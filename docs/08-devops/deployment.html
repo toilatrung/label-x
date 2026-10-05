@@ -70,6 +70,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="3-dev-local">3. Dev local</h2>
 <p>Chi tiết lệnh: <a href="../07-development/tooling.html">../07-development/tooling.md</a>.</p>
+<p>Máy dev chưa có công cụ dùng <code>env-setup.md</code> ở root project: script PowerShell hoặc Bash khởi tạo không yêu cầu Make có sẵn. Các lệnh Make dưới đây dành cho Ubuntu/WSL sau bootstrap; Celery worker dùng Linux/WSL.</p>
 <pre class="highlight"><code class="language-bash">make setup        # bật postgres, redis, seaweedfs bằng infrastructure/docker-compose.dev.yml, cài dependency, migrate
 make dev-backend  # Django runserver :8000 (không phải Gunicorn)
 make dev-worker   # Celery worker

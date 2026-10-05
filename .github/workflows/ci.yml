@@ -12,6 +12,25 @@ concurrency:
 env:
   NEXT_TELEMETRY_DISABLED: '1'
 jobs:
+  bootstrap-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Parse PowerShell bootstrap
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          [Management.Automation.Language.Parser]::ParseFile("$PWD/scripts/init-develop-environment.ps1", [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count) { $errors; exit 1 }
+      - name: Test bootstrap safeguards without installing machine tools
+        run: node --test scripts/development/tests/*.test.cjs
   framework:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +52,11 @@ jobs:
           node scripts/ci/render-plan.cjs --check
       - name: Test CI gates
         run: node --test scripts/ci/tests/*.test.cjs
+      - name: Test development bootstrap safeguards
+        run: |
+          bash -n scripts/init-develop-environment.sh
+          bash scripts/init-develop-environment.sh --plan
+          node --test scripts/development/tests/*.test.cjs
       - name: Generated documentation is up to date
         run: |
           # Markdown (.md) là nguồn của kit; HTML sinh bằng scripts/md2html.py phải khớp.

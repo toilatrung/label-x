@@ -44,6 +44,8 @@ Mô tả topology triển khai tham chiếu (SRS chương 10 + DEC-001), cách c
 
 Chi tiết lệnh: [../07-development/tooling.md](../07-development/tooling.md).
 
+Máy dev chưa có công cụ dùng `env-setup.md` ở root project: script PowerShell hoặc Bash khởi tạo không yêu cầu Make có sẵn. Các lệnh Make dưới đây dành cho Ubuntu/WSL sau bootstrap; Celery worker dùng Linux/WSL.
+
 ```bash
 make setup        # bật postgres, redis, seaweedfs bằng infrastructure/docker-compose.dev.yml, cài dependency, migrate
 make dev-backend  # Django runserver :8000 (không phải Gunicorn)

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabelX — SRS M13 Reviewer Prioritization Assistant</title>
+<!-- Sinh tự động bởi scripts/srs_tex2html.py từ docs/label-x_system-requirement-specification/. Không sửa tay. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true, securityLevel: "strict", theme: "base",
+    themeVariables: {
+      fontFamily: "Inter, 'Segoe UI', system-ui, sans-serif", fontSize: "13px",
+      primaryColor: "#ffffff", primaryBorderColor: "#8c93a0", primaryTextColor: "#1a1d23",
+      lineColor: "#4b5262", secondaryColor: "#f3f4f6", tertiaryColor: "#eef1f5",
+      actorBkg: "#ffffff", actorBorder: "#8c93a0", noteBkgColor: "#fdf2d8", noteBorderColor: "#8a5300"
+    },
+    flowchart: { htmlLabels: true, curve: "basis" },
+    sequence: { mirrorActors: false, showSequenceNumbers: true }
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.renderMathInElement) {
+      renderMathInElement(document.querySelector("main"), {
+        delimiters: [{left: "\\[", right: "\\]", display: true}, {left: "\\(", right: "\\)", display: false}],
+        ignoredClasses: ["mermaid"], throwOnError: false
+      });
+    }
+  });
+</script>
+<style>
+  :root {
+    --canvas: #f6f7f9; --surface: #ffffff; --surface-sunken: #f3f4f6; --surface-selected: #eef1f5;
+    --border: #e3e6ea; --border-strong: #8c93a0; --ink: #1a1d23; --ink-muted: #4b5262; --ink-subtle: #6b7280;
+    --primary: #1f2933; --brand: #d1202d;
+    --success: #146c43; --success-soft: #e6f4ec; --warning: #8a5300; --warning-soft: #fdf2d8;
+    --danger: #b42318; --danger-soft: #fdecea; --info: #1d5ea8; --info-soft: #e7effa;
+    --neutral: #475061; --neutral-soft: #eceef2;
+    --font: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 72px; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 15px/1.6 var(--font); }
+  .topbar { position: sticky; top: 0; z-index: 10; height: 56px; background: var(--primary); color: #fff;
+    display: flex; align-items: center; gap: 16px; padding: 0 24px; }
+  .logo { font-weight: 800; font-size: 18px; letter-spacing: -0.2px; }
+  .logo b { color: var(--brand); }
+  .topbar .meta { color: #cfd4dc; font-size: 13px; }
+  .topbar .spacer { flex: 1; }
+  .topbar a { color: #fff; font-size: 13px; text-decoration: none; border: 1px solid #5b6573; padding: 4px 10px; }
+  .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); max-width: 1440px; margin: 0 auto; }
+  .toc { position: sticky; top: 56px; align-self: start; height: calc(100vh - 56px); overflow: auto;
+    padding: 24px 16px 48px 24px; border-right: 1px solid var(--border); font-size: 13px; }
+  .toc-title { text-transform: uppercase; font-size: 12px; color: var(--ink-subtle); font-weight: 600; margin-bottom: 8px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc > ol > li { margin: 8px 0; }
+  .toc > ol > li > a { font-weight: 600; color: var(--ink); }
+  .toc ol ol { padding-left: 12px; margin-top: 4px; }
+  .toc ol ol a { color: var(--ink-muted); }
+  .toc a { text-decoration: none; display: block; padding: 2px 0; }
+  .toc a:hover { color: var(--ink); text-decoration: underline; }
+  main { padding: 24px 32px 96px; min-width: 0; }
+  .cover { background: var(--surface); border: 1px solid var(--border); padding: 32px; margin-bottom: 24px; }
+  .cover .kicker { color: var(--ink-subtle); font-size: 13px; }
+  .cover h1 { font-size: 34px; line-height: 1.2; margin: 8px 0 4px; }
+  .cover .sub { font-size: 18px; color: var(--ink-muted); margin: 0 0 16px; }
+  .cover dl { display: grid; grid-template-columns: 200px 1fr; gap: 6px 16px; margin: 0; font-size: 14px; }
+  .cover dt { color: var(--ink-subtle); } .cover dd { margin: 0; }
+  .chapter { background: var(--surface); border: 1px solid var(--border); padding: 8px 32px 24px; margin-bottom: 24px; }
+  h2 { font-size: 22px; line-height: 28px; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  h4 { font-size: 15px; margin: 20px 0 6px; }
+  h2 .num, h3 .num, h4 .num { color: var(--ink-subtle); font-weight: 600; margin-right: 10px; font-variant-numeric: tabular-nums; }
+  p { margin: 8px 0; }
+  a { color: var(--info); }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--surface-sunken); padding: 1px 4px; }
+  code.req { font-weight: 600; background: var(--neutral-soft); white-space: nowrap; }
+  ul, ol { margin: 6px 0; padding-left: 22px; }
+  li { margin: 2px 0; }
+  .tablewrap { overflow-x: auto; margin: 12px 0 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--surface); }
+  caption { caption-side: top; text-align: left; font-size: 13px; color: var(--ink-muted); padding: 0 0 6px; }
+  th { background: var(--surface-sunken); text-transform: uppercase; font-size: 11.5px; letter-spacing: .02em;
+    color: var(--ink-subtle); text-align: left; font-weight: 600; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; vertical-align: top; }
+  td ul, td ol { padding-left: 18px; margin: 2px 0; }
+  table.kv td:first-child { font-weight: 600; width: 22%; background: var(--surface-sunken); }
+  tr.grouprow td { background: var(--surface-selected); font-weight: 600; }
+  .capnum { font-weight: 600; color: var(--ink); }
+  figure { margin: 16px 0 20px; border: 1px solid var(--border); padding: 16px; background: var(--surface); }
+  figcaption { font-size: 13px; color: var(--ink-muted); margin-top: 10px; }
+  .mermaid { text-align: center; }
+  .callout { border: 1px solid var(--border); border-left: 3px solid var(--info); background: var(--info-soft);
+    padding: 10px 14px; margin: 12px 0; }
+  .callout-ok { border-left-color: var(--success); background: var(--success-soft); }
+  .callout-tbd { border-left-color: var(--warning); background: var(--warning-soft); }
+  .callout-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .tbd { display: inline-block; font: 600 11px/1.6 var(--mono); color: var(--warning); background: var(--warning-soft);
+    border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+  .pri { display: inline-block; min-width: 20px; text-align: center; font: 600 11px/1.6 var(--font); border-radius: 4px; }
+  .pri-m { color: var(--danger); background: var(--danger-soft); }
+  .pri-s { color: var(--warning); background: var(--warning-soft); }
+  .pri-c { color: var(--neutral); background: var(--neutral-soft); }
+  .src { color: var(--ink-subtle); font-size: 12px; }
+  .math { overflow-x: auto; margin: 10px 0; }
+  .eq { display: flex; align-items: center; gap: 16px; }
+  .eq .katex-display { flex: 1; margin: 0; }
+  .eqnum { color: var(--ink-subtle); font-variant-numeric: tabular-nums; }
+  svg.fig { max-width: 100%; height: auto; font-family: var(--font); }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .toc { position: static; height: auto; border-right: 0; }
+    main { padding: 16px; } .chapter { padding: 8px 16px 16px; } .cover dl { grid-template-columns: 1fr; } }
+  @media print { .topbar, .toc { display: none; } .layout { display: block; } body { background: #fff; }
+    .chapter, .cover { border: 0; page-break-before: always; } figure, table { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="logo">Label<b>X</b></span>
+  <span class="meta">Software Requirements Specification · M13 Reviewer Prioritization Assistant · v1.0</span>
+  <span class="spacer"></span>
+  <a href="srs.md">Hồ sơ intake SRS</a>
+</header>
+<div class="layout">
+{{TOC}}
+<main>
+  <section class="cover" id="top">
+    <div class="kicker">Hệ thống LabelX · Module Quality Control</div>
+    <h1>LabelX</h1>
+    <p class="sub">Trợ lý ưu tiên review annotation dựa trên rủi ro và bằng chứng</p>
+    <dl>
+      <dt>Hệ thống</dt><dd><strong>LabelX</strong></dd>
+      <dt>Tên đề tài đăng ký</dt><dd>Annotation QC Studio</dd>
+      <dt>Mã đăng ký</dt><dd><strong>M13 — Reviewer Prioritization Assistant</strong></dd>
+      <dt>Phạm vi nghiệm thu</dt><dd>CVAT → phân tích nghi vấn → xếp hạng frame → review &amp; phân xử → báo cáo hiệu quả</dd>
+      <dt>Dữ liệu</dt><dd>Bounding box trên BDD100K (2D detection)</dd>
+      <dt>Phiên bản</dt><dd>1.0 — 05/10/2026 · người dùng chấp nhận nội dung, chờ ký theo vai trò · chuẩn tham chiếu ISO/IEC/IEEE 29148:2018</dd>
+      <dt>Bản LaTeX</dt><dd><code>docs/label-x_system-requirement-specification/</code> (biên dịch XeLaTeX trên TeXPage)</dd>
+    </dl>
+    <div class="callout callout-note"><div class="callout-title">Cách đọc</div>
+      Các quyết định B-01…B-21, cấu hình MVP và mục tiêu kiểm chứng R-01…R-07 kế thừa từ bản rà soát kiến trúc đã chốt ngày 05/10/2026.
+      Giá trị <span class="tbd">TBD</span> là tham số chưa chốt, phải quyết định trước khi đo nghiệm thu (bảng TBD ở chương 11).
+      Ưu tiên: <span class="pri pri-m">M</span> Must, <span class="pri pri-s">S</span> Should, <span class="pri pri-c">C</span> Could.</div>
+  </section>
+{{FRONT}}
+{{BODY}}
+</main>
+</div>
+</body>
+</html>

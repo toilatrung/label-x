@@ -15,20 +15,22 @@ Mô tả công cụ và lệnh dev **đang có trong repo**. Nguồn: `scripts/i
 
 ## 1. Yêu cầu trên máy
 
+Hướng dẫn cho máy chưa có công cụ: `env-setup.md` ở root project. Windows chạy `scripts/init-develop-environment.ps1`; Ubuntu/WSL chạy `scripts/init-develop-environment.sh`. Make là wrapper tùy chọn, không phải điều kiện để chạy bootstrap. Script chỉ báo hoàn thành setup sau kiểm kết nối dịch vụ, migrate, Django check và build frontend.
+
 | Công cụ | Phiên bản | Ghi chú |
 |---|---|---|
-| git, make, curl | — | Phải có sẵn |
-| Docker + Docker Compose v2 | — | Phải có sẵn; daemon đang chạy |
-| Node.js + npm | ≥ 22 | Phải có sẵn (`NODE_MAJOR_MIN := 22`; `engines.node >= 22`). Gợi ý trong `make doctor`: `nvm install 22` |
-| uv | — | `make tools` tự cài nếu thiếu (script cài chính thức của Astral vào `~/.local/bin`) |
+| Git; Make/curl/build tools trên Ubuntu | — | Bootstrap cài khi chọn `-InstallGlobal` hoặc `--install-global`; Windows không cần Make/curl |
+| Docker + Docker Compose v2 | — | Bootstrap cài Docker Desktop trên Windows hoặc Docker Engine trên Ubuntu trực tiếp nếu thiếu. WSL dùng Desktop integration; first-start/quyền/reboot có thể cần xử lý thủ công |
+| Node.js + npm | ≥ 22 | Bootstrap cài khi thiếu/Node quá thấp; Windows dùng WinGet LTS, Ubuntu/WSL dùng nvm Node 22 |
+| uv | — | Bootstrap cài khi thiếu và bật InstallGlobal |
 | Python | 3.12 | uv tự cài và quản lý (`uv python install 3.12`), không đụng Python hệ thống |
 
-`openssl` được `make env` dùng để sinh `DJANGO_SECRET_KEY`; nếu thiếu thì dùng timestamp thay thế.
+`make env` dùng Node crypto để sinh secret ngẫu nhiên, không có fallback timestamp. File `.env` đã có được giữ; placeholder hoặc endpoint khác bundle Compose làm setup dừng. Script không tự tạo dữ liệu/đăng ký quyền CVAT hay model.
 
 ## 2. Bắt đầu nhanh
 
 ```bash
-make setup          # doctor → tools → env → infra-up → backend-install → frontend-install → migrate
+make setup          # sau bootstrap công cụ: env → dependency → healthy infra → verify → migrate → check → frontend build
 make dev-backend    # http://localhost:8000/api/docs/
 make dev-worker     # Celery worker
 make dev-frontend   # http://localhost:3000
@@ -53,9 +55,9 @@ Lệnh mặc định là `make help` (liệt kê target có chú thích `##`).
 | Nhóm | Target | Việc làm |
 |---|---|---|
 | Trợ giúp | `help` | Liệt kê lệnh |
-| Setup | `setup` | Cài toàn bộ môi trường dev: `doctor tools env infra-up backend-install frontend-install migrate` |
-| | `doctor` | Kiểm tra git, curl, docker, node, npm, Docker Compose v2, Docker daemon, Node ≥ 22 |
-| | `tools` | Cài uv nếu thiếu; `uv python install 3.12` |
+| Setup | `setup` | Gọi bootstrap Bash, thực hiện local tuần tự; không dùng prerequisites có thể chạy song song |
+| | `doctor` | Bootstrap `--check`: kiểm công cụ, dependency, kết nối dịch vụ, Django check và migrations; không cài/migrate/build |
+| | `tools` | Gọi bootstrap Bash `--install-global`, cài công cụ thiếu và khởi tạo local |
 | | `env` | Tạo `src/backend/.env` từ `.env.example` (sinh `DJANGO_SECRET_KEY` dạng `dev-only-…`) và `src/frontend/.env.local` từ `.env.example`; không ghi đè file đã có |
 | Hạ tầng | `infra-up` | `docker compose up -d --wait postgres redis seaweedfs`, rồi chạy `seaweedfs-init` tạo bucket |
 | | `infra-down` | Tắt hạ tầng, giữ dữ liệu |
@@ -67,7 +69,7 @@ Lệnh mặc định là `make help` (liệt kê target có chú thích `##`).
 | | `superuser` | `python manage.py createsuperuser` |
 | Chạy | `dev-backend` | `runserver 0.0.0.0:8000` |
 | | `dev-worker` | `celery -A config worker -l info` |
-| | `dev-beat` | `celery -A config beat -l info` — chỉ khởi động Celery beat. Chú thích trong Makefile ghi "lịch polling CVAT", nhưng hiện **chưa có** task hay lịch nào: `src/backend/config/celery.py` chỉ `autodiscover_tasks()`. Polling drift CVAT là việc mở (TBD-01) |
+| | `dev-beat` | `celery -A config beat -l info` — chỉ khởi động Celery beat. Hiện **chưa có** task hay lịch nào: `src/backend/config/celery.py` chỉ `autodiscover_tasks()`. Polling drift CVAT là việc mở (TBD-01) |
 | | `dev-frontend` | `npm run dev` (Next.js :3000) |
 | Chất lượng | `check` | `lint typecheck test validate-kit` — toàn bộ kiểm tra trước khi tạo PR |
 | | `lint` | `ruff check .` + `ruff format --check .` (backend); `npm run lint` (frontend) |

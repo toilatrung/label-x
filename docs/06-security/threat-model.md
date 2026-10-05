@@ -128,7 +128,7 @@ Cột "Trạng thái" cho biết biện pháp đã có trong repo hay mới là 
 - **TBD-01**: phiên bản CVAT, URL, quyền thật của token. Chưa kiểm được token có thật sự chỉ đọc hay không.
 - **TBD-02**: phần cứng app server/GPU server, nên chưa vẽ được vùng mạng chi tiết.
 - **TBD-15**: thời hạn lưu audit tối thiểu. **TBD-17**: RPO/RTO sao lưu.
-- Cơ chế phát hiện drift: A đề xuất webhook `update:job` có chữ ký, T cho polling có checkpoint làm dự phòng, SRS chỉ yêu cầu đọc lại trước khi khoá (FR-SNP-04). `scripts/init-develop-environment.mk` ghi `dev-beat` là "lịch polling CVAT". Phải chốt khi có TBD-01; nếu dùng webhook thì phải xác minh chữ ký.
+- Cơ chế phát hiện drift: A đề xuất webhook `update:job` có chữ ký, T cho polling có checkpoint làm dự phòng, SRS chỉ yêu cầu đọc lại trước khi khoá (FR-SNP-04). `scripts/init-develop-environment.mk` chỉ khởi động Celery beat, chưa có task/lịch polling CVAT. Phải chốt khi có TBD-01; nếu dùng webhook thì phải xác minh chữ ký.
 - Xác thực: A đề xuất SSO OIDC dùng chung với CVAT, còn SRS (09-interfaces) và `settings.py` dùng phiên đăng nhập LabelX. Tài liệu này theo SRS; OIDC là phương án sau, chưa chốt.
 
 ## Liên quan
