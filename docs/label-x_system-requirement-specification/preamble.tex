@@ -1,0 +1,174 @@
+% ---------------------------------------------------------------------
+%  Preamble — chỉ dùng gói có sẵn trong TeX Live, không cần shell-escape,
+%  không cần chạy công cụ ngoài (makeglossaries/biber).
+% ---------------------------------------------------------------------
+
+% --- Font & ngôn ngữ (XeLaTeX) ---------------------------------------
+\usepackage{fontspec}
+% Font TeX Gyre đi kèm TeX Live, gọi theo tên file nên không phụ thuộc
+% font cài trên máy chủ biên dịch. Bộ TeX Gyre có đủ dấu tiếng Việt.
+\setmainfont{texgyretermes}[
+  Extension      = .otf,
+  UprightFont    = *-regular,
+  BoldFont       = *-bold,
+  ItalicFont     = *-italic,
+  BoldItalicFont = *-bolditalic]
+\setsansfont{texgyreheros}[
+  Extension      = .otf,
+  UprightFont    = *-regular,
+  BoldFont       = *-bold,
+  ItalicFont     = *-italic,
+  BoldItalicFont = *-bolditalic]
+\setmonofont{texgyrecursor}[
+  Extension      = .otf,
+  UprightFont    = *-regular,
+  BoldFont       = *-bold,
+  ItalicFont     = *-italic,
+  BoldItalicFont = *-bolditalic]
+
+\usepackage[english]{babel}
+\babelprovide[import, main]{vietnamese}
+
+% xcolor phải nạp trước tikz/tcolorbox để tránh option clash
+\usepackage[table]{xcolor}
+
+% --- Trang & bố cục -----------------------------------------------------
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.2cm,
+            headheight=14pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.12}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily LabelX · SRS M13}
+\fancyhead[R]{\small\sffamily SRS v1.0}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]
+  {\sffamily\bfseries\Huge\color{lxnavy}}
+  {\thechapter\hspace{0.6em}\textcolor{lxblue}{|}\hspace{0.6em}}{0pt}{}
+\titlespacing*{\chapter}{0pt}{-10pt}{18pt}
+\titleformat{\section}
+  {\sffamily\bfseries\Large\color{lxnavy}}{\thesection}{0.8em}{}
+\titleformat{\subsection}
+  {\sffamily\bfseries\large\color{lxnavy}}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}
+  {\sffamily\bfseries\normalsize}{\thesubsubsection}{0.8em}{}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% --- Toán, bảng, danh sách ---------------------------------------------
+\usepackage{amsmath, amssymb}
+\usepackage{array, booktabs, multirow, tabularx, longtable, xltabular}
+\usepackage{makecell}
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=1.6em}
+\setlist[itemize]{label=\textbullet}
+\renewcommand{\arraystretch}{1.25}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% --- Hình -------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[font=small, labelfont={bf,sf}, labelsep=period,
+            skip=6pt]{caption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, shapes.misc,
+  shapes.multipart, fit, calc, backgrounds, decorations.pathreplacing,
+  matrix, chains}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepackage{pgf-umlsd}
+
+% --- Hộp ghi chú ----------------------------------------------------------
+\usepackage[most]{tcolorbox}
+
+% --- Màu (theo tinh thần LabelX Design System: trung tính, ít màu) -------
+\definecolor{lxnavy}{HTML}{1F2A44}
+\definecolor{lxblue}{HTML}{2F6FDE}
+\definecolor{lxbluel}{HTML}{E8F0FD}
+\definecolor{lxgray}{HTML}{6B7280}
+\definecolor{lxgrayl}{HTML}{F3F4F6}
+\definecolor{lxline}{HTML}{D1D5DB}
+\definecolor{lxgreen}{HTML}{1E8E5A}
+\definecolor{lxgreenl}{HTML}{E6F4EC}
+\definecolor{lxamber}{HTML}{B7791F}
+\definecolor{lxamberl}{HTML}{FDF3E1}
+\definecolor{lxred}{HTML}{C2410C}
+\definecolor{lxredl}{HTML}{FDECE4}
+
+\newtcolorbox{notebox}[1][Ghi chú]{colback=lxbluel, colframe=lxblue,
+  boxrule=0.5pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fonttitle=\sffamily\bfseries\small, title=#1}
+\newtcolorbox{decisionbox}[1][Quyết định đã chốt]{colback=lxgreenl,
+  colframe=lxgreen, boxrule=0.5pt, arc=2pt, left=6pt, right=6pt, top=4pt,
+  bottom=4pt, fonttitle=\sffamily\bfseries\small, title=#1}
+\newtcolorbox{tbdbox}[1][Chưa chốt — cần quyết định]{colback=lxamberl,
+  colframe=lxamber, boxrule=0.5pt, arc=2pt, left=6pt, right=6pt, top=4pt,
+  bottom=4pt, fonttitle=\sffamily\bfseries\small, title=#1}
+
+% --- Kiểu TikZ dùng chung --------------------------------------------------
+\tikzset{
+  >={Stealth[length=2.2mm]},
+  box/.style={draw=lxnavy, fill=white, rounded corners=2pt, align=center,
+    font=\sffamily\footnotesize, inner sep=4pt, minimum height=8mm},
+  boxb/.style={box, fill=lxbluel, draw=lxblue},
+  boxg/.style={box, fill=lxgrayl, draw=lxgray},
+  boxgr/.style={box, fill=lxgreenl, draw=lxgreen},
+  boxa/.style={box, fill=lxamberl, draw=lxamber},
+  ext/.style={box, fill=lxgrayl, draw=lxgray, dashed},
+  usecase/.style={ellipse, draw=lxnavy, fill=lxbluel, align=center,
+    font=\sffamily\scriptsize, inner sep=1.5pt, minimum height=8mm,
+    text width=26mm},
+  state/.style={rectangle, rounded corners=6pt, draw=lxnavy, fill=white,
+    align=center, font=\sffamily\scriptsize, minimum height=7mm,
+    minimum width=20mm, inner sep=3pt},
+  statef/.style={state, fill=lxgreenl, draw=lxgreen},
+  stater/.style={state, fill=lxredl, draw=lxred},
+  init/.style={circle, fill=lxnavy, minimum size=3mm, inner sep=0pt},
+  final/.style={circle, draw=lxnavy, double, double distance=1pt,
+    fill=lxnavy, minimum size=2.4mm, inner sep=0pt},
+  act/.style={rectangle, rounded corners=5pt, draw=lxnavy, fill=white,
+    align=center, font=\sffamily\scriptsize, minimum height=7mm,
+    text width=24mm, inner sep=2pt},
+  dec/.style={diamond, aspect=1.6, draw=lxnavy, fill=lxamberl,
+    align=center, font=\sffamily\scriptsize, inner sep=1pt},
+  arr/.style={->, draw=lxnavy, thick},
+  arrd/.style={->, draw=lxgray, dashed},
+  lbl/.style={font=\sffamily\scriptsize, fill=white, inner sep=1pt},
+  entity/.style={rectangle split, rectangle split parts=2, draw=lxnavy,
+    rectangle split part fill={lxbluel, white}, font=\sffamily\scriptsize,
+    align=left, inner sep=3pt, text width=30mm},
+  pics/actor/.style={code={
+    \draw[lxnavy, thick] (0,0.62) circle (0.13);
+    \draw[lxnavy, thick] (0,0.49)--(0,0.18) (-0.22,0.39)--(0.22,0.39)
+      (0,0.18)--(-0.17,-0.12) (0,0.18)--(0.17,-0.12);
+    \node[below, font=\sffamily\scriptsize, align=center] at (0,-0.14) {#1};
+  }},
+}
+
+% --- Macro tiện dụng --------------------------------------------------------
+\newcommand{\req}[1]{\texttt{\textbf{#1}}}
+\newcommand{\term}[1]{\emph{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\TBD}[1][]{\textcolor{lxamber}{\textbf{[TBD#1]}}}
+\newcommand{\src}[1]{\textcolor{lxgray}{\footnotesize[#1]}}
+\newcommand{\must}{\textcolor{lxred}{\textbf{M}}}
+\newcommand{\should}{\textcolor{lxamber}{\textbf{S}}}
+\newcommand{\could}{\textcolor{lxgray}{\textbf{C}}}
+
+% --- Liên kết (nạp sau cùng) ------------------------------------------------
+\usepackage[hidelinks, unicode, bookmarksnumbered]{hyperref}
+\hypersetup{
+  pdftitle={SRS — LabelX · M13 Reviewer Prioritization Assistant},
+  pdfauthor={LabelX},
+  pdfsubject={Software Requirements Specification}}

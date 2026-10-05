@@ -1,0 +1,187 @@
+% =====================================================================
+\chapter{Giới thiệu}
+\label{ch:intro}
+% =====================================================================
+
+\section{Mục đích tài liệu}
+Tài liệu này đặc tả yêu cầu phần mềm cho hệ thống \textbf{LabelX}, phạm vi
+chức năng \textbf{M13 — Reviewer Prioritization Assistant} (tên đề tài đăng ký:
+Annotation QC Studio): một trợ lý giúp reviewer quyết định
+\emph{nên xem frame nào trước} dựa trên rủi ro có lỗi annotation và bằng chứng
+đi kèm, thay vì review tuần tự toàn bộ dữ liệu.
+
+Tài liệu dùng để:
+\begin{itemize}
+  \item thống nhất phạm vi nghiệm thu giữa Product Owner, Quality Assurance,
+        đội backend và đội mô hình;
+  \item làm căn cứ thiết kế, lập trình, kiểm thử và nghiệm thu;
+  \item cố định \emph{cách đo} hai kết quả chính trước khi chạy pilot, để
+        tránh điều chỉnh phương pháp sau khi thấy số liệu.
+\end{itemize}
+
+\section{Phạm vi sản phẩm}
+\label{sec:scope}
+M13 là một lát cắt (vertical slice) của module Quality Control trong LabelX.
+Bản nghiệm thu đầu tiên tập trung vào \textbf{một luồng duy nhất}:
+
+\begin{center}
+\begin{tikzpicture}[node distance=4mm]
+  \node[boxb, text width=22mm] (a) {Annotation\\từ CVAT};
+  \node[boxb, text width=22mm, right=of a] (b) {Phân tích\\nghi vấn};
+  \node[boxb, text width=22mm, right=of b] (c) {Xếp hạng\\frame};
+  \node[boxb, text width=24mm, right=of c] (d) {Reviewer xem\\bằng chứng \& phân xử};
+  \node[boxb, text width=22mm, right=of d] (e) {Báo cáo\\hiệu quả};
+  \draw[arr] (a)--(b); \draw[arr] (b)--(c); \draw[arr] (c)--(d); \draw[arr] (d)--(e);
+\end{tikzpicture}
+\end{center}
+
+\begin{xltabular}{\linewidth}{@{}L{3.1cm}Y@{}}
+\caption{Phân loại phạm vi của bản nghiệm thu M13}\label{tab:scope}\\
+\toprule
+\textbf{Nhóm} & \textbf{Nội dung}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Nhóm} & \textbf{Nội dung}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Lõi — nghiệm thu} &
+Đọc annotation và ảnh từ CVAT, tạo snapshot bất biến; chạy các engine phát hiện
+nghi vấn cho Bounding box; hợp nhất candidate; tính điểm rủi ro frame và xếp
+hạng; hàng đợi ưu tiên; Review Workspace hiển thị bằng chứng; quyết định
+xác nhận/bác bỏ/chưa chắc chắn; phân xử; đo Recall@20\% và mức giảm công sức
+review; báo cáo hiệu quả.\\
+\textbf{Hỗ trợ — mức cần thiết} &
+Tra cứu guideline theo rule ID/version; yêu cầu sửa (rework) và kiểm lại sau
+sửa; phân quyền và nhật ký kiểm toán; Quality Gate tối thiểu để không phát hành
+dữ liệu chưa xác minh.\\
+\textbf{Ngoài phạm vi bản đầu} &
+Temporal/track, polygon, polyline, video (B-09); ghi annotation ngược vào CVAT
+(B-18); Diff/pre-label, vehicle profile, feedback loop (B-16); Classifier thứ
+hai (B-07); Guideline RAG (B-13); phát hành dataset đầy đủ và quản trị nền tảng
+ngoài mức tối thiểu.\\
+\textbf{Đề xuất thu hẹp — cần duyệt} &
+Engine mô hình thị giác – ngôn ngữ (VLM) không bật trong pilot M13. Đây là
+\emph{đề xuất thu hẹp cho pilot M13, cần Product Owner duyệt}; nó không kế thừa
+từ B-08. Quyết định B-08 (pipeline candidate $\rightarrow$ chọn theo policy
+$\rightarrow$ worker kiểm chọn lọc) vẫn là kiến trúc đã chốt. Nếu đề xuất bị bác,
+VLM chạy theo B-08 với hạn mức 400 candidate/run, tối đa 3 lần thử, và hết hạn
+mức thì ghi phần chưa kiểm (\TBD[-08]).\\
+\end{xltabular}
+
+\section{Đối tượng đọc và cách đọc}
+\begin{xltabular}{\linewidth}{@{}L{4cm}Y@{}}
+\toprule
+\textbf{Người đọc} & \textbf{Nên đọc}\\
+\midrule
+Product Owner, ban nghiệm thu & Chương~\ref{ch:overview}, \ref{ch:eval}, \ref{ch:trace}.\\
+Quality Assurance Lead & Chương~\ref{ch:data}, \ref{ch:usecase}, \ref{ch:eval}.\\
+Backend / Frontend & Chương~\ref{ch:usecase}–\ref{ch:arch}.\\
+Đội mô hình & Chương~\ref{ch:data}, mục~\ref{sec:fr-eng}, \ref{sec:fr-rnk}, chương~\ref{ch:eval}.\\
+Kiểm thử (QA engineer) & Chương~\ref{ch:func}, \ref{ch:eval}, \ref{ch:trace}.\\
+\bottomrule
+\end{xltabular}
+
+\section{Quy ước tài liệu}
+\begin{itemize}
+  \item \textbf{Mã định danh:} \req{UC-xx} use case; \req{FR-<MODULE>-xx} yêu cầu
+        chức năng; \req{NFR-xx} yêu cầu phi chức năng; \req{AC-xx} tiêu chí
+        nghiệm thu; \req{BR-xx} quy tắc nghiệp vụ; \req{B-xx} quyết định kiến
+        trúc đã chốt; \req{R-xx} mục tiêu kiểm chứng đã chốt; \req{E1–E3} nhóm lỗi.
+  \item \textbf{Mức ưu tiên (MoSCoW):} \must{} = Must (bắt buộc cho nghiệm thu),
+        \should{} = Should (nên có), \could{} = Could (có thể hoãn).
+  \item \textbf{Từ khoá:} “\emph{phải}” = bắt buộc; “\emph{nên}” = khuyến nghị;
+        “\emph{có thể}” = tuỳ chọn.
+  \item \TBD{} đánh dấu tham số chưa chốt. Mỗi \TBD{} có người chịu trách
+        nhiệm trong bảng~\ref{tab:tbd}.
+  \item Thuật ngữ kỹ thuật giữ nguyên tiếng Anh khi đó là tên dùng trong sản
+        phẩm (ví dụ \term{snapshot}, \term{candidate}); giải thích ở mục~\ref{sec:glossary}.
+\end{itemize}
+
+\section{Tài liệu tham chiếu}
+\begin{enumerate}[label={[\arabic*]}, leftmargin=2.2em]
+  \item ISO/IEC/IEEE 29148:2018 — \emph{Systems and software engineering — Life cycle processes — Requirements engineering}.
+  \item F.~Yu và cộng sự, \emph{BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning}, CVPR 2020.
+  \item CVAT — Computer Vision Annotation Tool, tài liệu REST API (phiên bản cụ thể \TBD[-01]).
+  \item LabelX Design System và 25 màn hình (\code{docs/design/}) — nguồn H.
+  \item Bản rà soát kiến trúc, luồng và triển khai đã chốt, 05/10/2026 — nguồn R.
+  \item QC Engine \& Review System — đề xuất kiến trúc, 04/10/2026 — nguồn T.
+  \item Quality Control Review — UX Architecture — nguồn A.
+\end{enumerate}
+
+\section{Thuật ngữ và viết tắt}
+\label{sec:glossary}
+
+\begin{xltabular}{\linewidth}{@{}L{3.6cm}Y@{}}
+\caption{Bảng thuật ngữ}\label{tab:glossary}\\
+\toprule
+\textbf{Thuật ngữ} & \textbf{Định nghĩa trong tài liệu này}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Thuật ngữ} & \textbf{Định nghĩa}\\ \midrule
+\endhead
+\midrule \multicolumn{2}{r}{\footnotesize\itshape tiếp trang sau}\\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{2}{@{}l}{\textbf{\sffamily Dữ liệu và annotation}}\\
+Frame & Một ảnh là đơn vị review và xếp hạng. Với BDD100K detection, mỗi ảnh tĩnh là một frame.\\
+Annotation & Một đối tượng được gán nhãn trên frame: Bounding box + lớp + thuộc tính.\\
+Bounding box (BBox) & Hình chữ nhật song song trục \((x_1, y_1, x_2, y_2)\) theo pixel.\\
+Taxonomy & Danh sách lớp và thuộc tính hợp lệ của dataset, có version.\\
+Guideline & Hướng dẫn gán nhãn, chia thành rule có mã (ví dụ \code{VEH-03}) và version.\\
+CVAT & Công cụ gán nhãn nguồn. Annotation chỉ được sửa trên CVAT (B-18).\\
+Project / Task / Job & Cấp tổ chức dữ liệu trong CVAT; Job là phần việc giao cho một annotator.\\
+Revision & Trạng thái annotation tại một thời điểm, nhận diện bằng hash nội dung đã chuẩn hoá.\\
+Snapshot & Bản sao bất biến của annotation, metadata và ảnh tại một revision; mọi phân tích chạy trên snapshot (B-02).\\
+Drift & Annotation trên CVAT thay đổi trong lúc đang export snapshot; phải phát hiện và chặn khoá.\\
+\multicolumn{2}{@{}l}{\textbf{\sffamily Phân tích và xếp hạng}}\\
+Engine & Thành phần kiểm tra tạo candidate. M13 dùng Schema/Taxonomy, Geometry, Duplicate/Overlap, Mô hình độc lập (Detector) và Metric.\\
+QC Run & Một lần chạy các engine trên một snapshot với cấu hình, seed và version cố định.\\
+Detector & Mô hình phát hiện đối tượng độc lập với người gán nhãn, dùng sinh candidate thiếu box và sai lớp. Không phải Ground Truth.\\
+Matching & Ghép một-một giữa box của Detector (hoặc reference) với annotation theo IoU, hình học trước rồi mới so lớp (B-21).\\
+IoU & Intersection over Union — tỉ lệ diện tích giao trên diện tích hợp của hai box.\\
+Candidate & Nghi vấn do engine sinh ra, chưa được người xác nhận. Candidate không phải lỗi.\\
+Issue & Đơn vị công việc review sau khi gộp các candidate trùng (B-10). Có vòng đời riêng.\\
+Evidence (bằng chứng) & Dữ liệu giải thích candidate: box của Detector, confidence, IoU, rule vi phạm, guideline, case tương tự.\\
+Risk score \(s(f)\) & Điểm rủi ro của frame \(f\), dùng để xếp hạng. Có version công thức.\\
+Ranking \(\pi\) & Thứ tự frame giảm dần theo \(s(f)\), có quy tắc phá hoà cố định.\\
+Top-\(k\)\% & Tập \(\lceil k\cdot N/100\rceil\) frame đứng đầu ranking trong tập \(N\) frame.\\
+Coverage ledger & Sổ ghi phần đơn vị đã kiểm/chưa kiểm theo từng engine với mẫu số áp dụng (B-04).\\
+Not checked / Partial / Failed & Trạng thái công khai của engine: chưa kiểm, kiểm một phần, lỗi thực thi. Không bao giờ được coi là đạt (B-19).\\
+\multicolumn{2}{@{}l}{\textbf{\sffamily Review và quy trình}}\\
+Review queue & Hàng đợi issue/frame cho reviewer, tách theo nguồn (rủi ro, ngẫu nhiên).\\
+Review Workspace & Màn hình xem frame, annotation, bằng chứng và ra quyết định.\\
+Quyết định review & Một trong: Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên.\\
+False alarm (cảnh báo sai) & Candidate/issue bị reviewer bác bỏ hoặc phân xử là không lỗi.\\
+Escalation / Adjudication & Chuyển issue chưa đủ căn cứ cho Quality Assurance Lead phân xử.\\
+Guideline Gap & Ghi nhận chỗ guideline thiếu, phát sinh từ phân xử.\\
+Rework & Yêu cầu annotator sửa trên CVAT; tạo revision mới.\\
+Re-check / Verify & Chạy lại engine bị ảnh hưởng trên revision mới và reviewer xác minh trước khi đóng issue.\\
+QC run cuối & QC Run trên snapshot của revision đã sửa; mọi báo cáo và phát hành trỏ về run này (B-03).\\
+Lease & Quyền giữ tạm một issue/frame cho một reviewer, tránh hai người cùng xử lý.\\
+Self-review & Reviewer review annotation do chính mình gán; backend phải chặn (B-12).\\
+Waiver & Miễn trừ có thời hạn cho một điều kiện gate, cần người duyệt khác người yêu cầu (B-11).\\
+Quality Gate & Tập điều kiện phải đạt trước khi một revision được coi là dùng được.\\
+\multicolumn{2}{@{}l}{\textbf{\sffamily Đánh giá}}\\
+Reference & Gồm annotation chuẩn (GT) của toàn bộ tập đánh giá và tập lỗi suy ra từ GT; cùng khoá version trước khi đo (B-20, mục~\ref{sec:reference}).\\
+Ground Truth & Annotation chuẩn đã được chuyên gia duyệt và khoá. Không model nào được mặc định là Ground Truth.\\
+Lỗi đã xác minh & Một phần tử của tập lỗi \(\mathcal{E}\): bản ghi gắn một nhóm lỗi với một đối tượng GT (E1, E2) hoặc một annotation dư (E3), suy ra từ GT và được người xác minh duyệt.\\
+Tập hiệu chỉnh / held-out & Tập dùng tinh chỉnh công thức điểm và tập chỉ dùng đo nghiệm thu; không giao nhau.\\
+Recall@20\% & Tỉ lệ lỗi đã xác minh nằm trong 20\% frame đầu của ranking (mục~\ref{sec:kpi1}).\\
+Effort & Tổng thời gian thao tác có ích của reviewer/QA, gồm xử lý cảnh báo sai và kiểm lại sau sửa (mục~\ref{sec:kpi2}).\\
+Baseline & Quy trình review thủ công hiện tại, không có ranking và bằng chứng.\\
+Assisted & Quy trình review có trợ lý M13.\\
+Residual error rate & Tỉ lệ lỗi còn lại sau quy trình, đo trên reference.\\
+Non-inferiority & Kiểm định chất lượng nhánh assisted không kém baseline quá biên \(\delta\).\\
+Bootstrap & Phương pháp lấy mẫu lại để ước lượng khoảng tin cậy.\\
+Model Orchestrator & Thành phần tổng hợp kết quả đánh giá engine trên reference, kèm provenance; không dùng model làm trọng tài (B-05). Đặc tả chi tiết \TBD[-21].\\
+\multicolumn{2}{@{}l}{\textbf{\sffamily Viết tắt}}\\
+QA / QC & Quality Assurance / Quality Control.\\
+SRS & Software Requirements Specification.\\
+RBAC & Role-Based Access Control.\\
+VLM & Vision–Language Model — mô hình thị giác – ngôn ngữ.\\
+DRF & Django REST framework.\\
+MVP & Minimum Viable Product.\\
+KPI & Key Performance Indicator.\\
+\end{xltabular}

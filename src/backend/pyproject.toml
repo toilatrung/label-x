@@ -1,0 +1,62 @@
+[project]
+name = "labelx-backend"
+version = "0.1.0"
+description = "LabelX — Quality Control backend (Django/DRF modular monolith + Celery workers)"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.38",
+    "celery[redis]>=5.5",
+    "django>=5.2,<5.3",
+    "django-celery-beat>=2.8",
+    "django-cors-headers>=4.7",
+    "django-environ>=0.12",
+    "django-filter>=25",
+    "django-storages[s3]>=1.14",
+    "djangorestframework>=3.16",
+    "drf-spectacular>=0.28",
+    "gunicorn>=23",
+    "httpx>=0.28",
+    "pillow>=11",
+    "psycopg[binary]>=3.2",
+    "redis>=5",
+]
+
+
+[dependency-groups]
+dev = [
+    "celery-types>=0.26.0",
+    "django-stubs[compatible-mypy]>=5.2,<5.3",
+    "djangorestframework-stubs>=3.16",
+    "factory-boy>=3.3",
+    "mypy>=1.16",
+    "pytest>=8",
+    "pytest-django>=4.11",
+    "ruff>=0.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_tests.py"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict = true
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

@@ -1,0 +1,307 @@
+% =====================================================================
+\chapter{Dữ liệu và phạm vi lỗi}
+\label{ch:data}
+% =====================================================================
+
+\section{Dữ liệu BDD100K cho M13}
+\label{sec:bdd}
+M13 dùng phần \textbf{2D object detection} của BDD100K: ảnh camera hành trình
+1280$\times$720, nhãn Bounding box cho 10 lớp đối tượng giao thông. Ảnh có thuộc
+tính cảnh (thời tiết, loại cảnh, thời điểm trong ngày) và đối tượng có cờ bị che
+(\code{occluded}) và bị cắt mép (\code{truncated}). Các thuộc tính này dùng để
+phân tầng mẫu và báo cáo theo lát (slice), không dùng làm nhãn cần kiểm.
+
+\begin{xltabular}{\linewidth}{@{}L{3cm}L{3.2cm}Y@{}}
+\caption{Lớp đối tượng BDD100K trong phạm vi M13}\label{tab:bddclasses}\\
+\toprule
+\textbf{Lớp} & \textbf{Nhóm} & \textbf{Ghi chú review}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Lớp} & \textbf{Nhóm} & \textbf{Ghi chú review}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\code{car} & Phương tiện & Lớp chiếm đa số; nhầm với \code{truck} thường gặp.\\
+\code{truck} & Phương tiện & Bán tải, xe tải; dễ nhầm với \code{car}, \code{bus}.\\
+\code{bus} & Phương tiện & Xe buýt; xe buýt mini cần guideline rõ.\\
+\code{train} & Phương tiện & Hiếm; recall theo lớp có khoảng tin cậy rộng.\\
+\code{motorcycle} & Phương tiện hai bánh & Phân biệt với \code{bicycle}; có người lái thì người lái là \code{rider}.\\
+\code{bicycle} & Phương tiện hai bánh & Như trên.\\
+\code{pedestrian} & Người & Người đi bộ.\\
+\code{rider} & Người & Người trên xe hai bánh; dễ nhầm với \code{pedestrian}.\\
+\code{traffic light} & Hạ tầng & Thường nhỏ; có thuộc tính màu đèn (ngoài phạm vi kiểm).\\
+\code{traffic sign} & Hạ tầng & Thường nhỏ, dễ bị bỏ sót.\\
+\end{xltabular}
+
+\begin{tbdbox}
+\begin{itemize}
+  \item \TBD[-03] Danh sách ảnh cụ thể đưa vào CVAT (lấy từ tập \code{val} hay
+        \code{train}) và số lượng frame \(N\) cho tập hiệu chỉnh và held-out.
+        Gợi ý: tách theo video nguồn (\code{video name}) để hai tập không chung cảnh.
+  \item \TBD[-04] Nguồn annotation cần review: (a) annotation do đội gán nhãn tạo
+        mới trên CVAT, hoặc (b) nhãn gốc BDD100K được đưa vào làm annotation
+        ``đang làm việc''. Hai lựa chọn cho phân bố lỗi khác nhau; phải ghi rõ trong
+        báo cáo.
+\end{itemize}
+\end{tbdbox}
+
+\subsection{Phân chia dữ liệu}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=4mm and 6mm]
+  \node[boxg, text width=34mm] (pool) {Ảnh BDD100K trong phạm vi\\\scriptsize nhóm theo video nguồn};
+  \node[boxb, text width=34mm, above right=2mm and 12mm of pool] (cal) {\textbf{Tập hiệu chỉnh}\\\scriptsize chọn trọng số, ngưỡng, $k^\ast$};
+  \node[boxgr, text width=34mm, below right=2mm and 12mm of pool] (ho) {\textbf{Tập held-out}\\\scriptsize chỉ dùng đo nghiệm thu};
+  \node[boxa, text width=38mm, right=10mm of cal] (lock) {Reference tập hiệu chỉnh\\$\rightarrow$ học, khoá công thức điểm,\\ngưỡng, quy tắc dừng};
+  \node[boxa, text width=38mm, right=10mm of ho] (ref) {Reference held-out độc lập\\được duyệt \& khoá riêng};
+  \draw[arr] (pool.east) -- (cal.west);
+  \draw[arr] (pool.east) -- (ho.west);
+  \draw[arr] (cal) -- (lock);
+  \draw[arr] (ho) -- (ref);
+  \draw[arr] (lock.south) -- node[lbl, right]{áp dụng 1 lần} (ref.north);
+  \node[font=\sffamily\scriptsize, text=lxred, below=1mm of ho] {không giao nhau theo video nguồn};
+\end{tikzpicture}
+\caption{Phân chia dữ liệu và thứ tự khoá để tránh rò rỉ (cả hai tập đều có reference, khoá riêng)}
+\label{fig:split}
+\end{figure}
+
+\section{Taxonomy nhóm lỗi trong bản đầu}
+\label{sec:errors}
+Bản đầu giới hạn ở \textbf{ba nhóm lỗi}. Lựa chọn dựa trên hai tiêu chí: (1)
+có engine phát hiện được trong cấu hình MVP đã chốt; (2) reviewer xác minh được
+bằng mắt mà không cần dữ liệu tham chiếu ngoài.
+
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}L{3.6cm}L{3.4cm}Y@{}}
+\caption{Ba nhóm lỗi của M13}\label{tab:errors}\\
+\toprule
+\textbf{Nhóm} & \textbf{Định nghĩa} & \textbf{Nguồn candidate} & \textbf{Tiêu chí xác minh}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Nhóm} & \textbf{Định nghĩa} & \textbf{Nguồn candidate} & \textbf{Tiêu chí xác minh}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{E1}\newline Thiếu box & Đối tượng thuộc 10 lớp, đủ điều kiện gán nhãn theo guideline, nhưng không có annotation nào ghép được. &
+Detector: box dự đoán không ghép được với annotation nào (unmatched prediction) và confidence $\ge \tau_{E1}$. &
+Reviewer thấy đối tượng thật, thuộc lớp trong phạm vi, không thuộc vùng/kích thước được bỏ qua (mục~\ref{sec:counting}).\\
+\textbf{E2}\newline Sai lớp & Annotation ghép được với đối tượng thật nhưng lớp khác lớp đúng theo guideline. &
+Detector: cặp ghép được về hình học (IoU $\ge \tau_m$) nhưng lớp dự đoán khác lớp annotation, confidence $\ge \tau_{E2}$. &
+Reviewer xác định lớp đúng theo rule guideline (ví dụ \code{VEH-03}); nếu guideline không đủ thì chuyển phân xử.\\
+\textbf{E3}\newline Trùng box & Hai hay nhiều annotation cho cùng một đối tượng. &
+Duplicate/Overlap: cặp annotation có IoU $\ge 0{,}85$ (D-002) \emph{chỉ sinh nghi vấn}; Detector bổ trợ khi chỉ có một dự đoán phủ cả hai. &
+Reviewer xác nhận các box cùng trỏ một đối tượng. Hai đối tượng thật chồng lấp (xe đỗ sát nhau) \emph{không} là lỗi. Trong reference, E3 suy ra theo BR-04.\\
+\end{xltabular}
+
+\begin{notebox}[Các nhóm cố ý hoãn]
+\begin{itemize}
+  \item \textbf{Box lệch/lỏng (tightness):} kiểm cần biên vật thể tham chiếu.
+        Theo B-06, Geometry chỉ kiểm cấu trúc/bounds/diện tích; rule G-009 giữ
+        Not checked khi chưa có tham chiếu. Reviewer vẫn có thể ghi nhận lỗi này
+        thủ công, nhưng nó \emph{không} được tính vào KPI của bản đầu.
+  \item \textbf{Box ``quá nhỏ'':} diện tích dưới 24 px$^2$ (G-014) là
+        \emph{cảnh báo cấu trúc}, không tự động là lỗi.
+  \item \textbf{Sai thuộc tính} (occluded, truncated, màu đèn) và lỗi track: ngoài phạm vi.
+\end{itemize}
+\end{notebox}
+
+\subsection{Engine kiểm cấu trúc (không tính vào KPI)}
+Schema/Taxonomy và Geometry vẫn chạy để bảo đảm dữ liệu đầu vào hợp lệ (lớp
+ngoài taxonomy, toạ độ ngoài ảnh, box suy biến, diện tích dưới ngưỡng). Kết quả
+của chúng là \emph{cảnh báo cấu trúc}, được đưa vào hàng đợi và có thể đóng góp
+vào điểm rủi ro, nhưng không phải nhóm lỗi đo KPI.
+
+\section{Reference: annotation chuẩn và tập lỗi suy ra}
+\label{sec:reference}
+Reference được lập theo cùng quy trình cho \emph{cả hai} tập: tập hiệu chỉnh
+(làm nhãn học và chọn tham số điểm, FR-RNK-10/11) và tập held-out (chỉ để đo
+nghiệm thu). Hai reference có version và khoá riêng; người xác minh của held-out
+không xem kết quả trên tập hiệu chỉnh.
+
+Reference gồm hai lớp, đều có version và được khoá trước khi đo:
+
+\begin{enumerate}
+  \item \textbf{Annotation chuẩn (GT)} cho \emph{toàn bộ} tập đánh giá, kể cả
+        frame nằm ngoài top 20\%. GT dùng chung cho đo KPI và cho Metric engine
+        (B-05, B-20).
+  \item \textbf{Tập lỗi \(\mathcal{E}\)} được \emph{suy ra tất định} bằng cách so
+        GT với annotation đang review (snapshot đầu vào) theo quy tắc ở
+        mục~\ref{sec:counting}, sau đó người xác minh duyệt lại.
+\end{enumerate}
+
+Nếu chỉ xác minh các candidate mà công cụ đưa ra, mẫu số sẽ thiếu các lỗi công
+cụ bỏ sót và KPI-1 bị thổi phồng. Vì vậy GT phải được lập độc lập với công cụ.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=5mm and 7mm]
+  \node[boxg, text width=26mm] (s) {Snapshot tập đánh giá\\\scriptsize (ảnh, đã khoá)};
+  \node[boxb, text width=25mm, above right=1mm and 8mm of s] (v1) {Người xác minh 1\\\scriptsize gán GT toàn bộ frame};
+  \node[boxb, text width=25mm, below right=1mm and 8mm of s] (v2) {Người xác minh 2\\\scriptsize gán GT toàn bộ frame};
+  \node[dec, right=33mm of s] (d) {Khớp?};
+  \node[boxa, text width=22mm, below=7mm of d] (adj) {QA Lead\\phân xử};
+  \node[boxgr, text width=22mm, right=8mm of d] (gt) {GT\\\scriptsize khoá version};
+  \node[boxb, text width=26mm, right=8mm of gt] (der) {Suy ra $\mathcal{E}$\\\scriptsize GT vs annotation\\đang review};
+  \node[boxa, text width=24mm, right=8mm of der] (rv) {Duyệt danh sách lỗi\\\scriptsize sửa mapping nếu sai};
+  \node[boxgr, text width=22mm, below=7mm of rv] (lock) {$\mathcal{E}$ khoá version\\\scriptsize + mapping, ngưỡng};
+  \draw[arr] (s) -- (v1); \draw[arr] (s) -- (v2);
+  \draw[arr] (v1) -- (d); \draw[arr] (v2) -- (d);
+  \draw[arr] (d) -- node[lbl, above]{có} (gt);
+  \draw[arr] (d) -- node[lbl, right]{không} (adj);
+  \draw[arr] (adj) -| (gt);
+  \draw[arr] (gt) -- (der); \draw[arr] (der) -- (rv); \draw[arr] (rv) -- (lock);
+  \draw[arrd] (rv.north) -- ++(0,0.5) -| node[lbl, pos=0.25, above]{suy lại khi sửa mapping} (der.north);
+  \node[font=\sffamily\scriptsize, text=lxred, align=center, above=2mm of d] {không xem ranking,\\candidate, risk score};
+\end{tikzpicture}}
+\caption{Quy trình lập reference: GT độc lập, rồi suy ra tập lỗi}
+\label{fig:reference}
+\end{figure}
+
+\begin{xltabular}{\linewidth}{@{}L{1.3cm}Y@{}}
+\caption{Quy tắc lập reference}\label{tab:refrules}\\
+\toprule
+\textbf{Mã} & \textbf{Quy tắc}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Quy tắc}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+BR-10 & Người xác minh \emph{không} được xem ranking, risk score hay candidate của tập đánh giá (mù với công cụ).\\
+BR-11 & Hai người gán GT độc lập trên toàn bộ frame; hai bản được ghép theo matching ở mục~\ref{sec:counting}, phần không khớp do QA Lead phân xử. Tỉ lệ khớp trước phân xử được báo cáo.\\
+BR-12 & Người xác minh không xác minh annotation do chính mình gán (self-review, B-12).\\
+BR-13 & GT, snapshot annotation đầu vào, mapping GT–annotation, các ngưỡng (\(\tau_m\), \(a_{min}\)) và version thuật toán matching được khoá cùng nhau. Mọi chỉnh sửa sau khoá tạo version mới, ghi lý do; kết quả đo trỏ đúng version.\\
+BR-14 & Khi người duyệt bác một lỗi do matching sai, phải sửa mapping (ghi lý do) rồi \emph{suy lại} \(\mathcal{E}\); không được xoá lỗi trực tiếp khỏi danh sách.\\
+BR-15 & Lỗi chèn có kiểm soát (nếu dùng, \TBD[-04]) chỉ là bổ sung, được gắn cờ riêng và báo cáo tách khỏi lỗi tự nhiên.\\
+BR-16 & Kho case phân xử dùng cho guideline (hiệu chỉnh) và GT của tập held-out phải tách riêng, tránh đánh giá trên dữ liệu đã dùng để hiệu chỉnh.\\
+BR-17 & Metric engine dùng chung GT nhưng có đặc tả matching riêng nếu phép đo yêu cầu (ví dụ ngưỡng IoU theo lớp); không dùng Detector làm trọng tài (B-05).\\
+\end{xltabular}
+
+\section{Quy tắc matching và đếm lỗi}
+\label{sec:counting}
+
+\subsection{Matching một-một, không phụ thuộc lớp}
+Cùng một thuật toán được dùng cho ba mục đích: GT với annotation (suy ra
+\(\mathcal{E}\)), dự đoán Detector với annotation (sinh candidate), và hai bản
+GT với nhau (BR-11).
+
+\begin{enumerate}
+  \item Với mỗi frame, tính IoU giữa mọi cặp box của hai tập, \emph{không xét lớp}.
+        Nếu matching có xét lớp, một lỗi sai lớp sẽ bị tách thành một lỗi thiếu
+        và một box thừa.
+  \item Loại mọi cạnh có IoU $< \tau_m$ (đề xuất 0{,}5, \TBD[-05]) \emph{trước}
+        khi tối ưu. Cặp nào cũng có thể không được ghép.
+  \item Giải bài toán gán (Hungarian) với mục tiêu theo thứ tự: tối đa \emph{số
+        cặp}, sau đó tối đa \emph{tổng IoU}.
+  \item Phá hoà tất định: ưu tiên IoU lớn hơn, sau đó ID đối tượng nhỏ hơn
+        (ID ổn định trong snapshot).
+  \item Cặp có IoU trong \([\tau_{amb}, \tau_m)\) được ghi \emph{ambiguous} và
+        đưa vào evidence.
+  \item Khi so với Detector: lọc dự đoán theo confidence $\ge \tau_{conf}$ trước
+        khi matching. Ngưỡng này được chọn trên tập hiệu chỉnh.
+  \item Kết quả matching là association, \emph{không} phải Precision/Recall của
+        annotation (B-21).
+\end{enumerate}
+
+\subsection{Suy ra lỗi từ GT}
+Gọi \(G\) là tập đối tượng GT và \(A\) là tập annotation đang review trên một
+frame, \(M \subseteq G \times A\) là kết quả matching.
+
+\begin{xltabular}{\linewidth}{@{}L{1.3cm}Y@{}}
+\caption{Quy tắc nghiệp vụ về suy ra và đếm lỗi}\label{tab:countrules}\\
+\toprule
+\textbf{Mã} & \textbf{Quy tắc}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Quy tắc}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+BR-01 & Mỗi lỗi là một bản ghi có ID, gắn đúng một nhóm lỗi và đúng một đối tượng: \emph{đối tượng GT} với E1/E2, hoặc \emph{annotation dư} với E3.\\
+BR-02 & \textbf{E1:} mỗi \(g \in G\) không nằm trong cặp nào của \(M\) sinh một lỗi E1 (gắn với \(g\)).\\
+BR-03 & \textbf{E2:} mỗi cặp \((g, a) \in M\) có lớp khác nhau sinh một lỗi E2 (gắn với \(g\)).\\
+BR-04 & \textbf{E3:} annotation \(a\) không nằm trong \(M\), có IoU $\ge \tau_m$ với ít nhất một \(g\) \emph{đã có cặp chính} trong \(M\), sinh một lỗi E3 gắn với \(a\). Nếu \(a\) thoả với nhiều \(g\), chọn \(g\) có IoU lớn nhất, phá hoà theo ID nhỏ hơn. Một cụm \(m\) box cho cùng đối tượng sinh \(m-1\) lỗi E3.\\
+BR-05 & Lớp của annotation dư không xét: annotation dư chỉ tính E3, không tính thêm E2. Cặp chính sai lớp vẫn tính E2 theo BR-03.\\
+BR-06 & Annotation không khớp GT nào và không thoả BR-04 (box thừa trên vùng không có đối tượng) \emph{không thuộc E1–E3}. Nó được ghi nhận và báo cáo riêng nhưng nằm ngoài KPI của pilot.\\
+BR-07 & Vùng/đối tượng được bỏ qua (\emph{ignore}): đối tượng GT có diện tích dưới \(a_{min}\) \TBD[-06], hoặc bị che/cắt mép quá mức theo guideline. Lỗi gắn với đối tượng ignore không tính vào cả tử số lẫn mẫu số.\\
+BR-08 & Nhiều candidate từ nhiều engine trỏ cùng một (đối tượng, nhóm) được gộp thành một issue (B-10). Gộp candidate không thay đổi \(\mathcal{E}\).\\
+BR-09 & Mức độ nghiêm trọng (Nghiêm trọng / Trung bình / Nhẹ) do QA Lead định nghĩa theo lớp và kích thước \TBD[-07]; dùng cho guardrail G-2.\\
+\end{xltabular}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize]
+  % frame
+  \draw[lxline, fill=lxgrayl] (0,0) rectangle (14,3.6);
+  % E1: GT không có annotation
+  \draw[lxgreen, very thick] (0.5,0.6) rectangle (2.3,2.4);
+  \node[align=center] at (1.4,3.0) {\textbf{E1} thiếu box};
+  \node[text=lxgreen] at (1.4,0.35) {GT \code{car}};
+  % đúng
+  \draw[lxgreen, very thick] (3.4,0.6) rectangle (5.2,2.4);
+  \draw[lxblue, thick, dashed] (3.5,0.7) rectangle (5.3,2.5);
+  \node[align=center] at (4.35,3.0) {Đúng};
+  \node[text=lxblue] at (4.35,0.35) {ann \code{car}};
+  % E2
+  \draw[lxgreen, very thick] (6.3,0.6) rectangle (8.1,2.4);
+  \draw[lxred, thick, dashed] (6.4,0.7) rectangle (8.2,2.5);
+  \node[align=center] at (7.2,3.0) {\textbf{E2} sai lớp};
+  \node[text=lxred] at (7.2,0.35) {GT \code{truck} / ann \code{car}};
+  % E3
+  \draw[lxgreen, very thick] (9.4,0.6) rectangle (11.2,2.4);
+  \draw[lxblue, thick, dashed] (9.5,0.7) rectangle (11.3,2.5);
+  \draw[lxred, thick, dashed] (9.3,0.5) rectangle (11.1,2.3);
+  \node[align=center] at (10.3,3.0) {\textbf{E3} trùng box};
+  \node[text=lxred] at (10.3,0.25) {box dư = 1 lỗi};
+  % box thừa
+  \draw[lxgray, thick, dashed] (12.2,0.9) rectangle (13.6,2.1);
+  \node[align=center] at (12.9,3.0) {Box thừa};
+  \node[text=lxgray, align=center] at (12.9,0.45) {ngoài KPI\\(BR-06)};
+\end{tikzpicture}
+\caption{Minh hoạ ba nhóm lỗi (nét liền xanh lá: GT; nét đứt: annotation)}
+\label{fig:errorexamples}
+\end{figure}
+
+\section{Mô hình dữ liệu khái niệm}
+\label{sec:erd}
+Hình~\ref{fig:erd} mô tả các thực thể chính. Mọi kết quả phân tích gắn với một
+\code{Snapshot} và một \code{QCRun}; mọi quyết định review gắn với actor,
+revision và lý do.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=9mm and 9mm]
+  \node[entity] (ds) {\textbf{Dataset}\nodepart{two}cvat\_project\_id\\taxonomy\_version\\guideline\_version};
+  \node[entity, right=of ds] (snap) {\textbf{Snapshot}\nodepart{two}revision\_hash\\created\_by, locked\_at\\assignee\_map\\parent\_snapshot};
+  \node[entity, right=of snap] (run) {\textbf{QCRun}\nodepart{two}config\_version, seed\\engine\_versions\\status, is\_final};
+  \node[entity, right=of run] (er) {\textbf{EngineResult}\nodepart{two}engine, status\\eligible\_units\\completed\_units};
+  \node[entity, below=of snap] (fr) {\textbf{Frame}\nodepart{two}frame\_key, image\_uri\\image\_checksum\\weather, scene, time};
+  \node[entity, left=of fr] (ann) {\textbf{Annotation}\nodepart{two}cvat\_shape\_id\\label, bbox\\attributes};
+  \node[entity, below=of run] (cand) {\textbf{Candidate}\nodepart{two}engine, family\\features, score\\dedup\_key};
+  \node[entity, below=of er] (ev) {\textbf{Evidence}\nodepart{two}type, payload\_uri\\pred\_bbox, conf, iou};
+  \node[entity, below=of cand] (iss) {\textbf{Issue}\nodepart{two}family, severity\\state, lease\_owner\\priority};
+  \node[entity, below=of fr] (rs) {\textbf{FrameRisk}\nodepart{two}score, rank\\score\_version\\contributions};
+  \node[entity, below=of iss] (dec) {\textbf{ReviewDecision}\nodepart{two}actor, decision\\reason, rule\_id\\started\_at, ended\_at};
+  \node[entity, right=of iss] (rw) {\textbf{ReworkRequest}\nodepart{two}assignee, deep\_link\\fixed\_revision\\verified\_by};
+  \node[entity, left=of rs] (ref) {\textbf{GT / RefError}\nodepart{two}ref\_version\\gt\_object | extra\_ann\\family, mapping\_ver};
+  \node[entity, below=of rs] (ef) {\textbf{EffortLog}\nodepart{two}actor, arm, frame\\activity, active\_ms};
+  \node[entity, right=of dec] (au) {\textbf{AuditLog}\nodepart{two}actor, action\\before/after\\append-only};
+  \draw[arr] (ds) -- node[lbl, above]{1..*} (snap);
+  \draw[arr] (snap) -- node[lbl, above]{1..*} (run);
+  \draw[arr] (run) -- node[lbl, above]{1..*} (er);
+  \draw[arr] (snap) -- node[lbl, right]{1..*} (fr);
+  \draw[arr] (fr) -- node[lbl, above]{0..*} (ann);
+  \draw[arr] (run) -- node[lbl, right]{0..*} (cand);
+  \draw[arr] (cand) -- node[lbl, above]{1..*} (ev);
+  \draw[arr] (cand) -- node[lbl, right]{*..1} (iss);
+  \draw[arr] (fr) -- node[lbl, right]{1 / run} (rs);
+  \draw[arr] (iss) -- node[lbl, right]{0..*} (dec);
+  \draw[arr] (iss) -- node[lbl, above]{0..1} (rw);
+  \draw[arr] (fr) -- node[lbl, above, sloped]{0..*} (ref);
+  \draw[arrd] (cand.west) -- (fr.east);
+  \draw[arrd] (rs) -- (ef);
+\end{tikzpicture}}
+\caption{Mô hình dữ liệu khái niệm (rút gọn thuộc tính)}
+\label{fig:erd}
+\end{figure}

@@ -1,0 +1,38 @@
+% =====================================================================
+\chapter{Yêu cầu phi chức năng}
+\label{ch:nfr}
+% =====================================================================
+
+Các con số trong bảng là \emph{đề xuất khởi điểm} của tài liệu này, chưa được
+phê duyệt và chưa có phép đo làm căn cứ. Theo B-14, ngưỡng nghiệm thu chỉ được
+chốt sau khi đo pilot trên phần cứng và mạng thật, với điều kiện đo ghi rõ (ảnh
+1280$\times$720 JPEG, mạng nội bộ, cache nguội/ấm, số người dùng đồng thời).
+Trước khi chốt, các yêu cầu có số đo ở trạng thái ``đề xuất''.
+
+\begin{xltabular}{\linewidth}{@{}L{1.6cm}L{2.6cm}Y L{2.6cm}@{}}
+\caption{Yêu cầu phi chức năng}\label{tab:nfr}\\
+\toprule
+\textbf{Mã} & \textbf{Nhóm} & \textbf{Yêu cầu} & \textbf{Cách kiểm}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Nhóm} & \textbf{Yêu cầu} & \textbf{Cách kiểm}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{NFR-01} & Hiệu năng UI & Mở frame kế tiếp trong Workspace (ảnh + annotation + issue): đề xuất p95 $\le$ 1{,}5 s, cache ấm (\TBD[-13]). & Đo log client trong pilot.\\
+\req{NFR-02} & Hiệu năng UI & Lưu quyết định review: đề xuất p95 $\le$ 500 ms (\TBD[-13]). & Đo log API trong pilot.\\
+\req{NFR-03} & Thông lượng & Thời gian QC Run cho 10.000 frame (CPU engine + Detector + xếp hạng) $\le$ \TBD[-13] trên phần cứng chốt ở \TBD[-02]. & Đo trên pilot.\\
+\req{NFR-04} & Tái lập & Cùng input, config, version, seed cho kết quả giống hệt (hash). Detector chạy chế độ suy luận tất định hoặc lưu prediction để tái dùng. & AC-01.\\
+\req{NFR-05} & Tin cậy & Shard lỗi được retry tối đa \TBD[-14] lần với backoff; lỗi còn lại ghi Failed cho đơn vị đó, không làm hỏng run; worker chết giữa chừng không mất kết quả đã commit. & Kiểm thử ép lỗi.\\
+\req{NFR-06} & Toàn vẹn & Blob (ảnh, crop evidence) được upload lên Object Storage \emph{trước}, với khoá theo hash nội dung (ghi lại là idempotent); sau đó metadata candidate, evidence, ledger của shard được commit trong một transaction PostgreSQL. Blob không có metadata trỏ tới sau \(t_{gc}\) được job dọn dẹp xoá. Quyết định và audit ghi trong một transaction. & Kiểm thử ngắt giữa upload và commit.\\
+\req{NFR-07} & Bảo mật & Token CVAT chỉ ở backend; HTTPS; mật khẩu/secret không xuất hiện trong log; phân quyền kiểm ở backend cho mọi endpoint. & Rà soát bảo mật, kiểm thử API.\\
+\req{NFR-08} & Kiểm toán, lưu trữ & Audit log append-only (không có API sửa/xoá). Audit, evidence, snapshot và reference được giữ chừng nào dataset còn cần quản lý hoặc đối chiếu; việc kết thúc lưu do người quản lý dữ liệu xác nhận và được ghi audit. Thời hạn tối thiểu \TBD[-15]. & Kiểm thử API, rà soát DB grant.\\
+\req{NFR-09} & Riêng tư dữ liệu & Ảnh BDD100K chỉ lưu trong Object Storage nội bộ; không gửi ảnh ra dịch vụ ngoài trong pilot. & Rà soát cấu hình.\\
+\req{NFR-10} & Khả dụng & Giao diện theo LabelX Design System: trung tính, table-first, trạng thái dùng nhãn chữ (không chỉ màu), tương phản WCAG AA. & Review UI.\\
+\req{NFR-11} & Khả dụng & Đề xuất: reviewer mới hoàn thành đúng quy trình một frame có 3 issue sau buổi làm quen (thời lượng \TBD[-11]). & Quan sát trong buổi làm quen (EX-08).\\
+\req{NFR-12} & Quan sát & Log có cấu trúc kèm run\_id, snapshot\_id, request\_id; metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi. & Kiểm tra dashboard vận hành.\\
+\req{NFR-13} & Khả năng mở rộng & Engine được đăng ký qua interface chung (input, output, trạng thái, ledger) để thêm engine (VLM, Classifier, temporal) mà không sửa luồng review. & Review kiến trúc.\\
+\req{NFR-14} & Tính đúng của số liệu & Mọi số liệu hiển thị có provenance truy về run, snapshot, version; không hiển thị số liệu không có nguồn. & AC-10.\\
+\req{NFR-15} & Đồng thời & Không có hai reviewer giữ cùng lease ở mọi mức tải; số reviewer đồng thời mục tiêu lấy từ kế hoạch pilot (đề xuất 10). & Kiểm thử tải.\\
+\req{NFR-16} & Sao lưu & Sao lưu PostgreSQL và Object Storage (bật versioning) theo cùng lịch; khôi phục được snapshot, ảnh, evidence, quyết định, reference, effort log nhất quán với nhau. RPO/RTO \TBD[-17]. & Diễn tập khôi phục.\\
+\end{xltabular}

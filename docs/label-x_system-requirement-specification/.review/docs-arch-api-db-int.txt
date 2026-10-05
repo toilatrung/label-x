@@ -1,0 +1,27 @@
+1. **Sai lệch SRS/quyết định chốt**
+   - `docs/05-database/schema.md:60`: lease UNIQUE theo `review_item`, trong khi item tách theo queue (`:59`); hai reviewer có thể giữ cùng frame qua queue risk/random, trái FR-REV-03.
+   - `docs/05-database/queries.md:173`: gate lấy **mọi snapshot của dataset**, gồm issue lịch sử; không lọc run cuối và scope, trái FR-GTE-01, FR-RWK-08.
+   - `docs/04-api/rest-api.md:186`: ngoài scope trả 404, nhưng SRS `09-interfaces.tex:160` quy định 403.
+   - `docs/04-api/event-contracts.md:33`: đổi snapshot sang `exporting` rồi enqueue; chết giữa hai bước khiến message giao lại bị guard `pending` bỏ qua. `:23` cũng chưa giải quyết tính nguyên tử giữa cờ DB và enqueue, nên chưa bảo đảm retry idempotent.
+   - Endpoint chính và ranh giới adapter chỉ đọc khớp SRS; không thấy writeback bị đưa vào MVP.
+
+2. **Mô tả sai hoặc vượt bằng chứng repo**
+   - `docs/05-database/migrations.md:20`: khẳng định CI chạy kiểm migration, nhưng không tìm thấy cấu hình CI thực hiện kiểm này.
+   - `docs/02-architecture/system-design.md:41`: Redis được mô tả làm cache; `src/backend/config/settings.py:128` chỉ cấu hình broker/result, chưa cấu hình cache.
+   - `docs/02-architecture/decisions.md:33`: “repository chưa có backend nào” là bối cảnh lịch sử DEC-001, sai nếu đọc như hiện trạng; repo đã có scaffold Django.
+
+3. **Mâu thuẫn giữa tài liệu**
+   - `docs/04-api/event-contracts.md:57`: hứa chỉ một run cuối đang chạy **mỗi scope**; `docs/05-database/schema.md:40` chỉ UNIQUE theo snapshot, không chặn hai snapshot cùng scope.
+   - `docs/04-api/event-contracts.md:56`: dùng bảng `verification_recheck` nhưng schema không định nghĩa.
+   - `docs/04-api/rest-api.md:50` bắt buộc Idempotency-Key; `:54` và `contract.md:47` vẫn gọi đây là đề xuất cần xác nhận.
+   - `docs/05-database/queries.md:57`: cho rằng kiểm lại khi lưu sẽ xử lý identity chưa map; chưa có cơ chế xác định self-review khi mapping vẫn thiếu.
+
+4. **TBD sai/thiếu**
+   - `docs/11-integrations/object-storage.md:62`, `docs/04-api/event-contracts.md:67`: nói `t_gc` chưa có mã; đúng là **TBD-20**.
+   - `docs/11-integrations/cvat.md:46`: làm tròn tọa độ phải truy vết TBD-20; timeout VLM tại `event-contracts.md:21` thuộc TBD-20, không phải TBD-13.
+   - `docs/02-architecture/system-design.md:204`: thiếu TBD-19 (policy waiver), TBD-20 và TBD-21 (Model Orchestrator); `:62` cũng bỏ trách nhiệm Orchestrator được SRS `10-architecture.tex:70` nêu.
+
+5. **Frontmatter/link/Mermaid**
+   - Không phát hiện link tương đối hỏng hoặc frontmatter thiếu trường.
+   - `docs/02-architecture/system-design.md:130`: Mermaid bỏ guard “không có quyết định đã lưu” của `lease_expired` (SRS `05-dynamics.tex:387`).
+   - `docs/02-architecture/diagrams/deployment.md:34`: sơ đồ production thiếu Next.js đã chốt trong DEC-001. Chưa kiểm render Mermaid.

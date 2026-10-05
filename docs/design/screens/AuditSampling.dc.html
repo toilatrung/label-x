@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Audit Sampling</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="calibration" active-item="audit" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Audit Sampling</h1>
+<p class="lx-lead">Hai luồng lấy mẫu độc lập: kiểm tra ngẫu nhiên để ước lượng chất lượng, lấy mẫu theo rủi ro để tìm lỗi. Không suy ra tỷ lệ lỗi toàn dataset từ mẫu theo rủi ro.</p>
+</div>
+<div class="lx-actions"><button class="lx-btn lx-btn--primary">Tạo mẫu mới</button></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isRandom}}" hint-placeholder-val="{{true}}">
+<div class="lx-card__body lx-grid lx-grid--4">
+<div class="lx-field"><span class="lx-label">Mã hạt giống (seed)</span><span class="lx-mono">20261004</span></div>
+<div class="lx-field"><span class="lx-label">Số frame</span><span>100 / 12,500</span></div>
+<div class="lx-field"><span class="lx-label">Cách chọn</span><span>Ngẫu nhiên đều, không phụ thuộc cảnh báo</span></div>
+<div class="lx-field"><span class="lx-label">Tỷ lệ lỗi còn sót</span><span class="is-warn" style="font-weight: 600">4.0% · 4 lỗi trong 100 frame</span></div>
+</div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Frame</th><th>Task · Job</th><th>Trạng thái review</th><th>Kết quả</th></tr></thead>
+<tbody>
+<tr><td class="lx-mono">Frame 01204</td><td class="lx-muted">T-119 · Job 2273</td><td><span class="lx-badge">Chờ review</span></td><td class="lx-subtle">—</td></tr>
+<tr><td class="lx-mono">Frame 01877</td><td class="lx-muted">T-119 · Job 2274</td><td><span class="lx-badge lx-badge--info">Đang review</span></td><td class="lx-subtle">—</td></tr>
+<tr><td class="lx-mono">Frame 02310</td><td class="lx-muted">T-120 · Job 2275</td><td><span class="lx-badge lx-badge--success">Đã review</span></td><td>Không có lỗi</td></tr>
+<tr><td class="lx-mono">Frame 02955</td><td class="lx-muted">T-120 · Job 2275</td><td><span class="lx-badge lx-badge--success">Đã review</span></td><td>1 lỗi · thiếu object</td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+
+<sc-if value="{{isRisk}}" hint-placeholder-val="{{false}}">
+<div class="lx-callout lx-callout--info" style="border-radius: 0"><span class="lx-callout__text" style="font-size: 13px">Mẫu theo rủi ro thiên lệch có chủ đích nên chỉ dùng để tìm lỗi nhanh hơn, không dùng để ước lượng chất lượng chung.</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Tiêu chí rủi ro</th><th class="r">Frame được chọn</th><th class="r">Lỗi đã xác nhận</th><th class="r">Tỷ lệ</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Mô hình bất đồng với annotation</td><td class="r">40</td><td class="r">17</td><td class="r">42.5%</td></tr>
+<tr><td class="lx-cell__main">Lớp khó (xe tải, xe buýt)</td><td class="r">25</td><td class="r">9</td><td class="r">36.0%</td></tr>
+<tr><td class="lx-cell__main">Vật thể nhỏ hoặc bị che</td><td class="r">20</td><td class="r">6</td><td class="r">30.0%</td></tr>
+<tr><td class="lx-cell__main">Camera / cảnh ban đêm</td><td class="r">15</td><td class="r">3</td><td class="r">20.0%</td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'random';
+    return {
+      isRandom: cur === 'random',
+      isRisk: cur === 'risk',
+      tabs: [['random','Kiểm tra ngẫu nhiên'],['risk','Lấy mẫu theo rủi ro']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

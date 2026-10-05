@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threat model LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/06-security/threat-model.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / threat-model</span><span class="sp"></span>
+<a href="threat-model.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>security-threat-model</span><b>title</b><span>Threat model LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[security, threat-model, stride, cvat, trust-boundary]</span><b>priority</b><span>2</span></div>
+<h1 id="threat-model-labelx">Threat model LabelX</h1>
+<h2 id="muc-ich-va-pham-vi">Mục đích và phạm vi</h2>
+<p>Tài liệu mô tả tài sản cần bảo vệ, ranh giới tin cậy và các mối đe doạ theo STRIDE của LabelX — module Quality Control chạy quanh CVAT — cùng biện pháp <strong>lấy từ quyết định đã chốt</strong>. Đây là threat model ở mức thiết kế cho MVP/pilot. Repo hiện mới có khung dự án (Django chưa có app nghiệp vụ, frontend mới có trang mặc định), nên mọi biện pháp dưới đây là <strong>yêu cầu phải hiện thực</strong>. Chúng chưa phải chức năng đã có.</p>
+<p>Nguồn:</p>
+<ul>
+<li><code>docs/00-project/sources/architecture_review.html</code> — phiếu chốt B-01…B-21, đặc biệt B-10, B-11, B-12, B-18 (gọi tắt <strong>R</strong>).</li>
+<li><code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code> — mục 14, 20.2 (ADR-01…07), 21, 28 (gọi tắt <strong>A</strong>).</li>
+<li><code>docs/00-project/sources/QC_Engine_Review_Report.html</code> — mục 6, độ tin cậy vận hành (gọi tắt <strong>T</strong>).</li>
+<li>SRS đã duyệt: <code>docs/label-x_system-requirement-specification/sections/06-functional.tex</code> (FR-SNP, FR-REV, FR-SEC, FR-GTE), <code>08-nonfunctional.tex</code> (NFR-05…09, NFR-16), <code>09-interfaces.tex</code>, <code>10-architecture.tex</code>.</li>
+<li>Cấu hình thật: <code>src/backend/config/settings.py</code>, <code>infrastructure/docker-compose.dev.yml</code>.</li>
+</ul>
+<h2 id="tai-san">Tài sản</h2>
+<table>
+<thead>
+<tr>
+<th>Tài sản</th>
+<th>Nơi lưu</th>
+<th>Vì sao quan trọng</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Token service account CVAT</td>
+<td>Backend (biến môi trường <code>CVAT_SERVICE_TOKEN</code>; production: secret store)</td>
+<td>Có token là đọc được toàn bộ project/job/ảnh trên CVAT</td>
+<td>FR-SNP-02, NFR-07, A mục 21</td>
+</tr>
+<tr>
+<td>Snapshot (annotation đã chuẩn hoá, hash SHA-256, assignee từng job, mapping frame)</td>
+<td>PostgreSQL + Object Storage</td>
+<td>Nền của tái lập (R-01) và kiểm self-review (assignee tại snapshot)</td>
+<td>FR-SNP-03…06</td>
+</tr>
+<tr>
+<td>Ảnh BDD100K và crop evidence</td>
+<td>Object Storage nội bộ</td>
+<td>Dữ liệu nguồn; không được gửi ra ngoài</td>
+<td>NFR-09, NFR-06</td>
+</tr>
+<tr>
+<td>Candidate, issue, decision, lease, effort log</td>
+<td>PostgreSQL</td>
+<td>Bằng chứng review và KPI</td>
+<td>FR-REV, FR-EVL-06</td>
+</tr>
+<tr>
+<td>Audit log</td>
+<td>PostgreSQL (append-only)</td>
+<td>Bằng chứng nghiệm thu R-05; không sửa ngược được</td>
+<td>FR-SEC-05, NFR-08, ADR-06</td>
+</tr>
+<tr>
+<td>Reference (Ground Truth) đã khoá, tập held-out</td>
+<td>PostgreSQL + Object Storage</td>
+<td>Rò rỉ hoặc sửa reference làm sai KPI</td>
+<td>FR-EVL, RK-02, RK-09</td>
+</tr>
+<tr>
+<td>Waiver, gate, báo cáo/manifest</td>
+<td>PostgreSQL + Object Storage</td>
+<td>Quyết định phát hành phụ thuộc vào đây</td>
+<td>FR-GTE-01…03, B-11</td>
+</tr>
+<tr>
+<td>Model artifact Detector (checksum, mapping lớp)</td>
+<td>Object Storage / GPU server</td>
+<td>Artifact bị thay thì candidate sai mà không ai biết</td>
+<td>FR-ENG-05, NFR-04</td>
+</tr>
+<tr>
+<td>Cấu hình engine, ngưỡng, policy version</td>
+<td>PostgreSQL</td>
+<td>Đổi ngưỡng sau khi thấy held-out là gian lận đo</td>
+<td>RK-09</td>
+</tr>
+<tr>
+<td><code>DJANGO_SECRET_KEY</code>, thông tin kết nối DB/Redis/S3</td>
+<td>Biến môi trường backend</td>
+<td>Lộ ra thì giả mạo được phiên đăng nhập hoặc truy cập thẳng kho dữ liệu</td>
+<td><code>src/backend/.env.example</code> (chỉ là mẫu)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ranh-gioi-tin-cay">Ranh giới tin cậy</h2>
+<p>Sơ đồ triển khai lấy từ SRS chương 10 (<code>10-architecture.tex</code>, hình deployment). Cấu hình phần cứng còn <strong>TBD-02</strong>.</p>
+<pre class="highlight"><code class="language-text">[Trình duyệt] --(TB-1) HTTPS + session--&gt; [App server: Gunicorn + Django/DRF, Celery CPU workers]
+     |                                                 |                    |
+     | (TB-3) deep link, mở thẳng CVAT                  | (TB-2) HTTPS,      | (TB-4) task qua Redis
+     v                                                 |  chỉ đọc            v
+[CVAT hiện có] &lt;---------------------------------------+          [GPU server: Celery GPU worker, Detector]
+                                                       |                    |
+                                     (TB-5, TB-6)      v                    v
+                                 [Data: PostgreSQL · Redis · Object Storage]</code></pre>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Ranh giới</th>
+<th>Bên ngoài → bên trong</th>
+<th>Giả định tin cậy</th>
+<th>Biện pháp chính</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TB-1</td>
+<td>Trình duyệt ↔ Django API</td>
+<td>Người dùng (Annotator, Reviewer, QA Lead, QC Admin, Super Admin)</td>
+<td><strong>Không tin</strong> mọi thứ từ client: ẩn nút trên UI chỉ để thuận tiện</td>
+<td>Backend kiểm quyền mọi request (FR-SEC-01, H WorkflowPermissions); session + CSRF (Django <code>SessionAuthentication</code>, <code>CsrfViewMiddleware</code> đã bật trong <code>settings.py</code>); HTTPS (NFR-07)</td>
+</tr>
+<tr>
+<td>TB-2</td>
+<td>Django/worker ↔ CVAT</td>
+<td>Hệ thống ngoài do đội khác vận hành</td>
+<td>Tin dữ liệu ở mức "nguồn annotation", không tin là bất biến</td>
+<td>Adapter <strong>chỉ đọc</strong> (B-18, FR-SNP-01); token chỉ ở backend (FR-SNP-02); kiểm drift trước khi khoá snapshot (FR-SNP-04); engine chỉ đọc snapshot đã export, không đọc CVAT live (ADR-02)</td>
+</tr>
+<tr>
+<td>TB-3</td>
+<td>Trình duyệt ↔ CVAT (deep link)</td>
+<td>Người dùng sang thẳng CVAT</td>
+<td>LabelX không kiểm được thao tác trong CVAT</td>
+<td>Sửa annotation chỉ trong CVAT bằng quyền CVAT của chính người dùng; LabelX phát hiện thay đổi qua hash revision và tạo snapshot mới (FR-SNP-06, B-03)</td>
+</tr>
+<tr>
+<td>TB-4</td>
+<td>App server ↔ GPU worker</td>
+<td>Máy riêng chạy Detector</td>
+<td>Tin ở mức worker nội bộ, nhưng kết quả phải truy được nguồn</td>
+<td>Kết quả gắn model name/version/checksum/mapping (09-interfaces, giao diện mô hình); GPU worker không gửi ảnh ra ngoài (NFR-09); worker chỉ ghi candidate/evidence (ADR-07)</td>
+</tr>
+<tr>
+<td>TB-5</td>
+<td>Ứng dụng ↔ Object Storage</td>
+<td>Kho S3-compatible hiện có</td>
+<td>Tin cậy nội bộ; dữ liệu đã ghi không được ghi đè</td>
+<td>Khoá blob theo hash nội dung, ghi lại là idempotent (NFR-06); <code>file_overwrite: False</code> trong <code>STORAGES</code> (settings.py); bật versioning khi sao lưu (NFR-16)</td>
+</tr>
+<tr>
+<td>TB-6</td>
+<td>Ứng dụng ↔ PostgreSQL / Redis</td>
+<td>Hạ tầng dữ liệu</td>
+<td>PostgreSQL là nguồn chuẩn; Redis chỉ là broker/cache</td>
+<td>Lease cấp bằng khoá dòng trong transaction PostgreSQL (SRS 10, tab:modules); decision và audit cùng transaction (NFR-06, ADR-04); <code>ATOMIC_REQUESTS = True</code> (settings.py)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="moi-e-doa-stride-va-bien-phap">Mối đe doạ STRIDE và biện pháp</h2>
+<p>Cột "Trạng thái" cho biết biện pháp đã có trong repo hay mới là yêu cầu. Hiện gần như toàn bộ là <strong>yêu cầu</strong>, vì chưa có module nghiệp vụ nào.</p>
+<h3 id="s-spoofing-gia-mao-danh-tinh">S — Spoofing (giả mạo danh tính)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S-1</td>
+<td>Người dùng mượn tài khoản thứ hai để tự duyệt waiver/reference/phân xử của chính mình</td>
+<td>Người duyệt khác người yêu cầu; cấm dùng tài khoản khác của cùng người. Nếu chưa có người khác đủ quyền thì phải chờ</td>
+<td>FR-SEC-04; R phiếu chốt B-11, B-20</td>
+<td>Yêu cầu. Kiểm "cùng một người" cần identity mapping (S-2) và quy trình cấp tài khoản; kỹ thuật thuần không chặn được hết</td>
+</tr>
+<tr>
+<td>S-2</td>
+<td>Reviewer review chính annotation của mình bằng cách dùng tài khoản LabelX khác tên CVAT</td>
+<td>Lưu identity mapping LabelX ↔ CVAT; kiểm self-review theo <strong>assignee của job tại snapshot</strong></td>
+<td>FR-SEC-02, FR-SEC-03; A mục 21</td>
+<td>Yêu cầu</td>
+</tr>
+<tr>
+<td>S-3</td>
+<td>Đánh cắp session cookie / CSRF</td>
+<td>Session auth + CSRF middleware (đã có); HTTPS bắt buộc (NFR-07); cookie <code>Secure</code> ở production</td>
+<td>settings.py; NFR-07</td>
+<td>Một phần: session/CSRF đã bật, cấu hình HTTPS/<code>SECURE_*</code> <strong>chưa có</strong> (đề xuất, xem <a href="security-policies.html">security-policies.md</a>)</td>
+</tr>
+<tr>
+<td>S-4</td>
+<td>Worker hoặc service account AI giả làm người ra quyết định</td>
+<td>Service account AI/worker chỉ được ghi Candidate/Evidence, không có quyền decision/gate/release</td>
+<td>ADR-07; A mục 28</td>
+<td>Yêu cầu</td>
+</tr>
+</tbody>
+</table>
+<h3 id="t-tampering-sua-trai-phep">T — Tampering (sửa trái phép)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-1</td>
+<td>LabelX ghi đè annotation trên CVAT (nhánh writeback trong T)</td>
+<td><strong>Không có đường gọi tạo/sửa/xoá annotation trên CVAT</strong>; sửa bằng deep link. Service account CVAT nên chỉ có quyền đọc</td>
+<td>B-18 (chặn); FR-SNP-01; <code>.env.example</code> ghi "service account CHỈ ĐỌC"</td>
+<td>Yêu cầu; quyền token thật còn <strong>TBD-01</strong></td>
+</tr>
+<tr>
+<td>T-2</td>
+<td>Annotation trên CVAT đổi giữa lúc export làm snapshot không nhất quán</td>
+<td>Export từng job, chuẩn hoá, hash; đọc lại trước khi khoá; drift thì không khoá</td>
+<td>B-02; FR-SNP-03, FR-SNP-04; RK-06</td>
+<td>Yêu cầu</td>
+</tr>
+<tr>
+<td>T-3</td>
+<td>Sửa hoặc xoá audit log để che quyết định</td>
+<td>Append-only: không có API sửa/xoá, không cấp quyền UPDATE/DELETE ở DB; tuỳ chọn nối hash chain</td>
+<td>FR-SEC-05, NFR-08, ADR-06</td>
+<td>Yêu cầu; hash chain là <strong>đề xuất</strong> (A ghi "có thể")</td>
+</tr>
+<tr>
+<td>T-4</td>
+<td>Ghi đè blob evidence/snapshot/báo cáo trên Object Storage</td>
+<td>Khoá theo hash nội dung; <code>file_overwrite: False</code>; versioning bucket</td>
+<td>NFR-06, NFR-16; settings.py</td>
+<td>Một phần: <code>file_overwrite: False</code> đã có</td>
+</tr>
+<tr>
+<td>T-5</td>
+<td>Thay model artifact Detector</td>
+<td>Freeze artifact + checksum + mapping lớp, ghi vào QC Run</td>
+<td>FR-ENG-01, FR-ENG-05</td>
+<td>Yêu cầu</td>
+</tr>
+<tr>
+<td>T-6</td>
+<td>Đổi ngưỡng/tham số sau khi thấy kết quả held-out</td>
+<td>Pre-registration; audit mọi thay đổi version</td>
+<td>RK-09</td>
+<td>Yêu cầu</td>
+</tr>
+<tr>
+<td>T-7</td>
+<td>Client gửi quyết định cho frame có lease đã hết hạn hoặc thuộc người khác</td>
+<td>Backend trả 409; lease là khoá dòng PostgreSQL</td>
+<td>FR-REV-14; SRS 10</td>
+<td>Yêu cầu</td>
+</tr>
+</tbody>
+</table>
+<h3 id="r-repudiation-choi-bo-hanh-vi">R — Repudiation (chối bỏ hành vi)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R-1</td>
+<td>Người duyệt chối đã duyệt waiver/phát hành</td>
+<td>AuditEvent ghi actor, hành động, đối tượng, trước/sau, revision, lý do; cùng transaction với thao tác</td>
+<td>FR-SEC-05; B-12</td>
+</tr>
+<tr>
+<td>R-2</td>
+<td>Super Admin dùng quyền ghi đè mà không ai biết</td>
+<td>Bắt buộc lý do, gắn nhãn Super Admin trong audit</td>
+<td>FR-SEC-06; H WorkflowPermissions</td>
+</tr>
+<tr>
+<td>R-3</td>
+<td>Thao tác bị từ chối (403/409) không để lại dấu vết</td>
+<td>Lỗi 403/409 được ghi audit; mọi phản hồi lỗi có <code>request_id</code></td>
+<td>09-interfaces, hợp đồng lỗi</td>
+</tr>
+</tbody>
+</table>
+<h3 id="i-information-disclosure-lo-thong-tin">I — Information disclosure (lộ thông tin)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I-1</td>
+<td>Token CVAT lộ xuống trình duyệt hoặc vào log</td>
+<td>Token chỉ ở backend; secret không xuất hiện trong log</td>
+<td>FR-SNP-02, NFR-07</td>
+</tr>
+<tr>
+<td>I-2</td>
+<td>Ảnh BDD100K (có thể có mặt người, biển số) bị gửi ra dịch vụ ngoài (VLM/API)</td>
+<td>Pilot: không gửi ảnh ra ngoài; Detector chạy GPU worker nội bộ; VLM đề xuất không bật (TBD-08)</td>
+<td>NFR-09; FR-ENG-10; A mục 28</td>
+</tr>
+<tr>
+<td>I-3</td>
+<td>Người dùng xem dataset/job ngoài scope được giao</td>
+<td>RBAC theo vai trò <strong>và</strong> scope dataset, kiểm ở backend</td>
+<td>FR-SEC-01; A mục 28</td>
+</tr>
+<tr>
+<td>I-4</td>
+<td>Reviewer ở nhánh baseline thấy ranking/evidence làm hỏng thí nghiệm effort</td>
+<td>Workspace nhánh baseline ẩn ranking, risk score, evidence</td>
+<td>FR-EVL-12</td>
+</tr>
+<tr>
+<td>I-5</td>
+<td>Tập held-out lọt vào dữ liệu huấn luyện Detector</td>
+<td>Chọn held-out từ phần chắc chắn không dùng huấn luyện</td>
+<td>AS-03, RK-02, FR-EVL-05(b)</td>
+</tr>
+<tr>
+<td>I-6</td>
+<td>OpenAPI schema/Swagger (<code>/api/schema/</code>, <code>/api/docs/</code>) mở công khai ở production</td>
+<td>Đề xuất: giới hạn quyền xem schema ở production (settings hiện chưa đặt <code>SERVE_PERMISSIONS</code>)</td>
+<td><code>src/backend/config/urls.py</code>; <strong>đề xuất</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="d-denial-of-service-tu-choi-dich-vu">D — Denial of service (từ chối dịch vụ)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D-1</td>
+<td>Một shard lỗi làm hỏng cả run</td>
+<td>Retry có giới hạn với backoff; phần còn lại ghi Failed cho đơn vị đó; worker chết không mất kết quả đã commit</td>
+<td>NFR-05 (số lần <strong>TBD-14</strong>); <code>CELERY_TASK_ACKS_LATE</code>, <code>CELERY_TASK_REJECT_ON_WORKER_LOST</code> trong settings.py</td>
+</tr>
+<tr>
+<td>D-2</td>
+<td>Retry tạo issue trùng, làm phình hàng đợi</td>
+<td>Task idempotent theo khoá (run, engine, shard); dedup theo scope/object/family và version policy</td>
+<td>B-10; A mục 20.3; T mục 6</td>
+</tr>
+<tr>
+<td>D-3</td>
+<td>Kiểm thị giác – ngôn ngữ (nếu bật) gọi vô hạn</td>
+<td>Tối đa 400 candidate mỗi run; tối đa 3 lần thử mỗi lượt kiểm; hết hạn mức thì ghi phần chưa kiểm</td>
+<td>B-08; FR-ENG-10</td>
+</tr>
+<tr>
+<td>D-4</td>
+<td>Redis mất dữ liệu làm mất event quyết định</td>
+<td>Redis chỉ là broker/cache; quyết định và audit nằm trong PostgreSQL (transactional outbox)</td>
+<td>ADR-04; SRS 10</td>
+</tr>
+<tr>
+<td>D-5</td>
+<td>CVAT chậm/không truy cập được làm treo snapshot</td>
+<td>Timeout riêng cho đọc CVAT (chưa đặt số khi chưa đo); snapshot không khoá được thì báo lỗi, không khoá dở</td>
+<td>R phiếu chốt B-10; FR-SNP-04</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e-elevation-of-privilege-leo-thang-quyen">E — Elevation of privilege (leo thang quyền)</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mối đe doạ</th>
+<th>Biện pháp</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-1</td>
+<td>Gọi API trực tiếp (bỏ qua UI) để làm việc của vai trò khác</td>
+<td><code>IsAuthenticated</code> mặc định (đã có trong <code>REST_FRAMEWORK</code>); permission theo vai trò + scope ở từng endpoint</td>
+<td>settings.py; FR-SEC-01</td>
+</tr>
+<tr>
+<td>E-2</td>
+<td>Super Admin tự duyệt yêu cầu của chính mình</td>
+<td>Super Admin <strong>không</strong> là người duyệt mặc định; vẫn chịu self-review và tách nhiệm vụ</td>
+<td>B-12 (phiếu chốt); FR-SEC-06</td>
+</tr>
+<tr>
+<td>E-3</td>
+<td>Waiver tự có hiệu lực hoặc biến Not checked thành pass</td>
+<td>Waiver chỉ hiệu lực sau khi duyệt; hết hạn thì điều kiện trở lại chưa đạt; không tự biến Not checked thành pass</td>
+<td>B-11; FR-GTE-02, FR-GTE-03</td>
+</tr>
+<tr>
+<td>E-4</td>
+<td>Mở frame bằng URL để né kiểm self-review</td>
+<td>Backend từ chối (403) kể cả khi mở frame trực tiếp bằng URL</td>
+<td>FR-REV-14</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rui-ro-con-lai-va-viec-mo">Rủi ro còn lại và việc mở</h2>
+<ul>
+<li><strong>TBD-01</strong>: phiên bản CVAT, URL, quyền thật của token. Chưa kiểm được token có thật sự chỉ đọc hay không.</li>
+<li><strong>TBD-02</strong>: phần cứng app server/GPU server, nên chưa vẽ được vùng mạng chi tiết.</li>
+<li><strong>TBD-15</strong>: thời hạn lưu audit tối thiểu. <strong>TBD-17</strong>: RPO/RTO sao lưu.</li>
+<li>Cơ chế phát hiện drift: A đề xuất webhook <code>update:job</code> có chữ ký, T cho polling có checkpoint làm dự phòng, SRS chỉ yêu cầu đọc lại trước khi khoá (FR-SNP-04). <code>scripts/init-develop-environment.mk</code> ghi <code>dev-beat</code> là "lịch polling CVAT". Phải chốt khi có TBD-01; nếu dùng webhook thì phải xác minh chữ ký.</li>
+<li>Xác thực: A đề xuất SSO OIDC dùng chung với CVAT, còn SRS (09-interfaces) và <code>settings.py</code> dùng phiên đăng nhập LabelX. Tài liệu này theo SRS; OIDC là phương án sau, chưa chốt.</li>
+</ul>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="security-policies.html">security-policies.md</a> — chính sách cụ thể (RBAC, tách nhiệm vụ, audit, lưu trữ).</li>
+<li><a href="compliance.html">compliance.md</a> — dữ liệu BDD100K, riêng tư dữ liệu.</li>
+<li><a href="../13-observability/logging.html">../13-observability/logging.md</a> — quy tắc log không chứa secret.</li>
+</ul>
+</article></main></body></html>

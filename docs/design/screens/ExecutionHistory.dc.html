@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Execution History</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="analysis" active-item="history" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="analysis" step="history" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Execution History</h1>
+<p class="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p>
+</div>
+<div class="lx-actions"><a class="lx-btn lx-btn--primary" href="AnalysisConfig.dc.html">Chạy phân tích mới</a></div>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Các lần chạy</h2><span class="lx-hint">Road Vision Urban · v1.4</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 560px">
+<thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th class="r">Coverage</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr aria-selected="true"><td class="lx-mono">#QC-091</td><td class="lx-mono">SNP-014</td><td class="lx-muted">2026-10-04 06:58</td><td class="r">92.4%</td><td><span class="lx-badge lx-badge--warning">Partial</span></td></tr>
+<tr><td class="lx-mono">#QC-088</td><td class="lx-mono">SNP-013</td><td class="lx-muted">2026-10-02 17:30</td><td class="r">95.1%</td><td><span class="lx-badge lx-badge--success">Checked</span></td></tr>
+<tr><td class="lx-mono">#QC-083</td><td class="lx-mono">SNP-013</td><td class="lx-muted">2026-10-01 09:12</td><td class="r">41.0%</td><td><span class="lx-badge lx-badge--danger">Failed</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card lx-side" style="flex-basis: 480px">
+<div class="lx-card__head"><h2 class="lx-h2">Chi tiết <span class="lx-mono">#QC-091</span></h2><span class="lx-hint">Thời gian chạy 2 giờ 31 phút</span></div>
+<div class="lx-card__body lx-stack" style="gap: 14px">
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Schema / Taxonomy</span><span class="lx-badge lx-badge--success">Checked</span></div><div class="lx-progress"><i style="width: 100%"></i></div></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Geometry</span><span class="lx-badge lx-badge--info">Issue found</span></div><div class="lx-progress"><i style="width: 98%"></i></div></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Duplicate / Overlap</span><span class="lx-badge lx-badge--info">Issue found</span></div><div class="lx-progress"><i style="width: 98%"></i></div></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Mô hình độc lập</span><span class="lx-badge lx-badge--warning">Partial</span></div><div class="lx-progress lx-progress--warn"><i style="width: 87%"></i></div><span class="lx-hint">Job 2273, 2274 chưa chạy hết</span></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Mô hình thị giác – ngôn ngữ</span><span class="lx-badge lx-badge--danger">Failed</span></div><div class="lx-progress"><i style="width: 0%"></i></div><span class="lx-hint">Hết thời gian chờ sau 3 lần thử</span></div>
+<div class="lx-row" style="justify-content: space-between"><span>Metric</span><span class="lx-badge">Not checked</span></div>
+<div class="lx-callout lx-callout--info"><span class="lx-callout__text" style="font-size: 13px">Candidate: 512 bản ghi thô → 384 sau khi gộp trùng, đã đưa vào Review Center.</span></div>
+<div class="lx-actions"><button class="lx-btn">Chạy lại engine lỗi</button><a class="lx-btn lx-btn--primary" href="ReviewQueues.dc.html">Mở Review Queues →</a></div>
+</div>
+</section>
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

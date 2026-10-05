@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detector baseline (engine Mô hình độc lập) — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/12-ai/detector.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / detector</span><span class="sp"></span>
+<a href="detector.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>ai-detector</span><b>title</b><span>Detector baseline (engine Mô hình độc lập)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, detector, model, bdd100k]</span><b>priority</b><span>1</span></div>
+<h1 id="detector-baseline-engine-mo-hinh-oc-lap">Detector baseline (engine Mô hình độc lập)</h1>
+<p>Engine "Mô hình độc lập" của MVP dùng <strong>một Detector baseline</strong> để sinh candidate E1 (thiếu box) và E2 (sai lớp). Classifier thứ hai chưa bật mặc định (nguồn: R B-07; SRS FR-ENG-05).</p>
+<p>Nguồn: <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (B-05, B-07, B-21, cấu hình MVP "Model artifact/class mapping"); SRS <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>, <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a>, <a href="../label-x_system-requirement-specification/sections/09-interfaces.tex">09-interfaces.tex</a> §Giao diện mô hình, <a href="../label-x_system-requirement-specification/sections/02-overview.tex">02-overview.tex</a> AS-02/AS-03.</p>
+<h2 id="1-vai-tro-va-gioi-han">1. Vai trò và giới hạn</h2>
+<ul>
+<li>Detector là <strong>nguồn candidate</strong>, không phải Ground Truth và không phải trọng tài (R B-05; SRS BR-17).</li>
+<li>Confidence của Detector không phải xác suất annotation sai và không phải độ chính xác (R B-07; SRS 06 <code>score_v0</code>).</li>
+<li>Candidate từ Detector luôn cần người review quyết định (R R-02).</li>
+<li>Agreement Detector–annotation không gọi là Precision/Recall (R B-21).</li>
+</ul>
+<h2 id="2-artifact-va-freeze">2. Artifact và freeze</h2>
+<p>Trước khi chạy pilot/held-out, Detector phải được freeze và ghi vào QC Run (FR-ENG-01, FR-ENG-05; SRS 07 bảng khoá trước khi đo):</p>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Yêu cầu</th>
+<th>Người khoá</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Artifact</td>
+<td>Tên model, version, file/endpoint cố định</td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td>Checksum</td>
+<td>Checksum artifact, lưu trong mỗi QC Run</td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td>Mapping lớp</td>
+<td>Bảng lớp model → 10 lớp BDD100K, có version</td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td>Transform toạ độ</td>
+<td>Toạ độ pixel ảnh gốc <code>(x1, y1, x2, y2)</code></td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td><code>τ_conf</code></td>
+<td>Lọc dự đoán trước matching; chọn trên tập hiệu chỉnh</td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td>Không leakage</td>
+<td>Xác nhận không huấn luyện trên ảnh held-out</td>
+<td>Data/Model Owner</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Chưa có</strong>: artifact/endpoint thực. Model nào, phiên bản nào: chưa chốt (R mục 10 "Đã chốt cấu hình, còn đầu vào thực"). Phần cứng GPU: <strong>TBD-02</strong>.</p>
+<blockquote>
+<p>Mâu thuẫn nguồn: H (AnalysisConfig, ModelsGuidelines) ghi "Detector v2.3 · ngưỡng 0.60 · Taxonomy v3 · 12 lớp". R nói không sao chép giá trị model demo và không coi 12 lớp là dữ liệu thật. Xử lý: dùng 10 lớp BDD100K của SRS; ngưỡng hiệu chỉnh từ tập hiệu chỉnh, không dùng 0.60.</p>
+</blockquote>
+<h2 id="3-mapping-10-lop-bdd100k">3. Mapping 10 lớp BDD100K</h2>
+<table>
+<thead>
+<tr>
+<th>Lớp đích</th>
+<th>Ghi chú review</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>car</code></td>
+<td>Đa số; hay nhầm với <code>truck</code></td>
+</tr>
+<tr>
+<td><code>truck</code></td>
+<td>Dễ nhầm <code>car</code>, <code>bus</code></td>
+</tr>
+<tr>
+<td><code>bus</code></td>
+<td>Xe buýt mini cần guideline rõ</td>
+</tr>
+<tr>
+<td><code>train</code></td>
+<td>Hiếm; khoảng tin cậy recall theo lớp rộng</td>
+</tr>
+<tr>
+<td><code>motorcycle</code></td>
+<td>Phân biệt với <code>bicycle</code>; người lái là <code>rider</code></td>
+</tr>
+<tr>
+<td><code>bicycle</code></td>
+<td>Như trên</td>
+</tr>
+<tr>
+<td><code>pedestrian</code></td>
+<td>Người đi bộ</td>
+</tr>
+<tr>
+<td><code>rider</code></td>
+<td>Dễ nhầm <code>pedestrian</code></td>
+</tr>
+<tr>
+<td><code>traffic light</code></td>
+<td>Nhỏ; màu đèn ngoài phạm vi kiểm</td>
+</tr>
+<tr>
+<td><code>traffic sign</code></td>
+<td>Nhỏ, dễ bỏ sót</td>
+</tr>
+</tbody>
+</table>
+<p>(Nguồn: SRS 03 bảng lớp.) Quy tắc mapping:</p>
+<ul>
+<li>Lớp model không ánh xạ được ⇒ dự đoán bị loại khỏi candidate và ledger ghi thiếu coverage; không tự suy tên lớp (R cấu hình MVP).</li>
+<li>Mapping là một phần của version Detector; đổi mapping ⇒ version mới.</li>
+</ul>
+<h2 id="4-giao-dien-suy-luan">4. Giao diện suy luận</h2>
+<ul>
+<li><strong>Đầu vào</strong>: lô ảnh (URI Object Storage), kích thước ảnh.</li>
+<li><strong>Đầu ra</strong>: danh sách <code>(x1, y1, x2, y2, lớp, confidence)</code> theo pixel gốc, lớp đã ánh xạ.</li>
+<li><strong>Metadata bắt buộc</strong>: model name, version, checksum artifact, mapping lớp version, thiết bị, batch size, thời gian suy luận.</li>
+<li>Chạy trong GPU worker nội bộ (Celery, hàng đợi riêng); không gửi ảnh ra ngoài (NFR-09).</li>
+</ul>
+<p>(Nguồn: SRS 09 §Giao diện mô hình; SRS 10.)</p>
+<h2 id="5-tu-du-oan-toi-candidate">5. Từ dự đoán tới candidate</h2>
+<ol>
+<li>Lọc dự đoán theo <code>τ_conf</code>.</li>
+<li>Matching một-một không phụ thuộc lớp với annotation (xem <a href="../03-domain/services.html#1-matchingservice">../03-domain/services.md §1</a>).</li>
+<li>Dự đoán không ghép, confidence ≥ <code>τ_E1</code> ⇒ candidate E1; cặp ghép khác lớp, confidence lớp dự đoán ≥ <code>τ_E2</code> ⇒ candidate E2 (FR-ENG-07).</li>
+<li>Evidence: box/lớp dự đoán, confidence, IoU, cặp ambiguous, crop, rule liên quan (FR-ENG-08).</li>
+</ol>
+<p><code>τ_m</code>, <code>τ_amb</code>: <strong>TBD-05</strong>. <code>τ_E1</code>, <code>τ_E2</code>: chọn trên tập hiệu chỉnh, khoá trong score version (SRS 07).</p>
+<h2 id="6-trang-thai-va-coverage">6. Trạng thái và coverage</h2>
+<ul>
+<li>Đơn vị coverage: frame (R cấu hình MVP).</li>
+<li>Không có Detector khả dụng ⇒ Not checked (<code>no_model</code>), không sinh ranking giả (FR-ENG-09).</li>
+<li>Lỗi trên một số frame ⇒ retry tối đa theo cấu hình (<strong>TBD-14</strong>); còn lỗi ⇒ frame Failed cho engine này, run Partial (UC-02 4a).</li>
+<li>Tái lập: chế độ suy luận tất định hoặc lưu prediction để tái dùng (NFR-04).</li>
+</ul>
+<h2 id="7-chong-leakage-as-03">7. Chống leakage (AS-03)</h2>
+<ul>
+<li><strong>Giả định AS-03</strong>: Detector không được huấn luyện trên ảnh của tập held-out. Nếu sai, recall bị thổi phồng, kết quả không hợp lệ (SRS 02; rủi ro RK-02).</li>
+<li><strong>Kiểm tra bắt buộc</strong> (FR-EVL-05b): đối chiếu danh sách ảnh huấn luyện của Detector với held-out; có giao nhau thì <strong>chặn</strong> đánh giá. Kết quả kiểm lưu cùng evaluation run.</li>
+<li>Nếu không có danh sách ảnh huấn luyện của model, coi như không chứng minh được AS-03: chọn held-out từ phần chắc chắn không dùng huấn luyện (RK-02). Phần nào của BDD100K được dùng: <strong>TBD-03</strong>.</li>
+<li>Tập hiệu chỉnh và held-out tách theo video nguồn (FR-EVL-05a).</li>
+</ul>
+<h2 id="8-anh-gia-detector-metric-engine">8. Đánh giá Detector (Metric engine)</h2>
+<ul>
+<li>Precision/Recall của Detector theo lớp chỉ tính trên GT đã khoá; thiếu GT ⇒ Metric Not checked (FR-EVL-15; R B-05).</li>
+<li>Lớp không đủ mẫu ghi "không đủ mẫu" (H Calibration "Không đủ mẫu để đánh giá").</li>
+<li>Hiệu chỉnh mô hình tách khỏi hiệu chỉnh reviewer (H Calibration).</li>
+<li>Xem <a href="evaluation.html">evaluation.md</a>.</li>
+</ul>
+<h2 id="9-ngoai-pham-vi-mvp">9. Ngoài phạm vi MVP</h2>
+<ul>
+<li>Classifier thứ hai / Specialized Classifier, vehicle profile (R B-07, B-16).</li>
+<li>M1 pre-label và Diff (R B-16).</li>
+<li>Đổi Detector khác sau pilot chỉ khi held-out/audit chỉ ra slice thiếu recall (SRS RK-01; T §8).</li>
+</ul>
+</article></main></body></html>

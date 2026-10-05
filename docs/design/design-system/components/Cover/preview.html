@@ -1,0 +1,59 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>LabelX</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--canvas); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .deep { fill:var(--primary); }
+  .tint { fill:var(--neutral-soft); }
+  .line { fill:var(--border-strong); }
+  .brand { fill:var(--brand); }
+  .cell { fill:var(--surface); }
+  .blk { rx:0; }
+  .bar { rx:var(--radius-sm); }
+  .words { position:absolute; left:var(--space-6); bottom:var(--space-6); max-width:440px; }
+  .name { margin:0; font-size:112px; line-height:.9; font-weight:600; letter-spacing:-.03em; color:var(--ink); }
+  .name b { color:var(--brand); font-weight:800; }
+  .tag { margin:var(--space-2) 0 0 4px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      primary 224×232 slab bleeding off the top (the graphite action colour) · neutral-soft 208×128 tint · brand 48×48 once (the X of the wordmark, kept small) · ≈35% of 960×288
+  arrangement one tall graphite slab with a table-like tint block beside it, bottoms aligned space-6 above the edge, space-4 gutter
+  pattern     table rows, from "table-first, borders not shadows": surface cells and space-2-tall bars cut into the slab and tint at a space-6 pitch, like rows of a DataTable
+  scales      sides in space-2 multiples; gutter space-4; row pitch space-6; corners radius-lg on blocks, radius-sm on bars
+-->
+<rect class="deep blk" x="16" y="-24" width="224" height="288" rx="0"/>
+<rect class="cell bar" x="40" y="144" width="96" height="8" rx="4"/>
+<rect class="cell bar" x="152" y="144" width="64" height="8" rx="4"/>
+<rect class="cell bar" x="40" y="168" width="128" height="8" rx="4"/>
+<rect class="cell bar" x="184" y="168" width="32" height="8" rx="4"/>
+<rect class="cell bar" x="40" y="192" width="80" height="8" rx="4"/>
+<rect class="cell bar" x="136" y="192" width="80" height="8" rx="4"/>
+<rect class="cell bar" x="40" y="216" width="112" height="8" rx="4"/>
+<rect class="cell bar" x="168" y="216" width="48" height="8" rx="4"/>
+<rect class="tint blk" x="256" y="136" width="208" height="128" rx="0"/>
+<rect class="line bar" x="272" y="160" width="120" height="8" rx="4"/>
+<rect class="line bar" x="272" y="184" width="88" height="8" rx="4"/>
+<rect class="line bar" x="272" y="208" width="136" height="8" rx="4"/>
+<rect class="line bar" x="272" y="232" width="64" height="8" rx="4"/>
+<rect class="brand blk" x="256" y="72" width="48" height="48" rx="0"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Label<b>X</b></h1>
+<p class="tag">Quality Control quanh CVAT — trung tính, dạng bảng, màu chỉ dành cho trạng thái.</p>
+</div>
+</div>
+</body>
+</html>

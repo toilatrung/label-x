@@ -1,0 +1,286 @@
+% =====================================================================
+\chapter{Phương pháp đo và tiêu chí nghiệm thu}
+\label{ch:eval}
+% =====================================================================
+
+Chương này cố định cách đo hai kết quả chính. Mọi tham số đánh dấu \TBD{} phải
+được chốt và khoá \emph{trước} khi chạy trên tập held-out (mục~\ref{sec:prereg}).
+
+% ---------------------------------------------------------------------
+\section{KPI-1 · Recall lỗi trong top 20\% frame}
+\label{sec:kpi1}
+
+\subsection{Định nghĩa}
+Với snapshot held-out có \(N\) frame, tập lỗi reference \(\mathcal{E}\) (chỉ E1–E3,
+đã loại ignore theo BR-07), ranking \(\pi\) do score version đã khoá sinh ra:
+\[
+  n_{20} = \lceil 0{,}2\,N \rceil, \qquad
+  \mathrm{Recall@20\%} = \frac{\bigl|\{e \in \mathcal{E} : \mathrm{rank}_\pi(\phi(e)) \le n_{20}\}\bigr|}{|\mathcal{E}|}.
+\]
+
+\begin{itemize}
+  \item \textbf{Đơn vị đếm:} lỗi (BR-01), không phải frame.
+  \item \textbf{Làm tròn:} lấy trần \(\lceil 0{,}2N \rceil\).
+  \item \textbf{Hoà điểm:} phá hoà tất định (FR-RNK-04); không chọn thứ tự có lợi.
+  \item \textbf{Điều kiện tính:} \(|\mathcal{E}| \ge E_{min}\) (\TBD[-K4]); dưới
+        ngưỡng ghi ``không đủ mẫu''.
+  \item \textbf{Ý nghĩa:} KPI-1 đo \emph{khả năng xếp hạng} của công cụ, độc lập
+        với việc reviewer có thực sự tìm thấy lỗi. Hiệu quả phát hiện thực tế đo
+        bằng KPI-2b trong thí nghiệm effort.
+\end{itemize}
+
+\subsection{Đối chứng}
+\begin{xltabular}{\linewidth}{@{}L{3.4cm}Y@{}}
+\caption{Ranking đối chứng cho KPI-1}\label{tab:baselines1}\\
+\toprule
+\textbf{Đối chứng} & \textbf{Cách tạo và ý nghĩa}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Đối chứng} & \textbf{Cách tạo}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Ngẫu nhiên & Hoán vị ngẫu nhiên đều, \(S \ge 1000\) seed. Kỳ vọng xấp xỉ \(n_{20}/N \approx 20\%\); báo cáo trung bình và phân vị 2{,}5\%–97{,}5\%, không dùng con số 20\% cố định.\\
+Heuristic mật độ & Sắp theo số annotation trong frame giảm dần. Kiểm tra công cụ có tốt hơn quy tắc ``frame đông thì nhiều lỗi''.\\
+Heuristic Detector & Sắp theo confidence lớn nhất của candidate E1/E2 trong frame (không cộng điểm nền, khác \code{score\_v0}). Kiểm tra giá trị của hiệu chỉnh và gộp nhiều nguồn.\\
+Oracle (tham khảo) & Sắp theo số lỗi thật trong frame; cho biết cận trên Recall@20\% có thể đạt.\\
+\end{xltabular}
+
+\subsection{Khoảng tin cậy và tiêu chí đạt}
+\begin{itemize}
+  \item Khoảng tin cậy 95\% bằng \emph{cluster bootstrap} theo video nguồn
+        (\(B \ge 1000\), seed khoá trước), vì các frame cùng video tương quan.
+        Mỗi lần lặp: lấy lại có hoàn lại toàn bộ video; frame của video lặp lại
+        được nhân bản với khoá phá hoà riêng; tính lại \(N\), \(n_{20}\), sắp lại
+        theo \(s(f)\) đã có (không học lại điểm) và tính lại các ranking đối chứng
+        trên mẫu đó. Recall của ranking ngẫu nhiên lấy theo kỳ vọng \(n_{20}/N\)
+        của từng mẫu.
+  \item Tính hiệu số \(\Delta = \mathrm{Recall@20\%}_{\pi} - \mathrm{Recall@20\%}_{\text{đối chứng}}\)
+        trên cùng mẫu bootstrap.
+  \item \textbf{Đạt KPI-1} khi đồng thời: (i) cận dưới khoảng tin cậy của
+        Recall@20\% $\ge$ ngưỡng \TBD[-K1]; (ii) cận dưới khoảng tin cậy của
+        \(\Delta\) so với ngẫu nhiên và với heuristic mật độ đều \(> 0\).
+  \item Báo cáo thêm theo nhóm lỗi E1/E2/E3 và theo slice; nhóm có ít hơn
+        \(E_{min,g}\) lỗi chỉ báo cáo, không kết luận.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\linewidth, height=6.2cm,
+  xlabel={\sffamily\small Tỉ lệ frame đã review theo ranking (\%)},
+  ylabel={\sffamily\small Tỉ lệ lỗi reference nằm trong phần đã review (\%)},
+  xmin=0, xmax=100, ymin=0, ymax=100,
+  xtick={0,20,40,60,80,100}, ytick={0,20,40,60,80,100},
+  grid=major, grid style={lxline},
+  legend style={font=\sffamily\scriptsize, at={(0.98,0.03)}, anchor=south east},
+  tick label style={font=\sffamily\scriptsize},
+]
+\addplot[lxgray, thick, dashed] coordinates {(0,0) (100,100)};
+\addlegendentry{Ngẫu nhiên (kỳ vọng)}
+\addplot[lxamber, thick] coordinates {(0,0) (10,17) (20,31) (40,52) (60,70) (80,86) (100,100)};
+\addlegendentry{Heuristic mật độ (minh hoạ)}
+\addplot[lxblue, very thick] coordinates {(0,0) (5,24) (10,40) (20,62) (40,82) (60,92) (80,97) (100,100)};
+\addlegendentry{Ranking M13 (minh hoạ)}
+\addplot[lxgreen, thin] coordinates {(0,0) (5,48) (10,78) (15,95) (20,100) (100,100)};
+\addlegendentry{Oracle (minh hoạ)}
+\draw[lxred, dashed] (axis cs:20,0) -- (axis cs:20,100);
+\node[font=\sffamily\scriptsize, text=lxred, anchor=west] at (axis cs:21,8) {$k = 20\%$};
+\end{axis}
+\end{tikzpicture}
+\caption{Đường Recall@k và cách đọc KPI-1 (số liệu \emph{minh hoạ}, không phải kết quả đo)}
+\label{fig:recallcurve}
+\end{figure}
+
+% ---------------------------------------------------------------------
+\section{KPI-2 · Giảm công sức review với chất lượng tương đương}
+\label{sec:kpi2}
+
+\subsection{Định nghĩa effort}
+Effort là \emph{thời gian thao tác hoạt động} ghi tự động (FR-EVL-06), loại các
+khoảng không thao tác dài hơn \(t_{idle}\). Thời gian được gán vào đúng một hoạt
+động để không cộng hai lần.
+
+\begin{xltabular}{\linewidth}{@{}L{1.4cm}L{4.2cm}Y C{1.6cm}@{}}
+\caption{Thành phần effort}\label{tab:effort}\\
+\toprule
+\textbf{Ký hiệu} & \textbf{Hoạt động} & \textbf{Ghi chú} & \textbf{Tính vào \(T\)}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Ký hiệu} & \textbf{Hoạt động} & \textbf{Ghi chú} & \textbf{Tính vào \(T\)}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\(t_{view}\) & Xem frame, không gắn issue cụ thể & Gồm cả frame sạch. & Có\\
+\(t_{tp}\) & Xử lý issue cuối cùng là lỗi thật & Từ khi mở issue đến khi lưu quyết định. & Có\\
+\(t_{fa}\) & Xử lý cảnh báo sai & Issue bị bác bỏ hoặc phân xử là không lỗi. Là một phần của thời gian review, tách ra để báo cáo. & Có\\
+\(t_{adj}\) & Phân xử của QA Lead & Cho các issue chuyển cấp. & Có\\
+\(t_{rc}\) & Kiểm lại sau sửa & Reviewer xem kết quả re-check và verify. & Có\\
+\(t_{fix}\) & Annotator sửa trên CVAT & Ghi bằng thời điểm mở deep link đến khi bấm \emph{Đã sửa}; báo cáo riêng và trong phân tích độ nhạy. & Không\\
+\end{xltabular}
+
+\[
+  T = \sum \left(t_{view} + t_{tp} + t_{fa} + t_{adj} + t_{rc}\right), \qquad
+  \text{KPI-2} = 1 - \frac{T_A}{T_B}.
+\]
+
+Chỉ số phụ: lỗi xác nhận trên giờ review, \(t_{fa}/T\) (tỉ trọng thời gian cho cảnh
+báo sai), KPI-2b (recall phát hiện thực tế).
+
+\subsection{Thiết kế thí nghiệm}
+Thí nghiệm so sánh \emph{hai quy trình} (baseline và assisted) trên cùng dữ liệu
+và đo chất lượng cuối trên toàn tập. Lợi ích đo được là của cả quy trình
+(ranking, evidence, guideline, điểm dừng), không quy riêng cho ranking.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=4mm and 8mm]
+  \node[boxg, text width=26mm] (d) {Dữ liệu thí nghiệm\\\scriptsize chia ngẫu nhiên D1, D2\\phân tầng theo video, slice};
+  \node[boxb, text width=30mm, right=12mm of d, yshift=10mm] (g1p1) {\textbf{Chuỗi AB · đợt 1}\\Baseline trên D1};
+  \node[boxgr, text width=30mm, right=of g1p1] (g1p2) {\textbf{Chuỗi AB · đợt 2}\\Assisted trên D2};
+  \node[boxgr, text width=30mm, right=12mm of d, yshift=-10mm] (g2p1) {\textbf{Chuỗi BA · đợt 1}\\Assisted trên D1};
+  \node[boxb, text width=30mm, right=of g2p1] (g2p2) {\textbf{Chuỗi BA · đợt 2}\\Baseline trên D2};
+  \draw[arr] (d.east) -- (g1p1.west);
+  \draw[arr] (d.east) -- (g2p1.west);
+  \draw[arr] (g1p1) -- (g1p2);
+  \draw[arr] (g2p1) -- (g2p2);
+  \node[font=\sffamily\scriptsize, align=center, below=3mm of g2p2, xshift=-20mm, text=lxgray]
+    {Reviewer được gán ngẫu nhiên vào chuỗi AB hoặc BA (phân tầng theo kinh nghiệm).\\Mỗi reviewer gặp mỗi tập dữ liệu và mỗi điều kiện đúng một lần.};
+\end{tikzpicture}
+\caption{Thiết kế chéo (crossover) cho thí nghiệm effort}
+\label{fig:crossover}
+\end{figure}
+
+\begin{xltabular}{\linewidth}{@{}L{1.3cm}Y@{}}
+\caption{Quy tắc thí nghiệm effort}\label{tab:exprules}\\
+\toprule
+\textbf{Mã} & \textbf{Quy tắc}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Quy tắc}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+EX-01 & Reviewer được gán \emph{ngẫu nhiên} (seed khoá trước) vào chuỗi AB hoặc BA, phân tầng theo kinh nghiệm và điểm calibration. AS-05 (4 reviewer) là mức sàn; số reviewer thực tế lấy từ power analysis (TBD-12).\\
+EX-02 & D1, D2 chia ngẫu nhiên theo video nguồn, phân tầng theo slice và số lỗi reference; không giao với tập hiệu chỉnh. Trong mỗi tập, frame được chia cho reviewer cùng nhánh theo khối video ngẫu nhiên, mỗi frame đúng một reviewer.\\
+EX-03 & Mỗi nhánh làm trên \emph{bản sao annotation riêng} (CVAT task riêng) cùng xuất phát từ snapshot đầu vào.\\
+EX-04 & \textbf{Baseline:} review toàn bộ frame theo thứ tự gốc, Workspace ẩn ranking, risk score và evidence engine; quy trình sửa và verify như assisted.\\
+EX-05 & \textbf{Assisted:} review tập \(R = T_{k^\ast}(\pi) \cup U\), với \(U\) là \(\lceil rN \rceil\) frame chọn ngẫu nhiên đều (seed khoá trước) từ các frame \emph{ngoài} \(T_{k^\ast}(\pi)\). Thứ tự review: hết \(T_{k^\ast}\) theo rank, rồi tới \(U\).\\
+EX-06 & \textbf{Chọn \(k^\ast\):} trên tập hiệu chỉnh, với lưới \(k \in \{10\%, 15\%, \dots, 100\%\}\), \(k^\ast\) là giá trị nhỏ nhất mà residual dự kiến của assisted (ngoài fold) không vượt residual baseline quá \(\delta/2\). \(k^\ast\), \(r\), seed khoá trước thí nghiệm.\\
+EX-07 & \textbf{Điểm kết thúc đo:} một nhánh kết thúc khi mọi frame trong phạm vi đã review xong, mọi issue (kể cả issue mới từ re-check và từ QC run cuối) đã có kết luận, và mọi rework đã verify. Effort tính đến thời điểm đó.\\
+EX-08 & \textbf{Chống carryover:} khoá guideline và kho case ở một version trong suốt thí nghiệm; case phân xử phát sinh trong thí nghiệm không được hiển thị cho nhánh khác đến khi kết thúc; reviewer không trao đổi về dữ liệu thí nghiệm; có buổi làm quen như nhau trước đợt 1.\\
+EX-09 & \textbf{Nguồn lực như nhau:} cùng QA Lead phân xử, cùng quy tắc verify, cùng quyền tra guideline ở hai nhánh.\\
+EX-10 & Reviewer không biết reference; người lập reference không tham gia thí nghiệm trên cùng dữ liệu.\\
+\end{xltabular}
+
+\subsection{Phân tích effort}
+\begin{itemize}
+  \item \textbf{Estimand chính:} tỉ số \(T_A/T_B\) của tổng effort trên cùng khối
+        lượng dữ liệu; \(\text{KPI-2} = 1 - T_A/T_B\).
+  \item \textbf{Mô hình:} hồi quy hỗn hợp trên \(\log T_{r,p}\) (effort của
+        reviewer \(r\) ở đợt \(p\), chuẩn hoá theo số frame của tập):
+        \(\log T_{r,p} = \mu + \tau\cdot\mathrm{arm} + \gamma\cdot\mathrm{period}
+        + \eta\cdot\mathrm{dataset} + u_r + \varepsilon\), với \(u_r\) là hiệu ứng
+        ngẫu nhiên của reviewer. \(\exp(\tau)\) ước lượng \(T_A/T_B\).
+  \item \textbf{Khoảng tin cậy:} từ mô hình trên, kiểm tra lại bằng bootstrap hai
+        tầng (lấy lại reviewer trong từng chuỗi, rồi lấy lại khối video trong
+        từng tập), giữ nguyên cặp hai điều kiện của mỗi reviewer.
+  \item \textbf{Phân tích độ nhạy định trước:} (i) chỉ dùng đợt 1 (so sánh song
+        song, không có carryover); (ii) hai giá trị \(t_{idle}\); (iii) cộng
+        \(t_{fix}\) vào \(T\).
+\end{itemize}
+
+\subsection{Chất lượng tương đương}
+Trong thí nghiệm, reference phủ toàn bộ dữ liệu nên residual được đo \emph{trực
+tiếp trên toàn tập}, không ước lượng từ mẫu. Sau khi mỗi nhánh kết thúc, so
+annotation cuối của nhánh với GT theo cùng quy tắc ở mục~\ref{sec:counting}:
+\[
+  \rho = \frac{\text{số lỗi E1–E3 còn lại sau quy trình}}{\text{số đối tượng GT không ignore}} .
+\]
+Lỗi còn lại gồm lỗi ban đầu chưa sửa và lỗi mới phát sinh do sửa. \(\rho\) có thể
+vượt 100\% trong trường hợp cực đoan (nhiều box trùng); mẫu số bằng 0 thì không
+tính. \(\rho\) khác G-4: G-4 là guardrail vận hành ước lượng từ lát kiểm tra
+ngẫu nhiên khi không có reference toàn tập.
+
+\begin{itemize}
+  \item \textbf{Kiểm định non-inferiority một phía:}
+        \(H_0: \rho_A - \rho_B \ge \delta\) với \(H_1: \rho_A - \rho_B < \delta\),
+        mức \(\alpha = 0{,}025\). Tương đương: bác \(H_0\) khi cận trên khoảng
+        tin cậy 95\% hai phía của \(\rho_A - \rho_B\) nhỏ hơn \(\delta\).
+  \item \textbf{Khoảng tin cậy:} bootstrap theo khối video trong từng tập, giữ
+        cặp hai nhánh trên cùng dữ liệu.
+  \item \textbf{Chọn \(\delta\):} Product Owner và QA Lead chốt dựa trên mức
+        residual chấp nhận được về nghiệp vụ (ví dụ một tỉ lệ của residual
+        baseline đo ở pilot nhỏ), trước thí nghiệm (TBD-K3).
+  \item \textbf{G-2b — lỗi nghiêm trọng:} số lỗi nghiêm trọng của reference còn
+        lại trong annotation cuối (kể cả lỗi chưa từng có issue) ở nhánh assisted
+        không lớn hơn nhánh baseline. G-2b khác G-2 (gate: issue nghiêm trọng đã
+        xác nhận còn mở = 0).
+  \item \textbf{G-5 — box thừa:} số box thừa (BR-06) trong annotation cuối, kể cả
+        box phát sinh do sửa, báo cáo theo nhánh; nhánh assisted không được nhiều
+        hơn baseline quá \(\delta_{fp}\) (TBD-K3).
+  \item Ngưỡng residual \(\le 5\%\) và đồng thuận \(\ge 90\%\) là guardrail
+        khởi điểm; chúng không thay thế kiểm định trên.
+\end{itemize}
+
+\subsection{Tiêu chí đạt KPI-2}
+\textbf{Đạt KPI-2} khi đồng thời: (i) bác được \(H_0\) non-inferiority về
+\(\rho\); (ii) cận dưới khoảng tin cậy 95\% của \(1 - T_A/T_B\) $\ge$ ngưỡng
+\TBD[-K2]; (iii) đạt G-2b và G-5; (iv) kết luận không đổi chiều ở phân tích chỉ
+dùng đợt 1.
+
+\begin{notebox}[Cỡ mẫu]
+Số frame mỗi tập và số reviewer được tính từ phương sai effort và residual đo ở
+pilot nhỏ trên tập hiệu chỉnh (power analysis 80\%, có tính hệ số thiết kế do
+phân cụm theo video và reviewer). Cỡ mẫu chốt trước thí nghiệm (\TBD[-12]).
+\end{notebox}
+
+\section{Đăng ký trước (pre-registration)}
+\label{sec:prereg}
+Các mục sau phải được khoá version trong LabelX \emph{trước} khi chạy trên tập
+held-out hoặc bắt đầu thí nghiệm. Thay đổi sau khoá phải ghi lý do và kết quả
+dùng phiên bản cũ vẫn được báo cáo.
+
+\begin{xltabular}{\linewidth}{@{}L{5.2cm}Y L{2.4cm}@{}}
+\caption{Danh sách khoá trước khi đo}\label{tab:prereg}\\
+\toprule
+\textbf{Mục} & \textbf{Nội dung} & \textbf{Người khoá}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mục} & \textbf{Nội dung} & \textbf{Người khoá}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Detector & Artifact, checksum, mapping lớp, \(\tau_{conf}\), xác nhận không huấn luyện trên held-out. & Data/Model Owner\\
+Score version & Đặc trưng, tham số \(\mathbf{w}_g, b_g\), mô hình điểm nền \(h(f)\), \(\tau_{E1}, \tau_{E2}\), seed phá hoà. & QC Admin\\
+Reference & GT version, mapping, \(\tau_m\), \(a_{min}\), \(E_{min}\). & QA Lead\\
+Ngưỡng KPI & K1, K2, \(\delta\). & Product Owner\\
+Thí nghiệm & Seed chia D1/D2 và gán chuỗi AB/BA, \(k^\ast\), \(r\), \(t_{idle}\), cỡ mẫu, mô hình phân tích, phân tích độ nhạy, \(\delta\), \(\delta_{fp}\). & Product Owner\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Ma trận nghiệm thu}
+\label{sec:acceptance}
+\begin{xltabular}{\linewidth}{@{}L{1.2cm}Y L{1.6cm}L{3cm}@{}}
+\caption{Tiêu chí nghiệm thu}\label{tab:acceptance}\\
+\toprule
+\textbf{Mã} & \textbf{Tiêu chí kiểm chứng được} & \textbf{Mục tiêu} & \textbf{Yêu cầu}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Tiêu chí} & \textbf{Mục tiêu} & \textbf{Yêu cầu}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+AC-01 & Tạo hai lần QC Run cùng snapshot, config, score version, seed cho ra candidate, issue, ranking giống hệt: so hash của nội dung đã chuẩn hoá (bỏ ID sinh tự động, thời điểm, run\_id; sắp theo khoá tự nhiên). & R-01 & FR-AGG-02, FR-RNK-03\\
+AC-02 & Ép lỗi một shard rồi retry: số issue không đổi, không có bản trùng. & R-01 & FR-AGG-02\\
+AC-03 & Sửa annotation trên CVAT trong lúc tạo snapshot: snapshot không được khoá, báo job drift. & R-01 & FR-SNP-04\\
+AC-04 & Mọi candidate hiển thị trong Workspace có evidence; không issue nào được đóng hoặc xác nhận mà không có quyết định của người. & R-02 & FR-REV-07, FR-REV-08\\
+AC-05 & Reviewer là assignee của job tại snapshot gửi quyết định qua API: bị từ chối, có audit. & R-05 & FR-SEC-03\\
+AC-06 & Issue chỉ Đã đóng sau verify trên revision mới; báo cáo trỏ QC run cuối. & R-03 & FR-RWK-05, FR-RWK-06\\
+AC-07 & Engine Not checked/Failed hiển thị đúng trạng thái; gate không đạt khi thiếu dữ liệu. & R-06 & FR-AGG-05, FR-GTE-02\\
+AC-08 & Recall@20\% trên held-out đạt tiêu chí mục~\ref{sec:kpi1}, kèm đối chứng và khoảng tin cậy. Chỉ đánh giá được sau khi TBD-K1, TBD-K4 đã chốt; trước đó trạng thái là ``chưa xác định''. & KPI-1, R-04 & FR-EVL-07…10\\
+AC-09 & Thí nghiệm effort đạt tiêu chí mục~\ref{sec:kpi2}. Chỉ đánh giá được sau khi TBD-K2, TBD-K3, TBD-12 đã chốt; trước đó trạng thái là ``chưa xác định''. & KPI-2, R-07 & FR-EVL-11…13\\
+AC-10 & Báo cáo hiệu quả có đủ cỡ mẫu, mẫu số, phương pháp, provenance; random và risk báo cáo riêng. & R-04 & FR-RPT-01…04\\
+AC-11 & Audit log có đủ actor, đối tượng, trước/sau, lý do cho mọi quyết định, phân xử, waiver, khoá reference. & R-05 & FR-SEC-05\\
+\end{xltabular}

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hợp đồng Celery task và sự kiện — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/04-api/event-contracts.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / event-contracts</span><span class="sp"></span>
+<a href="event-contracts.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>api-event-contracts</span><b>title</b><span>Hợp đồng Celery task và sự kiện</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, events, celery, idempotency, retry]</span><b>priority</b><span>2</span></div>
+<h1 id="hop-ong-celery-task-va-su-kien">Hợp đồng Celery task và sự kiện</h1>
+<h2 id="1-nguyen-tac">1. Nguyên tắc</h2>
+<table>
+<thead>
+<tr>
+<th>Nguyên tắc</th>
+<th>Nội dung</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Payload chỉ chứa ID</td>
+<td>Task chỉ nhận ID và khoá (<code>snapshot_id</code>, <code>run_id</code>, <code>work_unit_id</code>…). Dữ liệu thật đọc từ PostgreSQL hoặc Object Storage. Payload không bao giờ chứa token CVAT hay ảnh</td>
+<td>NFR-07; DEC-001</td>
+</tr>
+<tr>
+<td>Idempotent</td>
+<td>Celery chạy với <code>acks_late</code> và <code>reject_on_worker_lost</code>, nên một task có thể chạy nhiều lần. Mỗi task kiểm trạng thái trong DB, hoặc ghi với ràng buộc UNIQUE, trước khi tạo tác dụng phụ</td>
+<td>settings; FR-AGG-02</td>
+</tr>
+<tr>
+<td>Ghi nguyên tử</td>
+<td>Candidate, evidence và ledger của một đơn vị nằm trong <strong>một</strong> transaction</td>
+<td>FR-AGG-06</td>
+</tr>
+<tr>
+<td>Blob trước, metadata sau</td>
+<td>Upload lên Object Storage với khoá theo hash nội dung, sau đó mới commit</td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Retry</td>
+<td><code>autoretry_for</code> chỉ áp dụng cho lỗi tạm thời (mạng, timeout CVAT/storage). Số lần thử và backoff: <strong>TBD-14</strong>. Hết lượt thì đơn vị ghi <code>failed</code>, không làm hỏng run</td>
+<td>NFR-05</td>
+</tr>
+<tr>
+<td>Timeout</td>
+<td><code>soft_time_limit</code>/<code>time_limit</code> đặt riêng cho từng loại task: đọc CVAT, Detector theo lô, VLM. Giá trị cụ thể: đọc CVAT và Detector là <strong>TBD-13</strong> (đo pilot); timeout mỗi lượt VLM (nếu bật) là <strong>TBD-20</strong></td>
+<td>R "Cấu hình vận hành"; SRS <code>tab:tbd</code></td>
+</tr>
+<tr>
+<td>Huỷ</td>
+<td>Task đọc <code>qc_run.cancel_requested_at</code> trước khi nhận đơn vị mới. Không dùng <code>revoke(terminate=True)</code> để huỷ giữa transaction</td>
+<td>SRS state machine QC Run</td>
+</tr>
+<tr>
+<td>Enqueue sau commit</td>
+<td>Mọi chuyển trạng thái trong DB đều được commit trước, rồi mới enqueue task kế tiếp bằng <code>transaction.on_commit(...)</code>. Như vậy task không bao giờ chạy khi transaction tạo ra nó đã bị rollback</td>
+<td>Yêu cầu thiết kế; R-01</td>
+</tr>
+<tr>
+<td>Hoàn tất run</td>
+<td>Không dùng chord của Celery. Sau mỗi lần commit đơn vị, task khoá dòng <code>qc_run</code> (<code>SELECT … FOR UPDATE</code>) và kiểm xem mọi <code>work_unit</code> đã ở trạng thái kết thúc chưa. Nếu rồi thì đặt cờ <code>next_step_enqueued_at</code> trong cùng transaction và enqueue bước kế tiếp qua <code>on_commit</code></td>
+<td>Thiết kế; R-01</td>
+</tr>
+</tbody>
+</table>
+<h3 id="an-toan-khi-worker-chet-giua-chung-yeu-cau-thiet-ke">An toàn khi worker chết giữa chừng (yêu cầu thiết kế)</h3>
+<p>Có một khoảng hở: worker có thể chết <em>sau</em> khi commit chuyển trạng thái nhưng <em>trước</em> khi enqueue xong. Khi đó <code>on_commit</code> không chạy, và đối tượng bị kẹt ở trạng thái trung gian (ví dụ snapshot nằm mãi ở <code>exporting</code>). Yêu cầu là không để kẹt như vậy. Có hai phương án:</p>
+<ol>
+<li><strong>Claim bằng cập nhật có điều kiện + sweeper.</strong> Task nhận cả trạng thái <code>pending</code> lẫn trạng thái trung gian (ví dụ <code>exporting</code>). Task claim bằng <code>UPDATE … SET status='exporting', claimed_at=now() WHERE id=:id AND status IN ('pending','exporting')</code>, rồi xử lý idempotent theo các khoá UNIQUE. Một task beat định kỳ re-enqueue các đối tượng đứng ở trạng thái trung gian quá ngưỡng.</li>
+<li><strong>Transactional outbox</strong> (A ADR-04). Lệnh enqueue được ghi vào bảng outbox trong cùng transaction; một relay đọc outbox và gửi sang Celery.</li>
+</ol>
+<p>Phương án nào được chọn <strong>cần một decision mới</strong> (DEC). Trong lúc chờ, các task dưới đây được viết theo phương án 1, tức đều chấp nhận chạy lại từ trạng thái trung gian.</p>
+<p>Tên task và tên queue dưới đây là <strong>đề xuất đặt tên</strong>. SRS chỉ nêu bước và loại worker, không quy định tên.</p>
+<h2 id="2-danh-sach-task">2. Danh sách task</h2>
+<h3 id="21-snapshot-queue-snapshot">2.1 Snapshot (queue <code>snapshot</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Payload</th>
+<th>Khoá idempotent</th>
+<th>Hành vi</th>
+<th>Retry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snapshots.build_snapshot</code></td>
+<td><code>{snapshot_id}</code></td>
+<td><code>snapshot_id</code>; claim bằng <code>UPDATE … WHERE status IN ('pending','exporting')</code></td>
+<td>Chuyển status sang <code>exporting</code>; tạo các dòng <code>snapshot_job</code> còn thiếu (<code>ON CONFLICT DO NOTHING</code>); enqueue <code>export_job</code> qua <code>on_commit</code> cho từng job chưa export xong</td>
+<td>Không retry; lỗi thì snapshot <code>failed</code> (<code>export_error</code>)</td>
+</tr>
+<tr>
+<td><code>snapshots.export_job</code></td>
+<td><code>{snapshot_id, cvat_job_id}</code></td>
+<td>UNIQUE <code>(snapshot_id, cvat_job_id)</code> trên <code>snapshot_job</code></td>
+<td>Đọc annotation và meta, chuẩn hoá, tính SHA-256; tải ảnh lên <code>labelx-snapshots</code> (khoá theo sha256); ghi <code>frame</code>, <code>annotation</code>; bỏ shape không phải rectangle và đếm <code>out_of_scope_shapes</code></td>
+<td>Lỗi tạm thời: TBD-14</td>
+</tr>
+<tr>
+<td><code>snapshots.verify_and_lock</code></td>
+<td><code>{snapshot_id}</code></td>
+<td>Chỉ khi mọi <code>snapshot_job</code> đã export xong và status = <code>exporting</code></td>
+<td>Đọc lại <code>updated_date</code> của từng job. Không drift thì <code>locked</code> + hash tổng. Có drift thì <code>failed</code>/<code>drift_detected</code></td>
+<td>Lỗi tạm thời: TBD-14</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-qc-run-queue-cpugpu">2.2 QC Run (queue <code>cpu</code>/<code>gpu</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Payload</th>
+<th>Khoá idempotent</th>
+<th>Hành vi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>qc.start_run</code></td>
+<td><code>{run_id}</code></td>
+<td>Claim bằng <code>UPDATE … WHERE status IN ('queued','running')</code></td>
+<td>Tạo <code>work_unit</code> cho mỗi (engine, shard) bằng <code>INSERT … ON CONFLICT DO NOTHING</code>; ghi các engine Not checked (<code>disabled</code>, <code>no_model</code>…) vào ledger; chuyển run sang <code>running</code></td>
+</tr>
+<tr>
+<td><code>engines.run_cpu_unit</code></td>
+<td><code>{work_unit_id}</code></td>
+<td><code>work_unit.idempotency_key</code> = sha256(snapshot_id, engine, engine_version, config_version, model_checksum, shard_key)</td>
+<td>Schema / Geometry / Duplicate trên shard; ghi candidate, evidence và ledger trong 1 transaction. Đơn vị đã <code>completed</code> thì bỏ qua</td>
+</tr>
+<tr>
+<td><code>engines.detect_unit</code> (queue <code>gpu</code>)</td>
+<td><code>{work_unit_id}</code></td>
+<td>Như trên</td>
+<td>Detector theo lô; lưu <code>prediction</code> (để tái dùng, NFR-04); xong thì enqueue <code>engines.match_unit</code></td>
+</tr>
+<tr>
+<td><code>engines.match_unit</code></td>
+<td><code>{work_unit_id}</code></td>
+<td>Như trên (engine = <code>matching</code>)</td>
+<td>Matching một-một không xét lớp; sinh candidate E1/E2 kèm evidence (crop lên <code>labelx-evidence</code>)</td>
+</tr>
+<tr>
+<td><code>qc.finalize_engines</code></td>
+<td><code>{run_id}</code></td>
+<td><code>qc_run.next_step_enqueued_at</code></td>
+<td>Tổng hợp <code>engine_result</code> từ ledger; xác định Completed hoặc Partial</td>
+</tr>
+<tr>
+<td><code>issues.aggregate_run</code></td>
+<td><code>{run_id, policy_version}</code></td>
+<td>UNIQUE <code>(run_id, dedup_key)</code> trên <code>issue</code>; UNIQUE <code>candidate_id</code> trên <code>issue_candidate</code></td>
+<td>Gộp candidate thành issue, tính neo và <code>n_i</code></td>
+</tr>
+<tr>
+<td><code>ranking.score_run</code></td>
+<td><code>{run_id, score_version_id}</code></td>
+<td>UNIQUE <code>(run_id, score_version_id, frame_id)</code> trên <code>frame_risk</code></td>
+<td>Tính <code>s(f)</code> cho <strong>mọi</strong> frame; phá hoà bằng SHA256(frame_key‖seed); tạo <code>review_item</code> cho queue <code>risk</code></td>
+</tr>
+<tr>
+<td><code>ranking.build_random_slice</code></td>
+<td><code>{run_id, seed, rate}</code></td>
+<td>UNIQUE <code>(run_id, queue, frame_id)</code></td>
+<td>Lát ngẫu nhiên <code>r%</code> (TBD-10), độc lập với ranking; queue <code>random</code></td>
+</tr>
+<tr>
+<td><code>ranking.build_control_rankings</code></td>
+<td><code>{run_id, kinds, seeds}</code></td>
+<td>UNIQUE <code>(run_id, kind, seed, frame_id)</code></td>
+<td>Ranking đối chứng: ngẫu nhiên và heuristic (FR-RNK-08)</td>
+</tr>
+<tr>
+<td><code>qc.retry_failed</code></td>
+<td><code>{run_id}</code></td>
+<td>Đặt lại các <code>work_unit</code> có status <code>failed</code> thành <code>pending</code> và tăng <code>attempt</code>; giữ nguyên <code>idempotency_key</code></td>
+<td>Gọi từ <code>POST /runs/{id}/retry-failed</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-rework-anh-gia-bao-cao">2.3 Rework, đánh giá, báo cáo</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Payload</th>
+<th>Khoá idempotent</th>
+<th>Hành vi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>review.recheck_rework</code></td>
+<td><code>{rework_id, new_snapshot_id}</code></td>
+<td>UNIQUE <code>(rework_id, snapshot_id)</code> trên <code>rework_recheck</code></td>
+<td>Tạo run re-check giới hạn ở frame bị ảnh hưởng (FR-RWK-04)</td>
+</tr>
+<tr>
+<td><code>qc.build_final_run</code></td>
+<td><code>{dataset_id, scope_hash}</code></td>
+<td>Partial UNIQUE <code>(dataset_id, scope_hash) WHERE is_final AND status IN ('queued','running')</code> trên <code>qc_run</code> (<a href="../05-database/schema.html">schema.md</a>)</td>
+<td>Snapshot toàn scope, sau đó run <code>is_final=true</code>, liên kết các verification (FR-RWK-06)</td>
+</tr>
+<tr>
+<td><code>evaluation.run_evaluation</code></td>
+<td><code>{evaluation_id}</code></td>
+<td>Status <code>queued</code> → <code>running</code></td>
+<td>Kiểm rò rỉ dữ liệu (FR-EVL-05); số lỗi trong tập E ≥ E_min; Recall@k, bootstrap ≥ 1000 lần; lưu provenance</td>
+</tr>
+<tr>
+<td><code>reports.export_report</code></td>
+<td><code>{report_id, format}</code></td>
+<td>Khoá object = sha256 nội dung trong <code>labelx-reports</code></td>
+<td>Xuất PDF/CSV/JSON, ghi version snapshot, run, score, reference (FR-RPT-05)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-inh-ky-django-celery-beat">2.4 Định kỳ (django-celery-beat)</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Lịch</th>
+<th>Hành vi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>review.expire_leases</code></td>
+<td>Đề xuất mỗi phút</td>
+<td>Lease quá <code>expires_at</code> → <code>expired</code>, frame về hàng đợi. Nếu chỉ dựa vào truy vấn cấp lease thì đã đủ đúng; task này chỉ dọn dẹp</td>
+</tr>
+<tr>
+<td><code>gate.expire_waivers</code></td>
+<td>Đề xuất hằng ngày</td>
+<td>Waiver quá <code>expires_at</code> → <code>expired</code>; điều kiện trở lại chưa đạt (FR-GTE-03)</td>
+</tr>
+<tr>
+<td><code>storage.gc_orphan_blobs</code></td>
+<td>Đề xuất hằng ngày</td>
+<td>Xoá blob không có metadata nào trỏ tới sau <code>t_gc</code> (NFR-06). <code>t_gc</code>: <strong>TBD-20</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-su-kien-domain">3. Sự kiện domain</h2>
+<p>SRS <strong>không</strong> quy định event bus hay SSE. A §20 (ADR-04) đề xuất transactional outbox và §25.2 liệt kê domain event (<code>snapshot.created</code>, <code>run.completed</code>, <code>issue.decided</code>, <code>rework.submitted</code>…). Trong MVP:</p>
+<ul>
+<li>Thông tin trạng thái được ghi vào bảng nghiệp vụ và <code>audit_log</code> trong cùng transaction. Client đọc lại bằng polling GET (<code>/api/snapshots/{id}</code>, <code>/api/runs/{id}</code>).</li>
+<li>Outbox, SSE và thông báo đẩy <strong>chưa chốt</strong>. Khi cần, phải có quyết định mới. Lúc đó tên event của A có thể được dùng làm điểm khởi đầu.</li>
+</ul>
+<h2 id="4-loi-va-trang-thai">4. Lỗi và trạng thái</h2>
+<table>
+<thead>
+<tr>
+<th>Tình huống</th>
+<th>Kết quả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker chết giữa task</td>
+<td>Message được giao lại (<code>acks_late</code>); transaction chưa commit thì bị rollback; task chạy lại với cùng khoá</td>
+</tr>
+<tr>
+<td>Hết retry trên một đơn vị</td>
+<td><code>work_unit.status=failed</code>; ledger ghi <code>failed</code> cho các đơn vị áp dụng; run Partial; frame mang cờ <code>missing_evidence</code></td>
+</tr>
+<tr>
+<td>Ảnh hỏng hoặc không đọc được</td>
+<td>Ledger ghi <code>failed</code> với lý do <code>media_error</code>; không reject annotation (SRS <code>tab:enginestates</code>)</td>
+</tr>
+<tr>
+<td>Không có Detector</td>
+<td>Engine Mô hình độc lập là Not checked (<code>no_model</code>); không sinh ranking giả (FR-ENG-09)</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

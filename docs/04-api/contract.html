@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Contract Intake — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/04-api/contract.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / contract</span><span class="sp"></span>
+<a href="contract.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>project-contract</span><b>title</b><span>Project Contract Intake</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>repository</span><b>tags</b><span>[contract, interface, intake]</span><b>priority</b><span>1</span></div>
+<h1 id="project-contract-intake">Project Contract Intake</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Theo dõi việc tiếp nhận và kiểm tra hợp đồng giao diện có thẩm quyền của LabelX QC: REST API nội bộ, Celery task, và giao diện với CVAT và mô hình.</p>
+<h2 id="input-status">Input Status</h2>
+<ul>
+<li><strong>Status</strong>: <code>ingested</code></li>
+<li><strong>Authority</strong>: <code>established</code> — SRS §9 (Giao diện ngoài) đã duyệt; quyết định B-10, B-12, B-17, B-18 trong nguồn R</li>
+<li><strong>Source Artifact</strong>:</li>
+<li>SRS: <a href="../label-x_system-requirement-specification/sections/09-interfaces.tex">09-interfaces.tex</a> (bảng <code>tab:api</code>, <code>tab:apierrors</code>, <code>tab:cvatapi</code>, giao diện mô hình), <a href="../label-x_system-requirement-specification/sections/05-dynamics.tex">05-dynamics.tex</a> (bảng transition), <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a></li>
+<li>R: <a href="../00-project/sources/architecture_review.html">architecture_review.html</a></li>
+<li>A §25 (API &amp; Event Contract), chỉ dùng phần khớp SRS: <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html">Quality_Control_Review_UX_Architecture.html</a></li>
+<li>T §6 (idempotency, chunk, retry): <a href="../00-project/sources/QC_Engine_Review_Report.html">QC_Engine_Review_Report.html</a></li>
+<li>Cấu hình hiện có: <a href="../../src/backend/config/settings.py">settings.py</a>, <a href="../../src/backend/config/urls.py">urls.py</a></li>
+<li><strong>Ingested Date</strong>: <code>2026-10-05</code></li>
+<li><strong>Validated By</strong>: <code>claude-agent (đối chiếu nguồn); cần Tech Lead xác nhận</code></li>
+</ul>
+<h2 id="required-content">Required Content</h2>
+<table>
+<thead>
+<tr>
+<th>Nội dung</th>
+<th>Tài liệu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phạm vi, các bên, nghĩa vụ, loại trừ</td>
+<td><a href="rest-api.html">rest-api.md</a> mục 1, 4.2 (endpoint không triển khai)</td>
+</tr>
+<tr>
+<td>Hợp đồng interface có mã ổn định</td>
+<td><a href="rest-api.html">rest-api.md</a>; <a href="event-contracts.html">event-contracts.md</a></td>
+</tr>
+<tr>
+<td>Dữ liệu, bảo mật, tuân thủ</td>
+<td><a href="rest-api.html">rest-api.md</a> mục 6; <a href="../11-integrations/cvat.html">CVAT</a></td>
+</tr>
+<tr>
+<td>Mức dịch vụ, điều kiện nghiệm thu</td>
+<td>NFR-01…03 là đề xuất, chưa chốt: <strong>TBD-13</strong></td>
+</tr>
+<tr>
+<td>Version, ownership, hiệu lực</td>
+<td>OpenAPI do drf-spectacular sinh, <code>VERSION 0.1.0</code> (settings)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="validation-result">Validation Result</h2>
+<ul>
+<li>Toàn bộ 28 endpoint trong <code>tab:api</code> của SRS đã được đưa vào <a href="rest-api.html">rest-api.md</a>, kèm quyền, idempotency và mã lỗi 400/403/404/409/422.</li>
+<li>Endpoint của A chỉ được nhận khi khớp một FR của SRS. Các endpoint release, assistant, calibration session và SSE bị loại (B-13, FR-GTE-04).</li>
+<li>Mâu thuẫn đã xử lý:</li>
+<li>Tiền tố <code>/api/qc/v1</code> (A) đổi thành <code>/api/</code> (SRS).</li>
+<li>Mã lỗi 412 <code>REVISION_DRIFT</code> (A) đổi thành 409.</li>
+<li>Lease theo issue (A) đổi thành lease theo frame (SRS).</li>
+<li>Header <code>Idempotency-Key</code> (kể cả mức "bắt buộc" cho các POST quyết định) là <strong>đề xuất thiết kế</strong>, cần Tech Lead xác nhận.</li>
+<li>Blocker hợp đồng trước đây: <strong>resolved by source artifacts</strong>.</li>
+<li>Còn mở: endpoint CVAT thật và phiên bản (TBD-01); thời hạn lease (TBD-09); retry/backoff (TBD-14); vai trò Product Owner và Data/Model Owner trong <code>role_assignment</code> (SRS ch.6 đã nêu quyền, schema cần bổ sung); danh sách điều kiện được waiver (TBD-19).</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><a href="rest-api.html">REST API</a></li>
+<li><a href="event-contracts.html">Celery task và sự kiện</a></li>
+<li><a href="../02-architecture/system-design.html">Kiến trúc hệ thống</a></li>
+<li><a href="../../.agent/planning/roadmap.html">Roadmap</a></li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không thêm trường, endpoint hay mức dịch vụ ngoài SRS khi chưa có quyết định mới.</li>
+<li>Không thêm endpoint ghi annotation lên CVAT (B-18).</li>
+<li>Không gán số cho các mục TBD.</li>
+</ul>
+</article></main></body></html>

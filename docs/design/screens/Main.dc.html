@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Quality Control Home</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="overview" active-item="home" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Quality Control Home</h1>
+<p class="lx-lead">Chọn một Dataset để đặt ngữ cảnh làm việc chung cho toàn bộ module. Mọi màn hình, Quality Control Run và nhật ký kiểm toán đều gắn với Dataset và phạm vi đã chọn.</p>
+</div>
+<div class="lx-actions">
+<span class="lx-hint">Đồng bộ CVAT 2 phút trước</span>
+<button class="lx-btn">Đồng bộ lại</button>
+</div>
+</div>
+
+<section class="lx-card">
+<div class="lx-toolbar">
+<label class="lx-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" aria-label="Tìm dataset" placeholder="Tìm dataset, version, CVAT project…"></label>
+<span class="lx-hint">4 / 4 dataset</span>
+</div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 1040px">
+<thead><tr><th>Dataset</th><th class="r">Task / Job</th><th class="r">Frame</th><th>Quality Control Run gần nhất</th><th class="r">Coverage</th><th class="r">Issue đang mở</th><th>Gate</th><th></th></tr></thead>
+<tbody>
+<tr aria-selected="true">
+<td><div class="lx-cell__main">Road Vision Urban <span class="lx-tag">v1.4</span> <span class="lx-hint">· Đang chọn</span></div><div class="lx-cell__sub">CVAT project #31</div></td>
+<td class="r">3 / 7</td><td class="r">12,500</td>
+<td><span class="lx-mono">#QC-091</span> <span class="lx-badge lx-badge--warning">Partial</span><div class="lx-cell__sub">2026-10-04 06:58</div></td>
+<td class="r">92.4%</td><td class="r">192</td>
+<td><span class="lx-badge lx-badge--danger">Blocked</span></td>
+<td class="r"><a class="lx-iconbtn" href="Dashboard.dc.html" data-tip="Tiếp tục làm việc với Dataset này" aria-label="Tiếp tục làm việc với Dataset này"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td>
+</tr>
+<tr>
+<td><div class="lx-cell__main">Road Vision Urban <span class="lx-tag">v1.3</span></div><div class="lx-cell__sub">CVAT project #31 · chỉ xem</div></td>
+<td class="r">2 / 3</td><td class="r">11,800</td>
+<td><span class="lx-mono">#QC-077</span> <span class="lx-badge lx-badge--success">Checked</span><div class="lx-cell__sub">2026-09-10 08:30</div></td>
+<td class="r">97.2%</td><td class="r">0</td>
+<td><span class="lx-badge lx-badge--success">Released</span></td>
+<td class="r"><a class="lx-iconbtn" href="ReleaseHistory.dc.html" data-tip="Xem lịch sử phát hành" aria-label="Xem lịch sử phát hành"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M8 5v3.5l2 1.5"></path></svg></a></td>
+</tr>
+<tr>
+<td><div class="lx-cell__main">Road Vision Highway <span class="lx-tag">v0.9</span></div><div class="lx-cell__sub">CVAT project #34</div></td>
+<td class="r">2 / 3</td><td class="r">5,600</td>
+<td><span class="lx-mono">#QC-085</span> <span class="lx-badge lx-badge--success">Checked</span><div class="lx-cell__sub">2026-09-30 14:20</div></td>
+<td class="r">98.9%</td><td class="r">6</td>
+<td><span class="lx-badge lx-badge--warning">Ready · chờ duyệt</span></td>
+<td class="r"><a class="lx-iconbtn" href="Dashboard.dc.html" data-tip="Mở Dataset này" aria-label="Mở Dataset này"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td>
+</tr>
+<tr>
+<td><div class="lx-cell__main">Parking Lot <span class="lx-tag">v0.3</span></div><div class="lx-cell__sub">CVAT project #37</div></td>
+<td class="r">1 / 2</td><td class="r">3,000</td>
+<td class="lx-subtle">Chưa có Quality Control Run</td>
+<td class="r lx-subtle">—</td><td class="r lx-subtle">—</td>
+<td><span class="lx-badge">Not checked</span></td>
+<td class="r"><a class="lx-iconbtn" href="Snapshot.dc.html" data-tip="Tạo snapshot đầu tiên" aria-label="Tạo snapshot đầu tiên"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="lx-table__foot"><b>Dataset = CVAT Project + Version.</b> Dataset được đồng bộ từ CVAT, gồm cấu trúc Project, Task, Job và Frame. Quality Control chỉ đọc cấu trúc này; mọi thao tác tạo, sửa hoặc xoá annotation đều thực hiện trực tiếp trên CVAT.</div>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

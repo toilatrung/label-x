@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Quality Report</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="reports" active-item="report" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="release" step="report" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Quality Report</h1>
+<p class="lx-lead">Road Vision Urban v1.4 · Quality Control Run #QC-091 · tạo ngày 04/10/2026. Báo cáo luôn ghi rõ phạm vi, nguồn Ground Truth, coverage và những phần chưa đủ dữ liệu.</p>
+</div>
+<div class="lx-actions" style="position: relative">
+<span class="lx-badge lx-badge--danger">Release blocked</span>
+<button class="lx-btn" aria-haspopup="menu" aria-expanded="{{exportOpen}}" onClick="{{toggleExport}}">Xuất báo cáo
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg></button>
+<sc-if value="{{exportOpen}}" hint-placeholder-val="{{false}}">
+<div class="lx-menu lx-menu--end" role="menu" style="left: auto; right: 0; min-width: 160px">
+<a class="lx-menu__item" role="menuitem" href="#"><span class="lx-menu__t">PDF</span><span class="lx-menu__d">Bản đọc, kèm biểu đồ</span></a>
+<a class="lx-menu__item" role="menuitem" href="#"><span class="lx-menu__t">CSV</span><span class="lx-menu__d">Bảng số liệu</span></a>
+<a class="lx-menu__item" role="menuitem" href="#"><span class="lx-menu__t">JSON</span><span class="lx-menu__d">Gói báo cáo kèm manifest</span></a>
+</div>
+</sc-if>
+</div>
+</div>
+
+<div class="lx-grid lx-grid--4">
+<div class="lx-metric"><span class="lx-metric__k">Frame trong phạm vi</span><span class="lx-metric__v">12,500</span><span class="lx-metric__n">3 task · 7 job</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Coverage</span><span class="lx-metric__v is-warn">92.4%</span><span class="lx-metric__n">Ngưỡng yêu cầu 95%</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Lỗi đã xác nhận chưa đóng</span><span class="lx-metric__v is-bad">12</span><span class="lx-metric__n">Trong đó 3 nghiêm trọng</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Rework hoàn thành</span><span class="lx-metric__v">86.0%</span><span class="lx-metric__n">74 / 86 yêu cầu</span></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isSummary}}" hint-placeholder-val="{{true}}">
+<div class="lx-card__body lx-cols">
+<div class="lx-main lx-stack" style="gap: 12px"><h2 class="lx-h2">Lỗi đã xác nhận theo loại</h2>
+<div class="lx-bar"><span>Sai nhãn</span><div class="lx-bar__t"><i style="width: 100%"></i></div><span class="lx-bar__n">48</span></div>
+<div class="lx-bar"><span>Hình học</span><div class="lx-bar__t"><i style="width: 69%"></i></div><span class="lx-bar__n">33</span></div>
+<div class="lx-bar"><span>Thiếu object</span><div class="lx-bar__t"><i style="width: 52%"></i></div><span class="lx-bar__n">25</span></div>
+<div class="lx-bar"><span>Trùng / chồng lấn</span><div class="lx-bar__t"><i style="width: 29%"></i></div><span class="lx-bar__n">14</span></div>
+<div class="lx-bar"><span>Thuộc tính / Track</span><div class="lx-bar__t"><i style="width: 13%"></i></div><span class="lx-bar__n">6</span></div></div>
+<div class="lx-side lx-stack" style="gap: 12px"><h2 class="lx-h2">Cặp nhãn bị nhầm nhiều nhất</h2>
+<table class="lx-table" style="font-size: 12px"><tbody>
+<tr><td>car → truck</td><td class="r">19</td></tr>
+<tr><td>bus → truck</td><td class="r">11</td></tr>
+<tr><td>motorbike → bicycle</td><td class="r">7</td></tr>
+</tbody></table></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isClass}}" hint-placeholder-val="{{false}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 700px">
+<thead><tr><th>Lớp</th><th>Loại hình</th><th class="r">Intersection over Union</th><th class="r">Precision</th><th class="r">Recall</th><th class="r">Lỗi đã xác nhận</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">car</td><td class="lx-muted">Bounding box</td><td class="r">0.88</td><td class="r">91.2%</td><td class="r">88.7%</td><td class="r">41</td></tr>
+<tr><td class="lx-cell__main">pedestrian</td><td class="lx-muted">Bounding box</td><td class="r">0.82</td><td class="r">84.0%</td><td class="r">80.3%</td><td class="r">28</td></tr>
+<tr><td class="lx-cell__main">truck</td><td class="lx-muted">Bounding box</td><td class="r is-warn">0.74</td><td class="r is-warn">78.4%</td><td class="r is-warn">72.1%</td><td class="r">36</td></tr>
+<tr><td class="lx-cell__main">lane marking</td><td class="lx-muted">Polyline</td><td class="r lx-subtle">—</td><td class="r lx-subtle">—</td><td class="r lx-subtle">—</td><td class="r">21</td></tr>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Lớp kém nhất được tô màu cảnh báo. Polyline chưa có Ground Truth nên ghi là chưa đánh giá, không ghi là đạt.</span></div>
+</sc-if>
+
+<sc-if value="{{isCause}}" hint-placeholder-val="{{false}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Nguyên nhân gốc</th><th class="r">Số lỗi</th><th>Đề xuất</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Guideline chưa nêu rõ xe buýt mini chở hàng</td><td class="r">19</td><td class="lx-muted">Phê duyệt GAP-012</td></tr>
+<tr><td class="lx-cell__main">Cảnh ban đêm thiếu ánh sáng (Task T-119)</td><td class="r">23</td><td class="lx-muted">Tăng tỷ lệ review cho Task T-119</td></tr>
+<tr><td class="lx-cell__main">Annotator mới chưa quen quy tắc hình học G-014</td><td class="r">14</td><td class="lx-muted">Giao bài hiệu chỉnh</td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1020}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'summary';
+    const exp = !!(this.state && this.state.exp);
+    return {
+      isSummary: cur === 'summary',
+      isClass: cur === 'class',
+      isCause: cur === 'cause',
+      exportOpen: exp,
+      toggleExport: () => this.setState({ exp: !exp }),
+      tabs: [['summary','Tóm tắt'],['class','Theo lớp và loại hình'],['cause','Nguyên nhân gốc']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

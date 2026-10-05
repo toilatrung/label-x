@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tooling và môi trường dev LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/07-development/tooling.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / tooling</span><span class="sp"></span>
+<a href="tooling.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>development-tooling</span><b>title</b><span>Tooling và môi trường dev LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, tooling, uv, node, make, docker]</span><b>priority</b><span>2</span></div>
+<h1 id="tooling-va-moi-truong-dev-labelx">Tooling và môi trường dev LabelX</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Mô tả công cụ và lệnh dev <strong>đang có trong repo</strong>. Nguồn: <code>scripts/init-develop-environment.mk</code> (được <code>Makefile</code> gốc <code>include</code>), <code>README.md</code>, <code>src/backend/pyproject.toml</code>, <code>src/frontend/package.json</code>, <code>infrastructure/docker-compose.dev.yml</code>.</p>
+<h2 id="1-yeu-cau-tren-may">1. Yêu cầu trên máy</h2>
+<table>
+<thead>
+<tr>
+<th>Công cụ</th>
+<th>Phiên bản</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>git, make, curl</td>
+<td>—</td>
+<td>Phải có sẵn</td>
+</tr>
+<tr>
+<td>Docker + Docker Compose v2</td>
+<td>—</td>
+<td>Phải có sẵn; daemon đang chạy</td>
+</tr>
+<tr>
+<td>Node.js + npm</td>
+<td>≥ 22</td>
+<td>Phải có sẵn (<code>NODE_MAJOR_MIN := 22</code>; <code>engines.node &gt;= 22</code>). Gợi ý trong <code>make doctor</code>: <code>nvm install 22</code></td>
+</tr>
+<tr>
+<td>uv</td>
+<td>—</td>
+<td><code>make tools</code> tự cài nếu thiếu (script cài chính thức của Astral vào <code>~/.local/bin</code>)</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12</td>
+<td>uv tự cài và quản lý (<code>uv python install 3.12</code>), không đụng Python hệ thống</td>
+</tr>
+</tbody>
+</table>
+<p><code>openssl</code> được <code>make env</code> dùng để sinh <code>DJANGO_SECRET_KEY</code>; nếu thiếu thì dùng timestamp thay thế.</p>
+<h2 id="2-bat-au-nhanh">2. Bắt đầu nhanh</h2>
+<pre class="highlight"><code class="language-bash">make setup          # doctor → tools → env → infra-up → backend-install → frontend-install → migrate
+make dev-backend    # http://localhost:8000/api/docs/
+make dev-worker     # Celery worker
+make dev-frontend   # http://localhost:3000
+make superuser      # tạo tài khoản Django admin
+make check          # lint + typecheck + test + validate-kit (cần infra-up)</code></pre>
+<p><code>make setup</code> chạy lại an toàn: <code>make env</code> không ghi đè <code>src/backend/.env</code> và <code>src/frontend/.env.local</code> nếu đã có.</p>
+<h3 id="frontend-3000-goi-api-8000-session-csrf">Frontend :3000 gọi API :8000 (session + CSRF)</h3>
+<ul>
+<li>API xác thực bằng session Django (<code>SessionAuthentication</code>). Frontend phải gửi request với <code>credentials: "include"</code> và gửi header <code>X-CSRFToken</code> (lấy từ cookie <code>csrftoken</code>) cho mọi request ghi.</li>
+<li><code>CORS_ALLOWED_ORIGINS=http://localhost:3000</code> và <code>CORS_ALLOW_CREDENTIALS = True</code> đã có (<code>.env.example</code>, <code>settings.py</code>).</li>
+<li><code>CSRF_TRUSTED_ORIGINS</code> đọc từ biến môi trường, mặc định bằng <code>CORS_ALLOWED_ORIGINS</code>, nên POST từ <code>localhost:3000</code> qua được kiểm CSRF Origin.</li>
+<li><strong>Chưa có</strong> endpoint đăng nhập API trong <code>src/backend/config/urls.py</code> (chỉ có <code>admin/</code>, <code>api/schema/</code>, <code>api/docs/</code>). Tài khoản từ <code>make superuser</code> chỉ đăng nhập được Django admin.</li>
+<li>Cả hai mục trên là việc mở. Luồng chi tiết: <a href="../06-security/security-policies.html">../06-security/security-policies.md</a> mục 9.</li>
+</ul>
+<h2 id="3-danh-sach-make-target-ung-theo-scriptsinit-develop-environmentmk">3. Danh sách make target (đúng theo <code>scripts/init-develop-environment.mk</code>)</h2>
+<p>Lệnh mặc định là <code>make help</code> (liệt kê target có chú thích <code>##</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Target</th>
+<th>Việc làm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trợ giúp</td>
+<td><code>help</code></td>
+<td>Liệt kê lệnh</td>
+</tr>
+<tr>
+<td>Setup</td>
+<td><code>setup</code></td>
+<td>Cài toàn bộ môi trường dev: <code>doctor tools env infra-up backend-install frontend-install migrate</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>doctor</code></td>
+<td>Kiểm tra git, curl, docker, node, npm, Docker Compose v2, Docker daemon, Node ≥ 22</td>
+</tr>
+<tr>
+<td></td>
+<td><code>tools</code></td>
+<td>Cài uv nếu thiếu; <code>uv python install 3.12</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>env</code></td>
+<td>Tạo <code>src/backend/.env</code> từ <code>.env.example</code> (sinh <code>DJANGO_SECRET_KEY</code> dạng <code>dev-only-…</code>) và <code>src/frontend/.env.local</code> từ <code>.env.example</code>; không ghi đè file đã có</td>
+</tr>
+<tr>
+<td>Hạ tầng</td>
+<td><code>infra-up</code></td>
+<td><code>docker compose up -d --wait postgres redis seaweedfs</code>, rồi chạy <code>seaweedfs-init</code> tạo bucket</td>
+</tr>
+<tr>
+<td></td>
+<td><code>infra-down</code></td>
+<td>Tắt hạ tầng, giữ dữ liệu</td>
+</tr>
+<tr>
+<td></td>
+<td><code>infra-logs</code></td>
+<td>Xem log hạ tầng (<code>logs -f</code>)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>infra-reset</code></td>
+<td>Hỏi xác nhận, <strong>xoá</strong> volume Postgres/SeaweedFS (<code>down -v</code>), rồi <code>infra-up</code> + <code>migrate</code></td>
+</tr>
+<tr>
+<td>Dependency</td>
+<td><code>backend-install</code></td>
+<td><code>uv sync --frozen</code> theo <code>uv.lock</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>frontend-install</code></td>
+<td><code>npm ci --no-audit --no-fund</code> theo <code>package-lock.json</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>migrate</code></td>
+<td><code>python manage.py migrate</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>superuser</code></td>
+<td><code>python manage.py createsuperuser</code></td>
+</tr>
+<tr>
+<td>Chạy</td>
+<td><code>dev-backend</code></td>
+<td><code>runserver 0.0.0.0:8000</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>dev-worker</code></td>
+<td><code>celery -A config worker -l info</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>dev-beat</code></td>
+<td><code>celery -A config beat -l info</code> — chỉ khởi động Celery beat. Chú thích trong Makefile ghi "lịch polling CVAT", nhưng hiện <strong>chưa có</strong> task hay lịch nào: <code>src/backend/config/celery.py</code> chỉ <code>autodiscover_tasks()</code>. Polling drift CVAT là việc mở (TBD-01)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>dev-frontend</code></td>
+<td><code>npm run dev</code> (Next.js :3000)</td>
+</tr>
+<tr>
+<td>Chất lượng</td>
+<td><code>check</code></td>
+<td><code>lint typecheck test validate-kit</code> — toàn bộ kiểm tra trước khi tạo PR</td>
+</tr>
+<tr>
+<td></td>
+<td><code>lint</code></td>
+<td><code>ruff check .</code> + <code>ruff format --check .</code> (backend); <code>npm run lint</code> (frontend)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>format</code></td>
+<td><code>ruff check --fix .</code> + <code>ruff format .</code> (chỉ backend)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>typecheck</code></td>
+<td><code>mypy config</code> (backend); <code>npm run typecheck</code> (frontend)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>test</code></td>
+<td><code>pytest -q</code> (cần <code>infra-up</code>)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>gen-api</code></td>
+<td><code>npm run gen:api</code> — sinh type TypeScript từ OpenAPI (cần <code>dev-backend</code> đang chạy)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>validate-kit</code></td>
+<td><code>uv run --no-project python scripts/validate-framework.py</code> — kiểm cấu trúc agentic-sdlc-kit (<code>.agent/</code>, <code>docs/</code>)</td>
+</tr>
+<tr>
+<td>Dọn</td>
+<td><code>clean</code></td>
+<td>Xoá <code>src/backend/.venv</code>, <code>src/frontend/node_modules</code>, <code>src/frontend/.next</code></td>
+</tr>
+</tbody>
+</table>
+<p>Có thể gọi trực tiếp không qua <code>Makefile</code> gốc: <code>make -f scripts/init-develop-environment.mk &lt;target&gt;</code>.</p>
+<h2 id="4-ha-tang-dev-local-infrastructuredocker-composedevyml">4. Hạ tầng dev local (<code>infrastructure/docker-compose.dev.yml</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image</th>
+<th>Cổng</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code></td>
+<td><code>postgres:17</code></td>
+<td>5432</td>
+<td>Volume <code>postgres-data</code>; healthcheck <code>pg_isready</code></td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td><code>redis:7-alpine</code></td>
+<td>6379</td>
+<td>Broker (db 0) và result backend (db 1) của Celery theo <code>.env.example</code></td>
+</tr>
+<tr>
+<td><code>seaweedfs</code></td>
+<td><code>chrislusf/seaweedfs:latest</code></td>
+<td>9000 (S3)</td>
+<td>Thay Object Storage <strong>chỉ ở local</strong>; cấu hình định danh S3 ở <code>infrastructure/seaweedfs/s3.json</code></td>
+</tr>
+<tr>
+<td><code>seaweedfs-init</code></td>
+<td><code>chrislusf/seaweedfs:latest</code></td>
+<td>—</td>
+<td>Tạo bucket <code>labelx-snapshots</code>, <code>labelx-evidence</code>, <code>labelx-reports</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>CVAT <strong>không</strong> nằm trong compose. Adapter đọc instance CVAT đang triển khai (B-18); <code>CVAT_BASE_URL</code> và <code>CVAT_SERVICE_TOKEN</code> để trống trong <code>.env.example</code> (TBD-01).</li>
+<li>Credential trong compose/<code>s3.json</code>/<code>.env.example</code> là giá trị dev, không dùng cho môi trường thật.</li>
+<li><code>settings.py</code> có ba storage theo bucket: <code>snapshots</code> (<code>OBJECT_STORAGE_BUCKET_SNAPSHOTS</code>, mặc định <code>labelx-snapshots</code>), <code>evidence</code> (<code>OBJECT_STORAGE_BUCKET_EVIDENCE</code>, <code>labelx-evidence</code>), <code>reports</code> (<code>OBJECT_STORAGE_BUCKET_REPORTS</code>, <code>labelx-reports</code>); <code>default</code> vẫn là <code>OBJECT_STORAGE_BUCKET</code>. Dùng <code>django.core.files.storage.storages["snapshots"]</code>.</li>
+</ul>
+<h2 id="5-bien-moi-truong">5. Biến môi trường</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Tạo bởi</th>
+<th>Nội dung (tên biến)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/backend/.env</code></td>
+<td><code>make env</code> từ <code>.env.example</code></td>
+<td><code>DJANGO_SECRET_KEY</code>, <code>DJANGO_DEBUG</code>, <code>DJANGO_ALLOWED_HOSTS</code>, <code>CORS_ALLOWED_ORIGINS</code>, <code>DATABASE_URL</code>, <code>CELERY_BROKER_URL</code>, <code>CELERY_RESULT_BACKEND</code>, <code>OBJECT_STORAGE_*</code>, <code>CVAT_BASE_URL</code>, <code>CVAT_SERVICE_TOKEN</code></td>
+</tr>
+<tr>
+<td><code>src/frontend/.env.local</code></td>
+<td><code>make env</code> từ <code>.env.example</code></td>
+<td><code>NEXT_PUBLIC_API_BASE_URL</code>, <code>NEXT_PUBLIC_CVAT_BASE_URL</code></td>
+</tr>
+</tbody>
+</table>
+<p>Cả hai file bị <code>.gitignore</code> loại. Không commit, không chép giá trị của chúng vào tài liệu hay log.</p>
+<h2 id="6-thu-vien-chinh-dec-001">6. Thư viện chính (DEC-001)</h2>
+<ul>
+<li>Backend: Django 5.2 (<code>&gt;=5.2,&lt;5.3</code>), djangorestframework, drf-spectacular, django-filter, django-cors-headers, django-environ, django-storages[s3] + boto3, Celery 5 (<code>celery[redis]</code>) + django-celery-beat, psycopg 3, httpx, pillow, gunicorn.</li>
+<li>Frontend: next 16.3.8, react/react-dom 19.2.8, @tanstack/react-query, openapi-fetch, openapi-typescript.</li>
+<li>Chưa pin phiên bản CVAT/cvat-sdk; phải pin sau khi kiểm API instance thật (DEC-001, TBD-01).</li>
+</ul>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="coding-standards.html">coding-standards.md</a></li>
+<li><a href="workflow.html">workflow.md</a></li>
+<li><a href="../08-devops/deployment.html">../08-devops/deployment.md</a></li>
+</ul>
+</article></main></body></html>

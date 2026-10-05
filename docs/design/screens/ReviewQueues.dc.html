@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Review Queues</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="review" active-item="queues" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="review" step="queues" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Review Queues</h1>
+<p class="lx-lead">Điểm vào công việc hằng ngày của Reviewer. Các hàng đợi tách theo nguồn mẫu và mục tiêu, không chỉ xếp theo một điểm rủi ro.</p>
+</div>
+<div class="lx-actions"><a class="lx-btn lx-btn--primary" href="ReviewWorkspace.dc.html">Bắt đầu review →</a></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}<span class="lx-count">{{t.count}}</span></button>
+</sc-for>
+</div>
+<div class="lx-toolbar">
+<label class="lx-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" aria-label="Tìm issue" placeholder="Tìm theo mã issue, frame, object…"></label>
+<select class="lx-select lx-select--inline" aria-label="Loại issue"><option>Loại issue: Tất cả</option><option>Sai nhãn</option><option>Hình học</option><option>Thiếu object</option></select>
+<select class="lx-select lx-select--inline" aria-label="Nguồn"><option>Nguồn: Tất cả</option><option>Quy tắc</option><option>Mô hình</option><option>Kiểm tra ngẫu nhiên</option></select>
+<select class="lx-select lx-select--inline" aria-label="Phạm vi"><option>Phạm vi: Toàn dataset</option><option>T-119 · Urban night</option><option>Job 2272</option></select>
+</div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 900px">
+<thead><tr><th>Mã issue</th><th>Loại</th><th>Frame · Object</th><th>Nguồn</th><th>Ưu tiên</th><th>Trạng thái</th><th>Reviewer</th><th></th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<tr><td class="lx-mono">{{r.id}}</td><td class="lx-cell__main">{{r.type}}</td><td class="lx-muted">{{r.where}}</td><td class="lx-muted">{{r.source}}</td><td><span class="{{r.prioCls}}">{{r.prio}}</span></td><td><span class="{{r.statusCls}}">{{r.status}}</span></td><td class="lx-muted">{{r.who}}</td><td class="r"><a class="lx-iconbtn" href="ReviewWorkspace.dc.html" data-tip="Mở trong Review Workspace" aria-label="Mở trong Review Workspace"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Hiển thị 6 / {{total}} issue</span><span class="lx-pager"><button class="lx-btn lx-btn--sm" disabled="">Trước</button><button class="lx-btn lx-btn--sm">Sau</button></span></div>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'risk';
+    const B = (c) => 'lx-badge' + (c ? ' lx-badge--' + c : '');
+    const DATA = {
+      risk: { total: 124, rows: [
+        ['QC-00128','Sai nhãn','Frame 00428 · #18','Mô hình bất đồng','Cao','danger','Chờ review','','Chưa nhận'],
+        ['QC-00129','Hình học','Frame 00431 · #07','Quy tắc G-014','Trung bình','warning','Đang review','info','Bình Hồ'],
+        ['QC-00131','Trùng / chồng lấn','Frame 00436 · #02, #05','Duplicate / Overlap','Trung bình','warning','Chờ review','','Chưa nhận'],
+        ['QC-00133','Thiếu object','Frame 00502 · —','Mô hình bất đồng','Cao','danger','Chờ review','','Chưa nhận'],
+        ['QC-00137','Sai nhãn','Frame 00519 · #11','Mô hình thị giác – ngôn ngữ','Thấp','','Chờ review','','Chưa nhận'],
+        ['QC-00140','Hình học','Frame 00544 · #23','Quy tắc G-009','Thấp','','Chờ review','','Chưa nhận'] ] },
+      audit: { total: 50, rows: [
+        ['AUD-0007','Thiếu object','Frame 01204 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
+        ['AUD-0012','Rà soát frame','Frame 01877 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Đang review','info','An Nguyễn'],
+        ['AUD-0019','Rà soát frame','Frame 02310 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
+        ['AUD-0021','Rà soát frame','Frame 02955 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
+        ['AUD-0026','Rà soát frame','Frame 03408 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
+        ['AUD-0030','Rà soát frame','Frame 03912 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'] ] },
+      escalated: { total: 18, rows: [
+        ['QC-00098','Sai nhãn','Frame 00212 · #04','Mô hình bất đồng','Cao','danger','Chuyển cấp trên','warning','Chờ phân xử'],
+        ['QC-00104','Hình học','Frame 00255 · #09','Quy tắc G-014','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
+        ['QC-00112','Thuộc tính','Frame 00310 · #14','Quy tắc A-003','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
+        ['QC-00115','Sai nhãn','Frame 00366 · #02','Mô hình bất đồng','Cao','danger','Chuyển cấp trên','warning','Chờ phân xử'],
+        ['QC-00121','Thiếu object','Frame 00390 · —','Mô hình bất đồng','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
+        ['QC-00126','Hình học','Frame 00401 · #21','Quy tắc G-014','Thấp','','Chưa chắc chắn','warning','Chờ phân xử'] ] },
+      resolved: { total: 242, rows: [
+        ['QC-00061','Sai nhãn','Frame 00104 · #12','Mô hình bất đồng','Cao','danger','Đã xác nhận','success','Bình Hồ'],
+        ['QC-00062','Hình học','Frame 00110 · #03','Quy tắc G-014','Trung bình','warning','Bị bác bỏ','','Bình Hồ'],
+        ['QC-00064','Trùng / chồng lấn','Frame 00118 · #08','Duplicate / Overlap','Trung bình','warning','Đã xác nhận','success','An Nguyễn'],
+        ['QC-00067','Thiếu object','Frame 00131 · —','Mô hình bất đồng','Cao','danger','Đã đóng','success','An Nguyễn'],
+        ['QC-00070','Sai nhãn','Frame 00140 · #06','Mô hình bất đồng','Thấp','','Bị bác bỏ','','Chi Lâm'],
+        ['QC-00073','Hình học','Frame 00152 · #19','Quy tắc G-009','Thấp','','Đã đóng','success','Chi Lâm'] ] }
+    };
+    const TABS = [['risk','Ưu tiên theo rủi ro',124],['audit','Kiểm tra ngẫu nhiên',50],['escalated','Chưa chắc chắn / Chuyển cấp trên',18],['resolved','Đã xử lý',242]];
+    return {
+      total: DATA[cur].total,
+      tabs: TABS.map(([k, label, count]) => ({ label, count, selected: cur === k, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) })),
+      rows: DATA[cur].rows.map(([id, type, where, source, prio, prioC, status, statusC, who]) => ({ id, type, where, source, prio, prioCls: B(prioC), status, statusCls: B(statusC), who }))
+    };
+  }
+}
+</script>
+</body>
+</html>

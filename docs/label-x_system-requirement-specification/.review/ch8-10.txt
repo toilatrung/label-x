@@ -1,0 +1,13 @@
+Review tĩnh; chưa biên dịch trên TeXPage vì phiên này không có kết nối TeXPage. Không sửa tệp. Tên tệp dưới đây thuộc thư mục `sections/`.
+
+1. **(A) Chưa thấy lỗi biên dịch xác suất cao.** `10-architecture.tex:19,78,81,83`: `label={[font=…]…:…}` đúng dạng cú pháp [TikZ](https://tikz.dev/tikz-shapes#sec-17.10.2). `09-interfaces.tex:139`: `|` hợp lệ vì `\code` là `\texttt`, không phải delimiter verbatim (`preamble.tex:162`). Dòng 51–52 đã escape `#`; `·`, `§`, `‹›` không tự gây lỗi XeLaTeX. `10-architecture.tex:14,48`: `resizebox` đóng ngoặc đúng, đã nạp `graphicx`; cần kiểm PDF vì co hình làm chữ nhỏ. Không nên báo các điểm này là lỗi chắc chắn.
+
+2. **(B) Ngưỡng thiếu căn cứ.** `08-nonfunctional.tex:19,20,29,33`: 1,5 s, 500 ms, 500 lần mở, 15 phút và 10 reviewer chưa có nguồn/phê duyệt tương ứng. B-14 yêu cầu đo pilot rồi chốt tiêu chí. Dòng 6–7 gọi chúng là mục tiêu khởi điểm nhưng bảng vẫn viết như yêu cầu nghiệm thu. Thiếu cấu hình máy/mạng, kích thước ảnh, cache, tải và tiêu chí thành công của reviewer.
+
+3. **(B) Mô hình ranking bị lệch chương 6.** `10-architecture.tex:68`: ghi tính \(p_c,p_i\), trong khi `06-functional.tex:110,124,132,179` dùng xác suất cấp issue \(q_i\), \(n_i\), điểm nền \(h(f)\), đóng góp \(n_iq_i\); ausdrücklich tránh gộp xác suất candidate kiểu noisy-OR. Mô tả module cần thống nhất.
+
+4. **(B) Chính sách lưu chưa khớp quyết định.** `08-nonfunctional.tex:26`: “tối thiểu TBD tháng” chưa diễn đạt B-14: giữ audit/evidence/reference khi dataset còn cần quản lý/đối chiếu, kết thúc lưu do người quản lý xác nhận. Thời hạn tối thiểu không thay thế điều kiện này.
+
+5. **(C) Giao dịch xuyên kho chưa rõ.** `08-nonfunctional.tex:24`; `10-architecture.tex:8,34`: evidence nằm Object Storage nhưng yêu cầu ghi cùng transaction với ledger/candidate PostgreSQL. Cần phân biệt metadata và blob, quy định upload–commit, xử lý blob mồ côi và retry. `08-nonfunctional.tex:34` chỉ sao lưu PostgreSQL nên chưa bảo đảm khôi phục snapshot/evidence đầy đủ; thiếu RPO/RTO.
+
+6. **(C) API thiếu thao tác cốt lõi.** `09-interfaces.tex:125–138`: chưa có hoàn tất frame/trả lease/dừng effort theo `06-functional.tex:214`; chưa mô tả đọc trạng thái run/evaluation, gate/waiver, hợp đồng lỗi 403/409, scope run/snapshot và guideline version. `10-architecture.tex:31` cần xác định PostgreSQL là nguồn lease chuẩn, Redis chỉ cache, phù hợp khóa dòng tại `04-usecases.tex:193`.

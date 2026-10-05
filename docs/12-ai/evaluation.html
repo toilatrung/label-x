@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đánh giá engine, ranking và hiệu quả review — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/12-ai/evaluation.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / evaluation</span><span class="sp"></span>
+<a href="evaluation.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>ai-evaluation</span><b>title</b><span>Đánh giá engine, ranking và hiệu quả review</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, evaluation, kpi, reference]</span><b>priority</b><span>1</span></div>
+<h1 id="anh-gia-engine-ranking-va-hieu-qua-review">Đánh giá engine, ranking và hiệu quả review</h1>
+<p>Tài liệu mô tả cách đo: (1) KPI-1 Recall@20% của ranking; (2) KPI-2 giảm effort với chất lượng tương đương (non-inferiority); (3) Metric engine — accuracy của Detector trên reference. Nguồn chính: SRS <a href="../label-x_system-requirement-specification/sections/07-evaluation.tex">07-evaluation.tex</a>, <a href="../label-x_system-requirement-specification/sections/02-overview.tex">02-overview.tex</a> §KPI, <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a> §Reference; R B-05, B-14, B-15, B-20, R-04, R-07.</p>
+<blockquote>
+<p>Hiện chưa có reference, chưa có phép đo. Mọi con số trên H (ví dụ Precision 91.2%, agreement 94.1%, residual 4.0%) và đồ thị trong SRS là <strong>minh hoạ</strong>, không phải kết quả (R B-05, B-14).</p>
+</blockquote>
+<h2 id="1-reference-ieu-kien-tien-quyet">1. Reference — điều kiện tiên quyết</h2>
+<ul>
+<li>Reference = GT cho <strong>toàn bộ</strong> tập đánh giá + tập lỗi <code>E</code> suy ra tất định (BR-01…BR-07), duyệt và khoá version (SRS 03; R B-20).</li>
+<li>GT lập độc lập với công cụ: người xác minh mù với ranking/candidate (BR-10); hai người gán độc lập, QA Lead phân xử phần không khớp (BR-11). Nếu chỉ xác minh candidate công cụ đưa ra, mẫu số thiếu lỗi công cụ bỏ sót và KPI-1 bị thổi phồng.</li>
+<li>Khoá cùng: GT version, snapshot, mapping, <code>τ_m</code>, <code>a_min</code>, version thuật toán (BR-13; FR-EVL-04).</li>
+<li>Phân công (R phân công MVP): QA Lead chịu trách nhiệm reference và held-out; người có chuyên môn duyệt/khoá; reviewer/annotator được giao chuẩn bị nhưng không review annotation của mình. Tỉ lệ chia tập chưa đặt (<strong>TBD-03</strong>).</li>
+<li>Phụ thuộc AS-04: QA Lead và ít nhất hai người xác minh độc lập sẵn sàng trước khi đo.</li>
+</ul>
+<p><strong>Thứ tự (R B-20)</strong>: build discovery có thể đi trước, nhưng <strong>acceptance</strong> recall/precision chỉ sau khi reference đúng scope được khoá. Tách "hoàn thành build" khỏi "hoàn thành đánh giá".</p>
+<h2 id="2-phan-chia-du-lieu-va-chong-ro-ri">2. Phân chia dữ liệu và chống rò rỉ</h2>
+<ul>
+<li>Ảnh BDD100K nhóm theo video nguồn, chia <strong>tập hiệu chỉnh</strong> (chọn trọng số, ngưỡng, <code>k*</code>) và <strong>tập held-out</strong> (chỉ đo nghiệm thu), không giao nhau theo video (SRS 03 Hình phân chia).</li>
+<li>Kiểm bắt buộc, lưu cùng evaluation run (FR-EVL-05): (a) không giao video; từ chối dùng held-out học tham số; (b) đối chiếu danh sách ảnh huấn luyện Detector — giao ⇒ chặn (AS-03, xem <a href="detector.html#7-chống-leakage-as-03">detector.md §7</a>); (c) loại case guideline/hiệu chỉnh khỏi GT held-out (BR-16).</li>
+</ul>
+<h2 id="3-kpi-1-recall20">3. KPI-1 — Recall@20%</h2>
+<pre class="highlight"><code>n_20 = ⌈0,2 · N⌉
+Recall@20% = |{e ∈ E : rank_π(φ(e)) ≤ n_20}| / |E|</code></pre>
+<ul>
+<li>Đơn vị đếm: <strong>lỗi</strong> (BR-01), chỉ E1–E3, đã loại ignore (BR-07). Recall theo frame có lỗi là chỉ số phụ.</li>
+<li>Điều kiện tính: <code>|E| ≥ E_min</code> (<strong>TBD-K4</strong>); dưới ngưỡng ghi "không đủ mẫu". Nhóm lỗi có ít hơn <code>E_min,g</code> chỉ báo cáo.</li>
+<li>Ý nghĩa: đo khả năng xếp hạng, độc lập việc reviewer có tìm thấy lỗi; không thay accuracy engine.</li>
+</ul>
+<p><strong>Đối chứng</strong> (FR-RNK-08; SRS 07): ngẫu nhiên (<code>S ≥ 1000</code> seed, báo trung bình và phân vị 2,5–97,5%), heuristic mật độ (số annotation giảm dần), heuristic Detector (<code>score_v0</code>), oracle (cận trên, tham khảo).</p>
+<p><strong>Khoảng tin cậy</strong>: cluster bootstrap theo video nguồn (frame cùng video tương quan), <code>B ≥ 1000</code>, seed khoá trước (FR-EVL-09; SRS 07 mục KPI-1). Mỗi lần lặp:</p>
+<ol>
+<li>Lấy lại <strong>toàn bộ video</strong>, có hoàn lại.</li>
+<li>Frame của video bị lấy lặp được nhân bản, mỗi bản có <strong>khoá phá hoà riêng</strong>.</li>
+<li>Tính lại <code>N</code> và <code>n_20 = ⌈0,2·N⌉</code> của mẫu.</li>
+<li>Sắp lại theo <code>s(f)</code> đã có — <strong>không</strong> học lại điểm; tính lại các ranking đối chứng trên cùng mẫu.</li>
+<li>Recall của ranking ngẫu nhiên lấy theo kỳ vọng <code>n_20/N</code> của từng mẫu.</li>
+<li>Tính hiệu số <code>Δ = Recall@20%_π − Recall@20%_đối chứng</code> trên cùng mẫu bootstrap.</li>
+</ol>
+<p><strong>Đạt KPI-1</strong> khi đồng thời: (i) cận dưới CI của Recall@20% ≥ ngưỡng <strong>TBD-K1</strong>; (ii) cận dưới CI của <code>Δ</code> so với ngẫu nhiên và với heuristic mật độ đều &gt; 0. Báo cáo thêm theo E1/E2/E3, slice (ngày/đêm, thời tiết, kích thước), đường Recall@k với k từ 5% tới 100% (FR-EVL-08).</p>
+<h2 id="4-kpi-2-giam-effort-chat-luong-tuong-uong">4. KPI-2 — Giảm effort, chất lượng tương đương</h2>
+<p><strong>Effort</strong> = thời gian thao tác hoạt động ghi tự động, loại khoảng không thao tác &gt; <code>t_idle</code> (<strong>TBD-11</strong>):</p>
+<pre class="highlight"><code>T = Σ (t_view + t_tp + t_fa + t_adj + t_rc)        KPI-2 = 1 − T_A / T_B</code></pre>
+<p><code>t_fix</code> (annotator sửa trên CVAT) báo cáo riêng và trong phân tích độ nhạy, không cộng vào <code>T</code>. Chỉ số phụ: lỗi xác nhận/giờ review, <code>t_fa/T</code>, KPI-2b (recall phát hiện thực tế, không có ngưỡng).</p>
+<p><strong>Thiết kế</strong>: crossover AB/BA, D1/D2 chia theo video và phân tầng; quy tắc EX-01…EX-10 (xem <a href="../09-testing/acceptance-pilot.html">../09-testing/acceptance-pilot.md</a>).</p>
+<p><strong>Phân tích effort</strong> (SRS 07 §Phân tích effort):</p>
+<ul>
+<li><strong>Estimand chính</strong>: tỉ số <code>T_A/T_B</code> của tổng effort trên cùng khối lượng dữ liệu; KPI-2 = <code>1 − T_A/T_B</code>.</li>
+<li><strong>Mô hình</strong>: hồi quy hỗn hợp trên <code>log T_{r,p}</code> — effort của reviewer <code>r</code> ở đợt <code>p</code>, <strong>chuẩn hoá theo số frame của tập</strong>:
+  <code>log T_{r,p} = μ + τ·arm + γ·period + η·dataset + u_r + ε</code>, với <code>u_r</code> là hiệu ứng ngẫu nhiên của reviewer; <code>exp(τ)</code> ước lượng <code>T_A/T_B</code>.</li>
+<li><strong>Khoảng tin cậy</strong>: từ mô hình trên, kiểm lại bằng <strong>bootstrap hai tầng</strong> (lấy lại reviewer trong từng chuỗi, rồi lấy lại khối video trong từng tập), giữ nguyên cặp hai điều kiện của mỗi reviewer.</li>
+<li><strong>Phân tích độ nhạy định trước</strong>: (i) chỉ dùng đợt 1 (so sánh song song, không carryover); (ii) hai giá trị <code>t_idle</code>; (iii) cộng <code>t_fix</code> vào <code>T</code>.</li>
+</ul>
+<p><strong>Chất lượng tương đương (G-1, non-inferiority)</strong>:</p>
+<pre class="highlight"><code>ρ = số lỗi E1–E3 còn lại sau quy trình / số đối tượng GT không ignore
+H0: ρ_A − ρ_B ≥ δ    vs    H1: ρ_A − ρ_B &lt; δ,   α = 0,025 (một phía)</code></pre>
+<ul>
+<li><code>ρ</code> đo <strong>trực tiếp trên toàn tập</strong> (reference phủ toàn bộ) sau khi mỗi nhánh kết thúc, so annotation cuối của nhánh với GT theo cùng quy tắc matching/đếm lỗi.</li>
+<li>Lỗi còn lại gồm <strong>lỗi ban đầu chưa sửa và lỗi mới phát sinh do sửa</strong>. <code>ρ</code> có thể vượt 100% trong trường hợp cực đoan (nhiều box trùng).</li>
+<li><strong>Mẫu số (số đối tượng GT không ignore) bằng 0 thì không tính</strong> <code>ρ</code>.</li>
+<li><code>ρ</code> khác G-4 (residual vận hành ước lượng từ lát ngẫu nhiên khi không có reference toàn tập).</li>
+<li>Bác H0 khi cận trên CI 95% hai phía của <code>ρ_A − ρ_B</code> &lt; <code>δ</code>. CI bằng bootstrap theo khối video trong từng tập, giữ cặp hai nhánh trên cùng dữ liệu. <code>δ</code>: <strong>TBD-K3</strong>, Product Owner và QA Lead chốt trước thí nghiệm.</li>
+</ul>
+<p><strong>Guardrail của thí nghiệm</strong> (SRS 07):</p>
+<ul>
+<li><strong>G-2b — lỗi nghiêm trọng</strong>: số lỗi nghiêm trọng của reference còn lại trong annotation cuối, <strong>kể cả lỗi chưa từng có issue</strong>, ở nhánh assisted không lớn hơn nhánh baseline. G-2b khác G-2 (gate: issue nghiêm trọng đã xác nhận còn mở = 0).</li>
+<li><strong>G-5 — box thừa</strong>: số box thừa (BR-06) trong annotation cuối, kể cả box phát sinh do sửa, báo cáo theo nhánh; nhánh assisted không được nhiều hơn baseline quá <code>δ_fp</code> (<strong>TBD-K3</strong>).</li>
+<li>Ngưỡng residual ≤ 5% và đồng thuận ≥ 90% là guardrail khởi điểm, không thay kiểm định trên.</li>
+</ul>
+<p><strong>Đạt KPI-2</strong> khi đồng thời: (i) bác H0 non-inferiority; (ii) cận dưới CI 95% của <code>1 − T_A/T_B</code> ≥ <strong>TBD-K2</strong>; (iii) đạt G-2b và G-5; (iv) kết luận không đổi chiều khi chỉ dùng đợt 1. Cỡ mẫu từ power analysis 80% trên pilot nhỏ (<strong>TBD-12</strong>).</p>
+<h2 id="5-metric-engine-accuracy-detector-b-05">5. Metric engine — accuracy Detector (B-05)</h2>
+<ul>
+<li><strong>Quyết định B-05 (chọn B)</strong>: khối đánh giá engine riêng tính metric trên reference theo B-20; Model Orchestrator tổng hợp kết quả có provenance; không dùng model làm Ground Truth (R B-05).</li>
+<li>Precision/Recall Detector theo lớp chỉ tính trên GT đã khoá; thiếu GT ⇒ Metric Not checked, accuracy "chưa đánh giá" — không 0%, không pass (FR-EVL-15; FR-RPT-03).</li>
+<li>Provenance bắt buộc: engine/model/config version, evaluation run, snapshot/revision, reference version, scope, định nghĩa metric/matching, cỡ mẫu, status (R B-05; FR-EVL-14).</li>
+<li>Đặc tả matching của Metric có thể riêng (ví dụ IoU theo lớp), ghi rõ trong evaluation run (BR-17).</li>
+<li>"Model Orchestrator" là vai trò điều phối/tổng hợp phép đo; đặc tả chi tiết (đầu vào, đầu ra, provenance) là <strong>TBD-21</strong> (đội mô hình, trước khi đo Metric engine). Cài đặt nằm trong module Evaluation (SRS 10).</li>
+</ul>
+<h2 id="6-chi-so-van-hanh-va-guardrail">6. Chỉ số vận hành và guardrail</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Chỉ số</th>
+<th>Ngưỡng</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G-2</td>
+<td>Issue nghiêm trọng đã xác nhận còn mở trên run cuối</td>
+<td>0 (cấu hình pilot)</td>
+<td>Mức nghiêm trọng TBD-07</td>
+</tr>
+<tr>
+<td>G-3</td>
+<td>Đồng thuận reviewer với adjudicator trên tập case chuẩn</td>
+<td>≥ 90% (cấu hình pilot)</td>
+<td>"Chưa chắc chắn" = không trùng; tính từng reviewer + trung vị; không thay accuracy engine</td>
+</tr>
+<tr>
+<td>G-4</td>
+<td>Residual vận hành từ lát ngẫu nhiên</td>
+<td>≤ 5% (cấu hình pilot)</td>
+<td>Không dùng mẫu theo rủi ro; tiêu chí đủ mẫu chưa chốt (R B-15)</td>
+</tr>
+<tr>
+<td>—</td>
+<td>Candidate precision</td>
+<td>Báo cáo</td>
+<td>Confirmed / (confirmed + rejected) trong tập đã phân xử; báo kèm uncertain/unreviewed (T §7)</td>
+</tr>
+</tbody>
+</table>
+<p>Ngưỡng G-2/G-3/G-4 là cấu hình khởi điểm pilot đã chốt trong R, <strong>chưa</strong> là bằng chứng đạt và không thay kiểm định non-inferiority (SRS 02, 07).</p>
+<h2 id="7-ang-ky-truoc-pre-registration">7. Đăng ký trước (pre-registration)</h2>
+<p>Khoá version trong LabelX trước khi chạy held-out hoặc bắt đầu thí nghiệm (SRS 07 bảng khoá):</p>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Nội dung</th>
+<th>Người khoá</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Detector</td>
+<td>Artifact, checksum, mapping, <code>τ_conf</code>, xác nhận không huấn luyện trên held-out</td>
+<td>Data/Model Owner</td>
+</tr>
+<tr>
+<td>Score version</td>
+<td>Đặc trưng, tham số <code>w_g</code>, <code>b_g</code>, mô hình điểm nền <code>h(f)</code>, <code>τ_E1</code>, <code>τ_E2</code>, seed phá hoà</td>
+<td>QC Admin</td>
+</tr>
+<tr>
+<td>Reference</td>
+<td>GT version, mapping, <code>τ_m</code>, <code>a_min</code>, <code>E_min</code></td>
+<td>QA Lead</td>
+</tr>
+<tr>
+<td>Ngưỡng KPI</td>
+<td>K1, K2, <code>δ</code></td>
+<td>Product Owner</td>
+</tr>
+<tr>
+<td>Thí nghiệm</td>
+<td>Seed D1/D2 và AB/BA, <code>k*</code>, <code>r</code>, <code>t_idle</code>, cỡ mẫu, mô hình phân tích, độ nhạy, <code>δ</code>, <code>δ_fp</code></td>
+<td>Product Owner</td>
+</tr>
+</tbody>
+</table>
+<p>Thay đổi sau khoá ghi lý do; kết quả dùng phiên bản cũ vẫn được báo cáo.</p>
+<h2 id="8-bao-cao">8. Báo cáo</h2>
+<ul>
+<li>Mỗi chỉ số có cỡ mẫu, mẫu số, phương pháp, khoảng tin cậy, provenance (FR-RPT-01; NFR-14).</li>
+<li>Random và risk báo cáo riêng (FR-RPT-02; H AuditSampling, PerformanceEvaluation).</li>
+<li>Coverage theo từng engine; coverage chung chỉ là tiến độ (FR-RPT-04).</li>
+<li>Xuất PDF/CSV/JSON ghi version snapshot, run, score, reference (FR-RPT-05, Should).</li>
+</ul>
+<h2 id="9-ngoai-pham-vi-mvp">9. Ngoài phạm vi MVP</h2>
+<p>Ablation VLM/RAG/temporal/classifier (T §7–8) chỉ thực hiện khi các thành phần đó được đưa vào scope (R B-07, B-08, B-09, B-13). Reviewer calibration (honeypot, blind anchor) có trên H Calibration/Benchmark nhưng SRS chỉ yêu cầu G-3 (FR-EVL-16, Should).</p>
+</article></main></body></html>

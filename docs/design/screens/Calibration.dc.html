@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Calibration</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="calibration" active-item="calibrate" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Calibration</h1>
+<p class="lx-lead">Hiệu chỉnh reviewer và hiệu chỉnh mô hình là hai việc riêng, có tập dữ liệu, metric và cách điều chỉnh khác nhau. Không trộn hai loại này.</p>
+</div>
+<div class="lx-actions"><button class="lx-btn lx-btn--primary">Giao bài hiệu chỉnh</button></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isReviewer}}" hint-placeholder-val="{{true}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 760px">
+<thead><tr><th>Reviewer</th><th class="r">Thống nhất với adjudicator</th><th class="r">Bỏ sót lỗi nghiêm trọng</th><th class="r">Cảnh báo sai</th><th>Bài hiệu chỉnh gần nhất</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Bình Hồ</td><td class="r">40 / 45 (88.9%)</td><td class="r is-warn">6.7%</td><td class="r">4.4%</td><td class="lx-muted">2026-10-03 · Benchmark v1.2</td></tr>
+<tr><td class="lx-cell__main">An Nguyễn</td><td class="r">43 / 45 (95.6%)</td><td class="r">0.0%</td><td class="r">2.2%</td><td class="lx-muted">2026-10-03 · Benchmark v1.2</td></tr>
+<tr><td class="lx-cell__main">Chi Lâm</td><td class="r">44 / 45 (97.8%)</td><td class="r">0.0%</td><td class="r">2.2%</td><td class="lx-muted">2026-10-02 · Benchmark v1.2</td></tr>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Reviewer không nhìn thấy đáp án chuẩn khi làm bài. Kết quả được phân tích theo loại issue và độ khó.</span></div>
+</sc-if>
+
+<sc-if value="{{isModel}}" hint-placeholder-val="{{false}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 760px">
+<thead><tr><th>Lớp</th><th class="r">Ngưỡng tin cậy</th><th class="r">Precision</th><th class="r">Recall</th><th>Trạng thái đánh giá</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">car</td><td class="r">0.60</td><td class="r">91.2%</td><td class="r">88.7%</td><td><span class="lx-badge lx-badge--success">Đủ Ground Truth</span></td></tr>
+<tr><td class="lx-cell__main">truck</td><td class="r">0.60</td><td class="r is-warn">78.4%</td><td class="r">72.1%</td><td><span class="lx-badge lx-badge--success">Đủ Ground Truth</span></td></tr>
+<tr><td class="lx-cell__main">pedestrian</td><td class="r">0.55</td><td class="r">84.0%</td><td class="r">80.3%</td><td><span class="lx-badge lx-badge--success">Đủ Ground Truth</span></td></tr>
+<tr><td class="lx-cell__main">motorbike</td><td class="r">0.55</td><td class="r lx-subtle">—</td><td class="r lx-subtle">—</td><td><span class="lx-badge lx-badge--warning">Không đủ mẫu để đánh giá</span></td></tr>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Precision và recall chỉ tính khi có Ground Truth đúng phạm vi. Mức đồng thuận giữa mô hình và annotator không thay cho độ chính xác.</span></div>
+</sc-if>
+
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'reviewer';
+    return {
+      isReviewer: cur === 'reviewer',
+      isModel: cur === 'model',
+      tabs: [['reviewer','Hiệu chỉnh reviewer'],['model','Hiệu chỉnh mô hình']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

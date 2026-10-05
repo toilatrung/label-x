@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logging LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/13-observability/logging.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 13-observability / logging</span><span class="sp"></span>
+<a href="logging.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>observability-logging</span><b>title</b><span>Logging LabelX</span><b>type</b><span>reference</span><b>domain</b><span>observability</span><b>module</b><span>repository</span><b>tags</b><span>[observability, logging, structured-logs, correlation-id]</span><b>priority</b><span>3</span></div>
+<h1 id="logging-labelx">Logging LabelX</h1>
+<h2 id="yeu-cau-nguon">Yêu cầu nguồn</h2>
+<ul>
+<li><strong>NFR-12</strong>: log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code>; cách kiểm: kiểm tra dashboard vận hành.</li>
+<li><strong>NFR-07</strong>: mật khẩu/secret không xuất hiện trong log; token CVAT chỉ ở backend.</li>
+<li><strong>09-interfaces, hợp đồng lỗi</strong>: mọi phản hồi lỗi có <code>code</code>, <code>message</code>, <code>request_id</code>; lỗi 403/409 được ghi audit.</li>
+<li><strong>A mục 28</strong>: nếu sau này bật RAG/VLM, log prompt/response gắn với evidence để truy vết. VLM đề xuất không bật trong pilot (TBD-08).</li>
+</ul>
+<h2 id="hien-trang">Hiện trạng</h2>
+<ul>
+<li><code>src/backend/config/settings.py</code> <strong>chưa có</strong> cấu hình <code>LOGGING</code>, nên Django dùng log mặc định. Celery worker chạy <code>-l info</code> (<code>make dev-worker</code>).</li>
+<li>Chưa có middleware sinh <code>request_id</code>, chưa có thư viện log JSON, chưa có nơi tập trung log.</li>
+<li>Ba trường <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code> và yêu cầu log có cấu trúc là <strong>đã chốt</strong> (NFR-12); không log secret là <strong>đã chốt</strong> (NFR-07). Các trường khác, danh sách sự kiện và cách hiện thực là <strong>đề xuất</strong>. Không thêm thư viện log mới khi chưa có change request (DEC-001, <code>AGENT.md</code>). Thư viện <code>logging</code> chuẩn của Python với formatter JSON đủ cho yêu cầu này.</li>
+</ul>
+<h2 id="phan-biet-log-va-audit">Phân biệt log và audit</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Log vận hành</th>
+<th>Audit log</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mục đích</td>
+<td>Chẩn đoán lỗi, hiệu năng</td>
+<td>Bằng chứng nghiệp vụ (R-05)</td>
+</tr>
+<tr>
+<td>Lưu ở</td>
+<td>Hệ thống log (chưa chọn)</td>
+<td>Bảng PostgreSQL append-only, cùng transaction với thao tác (FR-SEC-05)</td>
+</tr>
+<tr>
+<td>Sửa/xoá</td>
+<td>Theo chính sách xoay vòng log</td>
+<td>Không có API sửa/xoá (NFR-08)</td>
+</tr>
+<tr>
+<td>Thời hạn</td>
+<td>Đề xuất ngắn (chưa chốt)</td>
+<td>Giữ khi dataset còn cần đối chiếu; tối thiểu <strong>TBD-15</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Log <strong>không thay</strong> audit. Một quyết định review phải có AuditEvent; log chỉ ghi thêm để chẩn đoán.</p>
+<h2 id="truong-log-e-xuat">Trường log đề xuất</h2>
+<table>
+<thead>
+<tr>
+<th>Trường</th>
+<th>Bắt buộc</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>timestamp</code></td>
+<td>Có</td>
+<td>ISO 8601 có múi giờ (<code>TIME_ZONE = Asia/Ho_Chi_Minh</code>, <code>USE_TZ = True</code>)</td>
+</tr>
+<tr>
+<td><code>level</code></td>
+<td>Có</td>
+<td><code>DEBUG</code>/<code>INFO</code>/<code>WARNING</code>/<code>ERROR</code></td>
+</tr>
+<tr>
+<td><code>logger</code>, <code>message</code></td>
+<td>Có</td>
+<td></td>
+</tr>
+<tr>
+<td><code>service</code></td>
+<td>Có</td>
+<td><code>api</code>, <code>worker-cpu</code>, <code>worker-gpu</code>, <code>beat</code></td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td>Có với request API</td>
+<td>Sinh ở middleware hoặc nhận từ header; trả về trong phản hồi lỗi</td>
+</tr>
+<tr>
+<td><code>run_id</code>, <code>snapshot_id</code></td>
+<td>Có khi thao tác thuộc run/snapshot</td>
+<td>NFR-12</td>
+</tr>
+<tr>
+<td><code>engine</code>, <code>shard</code>, <code>attempt</code></td>
+<td>Có với task engine</td>
+<td>Khoá idempotent <code>(run, engine, shard)</code> (A mục 20.3)</td>
+</tr>
+<tr>
+<td><code>task_id</code>, <code>task_name</code></td>
+<td>Có với Celery task</td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_id</code>, <code>role</code></td>
+<td>Có với request đã đăng nhập</td>
+<td>Dùng id nội bộ, không log tên/email</td>
+</tr>
+<tr>
+<td><code>duration_ms</code></td>
+<td>Nên có</td>
+<td>Thời gian request/task/shard</td>
+</tr>
+<tr>
+<td><code>error_code</code></td>
+<td>Khi lỗi</td>
+<td>Khớp <code>code</code> của hợp đồng lỗi</td>
+</tr>
+</tbody>
+</table>
+<p>Truyền <code>request_id</code> từ API sang Celery task qua header của task, để nối log API với log worker của cùng một thao tác (đề xuất).</p>
+<h2 id="khong-uoc-log">Không được log</h2>
+<ul>
+<li><code>CVAT_SERVICE_TOKEN</code>, <code>DJANGO_SECRET_KEY</code>, <code>OBJECT_STORAGE_SECRET_KEY</code>, mật khẩu, cookie phiên, header <code>Authorization</code>/<code>Cookie</code> (NFR-07).</li>
+<li>URL có chứa credential (ví dụ <code>DATABASE_URL</code> đầy đủ).</li>
+<li>Nội dung ảnh hay crop. Chỉ log URI Object Storage hoặc hash.</li>
+<li>Dữ liệu cá nhân không cần cho chẩn đoán.</li>
+</ul>
+<p>Đề xuất: thêm filter che giá trị theo tên biến/header nhạy cảm, và một test kiểm log của luồng adapter CVAT không chứa token.</p>
+<h2 id="su-kien-nen-log-e-xuat">Sự kiện nên log (đề xuất)</h2>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Sự kiện</th>
+<th>Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CVAT adapter</td>
+<td>Bắt đầu/kết thúc đọc job, số frame, thời gian; lỗi HTTP, timeout</td>
+<td>INFO / WARNING</td>
+</tr>
+<tr>
+<td>Snapshot</td>
+<td>Khoá thành công, hash tổng; drift phát hiện (danh sách job)</td>
+<td>INFO / WARNING</td>
+</tr>
+<tr>
+<td>Orchestrator</td>
+<td>Tạo run, chia shard, shard bắt đầu/kết thúc/retry/Failed, huỷ run</td>
+<td>INFO / WARNING / ERROR</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>Task bị giao lại sau khi worker chết (acks late)</td>
+<td>WARNING</td>
+</tr>
+<tr>
+<td>Review</td>
+<td>Cấp lease, lease hết hạn, xung đột 409, từ chối 403 (self-review, tách nhiệm vụ)</td>
+<td>INFO / WARNING</td>
+</tr>
+<tr>
+<td>Hệ thống</td>
+<td>Lỗi không bắt được (500) kèm stack trace</td>
+<td>ERROR</td>
+</tr>
+</tbody>
+</table>
+<h2 id="thoi-han-va-noi-luu-log">Thời hạn và nơi lưu log</h2>
+<p><strong>Chưa có.</strong> Phụ thuộc hạ tầng production (TBD-02). Khi chốt, ghi lại tại đây.</p>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="metrics.html">metrics.md</a></li>
+<li><a href="alerts-and-slo.html">alerts-and-slo.md</a></li>
+<li><a href="../06-security/security-policies.html">../06-security/security-policies.md</a></li>
+</ul>
+</article></main></body></html>

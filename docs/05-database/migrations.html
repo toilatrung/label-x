@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quy tắc Django migrations — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/05-database/migrations.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / migrations</span><span class="sp"></span>
+<a href="migrations.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>database-migrations</span><b>title</b><span>Quy tắc Django migrations</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>quality-control</span><b>tags</b><span>[database, migrations, django, postgresql]</span><b>priority</b><span>2</span></div>
+<h1 id="django-migrations">Django migrations</h1>
+<h2 id="cong-cu">Công cụ</h2>
+<ul>
+<li>Schema được quản lý bằng <strong>Django migrations</strong> (DEC-001). A §20.1 đề xuất Alembic; đề xuất này không dùng.</li>
+<li>Mỗi app (xem <a href="../02-architecture/system-design.html">system-design.md</a> mục 3) có thư mục <code>migrations/</code> riêng. Hiện chưa có app LabelX nào trong <code>INSTALLED_APPS</code>.</li>
+<li>CSDL dev: PostgreSQL 17 từ <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a>. Kết nối qua <code>DATABASE_URL</code> (<a href="../../src/backend/config/settings.py">settings.py</a>).</li>
+</ul>
+<h2 id="quy-tac">Quy tắc</h2>
+<ol>
+<li><strong>Mỗi thay đổi model đi kèm migration trong cùng PR.</strong> Đề xuất: pipeline CI (khi được thiết lập) chạy <code>python manage.py makemigrations --check --dry-run</code> và thất bại nếu còn thay đổi model chưa có migration. Repository <strong>hiện chưa có</strong> CI thực thi bước này (chưa có <code>.github/workflows</code>). Trong lúc chờ, người tạo PR tự chạy lệnh ở bảng "Lệnh" bên dưới.</li>
+<li><strong>Không sửa migration đã merge.</strong> Muốn thay đổi thì tạo migration mới.</li>
+<li><strong>Đặt tên có nghĩa</strong>: <code>makemigrations &lt;app&gt; --name &lt;mo_ta_ngan&gt;</code>.</li>
+<li><strong>Ràng buộc nghiệp vụ nằm trong model</strong>: dùng <code>Meta.constraints</code> (<code>UniqueConstraint</code>, kể cả partial với <code>condition=Q(...)</code>, và <code>CheckConstraint</code>). Không dựa vào việc kiểm ở tầng ứng dụng cho các khoá idempotent và dedup trong <a href="schema.html">schema.md</a>.</li>
+<li><strong>SQL đặc thù PostgreSQL</strong> dùng <code>migrations.RunSQL</code>, và luôn có <code>reverse_sql</code>. Áp dụng cho:
+   - <code>REVOKE UPDATE, DELETE, TRUNCATE ON audit_log …</code> và trigger chặn UPDATE/DELETE (append-only, FR-SEC-05, NFR-08). Tên role DB của ứng dụng lấy từ cấu hình triển khai; giá trị cụ thể là TBD theo môi trường.
+   - Trigger chặn UPDATE trên <code>candidate</code>, <code>evidence</code>, <code>review_decision</code>, cũng như trên <code>config_version</code>, <code>score_version</code>, <code>reference</code> sau khi đã publish hoặc khoá.</li>
+<li><strong>Migration dữ liệu</strong> (<code>RunPython</code>) phải idempotent và có <code>reverse_code</code>, hoặc ghi rõ <code>migrations.RunPython.noop</code> kèm lý do.</li>
+<li><strong>Không xoá hay đổi kiểu cột chứa bằng chứng</strong> (snapshot, evidence, decision, audit, reference). Bằng chứng phải được giữ khi dataset còn cần đối chiếu (NFR-08; R "retention"). Muốn bỏ cột thì làm hai bước: ngừng ghi, rồi xoá sau khi người quản lý dữ liệu xác nhận.</li>
+<li><strong>Thay đổi an toàn khi đang chạy</strong>:
+   - Thêm cột NULL được trước, backfill, rồi mới đặt NOT NULL.
+   - Index trên bảng lớn tạo bằng <code>AddIndexConcurrently</code> (<code>django.contrib.postgres.operations</code>), trong migration có <code>atomic = False</code>.</li>
+<li><strong>Không seed dữ liệu nghiệp vụ</strong> (taxonomy, guideline, ngưỡng) bằng migration. Dữ liệu này vào qua <code>config_version</code> và guideline version có audit.</li>
+<li><strong>Kiểm thử</strong>: <code>pytest-django</code> tạo DB test từ migrations. Mỗi ràng buộc idempotent hoặc dedup cần ít nhất một test chèn trùng để chứng minh DB từ chối.</li>
+</ol>
+<h2 id="lenh">Lệnh</h2>
+<table>
+<thead>
+<tr>
+<th>Việc</th>
+<th>Lệnh (chạy trong <code>src/backend</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tạo migration</td>
+<td><code>uv run python manage.py makemigrations &lt;app&gt; --name &lt;ten&gt;</code></td>
+</tr>
+<tr>
+<td>Kiểm còn thiếu</td>
+<td><code>uv run python manage.py makemigrations --check --dry-run</code></td>
+</tr>
+<tr>
+<td>Áp dụng</td>
+<td><code>uv run python manage.py migrate</code></td>
+</tr>
+<tr>
+<td>Xem SQL</td>
+<td><code>uv run python manage.py sqlmigrate &lt;app&gt; &lt;so&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="sao-luu-truoc-khi-migrate-o-moi-truong-that">Sao lưu trước khi migrate ở môi trường thật</h2>
+<p>Sao lưu PostgreSQL theo cùng lịch với Object Storage (NFR-16). RPO/RTO: <strong>TBD-17</strong>.</p>
+</article></main></body></html>

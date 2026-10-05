@@ -1,0 +1,177 @@
+% =====================================================================
+\chapter{Giao diện ngoài}
+\label{ch:interfaces}
+% =====================================================================
+
+\section{Giao diện người dùng}
+\label{sec:ui}
+M13 dùng lại các màn hình LabelX đã thiết kế (nguồn H), chỉ ở phần phục vụ luồng
+M13. Bảng~\ref{tab:screens} liệt kê màn hình và mức dùng.
+
+\begin{xltabular}{\linewidth}{@{}L{3.6cm}Y L{2cm}@{}}
+\caption{Màn hình trong phạm vi M13}\label{tab:screens}\\
+\toprule
+\textbf{Màn hình (H)} & \textbf{Vai trò trong M13} & \textbf{Mức}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Màn hình} & \textbf{Vai trò} & \textbf{Mức}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Snapshot & Tạo snapshot, xem hash, drift. & Lõi\\
+Analysis Config & Chọn engine, ngưỡng, model, seed; phạm vi áp dụng. & Lõi\\
+Execution History & Trạng thái run, shard lỗi, chạy lại. & Lõi\\
+Review Queues & Hàng đợi theo rủi ro và ngẫu nhiên; lý do xếp hạng. & Lõi\\
+Review Workspace & Ảnh, annotation, dự đoán, evidence, guideline, quyết định. & Lõi\\
+Escalations & Phân xử, Guideline Gap, Decision Case. & Lõi\\
+Performance Evaluation & Recall@k, effort, residual, đồng thuận, cỡ mẫu. & Lõi\\
+Quality Report & Báo cáo hiệu quả, xuất tệp. & Lõi\\
+Rework Tracking & Yêu cầu sửa, chờ xác minh. & Hỗ trợ\\
+Models \& Guidelines & Artifact Detector, guideline version, mapping rule. & Hỗ trợ\\
+Workflow \& Permissions & Ma trận quyền, quy tắc quy trình. & Hỗ trợ\\
+Quality Gate & Điều kiện gate, waiver. & Hỗ trợ\\
+Benchmark, Calibration, Audit Sampling & Lập reference, case chuẩn, lát ngẫu nhiên. & Hỗ trợ\\
+Release History, Dashboard & Ngoài phạm vi nghiệm thu; chỉ hiển thị nếu đã có. & Ngoài\\
+\end{xltabular}
+
+\subsection{Phác thảo Review Workspace}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize]
+  \draw[lxline, fill=white] (0,0) rectangle (15,9);
+  % thanh trên
+  \fill[lxgrayl] (0,8.3) rectangle (15,9);
+  \node[anchor=west] at (0.2,8.65) {\textbf{LabelX} · Review Workspace · Job 2272 · Frame 00428 / 00599 · rank 12 / 3.000};
+  \node[anchor=east, draw=lxline, fill=white, inner sep=2pt] at (14.8,8.65) {Mở trong CVAT};
+  % tab
+  \node[anchor=west, draw=lxblue, fill=lxbluel, inner sep=2pt] at (0.2,7.9) {Issue Review};
+  \node[anchor=west, draw=lxline, inner sep=2pt] at (1.9,7.9) {Frame Review};
+  % ảnh
+  \draw[lxline, fill=lxgrayl] (0.2,1.2) rectangle (9.4,7.5);
+  \draw[lxblue, thick] (1.0,2.2) rectangle (3.0,3.8); \node[text=lxblue, anchor=south west] at (1.0,3.8) {car \#12};
+  \draw[lxblue, thick] (5.0,2.0) rectangle (7.6,4.4); \node[text=lxblue, anchor=south west] at (5.0,4.4) {car \#18};
+  \draw[lxred, thick, dashed] (4.9,1.9) rectangle (7.7,4.5); \node[text=lxred, anchor=north west] at (4.9,1.9) {mô hình: truck · 0.81};
+  \draw[lxred, thick, dashed] (3.4,4.8) rectangle (4.2,6.0); \node[text=lxred, anchor=south] at (3.8,6.0) {E1? traffic sign · 0.74};
+  \node[anchor=west, text=lxgray] at (0.2,0.9) {Nét liền: annotation · Nét đứt: Detector · Bấm object để tạo issue};
+  \node[anchor=west] at (0.2,0.4) {‹ Frame trước \quad Frame sau ›};
+  % panel phải
+  \draw[lxline] (9.7,1.2) rectangle (14.8,7.5);
+  \node[anchor=north west, text width=4.8cm, align=left] at (9.8,7.4) {
+    \textbf{QC-00128} · Issue 1/3 · \textcolor{lxred}{Cao}\\
+    Nghi sai lớp (E2): car hay truck\\[3pt]
+    \textbf{Bằng chứng}\\
+    Annotation: car\\
+    Detector: truck · conf 0.81 · IoU 0.93\\
+    Đóng góp vào $s(f)$: 0.62 / 1.48\\[3pt]
+    \textbf{Hướng dẫn} · VEH-03 · v1.2 §3.2\\
+    Case tương tự: CASE-021, CASE-034\\[3pt]
+    \textbf{Quyết định}};
+  \foreach \t/\y in {Xác nhận lỗi/2.9, Bác bỏ/2.4, Chưa chắc chắn/1.9} {
+    \node[anchor=west, draw=lxline, fill=white, inner sep=2pt] at (9.9,\y) {\t};
+  }
+  \node[anchor=west, draw=lxline, fill=white, inner sep=2pt] at (12.3,2.9) {Yêu cầu sửa};
+  \node[anchor=west, draw=lxline, fill=white, inner sep=2pt] at (12.3,2.4) {Chuyển cấp trên};
+  \node[anchor=west, draw=lxblue, fill=lxblue, text=white, inner sep=2pt] at (12.3,1.6) {Đã review xong};
+\end{tikzpicture}
+\caption{Phác thảo Review Workspace (dựa trên màn hình H, đã thêm rank và đóng góp điểm)}
+\label{fig:workspace}
+\end{figure}
+
+\section{Giao diện CVAT}
+\label{sec:cvatapi}
+Adapter chỉ dùng thao tác đọc. Đường dẫn cụ thể phụ thuộc phiên bản CVAT được pin
+(\TBD[-01]) và phải được kiểm trên môi trường thật trước khi build.
+
+\begin{xltabular}{\linewidth}{@{}L{4.8cm}Y@{}}
+\caption{Thao tác CVAT dự kiến (chỉ đọc)}\label{tab:cvatapi}\\
+\toprule
+\textbf{Thao tác} & \textbf{Mục đích}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Thao tác} & \textbf{Mục đích}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Liệt kê project, task, job & Chọn phạm vi; lấy assignee và thời điểm cập nhật.\\
+Đọc annotation của job & Lấy shape (rectangle), label, attribute, frame.\\
+Đọc metadata frame & Kích thước ảnh, tên tệp, mapping frame.\\
+Đọc dữ liệu ảnh frame & Lưu vào Object Storage kèm checksum.\\
+Đọc label/taxonomy của project & Kiểm Schema/Taxonomy.\\
+Deep link UI & URL mở job tại frame cụ thể cho annotator/reviewer.\\
+\end{xltabular}
+
+\section{API nội bộ}
+\label{sec:api}
+REST JSON qua Django REST framework, xác thực theo phiên đăng nhập LabelX, kiểm
+quyền ở mọi endpoint.
+
+\begin{xltabular}{\linewidth}{@{}L{1.4cm}L{5.2cm}Y@{}}
+\caption{Endpoint chính}\label{tab:api}\\
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Mô tả}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Method} & \textbf{Endpoint} & \textbf{Mô tả}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+POST & \code{/api/snapshots} & Tạo snapshot (UC-01) cho scope dataset/project/task/job; trả 202 + id.\\
+GET & \code{/api/snapshots/\{id\}} & Trạng thái, hash, drift.\\
+POST & \code{/api/runs} & Tạo QC Run (UC-02) trên một snapshot và config version.\\
+GET & \code{/api/runs/\{id\}} & Trạng thái run, trạng thái từng engine, is\_final.\\
+POST & \code{/api/runs/\{id\}/cancel} & Huỷ run.\\
+POST & \code{/api/runs/\{id\}/retry-failed} & Chạy lại đơn vị lỗi (idempotent).\\
+GET & \code{/api/runs/\{id\}/ledger} & Coverage theo engine.\\
+GET & \code{/api/runs/\{id\}/ranking} & Ranking frame, có phân trang, lọc.\\
+POST & \code{/api/queues/\{name\}/next} & Cấp lease frame kế tiếp (UC-04).\\
+POST & \code{/api/leases/\{id\}/renew} & Gia hạn lease.\\
+GET & \code{/api/frames/\{id\}/issues} & Issue và evidence của frame.\\
+POST & \code{/api/frames/\{id\}/complete} & Đã review xong frame: kiểm FR-REV-13, trả lease, dừng effort.\\
+POST & \code{/api/issues} & Tạo issue thủ công.\\
+POST & \code{/api/issues/\{id\}/decisions} & Lưu quyết định (UC-05).\\
+POST & \code{/api/issues/\{id\}/adjudications} & Phân xử (UC-06).\\
+POST & \code{/api/rework} & Tạo yêu cầu sửa.\\
+POST & \code{/api/rework/\{id\}/submitted} & Annotator báo đã sửa.\\
+POST & \code{/api/rework/\{id\}/verify} & Verify đạt/chưa đạt.\\
+GET & \code{/api/guidelines/rules/\{rule\_id\}?version=} & Rule theo guideline version của snapshot và case liên quan.\\
+POST & \code{/api/references} & Tạo phiên reference; nhập GT.\\
+POST & \code{/api/references/\{id\}/lock} & Khoá reference.\\
+POST & \code{/api/effort-events} & Ghi sự kiện effort từ client (batch).\\
+POST & \code{/api/evaluations} & Chạy đánh giá KPI (UC-09, UC-10).\\
+GET & \code{/api/evaluations/\{id\}} & Kết quả và provenance của evaluation run.\\
+GET & \code{/api/runs/\{id\}/gate} & Kết quả từng điều kiện gate (UC-14).\\
+POST & \code{/api/waivers} & Đề nghị waiver cho một điều kiện gate.\\
+POST & \code{/api/waivers/\{id\}/approve} & Duyệt/từ chối waiver (người duyệt khác người đề nghị).\\
+GET & \code{/api/reports/\{id\}?format=pdf|csv|json} & Xuất báo cáo.\\
+\end{xltabular}
+
+\subsection{Hợp đồng lỗi}
+\begin{xltabular}{\linewidth}{@{}L{1.4cm}L{4.2cm}Y@{}}
+\caption{Mã lỗi API dùng chung}\label{tab:apierrors}\\
+\toprule
+\textbf{Mã} & \textbf{Ý nghĩa} & \textbf{Ví dụ trong M13}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Ý nghĩa} & \textbf{Ví dụ}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+400 & Dữ liệu không hợp lệ & Thiếu lý do khi bác bỏ; thiếu nhóm lỗi khi xác nhận.\\
+403 & Không có quyền hoặc vi phạm tách nhiệm vụ & Self-review; người duyệt trùng người đề nghị; ngoài scope.\\
+404 & Không tìm thấy & Issue không thuộc snapshot đang xem.\\
+409 & Xung đột trạng thái & Lease hết hạn hoặc thuộc người khác; chuyển trạng thái không có trong bảng~\ref{tab:transitions}; revision không đổi khi báo đã sửa.\\
+422 & Không đủ điều kiện nghiệp vụ & Khoá reference khi còn bất đồng chưa phân xử; đánh giá khi \(|\mathcal{E}| < E_{min}\).\\
+\end{xltabular}
+Mọi phản hồi lỗi có \code{code}, \code{message}, \code{request\_id}; lỗi 403/409
+được ghi audit.
+
+\section{Giao diện mô hình}
+\label{sec:modeliface}
+\begin{itemize}
+  \item \textbf{Đầu vào:} lô ảnh (URI Object Storage), kích thước ảnh.
+  \item \textbf{Đầu ra:} danh sách \((x_1, y_1, x_2, y_2, \text{lớp}, \text{confidence})\)
+        theo hệ toạ độ pixel gốc, lớp đã ánh xạ sang 10 lớp BDD100K.
+  \item \textbf{Metadata bắt buộc:} model name, version, checksum artifact, mapping
+        lớp version, thiết bị, batch size, thời gian suy luận.
+  \item Detector chạy trong GPU worker nội bộ; không gửi ảnh ra ngoài (NFR-09).
+\end{itemize}

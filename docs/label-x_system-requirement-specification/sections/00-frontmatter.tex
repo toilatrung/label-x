@@ -1,0 +1,85 @@
+% =====================================================================
+%  Trang bìa, lịch sử phiên bản, phê duyệt, mục lục
+% =====================================================================
+\begin{titlepage}
+  \newgeometry{top=3cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+  \sffamily
+  {\color{lxgray}\small Hệ thống LabelX · Module Quality Control\par}
+  \vspace{0.4cm}
+  {\color{lxblue}\rule{\linewidth}{1.2pt}\par}
+  \vspace{1.2cm}
+  {\Large\color{lxgray} Software Requirements Specification (SRS)\par}
+  \vspace{0.5cm}
+  {\fontsize{34}{40}\selectfont\bfseries\color{lxnavy} LabelX\par}
+  \vspace{0.4cm}
+  {\Large\color{lxnavy} Trợ lý ưu tiên review annotation\\dựa trên rủi ro và bằng chứng\par}
+  \vspace{1.0cm}
+  \begin{tabular}{@{}L{4.2cm}L{9cm}@{}}
+    \color{lxgray}Hệ thống & \textbf{LabelX}\\
+    \color{lxgray}Tên đề tài đăng ký & Annotation QC Studio\\
+    \color{lxgray}Mã đăng ký & \textbf{M13 — Reviewer Prioritization Assistant}\\
+    \color{lxgray}Phạm vi nghiệm thu & CVAT $\rightarrow$ phân tích nghi vấn $\rightarrow$ xếp hạng frame $\rightarrow$ review \& phân xử $\rightarrow$ báo cáo hiệu quả\\
+    \color{lxgray}Dữ liệu & Bounding box trên BDD100K (2D detection)\\
+    \color{lxgray}Phiên bản tài liệu & 1.0 — người dùng chấp nhận nội dung 05/10/2026; chờ ký theo vai trò\\
+    \color{lxgray}Ngày & 05/10/2026\\
+    \color{lxgray}Chuẩn tham chiếu & ISO/IEC/IEEE 29148:2018\\
+  \end{tabular}
+  \vfill
+  \begin{tcolorbox}[colback=lxgrayl, colframe=lxline, boxrule=0.4pt, arc=2pt]
+    \small\rmfamily
+    Tài liệu đặc tả yêu cầu cho bản nghiệm thu đầu tiên của M13. Các quyết định
+    kiến trúc B-01…B-21, cấu hình MVP và mục tiêu kiểm chứng R-01…R-07 được kế
+    thừa từ bản rà soát kiến trúc đã chốt ngày 05/10/2026. Giá trị đánh dấu
+    \TBD{} là tham số chưa chốt và phải được quyết định trước khi đo nghiệm thu.
+  \end{tcolorbox}
+  \restoregeometry
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{2}
+
+\chapter*{Lịch sử phiên bản}
+\addcontentsline{toc}{chapter}{Lịch sử phiên bản}
+
+\begin{xltabular}{\linewidth}{@{}L{1.6cm}L{2.3cm}L{3.2cm}Y@{}}
+\toprule
+\textbf{Phiên bản} & \textbf{Ngày} & \textbf{Người soạn} & \textbf{Nội dung thay đổi}\\
+\midrule
+0.1 & 05/10/2026 & Nhóm sản phẩm & Outline, phản biện chéo phương pháp đo KPI.\\
+1.0 & 05/10/2026 & Nhóm sản phẩm & Bản đầy đủ đầu tiên: bài toán, dữ liệu, use case, luồng, yêu cầu chức năng/phi chức năng, phương pháp nghiệm thu.\\
+\bottomrule
+\end{xltabular}
+
+\section*{Bảng phê duyệt}
+\begin{xltabular}{\linewidth}{@{}L{4.2cm}Y L{2.6cm}L{2.4cm}@{}}
+\toprule
+\textbf{Vai trò} & \textbf{Trách nhiệm phê duyệt} & \textbf{Họ tên} & \textbf{Ngày}\\
+\midrule
+Product Owner M13 & Phạm vi, KPI, tiêu chí nghiệm thu & & \\
+Quality Assurance Lead & Taxonomy lỗi, reference, quy trình phân xử & & \\
+Quality Control Admin & Cấu hình kỹ thuật, quyền, engine & & \\
+Tech Lead Backend & Kiến trúc, API, yêu cầu phi chức năng & & \\
+Data/Model Owner & Dữ liệu BDD100K, Detector baseline & & \\
+\bottomrule
+\end{xltabular}
+
+\section*{Nguồn đầu vào của tài liệu}
+Tài liệu được tổng hợp từ các nguồn đã được chốt. Ký hiệu nguồn dùng xuyên suốt:
+
+\begin{xltabular}{\linewidth}{@{}L{1cm}L{6cm}Y@{}}
+\toprule
+\textbf{Mã} & \textbf{Tài liệu} & \textbf{Vai trò}\\
+\midrule
+H & \code{docs/design/} (25 màn hình, Design System) & Chuẩn hành vi và giao diện (nguồn ưu tiên cao nhất).\\
+A & \code{docs/00-project/sources/Quality\_Control\_Review\_UX\_Architecture.html} & Kiến trúc UX, ADR, entity, guard.\\
+T & \code{docs/00-project/sources/QC\_Engine\_Review\_Report.html} & Thiết kế engine, phương pháp đo, pilot.\\
+L & \code{docs/00-project/sources/mermaid-diagram.png} & Sơ đồ thành phần hệ thống.\\
+R & \code{docs/00-project/sources/architecture\_review.html} & Bản rà soát đã chốt: B-01…B-21, cấu hình MVP, R-01…R-07.\\
+M13 & Đề bài M13 (người dùng cung cấp) & Phạm vi nghiệm thu, dữ liệu BDD100K, hai KPI chính.\\
+\bottomrule
+\end{xltabular}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\cleardoublepage

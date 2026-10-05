@@ -1,0 +1,67 @@
+name: LabelX Phase Testing
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Phase or MVP suite; planned suites return BLOCKED
+        required: true
+        type: choice
+        options: [mvp, scaffold, p0_snapshot, p1_deterministic, p2_discovery, ranking, p3_review, p5_evaluation, p6_gate_report, p4_ai, temporal, release_full, continuous]
+permissions:
+  contents: read
+  deployments: read
+concurrency:
+  group: phase-testing-labelx-evaluation
+  cancel-in-progress: false
+jobs:
+  phase:
+    if: github.ref == 'refs/heads/main'
+    # Do not run PR code or external fork code on a runner holding data/model credentials.
+    runs-on: [self-hosted, linux, labelx-evaluation]
+    environment: labelx-evaluation
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REQUESTED_PHASE: ${{ inputs.phase }}
+      LABELX_EVALUATION_POLICY: ${{ vars.LABELX_EVALUATION_POLICY }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      DJANGO_DEBUG: 'False'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      # TEST endpoints must be isolated; do not point at production stores.
+      CELERY_BROKER_URL: ${{ secrets.TEST_CELERY_BROKER_URL }}
+      CELERY_RESULT_BACKEND: ${{ secrets.TEST_CELERY_RESULT_BACKEND }}
+      OBJECT_STORAGE_ENDPOINT_URL: ${{ secrets.TEST_OBJECT_STORAGE_ENDPOINT_URL }}
+      OBJECT_STORAGE_ACCESS_KEY: ${{ secrets.TEST_OBJECT_STORAGE_ACCESS_KEY }}
+      OBJECT_STORAGE_SECRET_KEY: ${{ secrets.TEST_OBJECT_STORAGE_SECRET_KEY }}
+      OBJECT_STORAGE_BUCKET: ${{ vars.TEST_OBJECT_STORAGE_BUCKET }}
+      LABELX_TEST_NAMESPACE: ci-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install locked dependencies on preconfigured trusted runner
+        run: uv sync --frozen --project src/backend
+      - name: Verify evaluation environment protection
+        run: |
+          mkdir -p .ci-artifacts/upstream
+          gh api "repos/$GITHUB_REPOSITORY/environments/labelx-evaluation" > .ci-artifacts/upstream/evaluation-environment.json
+          node scripts/ci/quality-gate.cjs verify-environment --file .ci-artifacts/upstream/evaluation-environment.json --environment labelx-evaluation
+      - name: Run tests; no skip-to-green
+        shell: bash
+        run: |
+          if [ "$REQUESTED_PHASE" = mvp ]; then
+            node scripts/ci/quality-gate.cjs run-mvp
+          else
+            node scripts/ci/quality-gate.cjs run --phase "$REQUESTED_PHASE"
+          fi
+      - name: Export redacted evidence only
+        if: always()
+        run: node scripts/ci/export-evidence.cjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: phase-evidence-${{ github.sha }}
+          path: .ci-artifacts/phase-public/
+          if-no-files-found: error
+      # Raw JUnit/stdout/stderr remain private on the trusted runner.

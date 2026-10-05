@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabelX Design — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/design/README.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / design / README</span><span class="sp"></span>
+<a href="README.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>design-index</span><b>title</b><span>LabelX Design</span><b>type</b><span>reference</span><b>domain</b><span>design</span><b>module</b><span>index</span><b>tags</b><span>[design, design-system, screens]</span><b>priority</b><span>2</span></div>
+<h1 id="labelx-design">LabelX Design</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Nguồn thiết kế chuẩn của LabelX (nguồn <strong>H</strong> trong tài liệu): Design System và 25 màn hình Quality Control. Skill thiết kế cho agent nằm ở <a href="../../.agent/skills/labelx-design/SKILL.html">.agent/skills/labelx-design/SKILL.md</a>.</p>
+<h2 id="noi-dung">Nội dung</h2>
+<ul>
+<li><a href="design-system.html">design-system.md</a> — tài liệu Design System (nguyên tắc, quy tắc nội dung, layout, trạng thái, mọi component).</li>
+<li><a href="design-system/README.html">design-system/</a> — <code>tokens.json</code>, <code>design-system.json</code>, <code>components/bundle.css</code> (toàn bộ style <code>lx-*</code>) và README + <code>preview.html</code> cho từng component.</li>
+<li><a href="screens/Main.dc.html">screens/</a> — 25 màn hình dạng <code>.dc.html</code>, kèm <code>canvas.json</code> (bố cục board), component dùng chung <code>TopBar.dc.html</code>, <code>FlowNav.dc.html</code> và <code>ds/labelx/</code> (bản sao tokens và style mà màn hình link tới).</li>
+</ul>
+<p>Màn hình dùng canvas runtime của artifact đã publish (<code>support.js</code>), nên mở trong canvas đã publish; file ở đây dùng để sửa và bàn giao. Frontend chép tokens/style vào <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
+</article></main></body></html>

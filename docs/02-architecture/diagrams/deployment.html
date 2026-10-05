@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sơ đồ triển khai LabelX QC — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/02-architecture/diagrams/deployment.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / diagrams / deployment</span><span class="sp"></span>
+<a href="deployment.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>architecture-diagram-deployment</span><b>title</b><span>Sơ đồ triển khai LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>quality-control</span><b>tags</b><span>[architecture, diagram, deployment, mermaid]</span><b>priority</b><span>2</span></div>
+<h1 id="so-o-trien-khai">Sơ đồ triển khai</h1>
+<h2 id="moi-truong-that">Môi trường thật</h2>
+<p>Nguồn: SRS <code>fig:deployment</code>. Cấu hình phần cứng của app server và GPU server là <strong>TBD-02</strong>. RPO/RTO là <strong>TBD-17</strong>.</p>
+<pre class="mermaid">flowchart LR
+    BR["Trình duyệt reviewer"]
+    subgraph APP["App server (Linux)"]
+        NX["Next.js frontend (DEC-001)&lt;br/&gt;vị trí host: TBD-02"]
+        GU["Gunicorn + Django/DRF"]
+        CW["Celery CPU workers&lt;br/&gt;queues: snapshot, cpu"]
+        BEAT["Celery beat&lt;br/&gt;(django-celery-beat)"]
+    end
+    subgraph GPUS["GPU server"]
+        GW["Celery GPU worker&lt;br/&gt;queue: gpu · Detector"]
+    end
+    subgraph DATA["Data"]
+        PG[("PostgreSQL 17")]
+        RD[("Redis 7")]
+        OS[("Object Storage S3-compatible")]
+    end
+    CV["CVAT (hiện có)"]
+
+    BR &lt;--&gt;|HTTPS| NX
+    NX &lt;--&gt;|REST/JSON| GU
+    BR -. deep link HTTPS .-&gt; CV
+    GU --&gt;|HTTPS chỉ đọc| CV
+    CW --&gt;|HTTPS chỉ đọc| CV
+    GU &lt;--&gt; PG
+    GU &lt;--&gt; RD
+    CW &lt;--&gt; PG
+    CW &lt;--&gt; RD
+    CW &lt;--&gt; OS
+    GW &lt;--&gt; RD
+    GW &lt;--&gt; PG
+    GW &lt;--&gt; OS
+    BEAT --&gt; RD</pre>
+<p>Ràng buộc:</p>
+<ul>
+<li>Token CVAT chỉ nằm ở app server và worker, không bao giờ gửi xuống trình duyệt (FR-SNP-02; NFR-07).</li>
+<li>Ảnh chỉ nằm trong Object Storage nội bộ. Detector chạy trên GPU nội bộ (NFR-09).</li>
+<li>Frontend Next.js (DEC-001) không có trong sơ đồ triển khai của SRS. Việc chạy nó trên app server hay host riêng là <strong>TBD-02</strong>. Nếu trình duyệt gọi thẳng API thì cần cấu hình CORS và cookie session (<code>CORS_ALLOWED_ORIGINS</code>, <code>CORS_ALLOW_CREDENTIALS</code> trong settings).</li>
+<li>Không cần GPU worker thứ hai cho VLM, vì VLM không bật trong pilot (TBD-08).</li>
+</ul>
+<h2 id="dev-local">Dev local</h2>
+<p>Nguồn: <a href="../../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a>.</p>
+<pre class="mermaid">flowchart LR
+    DEV["Máy dev&lt;br/&gt;Django runserver · Celery · Next.js dev"]
+    subgraph Compose["docker compose: labelx-dev"]
+        P[("postgres:17&lt;br/&gt;:5432 db labelx")]
+        R[("redis:7-alpine&lt;br/&gt;:6379")]
+        S[("seaweedfs S3&lt;br/&gt;:9000")]
+        I["seaweedfs-init&lt;br/&gt;tạo bucket labelx-snapshots,&lt;br/&gt;labelx-evidence, labelx-reports"]
+    end
+    CV["CVAT instance thật&lt;br/&gt;(không trong compose)"]
+    DEV --&gt; P
+    DEV --&gt; R
+    DEV --&gt; S
+    I --&gt; S
+    DEV --&gt;|CVAT_BASE_URL| CV</pre>
+</article></main></body></html>

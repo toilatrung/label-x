@@ -1,0 +1,389 @@
+% =====================================================================
+\chapter{Yêu cầu chức năng}
+\label{ch:func}
+% =====================================================================
+
+Yêu cầu được nhóm theo module. Cột \emph{Truy vết} ghi use case, quyết định đã
+chốt (B-xx) và mục tiêu kiểm chứng (R-xx) liên quan. Ưu tiên: \must{} Must,
+\should{} Should, \could{} Could.
+
+% ---------------------------------------------------------------------
+\section{Module SNP — CVAT Adapter và Snapshot}
+\label{sec:fr-snp}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module SNP}\label{tab:fr-snp}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-SNP-01} & Adapter phải chỉ dùng thao tác đọc của CVAT API (project, task, job, frame meta, annotation, media). Không có đường gọi nào tạo/sửa/xoá annotation trên CVAT. & \must & UC-01; B-18\\
+\req{FR-SNP-02} & Token CVAT phải lưu ở backend (secret store), không gửi xuống client. & \must & UC-01; B-12\\
+\req{FR-SNP-03} & Hệ thống phải chuẩn hoá annotation từng job thành JSON chuẩn (sắp xếp khoá, toạ độ làm tròn cố định) và tính hash SHA-256 từng job và hash tổng. & \must & UC-01; B-02; R-01\\
+\req{FR-SNP-04} & Trước khi khoá, hệ thống phải đọc lại thông tin cập nhật của từng job; nếu khác lần đọc đầu thì không khoá và báo danh sách job bị drift. & \must & UC-01; B-02\\
+\req{FR-SNP-05} & Snapshot phải lưu: ảnh và checksum, mapping frame (job/task/frame nguồn), assignee từng job tại thời điểm snapshot, taxonomy version, guideline version, người tạo. & \must & UC-01; B-12\\
+\req{FR-SNP-06} & Snapshot đã khoá là bất biến; mọi thay đổi annotation tạo snapshot mới có \code{parent\_snapshot}. & \must & B-02, B-03\\
+\req{FR-SNP-07} & Shape không phải Bounding box phải được bỏ qua và đếm trong báo cáo snapshot là ``ngoài phạm vi''. & \must & Phạm vi M13\\
+\req{FR-SNP-08} & Hệ thống phải tạo deep link mở đúng job và frame trên CVAT cho mỗi frame/issue. & \must & UC-07; B-18\\
+\req{FR-SNP-09} & Hệ thống nên hỗ trợ tạo snapshot gia tăng chỉ cho các job bị ảnh hưởng bởi rework. & \should & UC-07\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module ENG — Engine phân tích nghi vấn}
+\label{sec:fr-eng}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module ENG}\label{tab:fr-eng}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-ENG-01} & QC Run phải ghi: snapshot, config version, seed, version từng engine, model artifact + checksum, người chạy, thời điểm. & \must & UC-02; R-01\\
+\req{FR-ENG-02} & \textbf{Schema/Taxonomy} phải kiểm: lớp thuộc taxonomy version; thuộc tính bắt buộc có giá trị hợp lệ; sinh cảnh báo cấu trúc có rule ID, expected/actual. & \must & UC-02\\
+\req{FR-ENG-03} & \textbf{Geometry} phải kiểm: \(x_1<x_2, y_1<y_2\); toạ độ trong ảnh với dung sai 2 px; diện tích $\ge$ 24 px$^2$ (G-014). Không kiểm độ khít biên (G-009 giữ Not checked). & \must & UC-02; B-06\\
+\req{FR-ENG-04} & \textbf{Duplicate/Overlap} phải sinh candidate E3 cho cặp annotation có IoU $\ge 0{,}85$ (D-002), kèm IoU và lớp của hai box. Candidate chỉ là nghi vấn. & \must & UC-02; E3\\
+\req{FR-ENG-05} & \textbf{Mô hình độc lập} phải chạy một Detector baseline đã freeze (artifact, version, checksum, mapping lớp sang 10 lớp BDD100K) trên mọi frame trong phạm vi áp dụng. & \must & UC-02; B-07\\
+\req{FR-ENG-06} & Matching dự đoán–annotation phải theo mục~\ref{sec:counting}: không phụ thuộc lớp, loại cạnh dưới \(\tau_m\) trước khi tối ưu, tối đa số cặp rồi tổng IoU, phá hoà tất định. & \must & B-21\\
+\req{FR-ENG-07} & Dự đoán không ghép với confidence $\ge \tau_{E1}$ sinh candidate E1; cặp ghép khác lớp với confidence lớp dự đoán $\ge \tau_{E2}$ sinh candidate E2. Ngưỡng có version, chọn trên tập hiệu chỉnh. & \must & E1, E2\\
+\req{FR-ENG-08} & Evidence của candidate phải gồm: box và lớp dự đoán, confidence, IoU, cặp ambiguous (nếu có), crop ảnh, rule liên quan. & \must & R-02\\
+\req{FR-ENG-09} & Nếu không có Detector khả dụng, engine Mô hình độc lập phải ở trạng thái Not checked; không được sinh ranking giả từ engine thiếu. & \must & B-07, B-19\\
+\req{FR-ENG-10} & Engine VLM: đề xuất không bật trong pilot M13, cần Product Owner duyệt (\TBD[-08]). Nếu đề xuất bị bác hoặc VLM được bật, phải theo B-08: pipeline candidate $\rightarrow$ chọn theo policy $\rightarrow$ worker kiểm chọn lọc; tối đa 400 candidate mỗi run; tối đa 3 lần thử tổng cộng mỗi lượt kiểm (tính cả retry); hết hạn mức thì ghi phần chưa kiểm, không pass/reject; timeout cụ thể lấy từ đo pilot; ảnh không gửi ra ngoài khi chưa được phép. & \could & B-08\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module AGG — Candidate, Issue và Coverage ledger}
+\label{sec:fr-agg}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module AGG}\label{tab:fr-agg}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-AGG-01} & Candidate và Issue phải là hai thực thể riêng; candidate không bao giờ bị sửa sau khi ghi. & \must & B-10\\
+\req{FR-AGG-02} & Mỗi đơn vị xử lý phải có khoá idempotent (snapshot, engine, config, model, shard); retry không tạo candidate hay issue trùng. & \must & B-10; R-01\\
+\req{FR-AGG-03} & Candidate được gộp thành issue theo \code{dedup\_key} = (snapshot, frame, đối tượng tham chiếu, nhóm lỗi), có version policy gộp. & \must & B-10; BR-08\\
+\req{FR-AGG-04} & Coverage ledger phải ghi theo từng engine: đơn vị áp dụng, số đơn vị eligible, completed, failed, not checked, kèm lý do; không loại đơn vị lỗi khỏi mẫu số. & \must & B-04; R-06\\
+\req{FR-AGG-05} & Trạng thái công khai của engine chỉ gồm Checked, Partial, Failed, Not checked, Running; không có trạng thái nào được hiển thị như ``đạt'' khi engine chưa hoàn tất. & \must & B-19\\
+\req{FR-AGG-06} & Ghi candidate, evidence và cập nhật ledger của một shard phải trong cùng transaction. & \must & R-01\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module RNK — Chấm điểm rủi ro và xếp hạng}
+\label{sec:fr-rnk}
+
+\subsection{Mô hình điểm}
+KPI-1 đếm \emph{lỗi} trong ngân sách tính bằng \emph{số frame}. Nếu mỗi lỗi chỉ
+được tính một lần và điểm frame là kỳ vọng số lỗi đã hiệu chỉnh tốt, thì sắp
+frame theo kỳ vọng số lỗi tối đa \emph{kỳ vọng} Recall@k. Hai điều kiện này không
+tự đúng; chúng được kiểm bằng hiệu chỉnh ngoài fold và ablation trên tập hiệu
+chỉnh, và chỉ kết luận trên held-out (FR-RNK-10, FR-RNK-11).
+
+\paragraph{Bước 1 — Issue có neo và số lỗi tối đa.}
+Mỗi issue \(i\) có một \emph{neo} và một \emph{số lỗi tối đa} \(n_i\), khớp với
+đơn vị đếm của reference (BR-01…BR-04):
+
+\begin{xltabular}{\linewidth}{@{}L{1.2cm}L{5.4cm}Y@{}}
+\caption{Neo của issue theo nhóm lỗi}\label{tab:anchors}\\
+\toprule
+\textbf{Nhóm} & \textbf{Neo} & \textbf{\(n_i\)}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Nhóm} & \textbf{Neo} & \textbf{\(n_i\)}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+E1 & Vùng box dự đoán không ghép (chưa có annotation). Các dự đoán chồng nhau với IoU $\ge \tau_m$ gộp thành một vùng. & 1\\
+E2 & Annotation trong cặp ghép khác lớp. & 1\\
+E3 & Cụm annotation nối với nhau bởi các cặp IoU $\ge 0{,}85$; cụm có \(m\) box. & \(m-1\)\\
+\end{xltabular}
+
+\paragraph{Bước 2 — Xác suất ở cấp issue.}
+Xác suất được học trực tiếp ở cấp issue, không gộp kiểu noisy-OR từ các
+candidate (vì các candidate cùng issue thường dùng chung bằng chứng và phụ thuộc
+nhau):
+\[
+  q_i = \sigma\!\left(\mathbf{w}_g^{\top}\mathbf{x}_i + b_g\right),
+\]
+trong đó \(\mathbf{x}_i\) tổng hợp đặc trưng các candidate của issue (giá trị lớn
+nhất, số engine cùng chỉ ra, có cặp ambiguous…), nhãn học là ``issue trùng ít
+nhất một lỗi trong \(\mathcal{E}\)'' trên tập hiệu chỉnh. Với E3, \(q_i\) là xác
+suất cụm là trùng thật; kỳ vọng số lỗi là \(n_i q_i\). Sau logistic có thể áp
+dụng hiệu chỉnh isotonic nếu đường reliability lệch.
+
+\paragraph{Bước 3 — Điểm nền cho lỗi không có issue.}
+\(h(f) \ge 0\) ước lượng số lỗi trong frame \emph{không} khớp issue nào. Nhãn học
+trên tập hiệu chỉnh: số lỗi trong \(\mathcal{E}\) của frame không trùng issue nào.
+Mô hình: hồi quy Poisson (đầu ra không âm) trên đặc trưng frame ở
+bảng~\ref{tab:features}. Vì nhãn chỉ đếm lỗi \emph{chưa} có issue, điểm nền không
+đếm lại lỗi đã có issue.
+
+\paragraph{Bước 4 — Điểm frame và phá hoà.}
+\[
+  s(f) = \sum_{i \in I_f} n_i\, q_i \;+\; h(f).
+\]
+Khi \(s(f)\) bằng nhau, thứ tự theo
+\(\mathrm{SHA256}(\text{frame\_key} \,\Vert\, \text{seed})\).
+
+\begin{xltabular}{\linewidth}{@{}L{1.6cm}Y@{}}
+\caption{Đặc trưng gợi ý (chốt trên tập hiệu chỉnh)}\label{tab:features}\\
+\toprule
+\textbf{Nhóm} & \textbf{Đặc trưng}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Nhóm} & \textbf{Đặc trưng}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+E1 & Confidence lớn nhất của dự đoán trong vùng; lớp dự đoán; diện tích (log); IoU lớn nhất với annotation bất kỳ; có cặp ambiguous; vị trí mép ảnh.\\
+E2 & Confidence lớp dự đoán; chênh lệch confidence giữa lớp dự đoán và lớp annotation; cặp lớp (ví dụ \code{car}/\code{truck}); IoU cặp ghép; diện tích.\\
+E3 & IoU lớn nhất trong cụm; cùng lớp hay khác lớp; số dự đoán Detector phủ cụm (1 hay nhiều); \(m\).\\
+Nền \(h(f)\) & Số annotation; số đối tượng nhỏ; ngày/đêm; thời tiết; số cảnh báo cấu trúc; cờ engine bắt buộc chưa kiểm trên frame.\\
+\end{xltabular}
+
+\begin{notebox}[Phiên bản 0 khi chưa đủ nhãn hiệu chỉnh]
+Mỗi nhóm lỗi cần ít nhất \(n_{min}\) issue dương trên tập hiệu chỉnh (\TBD[-16])
+để học \(\mathbf{w}_g\). Chưa đủ thì dùng \code{score\_v0}: \(q_i\) = confidence
+lớn nhất của Detector (E1, E2), \(q_i = 0{,}5\) (E3), và
+\(h(f) = \varepsilon \cdot\) số annotation (\(\varepsilon\) nhỏ, chỉ để frame không
+có issue được sắp theo mật độ thay vì theo hash). Confidence của Detector không
+phải xác suất annotation sai; báo cáo phải ghi rõ đang dùng \code{score\_v0}.
+Frame có engine bắt buộc chưa kiểm được đưa vào hàng đợi ``thiếu bằng chứng''
+riêng (FR-RNK-06), không bị coi là điểm thấp an toàn.
+\end{notebox}
+
+\subsection{Yêu cầu}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module RNK}\label{tab:fr-rnk}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-RNK-01} & Hệ thống phải tính \(s(f)\) cho \emph{mọi} frame của snapshot trong phạm vi run, kể cả frame không có candidate. & \must & UC-03; KPI-1\\
+\req{FR-RNK-02} & Công thức điểm (đặc trưng, tham số, mô hình nền, ngưỡng) phải có version, lưu kèm mỗi ranking, và không đổi được sau khi khoá. & \must & UC-03; R-01\\
+\req{FR-RNK-03} & Với cùng snapshot, config, score version và seed, ranking phải tái lập giống hệt. & \must & R-01\\
+\req{FR-RNK-04} & Phá hoà phải tất định theo hash(frame\_key, seed). & \must & KPI-1\\
+\req{FR-RNK-05} & Hệ thống phải lưu đóng góp \(n_i q_i\) của từng issue và điểm nền \(h(f)\) vào \(s(f)\) để hiển thị ``vì sao frame được xếp cao''. & \must & UC-04; R-02\\
+\req{FR-RNK-06} & Frame có engine bắt buộc ở trạng thái Not checked/Failed phải mang cờ ``thiếu bằng chứng'' trong hàng đợi, không được ẩn. & \must & B-19; R-06\\
+\req{FR-RNK-07} & Hệ thống phải tạo lát kiểm tra ngẫu nhiên \(r\%\) frame (\TBD[-10]) bằng seed cố định, độc lập với ranking, hiển thị ở hàng đợi riêng và báo cáo riêng. & \must & R-04\\
+\req{FR-RNK-08} & Hệ thống phải tạo được các ranking đối chứng trên cùng snapshot: ngẫu nhiên (nhiều seed) và heuristic (số annotation giảm dần; max confidence). & \must & UC-09; KPI-1\\
+\req{FR-RNK-09} & Hệ thống nên hỗ trợ biến thể xếp hạng theo kỳ vọng lỗi trên thời gian review ước lượng \(s(f)/\hat t(f)\) để tối ưu KPI-2. & \could & KPI-2\\
+\req{FR-RNK-10} & Hiệu chỉnh xác suất phải được kiểm bằng dự đoán ngoài fold (cross-validation theo video) trên tập hiệu chỉnh: Brier score và đường reliability theo E1/E2/E3; kết quả lưu cùng score version. & \must & KPI-1\\
+\req{FR-RNK-11} & Trước khi khoá score version, chạy ablation trên tập hiệu chỉnh: bỏ điểm nền, bỏ từng nhóm đặc trưng, so với \code{score\_v0} và heuristic; chọn version theo Recall@20\% ngoài fold. & \must & KPI-1; B-14\\
+\req{FR-RNK-12} & Mỗi issue lưu neo và \(n_i\) theo bảng~\ref{tab:anchors}; quy tắc tạo neo có version cùng policy gộp. & \must & BR-01…BR-04\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module REV — Hàng đợi và Review Workspace}
+\label{sec:fr-rev}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module REV}\label{tab:fr-rev}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-REV-01} & Review Queues phải có ít nhất hai hàng đợi tách theo nguồn: \emph{Theo rủi ro} (thứ tự rank) và \emph{Kiểm tra ngẫu nhiên}; lọc theo nhóm lỗi, nguồn, phạm vi. & \must & UC-04; H\\
+\req{FR-REV-02} & Mỗi dòng hàng đợi hiển thị: frame, rank, số issue theo nhóm, nguồn, mức ưu tiên, trạng thái, reviewer giữ lease. & \must & UC-04\\
+\req{FR-REV-03} & \emph{Bắt đầu review} cấp lease frame kế tiếp chưa có người giữ, bỏ qua frame mà reviewer là assignee tại snapshot. & \must & UC-04; B-12\\
+\req{FR-REV-04} & Lease có thời hạn \TBD[-09], gia hạn khi có thao tác; hết hạn thì frame về hàng đợi. & \must & UC-04\\
+\req{FR-REV-05} & Workspace phải hiển thị ảnh với annotation (nét liền) và dự đoán Detector (nét đứt), bật/tắt từng lớp hiển thị, phóng to và di chuyển. & \must & UC-05; H\\
+\req{FR-REV-06} & Workspace phải có hai chế độ: \emph{Issue Review} (theo từng issue) và \emph{Frame Review} (toàn frame). & \must & UC-05; H\\
+\req{FR-REV-07} & Panel issue phải hiển thị evidence (FR-ENG-08), trạng thái từng engine (kể cả Failed/Not checked), guideline và case tương tự (UC-12). & \must & UC-05; R-02\\
+\req{FR-REV-08} & Quyết định gồm: Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên, Yêu cầu sửa; xác nhận bắt buộc chọn nhóm lỗi và mức độ; bác bỏ, chưa chắc chắn và chuyển cấp bắt buộc lý do. & \must & UC-05; R-02\\
+\req{FR-REV-09} & Reviewer phải tạo được issue thủ công bằng cách chọn object hoặc vẽ vùng trên ảnh, nguồn ghi là ``reviewer''. & \must & UC-05; E1\\
+\req{FR-REV-10} & Mọi quyết định lưu actor, thời điểm, revision, lý do, rule ID và ghi audit trong cùng transaction. & \must & R-05; B-12\\
+\req{FR-REV-11} & Phím tắt cho các quyết định và chuyển frame/issue. & \should & KPI-2\\
+\req{FR-REV-12} & Nút \emph{Mở trong CVAT} mở deep link đúng job/frame. & \must & B-18\\
+\req{FR-REV-13} & \emph{Đã review xong} chỉ cho phép khi mọi issue của frame đã có quyết định hoặc đang chờ phân xử; khi lưu, hệ thống trả lease và dừng ghi effort của frame. & \must & UC-05\\
+\req{FR-REV-14} & Backend từ chối lưu mọi quyết định khi lease đã hết hạn hoặc thuộc người khác (409), và khi reviewer là assignee của job tại snapshot (403), kể cả khi mở frame trực tiếp bằng URL. & \must & UC-05; B-12\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module ESC — Chuyển cấp và phân xử}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module ESC}\label{tab:fr-esc}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-ESC-01} & Escalations phải liệt kê issue Chưa chắc chắn/Chuyển cấp, kèm quyết định từng reviewer và evidence. & \must & UC-06\\
+\req{FR-ESC-02} & Kết luận phân xử: Xác nhận lỗi, Bác bỏ, Guideline còn thiếu; bắt buộc rule áp dụng, nhãn đúng (nếu có), lý do. & \must & UC-06\\
+\req{FR-ESC-03} & Người phân xử phải khác người đã chuyển cấp. & \must & B-12\\
+\req{FR-ESC-04} & Phân xử được lưu thành Decision Case có version, tra cứu được ở UC-12. & \must & B-13\\
+\req{FR-ESC-05} & \emph{Guideline còn thiếu} tạo Guideline Gap gắn rule; issue chờ đến khi guideline có version mới. & \should & UC-06\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module RWK — Rework và kiểm lại}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module RWK}\label{tab:fr-rwk}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-RWK-01} & Yêu cầu sửa gồm: issue, việc cần sửa, annotator, hạn, mức độ, deep link. & \must & UC-07\\
+\req{FR-RWK-02} & Annotator chỉ thấy yêu cầu sửa của mình; sửa trên CVAT, bấm \emph{Đã sửa} trên LabelX. & \must & UC-07; B-18\\
+\req{FR-RWK-03} & Khi \emph{Đã sửa}, hệ thống tạo snapshot mới cho job bị ảnh hưởng; nếu revision không đổi thì từ chối với thông báo ``chưa có thay đổi''. & \must & UC-07; B-02\\
+\req{FR-RWK-04} & Hệ thống chạy lại các engine liên quan trên frame đã sửa (re-check) và hiển thị kết quả cho reviewer. & \must & UC-07; R-03\\
+\req{FR-RWK-05} & Issue chỉ chuyển Đã đóng khi reviewer verify đạt trên revision mới; người verify khác annotator đã sửa. & \must & R-03; H\\
+\req{FR-RWK-06} & Khi mọi yêu cầu sửa trong phạm vi đã đóng, hệ thống tạo snapshot toàn phạm vi trên revision đã sửa và QC run cuối (\code{is\_final}), liên kết các verification trước đó. Run gốc giữ nguyên để kiểm toán. & \must & B-03; R-03\\
+\req{FR-RWK-08} & Báo cáo và gate chỉ chuyển sang trỏ run cuối khi run cuối Completed và coverage engine bắt buộc đạt theo ledger. Run cuối Partial/Failed/Cancelled hoặc phát sinh issue mới: issue mới vào hàng đợi, gate chưa đạt, phạm vi chưa hoàn tất. & \must & B-03, B-15\\
+\req{FR-RWK-07} & Rework Tracking hiển thị: chờ sửa, chờ xác minh, hoàn thành, tỉ lệ đóng, quá hạn. & \should & H\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module GDL — Tra cứu guideline}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module GDL}\label{tab:fr-gdl}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-GDL-01} & Lưu guideline theo version với rule ID, section, nội dung trích; nội dung soạn và duyệt ở nơi soạn guideline. & \should & B-13\\
+\req{FR-GDL-02} & QC Admin cấu hình mapping (nhóm lỗi, lớp, cặp lớp) $\rightarrow$ rule ID. & \should & B-13\\
+\req{FR-GDL-03} & Workspace hiển thị rule theo mapping, version đang áp dụng cho snapshot và các Decision Case cùng rule. & \should & UC-12\\
+\req{FR-GDL-04} & Không dùng retrieval ngữ nghĩa/RAG trong M13. & \must & B-13\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module EVL — Reference, đo lường và ghi effort}
+\label{sec:fr-evl}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module EVL}\label{tab:fr-evl}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-EVL-01} & Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục~\ref{sec:counting}. & \must & UC-08; BR-11\\
+\req{FR-EVL-02} & Người được giao lập GT/xác minh của tập đánh giá không có quyền xem ranking, risk score, candidate của tập đó. & \must & BR-10\\
+\req{FR-EVL-03} & Hệ thống suy ra \(\mathcal{E}\) theo BR-01…BR-07 và hiển thị để duyệt; sửa mapping thì suy lại, không xoá lỗi trực tiếp. & \must & UC-08; BR-14\\
+\req{FR-EVL-04} & Khoá reference cùng: GT version, snapshot đầu vào, mapping, \(\tau_m\), \(a_{min}\), version thuật toán. & \must & BR-13; B-20\\
+\req{FR-EVL-05} & Chống rò rỉ dữ liệu: (a) tập hiệu chỉnh và held-out không giao nhau theo video nguồn; hệ thống từ chối dùng held-out để học tham số điểm; (b) đối chiếu danh sách ảnh huấn luyện của Detector với held-out, có giao nhau thì chặn đánh giá (AS-03); (c) loại case guideline/hiệu chỉnh khỏi GT held-out (BR-16). Kết quả kiểm lưu cùng evaluation run. & \must & AS-03; BR-16\\
+\req{FR-EVL-06} & Effort log tự động ghi theo frame và hoạt động (xem frame, xử lý issue, phân xử, re-check/verify) với thời gian hoạt động thực; khoảng không thao tác quá \(t_{idle}\) (\TBD[-11]) không tính. & \must & UC-05; KPI-2\\
+\req{FR-EVL-07} & Tính Recall@k theo phương trình~\eqref{eq:recallk} với \(k\) cấu hình (mặc định 0{,}2), làm tròn \(\lceil kN \rceil\). & \must & UC-09; KPI-1\\
+\req{FR-EVL-08} & Báo cáo kèm: recall theo nhóm lỗi, theo slice (ngày/đêm, thời tiết, kích thước), recall theo frame có lỗi, đường Recall@k với \(k\) từ 5\% đến 100\%. & \must & UC-09\\
+\req{FR-EVL-09} & Tính khoảng tin cậy 95\% bằng bootstrap theo cụm video nguồn (\(B \ge 1000\) lần lặp), và hiệu số so với từng ranking đối chứng. & \must & UC-09\\
+\req{FR-EVL-10} & Không tính KPI khi \(|\mathcal{E}| < E_{min}\); ghi ``không đủ mẫu''. & \must & KPI-1\\
+\req{FR-EVL-11} & Tạo thí nghiệm effort: phân reviewer vào nhánh theo thiết kế chéo, khoá quy tắc dừng, \(\delta\), cỡ mẫu trước khi bắt đầu. & \must & UC-10; KPI-2\\
+\req{FR-EVL-12} & Ở nhánh baseline, Workspace phải ẩn ranking, risk score và evidence của engine; frame theo thứ tự gốc. & \must & UC-10\\
+\req{FR-EVL-13} & Tính \(T_A, T_B\), KPI-2, KPI-2b, residual \(\rho_A, \rho_B\) trên reference và kiểm định non-inferiority theo mục~\ref{sec:kpi2}. & \must & UC-10\\
+\req{FR-EVL-14} & Evaluation run lưu provenance: snapshot, run, score version, reference version, thí nghiệm, tham số, thời điểm, người chạy. & \must & B-05; R-04\\
+\req{FR-EVL-15} & Metric engine (Precision/Recall của Detector theo lớp) chỉ tính trên GT đã khoá; thiếu GT thì Not checked. & \should & B-05\\
+\req{FR-EVL-16} & Tính đồng thuận reviewer (G-3) theo định nghĩa ở bảng~\ref{tab:kpis} trên tập case chuẩn. & \should & G-3\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module RPT — Báo cáo hiệu quả}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module RPT}\label{tab:fr-rpt}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-RPT-01} & Báo cáo hiệu quả hiển thị KPI-1, KPI-2, KPI-2b, G-1…G-4, mỗi chỉ số có cỡ mẫu, mẫu số, phương pháp, khoảng tin cậy. & \must & UC-11\\
+\req{FR-RPT-02} & Kết quả kiểm tra ngẫu nhiên và theo rủi ro được báo cáo riêng, không gộp. & \must & R-04; H\\
+\req{FR-RPT-03} & Chỉ số chưa đủ dữ liệu hiển thị Not checked/không đủ mẫu; không hiển thị 0\% hay đạt. & \must & B-05, B-19\\
+\req{FR-RPT-04} & Coverage hiển thị theo từng engine với mẫu số áp dụng; coverage chung chỉ là tiến độ. & \must & B-04\\
+\req{FR-RPT-05} & Xuất PDF, CSV, JSON; tệp xuất ghi version snapshot, run, score, reference. & \should & H\\
+\req{FR-RPT-06} & Báo cáo trỏ QC run cuối khi run cuối thoả FR-RWK-08; nếu chưa thì ghi rõ đang dùng run gốc và lý do. & \must & B-03\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Module SEC — Phân quyền và kiểm toán}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module SEC}\label{tab:fr-sec}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-SEC-01} & Phân quyền theo vai trò và scope dataset theo bảng~\ref{tab:rbac}; backend kiểm mọi request. & \must & UC-13; R-05\\
+\req{FR-SEC-02} & Identity mapping giữa tài khoản LabelX và người dùng CVAT được lưu và dùng cho kiểm self-review. & \must & B-12\\
+\req{FR-SEC-03} & Backend từ chối quyết định review khi reviewer là assignee của job tại snapshot. & \must & B-12\\
+\req{FR-SEC-04} & Người duyệt (waiver, khoá reference, phân xử) khác người yêu cầu; không được dùng tài khoản khác của cùng người. & \must & B-11, B-12\\
+\req{FR-SEC-05} & Audit log append-only, ghi trong cùng transaction với thao tác: actor, hành động, đối tượng, trước/sau, revision, lý do. & \must & B-12; R-05\\
+\req{FR-SEC-06} & Ghi đè của Super Admin bắt buộc lý do, gắn nhãn trong audit, vẫn chịu self-review và tách nhiệm vụ. & \must & H\\
+\req{FR-SEC-07} & Màn hình xem audit lọc theo actor, đối tượng, thời gian. & \should & UC-13\\
+\end{xltabular}
+
+\begin{xltabular}{\linewidth}{@{}L{3.2cm}C{1.8cm}C{1.8cm}C{2cm}C{2cm}C{1.8cm}@{}}
+\caption{Ma trận quyền theo vai trò (theo H, WorkflowPermissions)}\label{tab:rbac}\\
+\toprule
+\textbf{Chức năng} & \textbf{Annotator} & \textbf{Reviewer} & \textbf{QA Lead} & \textbf{QC Admin} & \textbf{Super Admin}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Chức năng} & \textbf{Annotator} & \textbf{Reviewer} & \textbf{QA Lead} & \textbf{QC Admin} & \textbf{Super Admin}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Snapshot, chạy phân tích & — & — & Chạy/xem & Cấu hình & Chạy/cấu hình\\
+Review Queues, Workspace & — & Review & Review/giám sát & Xem & Review/giám sát\\
+Rework & Thực hiện & Yêu cầu/xác minh & Yêu cầu/giám sát & — & Thực hiện/xác minh\\
+Phân xử & — & — & Có & — & Có (ghi đè)\\
+Reference, đánh giá & — & Lập GT (khi được giao) & Quản lý/khoá & Cấu hình & Quản lý\\
+Báo cáo hiệu quả & Giới hạn & Xem & Đầy đủ & Đầy đủ & Đầy đủ\\
+Cấu hình, quyền & — & — & Giới hạn & Có & Có\\
+\end{xltabular}
+
+Product Owner và Data/Model Owner không thao tác review. Quyền của họ trong M13:
+xem báo cáo hiệu quả (UC-11); Product Owner tạo và khoá thiết kế thí nghiệm effort
+(UC-10, FR-EVL-11), Data/Model Owner khoá artifact Detector (bảng~\ref{tab:prereg}).
+Họ không được là reviewer trong thí nghiệm mình thiết kế.
+
+% ---------------------------------------------------------------------
+\section{Module GTE — Quality Gate tối thiểu}
+\begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
+\caption{Yêu cầu module GTE}\label{tab:fr-gte}\\
+\toprule
+\textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Yêu cầu} & \textbf{Ưu tiên} & \textbf{Truy vết}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\req{FR-GTE-01} & Gate tính trên QC run cuối với các điều kiện cấu hình pilot: coverage engine bắt buộc $\ge$ 95\% (mẫu số theo ledger), lỗi nghiêm trọng chưa đóng = 0, rework bắt buộc verify 100\%, residual $\le$ 5\%, đồng thuận reviewer $\ge$ 90\%. & \must & B-15; R-06\\
+\req{FR-GTE-02} & Điều kiện thiếu dữ liệu (cỡ mẫu chưa đủ, engine Not checked) là \emph{chưa đạt}, không tự đạt. & \must & B-15, B-19\\
+\req{FR-GTE-03} & Waiver theo policy từng điều kiện: lý do, evidence, hạn hiệu lực, người duyệt khác người yêu cầu; chỉ hiệu lực sau duyệt; hết hạn thì điều kiện trở lại chưa đạt. & \should & B-11\\
+\req{FR-GTE-04} & Phát hành dataset đầy đủ nằm ngoài phạm vi; M13 chỉ hiển thị kết quả gate. & \must & Phạm vi\\
+\end{xltabular}

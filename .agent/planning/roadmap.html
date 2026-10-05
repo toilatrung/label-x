@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Roadmap — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: .agent/planning/roadmap.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / roadmap</span><span class="sp"></span>
+<a href="roadmap.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>roadmap-v1</span><b>title</b><span>Project Roadmap</span><b>type</b><span>planning</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[roadmap, milestones, planning]</span><b>priority</b><span>1</span></div>
+<h1 id="project-roadmap">Project Roadmap</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Maintain the approved sequence of outcome-level roadmap items and their target windows without defining task-level implementation.</p>
+<h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>ROADMAP_DRAFT | ROADMAP_APPROVED | ROADMAP_ACTIVE | ROADMAP_BLOCKED | ROADMAP_DONE | ROADMAP_CANCELLED</code></li>
+</ul>
+<h2 id="roadmap-records">Roadmap Records</h2>
+<table>
+<thead>
+<tr>
+<th>Roadmap ID</th>
+<th>Outcome</th>
+<th>Owner</th>
+<th>Target Window</th>
+<th>Status</th>
+<th>Milestone IDs</th>
+<th>Change Request</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>R-001</code></td>
+<td>Hoàn thành và nghiệm thu LabelX M13 — Reviewer Prioritization Assistant: CVAT → snapshot → phân tích nghi vấn → xếp hạng frame → review/phân xử/rework → đo KPI-1, KPI-2 và báo cáo hiệu quả</td>
+<td><code>unassigned (vai trò: Product Owner M13)</code></td>
+<td><code>not-set</code></td>
+<td><code>ROADMAP_DRAFT</code></td>
+<td><code>M-01, M-02, M-03, M-04, M-05, M-06</code></td>
+<td><code>none</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="basis">Basis</h2>
+<ul>
+<li>Nguồn: SRS M13 v1.0 (<code>docs/label-x_system-requirement-specification/sections/</code>), <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, R-01…R-07, mục 7 — thứ tự triển khai), <code>docs/00-project/charter.md</code>, <code>.agent/governance/decisions/DEC-001.md</code>.</li>
+<li>Thứ tự milestone theo bản rà soát R và charter: nền tảng → kiểm xác định → review/rework → reference + discovery → kiểm chứng/gate/báo cáo → vận hành/nghiệm thu. Đây là thứ tự phụ thuộc, không phải lịch.</li>
+<li>Phạm vi hoàn thành: mọi yêu cầu Must và Should của SRS; FR-RNK-09 (Could) ở backlog; FR-ENG-10 theo quyết định TBD-08 (<code>BLOCKER-002</code>).</li>
+<li>Lập qua ba vòng thảo luận độc lập Claude ↔ Codex ngày 2026-10-05; thống nhất 24 epic, 21 blocker, 10 risk.</li>
+<li>Trạng thái <code>ROADMAP_DRAFT</code>: SRS chờ ký theo vai trò và owner chưa được gán (<code>BLOCKER-001</code>). Không có target window vì SRS không cung cấp mốc thời gian.</li>
+</ul>
+</article></main></body></html>

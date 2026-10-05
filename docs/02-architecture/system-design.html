@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thiết kế hệ thống LabelX Quality Control — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/02-architecture/system-design.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / system-design</span><span class="sp"></span>
+<a href="system-design.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>architecture-system-design</span><b>title</b><span>Thiết kế hệ thống LabelX Quality Control</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>quality-control</span><b>tags</b><span>[architecture, system-design, celery, snapshot, ledger]</span><b>priority</b><span>1</span></div>
+<h1 id="thiet-ke-he-thong-labelx-quality-control">Thiết kế hệ thống LabelX Quality Control</h1>
+<h2 id="1-boi-canh-va-pham-vi">1. Bối cảnh và phạm vi</h2>
+<p>LabelX là module Quality Control (QC) chạy cạnh CVAT. CVAT là hệ thống nguồn của annotation và là <strong>editor duy nhất</strong>. LabelX chỉ đọc cấu trúc Project/Task/Job/Frame, annotation và ảnh. Mọi thao tác tạo, sửa hay xoá annotation đều làm trên CVAT, thông qua deep link (nguồn: H <code>Main.dc.html</code>; R B-18; SRS FR-SNP-01).</p>
+<p>Bản nghiệm thu đầu tiên là lát cắt <strong>M13 — Reviewer Prioritization Assistant</strong>. Luồng của nó như sau: annotation từ CVAT → phân tích nghi vấn → xếp hạng frame → reviewer xem bằng chứng và phân xử → báo cáo hiệu quả. Phạm vi dữ liệu là ảnh BDD100K, Bounding box, 10 lớp, và ba nhóm lỗi E1 (thiếu box), E2 (sai lớp), E3 (trùng box) (nguồn: SRS <a href="../label-x_system-requirement-specification/sections/01-introduction.tex">01-introduction.tex</a>, <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>).</p>
+<p>Các mục <strong>ngoài phạm vi MVP</strong>: temporal/track (B-09), Diff/pre-label (B-16), Classifier (B-07), Guideline RAG (B-13), annotation writeback (B-18), phát hành dataset đầy đủ (FR-GTE-04). Engine VLM đề xuất không bật trong pilot (TBD-08). Xem bảng loại trừ trong <a href="decisions.html">decisions.md</a>.</p>
+<h3 id="actor">Actor</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Vai trò chính</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Annotator</td>
+<td>Sửa trên CVAT, báo "Đã sửa"</td>
+<td>SRS <code>tab:rbac</code></td>
+</tr>
+<tr>
+<td>Reviewer</td>
+<td>Review theo hàng đợi, ra quyết định, yêu cầu sửa, verify</td>
+<td>SRS <code>tab:rbac</code></td>
+</tr>
+<tr>
+<td>QA Lead</td>
+<td>Chạy snapshot/run, phân xử, quản lý và khoá reference, duyệt waiver</td>
+<td>SRS <code>tab:rbac</code>; R "Phân công"</td>
+</tr>
+<tr>
+<td>QC Admin</td>
+<td>Cấu hình engine, mapping, quyền</td>
+<td>SRS <code>tab:rbac</code></td>
+</tr>
+<tr>
+<td>Super Admin</td>
+<td>Ghi đè có lý do và audit, vẫn chịu ràng buộc self-review</td>
+<td>FR-SEC-06</td>
+</tr>
+<tr>
+<td>Hệ thống (worker)</td>
+<td>Export, chạy engine, gộp issue, xếp hạng, re-check</td>
+<td>SRS §5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-thanh-phan">2. Thành phần</h2>
+<p>Sơ đồ chi tiết: <a href="diagrams/component.html">diagrams/component.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Thành phần</th>
+<th>Công nghệ</th>
+<th>Trách nhiệm</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web client</td>
+<td>Next.js + React + TypeScript</td>
+<td>Review Queues, Workspace, Escalations, Evaluation, Report; gọi REST/JSON</td>
+<td>DEC-001; SRS ch.10</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Django + DRF (Gunicorn)</td>
+<td>REST, xác thực theo session, kiểm quyền, ghi transaction</td>
+<td>DEC-001; <a href="../../src/backend/config/settings.py">settings.py</a></td>
+</tr>
+<tr>
+<td>CPU worker</td>
+<td>Celery</td>
+<td>Snapshot export, Schema, Geometry, Duplicate, Matching, Aggregation, Ranking, Evaluation</td>
+<td>SRS ch.10</td>
+</tr>
+<tr>
+<td>GPU worker</td>
+<td>Celery</td>
+<td>Detector baseline (suy luận theo lô)</td>
+<td>SRS ch.10; FR-ENG-05</td>
+</tr>
+<tr>
+<td>Broker</td>
+<td>Redis 7</td>
+<td>Broker và result backend của Celery (<code>CELERY_BROKER_URL</code>, <code>CELERY_RESULT_BACKEND</code>). SRS cho phép dùng Redis làm cache, nhưng <code>settings.py</code> <strong>hiện chưa cấu hình <code>CACHES</code></strong>. <strong>Không</strong> là nguồn chuẩn của lease</td>
+<td>SRS <code>tab:modules</code>; settings</td>
+</tr>
+<tr>
+<td>CSDL</td>
+<td>PostgreSQL 17</td>
+<td>Snapshot, run, ledger, candidate, issue, lease, decision, audit, effort, reference</td>
+<td>SRS ch.10</td>
+</tr>
+<tr>
+<td>Object Storage</td>
+<td>S3-compatible</td>
+<td>Ảnh, crop evidence, báo cáo xuất</td>
+<td><a href="../11-integrations/object-storage.html">object-storage.md</a></td>
+</tr>
+<tr>
+<td>Model artifact</td>
+<td>File trên Object Storage hoặc ổ của GPU server</td>
+<td>Trọng số Detector, kèm checksum và mapping lớp</td>
+<td>SRS ch.10; L "Model Registry"</td>
+</tr>
+<tr>
+<td>CVAT</td>
+<td>Hệ thống ngoài</td>
+<td>Nguồn annotation và ảnh; editor</td>
+<td><a href="../11-integrations/cvat.html">cvat.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-module-backend-django-apps">3. Module backend (Django apps)</h2>
+<p>Mỗi module là một Django app có bảng riêng, để có thể tách ra sau này (A ADR-01). Các module chỉ gọi nhau qua service function Python, không truy cập thẳng bảng của module khác. Tên app dưới đây là <strong>đề xuất đặt tên</strong>. <code>INSTALLED_APPS</code> hiện chưa có app LabelX nào; app sẽ được thêm khi epic tương ứng được triển khai.</p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Module SRS</th>
+<th>Trách nhiệm</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>access</code></td>
+<td>Auth/RBAC/Audit</td>
+<td>Vai trò theo scope dataset, identity mapping LabelX ↔ CVAT, audit append-only</td>
+<td>FR-SEC-01…07</td>
+</tr>
+<tr>
+<td><code>cvat_adapter</code></td>
+<td>CVAT Adapter</td>
+<td>Client chỉ đọc, chuẩn hoá annotation, sinh deep link</td>
+<td>FR-SNP-01, 02, 08</td>
+</tr>
+<tr>
+<td><code>snapshots</code></td>
+<td>Snapshot</td>
+<td>Hash, kiểm drift, khoá, lineage <code>parent_snapshot</code></td>
+<td>FR-SNP-03…09</td>
+</tr>
+<tr>
+<td><code>qc</code></td>
+<td>QC Orchestrator</td>
+<td>Run, chia shard, phụ thuộc giữa các bước, retry, huỷ, ledger</td>
+<td>FR-ENG-01, FR-AGG-02, 04–06</td>
+</tr>
+<tr>
+<td><code>engines</code></td>
+<td>Engine</td>
+<td>Schema/Taxonomy, Geometry, Duplicate/Overlap, Detector, Matching; dùng interface chung</td>
+<td>FR-ENG-02…10; NFR-13</td>
+</tr>
+<tr>
+<td><code>issues</code></td>
+<td>Aggregation</td>
+<td>Candidate → Issue theo <code>dedup_key</code>, neo và <code>n_i</code></td>
+<td>FR-AGG-01, 03; FR-RNK-12</td>
+</tr>
+<tr>
+<td><code>ranking</code></td>
+<td>Ranking</td>
+<td><code>q_i</code>, <code>h(f)</code>, <code>s(f)</code>, phá hoà, lát ngẫu nhiên, ranking đối chứng</td>
+<td>FR-RNK-01…11</td>
+</tr>
+<tr>
+<td><code>review</code></td>
+<td>Review Workflow</td>
+<td>Hàng đợi, lease, quyết định, phân xử, rework, verify</td>
+<td>FR-REV, FR-ESC, FR-RWK</td>
+</tr>
+<tr>
+<td><code>guidelines</code></td>
+<td>Guideline</td>
+<td>Guideline version, rule, mapping, Decision Case, Guideline Gap</td>
+<td>FR-GDL-01…04</td>
+</tr>
+<tr>
+<td><code>evaluation</code></td>
+<td>Evaluation</td>
+<td>Reference, suy ra tập lỗi, Recall@k, effort, non-inferiority, Metric engine. <strong>Model Orchestrator</strong> tổng hợp kết quả đánh giá engine trên reference đã khoá, kèm provenance (engine/model/config version, snapshot, reference version, scope, định nghĩa metric, cỡ mẫu); không dùng model làm trọng tài. Đặc tả chi tiết: <strong>TBD-21</strong></td>
+<td>FR-EVL-01…16; B-05; SRS <code>tab:modules</code></td>
+</tr>
+<tr>
+<td><code>gate</code></td>
+<td>Quality Gate</td>
+<td>Điều kiện gate, waiver</td>
+<td>FR-GTE-01…04</td>
+</tr>
+<tr>
+<td><code>reports</code></td>
+<td>Report</td>
+<td>Báo cáo hiệu quả, xuất PDF/CSV/JSON</td>
+<td>FR-RPT-01…06</td>
+</tr>
+</tbody>
+</table>
+<h3 id="interface-engine">Interface engine</h3>
+<p>Interface lấy từ A §20.3, đã chỉnh theo SRS:</p>
+<pre class="highlight"><code class="language-text">EngineJob    { run_id, engine, engine_version, config_version, model_checksum?, snapshot_id,
+               shard: { cvat_job_id, frame_from, frame_to }, attempt }
+EngineOutput { status: Checked | Partial | Failed | Not checked,
+               reason?: disabled | no_model | no_reference | not_applicable | not_triggered,
+               ledger: [{ unit_ref, applicability, status, reason? }],
+               candidates: [Candidate], evidence: [Evidence], duration_ms, error? }</code></pre>
+<p>A dùng thêm <code>ISSUE_FOUND</code>; H hiển thị "Issue found". Theo FR-AGG-05, trạng thái lưu trữ chỉ có năm giá trị: Checked, Partial, Failed, Not checked, Running. Nhãn "Issue found" của H được coi là <strong>hiển thị phái sinh</strong> của Checked khi có candidate. Cách hiển thị này cần UI xác nhận (xem mục 10).</p>
+<h2 id="4-worker-va-hang-oi">4. Worker và hàng đợi</h2>
+<table>
+<thead>
+<tr>
+<th>Queue (tên đề xuất)</th>
+<th>Worker</th>
+<th>Task</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snapshot</code></td>
+<td>CPU, nặng I/O</td>
+<td>Export job từ CVAT, upload ảnh, verify và khoá</td>
+<td>Timeout đọc CVAT đặt riêng (R "Cấu hình vận hành"; TBD-13)</td>
+</tr>
+<tr>
+<td><code>cpu</code></td>
+<td>CPU</td>
+<td>Schema, Geometry, Duplicate, Matching, Aggregation, Ranking, Evaluation, xuất báo cáo</td>
+<td>Chạy song song theo shard</td>
+</tr>
+<tr>
+<td><code>gpu</code></td>
+<td>GPU server</td>
+<td>Detector theo lô</td>
+<td>Ảnh không gửi ra ngoài (NFR-09)</td>
+</tr>
+<tr>
+<td><code>vlm</code></td>
+<td>—</td>
+<td>Kiểm chọn lọc VLM</td>
+<td><strong>Không bật</strong> trong pilot (TBD-08). Không khởi động worker cho queue này</td>
+</tr>
+</tbody>
+</table>
+<p>Cấu hình Celery đã có trong settings: <code>task_acks_late=True</code>, <code>task_reject_on_worker_lost=True</code>, <code>worker_prefetch_multiplier=1</code>. Như vậy một task có thể chạy lại khi worker chết, nên <strong>mọi task phải idempotent</strong>. Lịch định kỳ dùng <code>django_celery_beat</code> (DatabaseScheduler). Danh sách task chi tiết: <a href="../04-api/event-contracts.html">event-contracts.md</a>.</p>
+<h2 id="5-luong-f-01f-08">5. Luồng F-01…F-08</h2>
+<p>Mã F-01…F-08 là luồng tham chiếu trong R mục 5, đã được SRS <code>tab:flowsteps</code> cụ thể hoá. Sơ đồ chi tiết: <a href="diagrams/data-flow.html">diagrams/data-flow.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>Công việc</th>
+<th>Actor</th>
+<th>Thành phần</th>
+<th>Điểm kiểm soát</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-01</td>
+<td>Chọn phạm vi, đọc CVAT</td>
+<td>QA Lead (chạy), QC Admin (cấu hình)</td>
+<td><code>cvat_adapter</code></td>
+<td>Chỉ đọc; token ở backend</td>
+<td>B-18; FR-SNP-01, 02</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Export, hash, khoá snapshot</td>
+<td>Hệ thống</td>
+<td><code>snapshots</code>, queue <code>snapshot</code></td>
+<td>Có drift thì không khoá</td>
+<td>B-02; FR-SNP-03…06; SD-1</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Chạy engine, ghi ledger</td>
+<td>Worker</td>
+<td><code>qc</code>, <code>engines</code>, queue <code>cpu</code>/<code>gpu</code></td>
+<td>Retry idempotent; Not checked/Partial/Failed không bao giờ là đạt</td>
+<td>B-10, B-19; SD-2</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Kiểm chọn lọc VLM</td>
+<td>Worker</td>
+<td>—</td>
+<td>Không bật trong pilot M13</td>
+<td>B-08; FR-ENG-10; TBD-08</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Gộp issue, xếp hạng, tạo lát ngẫu nhiên</td>
+<td>Hệ thống</td>
+<td><code>issues</code>, <code>ranking</code></td>
+<td>Công thức có version; lát ngẫu nhiên độc lập với ranking</td>
+<td>FR-AGG-03; FR-RNK-01…07</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Review, quyết định, phân xử</td>
+<td>Reviewer, QA Lead</td>
+<td><code>review</code>, <code>guidelines</code></td>
+<td>Lease; chặn self-review; audit cùng transaction</td>
+<td>B-12; FR-REV; SD-3</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Sửa trên CVAT, re-check, verify</td>
+<td>Annotator, worker, Reviewer</td>
+<td><code>review</code>, <code>snapshots</code>, <code>qc</code></td>
+<td>Issue chỉ đóng sau khi verify trên revision đã sửa</td>
+<td>B-03; FR-RWK-01…05; SD-4</td>
+</tr>
+<tr>
+<td>F-08</td>
+<td>QC run cuối, gate, báo cáo</td>
+<td>Hệ thống, QA Lead</td>
+<td><code>qc</code>, <code>gate</code>, <code>reports</code></td>
+<td>Báo cáo và gate trỏ run cuối</td>
+<td>B-03, B-15; FR-RWK-06, 08; FR-GTE</td>
+</tr>
+</tbody>
+</table>
+<p>Đánh giá KPI (UC-08…UC-10, SD-5) là nhánh song song. QA Lead khoá reference, sau đó <code>evaluation</code> đọc ranking, tập lỗi và effort log để tính Recall@k, KPI-2 và non-inferiority. Nhánh này phải gặp luồng chính trước khi kết luận nghiệm thu (R mục 7, "đường găng").</p>
+<h3 id="may-trang-thai">Máy trạng thái</h3>
+<p>Nguồn: SRS §5.3–5.5. Chuyển trạng thái không có trong bảng sẽ trả 409.</p>
+<pre class="mermaid">stateDiagram-v2
+    direction LR
+    [*] --&gt; Queued
+    Queued --&gt; Running: worker nhận
+    Running --&gt; Completed: mọi shard ok
+    Running --&gt; Partial: có shard lỗi sau retry
+    Running --&gt; Failed: lỗi toàn cục
+    Queued --&gt; Cancelled: huỷ
+    Running --&gt; Cancelled: huỷ
+    Partial --&gt; Running: chạy lại shard lỗi</pre>
+<pre class="mermaid">stateDiagram-v2
+    [*] --&gt; ChoReview
+    ChoReview --&gt; DangReview: claim (cấp lease)
+    DangReview --&gt; ChoReview: lease_expired [không có quyết định đã lưu]
+    DangReview --&gt; DaXacNhan: confirm
+    DangReview --&gt; BacBo: reject
+    DangReview --&gt; ChoPhanXu: uncertain / escalate
+    ChoPhanXu --&gt; DaXacNhan: adjudicate
+    ChoPhanXu --&gt; BacBo: adjudicate
+    ChoPhanXu --&gt; ChoPhanXu: guideline_gap
+    DaXacNhan --&gt; ChoSua: request_fix
+    ChoSua --&gt; ChoKiemLai: fix_submitted
+    ChoKiemLai --&gt; DaDong: verify_pass
+    ChoKiemLai --&gt; MoLai: verify_fail
+    MoLai --&gt; ChoSua: request_fix (tự động)</pre>
+<p>Bảng ánh xạ mã trạng thái: <code>ChoReview</code>=<code>pending_review</code> (Chờ review), <code>DangReview</code>=<code>in_review</code>, <code>DaXacNhan</code>=<code>confirmed</code>, <code>BacBo</code>=<code>rejected</code>, <code>ChoPhanXu</code>=<code>awaiting_adjudication</code>, <code>ChoSua</code>=<code>fix_requested</code>, <code>ChoKiemLai</code>=<code>awaiting_verification</code>, <code>DaDong</code>=<code>closed</code>, <code>MoLai</code>=<code>reopened</code>. Mã tiếng Anh là đề xuất cho cột <code>issue.state</code>. Nhãn hiển thị giữ theo H.</p>
+<p>Snapshot có các trạng thái <code>pending</code> → <code>exporting</code> → <code>locked</code>, hoặc <code>failed</code> với lý do <code>drift_detected</code>/<code>export_error</code> (SD-1). Trạng thái review của frame gồm: Chưa review → Đang review (có lease) → Đã review → Còn issue chờ (phân xử hoặc sửa) → Hoàn tất (run cuối) (SRS <code>fig:framestate</code>).</p>
+<h2 id="6-idempotency-va-retry">6. Idempotency và retry</h2>
+<table>
+<thead>
+<tr>
+<th>Cơ chế</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Khoá đơn vị xử lý</td>
+<td><code>idempotency_key = sha256(snapshot_id, engine, engine_version, config_version, model_checksum, shard_key)</code>, có UNIQUE <code>(run_id, idempotency_key)</code> trong bảng <code>work_unit</code></td>
+<td>FR-AGG-02; T §6</td>
+</tr>
+<tr>
+<td>Ghi kết quả shard</td>
+<td>Candidate, evidence và cập nhật ledger trong <strong>một</strong> transaction. Đơn vị đã ở trạng thái <code>completed</code> thì task kết thúc ngay (no-op)</td>
+<td>FR-AGG-06</td>
+</tr>
+<tr>
+<td>Candidate</td>
+<td>Có <code>candidate_fingerprint</code> UNIQUE theo run; dùng <code>INSERT … ON CONFLICT DO NOTHING</code>. Không bao giờ UPDATE</td>
+<td>FR-AGG-01</td>
+</tr>
+<tr>
+<td>Issue</td>
+<td>UNIQUE <code>(run_id, dedup_key)</code>; upsert để gắn thêm candidate, không tạo issue mới</td>
+<td>FR-AGG-03; BR-08</td>
+</tr>
+<tr>
+<td>Blob</td>
+<td>Upload lên Object Storage <strong>trước</strong>, với khoá theo hash nội dung. Ghi lại cùng khoá là idempotent. Sau đó mới commit metadata</td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Quyết định review</td>
+<td>Header <code>Idempotency-Key</code> được lưu với UNIQUE trên <code>review_decision</code>. Gửi lại cùng khoá trả lại kết quả cũ</td>
+<td>A §25.1 (đề xuất, xem <a href="../04-api/rest-api.html">rest-api.md</a>)</td>
+</tr>
+<tr>
+<td>Enqueue</td>
+<td>Commit chuyển trạng thái trước, rồi enqueue qua <code>transaction.on_commit</code>. Task claim bằng cập nhật có điều kiện, nên chạy lại được từ trạng thái trung gian. Chọn sweeper hay outbox <strong>cần decision mới</strong> (<a href="../04-api/event-contracts.html">event-contracts.md</a> mục 1)</td>
+<td>Yêu cầu thiết kế</td>
+</tr>
+<tr>
+<td>Retry</td>
+<td>Số lần thử và backoff: TBD-14. Hết lượt thì đơn vị là <code>failed</code>, run là Partial; không làm hỏng run</td>
+<td>NFR-05</td>
+</tr>
+<tr>
+<td>VLM (nếu bật)</td>
+<td>Tối đa 3 lần thử, đã gồm retry; budget 400 candidate</td>
+<td>B-08</td>
+</tr>
+<tr>
+<td>Huỷ</td>
+<td><code>POST /runs/{id}/cancel</code> đặt <code>cancel_requested_at</code>. Task kiểm cờ này trước khi nhận đơn vị mới. Kết quả đã commit được giữ lại. Run chuyển Cancelled</td>
+<td>SRS state machine QC Run; R "Huỷ chạy"</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-snapshot-va-revision">7. Snapshot và revision</h2>
+<ul>
+<li>CVAT không có "annotation revision" chính thức. Revision trong LabelX là <strong>hash do LabelX tính</strong> từ JSON đã chuẩn hoá: sắp xếp khoá, toạ độ làm tròn cố định (số chữ số: <strong>TBD-20</strong>), SHA-256 theo job, sau đó tính hash tổng (nguồn: A §21; FR-SNP-03).</li>
+<li>Kiểm drift: đọc <code>updated_date</code> của từng job lúc bắt đầu, rồi đọc lại trước khi khoá. Nếu khác thì snapshot <code>failed</code> (<code>drift_detected</code>) và trả về danh sách job bị drift (FR-SNP-04; SD-1).</li>
+<li>Snapshot đã khoá là bất biến. Mọi thay đổi annotation tạo snapshot mới có <code>parent_snapshot_id</code> (FR-SNP-06).</li>
+<li>Snapshot lưu assignee của từng job tại thời điểm snapshot. Đây là căn cứ chặn self-review (FR-SNP-05; B-12).</li>
+<li>Rework: khi annotator bấm "Đã sửa", hệ thống tạo snapshot gia tăng cho job bị ảnh hưởng. Nếu hash không đổi thì trả 409 "chưa có thay đổi" (FR-RWK-03, FR-SNP-09).</li>
+<li>Run cuối: khi mọi yêu cầu sửa trong phạm vi đã đóng, hệ thống tạo snapshot toàn phạm vi và QC Run có <code>is_final=true</code>, liên kết các verification trước đó (FR-RWK-06).</li>
+</ul>
+<h2 id="8-coverage-ledger">8. Coverage ledger</h2>
+<ul>
+<li>Ledger ghi theo <strong>từng engine</strong> và từng đơn vị áp dụng. Mỗi đơn vị có trạng thái <code>eligible</code>, <code>completed</code>, <code>failed</code> hoặc <code>not_checked</code>, kèm lý do (FR-AGG-04).</li>
+<li>Đơn vị áp dụng theo policy MVP: Schema/Geometry theo annotation; Duplicate/Overlap theo frame (cặp so được); Detector và Matching theo frame; Metric theo scope reference; VLM (nếu bật) theo candidate được trigger (R "Required units").</li>
+<li><code>coverage(engine) = completed / eligible</code>. Mẫu số <strong>gồm cả</strong> đơn vị lỗi. Đơn vị <code>not_triggered</code> không nằm trong mẫu số của kiểm chọn lọc (SRS <code>tab:enginestates</code>).</li>
+<li>Frame có engine bắt buộc ở trạng thái Not checked hoặc Failed mang cờ <code>missing_evidence</code> trong hàng đợi (FR-RNK-06).</li>
+<li>Gate coverage là ≥ 95% trên từng engine bắt buộc, tính trên run cuối (FR-GTE-01). Truy vấn xem tại <a href="../05-database/queries.html">queries.md</a>.</li>
+</ul>
+<h2 id="9-trien-khai">9. Triển khai</h2>
+<p>Sơ đồ: <a href="diagrams/deployment.html">diagrams/deployment.md</a>.</p>
+<ul>
+<li><strong>Dev local</strong>: <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a> chạy <code>postgres:17</code>, <code>redis:7-alpine</code>, <code>seaweedfs</code> (S3 ở cổng 9000) và <code>seaweedfs-init</code>. <code>seaweedfs-init</code> tạo các bucket <code>labelx-snapshots</code>, <code>labelx-evidence</code>, <code>labelx-reports</code>. CVAT không nằm trong compose.</li>
+<li><strong>Môi trường thật</strong> (SRS <code>fig:deployment</code>): một app server Linux chạy Gunicorn + Django/DRF và Celery CPU worker; một GPU server chạy Celery GPU worker; tầng dữ liệu gồm PostgreSQL, Redis và Object Storage hiện có; CVAT hiện có được truy cập qua HTTPS (chỉ đọc). Cấu hình phần cứng: <strong>TBD-02</strong>.</li>
+<li>Sao lưu PostgreSQL và Object Storage (bật versioning) theo cùng lịch; RPO/RTO: <strong>TBD-17</strong> (NFR-16).</li>
+<li>Quan sát: log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code>; metric hàng đợi Celery (NFR-12).</li>
+</ul>
+<h2 id="10-mau-thuan-nguon-va-cach-xu-ly">10. Mâu thuẫn nguồn và cách xử lý</h2>
+<table>
+<thead>
+<tr>
+<th>Điểm</th>
+<th>Nguồn mâu thuẫn</th>
+<th>Xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>A FastAPI; L và R Django</td>
+<td>Django (DEC-001)</td>
+</tr>
+<tr>
+<td>Lease</td>
+<td>A: lease theo issue, 15 phút, heartbeat; SRS: lease theo frame, thời hạn TBD-09</td>
+<td>Theo SRS (FR-REV-03, 04). Không dùng giá trị 15 phút</td>
+</tr>
+<tr>
+<td>Nguồn chuẩn lease</td>
+<td>A: Redis làm lease cache</td>
+<td>PostgreSQL là nguồn chuẩn (SRS <code>tab:modules</code>)</td>
+</tr>
+<tr>
+<td>Khoá idempotent</td>
+<td>A <code>(runId, engine, shard)</code>; T <code>snapshot+step+frame+config/model</code></td>
+<td>SRS FR-AGG-02 <code>(snapshot, engine, config, model, shard)</code></td>
+</tr>
+<tr>
+<td>Trạng thái engine</td>
+<td>T NOT_REQUIRED; A ISSUE_FOUND; H "Issue found"</td>
+<td>SRS FR-AGG-05: năm trạng thái công khai. "Issue found" chỉ là nhãn hiển thị phái sinh, cần xác nhận khi build UI</td>
+</tr>
+<tr>
+<td>Trạng thái Issue/Run</td>
+<td>A và T có tập trạng thái riêng</td>
+<td>Theo SRS §5 (dựa trên H)</td>
+</tr>
+<tr>
+<td>Drift</td>
+<td>A: webhook <code>update:job</code>; R: polling có checkpoint nếu webhook không có</td>
+<td>Theo SRS FR-SNP-04: đọc lại trước khi khoá. Webhook là tuỳ chọn, phụ thuộc TBD-01</td>
+</tr>
+<tr>
+<td>Đường dẫn API</td>
+<td>A <code>/api/qc/v1/...</code>; SRS <code>/api/...</code></td>
+<td>Theo SRS §9.3</td>
+</tr>
+<tr>
+<td>Phạm vi</td>
+<td>R nói chung về QC; SRS khoá M13 (BDD100K, 10 lớp)</td>
+<td>Theo SRS cho MVP; schema không gắn cứng 10 lớp (mapping lớp có version)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-tbd-lien-quan">11. TBD liên quan</h2>
+<p>TBD-01 (CVAT), TBD-02 (phần cứng), TBD-05 (<code>τ_m</code>, <code>τ_amb</code>), TBD-08 (VLM), TBD-09 (lease), TBD-10 (tỉ lệ lát ngẫu nhiên), TBD-13 (hiệu năng), TBD-14 (retry/backoff), TBD-15 (lưu audit), TBD-17 (RPO/RTO), TBD-18 (giấy phép BDD100K, trước khi nạp dữ liệu vào Object Storage), TBD-19 (điều kiện gate được waiver), TBD-20 (timeout mỗi lượt VLM, <code>t_gc</code>, ε của <code>score_v0</code>, số chữ số làm tròn toạ độ khi hash), TBD-21 (đặc tả Model Orchestrator). Định nghĩa đầy đủ ở bảng <code>tab:tbd</code> trong <a href="../label-x_system-requirement-specification/sections/11-traceability.tex">11-traceability.tex</a>.</p>
+</article></main></body></html>

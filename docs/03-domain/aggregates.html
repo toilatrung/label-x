@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aggregate của module Quality Control — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/03-domain/aggregates.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 03-domain / aggregates</span><span class="sp"></span>
+<a href="aggregates.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>domain-aggregates</span><b>title</b><span>Aggregate của module Quality Control</span><b>type</b><span>reference</span><b>domain</b><span>domain</span><b>module</b><span>quality-control</span><b>tags</b><span>[domain, aggregates, invariants, state-machine]</span><b>priority</b><span>1</span></div>
+<h1 id="aggregate-cua-module-quality-control">Aggregate của module Quality Control</h1>
+<p>Tài liệu mô tả các aggregate (gốc nhất quán) của LabelX — module Quality Control quanh CVAT, phạm vi M13 (Reviewer Prioritization) trên ảnh BDD100K, Bounding box. Mỗi aggregate có: trách nhiệm, thuộc tính chính, invariant, vòng đời và trạng thái công khai.</p>
+<p>Ký hiệu nguồn:</p>
+<ul>
+<li><strong>R</strong>: <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> — quyết định B-01…B-21, cấu hình MVP, mục tiêu R-01…R-07 (đã chốt).</li>
+<li><strong>SRS</strong>: <a href="../label-x_system-requirement-specification/sections/">sections/</a> — đặc biệt <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>, <a href="../label-x_system-requirement-specification/sections/05-dynamics.tex">05-dynamics.tex</a>, <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a>.</li>
+<li><strong>H</strong>: màn hình chuẩn hành vi trong <a href="../design/screens/">docs/design/screens/</a>.</li>
+<li><strong>A/T</strong>: <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html">Quality_Control_Review_UX_Architecture.html</a>, <a href="../00-project/sources/QC_Engine_Review_Report.html">QC_Engine_Review_Report.html</a> — chỉ dùng khi không mâu thuẫn R/SRS/H.</li>
+</ul>
+<p>Thứ tự ưu tiên khi mâu thuẫn: R và SRS &gt; H &gt; A/T &gt; B. Value object dùng trong các aggregate ở <a href="value-objects.html">value-objects.md</a>; quy tắc tính toán liên aggregate ở <a href="services.html">services.md</a>.</p>
+<h2 id="1-nguyen-tac-chung">1. Nguyên tắc chung</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nguyên tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P-01</td>
+<td>CVAT là hệ thống nguồn annotation và là editor duy nhất. Không aggregate nào của LabelX ghi annotation ngược vào CVAT.</td>
+<td>R B-18; SRS FR-SNP-01</td>
+</tr>
+<tr>
+<td>P-02</td>
+<td>Mọi kết quả phân tích gắn với một <code>Snapshot</code> và một <code>QualityControlRun</code>; mọi quyết định gắn actor, revision, lý do.</td>
+<td>SRS 03 §Mô hình dữ liệu khái niệm</td>
+</tr>
+<tr>
+<td>P-03</td>
+<td><code>Candidate</code> (phát hiện thô của engine) và <code>Issue</code> (đơn vị công việc review) là hai aggregate riêng; quyết định không ghi đè candidate.</td>
+<td>R B-10; SRS FR-AGG-01</td>
+</tr>
+<tr>
+<td>P-04</td>
+<td>Trạng thái công khai giữ theo H; lý do áp dụng (applicability) lưu riêng. Not checked / Partial / Failed không bao giờ được hiển thị hay tính là đạt.</td>
+<td>R B-19; SRS FR-AGG-05</td>
+</tr>
+<tr>
+<td>P-05</td>
+<td>AI (Detector, VLM nếu bật) chỉ được ghi <code>Candidate</code> và <code>Evidence</code>; không có đường ghi <code>ReviewDecision</code>, phân xử, gate hay waiver.</td>
+<td>R R-02; A ADR-07</td>
+</tr>
+<tr>
+<td>P-06</td>
+<td>Bản ghi lịch sử (snapshot đã khoá, candidate, decision, audit, reference đã khoá, evaluation run) là bất biến; thay đổi tạo bản ghi/version mới.</td>
+<td>SRS FR-SNP-06, BR-13, FR-SEC-05</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-ban-o-aggregate">2. Bản đồ aggregate</h2>
+<pre class="highlight"><code>Dataset 1─* Snapshot 1─* QualityControlRun 1─* EngineResult (ledger)
+                │                 │
+                │                 ├─* Candidate *─1 Issue 1─* ReviewDecision
+                │                 │                   │
+                │                 │                   ├─0..1 ReworkRequest ─▶ Snapshot (revision đã sửa)
+                │                 │                   └─0..1 Lease
+                │                 └─* FrameRisk (1 / frame / run)
+                └─* Reference (GT + tập lỗi E) ─▶ EvaluationRun
+QualityGateEvaluation 1─* GateCondition 1─0..1 Waiver
+Experiment 1─* EffortLog          GuidelineVersion 1─* DecisionCase, GuidelineGap
+AuditLog (append-only) ─▶ mọi aggregate trên</code></pre>
+<h2 id="3-dataset">3. Dataset</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: ngữ cảnh làm việc chung. Dataset = CVAT Project + Version (nguồn: H Main.dc.html).</li>
+<li><strong>Thuộc tính</strong>: <code>cvat_project_id</code>, <code>taxonomy_version</code>, <code>guideline_version</code>, scope quyền theo dataset (SRS 03; FR-SEC-01).</li>
+<li><strong>Invariant</strong>:</li>
+<li>LabelX chỉ đọc cấu trúc Project/Task/Job/Frame từ CVAT (H Main; R B-18).</li>
+<li>Taxonomy phạm vi M13 là 10 lớp 2D detection của BDD100K (<code>car</code>, <code>truck</code>, <code>bus</code>, <code>train</code>, <code>motorcycle</code>, <code>bicycle</code>, <code>pedestrian</code>, <code>rider</code>, <code>traffic light</code>, <code>traffic sign</code>) (SRS 03 bảng lớp). Con số "12 lớp" và "Project #31" trên mockup H không phải dữ liệu thật (R cấu hình MVP).</li>
+<li><strong>Vòng đời</strong>: đồng bộ từ CVAT; không có trạng thái nghiệp vụ riêng trong MVP.</li>
+</ul>
+<h2 id="4-snapshot">4. Snapshot</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: khoá một phiên bản annotation để kiểm tra và tái lập (R B-02; SRS FR-SNP-03…07).</li>
+<li><strong>Thuộc tính</strong>: <code>revision_hash</code> (hash tổng) và hash từng job (<a href="value-objects.html#revisionhash">Revision hash</a>), ảnh + checksum, mapping frame (job/task/frame nguồn), <code>assignee_map</code> từng job tại thời điểm snapshot, taxonomy version, guideline version, <code>created_by</code>, <code>locked_at</code>, <code>parent_snapshot</code>, seed lấy mẫu (H Snapshot.dc.html).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Snapshot đã khoá là bất biến; annotation đổi tạo snapshot mới có <code>parent_snapshot</code> (FR-SNP-06; H Snapshot).</li>
+<li>Chỉ khoá khi không có drift: đọc lại thông tin cập nhật của từng job trước khi khoá; khác lần đọc đầu thì không khoá, không tạo snapshot một phần (FR-SNP-04; UC-01 4a).</li>
+<li>Shape không phải Bounding box bị bỏ qua và đếm là "ngoài phạm vi" (FR-SNP-07).</li>
+<li><code>assignee_map</code> là căn cứ kiểm self-review cho mọi quyết định trên snapshot (R B-12; FR-SNP-05).</li>
+<li><strong>Vòng đời</strong> (SD-1, SRS 05):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Trạng thái</th>
+<th>Ý nghĩa</th>
+<th>Chuyển tiếp</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pending</td>
+<td>Đã tạo bản ghi, worker đang export/hash</td>
+<td>→ Locked (không drift) · → Failed (drift hoặc CVAT lỗi)</td>
+</tr>
+<tr>
+<td>Locked</td>
+<td>Bất biến, dùng được cho QC Run</td>
+<td>Không chuyển tiếp; thay đổi tạo snapshot mới</td>
+</tr>
+<tr>
+<td>Failed</td>
+<td><code>DriftDetected</code> hoặc CVAT không phản hồi/từ chối quyền; không ảnh hưởng snapshot cũ</td>
+<td>Thử lại bằng snapshot mới</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Biến thể</strong>: snapshot gia tăng chỉ cho job bị ảnh hưởng bởi rework (FR-SNP-09, Should); snapshot toàn phạm vi trên revision đã sửa trước QC run cuối (FR-RWK-06; R B-03).</li>
+</ul>
+<h2 id="5-qualitycontrolrun-qc-run">5. QualityControlRun (QC Run)</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: một lần chạy các engine trên một snapshot với cấu hình có version (UC-02).</li>
+<li><strong>Thuộc tính</strong>: snapshot, config version, seed, version từng engine, model artifact + checksum, người chạy, thời điểm (FR-ENG-01); <code>status</code>, <code>is_final</code>; tập <code>EngineResult</code> (ledger từng engine).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Run chỉ tham chiếu snapshot đã khoá và cấu hình có version; engine đọc snapshot đã export, không đọc CVAT live (R B-01/B-02; A ADR-02).</li>
+<li>Cùng snapshot, config, score version, seed ⇒ candidate, issue, ranking giống hệt (FR-RNK-03; R R-01).</li>
+<li>Ghi candidate, evidence và cập nhật ledger của một shard trong cùng transaction (FR-AGG-06).</li>
+<li>Run gốc giữ nguyên để kiểm toán khi có run cuối; không sửa kết quả lịch sử (R B-03; FR-RWK-06).</li>
+<li>Chỉ một run được đánh dấu <code>is_final</code> cho phạm vi đang dùng cho báo cáo/gate; báo cáo/gate chỉ trỏ run cuối khi run cuối Completed và coverage engine bắt buộc đạt (FR-RWK-08).</li>
+<li><strong>Vòng đời</strong> (SRS 05 §Trạng thái QC Run):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Từ</th>
+<th>Đến</th>
+<th>Sự kiện</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—</td>
+<td>Queued</td>
+<td>Tạo run</td>
+</tr>
+<tr>
+<td>Queued</td>
+<td>Running</td>
+<td>Worker nhận</td>
+</tr>
+<tr>
+<td>Running</td>
+<td>Completed</td>
+<td>Mọi shard ok</td>
+</tr>
+<tr>
+<td>Running</td>
+<td>Partial</td>
+<td>Có shard lỗi sau retry</td>
+</tr>
+<tr>
+<td>Running</td>
+<td>Failed</td>
+<td>Lỗi toàn cục</td>
+</tr>
+<tr>
+<td>Queued / Running</td>
+<td>Cancelled</td>
+<td>Huỷ: dừng nhận shard mới, giữ kết quả đã xong (UC-02)</td>
+</tr>
+<tr>
+<td>Partial</td>
+<td>Running</td>
+<td>Chạy lại shard lỗi</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Hiển thị</strong>: H (ExecutionHistory, Main) gắn nhãn "Checked" cho run hoàn tất; domain dùng tên SRS <code>Completed</code>, UI ánh xạ nhãn theo H (B-19). Các trạng thái <code>Draft/Snapshotting/Published/Archived</code> của A không thuộc MVP.</li>
+</ul>
+<h2 id="6-engineresult-va-coverage-ledger-thuoc-qc-run">6. EngineResult và Coverage ledger (thuộc QC Run)</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: ghi theo từng engine: đơn vị áp dụng, số đơn vị eligible, completed, failed, not checked, kèm lý do (<a href="value-objects.html#coverageunit">CoverageUnit</a>) (FR-AGG-04; R B-04).</li>
+<li><strong>Sáu engine giữ đúng tên H</strong> (R B-16): Schema / Taxonomy, Geometry, Duplicate / Overlap, Mô hình độc lập (Detector), Mô hình thị giác – ngôn ngữ (VLM), Metric.</li>
+<li><strong>Trạng thái công khai</strong> (SRS 05 §Trạng thái engine; FR-AGG-05): <code>Running</code>, <code>Checked</code>, <code>Partial</code>, <code>Failed</code>, <code>Not checked</code>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Trạng thái</th>
+<th>Lý do lưu trong ledger</th>
+<th>Ảnh hưởng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Checked</td>
+<td>Mọi đơn vị áp dụng đã xong</td>
+<td>Dùng cho ranking, coverage</td>
+</tr>
+<tr>
+<td>Partial</td>
+<td>Một số đơn vị Failed/chưa xong</td>
+<td>Frame thiếu kết quả mang cờ "thiếu bằng chứng" (FR-RNK-06)</td>
+</tr>
+<tr>
+<td>Failed</td>
+<td>Lỗi thực thi (timeout, ảnh hỏng, worker lỗi) sau retry</td>
+<td>Không pass, không reject annotation; cho chạy lại</td>
+</tr>
+<tr>
+<td>Not checked</td>
+<td><code>disabled</code>, <code>no_model</code>, <code>no_reference</code>, <code>not_applicable</code></td>
+<td>Không pass; coverage engine bắt buộc chưa đạt</td>
+</tr>
+<tr>
+<td>Not checked</td>
+<td><code>not_triggered</code> (candidate không thoả điều kiện kiểm chọn lọc)</td>
+<td>Khác lỗi thực thi; không vào mẫu số kiểm chọn lọc</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Invariant</strong>: không loại đơn vị lỗi khỏi mẫu số (B-04); <code>NOT_REQUIRED</code>, <code>abstain</code>, <code>EXCEPTION_APPROVED</code> của T không là trạng thái công khai — chỉ là lý do trong ledger hoặc gắn waiver (B-19).</li>
+<li><strong>Mâu thuẫn ghi nhận</strong>: H ExecutionHistory hiện nhãn "Issue found" cho Geometry/Duplicate. SRS FR-AGG-05 không có trạng thái này. Xử lý: domain coi là <code>Checked</code> có số candidate &gt; 0; nhãn hiển thị "Issue found" là lựa chọn UI, không phải trạng thái riêng (SRS &gt; H).</li>
+</ul>
+<h2 id="7-candidate">7. Candidate</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: phát hiện thô, bất biến của một engine (FR-AGG-01).</li>
+<li><strong>Thuộc tính</strong>: run, engine + version, frame, đối tượng tham chiếu (annotation, hoặc vùng dự đoán với E1), nhóm lỗi dự kiến (<a href="value-objects.html#errorfamily">ErrorFamily</a>), đặc trưng, score, <a href="value-objects.html#dedupkey"><code>dedup_key</code></a>, evidence (FR-ENG-08: box và lớp dự đoán, confidence, IoU, cặp ambiguous, crop, rule liên quan).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Không bao giờ bị sửa sau khi ghi (FR-AGG-01).</li>
+<li>Retry cùng khoá idempotent không tạo candidate trùng (FR-AGG-02).</li>
+<li>Candidate chỉ là nghi vấn; không tự trở thành lỗi đã xác nhận (R R-02; H ModelsGuidelines).</li>
+<li>Cảnh báo cấu trúc (Schema/Geometry) vào hàng đợi và có thể đóng góp điểm rủi ro, nhưng không phải nhóm lỗi đo KPI (SRS 03).</li>
+<li><strong>Vòng đời</strong>: chỉ có tạo; không có trạng thái.</li>
+</ul>
+<h2 id="8-issue">8. Issue</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: đơn vị công việc review, gom một hay nhiều candidate cùng <code>dedup_key</code>, hoặc tạo thủ công từ Frame Review (nguồn = "reviewer") (FR-AGG-03, FR-REV-09).</li>
+<li><strong>Thuộc tính</strong>: nhóm lỗi, <a href="value-objects.html#severity">mức độ</a>, trạng thái, <code>lease_owner</code>, ưu tiên, neo và <code>n_i</code> (FR-RNK-12), danh sách candidate, nguồn.</li>
+<li><strong>Invariant</strong>:</li>
+<li>Một issue = một (snapshot, frame, đối tượng tham chiếu, nhóm lỗi) theo version policy gộp (FR-AGG-03; BR-08). Gộp không thay đổi tập lỗi reference.</li>
+<li>Không issue nào được xác nhận hoặc đóng mà không có quyết định của người (AC-04).</li>
+<li>Mọi chuyển trạng thái phải có trong bảng transition; chuyển ngoài bảng bị từ chối (409) (R B-17; SRS 05 §Bảng chuyển trạng thái).</li>
+<li>Chỉ chuyển Đã đóng sau verify đạt trên revision đã sửa, người verify khác annotator đã sửa (FR-RWK-05).</li>
+<li><strong>Trạng thái công khai</strong> (theo H, SRS 05 Hình State machine Issue):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Từ</th>
+<th>Đến</th>
+<th>Event</th>
+<th>Actor</th>
+<th>Guard chính</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chờ review</td>
+<td>Đang review</td>
+<td>claim</td>
+<td>Reviewer</td>
+<td>Quyền Review trong scope; không là assignee tại snapshot; chưa có lease khác còn hạn</td>
+</tr>
+<tr>
+<td>Đang review</td>
+<td>Chờ review</td>
+<td>lease_expired</td>
+<td>Hệ thống</td>
+<td>Hết hạn lease (TBD-09); chưa có quyết định</td>
+</tr>
+<tr>
+<td>Đang review</td>
+<td>Đã xác nhận</td>
+<td>confirm</td>
+<td>Reviewer</td>
+<td>Có nhóm lỗi, mức độ; lease còn hạn; không self-review</td>
+</tr>
+<tr>
+<td>Đang review</td>
+<td>Bác bỏ</td>
+<td>reject</td>
+<td>Reviewer</td>
+<td>Có lý do; lease còn hạn; không self-review</td>
+</tr>
+<tr>
+<td>Đang review</td>
+<td>Chờ phân xử</td>
+<td>uncertain / escalate</td>
+<td>Reviewer</td>
+<td>Có lý do; lease còn hạn; không self-review</td>
+</tr>
+<tr>
+<td>Chờ phân xử</td>
+<td>Đã xác nhận / Bác bỏ</td>
+<td>adjudicate</td>
+<td>QA Lead</td>
+<td>Khác người chuyển cấp; có rule và lý do</td>
+</tr>
+<tr>
+<td>Chờ phân xử</td>
+<td>Chờ phân xử</td>
+<td>guideline_gap</td>
+<td>QA Lead</td>
+<td>Tạo Guideline Gap; chờ guideline version mới</td>
+</tr>
+<tr>
+<td>Đã xác nhận</td>
+<td>Chờ sửa</td>
+<td>request_fix</td>
+<td>Reviewer, QA Lead</td>
+<td>Có annotator, việc cần sửa, hạn</td>
+</tr>
+<tr>
+<td>Chờ sửa</td>
+<td>Chờ kiểm lại</td>
+<td>fix_submitted</td>
+<td>Annotator</td>
+<td>Là assignee yêu cầu; revision CVAT mới khác revision gốc</td>
+</tr>
+<tr>
+<td>Chờ kiểm lại</td>
+<td>Đã đóng</td>
+<td>verify_pass</td>
+<td>Reviewer</td>
+<td>Re-check xong; người verify ≠ annotator đã sửa</td>
+</tr>
+<tr>
+<td>Chờ kiểm lại</td>
+<td>Mở lại</td>
+<td>verify_fail</td>
+<td>Reviewer</td>
+<td>Có lý do; người verify ≠ annotator đã sửa</td>
+</tr>
+<tr>
+<td>Mở lại</td>
+<td>Chờ sửa</td>
+<td>request_fix</td>
+<td>Hệ thống</td>
+<td>Tự động</td>
+</tr>
+<tr>
+<td>(như trên)</td>
+<td>(như trên)</td>
+<td>override</td>
+<td>Super Admin</td>
+<td>Bắt buộc lý do, audit gắn nhãn ghi đè; vẫn chịu self-review và tách nhiệm vụ</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Ngoài phạm vi MVP</strong>: trạng thái <code>Known defect</code>, <code>Superseded</code>, <code>On Hold (Guideline)</code> của A và lifecycle <code>OPEN…ESCALATED</code> / <code>FIX_SUBMITTED…REOPENED</code> của T không dùng làm trạng thái công khai; khi cần, ánh xạ về bảng trên (B-17, B-19).</li>
+</ul>
+<h2 id="9-lease-thuoc-issueframe">9. Lease (thuộc Issue/Frame)</h2>
+<ul>
+<li><strong>Invariant</strong>: tại mọi thời điểm, một frame có tối đa một lease còn hạn; cấp lease nguyên tử (một transaction, khoá dòng) (UC-04 3c; NFR-15). Lease có thời hạn và gia hạn khi có thao tác — giá trị <strong>TBD-09</strong> (A đề xuất 15 phút, chưa chốt; không dùng).</li>
+<li><strong>Trạng thái review của frame</strong> (SRS 05): Chưa review → Đang review (có lease) → Đã review → (Còn issue chờ phân xử/sửa) → Hoàn tất (run cuối). Lease hết hạn đưa frame về Chưa review.</li>
+</ul>
+<h2 id="10-reviewdecision">10. ReviewDecision</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: quyết định của người trên một issue (FR-REV-08).</li>
+<li><strong>Giá trị</strong>: Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên, Yêu cầu sửa (H ReviewWorkspace).</li>
+<li><strong>Thuộc tính</strong>: actor, quyết định, nhóm lỗi + mức độ (khi xác nhận), lý do, rule ID, revision, <code>started_at</code>, <code>ended_at</code> (SRS 03 ERD; FR-REV-10).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Ghi cùng audit trong một transaction (FR-REV-10; B-12).</li>
+<li>Từ chối khi lease hết hạn/thuộc người khác (409) hoặc reviewer là assignee tại snapshot (403), kể cả mở trực tiếp bằng URL (FR-REV-14).</li>
+<li>Bất biến: quyết định mới là bản ghi mới, không sửa bản cũ (A §22; P-06).</li>
+<li>Snapshot bị thay bởi revision mới trong lúc review: quyết định vẫn gắn revision cũ, hệ thống cảnh báo (UC-05).</li>
+<li><strong>Phân xử (Adjudication)</strong> là một ReviewDecision của QA Lead, kết luận Xác nhận lỗi / Bác bỏ / Guideline còn thiếu; được lưu thành <code>DecisionCase</code> có version để tra cứu (FR-ESC-02…04).</li>
+</ul>
+<h2 id="11-reworkrequest">11. ReworkRequest</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: yêu cầu sửa lỗi đã xác nhận trên CVAT (UC-07).</li>
+<li><strong>Thuộc tính</strong>: issue, việc cần sửa, annotator (assignee), hạn, mức độ, deep link, revision gốc, <code>fixed_revision</code>, <code>verified_by</code> (FR-RWK-01; SRS 03 ERD).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Annotator chỉ thấy yêu cầu của mình; sửa trên CVAT, bấm "Đã sửa" trên LabelX (FR-RWK-02).</li>
+<li>"Đã sửa" tạo snapshot mới cho job bị ảnh hưởng; revision không đổi thì từ chối "chưa có thay đổi" (FR-RWK-03).</li>
+<li>Re-check engine liên quan trên frame đã sửa trước khi verify (FR-RWK-04).</li>
+<li>Snapshot gốc giữ nguyên (H ReworkTracking).</li>
+<li><strong>Trạng thái công khai</strong> (H ReworkTracking): Chờ sửa → Chờ xác minh → Đã đóng; verify chưa đạt → Mở lại → Chờ sửa.</li>
+<li><strong>Kết thúc phạm vi</strong>: khi mọi yêu cầu trong phạm vi đã đóng, tạo snapshot toàn phạm vi và QC run cuối (<code>is_final</code>) liên kết các verification trước đó (FR-RWK-06; R B-03). Run cuối Partial/Failed/Cancelled hoặc có issue mới ⇒ gate chưa đạt (FR-RWK-08).</li>
+</ul>
+<h2 id="12-reference-gt-va-tap-loi-e">12. Reference (GT và tập lỗi E)</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: đáp án đúng độc lập để đo KPI và Metric engine (R B-05, B-20; SRS 03 §Reference).</li>
+<li><strong>Thành phần</strong>: (1) annotation chuẩn (GT) cho <strong>toàn bộ</strong> tập đánh giá; (2) tập lỗi <code>E</code> suy ra tất định từ GT so với annotation đang review (BR-01…BR-07), rồi được duyệt.</li>
+<li><strong>Thuộc tính</strong>: <code>ref_version</code>, GT version, snapshot đầu vào, mapping GT–annotation (<code>mapping_ver</code>), <code>τ_m</code>, <code>a_min</code>, version thuật toán matching, tỉ lệ khớp hai bản GT trước phân xử (BR-11, BR-13).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Người xác minh mù với công cụ: không xem ranking, risk score, candidate của tập đánh giá (BR-10; FR-EVL-02).</li>
+<li>Hai người gán GT độc lập toàn bộ frame; không khớp thì QA Lead phân xử (BR-11). Người xác minh không xác minh annotation của mình (BR-12).</li>
+<li>Khoá cùng nhau GT, snapshot, mapping, ngưỡng, version thuật toán; sửa sau khoá tạo version mới có lý do (BR-13).</li>
+<li>Bác lỗi do matching sai ⇒ sửa mapping rồi suy lại <code>E</code>, không xoá lỗi trực tiếp (BR-14).</li>
+<li>Lỗi chèn có kiểm soát (nếu dùng — <strong>TBD-04</strong>) chỉ là bổ sung, gắn cờ riêng và báo cáo tách khỏi lỗi tự nhiên (BR-15).</li>
+<li>Case phân xử dùng hiệu chỉnh guideline tách khỏi GT held-out (BR-16).</li>
+<li>Detector <strong>không</strong> phải Ground Truth, không làm trọng tài (BR-17; B-05).</li>
+<li>Khoá reference khi còn bất đồng chưa phân xử bị từ chối (422) (SRS 09 bảng mã lỗi).</li>
+<li><strong>Vòng đời</strong>: Đang lập (hai bản GT) → Phân xử phần không khớp → Suy ra <code>E</code> → Duyệt (có thể suy lại) → Đã khoá (H Benchmark: "Đã khoá", "Đang duyệt", "Đã thay thế"). Tên trạng thái nội bộ chi tiết chưa chốt trong SRS; dùng nhãn H.</li>
+<li><strong>Còn mở</strong>: TBD-03 (danh sách ảnh, N), TBD-04 (nguồn annotation, lỗi chèn), TBD-05 (<code>τ_m</code>, <code>τ_amb</code>), TBD-06 (<code>a_min</code>, quy tắc ignore). Reference thực tế <strong>chưa có</strong> (R B-05).</li>
+</ul>
+<h2 id="13-evaluationrun">13. EvaluationRun</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: một lần đo KPI/metric có provenance (UC-09, UC-10; FR-EVL-14).</li>
+<li><strong>Thuộc tính</strong>: snapshot, run, score version, reference version, thí nghiệm (nếu có), tham số (<code>k</code>, B bootstrap, seed), thời điểm, người chạy, kết quả kiểm chống rò rỉ (FR-EVL-05).</li>
+<li><strong>Invariant</strong>:</li>
+<li>Chỉ chạy trên reference đã khoá; <code>|E| &lt; E_min</code> ⇒ "không đủ mẫu", không kết luận (FR-EVL-10; TBD-K4).</li>
+<li>Từ chối dùng held-out để học tham số điểm; Detector có ảnh huấn luyện giao với held-out ⇒ chặn đánh giá (FR-EVL-05; AS-03).</li>
+<li>Kết quả bất biến; đổi tham số tạo evaluation run mới, kết quả cũ vẫn được báo cáo (SRS 07 §Đăng ký trước).</li>
+<li>Chi tiết phép đo: <a href="../12-ai/evaluation.html">../12-ai/evaluation.md</a>.</li>
+</ul>
+<h2 id="14-experiment-va-effortlog">14. Experiment và EffortLog</h2>
+<ul>
+<li><strong>Experiment</strong>: thí nghiệm effort baseline/assisted theo thiết kế chéo AB/BA; khoá trước seed chia D1/D2, gán chuỗi, <code>k*</code>, <code>r</code>, <code>t_idle</code>, cỡ mẫu, <code>δ</code>, <code>δ_fp</code> (FR-EVL-11; SRS 07 §Đăng ký trước). Không đổi sau khi bắt đầu.</li>
+<li><strong>EffortLog</strong>: sự kiện effort <code>event_id</code> (UUID, idempotent), actor, <code>experiment_id</code>, <code>arm</code>, frame, issue, <code>activity</code> (<code>view</code>, <code>issue</code>, <code>adjudicate</code>, <code>recheck</code>, <code>fix</code>), <code>started_at</code>/<code>ended_at</code> theo đồng hồ server, <code>active_ms</code>, <code>outcome</code> (SRS 12 Phụ lục effort log).</li>
+<li><strong>Invariant</strong>: thời gian gán đúng một hoạt động; khoảng không thao tác quá <code>t_idle</code> (TBD-11) không tính; issue chỉ được xếp <code>t_tp</code>/<code>t_fa</code> sau khi có kết luận cuối (SRS 07, 12).</li>
+</ul>
+<h2 id="15-qualitygateevaluation-gatecondition-va-waiver">15. QualityGateEvaluation, GateCondition và Waiver</h2>
+<ul>
+<li><strong>Trách nhiệm</strong>: tính từng điều kiện gate trên QC run cuối; M13 chỉ hiển thị kết quả gate, không phát hành dataset (FR-GTE-01…04).</li>
+<li><strong>Điều kiện cấu hình khởi điểm pilot</strong> (R cấu hình MVP; H RulesThresholds): coverage engine bắt buộc ≥ 95% (mẫu số theo ledger), lỗi nghiêm trọng chưa đóng = 0, rework bắt buộc verify 100%, residual ≤ 5%, đồng thuận reviewer ≥ 90%. Đây là cấu hình pilot, <strong>chưa</strong> là cam kết nghiệm thu.</li>
+<li><strong>Invariant GateCondition</strong>: mỗi điều kiện có nguồn, scope, mẫu số, cỡ mẫu; thiếu dữ liệu hoặc engine bắt buộc Not checked/Partial/Failed ⇒ "chưa đạt" (FR-GTE-02; B-15). Hệ thống không tự quyết định phát hành (H QualityGate).</li>
+<li><strong>Waiver</strong> (R B-11; FR-GTE-03, Should):</li>
+<li>Phạm vi theo H: Coverage, Lỗi nghiêm trọng, Rework — nhưng được miễn hay không do <strong>policy từng điều kiện</strong>. Danh sách điều kiện được miễn và policy từng điều kiện: <strong>TBD-19</strong> (Product Owner, QA Lead; trước pilot).</li>
+<li>Bắt buộc lý do, evidence, người chịu trách nhiệm, hạn hiệu lực; người duyệt khác người yêu cầu, không dùng tài khoản khác của cùng người (FR-SEC-04).</li>
+<li>Chỉ hiệu lực sau duyệt; hết hạn ⇒ điều kiện trở lại chưa đạt; waiver không đổi trạng thái engine, chỉ gate ghi "miễn có điều kiện" kèm hạn (SRS 05 bảng trạng thái engine).</li>
+<li>Vòng đời khái niệm: Đã đề nghị → Đã duyệt / Bị từ chối → Hết hạn. Tên trạng thái chưa chốt trong H/SRS.</li>
+</ul>
+<h2 id="16-guideline-decisioncase-va-guidelinegap">16. Guideline, DecisionCase và GuidelineGap</h2>
+<ul>
+<li><strong>GuidelineVersion</strong>: rule ID, section, nội dung trích; soạn và duyệt ở nơi khác, LabelX chỉ lưu version (FR-GDL-01; H ModelsGuidelines). Mapping (nhóm lỗi, lớp, cặp lớp) → rule ID do QC Admin cấu hình (FR-GDL-02).</li>
+<li><strong>DecisionCase</strong>: phân xử đã duyệt, có version, tra cứu theo rule (FR-ESC-04; B-13).</li>
+<li><strong>GuidelineGap</strong>: gắn rule; issue liên quan chờ đến khi có guideline version mới (FR-ESC-05).</li>
+<li><strong>Invariant</strong>: tra cứu trực tiếp rule ID + version + section + case; không RAG (FR-GDL-04; B-13).</li>
+</ul>
+<h2 id="17-auditlog">17. AuditLog</h2>
+<ul>
+<li><strong>Invariant</strong>: append-only (không API sửa/xoá), ghi trong cùng transaction với thao tác: actor, hành động, đối tượng, trước/sau, revision, lý do (FR-SEC-05; NFR-08). Lỗi 403/409 cũng được ghi audit (SRS 09). Ghi đè Super Admin gắn nhãn (FR-SEC-06). Thời hạn lưu tối thiểu <strong>TBD-15</strong>.</li>
+</ul>
+<h2 id="18-noi-dung-ngoai-pham-vi-mvp">18. Nội dung ngoài phạm vi MVP</h2>
+<table>
+<thead>
+<tr>
+<th>Nội dung (nguồn A/T)</th>
+<th>Lý do</th>
+<th>Nguồn quyết định</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Release / ReleaseManifest đầy đủ, Published/Revoked</td>
+<td>M13 chỉ hiển thị gate</td>
+<td>SRS FR-GTE-04</td>
+</tr>
+<tr>
+<td>Temporal / track issue có frame range</td>
+<td>Ngoài tự động giai đoạn đầu</td>
+<td>R B-09</td>
+</tr>
+<tr>
+<td>Diff/pre-label (change events), vehicle profile</td>
+<td>Không tự mở rộng</td>
+<td>R B-16</td>
+</tr>
+<tr>
+<td>Classifier thứ hai mặc định</td>
+<td>Chỉ Detector baseline</td>
+<td>R B-07</td>
+</tr>
+<tr>
+<td>Guideline RAG, vector index</td>
+<td>Tra cứu trực tiếp</td>
+<td>R B-13</td>
+</tr>
+<tr>
+<td>Annotation writeback vào CVAT</td>
+<td>Adapter chỉ đọc</td>
+<td>R B-18</td>
+</tr>
+<tr>
+<td>Công thức priority <code>S × (0.5·C + 0.3·A + 0.2·R)</code> của A, tier P0–P3 của T</td>
+<td>Thay bằng điểm rủi ro có version của SRS</td>
+<td>R B-10; SRS FR-RNK</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

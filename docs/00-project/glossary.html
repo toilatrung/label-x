@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thuật ngữ LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/00-project/glossary.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 00-project / glossary</span><span class="sp"></span>
+<a href="glossary.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>project-glossary</span><b>title</b><span>Thuật ngữ LabelX</span><b>type</b><span>reference</span><b>domain</b><span>project</span><b>module</b><span>repository</span><b>tags</b><span>[glossary, terminology]</span><b>priority</b><span>2</span></div>
+<h1 id="thuat-ngu-labelx">Thuật ngữ LabelX</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Thuật ngữ dùng chung trong tài liệu và giao diện LabelX, trích từ SRS M13 (bảng thuật ngữ, chương 1). Quy ước giao diện: viết đầy đủ tên (Quality Control, Intersection over Union, Ground Truth) theo Design System LabelX; viết tắt chỉ dùng trong tài liệu kỹ thuật.</p>
+<p>Nguồn: <a href="../01-business/labelX.html">SRS M13</a>.</p>
+<h2 id="du-lieu-va-annotation">Dữ liệu và annotation</h2>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Định nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frame</td>
+<td>Một ảnh là đơn vị review và xếp hạng. Với BDD100K detection, mỗi ảnh tĩnh là một frame.</td>
+</tr>
+<tr>
+<td>Annotation</td>
+<td>Một đối tượng được gán nhãn trên frame: Bounding box + lớp + thuộc tính.</td>
+</tr>
+<tr>
+<td>Bounding box (BBox)</td>
+<td>Hình chữ nhật song song trục $(x_1, y_1, x_2, y_2)$ theo pixel.</td>
+</tr>
+<tr>
+<td>Taxonomy</td>
+<td>Danh sách lớp và thuộc tính hợp lệ của dataset, có version.</td>
+</tr>
+<tr>
+<td>Guideline</td>
+<td>Hướng dẫn gán nhãn, chia thành rule có mã (ví dụ <code>VEH-03</code>) và version.</td>
+</tr>
+<tr>
+<td>CVAT</td>
+<td>Công cụ gán nhãn nguồn. Annotation chỉ được sửa trên CVAT (B-18).</td>
+</tr>
+<tr>
+<td>Project / Task / Job</td>
+<td>Cấp tổ chức dữ liệu trong CVAT; Job là phần việc giao cho một annotator.</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>Trạng thái annotation tại một thời điểm, nhận diện bằng hash nội dung đã chuẩn hoá.</td>
+</tr>
+<tr>
+<td>Snapshot</td>
+<td>Bản sao bất biến của annotation, metadata và ảnh tại một revision; mọi phân tích chạy trên snapshot (B-02).</td>
+</tr>
+<tr>
+<td>Drift</td>
+<td>Annotation trên CVAT thay đổi trong lúc đang export snapshot; phải phát hiện và chặn khoá.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="phan-tich-va-xep-hang">Phân tích và xếp hạng</h2>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Định nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine</td>
+<td>Thành phần kiểm tra tạo candidate. M13 dùng Schema/Taxonomy, Geometry, Duplicate/Overlap, Mô hình độc lập (Detector) và Metric.</td>
+</tr>
+<tr>
+<td>QC Run</td>
+<td>Một lần chạy các engine trên một snapshot với cấu hình, seed và version cố định.</td>
+</tr>
+<tr>
+<td>Detector</td>
+<td>Mô hình phát hiện đối tượng độc lập với người gán nhãn, dùng sinh candidate thiếu box và sai lớp. Không phải Ground Truth.</td>
+</tr>
+<tr>
+<td>Matching</td>
+<td>Ghép một-một giữa box của Detector (hoặc reference) với annotation theo IoU, hình học trước rồi mới so lớp (B-21).</td>
+</tr>
+<tr>
+<td>IoU</td>
+<td>Intersection over Union — tỉ lệ diện tích giao trên diện tích hợp của hai box.</td>
+</tr>
+<tr>
+<td>Candidate</td>
+<td>Nghi vấn do engine sinh ra, chưa được người xác nhận. Candidate không phải lỗi.</td>
+</tr>
+<tr>
+<td>Issue</td>
+<td>Đơn vị công việc review sau khi gộp các candidate trùng (B-10). Có vòng đời riêng.</td>
+</tr>
+<tr>
+<td>Evidence (bằng chứng)</td>
+<td>Dữ liệu giải thích candidate: box của Detector, confidence, IoU, rule vi phạm, guideline, case tương tự.</td>
+</tr>
+<tr>
+<td>Risk score $s(f)$</td>
+<td>Điểm rủi ro của frame $f$, dùng để xếp hạng. Có version công thức.</td>
+</tr>
+<tr>
+<td>Ranking $\pi$</td>
+<td>Thứ tự frame giảm dần theo $s(f)$, có quy tắc phá hoà cố định.</td>
+</tr>
+<tr>
+<td>Top-$k$%</td>
+<td>Tập $\lceil k\cdot N/100\rceil$ frame đứng đầu ranking trong tập $N$ frame.</td>
+</tr>
+<tr>
+<td>Coverage ledger</td>
+<td>Sổ ghi phần đơn vị đã kiểm/chưa kiểm theo từng engine với mẫu số áp dụng (B-04).</td>
+</tr>
+<tr>
+<td>Not checked / Partial / Failed</td>
+<td>Trạng thái công khai của engine: chưa kiểm, kiểm một phần, lỗi thực thi. Không bao giờ được coi là đạt (B-19).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="review-va-quy-trinh">Review và quy trình</h2>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Định nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Review queue</td>
+<td>Hàng đợi issue/frame cho reviewer, tách theo nguồn (rủi ro, ngẫu nhiên).</td>
+</tr>
+<tr>
+<td>Review Workspace</td>
+<td>Màn hình xem frame, annotation, bằng chứng và ra quyết định.</td>
+</tr>
+<tr>
+<td>Quyết định review</td>
+<td>Một trong: Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên.</td>
+</tr>
+<tr>
+<td>False alarm (cảnh báo sai)</td>
+<td>Candidate/issue bị reviewer bác bỏ hoặc phân xử là không lỗi.</td>
+</tr>
+<tr>
+<td>Escalation / Adjudication</td>
+<td>Chuyển issue chưa đủ căn cứ cho Quality Assurance Lead phân xử.</td>
+</tr>
+<tr>
+<td>Guideline Gap</td>
+<td>Ghi nhận chỗ guideline thiếu, phát sinh từ phân xử.</td>
+</tr>
+<tr>
+<td>Rework</td>
+<td>Yêu cầu annotator sửa trên CVAT; tạo revision mới.</td>
+</tr>
+<tr>
+<td>Re-check / Verify</td>
+<td>Chạy lại engine bị ảnh hưởng trên revision mới và reviewer xác minh trước khi đóng issue.</td>
+</tr>
+<tr>
+<td>QC run cuối</td>
+<td>QC Run trên snapshot của revision đã sửa; mọi báo cáo và phát hành trỏ về run này (B-03).</td>
+</tr>
+<tr>
+<td>Lease</td>
+<td>Quyền giữ tạm một issue/frame cho một reviewer, tránh hai người cùng xử lý.</td>
+</tr>
+<tr>
+<td>Self-review</td>
+<td>Reviewer review annotation do chính mình gán; backend phải chặn (B-12).</td>
+</tr>
+<tr>
+<td>Waiver</td>
+<td>Miễn trừ có thời hạn cho một điều kiện gate, cần người duyệt khác người yêu cầu (B-11).</td>
+</tr>
+<tr>
+<td>Quality Gate</td>
+<td>Tập điều kiện phải đạt trước khi một revision được coi là dùng được.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="anh-gia">Đánh giá</h2>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Định nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reference</td>
+<td>Gồm annotation chuẩn (GT) của toàn bộ tập đánh giá và tập lỗi suy ra từ GT; cùng khoá version trước khi đo (B-20, mục tương ứng trong labelX.html).</td>
+</tr>
+<tr>
+<td>Ground Truth</td>
+<td>Annotation chuẩn đã được chuyên gia duyệt và khoá. Không model nào được mặc định là Ground Truth.</td>
+</tr>
+<tr>
+<td>Lỗi đã xác minh</td>
+<td>Một phần tử của tập lỗi $E$: bản ghi gắn một nhóm lỗi với một đối tượng GT (E1, E2) hoặc một annotation dư (E3), suy ra từ GT và được người xác minh duyệt.</td>
+</tr>
+<tr>
+<td>Tập hiệu chỉnh / held-out</td>
+<td>Tập dùng tinh chỉnh công thức điểm và tập chỉ dùng đo nghiệm thu; không giao nhau.</td>
+</tr>
+<tr>
+<td>Recall@20%</td>
+<td>Tỉ lệ lỗi đã xác minh nằm trong 20% frame đầu của ranking (mục tương ứng trong labelX.html).</td>
+</tr>
+<tr>
+<td>Effort</td>
+<td>Tổng thời gian thao tác có ích của reviewer/QA, gồm xử lý cảnh báo sai và kiểm lại sau sửa (mục tương ứng trong labelX.html).</td>
+</tr>
+<tr>
+<td>Baseline</td>
+<td>Quy trình review thủ công hiện tại, không có ranking và bằng chứng.</td>
+</tr>
+<tr>
+<td>Assisted</td>
+<td>Quy trình review có trợ lý M13.</td>
+</tr>
+<tr>
+<td>Residual error rate</td>
+<td>Tỉ lệ lỗi còn lại sau quy trình, đo trên reference.</td>
+</tr>
+<tr>
+<td>Non-inferiority</td>
+<td>Kiểm định chất lượng nhánh assisted không kém baseline quá biên $\delta$.</td>
+</tr>
+<tr>
+<td>Bootstrap</td>
+<td>Phương pháp lấy mẫu lại để ước lượng khoảng tin cậy.</td>
+</tr>
+<tr>
+<td>Model Orchestrator</td>
+<td>Thành phần tổng hợp kết quả đánh giá engine trên reference, kèm provenance; không dùng model làm trọng tài (B-05). Đặc tả chi tiết TBD-21.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="viet-tat">Viết tắt</h2>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Định nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QA / QC</td>
+<td>Quality Assurance / Quality Control.</td>
+</tr>
+<tr>
+<td>SRS</td>
+<td>Software Requirements Specification.</td>
+</tr>
+<tr>
+<td>RBAC</td>
+<td>Role-Based Access Control.</td>
+</tr>
+<tr>
+<td>VLM</td>
+<td>Vision–Language Model — mô hình thị giác – ngôn ngữ.</td>
+</tr>
+<tr>
+<td>DRF</td>
+<td>Django REST framework.</td>
+</tr>
+<tr>
+<td>MVP</td>
+<td>Minimum Viable Product.</td>
+</tr>
+<tr>
+<td>KPI</td>
+<td>Key Performance Indicator.</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

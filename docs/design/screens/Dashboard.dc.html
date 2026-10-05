@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Quality Summary</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="overview" active-item="summary" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Quality Summary</h1>
+<p class="lx-lead">Tình trạng kiểm tra của Road Vision Urban v1.4 · Quality Control Run #QC-091. Coverage thấp và lỗi nghiêm trọng luôn hiển thị riêng, không gộp vào một điểm chất lượng duy nhất.</p>
+</div>
+<div class="lx-actions">
+<a class="lx-btn" href="QualityReport.dc.html">Xem Quality Report</a>
+<a class="lx-btn lx-btn--primary" href="ReviewQueues.dc.html">Vào Review Center →</a>
+</div>
+</div>
+
+<div class="lx-callout">
+<span class="lx-badge lx-badge--danger">Release blocked</span>
+<span class="lx-callout__text">Coverage 92.4% chưa đạt ngưỡng 95% · 3 lỗi nghiêm trọng chưa đóng · 12 yêu cầu sửa chờ xử lý.</span>
+<a class="lx-btn lx-btn--sm" href="QualityGate.dc.html">Xem Quality Gate</a>
+</div>
+
+<div class="lx-grid lx-grid--4">
+<div class="lx-metric"><span class="lx-metric__k">Frame trong phạm vi</span><span class="lx-metric__v">12,500</span><span class="lx-metric__n">48,912 object · 7 job</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Coverage</span><span class="lx-metric__v is-warn">92.4%</span><div class="lx-progress lx-progress--warn" role="img" aria-label="Coverage 92.4%"><i style="width: 92.4%"></i></div><span class="lx-metric__n">Ngưỡng yêu cầu 95%</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Candidate issue</span><span class="lx-metric__v">384</span><span class="lx-metric__n">512 bản ghi thô → 384 sau khi gộp trùng</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Lỗi đã xác nhận</span><span class="lx-metric__v">126</span><span class="lx-metric__n is-bad">3 lỗi nghiêm trọng chưa đóng</span></div>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Trạng thái từng engine</h2><a class="lx-link" href="ExecutionHistory.dc.html" style="font-size: 13px">Xem Execution History</a></div>
+<div class="lx-scroll">
+<table class="lx-table">
+<thead><tr><th>Engine</th><th>Trạng thái</th><th class="r">Coverage</th><th>Ghi chú</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Schema / Taxonomy</td><td><span class="lx-badge lx-badge--success">Checked</span></td><td class="r">100%</td><td class="lx-muted">Không phát hiện lỗi cấu trúc</td></tr>
+<tr><td class="lx-cell__main">Geometry</td><td><span class="lx-badge lx-badge--info">Issue found</span></td><td class="r">98.2%</td><td class="lx-muted">74 candidate issue</td></tr>
+<tr><td class="lx-cell__main">Duplicate / Overlap</td><td><span class="lx-badge lx-badge--info">Issue found</span></td><td class="r">98.2%</td><td class="lx-muted">41 candidate issue</td></tr>
+<tr><td class="lx-cell__main">Mô hình độc lập</td><td><span class="lx-badge lx-badge--warning">Partial</span></td><td class="r">86.7%</td><td class="lx-muted">Job 2273, 2274 chưa chạy hết</td></tr>
+<tr><td class="lx-cell__main">Mô hình thị giác – ngôn ngữ</td><td><span class="lx-badge lx-badge--danger">Failed</span></td><td class="r">0%</td><td class="lx-muted">Hết thời gian chờ · có thể chạy lại</td></tr>
+<tr><td class="lx-cell__main">Metric</td><td><span class="lx-badge">Not checked</span></td><td class="r lx-subtle">—</td><td class="lx-muted">Chưa có Ground Truth cho phạm vi này</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Khối lượng review</h2><a class="lx-link" href="ReviewQueues.dc.html" style="font-size: 13px">Mở hàng đợi</a></div>
+<div class="lx-card__body lx-stack" style="gap: 14px">
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Ưu tiên theo rủi ro</span><b class="lx-num">124</b></div><div class="lx-progress"><i style="width: 38%"></i></div><span class="lx-hint">Đã review 47 / 124</span></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Kiểm tra ngẫu nhiên</span><b class="lx-num">50</b></div><div class="lx-progress"><i style="width: 20%"></i></div><span class="lx-hint">Đã review 10 / 50</span></div>
+<div class="lx-stack" style="gap: 6px"><div class="lx-row" style="justify-content: space-between"><span>Chưa chắc chắn / Chuyển cấp trên</span><b class="lx-num">18</b></div><div class="lx-progress"><i style="width: 0%"></i></div><span class="lx-hint">Chờ phân xử tại Escalations</span></div>
+<div class="lx-row" style="justify-content: space-between; padding-top: 4px; border-top: 1px solid var(--border)"><span class="lx-muted">Đã xử lý</span><b class="lx-num">242</b></div>
+</div>
+</section>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Theo Task</h2><span class="lx-hint">Chọn một dòng để đặt Phạm vi cho toàn module</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Task</th><th class="r">Job</th><th class="r">Frame</th><th class="r">Coverage</th><th class="r">Candidate</th><th class="r">Đã xác nhận</th><th>Gate</th></tr></thead>
+<tbody>
+<tr><td><div class="lx-cell__main">T-118 · Urban day</div><div class="lx-cell__sub">Job 2270 – 2272</div></td><td class="r">3</td><td class="r">600</td><td class="r">98.0%</td><td class="r">65</td><td class="r">21</td><td><span class="lx-badge lx-badge--success">Đạt</span></td></tr>
+<tr><td><div class="lx-cell__main">T-119 · Urban night</div><div class="lx-cell__sub">Job 2273 – 2274</div></td><td class="r">2</td><td class="r">6,000</td><td class="r is-warn">86.7%</td><td class="r">208</td><td class="r">69</td><td><span class="lx-badge lx-badge--danger">Blocked</span></td></tr>
+<tr><td><div class="lx-cell__main">T-120 · Urban rain</div><div class="lx-cell__sub">Job 2275 – 2276</div></td><td class="r">2</td><td class="r">5,900</td><td class="r">97.6%</td><td class="r">111</td><td class="r">36</td><td><span class="lx-badge lx-badge--warning">Partial</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Candidate theo loại lỗi</h2></div>
+<div class="lx-card__body lx-stack" style="gap: 12px">
+<div class="lx-bar"><span>Sai nhãn</span><div class="lx-bar__t"><i style="width: 100%"></i></div><span class="lx-bar__n">142</span></div>
+<div class="lx-bar"><span>Hình học</span><div class="lx-bar__t"><i style="width: 52%"></i></div><span class="lx-bar__n">74</span></div>
+<div class="lx-bar"><span>Trùng / chồng lấn</span><div class="lx-bar__t"><i style="width: 29%"></i></div><span class="lx-bar__n">41</span></div>
+<div class="lx-bar"><span>Thiếu object</span><div class="lx-bar__t"><i style="width: 85%"></i></div><span class="lx-bar__n">121</span></div>
+<div class="lx-bar"><span>Thuộc tính / Track</span><div class="lx-bar__t"><i style="width: 4%"></i></div><span class="lx-bar__n">6</span></div>
+</div>
+</section>
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

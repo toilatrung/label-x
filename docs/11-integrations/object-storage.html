@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tích hợp Object Storage — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/11-integrations/object-storage.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 11-integrations / object-storage</span><span class="sp"></span>
+<a href="object-storage.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>integration-object-storage</span><b>title</b><span>Tích hợp Object Storage</span><b>type</b><span>reference</span><b>domain</b><span>integrations</span><b>module</b><span>object-storage</span><b>tags</b><span>[integrations, object-storage, s3, evidence, gc]</span><b>priority</b><span>2</span></div>
+<h1 id="tich-hop-object-storage">Tích hợp Object Storage</h1>
+<h2 id="1-vai-tro">1. Vai trò</h2>
+<p>Object Storage lưu dữ liệu nhị phân bất biến:</p>
+<ul>
+<li>ảnh frame của snapshot;</li>
+<li>crop evidence;</li>
+<li>báo cáo xuất.</li>
+</ul>
+<p>Metadata nằm trong PostgreSQL. Môi trường thật dùng <strong>Object Storage S3-compatible hiện có</strong>. Dev local dùng SeaweedFS (nguồn: DEC-001; R cấu hình MVP "Backend"; SRS ch.10).</p>
+<h2 id="2-bucket">2. Bucket</h2>
+<p>Theo <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a> (service <code>seaweedfs-init</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Bucket</th>
+<th>Nội dung</th>
+<th>Ghi bởi</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>labelx-snapshots</code></td>
+<td>Ảnh frame tải từ CVAT lúc tạo snapshot</td>
+<td>Task <code>snapshots.export_job</code></td>
+<td>FR-SNP-05</td>
+</tr>
+<tr>
+<td><code>labelx-evidence</code></td>
+<td>Crop ảnh, overlay, payload evidence của candidate; tệp evidence của waiver</td>
+<td>Task engine (<code>match_unit</code>…), API waiver</td>
+<td>FR-ENG-08; FR-GTE-03</td>
+</tr>
+<tr>
+<td><code>labelx-reports</code></td>
+<td>Báo cáo PDF/CSV/JSON</td>
+<td>Task <code>reports.export_report</code></td>
+<td>FR-RPT-05</td>
+</tr>
+</tbody>
+</table>
+<p>Bucket mặc định của <code>STORAGES["default"]</code> trong <a href="../../src/backend/config/settings.py">settings.py</a> là <code>labelx-evidence</code> (biến <code>OBJECT_STORAGE_BUCKET</code>). Ngoài <code>default</code>, settings có ba storage tương ứng ba bucket: <code>storages["snapshots"]</code> (<code>OBJECT_STORAGE_BUCKET_SNAPSHOTS</code>), <code>storages["evidence"]</code> (<code>OBJECT_STORAGE_BUCKET_EVIDENCE</code>), <code>storages["reports"]</code> (<code>OBJECT_STORAGE_BUCKET_REPORTS</code>); mặc định là tên bucket trong compose.</p>
+<p>Vị trí lưu <strong>model artifact</strong> (L: "Model Registry") chưa có bucket trong compose và chưa chốt. Yêu cầu tối thiểu là lưu được checksum và mapping lớp (FR-ENG-05).</p>
+<h2 id="3-khoa-theo-hash-noi-dung">3. Khoá theo hash nội dung</h2>
+<pre class="highlight"><code class="language-text">&lt;bucket&gt;/sha256/&lt;2 ký tự đầu&gt;/&lt;sha256&gt;.&lt;ext&gt;
+ví dụ: labelx-snapshots/sha256/9f/9f86d081…0a08.jpg</code></pre>
+<ul>
+<li>Khoá được tính từ SHA-256 của chính nội dung. Ghi lại cùng nội dung sẽ ra cùng khoá, nên <strong>ghi lặp là idempotent</strong> (NFR-06).</li>
+<li>Cùng một ảnh xuất hiện trong nhiều snapshot (snapshot gia tăng, run cuối) chỉ được lưu một lần. Mỗi dòng <code>frame</code> vẫn ghi <code>image_sha256</code> riêng.</li>
+<li><code>frame.image_sha256</code> chính là checksum mà FR-SNP-05 yêu cầu. Worker kiểm lại checksum khi đọc ảnh để chạy engine.</li>
+<li>Cấu hình: storage <code>snapshots</code> và <code>evidence</code> đặt <code>file_overwrite=True</code>, vì <code>file_overwrite=False</code> của django-storages sẽ <strong>tự đổi tên</strong> khi khoá đã tồn tại và phá cơ chế content-addressed; ghi lại cùng khoá hash là ghi cùng nội dung nên idempotent. <code>reports</code> và <code>default</code> giữ <code>False</code>. Vẫn nên <code>HEAD</code> trước khi ghi blob lớn để tránh upload thừa. Kiểm bằng <code>src/backend/tests/test_settings.py</code>.</li>
+</ul>
+<h2 id="4-upload-truoc-commit-sau">4. Upload trước, commit sau</h2>
+<p>Thứ tự bắt buộc khi worker ghi kết quả (NFR-06):</p>
+<ol>
+<li>Tính SHA-256 của blob, rồi <code>PUT</code> lên bucket (bỏ qua nếu đã có).</li>
+<li>Mở transaction PostgreSQL: ghi <code>candidate</code>, <code>evidence(payload_key, payload_sha256)</code> và <code>ledger_entry</code>; cập nhật <code>work_unit</code> → COMMIT.</li>
+<li>Nếu worker chết sau bước 1 nhưng trước bước 2, blob trở thành mồ côi. Task chạy lại sẽ ghi đúng blob đó (cùng khoá) rồi commit. Blob nào không bao giờ được commit sẽ bị GC dọn.</li>
+</ol>
+<p>Không có thứ tự ngược lại (commit trước, upload sau), vì như vậy DB có thể trỏ tới blob không tồn tại.</p>
+<h2 id="5-don-rac-gc-va-luu-tru">5. Dọn rác (GC) và lưu trữ</h2>
+<table>
+<thead>
+<tr>
+<th>Loại</th>
+<th>Chính sách</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Blob mồ côi</td>
+<td>Task định kỳ <code>storage.gc_orphan_blobs</code> xoá blob không được <code>frame.image_sha256</code>, <code>evidence.payload_sha256</code>, <code>waiver.evidence_key</code> hay <code>report_export.sha256</code> nào tham chiếu, sau <code>t_gc</code> kể từ lúc tạo. <code>t_gc</code>: <strong>TBD-20</strong></td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Snapshot, evidence nguồn, reference, báo cáo</td>
+<td><strong>Không xoá</strong> khi dataset còn cần quản lý hoặc đối chiếu. Việc kết thúc lưu do QA Lead và người quản lý dữ liệu xác nhận, và được audit. Chưa đặt số ngày</td>
+<td>R "retention"; NFR-08; TBD-15</td>
+</tr>
+<tr>
+<td>Cache, crop tạm</td>
+<td>Chỉ dọn khi không còn công việc dùng và có thể tái tạo từ nguồn giữ nguyên</td>
+<td>R "retention"</td>
+</tr>
+<tr>
+<td>Versioning bucket</td>
+<td>Bật ở môi trường thật; sao lưu cùng lịch với PostgreSQL. RPO/RTO <strong>TBD-17</strong></td>
+<td>NFR-16</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-bao-mat">6. Bảo mật</h2>
+<ul>
+<li>Ảnh chỉ lưu trong Object Storage nội bộ; không gửi ảnh ra dịch vụ ngoài trong pilot (NFR-09). Chưa được nạp ảnh BDD100K trước khi Data Owner xác nhận giấy phép và điều khoản lưu trữ nội bộ (<strong>TBD-18</strong>).</li>
+<li>Client không nhận credential của storage. Ảnh và crop được phục vụ qua API có kiểm quyền, hoặc qua presigned URL ngắn hạn sinh sau khi đã kiểm scope. Thời hạn presigned URL <strong>chưa chốt</strong>.</li>
+<li>Credential nằm trong biến môi trường <code>OBJECT_STORAGE_*</code> và không được ghi vào log (NFR-07).</li>
+</ul>
+</article></main></body></html>

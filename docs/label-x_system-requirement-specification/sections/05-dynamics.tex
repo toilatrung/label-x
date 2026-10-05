@@ -1,0 +1,422 @@
+% =====================================================================
+\chapter{Luồng nghiệp vụ và hành vi động}
+\label{ch:dynamics}
+% =====================================================================
+
+\section{Workflow end-to-end}
+Hình~\ref{fig:workflow} mô tả luồng nghiệp vụ theo làn (swimlane) từ khi annotation
+có trên CVAT tới khi có báo cáo hiệu quả. Mã F-01…F-08 ánh xạ tới luồng tham chiếu
+trong nguồn R.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1cm, y=1cm]
+  % làn
+  \def\lw{21.5}
+  \foreach \i/\name/\col in {0/{CVAT}/lxgrayl, 1/{Vận hành QC}/white, 2/{Hệ thống LabelX}/lxbluel, 3/{Reviewer}/white, 4/{QA Lead phân xử}/lxgrayl, 5/{Annotator}/white}{
+    \fill[\col] (0,-\i*2.2) rectangle (\lw,-\i*2.2-2.2);
+    \draw[lxline] (0,-\i*2.2) rectangle (\lw,-\i*2.2-2.2);
+    \node[rotate=90, font=\sffamily\scriptsize\bfseries, text=lxnavy] at (0.3,-\i*2.2-1.1) {\name};
+  }
+  \draw[lxline] (0.6,0) -- (0.6,-13.2);
+  % nút
+  \node[init] (st) at (1.3,-3.3) {};
+  \node[act] (a1) at (3.0,-3.3) {Chọn phạm vi\\tạo snapshot};
+  \node[act] (c1) at (3.0,-1.1) {API đọc job,\\annotation, ảnh};
+  \node[act] (s1) at (5.6,-5.5) {Chuẩn hoá, hash\\kiểm drift, khoá};
+  \node[act] (a2) at (5.6,-3.3) {Chọn cấu hình\\chạy QC Run};
+  \node[act] (s2) at (8.3,-5.5) {Engine + Detector\\matching, ledger};
+  \node[act] (s3) at (11.0,-5.5) {Gộp issue, tính\\$s(f)$, xếp hạng};
+  \node[act] (r1) at (11.0,-7.7) {Nhận frame\\theo hàng đợi};
+  \node[act] (r2) at (13.6,-7.7) {Xem evidence\\ra quyết định};
+  \node[dec] (d1) at (13.6,-5.5) {Cần\\phân xử?};
+  \node[act] (q1) at (13.6,-9.9) {Phân xử; Gap thì\\chờ guideline mới};
+  \node[dec] (d2) at (16.2,-7.7) {Lỗi\\cần sửa?};
+  \node[act] (n1) at (16.2,-12.1) {Sửa trên CVAT\\qua deep link};
+  \node[act] (s4) at (18.6,-5.5) {Snapshot mới\\re-check};
+  \node[act] (r3) at (18.6,-7.7) {Xác minh\\sau sửa};
+  \node[act] (s5) at (20.2,-3.3) {QC run cuối\\gate, báo cáo};
+  \node[final] (en) at (20.2,-1.4) {};
+  % mũi tên
+  \draw[arr] (st) -- (a1);
+  \draw[arr] (a1) -- node[lbl, right]{F-01} (c1);
+  \draw[arr] (c1.east) -| (s1.north);
+  \draw[arr] (s1) -- node[lbl, right]{F-02} (a2);
+  \draw[arr] (a2) -| (s2.north);
+  \draw[arr] (s2) -- node[lbl, above]{F-03} (s3);
+  \draw[arr] (s3) -- node[lbl, right]{F-05} (r1);
+  \draw[arr] (r1) -- (r2);
+  \draw[arr] (r2) -- node[lbl, right]{F-06} (d1);
+  \draw[arr] (d1.west) -- ++(-0.5,0) |- node[lbl, pos=0.25, left]{có} (q1.west);
+  \draw[arr] (q1.east) -| (d2.south);
+  \draw[arr] (d1) -- node[lbl, right]{không} (d2);
+  \draw[arr] (d2) -- node[lbl, right]{có} (n1);
+  \draw[arr] (n1.east) -| node[lbl, pos=0.75, right]{F-07} (s4.south east);
+  \draw[arr] (s4) -- (r3);
+  \draw[arr] (r3.north east) -- node[lbl, right]{đạt} (s5.south);
+  \draw[arr] (d2.north) -- ++(0,0.9) -| node[lbl, pos=0.2, above]{không} (s5.south west);
+  \draw[arr] (s5) -- node[lbl, right]{F-08} (en);
+  \draw[arrd] (r3.south) -- ++(0,-1.0) -| node[lbl, pos=0.2, below]{chưa đạt} (n1.north);
+\end{tikzpicture}}
+\caption{Workflow end-to-end theo làn}
+\label{fig:workflow}
+\end{figure}
+
+\begin{xltabular}{\linewidth}{@{}L{1.2cm}L{3.5cm}L{3cm}Y@{}}
+\caption{Các bước luồng và điểm kiểm soát}\label{tab:flowsteps}\\
+\toprule
+\textbf{Bước} & \textbf{Công việc} & \textbf{Ai / tự động} & \textbf{Điểm kiểm soát}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Bước} & \textbf{Công việc} & \textbf{Ai} & \textbf{Điểm kiểm soát}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+F-01 & Chọn phạm vi, đọc CVAT & QA Lead (chạy), QC Admin (cấu hình); adapter & Chỉ đọc; token ở backend (B-18).\\
+F-02 & Export, hash, khoá snapshot & Hệ thống & Drift $\Rightarrow$ không khoá (B-02).\\
+F-03 & Chạy engine, ledger & Worker & Retry idempotent; Not checked/Partial/Failed $\ne$ đạt (B-10, B-19).\\
+F-04 & Kiểm chọn lọc VLM & Worker & Không bật trong pilot M13 (đề xuất cần duyệt).\\
+F-05 & Gộp issue, xếp hạng, lát ngẫu nhiên & Hệ thống & Công thức có version; lát ngẫu nhiên độc lập.\\
+F-06 & Review, quyết định, phân xử & Reviewer, QA Lead & Lease; chặn self-review; audit cùng transaction (B-12).\\
+F-07 & Sửa trên CVAT, re-check, verify & Annotator, worker, Reviewer & Đóng issue chỉ sau verify trên revision đã sửa.\\
+F-08 & QC run cuối, gate, báo cáo & Hệ thống, QA Lead & Báo cáo/gate trỏ run cuối (B-03).\\
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\section{Sequence diagram}
+\label{sec:sequence}
+
+\subsection{SD-1 · Tạo snapshot và kiểm drift}
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{sequencediagram}
+  \newthread{adm}{QA Lead}
+  \newinst[1.2]{api}{LabelX API}
+  \newinst[1.2]{wk}{Snapshot worker}
+  \newinst[1.2]{cv}{CVAT API}
+  \newinst[1.2]{os}{Object Storage}
+  \newinst[1.0]{db}{PostgreSQL}
+  \begin{call}{adm}{POST /snapshots, scope}{api}{202 snapshot\_id}
+    \begin{call}{api}{kiểm quyền, tạo bản ghi}{db}{Pending}
+    \end{call}
+    \mess{api}{enqueue tạo snapshot}{wk}
+  \end{call}
+  \begin{sdblock}{Lặp}{mỗi job trong scope}
+    \begin{call}{wk}{GET job, annotations, meta}{cv}{JSON, updated\_date}
+    \end{call}
+    \begin{callself}{wk}{chuẩn hoá + hash job}{}
+    \end{callself}
+    \begin{call}{wk}{GET frame ảnh}{cv}{bytes}
+    \end{call}
+    \begin{call}{wk}{PUT ảnh + checksum}{os}{uri}
+    \end{call}
+  \end{sdblock}
+  \begin{call}{wk}{GET job meta lần 2}{cv}{updated\_date}
+  \end{call}
+  \begin{sdblock}{Alt}{[không drift]}
+    \begin{call}{wk}{khoá snapshot, lưu hash, assignee}{db}{Locked}
+    \end{call}
+  \end{sdblock}
+  \begin{sdblock}{Alt}{[có drift] — nhánh thay thế}
+    \begin{call}{wk}{đánh dấu DriftDetected}{db}{Failed}
+    \end{call}
+  \end{sdblock}
+\end{sequencediagram}}
+\caption{SD-1 — Tạo snapshot bất biến từ CVAT}
+\label{fig:sd1}
+\end{figure}
+
+\subsection{SD-2 · Chạy pipeline phân tích và xếp hạng}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{sequencediagram}
+  \newthread{adm}{QA Lead}
+  \newinst[1.0]{orc}{QC Orchestrator}
+  \newinst[1.0]{cpu}{CPU worker}
+  \newinst[1.0]{gpu}{GPU worker · Detector}
+  \newinst[1.0]{agg}{Aggregation}
+  \newinst[1.0]{rnk}{Ranking}
+  \newinst[0.8]{db}{PostgreSQL}
+  \begin{call}{adm}{POST /runs: snapshot, config}{orc}{run\_id, Queued}
+  \end{call}
+  \begin{sdblock}{Lặp}{mỗi shard frame; các shard chạy song song trên worker}
+    \begin{call}{orc}{schema, geometry, duplicate}{cpu}{candidates}
+      \begin{call}{cpu}{ghi candidate + ledger, 1 txn}{db}{ok}
+      \end{call}
+    \end{call}
+    \begin{call}{orc}{detect theo lô}{gpu}{predictions}
+    \end{call}
+    \begin{call}{orc}{matching pred và ann}{cpu}{E1/E2 candidates}
+      \begin{call}{cpu}{ghi candidate + evidence + ledger}{db}{ok}
+      \end{call}
+    \end{call}
+  \end{sdblock}
+  \begin{sdblock}{Opt}{shard lỗi}
+    \mess{orc}{retry với khoá idempotent}{gpu}
+  \end{sdblock}
+  \begin{call}{orc}{gộp candidate $\rightarrow$ issue}{agg}{issues}
+    \begin{call}{agg}{upsert theo dedup\_key}{db}{ok}
+    \end{call}
+  \end{call}
+  \begin{call}{orc}{score: run, score\_version}{rnk}{ranking}
+    \begin{call}{rnk}{lưu FrameRisk, audit slice}{db}{ok}
+    \end{call}
+  \end{call}
+  \mess{orc}{run Completed/Partial}{adm}
+\end{sequencediagram}}
+\caption{SD-2 — QC Run: engine, Detector, matching, gộp issue và xếp hạng}
+\label{fig:sd2}
+\end{figure}
+
+\subsection{SD-3 · Review với bằng chứng}
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{sequencediagram}
+  \newthread{rv}{Reviewer}
+  \newinst[1.4]{ui}{Review Workspace}
+  \newinst[1.4]{api}{LabelX API}
+  \newinst[1.4]{gd}{Guideline lookup}
+  \newinst[1.2]{db}{PostgreSQL}
+  \begin{call}{rv}{Bắt đầu review}{ui}{frame + issues}
+    \begin{call}{ui}{POST /queue/next}{api}{frame, lease}
+      \begin{call}{api}{kiểm self-review, cấp lease}{db}{ok}
+      \end{call}
+    \end{call}
+    \mess{ui}{effort start}{api}
+  \end{call}
+  \begin{call}{rv}{chọn issue}{ui}{evidence}
+    \begin{call}{ui}{GET /issues/id/evidence}{api}{pred, conf, IoU}
+    \end{call}
+    \begin{call}{ui}{GET rule, case}{gd}{VEH-03 v1.2, cases}
+    \end{call}
+  \end{call}
+  \begin{call}{rv}{Xác nhận / Bác bỏ + lý do}{ui}{đã lưu}
+    \begin{call}{ui}{POST /decisions}{api}{201 hoặc 403/409}
+      \begin{call}{api}{kiểm lease còn hạn, self-review theo assignee tại snapshot}{db}{ok}
+      \end{call}
+      \begin{call}{api}{decision + audit, 1 txn}{db}{ok}
+      \end{call}
+    \end{call}
+  \end{call}
+  \begin{call}{rv}{Đã review xong frame}{ui}{frame kế tiếp}
+    \mess{ui}{effort stop}{api}
+    \begin{call}{ui}{release lease}{api}{ok}
+    \end{call}
+  \end{call}
+\end{sequencediagram}}
+\caption{SD-3 — Reviewer xem bằng chứng và ra quyết định}
+\label{fig:sd3}
+\end{figure}
+
+\subsection{SD-4 · Rework, kiểm lại và QC run cuối}
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{sequencediagram}
+  \newthread{rv}{Reviewer}
+  \newinst[1.2]{api}{LabelX API}
+  \newinst[1.2]{an}{Annotator}
+  \newinst[1.2]{cv}{CVAT}
+  \newinst[1.2]{orc}{QC Orchestrator}
+  \begin{call}{rv}{Yêu cầu sửa issue}{api}{RW-id}
+  \end{call}
+  \mess{api}{thông báo + deep link}{an}
+  \begin{call}{an}{mở job/frame, sửa box}{cv}{saved}
+  \end{call}
+  \begin{call}{an}{Đã sửa RW-id}{api}{Chờ kiểm lại}
+  \end{call}
+  \begin{call}{api}{snapshot mới, job bị ảnh hưởng}{orc}{revision mới}
+    \begin{callself}{orc}{re-check engine liên quan}{}
+    \end{callself}
+  \end{call}
+  \begin{call}{rv}{Xác minh trên revision mới}{api}{Resolved / Reopened}
+  \end{call}
+  \begin{sdblock}{Opt}{[mọi yêu cầu sửa của phạm vi đã Resolved]}
+    \begin{call}{api}{snapshot toàn phạm vi + QC run cuối is\_final}{orc}{run cuối}
+      \begin{callself}{orc}{liên kết verification trước đó}{}
+      \end{callself}
+    \end{call}
+    \begin{callself}{api}{kiểm Completed + coverage engine bắt buộc}{}
+    \end{callself}
+  \end{sdblock}
+  \begin{sdblock}{Alt}{[run cuối Partial/Failed hoặc có issue mới]}
+    \mess{api}{issue mới vào hàng đợi, gate chưa đạt}{rv}
+  \end{sdblock}
+\end{sequencediagram}}
+\caption{SD-4 — Rework qua CVAT, kiểm lại và QC run cuối}
+\label{fig:sd4}
+\end{figure}
+
+\subsection{SD-5 · Đánh giá KPI}
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{sequencediagram}
+  \newthread{ql}{QA Lead}
+  \newinst[1.3]{api}{LabelX API}
+  \newinst[1.3]{ev}{Evaluation service}
+  \newinst[1.3]{db}{PostgreSQL}
+  \begin{call}{ql}{khoá reference GT và $\mathcal{E}$}{api}{ref v}
+  \end{call}
+  \begin{call}{ql}{POST /evaluations: run, ref, k}{api}{eval\_id}
+    \begin{call}{api}{evaluate}{ev}{kết quả}
+      \begin{call}{ev}{đọc ranking, $\mathcal{E}$, effort log}{db}{dữ liệu}
+      \end{call}
+      \begin{callself}{ev}{kiểm $|\mathcal{E}| \ge E_{min}$}{}
+      \end{callself}
+      \begin{callself}{ev}{Recall@k + đối chứng + bootstrap}{}
+      \end{callself}
+      \begin{callself}{ev}{KPI-2, non-inferiority}{}
+      \end{callself}
+      \begin{call}{ev}{lưu evaluation run + provenance}{db}{ok}
+      \end{call}
+    \end{call}
+  \end{call}
+\end{sequencediagram}}
+\caption{SD-5 — Đánh giá Recall@20\% và effort}
+\label{fig:sd5}
+\end{figure}
+
+% ---------------------------------------------------------------------
+\section{Máy trạng thái}
+\label{sec:states}
+
+\subsection{Trạng thái QC Run}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=8mm and 14mm]
+  \node[init] (i) {};
+  \node[state, right=of i] (q) {Queued};
+  \node[state, right=of q] (r) {Running};
+  \node[statef, right=of r] (c) {Completed};
+  \node[state, fill=lxamberl, draw=lxamber, below=of c] (p) {Partial};
+  \node[stater, below=of r] (f) {Failed};
+  \node[state, fill=lxgrayl, draw=lxgray, below=of q] (x) {Cancelled};
+  \draw[arr] (i) -- (q);
+  \draw[arr] (q) -- node[lbl, above]{worker nhận} (r);
+  \draw[arr] (r) -- node[lbl, above]{mọi shard ok} (c);
+  \draw[arr] (r) -- node[lbl, sloped, above]{có shard lỗi sau retry} (p);
+  \draw[arr] (r) -- node[lbl, right]{lỗi toàn cục} (f);
+  \draw[arr] (q) -- node[lbl, left]{huỷ} (x);
+  \draw[arr] (r) -- node[lbl, sloped, above]{huỷ} (x);
+  \draw[arrd] (p.east) to[bend right=40] node[lbl, right]{chạy lại shard lỗi} (r.north east);
+\end{tikzpicture}
+\caption{State machine của QC Run}
+\label{fig:runstate}
+\end{figure}
+
+\subsection{Trạng thái Issue}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=9mm and 12mm]
+  \node[init] (i) {};
+  \node[state, right=of i] (o) {Chờ review};
+  \node[state, right=of o] (ir) {Đang review};
+  \node[statef, right=of ir] (cf) {Đã xác nhận};
+  \node[stater, above=of cf] (rj) {Bác bỏ\\\scriptsize (cảnh báo sai)};
+  \node[state, fill=lxamberl, draw=lxamber, below=of ir] (es) {Chờ phân xử\\\scriptsize (Chưa chắc / Chuyển cấp)};
+  \node[state, right=of cf] (fp) {Chờ sửa};
+  \node[state, right=of fp] (rc) {Chờ kiểm lại};
+  \node[statef, above=of rc] (rs) {Đã đóng\\\scriptsize (Resolved)};
+  \node[state, below=of rc] (ro) {Mở lại};
+  \node[final, right=of rs] (e) {};
+  \node[final, left=of rj] (e2) {};
+  \draw[arr] (i) -- (o);
+  \draw[arr] (o) -- node[lbl, above]{cấp lease} (ir);
+  \draw[arr] (ir) -- node[lbl, above]{xác nhận} (cf);
+  \draw[arr] (ir) -- node[lbl, sloped, above]{bác bỏ} (rj);
+  \draw[arr] (ir) -- node[lbl, right]{chưa chắc / chuyển cấp} (es);
+  \draw[arr] (es) -| node[lbl, pos=0.3, below]{QA Lead xác nhận} (cf);
+  \draw[arr] (es.west) -| node[lbl, pos=0.7, left]{QA Lead bác bỏ} ([xshift=-6mm]rj.south west) -- (rj.west);
+  \draw[arr] (cf) -- node[lbl, above]{yêu cầu sửa} (fp);
+  \draw[arr] (fp) -- node[lbl, above]{annotator: đã sửa} (rc);
+  \draw[arr] (rc) -- node[lbl, right]{verify đạt} (rs);
+  \draw[arr] (rc) -- node[lbl, right]{verify chưa đạt} (ro);
+  \draw[arr] (ro) -| (fp);
+  \draw[arr] (rs) -- (e);
+  \draw[arr] (rj) -- (e2);
+  \draw[arrd] (ir.north west) to[bend right=35] node[lbl, above]{lease hết hạn} (o.north east);
+\end{tikzpicture}}
+\caption{State machine của Issue (trạng thái công khai theo H)}
+\label{fig:issuestate}
+\end{figure}
+
+\subsection{Trạng thái review của frame}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=8mm and 13mm]
+  \node[init] (i) {};
+  \node[state, right=of i] (u) {Chưa review};
+  \node[state, right=of u] (l) {Đang review\\\scriptsize (có lease)};
+  \node[statef, right=of l] (d) {Đã review};
+  \node[state, fill=lxamberl, draw=lxamber, below=of d] (w) {Còn issue chờ\\phân xử / sửa};
+  \node[statef, right=of d] (v) {Hoàn tất\\\scriptsize (run cuối)};
+  \draw[arr] (i) -- (u);
+  \draw[arr] (u) -- node[lbl, above]{cấp lease} (l);
+  \draw[arr] (l.south west) to[bend left=35] node[lbl, below]{lease hết hạn} (u.south east);
+  \draw[arr] (l) -- node[lbl, above]{xong} (d);
+  \draw[arr] (d) -- node[lbl, right]{có issue mở} (w);
+  \draw[arr] (w) -| node[lbl, pos=0.25, below]{đóng hết + run cuối đạt} (v);
+  \draw[arr] (d) -- node[lbl, above]{không còn issue} (v);
+\end{tikzpicture}
+\caption{State machine trạng thái review của frame}
+\label{fig:framestate}
+\end{figure}
+
+\section{Bảng chuyển trạng thái}
+\label{sec:transitions}
+Theo B-17, mọi chuyển trạng thái của Issue có event, actor và guard được backend
+kiểm tra. Chuyển trạng thái không có trong bảng phải bị từ chối.
+
+\begin{xltabular}{\linewidth}{@{}L{2.2cm}L{2.2cm}L{2.6cm}L{2.2cm}Y@{}}
+\caption{Bảng transition/event/actor/guard của Issue}\label{tab:transitions}\\
+\toprule
+\textbf{Từ} & \textbf{Đến} & \textbf{Event} & \textbf{Actor} & \textbf{Guard}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Từ} & \textbf{Đến} & \textbf{Event} & \textbf{Actor} & \textbf{Guard}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Chờ review & Đang review & claim & Reviewer & Có quyền Review trong scope; không phải annotator của object theo assignee tại snapshot; chưa có lease khác còn hạn.\\
+Đang review & Chờ review & lease\_expired & Hệ thống & Hết thời gian lease \TBD[-09]; không có quyết định đã lưu.\\
+Đang review & Đã xác nhận & confirm & Reviewer & Có nhóm lỗi, mức độ; lease còn hạn; không self-review (kiểm lại khi lưu).\\
+Đang review & Bác bỏ & reject & Reviewer & Có lý do; lease còn hạn; không self-review.\\
+Đang review & Chờ phân xử & uncertain / escalate & Reviewer & Có lý do; lease còn hạn; không self-review.\\
+Chờ phân xử & Đã xác nhận / Bác bỏ & adjudicate & QA Lead & Người phân xử khác người chuyển cấp; có rule áp dụng và lý do.\\
+Chờ phân xử & Chờ phân xử & guideline\_gap & QA Lead & Tạo Guideline Gap gắn rule; issue giữ trạng thái đến khi có guideline version mới rồi phân xử lại.\\
+Đã xác nhận & Chờ sửa & request\_fix & Reviewer, QA Lead & Có annotator, việc cần sửa, hạn.\\
+Chờ sửa & Chờ kiểm lại & fix\_submitted & Annotator & Là assignee của yêu cầu; revision CVAT mới khác revision gốc.\\
+Chờ kiểm lại & Đã đóng & verify\_pass & Reviewer & Re-check trên revision mới đã xong; người verify không phải annotator đã sửa.\\
+Chờ kiểm lại & Mở lại & verify\_fail & Reviewer & Có lý do; người verify không phải annotator đã sửa.\\
+Mở lại & Chờ sửa & request\_fix & Hệ thống & Tự động khi mở lại.\\
+Như các dòng trên & Như các dòng trên & override & Super Admin & Super Admin có thể thực hiện quyết định, phân xử, xác minh thay vai trò thường (theo H); bắt buộc lý do, audit gắn nhãn ghi đè, vẫn chịu self-review và tách nhiệm vụ. Không có chuyển trạng thái ngoài bảng.\\
+\end{xltabular}
+
+\section{Trạng thái engine và lý do áp dụng}
+\label{sec:enginestates}
+Theo B-19, trạng thái công khai giữ theo H; lý do áp dụng (applicability) lưu
+riêng trong ledger. Không trạng thái nào dưới đây được tính là đạt.
+
+\begin{xltabular}{\linewidth}{@{}L{2.4cm}L{4.6cm}Y@{}}
+\caption{Ánh xạ trạng thái engine công khai và lý do}\label{tab:enginestates}\\
+\toprule
+\textbf{Trạng thái} & \textbf{Lý do lưu trong ledger} & \textbf{Ảnh hưởng}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Trạng thái} & \textbf{Lý do} & \textbf{Ảnh hưởng}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Checked & Mọi đơn vị áp dụng đã xong. & Dùng cho ranking, coverage.\\
+Partial & Một số đơn vị Failed hoặc chưa xong. & Frame thiếu kết quả mang cờ ``thiếu bằng chứng'' (FR-RNK-06).\\
+Failed & Lỗi thực thi (timeout, ảnh hỏng, worker lỗi) sau retry. & Không pass, không reject annotation; hiển thị lỗi, cho chạy lại.\\
+Not checked & \code{disabled} (engine tắt theo cấu hình); \code{no\_model} (thiếu Detector); \code{no\_reference} (Metric thiếu GT); \code{not\_applicable} (shape ngoài phạm vi). & Không pass; coverage engine bắt buộc chưa đạt.\\
+Not checked & \code{not\_triggered}: candidate không thoả điều kiện kiểm chọn lọc (VLM, nếu bật). & Khác lỗi thực thi; không tính vào mẫu số của kiểm chọn lọc.\\
+(waiver) & Waiver được duyệt cho một điều kiện gate. & Không đổi trạng thái engine; chỉ gate ghi ``miễn có điều kiện'' kèm hạn.\\
+\end{xltabular}

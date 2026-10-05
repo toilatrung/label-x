@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Context bar — trạng thái</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1200px; height: 400px; box-sizing: border-box; padding: 32px; background: #f6f7f9; color: #1a1d23; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 20px; display: flex; flex-direction: column; gap: 24px">
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #4b5262">Version đã release — chỉ xem</div>
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; background: #ffffff; border: 1px solid #e3e6ea; border-radius: 0">
+<button style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #8c93a0; background: #ffffff; font: 400 13px/1 'Inter', sans-serif; color: #1a1d23; white-space: nowrap">
+<span style="color: #6b7280">Dataset</span><span style="font-weight: 600">Road Vision Urban · v1.3</span>
+<span style="display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 4px; background: #e6f4ec; color: #146c43; font-size: 11px; font-weight: 600">read-only</span>
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#6b7280" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg>
+</button>
+<button style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #8c93a0; background: #ffffff; font: 400 13px/1 'Inter', sans-serif; color: #1a1d23; white-space: nowrap">
+<span style="color: #6b7280">Quality Control Run</span><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">#QC-077</span>
+<span aria-label="Trạng thái run: PARTIAL" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #b7791f"></span>
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#6b7280" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg>
+</button>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #e3e6ea; background: #ffffff; font-size: 13px; white-space: nowrap">
+<span style="color: #6b7280">Snapshot</span><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">SNP-011</span><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #4b5262">rev f02a6d</span>
+<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b7280" stroke-width="1.5" aria-label="Đã khoá"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>
+</span>
+<button style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #8c93a0; background: #ffffff; font: 400 13px/1 'Inter', sans-serif; color: #1a1d23; white-space: nowrap">
+<span style="color: #6b7280">Phạm vi</span><span style="font-weight: 600">Toàn dataset</span>
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#6b7280" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg>
+</button>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #e3e6ea; background: #ffffff; font-size: 13px; white-space: nowrap"><span style="color: #6b7280">Guideline</span><span style="font-weight: 600">v1.2</span></span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid #e3e6ea; background: #ffffff; font-size: 13px; white-space: nowrap"><span style="color: #6b7280">Taxonomy</span><span style="font-weight: 600">v3</span></span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 0; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 600">1 · Dataset read-only</div>
+<div style="color: #4b5262; font-size: 13px">Version đã release chỉ mở để xem lịch sử. Tag <b>read-only</b> nằm trong chip Dataset; mọi thao tác ghi bị ẩn.</div>
+</div>
+<div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 0; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 600">2 · Trạng thái Quality Control Run</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #4b5262">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #1f8f5a"></span>Checked</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #b7791f"></span>Partial</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2f6fbf"></span>Running</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #c0362c"></span>Failed</span>
+</div>
+<div style="color: #4b5262; font-size: 13px">Chấm 8px cạnh mã run; tên trạng thái hiện ở tooltip và trong menu chọn run.</div>
+</div>
+<div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 0; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 600">3 · Snapshot đã khoá</div>
+<div style="color: #4b5262; font-size: 13px">Snapshot bất biến, gắn theo run: hiển thị mã + revision kèm biểu tượng khoá, viền nhạt, không mở menu.</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

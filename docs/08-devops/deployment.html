@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triển khai LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/08-devops/deployment.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / deployment</span><span class="sp"></span>
+<a href="deployment.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>devops-deployment</span><b>title</b><span>Triển khai LabelX</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[devops, deployment, topology, docker-compose]</span><b>priority</b><span>3</span></div>
+<h1 id="trien-khai-labelx">Triển khai LabelX</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Mô tả topology triển khai tham chiếu (SRS chương 10 + DEC-001), cách chạy môi trường dev local và những gì còn mở cho production.</p>
+<h2 id="1-thanh-phan-dec-001-b-01">1. Thành phần (DEC-001, B-01)</h2>
+<ul>
+<li><strong>Modular monolith</strong> Django 5.2 + DRF, chạy bằng Gunicorn (dependency <code>gunicorn</code> có trong <code>pyproject.toml</code>).</li>
+<li><strong>Worker pool Celery 5</strong> + Redis 7 làm broker/result backend; <code>django-celery-beat</code> cho lịch định kỳ (<code>CELERY_BEAT_SCHEDULER = DatabaseScheduler</code>).</li>
+<li><strong>PostgreSQL 17</strong>: snapshot, run, issue, lease, decision, audit, effort.</li>
+<li><strong>Object Storage S3-compatible hiện có</strong> (qua <code>django-storages</code>): ảnh, evidence, báo cáo/manifest. SeaweedFS <strong>chỉ dùng cho dev local</strong>.</li>
+<li><strong>Frontend</strong> Next.js 16 + React 19.</li>
+<li><strong>CVAT hiện có</strong>: hệ thống ngoài; adapter chỉ đọc (B-18).</li>
+</ul>
+<h2 id="2-topology-tham-chieu-srs-10-architecturetex-hinh-deployment">2. Topology tham chiếu (SRS <code>10-architecture.tex</code>, hình deployment)</h2>
+<pre class="highlight"><code class="language-text">+---------------------------+   +-----------------------+   +----------------------+
+| App server (Linux)        |&lt;-&gt;| GPU server            |&lt;-&gt;| Data                 |
+|  Gunicorn + Django/DRF    |   |  Celery GPU worker    |   |  PostgreSQL          |
+|  Celery CPU workers       |   |  Detector baseline    |   |  Redis               |
++---------------------------+   +-----------------------+   |  Object Storage      |
+      ^            ^                                        +----------------------+
+      | HTTPS      | HTTPS (chỉ đọc)                              ^
+ [Trình duyệt]  [CVAT hiện có]           App server &lt;-------------+</code></pre>
+<ul>
+<li>CPU worker chạy Schema, Geometry, Duplicate, Matching, Ranking; GPU worker chạy Detector baseline (SRS 10, sơ đồ thành phần).</li>
+<li>T và A đề xuất tách hàng đợi CPU và GPU (A mục 20.1: "worker GPU tách hàng đợi riêng"). Tên queue và routing Celery <strong>chưa cấu hình</strong> trong repo.</li>
+<li>Cấu hình phần cứng app server và GPU server: <strong>TBD-02</strong> (Tech Lead, trước build).</li>
+<li>Cách phục vụ frontend Next.js ở production (<code>next start</code> hay host khác) và reverse proxy/TLS: <strong>chưa có căn cứ</strong>, chờ TBD-02.</li>
+</ul>
+<h2 id="3-dev-local">3. Dev local</h2>
+<p>Chi tiết lệnh: <a href="../07-development/tooling.html">../07-development/tooling.md</a>.</p>
+<pre class="highlight"><code class="language-bash">make setup        # bật postgres, redis, seaweedfs bằng infrastructure/docker-compose.dev.yml, cài dependency, migrate
+make dev-backend  # Django runserver :8000 (không phải Gunicorn)
+make dev-worker   # Celery worker
+make dev-beat     # Celery beat — hiện chưa có task/lịch nào (polling drift CVAT: việc mở, TBD-01)
+make dev-frontend # Next.js dev :3000</code></pre>
+<ul>
+<li>Compose chỉ chứa hạ tầng (PostgreSQL, Redis, SeaweedFS + job tạo bucket). Django, Celery và Next.js chạy trực tiếp trên máy dev.</li>
+<li>CVAT không chạy trong compose; trỏ <code>CVAT_BASE_URL</code> tới instance thật khi có (TBD-01). <code>NEXT_PUBLIC_CVAT_BASE_URL</code> mặc định <code>http://localhost:8080</code> chỉ dùng để dựng deep link.</li>
+<li>Repo <strong>chưa có</strong> Dockerfile cho backend/frontend.</li>
+</ul>
+<h2 id="4-production-tbd">4. Production — TBD</h2>
+<table>
+<thead>
+<tr>
+<th>Hạng mục</th>
+<th>Trạng thái</th>
+<th>Căn cứ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phần cứng app server, GPU server</td>
+<td><strong>TBD-02</strong></td>
+<td>SRS 11</td>
+</tr>
+<tr>
+<td>Phiên bản CVAT được pin, URL, quyền token</td>
+<td><strong>TBD-01</strong></td>
+<td>SRS 11; DEC-001</td>
+</tr>
+<tr>
+<td>Object Storage thật (endpoint, bucket, versioning)</td>
+<td>Dùng storage hiện có; chi tiết chưa có. Bật versioning theo NFR-16</td>
+<td>DEC-001; NFR-16</td>
+</tr>
+<tr>
+<td>HTTPS, cấu hình bảo mật Django production</td>
+<td>Đề xuất trong <a href="../06-security/security-policies.html">../06-security/security-policies.md</a> mục 9</td>
+<td>NFR-07</td>
+</tr>
+<tr>
+<td>Secret store cho token CVAT, <code>DJANGO_SECRET_KEY</code></td>
+<td>Chưa chọn</td>
+<td>FR-SNP-02</td>
+</tr>
+<tr>
+<td>Sao lưu PostgreSQL + Object Storage cùng lịch, diễn tập khôi phục</td>
+<td>RPO/RTO <strong>TBD-17</strong></td>
+<td>NFR-16</td>
+</tr>
+<tr>
+<td>Pipeline triển khai</td>
+<td>Chưa triển khai thật; xem <a href="ci-cd.html">ci-cd.md</a></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="thu-tu-khoi-ong-va-migration-e-xuat">Thứ tự khởi động và migration (đề xuất)</h3>
+<ol>
+<li>Hạ tầng dữ liệu (PostgreSQL, Redis, Object Storage) sẵn sàng.</li>
+<li>Chạy <code>manage.py migrate</code> một lần trước khi bật phiên bản mới.</li>
+<li>Bật Gunicorn, CPU worker, GPU worker, beat. Chỉ chạy <strong>một</strong> tiến trình beat.</li>
+<li>Bật frontend.</li>
+</ol>
+<p>Task Celery phải idempotent (B-10), nên worker có thể restart giữa chừng: <code>CELERY_TASK_ACKS_LATE</code> và <code>CELERY_TASK_REJECT_ON_WORKER_LOST</code> đã bật trong <code>settings.py</code>, task bị gián đoạn sẽ được giao lại.</p>
+<h2 id="5-sao-luu-va-khoi-phuc-nhat-quan-nfr-16">5. Sao lưu và khôi phục nhất quán (NFR-16)</h2>
+<p>NFR-16 yêu cầu sao lưu PostgreSQL và Object Storage (bật versioning) <strong>theo cùng lịch</strong>, và khôi phục được snapshot, ảnh, evidence, quyết định, reference, effort log <strong>nhất quán với nhau</strong>; cách kiểm là diễn tập khôi phục. RPO/RTO: <strong>TBD-17</strong> (Tech Lead, trước triển khai). Công cụ sao lưu <strong>chưa chọn</strong>. Quy trình dưới đây là <strong>đề xuất</strong> để đáp ứng yêu cầu; cần duyệt và diễn tập trước khi dùng.</p>
+<h3 id="nguyen-tac-nhat-quan">Nguyên tắc nhất quán</h3>
+<ul>
+<li>PostgreSQL là nguồn chuẩn của metadata. Blob trên Object Storage được ghi <strong>trước</strong> metadata, với khoá theo hash nội dung (NFR-06). Vì vậy một bản PostgreSQL tại thời điểm T chỉ trỏ tới blob đã tồn tại trước T.</li>
+<li>Hệ quả: khôi phục PostgreSQL về T, rồi khôi phục Object Storage về một thời điểm <strong>≥ T</strong> (versioning cho phép chọn phiên bản theo thời gian). Blob thừa (có trên storage nhưng không có metadata) là chấp nhận được; job dọn dẹp (t_{gc}) xử lý chúng. <strong>Không</strong> khôi phục storage về thời điểm sớm hơn DB, vì metadata sẽ trỏ tới blob không tồn tại.</li>
+<li>Không dùng job dọn dẹp blob mồ côi ngay sau khôi phục, cho tới khi kiểm xong các tiêu chí bên dưới.</li>
+</ul>
+<h3 id="cac-buoc-khoi-phuc-e-xuat">Các bước khôi phục (đề xuất)</h3>
+<ol>
+<li>Dừng ghi: tắt Gunicorn, worker, beat (hoặc chặn ghi) để không phát sinh dữ liệu mới.</li>
+<li>Chọn thời điểm khôi phục T theo bản sao lưu PostgreSQL gần nhất hợp lệ. Ghi lại T và lý do.</li>
+<li>Khôi phục PostgreSQL về T.</li>
+<li>Khôi phục/giữ Object Storage ở phiên bản tại thời điểm ≥ T (theo versioning).</li>
+<li>Chạy <code>manage.py migrate --check</code> (hoặc <code>showmigrations</code>) để xác nhận schema khớp phiên bản code đang triển khai.</li>
+<li>Chạy bộ kiểm xác nhận (mục dưới) <strong>trước khi</strong> mở lại cho người dùng.</li>
+<li>Bật lại dịch vụ. Shard/run đang chạy dở được xử lý lại nhờ task idempotent (B-10). Lease đang giữ tại T coi như hết hạn theo quy tắc lease (TBD-09).</li>
+<li>Ghi audit cho sự kiện khôi phục: người thực hiện, T, phạm vi dữ liệu mất từ T đến thời điểm sự cố.</li>
+</ol>
+<h3 id="tieu-chi-xac-nhan-sau-khoi-phuc">Tiêu chí xác nhận sau khôi phục</h3>
+<table>
+<thead>
+<tr>
+<th>Đối tượng</th>
+<th>Kiểm tra</th>
+<th>Đạt khi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Snapshot</td>
+<td>Với mỗi snapshot đã khoá: đọc JSON đã chuẩn hoá trên Object Storage, tính lại hash SHA-256 từng job và hash tổng (FR-SNP-03)</td>
+<td>Khớp hash lưu trong PostgreSQL</td>
+</tr>
+<tr>
+<td>Ảnh frame</td>
+<td>Với ảnh mà snapshot tham chiếu: tính checksum</td>
+<td>Mọi ảnh tồn tại và khớp checksum lưu khi snapshot (FR-SNP-05)</td>
+</tr>
+<tr>
+<td>Evidence/crop</td>
+<td>Mọi URI evidence trong metadata candidate/issue</td>
+<td>Tồn tại và khớp hash nội dung (NFR-06)</td>
+</tr>
+<tr>
+<td>Quyết định + audit</td>
+<td>Mỗi decision có AuditEvent tương ứng; audit không có bản ghi trỏ tới đối tượng không tồn tại</td>
+<td>Đủ cặp; số lượng không giảm so với báo cáo gần nhất trước T</td>
+</tr>
+<tr>
+<td>Reference</td>
+<td>Reference đã khoá: version, trạng thái khoá và tập item còn nguyên</td>
+<td>Khớp với audit khoá reference</td>
+</tr>
+<tr>
+<td>Effort log</td>
+<td>Sự kiện effort liên tục theo frame/phiên tới T; không có phiên trỏ tới lease/frame không tồn tại</td>
+<td>Không có tham chiếu hỏng</td>
+</tr>
+<tr>
+<td>Report/manifest</td>
+<td>File trên storage</td>
+<td>Tồn tại, checksum khớp</td>
+</tr>
+</tbody>
+</table>
+<p>Kết quả xác nhận được lưu làm bằng chứng diễn tập. NFR-16 yêu cầu diễn tập khôi phục; tần suất diễn tập <strong>chưa chốt</strong>.</p>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="ci-cd.html">ci-cd.md</a></li>
+<li><a href="monitoring.html">monitoring.md</a></li>
+<li><a href="../06-security/threat-model.html">../06-security/threat-model.md</a></li>
+</ul>
+</article></main></body></html>

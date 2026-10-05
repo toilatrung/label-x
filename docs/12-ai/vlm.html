@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô hình thị giác – ngôn ngữ (VLM) — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/12-ai/vlm.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / vlm</span><span class="sp"></span>
+<a href="vlm.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, selective-check, pilot]</span><b>priority</b><span>3</span></div>
+<h1 id="mo-hinh-thi-giac-ngon-ngu-vlm">Mô hình thị giác – ngôn ngữ (VLM)</h1>
+<h2 id="1-trang-thai-trong-pilot-m13">1. Trạng thái trong pilot M13</h2>
+<ul>
+<li><strong>Đề xuất</strong>: VLM <strong>không bật</strong> trong pilot M13. Đây là đề xuất thu hẹp cho pilot, <strong>cần Product Owner duyệt</strong> — <strong>TBD-08</strong> (SRS <a href="../label-x_system-requirement-specification/sections/01-introduction.tex">01-introduction.tex</a> §Phạm vi; FR-ENG-10, ưu tiên Could).</li>
+<li>Đề xuất này không kế thừa từ B-08 và không thay B-08. Kiến trúc B-08 vẫn là kiến trúc đã chốt nếu VLM được bật (R B-08).</li>
+<li>Khi tắt: engine "Mô hình thị giác – ngôn ngữ" hiển thị <strong>Not checked</strong> (<code>disabled</code>); không bao giờ coi là đạt (H AnalysisConfig; R B-19). Ba nhóm lỗi E1–E3 không phụ thuộc VLM.</li>
+</ul>
+<h2 id="2-kien-truc-a-chot-neu-bat-b-08">2. Kiến trúc đã chốt nếu bật (B-08)</h2>
+<pre class="highlight"><code>Candidate (từ engine khác trong run) → chọn theo policy → worker VLM kiểm chọn lọc → Evidence có cấu trúc</code></pre>
+<ul>
+<li>VLM phụ thuộc candidate nên <strong>không</strong> chạy song song từ đầu với các engine sinh candidate (R B-08: "Chạy song song chưa giải quyết phụ thuộc candidate").</li>
+<li>Chỉ ghi Evidence/Candidate; không tự xác nhận lỗi; không có quyền quyết định, gate, release (R R-02; A ADR-07).</li>
+<li>Kết quả không rõ ⇒ uncertain/chuyển cấp cho người (T §4); lời giải thích của VLM không phải bằng chứng đã xác minh (T §3).</li>
+<li>Kiểm frame/revision và mapping crop về ảnh gốc trước khi dùng evidence (T §3, §9).</li>
+</ul>
+<h2 id="3-han-muc-va-retry-inh-huong-van-hanh-a-duyet">3. Hạn mức và retry (định hướng vận hành đã duyệt)</h2>
+<table>
+<thead>
+<tr>
+<th>Tham số</th>
+<th>Giá trị</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Candidate tối đa mỗi run</td>
+<td>400</td>
+<td>R cấu hình vận hành "budget"; H AnalysisConfig</td>
+</tr>
+<tr>
+<td>Số lần thử mỗi lượt kiểm</td>
+<td>Tối đa 3 lần <strong>tổng cộng</strong>, tính cả retry, nằm trong hạn mức lượt gọi</td>
+<td>R B-08; H ExecutionHistory</td>
+</tr>
+<tr>
+<td>Timeout mỗi lượt</td>
+<td>Lấy từ đo pilot — <strong>TBD-20</strong> (Tech Lead, đội mô hình)</td>
+<td>R cấu hình vận hành</td>
+</tr>
+<tr>
+<td>Hạn mức tổng (lượt gọi, GPU, tiền)</td>
+<td>Chưa đặt; Admin + đội mô hình đo, người phụ trách dự án duyệt</td>
+<td>R cấu hình vận hành</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>400 candidate không đồng nghĩa 400 lượt gọi nếu có retry (R).</li>
+<li>Hết hạn mức ⇒ dừng nhận lượt mới, ghi phần chưa kiểm; <strong>không</strong> chuyển thành đạt hay bác bỏ (R B-08; FR-ENG-10; T §6 "hết budget giữ unreviewed").</li>
+<li>Hết 3 lần thử ⇒ đơn vị đó Failed (lỗi thực thi), không pass, không reject annotation (SRS 05).</li>
+</ul>
+<h2 id="4-coverage">4. Coverage</h2>
+<ul>
+<li>Đơn vị: candidate được trigger (R cấu hình MVP "Required units").</li>
+<li>Candidate không thoả điều kiện kiểm chọn lọc ⇒ Not checked <code>not_triggered</code>, <strong>không</strong> vào mẫu số (SRS 05 bảng trạng thái engine).</li>
+<li>Kiểm chọn lọc không tự thành yêu cầu quét mọi frame (R).</li>
+</ul>
+<h2 id="5-ieu-kien-truoc-khi-bat">5. Điều kiện trước khi bật</h2>
+<table>
+<thead>
+<tr>
+<th>Điều kiện</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Product Owner bác đề xuất không bật (TBD-08)</td>
+<td>Chưa</td>
+</tr>
+<tr>
+<td>Model/provider được chọn; self-host hay API ngoài (A ưu tiên self-host; H chưa chốt)</td>
+<td>Chưa chốt</td>
+</tr>
+<tr>
+<td>Quyền xử lý ảnh: ảnh <strong>không gửi ra ngoài</strong> khi chưa được phép (FR-ENG-10; NFR-09)</td>
+<td>Pilot: không gửi</td>
+</tr>
+<tr>
+<td>Trigger/policy chọn candidate có version</td>
+<td>Chưa chốt</td>
+</tr>
+<tr>
+<td>Ablation chứng minh lợi ích trong budget (T §7–8; R thứ tự triển khai bước 4)</td>
+<td>Chưa đo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-mau-thuan-nguon">6. Mâu thuẫn nguồn</h2>
+<ul>
+<li>H ghi VLM v0.9 "thử nghiệm"; B ghi v0.4. Không phiên bản nào được coi là model sẵn dùng (R mục 8).</li>
+<li>T đưa VLM + RAG vào giai đoạn D; A đưa AI Assistance vào P4. R B-13 chốt lookup trực tiếp, RAG sau MVP — RAG không đi kèm VLM trong MVP.</li>
+</ul>
+<p>Liên quan: <a href="safety-and-data.html">safety-and-data.md</a>, <a href="../03-domain/services.html#3-candidategenerationservice-engine">../03-domain/services.md</a>.</p>
+</article></main></body></html>

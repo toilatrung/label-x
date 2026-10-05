@@ -1,0 +1,123 @@
+name: LabelX CD (target configuration required)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        type: choice
+        options: [staging, production]
+        required: true
+      commit_sha:
+        description: Full SHA tested in both CI and phase-testing
+        type: string
+        required: true
+      ci_run_id:
+        description: Successful LabelX CI run on trusted main
+        type: string
+        required: true
+      test_run_id:
+        description: Successful Phase Testing MVP suite at the same SHA
+        type: string
+        required: true
+      staging_run_id:
+        description: Required for production; successful staging of the same CI/test runs
+        type: string
+        required: false
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+concurrency:
+  group: cd-${{ inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  promote:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+      SOURCE_SHA: ${{ inputs.commit_sha }}
+      CI_RUN_ID: ${{ inputs.ci_run_id }}
+      TEST_RUN_ID: ${{ inputs.test_run_id }}
+      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+      LABELX_CD_ENABLED: ${{ vars.LABELX_CD_ENABLED }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Validate input syntax
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$CI_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$TEST_RUN_ID" =~ ^[0-9]+$ ]]
+          if [ "$DEPLOY_ENVIRONMENT" = production ]; then
+            [[ "$STAGING_RUN_ID" =~ ^[0-9]+$ ]]
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Block unconfigured deployment targets
+        run: node scripts/ci/quality-gate.cjs deploy-preflight --environment "$DEPLOY_ENVIRONMENT"
+      - name: Verify actual environment protection settings
+        run: |
+          mkdir -p .ci-artifacts/upstream
+          gh api "repos/$GITHUB_REPOSITORY/environments/$DEPLOY_ENVIRONMENT" > .ci-artifacts/upstream/environment.json
+          node scripts/ci/quality-gate.cjs verify-environment --file .ci-artifacts/upstream/environment.json --environment "$DEPLOY_ENVIRONMENT"
+      - name: Verify trusted upstream workflows and matching commit
+        run: |
+          mkdir -p .ci-artifacts/upstream
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID" > .ci-artifacts/upstream/ci.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$TEST_RUN_ID" > .ci-artifacts/upstream/tests.json
+          node scripts/ci/quality-gate.cjs verify-upstream --file .ci-artifacts/upstream/ci.json --sha "$SOURCE_SHA" --workflow .github/workflows/ci.yml
+          node scripts/ci/quality-gate.cjs verify-upstream --file .ci-artifacts/upstream/tests.json --sha "$SOURCE_SHA" --workflow .github/workflows/phase-testing.yml
+      - uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ inputs.ci_run_id }}
+          github-token: ${{ github.token }}
+          pattern: '*-${{ inputs.commit_sha }}'
+          path: .ci-artifacts/build
+      - uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ inputs.test_run_id }}
+          github-token: ${{ github.token }}
+          name: phase-evidence-${{ inputs.commit_sha }}
+          path: .ci-artifacts/phases
+      - name: Require every MVP phase at the same commit
+        run: node scripts/ci/quality-gate.cjs verify-suite --sha "$SOURCE_SHA"
+      - name: Load successful staging run for production promotion
+        if: inputs.environment == 'production'
+        run: gh api "repos/$GITHUB_REPOSITORY/actions/runs/$STAGING_RUN_ID" > .ci-artifacts/upstream/staging.json
+      - uses: actions/download-artifact@v8
+        if: inputs.environment == 'production'
+        with:
+          run-id: ${{ inputs.staging_run_id }}
+          github-token: ${{ github.token }}
+          name: staging-verification-${{ inputs.commit_sha }}
+          path: .ci-artifacts/staging
+      - name: Block production without identical staging evidence
+        if: inputs.environment == 'production'
+        run: node scripts/ci/quality-gate.cjs verify-staging --receipt .ci-artifacts/staging/staging-verification.json --run .ci-artifacts/upstream/staging.json --sha "$SOURCE_SHA" --ci-run-id "$CI_RUN_ID" --test-run-id "$TEST_RUN_ID"
+      - name: Deploy the already-built artifacts to configured target
+        id: deploy
+        run: bash "scripts/deploy/$DEPLOY_ENVIRONMENT.sh" "$SOURCE_SHA" .ci-artifacts/build
+      - name: Target-specific smoke check
+        id: smoke
+        run: bash scripts/deploy/smoke.sh "$DEPLOY_ENVIRONMENT" "$SOURCE_SHA"
+      - name: Record successful staging artifact identity
+        if: inputs.environment == 'staging'
+        run: |
+          mkdir -p .ci-artifacts/staging
+          node -e 'const fs=require("fs");const e=process.env;fs.writeFileSync(".ci-artifacts/staging/staging-verification.json",JSON.stringify({status:"passed",environment:"staging",source_sha:e.SOURCE_SHA,ci_run_id:e.CI_RUN_ID,test_run_id:e.TEST_RUN_ID,staging_run_id:e.GITHUB_RUN_ID}));'
+      - uses: actions/upload-artifact@v7
+        if: inputs.environment == 'staging'
+        with:
+          name: staging-verification-${{ inputs.commit_sha }}
+          path: .ci-artifacts/staging/staging-verification.json
+          if-no-files-found: error
+      - name: Roll back failed deploy/smoke
+        if: failure() && (steps.deploy.outcome == 'failure' || steps.smoke.outcome == 'failure')
+        run: bash scripts/deploy/rollback.sh "$DEPLOY_ENVIRONMENT" "$SOURCE_SHA"

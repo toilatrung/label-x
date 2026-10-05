@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Rules và Thresholds</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="configuration" active-item="rules" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Rules và Thresholds</h1>
+<p class="lx-lead">Quy tắc kiểm tra tự động, ngưỡng và chính sách lấy mẫu áp dụng cho các lần chạy phân tích mới. Thay đổi được lưu thành phiên bản cấu hình mới, không ảnh hưởng snapshot đã khoá.</p>
+</div>
+<div class="lx-actions"><span class="lx-hint">Cấu hình hiện tại v7</span><button class="lx-btn lx-btn--primary">Lưu thành v8</button></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isRules}}" hint-placeholder-val="{{true}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 760px">
+<thead><tr><th style="width: 64px">Bật</th><th>Mã</th><th>Quy tắc</th><th>Nhóm</th><th>Ngưỡng</th><th>Mức độ</th><th></th></tr></thead>
+<tbody>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="S-001"><span></span></label></td><td class="lx-mono">S-001</td><td class="lx-cell__main">Thiếu thuộc tính bắt buộc</td><td class="lx-muted">Schema</td><td class="lx-muted">—</td><td><span class="lx-badge lx-badge--danger">Nghiêm trọng</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh quy tắc" aria-label="Chỉnh quy tắc"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="G-009"><span></span></label></td><td class="lx-mono">G-009</td><td class="lx-cell__main">Biên polygon lệch so với vật thể</td><td class="lx-muted">Geometry</td><td class="lx-muted">Dung sai 2 px</td><td><span class="lx-badge lx-badge--warning">Trung bình</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh quy tắc" aria-label="Chỉnh quy tắc"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="G-014"><span></span></label></td><td class="lx-mono">G-014</td><td class="lx-cell__main">Bounding box quá nhỏ hoặc nằm ngoài khung</td><td class="lx-muted">Geometry</td><td class="lx-muted">Tối thiểu 24 px²</td><td><span class="lx-badge lx-badge--warning">Trung bình</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh quy tắc" aria-label="Chỉnh quy tắc"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="D-002"><span></span></label></td><td class="lx-mono">D-002</td><td class="lx-cell__main">Hai annotation chồng lấn cùng lớp</td><td class="lx-muted">Duplicate</td><td class="lx-muted">Intersection over Union ≥ 0.85</td><td><span class="lx-badge lx-badge--warning">Trung bình</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh quy tắc" aria-label="Chỉnh quy tắc"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" aria-label="A-003"><span></span></label></td><td class="lx-mono">A-003</td><td class="lx-cell__main">Thuộc tính occluded thiếu nhất quán</td><td class="lx-muted">Attribute</td><td class="lx-muted">—</td><td><span class="lx-badge">Nhẹ</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh quy tắc" aria-label="Chỉnh quy tắc"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+
+<sc-if value="{{isGate}}" hint-placeholder-val="{{false}}">
+<div class="lx-card__body lx-grid lx-grid--3">
+<div class="lx-field"><label class="lx-label" for="t1">Coverage tối thiểu để phát hành</label><input id="t1" class="lx-input" value="95%"></div>
+<div class="lx-field"><label class="lx-label" for="t2">Lỗi nghiêm trọng chưa đóng tối đa</label><input id="t2" class="lx-input" value="0"></div>
+<div class="lx-field"><label class="lx-label" for="t3">Tỷ lệ lỗi còn sót tối đa</label><input id="t3" class="lx-input" value="5%"></div>
+<div class="lx-field"><label class="lx-label" for="t4">Mức thống nhất reviewer tối thiểu</label><input id="t4" class="lx-input" value="90%"></div>
+<div class="lx-field"><label class="lx-label" for="t5">Rework bắt buộc đã xác minh</label><input id="t5" class="lx-input" value="100%"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isSampling}}" hint-placeholder-val="{{false}}">
+<div class="lx-card__body lx-grid lx-grid--3">
+<div class="lx-field"><label class="lx-label" for="s1">Kiểm tra ngẫu nhiên · tỷ lệ frame</label><input id="s1" class="lx-input" value="0.8%"><span class="lx-hint">Tối thiểu 100 frame mỗi lần chạy</span></div>
+<div class="lx-field"><label class="lx-label" for="s2">Lấy mẫu theo rủi ro · tỷ lệ frame</label><input id="s2" class="lx-input" value="0.8%"></div>
+<div class="lx-field"><label class="lx-label" for="s3">Cách chọn seed</label><select id="s3" class="lx-select"><option>Tự sinh và lưu vào manifest</option><option>Nhập thủ công</option></select></div>
+</div>
+</sc-if>
+
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'rules';
+    return {
+      isRules: cur === 'rules', isGate: cur === 'gate', isSampling: cur === 'sampling',
+      tabs: [['rules','Quy tắc kiểm tra'],['gate','Ngưỡng phát hành'],['sampling','Chính sách lấy mẫu']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

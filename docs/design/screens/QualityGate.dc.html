@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Quality Gate</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="reports" active-item="gate" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="release" step="gate" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Quality Gate</h1>
+<p class="lx-lead">Điều kiện bắt buộc trước khi phát hành Road Vision Urban v1.4. Chỉ phát hành khi mọi điều kiện đạt hoặc có waiver được người có thẩm quyền duyệt.</p>
+</div>
+<div class="lx-actions"><span class="lx-badge lx-badge--danger">Blocked</span></div>
+</div>
+
+<div class="lx-cols">
+
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Điều kiện phát hành</h2><span class="lx-hint">2 đạt · 3 chưa đạt · 1 chờ phê duyệt</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 720px">
+<thead><tr><th>Điều kiện</th><th>Kết quả</th><th>Trạng thái</th><th>Cần làm</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Toàn vẹn phiên bản</td><td class="lx-muted">Snapshot, taxonomy, guideline khớp nhau</td><td><span class="lx-badge lx-badge--success">Đạt</span></td><td class="lx-subtle">—</td></tr>
+<tr><td class="lx-cell__main">Benchmark và kiểm tra mẫu</td><td class="lx-muted">Benchmark v1.2 đã đính kèm</td><td><span class="lx-badge lx-badge--success">Đạt</span></td><td class="lx-subtle">—</td></tr>
+<tr><td class="lx-cell__main">Coverage</td><td class="lx-muted"><span class="is-warn" style="font-weight: 600">92.4%</span> / ngưỡng 95%</td><td><span class="lx-badge lx-badge--danger">Chưa đạt</span></td><td>Chạy bổ sung hoặc xin waiver</td></tr>
+<tr><td class="lx-cell__main">Lỗi nghiêm trọng</td><td class="lx-muted"><span class="is-bad" style="font-weight: 600">3</span> chưa đóng</td><td><span class="lx-badge lx-badge--danger">Chưa đạt</span></td><td>Sửa và xác minh</td></tr>
+<tr><td class="lx-cell__main">Rework</td><td class="lx-muted">12 yêu cầu bắt buộc chưa xác minh</td><td><span class="lx-badge lx-badge--danger">Chưa đạt</span></td><td><a class="lx-link" href="ReworkTracking.dc.html">Mở Rework Tracking</a></td></tr>
+<tr><td class="lx-cell__main">Phê duyệt</td><td class="lx-muted">Chưa gửi phê duyệt</td><td><span class="lx-badge">Chờ</span></td><td class="lx-subtle">Sau khi các điều kiện trên đạt</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<aside class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Phê duyệt phát hành</h2></div>
+<div class="lx-card__body lx-stack">
+<p class="lx-muted" style="margin: 0; font-size: 13px">Chưa thể phát hành vì còn 3 điều kiện chưa đạt. Hệ thống không tự quyết định phát hành.</p>
+<button class="lx-btn lx-btn--primary" disabled="" style="justify-content: center">Phê duyệt phát hành</button>
+<div class="lx-stack" style="gap: 8px; padding-top: 12px; border-top: 1px solid var(--border)">
+<span class="lx-label">Hoặc xin waiver cho điều kiện chưa đạt</span>
+<div class="lx-field"><label class="lx-label" for="w1">Điều kiện</label><select id="w1" class="lx-select"><option>Coverage</option><option>Lỗi nghiêm trọng</option><option>Rework</option></select></div>
+<div class="lx-field"><label class="lx-label" for="w2">Lý do (bắt buộc)</label><textarea id="w2" class="lx-textarea" placeholder="Nêu rõ người chịu trách nhiệm và căn cứ. Mọi waiver đều được ghi vào nhật ký kiểm toán."></textarea></div>
+<button class="lx-btn">Gửi xin waiver</button>
+</div>
+</div>
+</aside>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

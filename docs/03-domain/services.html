@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domain service và quy tắc nghiệp vụ — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/03-domain/services.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 03-domain / services</span><span class="sp"></span>
+<a href="services.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>domain-services</span><b>title</b><span>Domain service và quy tắc nghiệp vụ</span><b>type</b><span>reference</span><b>domain</b><span>domain</span><b>module</b><span>quality-control</span><b>tags</b><span>[domain, services, business-rules, matching]</span><b>priority</b><span>1</span></div>
+<h1 id="domain-service-va-quy-tac-nghiep-vu">Domain service và quy tắc nghiệp vụ</h1>
+<p>Domain service chứa logic không thuộc riêng một aggregate: matching, gộp candidate, xếp hạng, coverage ledger, đánh giá và gate. Aggregate ở <a href="aggregates.html">aggregates.md</a>, value object ở <a href="value-objects.html">value-objects.md</a>.</p>
+<p><strong>Quy ước mã quy tắc</strong></p>
+<ul>
+<li><code>BR-01…BR-17</code>, <code>EX-01…EX-10</code>: mã gốc của SRS (<a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>, <a href="../label-x_system-requirement-specification/sections/07-evaluation.tex">07-evaluation.tex</a>); giữ nguyên nghĩa.</li>
+<li><code>DR-xx</code>: mã do tài liệu này đặt để truy vết các quy tắc rút từ FR/B-xx; <strong>không</strong> phải mã SRS. Mỗi DR ghi nguồn.</li>
+</ul>
+<p>Mọi service phải tất định với cùng input/version/seed (R R-01; NFR-04) và không tự đặt ngưỡng: tham số chưa chốt ghi mã TBD.</p>
+<h2 id="1-matchingservice">1. MatchingService</h2>
+<p>Thuật toán matching một-một, không phụ thuộc lớp, dùng chung cho ba mục đích: GT ↔ annotation (suy ra <code>E</code>), dự đoán Detector ↔ annotation (sinh candidate E1/E2), GT ↔ GT (ghép hai bản reference, BR-11) (SRS 03 §Matching; FR-ENG-06).</p>
+<p><strong>Thuật toán</strong> (theo frame):</p>
+<ol>
+<li>Tính IoU mọi cặp box hai tập, <strong>không xét lớp</strong>.</li>
+<li>Loại cạnh IoU &lt; <code>τ_m</code> trước khi tối ưu (<code>τ_m</code>: <strong>TBD-05</strong>, SRS đề xuất 0,5).</li>
+<li>Giải bài toán gán (Hungarian): tối đa số cặp, rồi tối đa tổng IoU.</li>
+<li>Phá hoà tất định: IoU lớn hơn, rồi ID đối tượng nhỏ hơn (ID ổn định trong snapshot).</li>
+<li>Cặp IoU trong <code>[τ_amb, τ_m)</code> ghi <strong>ambiguous</strong>, đưa vào evidence (<code>τ_amb</code>: <strong>TBD-05</strong>).</li>
+<li>Khi so với Detector: lọc dự đoán confidence ≥ <code>τ_conf</code> trước khi matching; <code>τ_conf</code> chọn trên tập hiệu chỉnh và khoá trong pre-registration (SRS 07 §Đăng ký trước).</li>
+<li>Kết quả là <strong>association</strong>, không phải Precision/Recall của annotation (R B-21).</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-01</td>
+<td>Matching là bước của engine Mô hình độc lập để sinh candidate; nó chạy được khi không có GT. Metric (accuracy) là thao tác riêng, chỉ chạy khi có GT đã khoá.</td>
+<td>R B-21; SRS FR-EVL-15</td>
+</tr>
+<tr>
+<td>DR-02</td>
+<td>Agreement giữa Detector và annotation không được gọi là Precision/Recall hay accuracy.</td>
+<td>R B-21; H Calibration</td>
+</tr>
+<tr>
+<td>DR-03</td>
+<td>Metric engine dùng chung GT nhưng có thể có đặc tả matching riêng (ví dụ IoU theo lớp); khi đó ghi rõ định nghĩa trong evaluation run.</td>
+<td>BR-17</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-errorderivationservice-suy-ra-tap-loi-reference">2. ErrorDerivationService (suy ra tập lỗi reference)</h2>
+<p>Với <code>G</code> là tập đối tượng GT, <code>A</code> là annotation đang review trên một frame, <code>M ⊆ G × A</code> là kết quả matching:</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR-01</td>
+<td>Mỗi lỗi có ID, đúng một nhóm lỗi, đúng một đối tượng: đối tượng GT (E1/E2) hoặc annotation dư (E3).</td>
+</tr>
+<tr>
+<td>BR-02</td>
+<td>E1: mỗi <code>g ∈ G</code> không thuộc cặp nào của <code>M</code>.</td>
+</tr>
+<tr>
+<td>BR-03</td>
+<td>E2: mỗi cặp <code>(g, a) ∈ M</code> khác lớp.</td>
+</tr>
+<tr>
+<td>BR-04</td>
+<td>E3: <code>a ∉ M</code>, IoU ≥ <code>τ_m</code> với ít nhất một <code>g</code> đã có cặp chính; chọn <code>g</code> IoU lớn nhất, phá hoà ID nhỏ; cụm <code>m</code> box sinh <code>m − 1</code> lỗi.</td>
+</tr>
+<tr>
+<td>BR-05</td>
+<td>Lớp của annotation dư không xét (chỉ E3, không cộng E2); cặp chính sai lớp vẫn tính E2.</td>
+</tr>
+<tr>
+<td>BR-06</td>
+<td>Box thừa không khớp GT và không thoả BR-04: ngoài E1–E3, báo cáo riêng, ngoài KPI pilot.</td>
+</tr>
+<tr>
+<td>BR-07</td>
+<td>Đối tượng ignore (diện tích &lt; <code>a_min</code> — <strong>TBD-06</strong>, hoặc che/cắt quá mức theo guideline) không tính tử số lẫn mẫu số.</td>
+</tr>
+<tr>
+<td>BR-14</td>
+<td>Bác lỗi do matching sai ⇒ sửa mapping (có lý do) rồi suy lại; không xoá lỗi trực tiếp.</td>
+</tr>
+</tbody>
+</table>
+<p>Quy tắc lập reference BR-10…BR-17 áp dụng cho aggregate Reference (<a href="aggregates.html#12-reference-gt-và-tập-lỗi-e">aggregates.md §12</a>).</p>
+<h2 id="3-candidategenerationservice-engine">3. CandidateGenerationService (engine)</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-04</td>
+<td>Schema/Taxonomy: lớp thuộc taxonomy version; thuộc tính bắt buộc hợp lệ; sinh cảnh báo cấu trúc có rule ID, expected/actual.</td>
+<td>FR-ENG-02</td>
+</tr>
+<tr>
+<td>DR-05</td>
+<td>Geometry chỉ kiểm cấu trúc/bounds/diện tích (2 px, 24 px²); G-009 Not checked khi chưa có biên tham chiếu; không suy biên vật thể.</td>
+<td>R B-06; FR-ENG-03</td>
+</tr>
+<tr>
+<td>DR-06</td>
+<td>Duplicate/Overlap sinh candidate E3 cho cặp annotation IoU ≥ 0,85 (D-002), kèm IoU và lớp hai box; chỉ là nghi vấn — hai đối tượng thật chồng lấp không là lỗi.</td>
+<td>FR-ENG-04; SRS 03</td>
+</tr>
+<tr>
+<td>DR-07</td>
+<td>Detector chạy trên mọi frame trong phạm vi áp dụng với artifact đã freeze (version, checksum, mapping 10 lớp).</td>
+<td>R B-07; FR-ENG-05</td>
+</tr>
+<tr>
+<td>DR-08</td>
+<td>Dự đoán không ghép, confidence ≥ <code>τ_E1</code> ⇒ candidate E1; cặp ghép khác lớp, confidence lớp dự đoán ≥ <code>τ_E2</code> ⇒ candidate E2. Ngưỡng có version, chọn trên tập hiệu chỉnh.</td>
+<td>FR-ENG-07</td>
+</tr>
+<tr>
+<td>DR-09</td>
+<td>Không có Detector khả dụng ⇒ engine Mô hình độc lập Not checked (<code>no_model</code>); không sinh ranking giả từ engine thiếu.</td>
+<td>FR-ENG-09</td>
+</tr>
+<tr>
+<td>DR-10</td>
+<td>Evidence candidate gồm: box và lớp dự đoán, confidence, IoU, cặp ambiguous, crop ảnh, rule liên quan.</td>
+<td>FR-ENG-08</td>
+</tr>
+<tr>
+<td>DR-11</td>
+<td>Blob upload trước (khoá hash nội dung), rồi commit metadata candidate + evidence + ledger của shard trong một transaction.</td>
+<td>NFR-06; FR-AGG-06</td>
+</tr>
+<tr>
+<td>DR-12</td>
+<td>VLM không bật trong pilot (đề xuất, cần Product Owner duyệt — <strong>TBD-08</strong>). Nếu bật: theo B-08, tối đa 400 candidate/run, tối đa 3 lần thử mỗi lượt kiểm.</td>
+<td>R B-08; FR-ENG-10</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-aggregationservice-candidate-issue">4. AggregationService (Candidate → Issue)</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR-08</td>
+<td>Nhiều candidate từ nhiều engine trỏ cùng (đối tượng, nhóm) gộp thành một issue; gộp không thay đổi <code>E</code>.</td>
+<td>SRS 03</td>
+</tr>
+<tr>
+<td>DR-13</td>
+<td>Upsert issue theo <code>dedup_key</code> = (snapshot, frame, đối tượng tham chiếu, nhóm lỗi) với version policy gộp; giữ toàn bộ provenance candidate.</td>
+<td>FR-AGG-03; R B-10</td>
+</tr>
+<tr>
+<td>DR-14</td>
+<td>Retry cùng khoá idempotent <code>(snapshot, engine, config, model, shard)</code> không tạo candidate/issue trùng.</td>
+<td>FR-AGG-02; AC-02</td>
+</tr>
+<tr>
+<td>DR-15</td>
+<td>Mỗi issue lưu neo và <code>n_i</code> (E1 = 1, E2 = 1, E3 = <code>m − 1</code>); quy tắc neo có version cùng policy gộp.</td>
+<td>FR-RNK-12</td>
+</tr>
+<tr>
+<td>DR-16</td>
+<td>Không tự đóng issue theo confidence; mọi issue cần quyết định của người. Không nhân confidence của các nguồn có lỗi tương quan để tạo mức chắc chắn giả.</td>
+<td>R R-02; T §3 Aggregation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-rankingservice">5. RankingService</h2>
+<p>Chi tiết mô hình điểm ở <a href="../12-ai/risk-scoring.html">../12-ai/risk-scoring.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-17</td>
+<td>Tính <code>s(f)</code> cho <strong>mọi</strong> frame của snapshot trong phạm vi run, kể cả frame không có candidate.</td>
+<td>FR-RNK-01</td>
+</tr>
+<tr>
+<td>DR-18</td>
+<td>Công thức điểm có version, lưu kèm mỗi ranking, không đổi sau khoá.</td>
+<td>FR-RNK-02</td>
+</tr>
+<tr>
+<td>DR-19</td>
+<td>Phá hoà theo <code>SHA256(frame_key ‖ seed)</code>. Cùng snapshot/config/score version/seed ⇒ ranking giống hệt.</td>
+<td>FR-RNK-03, FR-RNK-04</td>
+</tr>
+<tr>
+<td>DR-20</td>
+<td>Lưu đóng góp <code>n_i·q_i</code> từng issue và <code>h(f)</code> để giải thích "vì sao frame được xếp cao".</td>
+<td>FR-RNK-05</td>
+</tr>
+<tr>
+<td>DR-21</td>
+<td>Frame có engine bắt buộc Not checked/Failed mang cờ "thiếu bằng chứng", hiển thị riêng, không coi là điểm thấp an toàn.</td>
+<td>FR-RNK-06; R B-19</td>
+</tr>
+<tr>
+<td>DR-22</td>
+<td>Lát kiểm tra ngẫu nhiên <code>r%</code> frame (<strong>TBD-10</strong>) bằng seed cố định, độc lập ranking, hàng đợi và báo cáo riêng; item ngẫu nhiên không được chấm điểm hay trộn vào hàng đợi rủi ro.</td>
+<td>FR-RNK-07; H AuditSampling</td>
+</tr>
+<tr>
+<td>DR-23</td>
+<td>Tạo được ranking đối chứng trên cùng snapshot: ngẫu nhiên (nhiều seed), heuristic mật độ, heuristic max confidence.</td>
+<td>FR-RNK-08</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-reviewworkflowservice-lease-quyet-inh-phan-xu-rework">6. ReviewWorkflowService (lease, quyết định, phân xử, rework)</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-24</td>
+<td>"Bắt đầu review" cấp lease frame kế tiếp chưa có người giữ, bỏ qua frame mà reviewer là assignee tại snapshot; cấp nguyên tử.</td>
+<td>FR-REV-03; UC-04</td>
+</tr>
+<tr>
+<td>DR-25</td>
+<td>Lease có thời hạn <strong>TBD-09</strong>, gia hạn khi có thao tác; hết hạn ⇒ frame về hàng đợi.</td>
+<td>FR-REV-04</td>
+</tr>
+<tr>
+<td>DR-26</td>
+<td>Chuyển trạng thái issue chỉ theo bảng transition/event/actor/guard; ngoài bảng ⇒ 409.</td>
+<td>R B-17; SRS 05</td>
+</tr>
+<tr>
+<td>DR-27</td>
+<td>Lưu quyết định: lease còn hạn và thuộc actor (409 nếu không), actor không là assignee tại snapshot (403); quyết định + audit cùng transaction.</td>
+<td>FR-REV-10, FR-REV-14; R B-12</td>
+</tr>
+<tr>
+<td>DR-28</td>
+<td>Xác nhận bắt buộc nhóm lỗi và mức độ; bác bỏ/chuyển cấp bắt buộc lý do (400 nếu thiếu).</td>
+<td>FR-REV-08; SRS 09</td>
+</tr>
+<tr>
+<td>DR-29</td>
+<td>"Đã review xong" chỉ khi mọi issue của frame đã có quyết định hoặc đang chờ phân xử; trả lease, dừng ghi effort.</td>
+<td>FR-REV-13</td>
+</tr>
+<tr>
+<td>DR-30</td>
+<td>Người phân xử khác người chuyển cấp; kết luận bắt buộc rule áp dụng và lý do; lưu Decision Case có version.</td>
+<td>FR-ESC-02…04</td>
+</tr>
+<tr>
+<td>DR-31</td>
+<td>Guideline còn thiếu ⇒ Guideline Gap gắn rule, issue chờ guideline version mới; không ép annotator sửa theo rule tự suy.</td>
+<td>FR-ESC-05; R phân công MVP</td>
+</tr>
+<tr>
+<td>DR-32</td>
+<td>"Đã sửa" yêu cầu revision mới khác revision gốc; re-check engine liên quan; verify bởi người khác annotator đã sửa.</td>
+<td>FR-RWK-03…05</td>
+</tr>
+<tr>
+<td>DR-33</td>
+<td>Mọi yêu cầu sửa trong phạm vi đã đóng ⇒ snapshot toàn phạm vi + QC run cuối <code>is_final</code>, liên kết verification trước đó; run gốc giữ nguyên.</td>
+<td>FR-RWK-06; R B-03</td>
+</tr>
+<tr>
+<td>DR-34</td>
+<td>Super Admin ghi đè phải có lý do, audit gắn nhãn, vẫn chịu self-review và tách nhiệm vụ; không là người duyệt mặc định.</td>
+<td>FR-SEC-06; R B-12</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-coverageledgerservice">7. CoverageLedgerService</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-35</td>
+<td>Ledger riêng từng engine với policy version: đơn vị áp dụng theo <a href="value-objects.html#coverageunit">CoverageUnit</a>; chốt applicability <strong>trước</strong> chạy.</td>
+<td>R B-04, cấu hình MVP</td>
+</tr>
+<tr>
+<td>DR-36</td>
+<td>Không loại đơn vị lỗi khỏi mẫu số để tăng coverage.</td>
+<td>R B-04; FR-AGG-04</td>
+</tr>
+<tr>
+<td>DR-37</td>
+<td><code>not_triggered</code> (VLM, nếu bật) không vào mẫu số kiểm chọn lọc; các lý do Not checked khác vẫn làm coverage engine bắt buộc chưa đạt.</td>
+<td>SRS 05 bảng trạng thái engine</td>
+</tr>
+<tr>
+<td>DR-38</td>
+<td>Kiểm chọn lọc không tự thành yêu cầu quét mọi frame; coverage frame chung chỉ là tiến độ, gate kiểm ledger riêng từng engine bắt buộc.</td>
+<td>R cấu hình MVP; FR-RPT-04</td>
+</tr>
+<tr>
+<td>DR-39</td>
+<td>Engine bắt buộc trong MVP: kiểm xác định (Schema/Taxonomy, Geometry, Duplicate/Overlap) trong scope; Detector bắt buộc trong pilot đánh giá discovery. Thiếu reference ⇒ Metric Not checked, accuracy "chưa đánh giá".</td>
+<td>R cấu hình MVP</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-evaluationservice">8. EvaluationService</h2>
+<p>Chi tiết phương pháp ở <a href="../12-ai/evaluation.html">../12-ai/evaluation.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-40</td>
+<td>Recall@k theo <strong>lỗi</strong>, <code>n_k = ⌈kN⌉</code>, <code>k</code> mặc định 0,2; chỉ tính khi <code>|E| ≥ E_min</code> (<strong>TBD-K4</strong>).</td>
+<td>FR-EVL-07, FR-EVL-10</td>
+</tr>
+<tr>
+<td>DR-41</td>
+<td>Khoảng tin cậy 95% bằng cluster bootstrap theo video nguồn, <code>B ≥ 1000</code>, kèm hiệu số với từng ranking đối chứng.</td>
+<td>FR-EVL-09</td>
+</tr>
+<tr>
+<td>DR-42</td>
+<td>Chống rò rỉ: tập hiệu chỉnh và held-out không giao theo video; không học tham số trên held-out; Detector không huấn luyện trên ảnh held-out (AS-03); loại case hiệu chỉnh khỏi GT held-out.</td>
+<td>FR-EVL-05; BR-16</td>
+</tr>
+<tr>
+<td>DR-43</td>
+<td>Ở nhánh baseline, Workspace ẩn ranking, risk score, evidence engine.</td>
+<td>FR-EVL-12; EX-04</td>
+</tr>
+<tr>
+<td>DR-44</td>
+<td>Chỉ số thiếu dữ liệu hiển thị Not checked / không đủ mẫu; không hiển thị 0% hay đạt. Random và risk báo cáo riêng.</td>
+<td>FR-RPT-02, FR-RPT-03; R B-05</td>
+</tr>
+<tr>
+<td>EX-01…EX-10</td>
+<td>Quy tắc thí nghiệm effort (gán ngẫu nhiên, chia D1/D2, bản sao annotation riêng, điểm kết thúc, chống carryover…).</td>
+<td>SRS 07</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-gateservice">9. GateService</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DR-45</td>
+<td>Gate tính trên QC run cuối (hoặc run gốc nếu chưa có rework, ghi rõ) với điều kiện cấu hình pilot: coverage engine bắt buộc ≥ 95%, critical chưa đóng = 0, rework bắt buộc verify 100%, residual ≤ 5%, đồng thuận reviewer ≥ 90%.</td>
+<td>FR-GTE-01; R cấu hình MVP; H RulesThresholds</td>
+</tr>
+<tr>
+<td>DR-46</td>
+<td>Mỗi điều kiện có nguồn, scope, mẫu số, cỡ mẫu; thiếu dữ liệu ⇒ chưa đạt, không tự đạt.</td>
+<td>FR-GTE-02; R B-15</td>
+</tr>
+<tr>
+<td>DR-47</td>
+<td>Residual (G-4) ước lượng từ lát kiểm tra ngẫu nhiên, không từ mẫu theo rủi ro; tiêu chí đủ mẫu và cách dùng khoảng tin cậy chưa chốt (R B-15).</td>
+<td>H AuditSampling; SRS 02 G-4</td>
+</tr>
+<tr>
+<td>DR-48</td>
+<td>Đồng thuận reviewer (G-3) tách khỏi accuracy engine; "Chưa chắc chắn" tính là không trùng.</td>
+<td>SRS 02 G-3; R B-15</td>
+</tr>
+<tr>
+<td>DR-49</td>
+<td>Waiver theo policy từng điều kiện; người duyệt khác người yêu cầu; hiệu lực sau duyệt; hết hạn ⇒ chưa đạt; không đổi Not checked thành pass. Danh sách điều kiện được miễn và policy từng điều kiện: <strong>TBD-19</strong>.</td>
+<td>R B-11; FR-GTE-03, FR-SEC-04</td>
+</tr>
+<tr>
+<td>DR-50</td>
+<td>Không phát hành khi thiếu toàn vẹn revision, approval, rework bắt buộc chưa verify, hoặc critical chưa xử lý mà không có waiver hợp lệ. Hệ thống/AI không tự quyết định phát hành.</td>
+<td>R cấu hình MVP; H QualityGate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-guidelinelookupservice">10. GuidelineLookupService</h2>
+<ul>
+<li>Tra mapping (nhóm lỗi, lớp, cặp lớp) → rule ID; hiển thị trích đoạn, version áp dụng cho snapshot, section, Decision Case cùng rule (FR-GDL-02, FR-GDL-03; UC-12).</li>
+<li>Không dùng retrieval ngữ nghĩa/RAG (FR-GDL-04; R B-13). Kho case cho RAG là hướng sau MVP.</li>
+</ul>
+<h2 id="11-cac-tham-so-con-mo-lien-quan">11. Các tham số còn mở liên quan</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nội dung</th>
+<th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TBD-05</td>
+<td><code>τ_m</code>, <code>τ_amb</code></td>
+<td>Matching</td>
+</tr>
+<tr>
+<td>TBD-06</td>
+<td><code>a_min</code>, quy tắc ignore</td>
+<td>ErrorDerivation</td>
+</tr>
+<tr>
+<td>TBD-07</td>
+<td>Định nghĩa mức độ nghiêm trọng</td>
+<td>Review, Gate</td>
+</tr>
+<tr>
+<td>TBD-08</td>
+<td>Duyệt đề xuất không bật VLM</td>
+<td>CandidateGeneration</td>
+</tr>
+<tr>
+<td>TBD-09</td>
+<td>Thời hạn lease, gia hạn</td>
+<td>ReviewWorkflow</td>
+</tr>
+<tr>
+<td>TBD-10</td>
+<td>Tỉ lệ lát ngẫu nhiên <code>r</code></td>
+<td>Ranking</td>
+</tr>
+<tr>
+<td>TBD-14</td>
+<td>Số lần retry, backoff shard</td>
+<td>Orchestration</td>
+</tr>
+<tr>
+<td>TBD-16</td>
+<td><code>n_min</code> issue dương mỗi nhóm để học score</td>
+<td>Ranking</td>
+</tr>
+<tr>
+<td>TBD-19</td>
+<td>Danh sách điều kiện gate được waiver, policy từng điều kiện</td>
+<td>Gate</td>
+</tr>
+<tr>
+<td>TBD-20</td>
+<td>Timeout mỗi lượt VLM, <code>t_gc</code>, <code>ε</code> của <code>score_v0</code>, số chữ số làm tròn toạ độ khi hash</td>
+<td>CandidateGeneration, Ranking, Snapshot</td>
+</tr>
+<tr>
+<td>TBD-21</td>
+<td>Đặc tả Model Orchestrator</td>
+<td>Evaluation</td>
+</tr>
+<tr>
+<td>TBD-K1…K4</td>
+<td>Ngưỡng KPI-1, KPI-2, <code>δ</code>/<code>δ_fp</code>, <code>E_min</code></td>
+<td>Evaluation</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

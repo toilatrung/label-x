@@ -1,0 +1,21 @@
+Quy ước: tên `.tex` thuộc thư mục `sections`. Review tĩnh, không biên dịch và không sửa file.
+
+1. **(A) Chưa thấy lỗi biên dịch khả năng cao.** `06-functional.tex:149`: kiểm tra lại cho thấy `frame\_key` đã escape đúng; nhận định sơ bộ về dấu gạch dưới được rút lại. Các macro và môi trường bảng đều có định nghĩa/package tương ứng.
+
+2. **(B) Calibration chưa có tiêu chí kiểm chứng.** `06-functional.tex:95`, `06-functional.tex:130`: logistic không bảo đảm xác suất đúng; confidence Detector cũng không phải xác suất annotation sai. Thiếu kiểm tra calibration theo E1–E3 và quy tắc “đủ nhãn”. Nên kiểm bằng dự đoán ngoài fold, reliability/Brier. [Tài liệu calibration](https://scikit-learn.org/stable/modules/calibration.html).
+
+3. **(B) Noisy-OR thổi điểm khi candidate phụ thuộc.** `06-functional.tex:98`: hai candidate trùng bằng chứng, cùng \(p=0,6\), tạo \(p_i=0,84\). Gộp ID không loại được tương quan. Cần học xác suất ở cấp issue hoặc quy định xử lý nguồn phụ thuộc.
+
+4. **(B) Đơn vị issue chưa khớp đơn vị lỗi.** `06-functional.tex:74`, `06-functional.tex:104`: E1 chưa có annotation để làm khóa; E3 sinh theo cặp nhưng `03-data-errors.tex:218` đếm \(m-1\) annotation dư. Ba box có thể tạo ba candidate nhưng chỉ hai lỗi. Thiếu policy ánh xạ, nên tổng \(p_i\) chưa chắc là kỳ vọng số lỗi.
+
+5. **(B) Điểm nền chưa đủ đặc tả.** `06-functional.tex:106`: thiếu nhãn mục tiêu, thuật toán, ràng buộc không âm và cách tránh đếm lại lỗi đã có candidate. `06-functional.tex:132` đặt \(\beta=0\), khiến frame không candidate đồng điểm 0, kể cả frame thiếu kiểm tra; cờ cảnh báo không khắc phục ranking.
+
+6. **(B) Tuyên bố tối ưu quá mạnh.** `06-functional.tex:85`: tổng kỳ vọng phù hợp ngân sách frame khi mỗi lỗi được tính đúng một lần và mẫu số reference cố định. Công thức hiện tại chưa chứng minh các điều kiện này; logistic tối ưu phân loại candidate cũng không trực tiếp tối ưu Recall@20%. Cần kiểm held-out và ablation điểm nền/gộp issue. Tổng kỳ vọng không đòi các issue độc lập.
+
+7. **(B/C) Guard chống leakage thiếu.** `06-functional.tex:259` chỉ chặn học điểm trên held-out, chưa kiểm dữ liệu huấn luyện Detector theo AS-03, cũng chưa thể hiện kiểm case guideline/hiệu chỉnh theo `03-data-errors.tex:171`.
+
+8. **(C) Lệch B-08 đã chốt.** `06-functional.tex:56` mặc định tắt VLM, còn `architecture_review.html:69` chọn pipeline A: tối đa 400 candidate/run, ba lần thử tổng cộng. SRS thiếu các giới hạn này và đang dùng phương án khác.
+
+9. **(C) Chuyển báo cáo sang run cuối quá sớm.** `06-functional.tex:220`: thiếu guard Completed/đủ coverage và xử lý lỗi mới, trong khi `04-usecases.tex:261` yêu cầu rõ.
+
+10. **(C) Thiếu yêu cầu hoàn tất frame.** `06-functional.tex:175`: chỉ nêu hai chế độ có trong `ReviewWorkspace.dc.html:34`; chưa quy định “Đã review xong”, trả lease và chặn lưu khi lease hết hạn như `04-usecases.tex:213`, `04-usecases.tex:218`.

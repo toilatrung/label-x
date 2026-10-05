@@ -1,0 +1,19 @@
+Đã đối chiếu chương 2, 3, 6; không sửa file. Các đường dẫn dưới đây thuộc thư mục `sections`.
+
+1. **(A) `07-evaluation.tex:65`:** Chưa thấy lỗi biên dịch xác suất cao qua kiểm tra tĩnh; preamble có thư viện positioning, màu, kiểu node và `compat=1.16`. **Chưa biên dịch trên TeXPage**: không có phiên/dự án TeXPage được cung cấp; máy cũng không có `xelatex`. Không thể xác nhận build thành công.
+
+2. **(B) `07-evaluation.tex:156`: Crossover chưa đủ đặc tả.** “Chia cân bằng” chưa bảo đảm ngẫu nhiên hoá chuỗi BA/AB. D1/D2 gắn cố định với đợt nên hiệu ứng dữ liệu và đợt bị lẫn. Cần quy tắc phân frame cho reviewer, mô hình điều chỉnh reviewer/đợt/dữ liệu và estimand effort rõ ràng.
+
+3. **(B) `07-evaluation.tex:158`: Carryover vẫn tồn tại.** Bản sao riêng ngăn lan truyền sửa annotation, nhưng không ngăn reviewer mang kỹ năng/evidence từ assisted sang baseline; case phân xử cũng có thể lan giữa nhóm. Cần khoá guideline/case, ngăn trao đổi và định trước phân tích chỉ đợt 1 hoặc thiết kế song song.
+
+4. **(B) `07-evaluation.tex:51`, `07-evaluation.tex:178`: Bootstrap chưa tái lập được.** KPI-1 cần quy định lấy lại toàn video, xử lý bản sao, tính lại N/top 20% và ranking đối chứng. KPI-2 có reviewer × video giao nhau: cần bootstrap phù hợp, giữ cặp hai điều kiện của reviewer và hai bản dữ liệu. Chưa nêu cách tạo CI effort; bốn reviewer không bảo đảm suy luận ổn định.
+
+5. **(B) `07-evaluation.tex:175`:** Non-inferiority là “không kém hơn quá δ”, chưa chứng minh tương đương. Chuẩn hoá \(H_0:\rho_A-\rho_B\ge\delta\), chốt quy tắc biên. Cận trên CI hai phía 95% tương ứng kiểm định một phía α=0,025; α=0,05 dùng cận một phía 95%. Cần cơ sở chọn δ và power theo thiết kế cụm. [FDA](https://www.fda.gov/media/78504/download?attachment=)
+
+6. **(B) `07-evaluation.tex:170`: Residual lệch định nghĩa.** Lỗi/đối tượng GT khác G-4 “qua kiểm tra ngẫu nhiên” (`02-overview.tex:90`). E3 có thể làm tỷ lệ vượt 100%; mẫu số bằng 0 chưa xử lý. BR-06 bỏ box thừa nên sửa gây box giả có thể vẫn vượt nghiệm thu. Cần phân biệt residual toàn tập, ước lượng từ mẫu và guardrail lỗi ngoài E1–E3.
+
+7. **(B) `07-evaluation.tex:160`: Stopping rule thiếu chi tiết.** Chưa nêu cách chọn k*, mẫu số r%, làm tròn, seed, loại trùng, xử lý issue chờ và issue mới từ run cuối (`06-functional.tex:255`). Cần khoá thuật toán dừng và điểm kết thúc đo effort.
+
+8. **(B) `07-evaluation.tex:159`:** So baseline toàn bộ với assisted một phần hợp lệ nếu đánh giá **hai quy trình** trên cùng dữ liệu và chất lượng cuối toàn tập. Cần cân bằng nhân lực/QA, quyền guideline, quy trình verify; t_idle có thể loại nhầm thời gian suy nghĩ. Không thể quy toàn bộ lợi ích cho ranking.
+
+9. **(C) `07-evaluation.tex:239`:** AC-08/09 chưa quyết định đạt/trượt khi K1/K2/δ/cỡ mẫu còn TBD. `07-evaluation.tex:187` cho phép assisted còn lỗi nghiêm trọng nếu baseline cũng còn, trái G-2=0; “còn mở” còn bỏ sót lỗi chưa tạo issue. AC-01 (`:232`) cần chuẩn hoá trường ID/thời gian trước khi hash.

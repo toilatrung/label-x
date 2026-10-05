@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tích hợp CVAT (adapter chỉ đọc) — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/11-integrations/cvat.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 11-integrations / cvat</span><span class="sp"></span>
+<a href="cvat.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>integration-cvat</span><b>title</b><span>Tích hợp CVAT (adapter chỉ đọc)</span><b>type</b><span>reference</span><b>domain</b><span>integrations</span><b>module</b><span>cvat-adapter</span><b>tags</b><span>[integrations, cvat, adapter, read-only, deep-link]</span><b>priority</b><span>1</span></div>
+<h1 id="tich-hop-cvat">Tích hợp CVAT</h1>
+<h2 id="1-ranh-gioi">1. Ranh giới</h2>
+<ul>
+<li>CVAT là hệ thống nguồn của annotation, đồng thời là <strong>editor duy nhất</strong>. LabelX chỉ đọc cấu trúc Project/Task/Job/Frame, annotation và ảnh (nguồn: H <code>Main.dc.html</code>; R B-18; FR-SNP-01).</li>
+<li>Adapter <strong>không có</strong> bất kỳ đường gọi nào để tạo, sửa hay xoá annotation. Annotation writeback mà T §6 đề xuất <strong>ngoài phạm vi</strong>.</li>
+<li>Mirror Rework thành CVAT issue/comment (A §21) và chuyển stage job chỉ được cân nhắc sau khi API và quyền đã được xác minh. Hai việc này không thuộc MVP (R B-18; R cấu hình "CVAT version/quyền").</li>
+<li>Engine không bao giờ đọc CVAT trực tiếp. Mọi engine đọc snapshot đã khoá (A ADR-02; R-01).</li>
+</ul>
+<h2 id="2-phien-ban-va-cau-hinh">2. Phiên bản và cấu hình</h2>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Giá trị</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phiên bản CVAT</td>
+<td><strong>TBD-01</strong>: giữ phiên bản đang triển khai, pin sau khi kiểm API thật</td>
+<td>R; SRS §9.2; DEC-001 "Negative"</td>
+</tr>
+<tr>
+<td>Edition (self-host hay cloud)</td>
+<td><strong>TBD-01</strong></td>
+<td>T §6</td>
+</tr>
+<tr>
+<td><code>cvat-sdk</code> / client</td>
+<td>Chưa pin; trong lúc chờ, client gọi REST bằng <code>httpx</code> (có sẵn trong <a href="../../src/backend/pyproject.toml">pyproject.toml</a>)</td>
+<td>DEC-001</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>Biến <code>CVAT_BASE_URL</code></td>
+<td><a href="../../src/backend/config/settings.py">settings.py</a></td>
+</tr>
+<tr>
+<td>Token</td>
+<td>Biến <code>CVAT_SERVICE_TOKEN</code>: service account <strong>chỉ đọc</strong>; quyền token thuộc <strong>TBD-01</strong></td>
+<td>FR-SNP-02; R B-12</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-thao-tac-chi-oc">3. Thao tác (chỉ đọc)</h2>
+<p>Theo SRS <code>tab:cvatapi</code>. Đường dẫn endpoint cụ thể phụ thuộc phiên bản pin (TBD-01), nên <strong>chưa</strong> được ghi ở đây.</p>
+<table>
+<thead>
+<tr>
+<th>Thao tác</th>
+<th>Mục đích</th>
+<th>Dùng ở</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liệt kê project, task, job</td>
+<td>Chọn scope; lấy assignee và thời điểm cập nhật (<code>updated_date</code>)</td>
+<td><code>GET /api/datasets…</code>; <code>export_job</code>; <code>verify_and_lock</code></td>
+</tr>
+<tr>
+<td>Đọc annotation của job</td>
+<td>Lấy shape (rectangle), label, attribute, frame</td>
+<td><code>export_job</code></td>
+</tr>
+<tr>
+<td>Đọc metadata frame</td>
+<td>Kích thước ảnh, tên tệp, mapping frame</td>
+<td><code>export_job</code></td>
+</tr>
+<tr>
+<td>Đọc dữ liệu ảnh frame</td>
+<td>Lưu vào Object Storage kèm checksum</td>
+<td><code>export_job</code> → <a href="object-storage.html">object-storage.md</a></td>
+</tr>
+<tr>
+<td>Đọc label/taxonomy của project</td>
+<td>Kiểm Schema/Taxonomy</td>
+<td><code>export_job</code>; engine Schema</td>
+</tr>
+<tr>
+<td>Deep link UI</td>
+<td>URL mở job tại frame cụ thể</td>
+<td><code>issue</code>, <code>rework_request.deep_link</code></td>
+</tr>
+</tbody>
+</table>
+<p>Shape không phải rectangle bị bỏ qua và được đếm vào <code>snapshot.out_of_scope_shapes</code> (FR-SNP-07).</p>
+<h2 id="4-chuan-hoa-va-hash">4. Chuẩn hoá và hash</h2>
+<ul>
+<li>JSON chuẩn hoá theo job: sắp xếp khoá, sắp xếp shape theo <code>(frame, cvat_shape_id)</code>, toạ độ làm tròn với số chữ số cố định. Số chữ số cụ thể: <strong>TBD-20</strong>. Khi đã chốt thì <strong>không đổi</strong> nữa, vì nó là một phần của version thuật toán hash.</li>
+<li>Mỗi job có <code>job_hash = SHA-256(JSON chuẩn hoá)</code>. Hash tổng là SHA-256 của danh sách <code>(cvat_job_id, job_hash)</code> đã sắp xếp (FR-SNP-03).</li>
+<li>CVAT không có "annotation revision" chính thức. Revision trong LabelX là hash do LabelX tính (A §21).</li>
+</ul>
+<h2 id="5-phat-hien-drift">5. Phát hiện drift</h2>
+<table>
+<thead>
+<tr>
+<th>Cơ chế</th>
+<th>Trạng thái</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đọc lại <code>updated_date</code> của từng job trước khi khoá; khác lần đọc đầu thì không khoá, báo danh sách job bị drift</td>
+<td><strong>Bắt buộc</strong></td>
+<td>FR-SNP-04; SD-1</td>
+</tr>
+<tr>
+<td>Polling có checkpoint cho job có issue mở</td>
+<td>Phương án dự phòng khi không có webhook</td>
+<td>R cấu hình "CVAT"; T §6</td>
+</tr>
+<tr>
+<td>Webhook <code>update:job</code></td>
+<td>Tuỳ chọn; chỉ dùng khi instance hỗ trợ và đã kiểm (TBD-01)</td>
+<td>A §21</td>
+</tr>
+<tr>
+<td>Dự phòng nếu API không cho kiểm drift tin cậy</td>
+<td>Tạm khoá quyền sửa trên scope trong lúc export</td>
+<td>RK-06; R B-02 phương án B (không chọn, chỉ là dự phòng)</td>
+</tr>
+</tbody>
+</table>
+<p>Khi annotator báo "Đã sửa", adapter export lại job bị ảnh hưởng. Nếu <code>job_hash</code> không đổi, API trả 409 <code>REVISION_UNCHANGED</code> (FR-RWK-03).</p>
+<h2 id="6-deep-link">6. Deep link</h2>
+<ul>
+<li>Mỗi frame và issue có URL mở đúng job và frame trên CVAT (FR-SNP-08, FR-REV-12).</li>
+<li>Mẫu A §21 có dạng <code>{CVAT_BASE_URL}/tasks/{task_id}/jobs/{job_id}?frame={n}</code>. Tham số URL <strong>phụ thuộc phiên bản</strong>, nên phải kiểm trên instance thật (TBD-01).</li>
+<li>Link chỉ được sinh tại một hàm duy nhất trong <code>cvat_adapter</code>, để khi đổi phiên bản chỉ cần sửa một chỗ.</li>
+<li>Khi CVAT không truy cập được: tắt nút "Mở trong CVAT" và hiển thị trạng thái đồng bộ (A §26.5).</li>
+</ul>
+<h2 id="7-inh-danh-va-self-review">7. Định danh và self-review</h2>
+<ul>
+<li>Snapshot lưu assignee của từng job tại thời điểm snapshot (<code>snapshot_job.assignee_cvat_user_id</code>) (FR-SNP-05).</li>
+<li>Bảng <code>identity_mapping</code> nối tài khoản LabelX với người dùng CVAT. Backend dùng bảng này để từ chối self-review (FR-SEC-02, 03).</li>
+<li>CVAT không lưu tin cậy người tạo từng shape, nên căn cứ self-review là assignee của job (A §21; R B-12).</li>
+</ul>
+<h2 id="8-loi-va-timeout">8. Lỗi và timeout</h2>
+<table>
+<thead>
+<tr>
+<th>Tình huống</th>
+<th>Xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Timeout, 5xx, lỗi mạng</td>
+<td>Retry với backoff, theo <strong>TBD-14</strong>. Timeout đọc CVAT đặt riêng (<strong>TBD-13</strong>)</td>
+</tr>
+<tr>
+<td>401/403 từ CVAT</td>
+<td>Không retry. Snapshot <code>failed</code> (<code>export_error</code>) và ghi rõ là lỗi quyền service account</td>
+</tr>
+<tr>
+<td>Ảnh không tải được</td>
+<td>Ledger ghi <code>failed</code> (<code>media_error</code>) cho các đơn vị liên quan; không reject annotation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-viec-phai-lam-truoc-khi-build-adapter-tbd-01">9. Việc phải làm trước khi build adapter (TBD-01)</h2>
+<ol>
+<li>Chủ CVAT cung cấp URL, phiên bản, edition và service account chỉ đọc.</li>
+<li>Kiểm trên instance thật: đọc annotation, ảnh và frame mapping; hash ổn định qua hai lần đọc; phát hiện được drift (R mục 7, "Adapter + snapshot").</li>
+<li>Pin phiên bản và client, rồi cập nhật tài liệu này cùng DEC-001 (bằng một decision mới, không sửa DEC-001).</li>
+</ol>
+</article></main></body></html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Lịch sử snapshot</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="analysis" active-item="snapshot" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Lịch sử snapshot</h1>
+<p class="lx-lead">Các snapshot đã tạo, annotation revision tương ứng và Quality Control Run đã chạy trên từng snapshot. Snapshot không thể sửa.</p>
+</div>
+<div class="lx-actions"><a class="lx-btn" href="Snapshot.dc.html">Về Snapshot</a></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-card__head"><h2 class="lx-h2">Tất cả snapshot</h2><span class="lx-hint">4 snapshot</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 760px">
+<thead><tr><th>Snapshot</th><th>Dataset</th><th>Revision</th><th class="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr aria-selected="true"><td class="lx-mono">SNP-014</td><td>Road Vision Urban · v1.4</td><td class="lx-mono">a91f3c</td><td class="r">12,500</td><td class="lx-mono">#QC-091</td><td><span class="lx-badge lx-badge--info">Đang dùng</span></td></tr>
+<tr><td class="lx-mono">SNP-013</td><td>Road Vision Urban · v1.4</td><td class="lx-mono">7be204</td><td class="r">12,500</td><td class="lx-mono">#QC-088</td><td><span class="lx-badge">Đã thay thế</span></td></tr>
+<tr><td class="lx-mono">SNP-012</td><td>Road Vision Highway · v0.9</td><td class="lx-mono">c40d19</td><td class="r">5,600</td><td class="lx-mono">#QC-085</td><td><span class="lx-badge lx-badge--success">Đã khoá</span></td></tr>
+<tr><td class="lx-mono">SNP-011</td><td>Road Vision Urban · v1.3</td><td class="lx-mono">f02a6d</td><td class="r">11,800</td><td class="lx-mono">#QC-077</td><td><span class="lx-badge lx-badge--success">Đã khoá</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

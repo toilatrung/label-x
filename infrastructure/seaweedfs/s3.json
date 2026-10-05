@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "labelx-dev",
+      "credentials": [{ "accessKey": "labelx", "secretKey": "labelx-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

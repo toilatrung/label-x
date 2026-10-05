@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milestones — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: .agent/planning/milestones.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / milestones</span><span class="sp"></span>
+<a href="milestones.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>milestones-v1</span><b>title</b><span>Milestones</span><b>type</b><span>planning</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[milestones, planning]</span><b>priority</b><span>2</span></div>
+<h1 id="milestones">Milestones</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Maintain measurable delivery checkpoints that group epics under approved roadmap outcomes.</p>
+<h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>proposed | ready | in-progress | blocked | completed | cancelled</code></li>
+</ul>
+<h2 id="milestone-records">Milestone Records</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone ID</th>
+<th>Roadmap ID</th>
+<th>Outcome</th>
+<th>Owner</th>
+<th>Target Window</th>
+<th>Status</th>
+<th>Epic IDs</th>
+<th>Acceptance Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>M-01</code></td>
+<td><code>R-001</code></td>
+<td><strong>Nền tảng và hợp đồng triển khai</strong> — Contract dữ liệu/API/state/lineage được review; nền backend+frontend có auth, RBAC theo scope, audit append-only, CI; guideline có version.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-01, E-02, E-03</code></td>
+<td>Contract E-01 được Tech Lead Backend + QA Lead review; kiểm thử quyền/audit (FR-SEC-01…07) xanh trên CI; <code>make check</code> chạy cả backend lẫn frontend.</td>
+</tr>
+<tr>
+<td><code>M-02</code></td>
+<td><code>R-001</code></td>
+<td><strong>Pipeline kiểm xác định tái lập</strong> — Snapshot bất biến từ CVAT thật; QC Run với engine xác định, ledger, dedup và ranking score_v0 tái lập.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-04, E-05, E-08, E-09, E-11</code></td>
+<td>AC-01, AC-02, AC-03 đạt; engine thiếu/hỏng hiển thị Not checked/Failed (phần engine của AC-07).</td>
+</tr>
+<tr>
+<td><code>M-03</code></td>
+<td><code>R-001</code></td>
+<td><strong>Vòng review–rework khép kín</strong> — Reviewer xử lý frame theo hàng đợi đến phân xử, sửa trên CVAT, verify và QC run cuối.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-13, E-14, E-15, E-16</code></td>
+<td>AC-04, AC-05, AC-06, AC-11 đạt; lease nguyên tử dưới tải đồng thời (NFR-15); transition ngoài bảng bị từ chối.</td>
+</tr>
+<tr>
+<td><code>M-04</code></td>
+<td><code>R-001</code></td>
+<td><strong>Reference và discovery</strong> — Công cụ reference, reference tập hiệu chỉnh đã khoá; Detector sinh E1/E2; score được hiệu chỉnh và khoá version.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-06, E-07, E-10, E-12, E-17</code></td>
+<td>Reference hiệu chỉnh khoá version (FR-EVL-04); ngưỡng Detector chọn trên tập hiệu chỉnh; score version khoá kèm kết quả ngoài fold/ablation (FR-RNK-10, 11); TBD-08 có quyết định.</td>
+</tr>
+<tr>
+<td><code>M-05</code></td>
+<td><code>R-001</code></td>
+<td><strong>Kiểm chứng hiệu quả, gate và báo cáo</strong> — Reference held-out/D1-D2 khoá; preregistration; thí nghiệm crossover; đánh giá KPI-1/KPI-2; báo cáo và Quality Gate.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-18, E-19, E-20, E-21, E-22</code></td>
+<td>AC-07, AC-08, AC-09, AC-10 đạt theo ngưỡng đã preregister (TBD-K1…K4); thiếu mẫu ghi "không đủ mẫu", không kết luận đạt.</td>
+</tr>
+<tr>
+<td><code>M-06</code></td>
+<td><code>R-001</code></td>
+<td><strong>Vận hành và nghiệm thu tổng thể</strong> — Hệ thống chạy trên môi trường mục tiêu, đo NFR, phục hồi được; bằng chứng nghiệm thu AC-01…AC-11 và R-01…R-07 đầy đủ.</td>
+<td><code>unassigned</code></td>
+<td><code>not-set</code></td>
+<td><code>proposed</code></td>
+<td><code>E-23, E-24</code></td>
+<td>NFR có ngưỡng đã duyệt được kiểm; diễn tập restore nhất quán (NFR-16); mọi Must + Should có evidence; blocker bắt buộc đóng.</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

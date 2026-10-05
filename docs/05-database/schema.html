@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schema PostgreSQL LabelX QC — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/05-database/schema.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / schema</span><span class="sp"></span>
+<a href="schema.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>database-schema</span><b>title</b><span>Schema PostgreSQL LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>quality-control</span><b>tags</b><span>[database, postgresql, schema, idempotency, audit]</span><b>priority</b><span>1</span></div>
+<h1 id="schema-postgresql">Schema PostgreSQL</h1>
+<h2 id="1-nguon-va-quy-uoc">1. Nguồn và quy ước</h2>
+<ul>
+<li>Schema dựa trên ERD khái niệm của SRS (<code>fig:erd</code> trong <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>) và A §22 (Domain Data Model). Chỉ lấy phần của A khớp SRS; xem mục 7.</li>
+<li>Bảng được tạo bằng Django model. Tên bảng ở đây là <strong>tên logic</strong> (đề xuất <code>db_table</code>). Mỗi bảng thuộc một app trong <a href="../02-architecture/system-design.html">system-design.md</a> mục 3.</li>
+<li>Khoá chính dùng <code>BigAutoField</code> (<code>DEFAULT_AUTO_FIELD</code>). Thời gian là <code>timestamptz</code>. <code>jsonb</code> chỉ dùng cho dữ liệu có cấu trúc thay đổi theo version (features, contributions, payload cấu hình).</li>
+<li>Toạ độ box là <code>double precision</code> theo pixel ảnh gốc (<code>x1, y1, x2, y2</code>) (SRS §9.4).</li>
+<li>Bản ghi bất biến (candidate, evidence, decision, audit) không có API sửa. Audit còn bị chặn ở mức DB (mục 5).</li>
+</ul>
+<h2 id="2-du-lieu-nguon-va-snapshot">2. Dữ liệu nguồn và snapshot</h2>
+<table>
+<thead>
+<tr>
+<th>Bảng</th>
+<th>Cột chính</th>
+<th>Khoá và ràng buộc</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dataset</code></td>
+<td><code>id</code>, <code>cvat_project_id</code>, <code>name</code>, <code>version_label</code>, <code>taxonomy_version</code>, <code>guideline_version</code></td>
+<td>UNIQUE <code>(cvat_project_id, version_label)</code></td>
+<td>H "Dataset = CVAT Project + Version"</td>
+</tr>
+<tr>
+<td><code>snapshot</code></td>
+<td><code>id</code>, <code>dataset_id</code>, <code>parent_snapshot_id</code> NULL, <code>scope</code> jsonb, <code>status</code> (<code>pending</code>, <code>exporting</code>, <code>locked</code>, <code>failed</code>), <code>failure_reason</code>, <code>revision_hash</code>, <code>taxonomy_version</code>, <code>guideline_version</code>, <code>seed</code>, <code>out_of_scope_shapes</code>, <code>created_by</code>, <code>created_at</code>, <code>locked_at</code>, <code>purpose</code> (<code>review</code>, <code>rework_incremental</code>, <code>final</code>)</td>
+<td>FK <code>parent_snapshot_id</code> → <code>snapshot</code>; CHECK <code>status&lt;&gt;'locked' OR revision_hash IS NOT NULL</code></td>
+<td>FR-SNP-03…07</td>
+</tr>
+<tr>
+<td><code>snapshot_job</code></td>
+<td><code>snapshot_id</code>, <code>cvat_task_id</code>, <code>cvat_job_id</code>, <code>job_hash</code>, <code>updated_date_first</code>, <code>updated_date_verify</code>, <code>assignee_cvat_user_id</code>, <code>assignee_user_id</code> NULL, <code>export_status</code></td>
+<td>UNIQUE <code>(snapshot_id, cvat_job_id)</code> — khoá idempotent của <code>export_job</code></td>
+<td>FR-SNP-04, 05; B-12</td>
+</tr>
+<tr>
+<td><code>frame</code></td>
+<td><code>id</code>, <code>snapshot_id</code>, <code>cvat_job_id</code>, <code>cvat_frame_index</code>, <code>frame_key</code>, <code>image_key</code>, <code>image_sha256</code>, <code>width</code>, <code>height</code>, <code>weather</code>, <code>scene</code>, <code>timeofday</code>, <code>source_video</code></td>
+<td>UNIQUE <code>(snapshot_id, frame_key)</code>; UNIQUE <code>(snapshot_id, cvat_job_id, cvat_frame_index)</code></td>
+<td>FR-SNP-05; split theo video (FR-EVL-05)</td>
+</tr>
+<tr>
+<td><code>annotation</code></td>
+<td><code>id</code>, <code>frame_id</code>, <code>cvat_shape_id</code>, <code>label</code>, <code>x1</code>, <code>y1</code>, <code>x2</code>, <code>y2</code>, <code>attributes</code> jsonb</td>
+<td>UNIQUE <code>(frame_id, cvat_shape_id)</code></td>
+<td>ERD Annotation</td>
+</tr>
+<tr>
+<td><code>identity_mapping</code></td>
+<td><code>user_id</code>, <code>cvat_user_id</code>, <code>cvat_username</code></td>
+<td>UNIQUE <code>user_id</code>; UNIQUE <code>cvat_user_id</code></td>
+<td>FR-SEC-02</td>
+</tr>
+<tr>
+<td><code>role_assignment</code></td>
+<td><code>user_id</code>, <code>role</code> (<code>annotator</code>, <code>reviewer</code>, <code>qa_lead</code>, <code>qc_admin</code>, <code>super_admin</code>, <code>product_owner</code>, <code>data_owner</code>; hai vai trò cuối theo SRS ch.6, đoạn dưới <code>tab:rbac</code>), <code>dataset_id</code> NULL (NULL = toàn hệ thống, chỉ cho SA)</td>
+<td>UNIQUE <code>(user_id, role, dataset_id)</code></td>
+<td>FR-SEC-01</td>
+</tr>
+</tbody>
+</table>
+<p>Lineage revision: snapshot đã khoá thì bất biến. Mọi thay đổi annotation tạo dòng <code>snapshot</code> mới, có <code>parent_snapshot_id</code> (FR-SNP-06). Không có cột "revision" riêng: revision chính là <code>snapshot.revision_hash</code> và <code>snapshot_job.job_hash</code>.</p>
+<h2 id="3-cau-hinh-run-va-ledger">3. Cấu hình, run và ledger</h2>
+<table>
+<thead>
+<tr>
+<th>Bảng</th>
+<th>Cột chính</th>
+<th>Khoá và ràng buộc</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config_version</code></td>
+<td><code>id</code>, <code>payload</code> jsonb (engine bật/tắt, ngưỡng, <code>τ</code>, policy gộp), <code>status</code> (<code>draft</code>, <code>published</code>), <code>published_by</code>, <code>published_at</code></td>
+<td>Trigger hoặc logic service chặn UPDATE khi <code>published</code></td>
+<td>FR-ENG-01; A §22</td>
+</tr>
+<tr>
+<td><code>model_artifact</code></td>
+<td><code>id</code>, <code>name</code>, <code>version</code>, <code>checksum</code>, <code>class_mapping_version</code>, <code>class_mapping</code> jsonb, <code>artifact_key</code></td>
+<td>UNIQUE <code>(name, version)</code>; UNIQUE <code>checksum</code></td>
+<td>FR-ENG-05; SRS §9.4</td>
+</tr>
+<tr>
+<td><code>qc_run</code></td>
+<td><code>id</code>, <code>snapshot_id</code>, <code>config_version_id</code>, <code>model_artifact_id</code> NULL, <code>seed</code>, <code>engine_versions</code> jsonb, <code>status</code> (<code>queued</code>, <code>running</code>, <code>completed</code>, <code>partial</code>, <code>failed</code>, <code>cancelled</code>), <code>is_final</code>, <code>origin_run_id</code> NULL, <code>dataset_id</code>, <code>scope_hash</code> (SHA-256 của scope đã chuẩn hoá), <code>cancel_requested_at</code>, <code>next_step_enqueued_at</code>, <code>claimed_at</code>, <code>created_by</code>, <code>started_at</code>, <code>finished_at</code></td>
+<td>Partial UNIQUE <code>(dataset_id, scope_hash) WHERE is_final AND status IN ('queued','running')</code> — một scope chỉ có một run cuối đang chạy</td>
+<td>FR-ENG-01; FR-RWK-06</td>
+</tr>
+<tr>
+<td><code>engine_result</code></td>
+<td><code>run_id</code>, <code>engine</code>, <code>status</code> (<code>running</code>, <code>checked</code>, <code>partial</code>, <code>failed</code>, <code>not_checked</code>), <code>reason</code> NULL, <code>eligible_units</code>, <code>completed_units</code>, <code>failed_units</code>, <code>not_checked_units</code>, <code>required</code> bool</td>
+<td>UNIQUE <code>(run_id, engine)</code></td>
+<td>FR-AGG-04, 05; B-19</td>
+</tr>
+<tr>
+<td><code>work_unit</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>engine</code>, <code>shard_key</code> (job + khoảng frame), <code>idempotency_key</code>, <code>status</code> (<code>pending</code>, <code>running</code>, <code>completed</code>, <code>failed</code>, <code>cancelled</code>), <code>attempt</code>, <code>last_error</code>, <code>started_at</code>, <code>finished_at</code></td>
+<td>UNIQUE <code>(run_id, idempotency_key)</code>; UNIQUE <code>(run_id, engine, shard_key)</code></td>
+<td>FR-AGG-02; R-01</td>
+</tr>
+<tr>
+<td><code>ledger_entry</code></td>
+<td><code>run_id</code>, <code>engine</code>, <code>unit_type</code> (<code>annotation</code>, <code>frame</code>, <code>pair</code>, <code>candidate</code>, <code>reference_frame</code>), <code>unit_ref</code>, <code>frame_id</code>, <code>applicability</code> (<code>eligible</code>, <code>not_applicable</code>, <code>not_triggered</code>), <code>status</code> (<code>completed</code>, <code>failed</code>, <code>not_checked</code>, <code>pending</code>), <code>reason</code>, <code>work_unit_id</code></td>
+<td>UNIQUE <code>(run_id, engine, unit_type, unit_ref)</code></td>
+<td>FR-AGG-04; B-04</td>
+</tr>
+<tr>
+<td><code>prediction</code></td>
+<td><code>work_unit_id</code>, <code>frame_id</code>, <code>x1..y2</code>, <code>label</code>, <code>confidence</code>, <code>model_artifact_id</code></td>
+<td>UNIQUE <code>(work_unit_id, frame_id, ordinal)</code></td>
+<td>NFR-04 (lưu để tái dùng)</td>
+</tr>
+</tbody>
+</table>
+<p><code>idempotency_key = sha256(snapshot_id ‖ engine ‖ engine_version ‖ config_version_id ‖ model_checksum ‖ shard_key)</code>. Khoá này không chứa <code>run_id</code>, nên hai run trên cùng input sẽ có khoá trùng nhau. Vì vậy ràng buộc UNIQUE được đặt theo run: <code>(run_id, idempotency_key)</code>. Việc tái dùng kết quả giữa các run (cache) <strong>chưa chốt</strong>; R B-10 yêu cầu tách tái dùng khỏi attribution theo run.</p>
+<h2 id="4-candidate-issue-ranking-review">4. Candidate, issue, ranking, review</h2>
+<table>
+<thead>
+<tr>
+<th>Bảng</th>
+<th>Cột chính</th>
+<th>Khoá và ràng buộc</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>candidate</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>work_unit_id</code>, <code>engine</code>, <code>family</code> (<code>E1</code>, <code>E2</code>, <code>E3</code>, <code>structural</code>), <code>frame_id</code>, <code>annotation_id</code> NULL, <code>pred_x1..y2</code> NULL, <code>features</code> jsonb, <code>score</code>, <code>rule_id</code>, <code>dedup_key</code>, <code>fingerprint</code>, <code>created_at</code></td>
+<td>UNIQUE <code>(run_id, fingerprint)</code>; bất biến</td>
+<td>FR-AGG-01; FR-ENG-07</td>
+</tr>
+<tr>
+<td><code>evidence</code></td>
+<td><code>id</code>, <code>candidate_id</code>, <code>type</code>, <code>payload_key</code>, <code>payload_sha256</code>, <code>pred_label</code>, <code>confidence</code>, <code>iou</code>, <code>ambiguous</code> jsonb, <code>rule_id</code></td>
+<td>UNIQUE <code>(candidate_id, type, payload_sha256)</code>; bất biến</td>
+<td>FR-ENG-08; NFR-06</td>
+</tr>
+<tr>
+<td><code>issue</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>snapshot_id</code>, <code>frame_id</code>, <code>family</code>, <code>anchor</code> jsonb, <code>n_i</code>, <code>dedup_key</code>, <code>policy_version</code>, <code>origin</code> (<code>candidate</code>, <code>reviewer</code>), <code>severity</code> NULL, <code>state</code>, <code>q_i</code>, <code>created_by</code> NULL</td>
+<td>UNIQUE <code>(run_id, dedup_key)</code>; CHECK <code>state</code> thuộc tập trạng thái SRS</td>
+<td>FR-AGG-03; FR-RNK-12; BR-08</td>
+</tr>
+<tr>
+<td><code>issue_candidate</code></td>
+<td><code>issue_id</code>, <code>candidate_id</code></td>
+<td>UNIQUE <code>candidate_id</code> (mỗi candidate thuộc đúng một issue)</td>
+<td>ERD Candidate *..1 Issue</td>
+</tr>
+<tr>
+<td><code>score_version</code></td>
+<td><code>id</code>, <code>name</code>, <code>params</code> jsonb, <code>calibration_report</code> jsonb, <code>locked_at</code></td>
+<td>Không sửa sau khi khoá</td>
+<td>FR-RNK-02, 10, 11</td>
+</tr>
+<tr>
+<td><code>frame_risk</code></td>
+<td><code>run_id</code>, <code>score_version_id</code>, <code>frame_id</code>, <code>score</code>, <code>h_f</code>, <code>rank</code>, <code>contributions</code> jsonb, <code>missing_evidence</code> bool</td>
+<td>UNIQUE <code>(run_id, score_version_id, frame_id)</code>; UNIQUE <code>(run_id, score_version_id, rank)</code></td>
+<td>FR-RNK-01…06</td>
+</tr>
+<tr>
+<td><code>control_ranking</code></td>
+<td><code>run_id</code>, <code>kind</code> (<code>random</code>, <code>count_desc</code>, <code>max_conf</code>), <code>seed</code>, <code>frame_id</code>, <code>rank</code></td>
+<td>UNIQUE <code>(run_id, kind, seed, frame_id)</code></td>
+<td>FR-RNK-08</td>
+</tr>
+<tr>
+<td><code>review_item</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>frame_id</code>, <code>queue</code> (<code>risk</code>, <code>random</code>), <code>rank</code>, <code>state</code> (<code>unreviewed</code>, <code>in_review</code>, <code>reviewed</code>, <code>pending_issues</code>, <code>done</code>), <code>lease_id</code> NULL</td>
+<td>UNIQUE <code>(run_id, queue, frame_id)</code></td>
+<td>FR-REV-01, 02; SRS <code>fig:framestate</code></td>
+</tr>
+<tr>
+<td><code>review_lease</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>frame_id</code>, <code>review_item_id</code> (queue đã cấp lease), <code>holder_user_id</code>, <code>acquired_at</code>, <code>expires_at</code>, <code>status</code> (<code>active</code>, <code>released</code>, <code>expired</code>)</td>
+<td>Partial UNIQUE <code>(run_id, frame_id) WHERE status='active'</code>: lease duy nhất <strong>theo frame</strong> trong một run, bất kể frame nằm ở queue <code>risk</code> hay <code>random</code>. Partial UNIQUE <code>(holder_user_id) WHERE status='active'</code>: mỗi reviewer một lease (RK-05)</td>
+<td>FR-REV-03, 04; NFR-15</td>
+</tr>
+<tr>
+<td><code>review_decision</code></td>
+<td><code>id</code>, <code>issue_id</code>, <code>actor_id</code>, <code>lease_id</code>, <code>decision</code>, <code>family</code>, <code>severity</code>, <code>reason</code>, <code>rule_id</code>, <code>guideline_version</code>, <code>snapshot_revision</code>, <code>is_override</code>, <code>override_reason</code>, <code>idempotency_key</code>, <code>started_at</code>, <code>ended_at</code></td>
+<td>UNIQUE <code>(actor_id, idempotency_key)</code>; bất biến (quyết định mới là dòng mới)</td>
+<td>FR-REV-08, 10</td>
+</tr>
+<tr>
+<td><code>adjudication</code></td>
+<td><code>id</code>, <code>issue_id</code>, <code>actor_id</code>, <code>escalated_by_id</code>, <code>outcome</code> (<code>confirm</code>, <code>reject</code>, <code>guideline_gap</code>), <code>rule_id</code>, <code>correct_label</code>, <code>reason</code></td>
+<td>CHECK <code>actor_id &lt;&gt; escalated_by_id</code></td>
+<td>FR-ESC-02, 03</td>
+</tr>
+<tr>
+<td><code>decision_case</code></td>
+<td><code>id</code>, <code>adjudication_id</code>, <code>rule_id</code>, <code>guideline_version</code>, <code>version</code></td>
+<td>UNIQUE <code>(adjudication_id, version)</code></td>
+<td>FR-ESC-04</td>
+</tr>
+<tr>
+<td><code>rework_request</code></td>
+<td><code>id</code>, <code>issue_id</code>, <code>assignee_user_id</code>, <code>instruction</code>, <code>severity</code>, <code>due_at</code>, <code>deep_link</code>, <code>base_snapshot_id</code>, <code>base_job_hash</code>, <code>fixed_snapshot_id</code> NULL, <code>status</code>, <code>attempt</code></td>
+<td>UNIQUE <code>(issue_id, attempt)</code></td>
+<td>FR-RWK-01…03</td>
+</tr>
+<tr>
+<td><code>verification</code></td>
+<td><code>id</code>, <code>rework_id</code>, <code>verifier_id</code>, <code>recheck_run_id</code>, <code>outcome</code> (<code>pass</code>, <code>fail</code>), <code>reason</code></td>
+<td>CHECK verifier khác annotator (kiểm ở service, vì cần join <code>rework_request.assignee_user_id</code>)</td>
+<td>FR-RWK-05</td>
+</tr>
+<tr>
+<td><code>rework_recheck</code></td>
+<td><code>id</code>, <code>rework_id</code>, <code>snapshot_id</code> (snapshot gia tăng sau "Đã sửa"), <code>run_id</code> (run re-check), <code>status</code></td>
+<td>UNIQUE <code>(rework_id, snapshot_id)</code> — khoá idempotent của task <code>review.recheck_rework</code></td>
+<td>FR-RWK-03, 04</td>
+</tr>
+<tr>
+<td><code>final_run_link</code></td>
+<td><code>final_run_id</code>, <code>verification_id</code></td>
+<td>UNIQUE <code>(final_run_id, verification_id)</code></td>
+<td>FR-RWK-06</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-guideline-anh-gia-gate-audit">5. Guideline, đánh giá, gate, audit</h2>
+<table>
+<thead>
+<tr>
+<th>Bảng</th>
+<th>Cột chính</th>
+<th>Khoá và ràng buộc</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>guideline_version</code></td>
+<td><code>id</code>, <code>version</code>, <code>approved_at</code>, <code>source_ref</code></td>
+<td>UNIQUE <code>version</code></td>
+<td>FR-GDL-01</td>
+</tr>
+<tr>
+<td><code>guideline_rule</code></td>
+<td><code>guideline_version_id</code>, <code>rule_id</code>, <code>section</code>, <code>excerpt</code></td>
+<td>UNIQUE <code>(guideline_version_id, rule_id)</code></td>
+<td>FR-GDL-01</td>
+</tr>
+<tr>
+<td><code>rule_mapping</code></td>
+<td><code>mapping_version</code>, <code>family</code>, <code>label</code>, <code>label_pair</code>, <code>rule_id</code></td>
+<td>UNIQUE <code>(mapping_version, family, label, label_pair)</code></td>
+<td>FR-GDL-02</td>
+</tr>
+<tr>
+<td><code>guideline_gap</code></td>
+<td><code>id</code>, <code>rule_id</code>, <code>description</code>, <code>status</code>, <code>resolved_in_version</code></td>
+<td>—</td>
+<td>FR-ESC-05</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td><code>id</code>, <code>snapshot_id</code>, <code>version</code>, <code>status</code> (<code>draft</code>, <code>locked</code>), <code>tau_m</code>, <code>a_min</code>, <code>matching_algo_version</code>, <code>locked_by</code>, <code>locked_at</code>, <code>split</code> (<code>calibration</code>, <code>held_out</code>)</td>
+<td>UNIQUE <code>(snapshot_id, version)</code></td>
+<td>FR-EVL-04; BR-13</td>
+</tr>
+<tr>
+<td><code>gt_object</code></td>
+<td><code>reference_id</code>, <code>slot</code> (1, 2, <code>merged</code>), <code>frame_id</code>, <code>x1..y2</code>, <code>label</code>, <code>ignored</code>, <code>annotator_id</code></td>
+<td>—</td>
+<td>FR-EVL-01; BR-11</td>
+</tr>
+<tr>
+<td><code>ref_error</code></td>
+<td><code>reference_id</code>, <code>family</code>, <code>gt_object_id</code> NULL, <code>annotation_id</code> NULL, <code>mapping_version</code></td>
+<td>CHECK đúng một trong hai FK khác NULL theo family (BR-01)</td>
+<td>FR-EVL-03</td>
+</tr>
+<tr>
+<td><code>evaluation_run</code></td>
+<td><code>id</code>, <code>kind</code> (<code>kpi1</code>, <code>kpi2</code>, <code>metric</code>), <code>run_id</code>, <code>reference_id</code>, <code>score_version_id</code>, <code>experiment_id</code>, <code>params</code> jsonb, <code>leakage_check</code> jsonb, <code>results</code> jsonb, <code>status</code>, <code>created_by</code></td>
+<td>—</td>
+<td>FR-EVL-05, 14; B-05</td>
+</tr>
+<tr>
+<td><code>experiment</code></td>
+<td><code>id</code>, <code>design</code> jsonb, <code>delta</code>, <code>stop_rule</code>, <code>locked_at</code></td>
+<td>—</td>
+<td>FR-EVL-11</td>
+</tr>
+<tr>
+<td><code>effort_event</code></td>
+<td><code>id</code>, <code>actor_id</code>, <code>arm</code>, <code>frame_id</code>, <code>activity</code>, <code>active_ms</code>, <code>client_event_id</code>, <code>occurred_at</code></td>
+<td>UNIQUE <code>(actor_id, client_event_id)</code></td>
+<td>FR-EVL-06</td>
+</tr>
+<tr>
+<td><code>gate_check</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>condition</code> (<code>coverage</code>, <code>critical_open</code>, <code>rework_verified</code>, <code>residual</code>, <code>reviewer_agreement</code>), <code>status</code> (<code>passed</code>, <code>failed</code>, <code>insufficient_data</code>, <code>waived</code>), <code>value</code>, <code>threshold</code>, <code>sample_size</code>, <code>evaluated_at</code></td>
+<td>UNIQUE <code>(run_id, condition, evaluated_at)</code></td>
+<td>FR-GTE-01, 02</td>
+</tr>
+<tr>
+<td><code>waiver</code></td>
+<td><code>id</code>, <code>gate_check_id</code>, <code>requested_by</code>, <code>approved_by</code> NULL, <code>reason</code>, <code>evidence_key</code>, <code>expires_at</code>, <code>status</code> (<code>requested</code>, <code>approved</code>, <code>rejected</code>, <code>expired</code>)</td>
+<td>CHECK <code>approved_by IS NULL OR approved_by &lt;&gt; requested_by</code>; NOT NULL <code>reason</code>, <code>evidence_key</code>, <code>expires_at</code></td>
+<td>FR-GTE-03; B-11</td>
+</tr>
+<tr>
+<td><code>report_export</code></td>
+<td><code>id</code>, <code>run_id</code>, <code>format</code>, <code>object_key</code>, <code>sha256</code>, <code>versions</code> jsonb</td>
+<td>UNIQUE <code>sha256</code></td>
+<td>FR-RPT-05</td>
+</tr>
+<tr>
+<td><code>idempotency_record</code></td>
+<td><code>user_id</code>, <code>key</code>, <code>method</code>, <code>path</code>, <code>request_hash</code>, <code>status_code</code>, <code>response_body</code>, <code>created_at</code></td>
+<td>UNIQUE <code>(user_id, key)</code></td>
+<td><a href="../04-api/rest-api.html">rest-api.md</a> mục 3</td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td><code>id</code> bigserial, <code>at</code>, <code>actor_id</code>, <code>actor_role</code>, <code>action</code>, <code>object_type</code>, <code>object_id</code>, <code>before</code> jsonb, <code>after</code> jsonb, <code>revision</code>, <code>reason</code>, <code>is_override</code>, <code>request_id</code></td>
+<td><strong>Append-only</strong></td>
+<td>FR-SEC-05; NFR-08</td>
+</tr>
+</tbody>
+</table>
+<h3 id="append-only-cho-audit_log">Append-only cho <code>audit_log</code></h3>
+<ul>
+<li>Ứng dụng chỉ có thao tác INSERT. Không có model method hay API nào để sửa hoặc xoá (A ADR-06; NFR-08).</li>
+<li>Mức DB:</li>
+<li><code>REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM labelx_app</code>.</li>
+<li>Thêm trigger <code>BEFORE UPDATE OR DELETE … RAISE EXCEPTION</code>.</li>
+<li>Hai lệnh trên được tạo bằng migration <code>RunSQL</code> (xem <a href="migrations.html">migrations.md</a>).</li>
+<li>Audit được ghi trong cùng transaction với thao tác. Settings đặt <code>ATOMIC_REQUESTS=True</code>; service gọi <code>audit.record()</code> trước khi kết thúc view.</li>
+<li>Nối hash chain (A ADR-06 gợi ý) <strong>chưa chốt</strong>.</li>
+<li>Thời hạn lưu: <strong>TBD-15</strong>. Không có job xoá audit.</li>
+</ul>
+<h2 id="6-index-chinh">6. Index chính</h2>
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Mục đích</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>review_item (run_id, queue, state, rank)</code></td>
+<td>Cấp lease theo thứ tự rank (<a href="queries.html">queries.md</a> Q1)</td>
+</tr>
+<tr>
+<td><code>review_lease (status, expires_at)</code></td>
+<td>Dọn lease hết hạn</td>
+</tr>
+<tr>
+<td><code>review_lease (run_id, frame_id) WHERE status='active'</code></td>
+<td>Kiểm frame đã có lease ở queue khác (Q1)</td>
+</tr>
+<tr>
+<td><code>ledger_entry (run_id, engine, applicability, status)</code></td>
+<td>Tính coverage (Q4)</td>
+</tr>
+<tr>
+<td><code>frame_risk (run_id, score_version_id, rank)</code></td>
+<td>Phân trang ranking (Q3)</td>
+</tr>
+<tr>
+<td><code>candidate (run_id, dedup_key)</code></td>
+<td>Gộp issue</td>
+</tr>
+<tr>
+<td><code>issue (run_id, frame_id, state)</code></td>
+<td>Kiểm FR-REV-13, gate critical</td>
+</tr>
+<tr>
+<td><code>audit_log (object_type, object_id, at)</code>, <code>audit_log (actor_id, at)</code></td>
+<td>FR-SEC-07</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-khac-biet-so-voi-a-22">7. Khác biệt so với A §22</h2>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>Schema này</th>
+<th>Lý do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DatasetVersion</code>, <code>SampleManifest</code>, <code>FrameAuditRecord</code></td>
+<td>Dùng <code>dataset.version_label</code>, <code>review_item(queue='random')</code> và <code>effort_event</code></td>
+<td>SRS ERD không có các bảng riêng này</td>
+</tr>
+<tr>
+<td><code>IssueLease</code> theo issue</td>
+<td><code>review_lease</code> theo frame trong run</td>
+<td>FR-REV-03</td>
+</tr>
+<tr>
+<td><code>Issue.version</code> (If-Match)</td>
+<td>Không có</td>
+<td>Không áp dụng If-Match (<a href="../04-api/rest-api.html">rest-api.md</a> mục 3)</td>
+</tr>
+<tr>
+<td><code>Release</code>, <code>ReleaseManifest</code>, <code>QualityReport</code>–<code>GateEvaluation</code></td>
+<td>Chỉ có <code>gate_check</code>, <code>waiver</code>, <code>report_export</code></td>
+<td>FR-GTE-04</td>
+</tr>
+<tr>
+<td>pgvector guideline index</td>
+<td>Không có</td>
+<td>B-13; FR-GDL-04</td>
+</tr>
+<tr>
+<td>Trạng thái Known Defect, Superseded</td>
+<td>Không có</td>
+<td>SRS <code>tab:transitions</code></td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

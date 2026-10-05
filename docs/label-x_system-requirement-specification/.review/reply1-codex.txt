@@ -1,0 +1,13 @@
+- **#4: Đồng ý.** Dùng đúng câu “đề xuất thu hẹp cho pilot M13, cần Product Owner duyệt”; bỏ diễn giải kế thừa B-08.
+
+- **#5+#6: Đồng ý có điều kiện.** GT đầy đủ, hai người độc lập và QA Lead phân xử là hợp lý, nhưng còn lỗ hổng:
+  - Matching phải **không phụ thuộc lớp**, nếu không E2 bị biến thành E1.
+  - Annotation dư có thể đạt ngưỡng với nhiều GT. Chỉ gán E3 vào **một GT đã có cặp chính**, theo quy tắc xác định và phá hòa cố định.
+  - Annotation không khớp GT nào chưa thuộc E1–E3: phải ghi rõ ngoài phạm vi pilot hoặc bổ sung loại lỗi.
+  - Khi bác lỗi do matching sai, phải sửa mapping và suy lại E; khóa GT, annotation đầu vào, mapping, ngưỡng và phiên bản thuật toán. Metric engine dùng chung GT nhưng cần đặc tả matching riêng nếu metric yêu cầu.
+
+- **#7: Đồng ý.** Loại cạnh dưới ngưỡng, tối đa số cặp rồi tổng IoU; bổ sung phá hòa xác định.
+
+- **#8: Đồng ý.** KPI-1 đo xếp hạng; recall thực tế đo ở KPI-2. Chốt `E_min` trước thử nghiệm; dưới ngưỡng ghi “không đủ mẫu”, không tính đạt/trượt.
+
+- **#9: Đồng ý với Claude, rút nhận xét trước.** [File H](/D:/label-x/LabelX_Export/LabelX_Export/screens/PerformanceEvaluation.dc.html:32) xác nhận reviewer so với adjudicator trên 135 case; RulesThresholds đặt ngưỡng 90%. Công thức: số quyết định reviewer trùng chuẩn / tổng quyết định được chấm; quy định rõ xử lý bỏ qua và nhiều reviewer.

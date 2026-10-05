@@ -1,0 +1,90 @@
+% =====================================================================
+\chapter{Truy vết, rủi ro và câu hỏi mở}
+\label{ch:trace}
+% =====================================================================
+
+\section{Ma trận truy vết}
+\label{sec:tracematrix}
+\begin{xltabular}{\linewidth}{@{}L{2.2cm}L{2.6cm}Y L{2.4cm}@{}}
+\caption{Truy vết mục tiêu $\rightarrow$ use case $\rightarrow$ yêu cầu $\rightarrow$ nghiệm thu}\label{tab:trace}\\
+\toprule
+\textbf{Mục tiêu} & \textbf{Use case} & \textbf{Yêu cầu chức năng} & \textbf{Nghiệm thu}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mục tiêu} & \textbf{Use case} & \textbf{Yêu cầu} & \textbf{Nghiệm thu}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+KPI-1 & UC-03, UC-08, UC-09 & FR-RNK-01…12, FR-EVL-01…10 & AC-08\\
+KPI-2, KPI-2b & UC-04, UC-05, UC-10 & FR-REV-01…14, FR-EVL-06, FR-EVL-11…13 & AC-09\\
+G-1…G-5, G-2b & UC-07, UC-10, UC-14 & FR-EVL-13, FR-EVL-16, FR-GTE-01…03 & AC-07, AC-09\\
+R-01 Tái lập & UC-01, UC-02, UC-03 & FR-SNP-03…06, FR-ENG-01, FR-AGG-02, FR-AGG-06, FR-RNK-03 & AC-01…03\\
+R-02 Evidence, người quyết định & UC-02, UC-05, UC-06 & FR-ENG-08, FR-REV-07…10, FR-ESC-01…04 & AC-04\\
+R-03 Verify, run cuối & UC-07, UC-14 & FR-RWK-01…08 & AC-06\\
+R-04 Đo đúng reference & UC-08, UC-09, UC-11 & FR-EVL-01…05, FR-EVL-14, FR-RPT-01…03 & AC-08, AC-10\\
+R-05 Quyền, audit & UC-04, UC-05, UC-13 & FR-SEC-01…07, FR-REV-14 & AC-05, AC-11\\
+R-06 Coverage/Gate & UC-02, UC-14 & FR-AGG-04, FR-AGG-05, FR-RNK-06, FR-GTE-01…02, FR-RPT-04 & AC-07\\
+R-07 Hiệu quả review & UC-10, UC-11 & FR-EVL-06, FR-EVL-11…13 & AC-09\\
+\end{xltabular}
+
+\section{Rủi ro và biện pháp giảm thiểu}
+\label{sec:risks}
+\begin{xltabular}{\linewidth}{@{}L{1.2cm}Y C{1.1cm}C{1.1cm}Y@{}}
+\caption{Bảng rủi ro}\label{tab:risks}\\
+\toprule
+\textbf{Mã} & \textbf{Rủi ro} & \textbf{Khả năng} & \textbf{Tác động} & \textbf{Giảm thiểu}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Rủi ro} & \textbf{KN} & \textbf{TĐ} & \textbf{Giảm thiểu}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+RK-01 & Detector baseline yếu trên ảnh đêm, đối tượng nhỏ $\Rightarrow$ ít candidate E1/E2 đúng, KPI-1 thấp. & TB & Cao & Báo cáo theo slice; điểm nền \(h(f)\) dùng đặc trưng ngày/đêm; cân nhắc Detector khác sau pilot (B-07).\\
+RK-02 & Detector đã thấy ảnh held-out khi huấn luyện $\Rightarrow$ recall bị thổi phồng. & TB & Cao & FR-EVL-05(b); chọn held-out từ phần chắc chắn không dùng huấn luyện.\\
+RK-03 & Reference chậm hoặc tốn công (hai người gán toàn bộ). & Cao & Cao & Bắt đầu sớm (B-20); giới hạn \(N\) theo power analysis; dùng CVAT task riêng cho người xác minh.\\
+RK-04 & Reviewer ở nhánh assisted tin máy quá mức (automation bias), bỏ qua lỗi không có candidate. & TB & Cao & Lát ngẫu nhiên; Frame Review luôn hiển thị toàn ảnh; đo KPI-2b và residual.\\
+RK-05 & Effort log sai do reviewer bỏ máy, mở nhiều tab. & TB & TB & Ngưỡng \(t_{idle}\); một lease mỗi reviewer; loại phiên bất thường theo quy tắc khoá trước.\\
+RK-06 & CVAT API không cho kiểm drift tin cậy. & Thấp & Cao & Thử adapter trên CVAT thật trước build (B-02); phương án dự phòng: tạm khoá sửa phạm vi khi export.\\
+RK-07 & Ít lỗi E3 tự nhiên $\Rightarrow$ không đủ mẫu kết luận theo nhóm. & Cao & Thấp & \(E_{min,g}\); chỉ kết luận KPI tổng; lỗi chèn báo cáo riêng (BR-15).\\
+RK-08 & Guideline BDD100K của dự án chưa có rule ID rõ. & TB & TB & QA Lead chuẩn hoá rule tối thiểu cho 10 lớp trước pilot (AS-06).\\
+RK-09 & Thay đổi tham số sau khi thấy kết quả held-out. & TB & Cao & Pre-registration (bảng~\ref{tab:prereg}); audit mọi thay đổi version.\\
+\end{xltabular}
+
+\section{Tham số và quyết định còn mở}
+\label{sec:tbd}
+\begin{xltabular}{\linewidth}{@{}L{1.4cm}Y L{3cm}L{2.6cm}@{}}
+\caption{Danh sách TBD, người chịu trách nhiệm và thời điểm phải chốt}\label{tab:tbd}\\
+\toprule
+\textbf{Mã} & \textbf{Nội dung} & \textbf{Người chốt} & \textbf{Hạn chốt}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Nội dung} & \textbf{Người chốt} & \textbf{Hạn chốt}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+TBD-01 & Phiên bản CVAT được pin, URL, quyền token, danh sách endpoint thật. & Chủ CVAT, Tech Lead & Trước build adapter\\
+TBD-02 & Cấu hình phần cứng app server, GPU server. & Tech Lead & Trước build\\
+TBD-03 & Danh sách ảnh BDD100K, \(N\) của tập hiệu chỉnh và held-out. & Data Owner, QA Lead & Trước lập reference\\
+TBD-04 & Nguồn annotation cần review; có dùng lỗi chèn hay không. & Product Owner, QA Lead & Trước lập reference\\
+TBD-05 & \(\tau_m\), \(\tau_{amb}\) cho matching. & QA Lead, đội mô hình & Trước lập reference\\
+TBD-06 & \(a_{min}\) và quy tắc ignore theo occlusion/truncation. & QA Lead & Trước lập reference\\
+TBD-07 & Định nghĩa mức độ nghiêm trọng theo lớp và kích thước. & QA Lead & Trước pilot\\
+TBD-08 & Duyệt đề xuất không bật VLM trong pilot M13. & Product Owner & Trước pilot\\
+TBD-09 & Thời hạn lease và quy tắc gia hạn. & Product Owner & Trước build review\\
+TBD-10 & Tỉ lệ lát kiểm tra ngẫu nhiên \(r\). & QA Lead & Trước pilot\\
+TBD-11 & Ngưỡng không thao tác \(t_{idle}\); thời lượng buổi làm quen. & Product Owner & Trước thí nghiệm\\
+TBD-12 & Cỡ mẫu thí nghiệm effort (frame, reviewer). & Product Owner & Sau pilot nhỏ\\
+TBD-13 & Mục tiêu thời gian QC Run và độ trễ UI (NFR-01…03). & Tech Lead & Sau đo pilot\\
+TBD-14 & Số lần retry và backoff. & Tech Lead & Sau đo pilot\\
+TBD-15 & Thời hạn lưu audit log. & Product Owner & Trước triển khai\\
+TBD-16 & \(n_{min}\) issue dương mỗi nhóm để học score. & Đội mô hình & Trước khoá score\\
+TBD-17 & RPO/RTO cho sao lưu PostgreSQL và Object Storage. & Tech Lead & Trước triển khai\\
+TBD-19 & Danh sách điều kiện gate được phép waiver và policy từng điều kiện (B-11). & Product Owner, QA Lead & Trước pilot\\
+TBD-20 & Tham số kỹ thuật phụ: timeout mỗi lượt kiểm VLM (nếu bật), \(t_{gc}\) dọn blob mồ côi, \(\varepsilon\) của \code{score\_v0}, số chữ số làm tròn toạ độ khi chuẩn hoá hash. & Tech Lead, đội mô hình & Trước build tương ứng\\
+TBD-21 & Đặc tả chi tiết Model Orchestrator (đầu vào, đầu ra, provenance) cho tổng hợp kết quả đánh giá engine (B-05). & Đội mô hình & Trước đo Metric engine\\
+TBD-18 & Xác nhận giấy phép và điều khoản sử dụng BDD100K cho mục đích pilot và lưu trữ nội bộ. & Data Owner & Trước nạp dữ liệu\\
+TBD-K1 & Ngưỡng đạt KPI-1. & Product Owner & Trước chạy held-out\\
+TBD-K2 & Ngưỡng đạt KPI-2. & Product Owner & Trước thí nghiệm\\
+TBD-K3 & Biên non-inferiority \(\delta\) và \(\delta_{fp}\). & Product Owner, QA Lead & Trước thí nghiệm\\
+TBD-K4 & \(E_{min}\), \(E_{min,g}\). & QA Lead & Trước chạy held-out\\
+\end{xltabular}

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chính sách bảo mật LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/06-security/security-policies.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / security-policies</span><span class="sp"></span>
+<a href="security-policies.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>security-policies</span><b>title</b><span>Chính sách bảo mật LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[security, rbac, separation-of-duties, audit, retention]</span><b>priority</b><span>1</span></div>
+<h1 id="chinh-sach-bao-mat-labelx">Chính sách bảo mật LabelX</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Gom các chính sách bảo mật <strong>đã chốt</strong> mà backend và frontend LabelX phải hiện thực. Mỗi chính sách ghi nguồn. Phần nào là đề xuất của tài liệu này thì ghi rõ "đề xuất"; phần nào chưa chốt thì dùng mã TBD của SRS.</p>
+<p>Nguồn chính:</p>
+<ul>
+<li>SRS: FR-SEC-01…07 và bảng <code>tab:rbac</code> trong <code>06-functional.tex</code>, NFR-07/08 trong <code>08-nonfunctional.tex</code>, hợp đồng lỗi trong <code>09-interfaces.tex</code>.</li>
+<li><code>docs/00-project/sources/architecture_review.html</code>, phiếu chốt B-11 (waiver), B-12 (quyền, tách nhiệm vụ, audit), B-18 (adapter chỉ đọc).</li>
+<li><code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code> mục 14, 21, 28, ADR-04/06/07.</li>
+<li>Màn hình H <code>docs/design/screens/WorkflowPermissions.dc.html</code>.</li>
+</ul>
+<h2 id="1-nguyen-tac-chung">1. Nguyên tắc chung</h2>
+<ol>
+<li><strong>Backend luôn kiểm quyền.</strong> Ẩn nút trên giao diện chỉ để thuận tiện (H, WorkflowPermissions). Mọi endpoint kiểm vai trò + scope (FR-SEC-01, NFR-07). Cấu hình hiện có: <code>DEFAULT_PERMISSION_CLASSES = IsAuthenticated</code> (<code>src/backend/config/settings.py</code>). Permission theo vai trò/scope <strong>chưa có</strong>, sẽ thêm cùng module Auth/RBAC/Audit.</li>
+<li><strong>Quyền project/job kiểm ở API</strong>, không dựa vào frontend hay CVAT (<code>CLAUDE.md</code>, DEC-001).</li>
+<li><strong>Adapter CVAT chỉ đọc</strong>: không có đường gọi tạo/sửa/xoá annotation; sửa annotation bằng deep link sang CVAT (B-18, FR-SNP-01, FR-SNP-08).</li>
+<li>Chặn theo ngữ cảnh (lease của người khác, self-review, tách nhiệm vụ, gate chưa đạt) vẫn <strong>hiển thị nút ở trạng thái disabled kèm lý do</strong>; truy cập URL không có quyền thì hiện trang "Không đủ quyền" (A mục 14.1).</li>
+</ol>
+<h2 id="2-rbac-theo-vai-tro-va-scope">2. RBAC theo vai trò và scope</h2>
+<p>Ma trận lấy từ SRS <code>tab:rbac</code> (theo H WorkflowPermissions). Quyền luôn giới hạn trong <strong>scope dataset</strong> được giao (FR-SEC-01; A mục 28: "RBAC theo vai trò cộng scope project/dataset, enforce ở server").</p>
+<table>
+<thead>
+<tr>
+<th>Chức năng</th>
+<th>Annotator</th>
+<th>Reviewer</th>
+<th>Quality Assurance Lead</th>
+<th>Quality Control Admin</th>
+<th>Super Admin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Snapshot, chạy phân tích</td>
+<td>—</td>
+<td>—</td>
+<td>Chạy/xem</td>
+<td>Cấu hình</td>
+<td>Chạy/cấu hình</td>
+</tr>
+<tr>
+<td>Review Queues, Workspace</td>
+<td>—</td>
+<td>Review</td>
+<td>Review/giám sát</td>
+<td>Xem</td>
+<td>Review/giám sát</td>
+</tr>
+<tr>
+<td>Rework</td>
+<td>Thực hiện</td>
+<td>Yêu cầu/xác minh</td>
+<td>Yêu cầu/giám sát</td>
+<td>—</td>
+<td>Thực hiện/xác minh</td>
+</tr>
+<tr>
+<td>Phân xử</td>
+<td>—</td>
+<td>—</td>
+<td>Có</td>
+<td>—</td>
+<td>Có (ghi đè)</td>
+</tr>
+<tr>
+<td>Reference, đánh giá</td>
+<td>—</td>
+<td>Lập Ground Truth (khi được giao)</td>
+<td>Quản lý/khoá</td>
+<td>Cấu hình</td>
+<td>Quản lý</td>
+</tr>
+<tr>
+<td>Báo cáo hiệu quả</td>
+<td>Giới hạn</td>
+<td>Xem</td>
+<td>Đầy đủ</td>
+<td>Đầy đủ</td>
+<td>Đầy đủ</td>
+</tr>
+<tr>
+<td>Cấu hình, quyền</td>
+<td>—</td>
+<td>—</td>
+<td>Giới hạn</td>
+<td>Có</td>
+<td>Có</td>
+</tr>
+</tbody>
+</table>
+<p>Phân vai đã duyệt (phiếu chốt B-12): Quality Assurance Lead quản lý chất lượng/phân xử; Quality Control Admin cấu hình kỹ thuật và scope quyền; người có quyền nghiệp vụ duyệt ngoại lệ/phát hành phải khác người yêu cầu; <strong>Super Admin không là người duyệt mặc định</strong>. Việc gán người và tài khoản thật <strong>chưa làm</strong>, không được coi là quyền đã cấp.</p>
+<p>Ghi chú khác biệt nguồn:</p>
+<ul>
+<li>H có thêm dòng "Phê duyệt phát hành" (Quality Assurance Lead: "Người được cấp quyền"; Super Admin: "Có (ghi đè)"). SRS FR-GTE-04 đặt phát hành dataset đầy đủ <strong>ngoài phạm vi M13</strong>, M13 chỉ hiển thị kết quả gate. Khi phạm vi phát hành được mở, áp dụng cùng quy tắc tách nhiệm vụ ở mục 4.</li>
+<li>H và A cho Annotator "Tham gia" Calibration và Audit, còn SRS ghi "—" ở dòng Reference, đánh giá. Tài liệu này theo SRS cho reference. Annotator chuẩn bị reference khi được giao nhưng không tự review annotation của mình (phiếu chốt B-20).</li>
+<li>Service account AI/worker chỉ được ghi Candidate và Evidence, không có quyền decision/gate/release (ADR-07, A mục 28).</li>
+</ul>
+<h2 id="3-self-review-theo-assignee-tai-snapshot">3. Self-review theo assignee tại snapshot</h2>
+<ul>
+<li>Lưu <strong>identity mapping</strong> giữa tài khoản LabelX và người dùng CVAT; mapping này dùng để kiểm self-review (FR-SEC-02).</li>
+<li>Snapshot lưu <strong>assignee từng job tại thời điểm snapshot</strong> (FR-SNP-05). Lý do: CVAT không lưu tin cậy người tạo từng shape (A mục 21).</li>
+<li>Backend <strong>từ chối (403)</strong> quyết định review khi reviewer là assignee của job tại snapshot, kể cả khi mở frame trực tiếp bằng URL (FR-SEC-03, FR-REV-14).</li>
+<li>Cấp lease tự động bỏ qua frame mà reviewer là assignee tại snapshot (FR-REV-03).</li>
+</ul>
+<h2 id="4-tach-nguoi-yeu-cau-va-nguoi-duyet">4. Tách người yêu cầu và người duyệt</h2>
+<ul>
+<li>Người duyệt waiver, khoá reference, phân xử phải <strong>khác người yêu cầu</strong>; không được dùng tài khoản khác của cùng một người (FR-SEC-04; B-11, B-12).</li>
+<li>Nếu chưa có người khác đủ quyền thì <strong>chờ</strong>, không tự duyệt bằng tài khoản phụ (phiếu chốt R, ghi chú phân vai đi kèm B-11: "Nếu chưa có người khác đủ quyền thì chờ, không dùng tài khoản khác của cùng người để tự duyệt").</li>
+<li>API trả <strong>403</strong> khi người duyệt trùng người đề nghị (09-interfaces, hợp đồng lỗi).</li>
+</ul>
+<h3 id="waiver-b-11">Waiver (B-11)</h3>
+<ul>
+<li>Giữ scope waiver của H, nhưng <strong>bắt buộc policy cho từng điều kiện gate</strong>.</li>
+<li>Mỗi waiver có: lý do, evidence, thời hạn hiệu lực/hết hạn, người duyệt khác người yêu cầu (FR-GTE-03).</li>
+<li>Waiver <strong>không tự có hiệu lực</strong>: chỉ hiệu lực sau khi được duyệt; hết hạn thì điều kiện trở lại "chưa đạt".</li>
+<li>Waiver <strong>không biến Not checked thành pass</strong>; điều kiện thiếu dữ liệu là chưa đạt (FR-GTE-02, B-19).</li>
+</ul>
+<h2 id="5-super-admin-ghi-e">5. Super Admin ghi đè</h2>
+<ul>
+<li>Ghi đè bắt buộc <strong>lý do</strong>, được <strong>gắn nhãn Super Admin</strong> trong audit (FR-SEC-06; H: "Ghi đè của Super Admin phải có lý do", áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline).</li>
+<li>Super Admin <strong>vẫn chịu</strong> kiểm self-review và tách nhiệm vụ: không tự duyệt waiver/release do chính mình yêu cầu, không review annotation do chính mình tạo (A mục 14).</li>
+<li>Số tài khoản Super Admin giữ ở mức tối thiểu và được rà soát định kỳ (A mục 14, 28). Chu kỳ rà soát <strong>chưa chốt</strong>.</li>
+</ul>
+<h2 id="6-token-cvat-va-secret">6. Token CVAT và secret</h2>
+<ul>
+<li>Token service account CVAT <strong>chỉ ở backend</strong>, không gửi xuống client (FR-SNP-02, NFR-07). Hiện đọc từ biến môi trường <code>CVAT_SERVICE_TOKEN</code> (<code>settings.py</code>). Ở môi trường thật, đặt trong secret store (FR-SNP-02); secret store cụ thể <strong>chưa chốt</strong> (phụ thuộc TBD-02).</li>
+<li>Service account CVAT chỉ có quyền đọc (<code>.env.example</code>; B-18). Quyền thật của token còn <strong>TBD-01</strong>.</li>
+<li>Frontend chỉ biết <code>NEXT_PUBLIC_CVAT_BASE_URL</code> để dựng deep link (<code>src/frontend/.env.example</code>). Không đưa token hay secret vào biến <code>NEXT_PUBLIC_*</code>, vì biến này bị nhúng vào bundle trình duyệt.</li>
+<li>File <code>.env</code> và <code>.env.*</code> bị loại khỏi git (<code>.gitignore</code>, trừ <code>.env.example</code>). Credential trong <code>.env.example</code>, <code>infrastructure/docker-compose.dev.yml</code>, <code>infrastructure/seaweedfs/s3.json</code> <strong>chỉ dùng cho dev local</strong>; không dùng lại cho môi trường thật.</li>
+<li>Mật khẩu/secret không xuất hiện trong log (NFR-07). Xem <a href="../13-observability/logging.html">../13-observability/logging.md</a>.</li>
+<li><code>make env</code> sinh <code>DJANGO_SECRET_KEY</code> ngẫu nhiên với tiền tố <code>dev-only-</code> cho local (<code>scripts/init-develop-environment.mk</code>).</li>
+</ul>
+<h2 id="7-audit-append-only-cung-transaction">7. Audit append-only cùng transaction</h2>
+<ul>
+<li>AuditEvent ghi: actor, vai trò, hành động, đối tượng, trước/sau, revision, lý do (FR-SEC-05). A bổ sung guideline version và evidence refs (A mục 28).</li>
+<li>Ghi <strong>trong cùng transaction PostgreSQL</strong> với thao tác nghiệp vụ (FR-SEC-05, NFR-06, ADR-04). Cấu hình nền đã có <code>DATABASES["default"]["ATOMIC_REQUESTS"] = True</code>. Riêng Celery task phải tự mở transaction cho phần ghi.</li>
+<li><strong>Append-only</strong>: không có API sửa/xoá; không cấp quyền <code>UPDATE</code>/<code>DELETE</code> trên bảng audit cho user ứng dụng (NFR-08, ADR-06). Cách kiểm: kiểm thử API và rà soát DB grant (NFR-08).</li>
+<li>Lỗi 403/409 cũng được ghi audit (09-interfaces). <strong>Yêu cầu phải hiện thực (chưa có code):</strong></li>
+<li>Vì <code>ATOMIC_REQUESTS = True</code>, mọi ghi DB trong view nằm trong transaction của request. Khi view trả 403/409 bằng exception, transaction đó bị rollback, nên AuditEvent "bị từ chối" ghi theo cách thông thường cũng mất theo.</li>
+<li><code>transaction.on_commit</code> không giải quyết được: callback chỉ chạy khi transaction commit, mà đây là trường hợp rollback.</li>
+<li>Sự kiện từ chối phải được ghi <strong>ngoài transaction bị rollback</strong>. Các cách có thể chọn: (a) ghi qua một kết nối DB riêng (alias database thứ hai trỏ cùng PostgreSQL, autocommit); (b) ghi sau khi transaction request đã rollback, ví dụ trong exception handler/middleware chạy ngoài khối atomic, hoặc view được đánh dấu <code>non_atomic_requests</code> tự quản lý transaction; (c) dùng savepoint chỉ khi phần bị huỷ nằm trong savepoint con và bản ghi audit nằm ở transaction ngoài được commit. Chọn cách nào phải ghi decision.</li>
+<li>Phân biệt với audit của thao tác <strong>thành công</strong>: thao tác thành công vẫn phải ghi audit <strong>cùng</strong> transaction (nếu audit lỗi thì thao tác rollback).</li>
+<li>Cách kiểm chứng (đề xuất test): gọi API với tình huống self-review (403) và lease của người khác (409); xác nhận phản hồi đúng mã và có <code>request_id</code>; xác nhận <strong>không</strong> có thay đổi nghiệp vụ nào được lưu; truy vấn bảng audit bằng kết nối mới, sau khi request kết thúc, và thấy đúng một AuditEvent từ chối với actor, hành động, đối tượng, lý do và <code>request_id</code>. Test phải dùng transaction thật (ví dụ <code>pytest.mark.django_db(transaction=True)</code>), vì test bọc trong một transaction lớn sẽ che mất lỗi rollback.</li>
+<li>100% decision, waiver, approval, config publish phải có AuditEvent (A, bảng NFR).</li>
+<li>Đề xuất (chưa chốt): nối hash chain giữa các AuditEvent (ADR-06 ghi "có thể").</li>
+<li>Màn hình xem audit lọc theo actor, đối tượng, thời gian (FR-SEC-07, mức Should).</li>
+</ul>
+<h2 id="8-luu-tru-nfr-08">8. Lưu trữ (NFR-08)</h2>
+<ul>
+<li>Audit, evidence, snapshot và reference được giữ <strong>chừng nào dataset còn cần quản lý hoặc đối chiếu</strong> (NFR-08). Phiếu chốt R bổ sung: decision, report/manifest cũng được giữ.</li>
+<li>Việc kết thúc lưu do <strong>người quản lý dữ liệu xác nhận</strong> và được ghi audit. Không tự đặt ngày/tháng, không tự xoá.</li>
+<li>Chỉ dọn <strong>cache/crop tạm</strong> khi không còn công việc dùng và tái tạo được (phiếu chốt R, định hướng lưu).</li>
+<li>Blob không có metadata trỏ tới sau (t_{gc}) được job dọn dẹp xoá (NFR-06). Giá trị (t_{gc}) <strong>chưa chốt</strong>.</li>
+<li>Thời hạn lưu audit tối thiểu: <strong>TBD-15</strong> (Product Owner, trước triển khai).</li>
+<li>Sao lưu PostgreSQL và Object Storage (bật versioning) theo cùng lịch; RPO/RTO <strong>TBD-17</strong> (NFR-16).</li>
+</ul>
+<h2 id="9-truyen-tai-va-cau-hinh-web">9. Truyền tải và cấu hình web</h2>
+<ul>
+<li>HTTPS cho trình duyệt ↔ app server và app server ↔ CVAT (NFR-07; SRS hình deployment).</li>
+<li>Hiện trạng <code>settings.py</code>: đã có <code>SecurityMiddleware</code>, <code>CsrfViewMiddleware</code>, <code>XFrameOptionsMiddleware</code>, CORS chỉ cho origin trong <code>CORS_ALLOWED_ORIGINS</code> kèm credential, <code>DEBUG</code> mặc định <code>False</code>.</li>
+<li><strong>Đăng nhập, session và CSRF cho frontend tách cổng</strong> (dev: Next.js <code>http://localhost:3000</code> gọi API <code>http://localhost:8000/api</code>):</li>
+<li>Xác thực API là <code>SessionAuthentication</code> (settings.py; SRS 09: "xác thực theo phiên đăng nhập LabelX").</li>
+<li><strong>Việc mở:</strong> <code>src/backend/config/urls.py</code> hiện chỉ có <code>admin/</code>, <code>api/schema/</code>, <code>api/docs/</code>. <strong>Chưa có endpoint đăng nhập/đăng xuất/lấy người dùng hiện tại cho API</strong>, và chưa có trang đăng nhập ở frontend. Đăng nhập qua <code>/admin/</code> chỉ dành cho tài khoản staff; không coi đó là luồng đăng nhập của sản phẩm.</li>
+<li>Luồng cần hiện thực (yêu cầu theo cơ chế session của Django/DRF): frontend lấy cookie <code>csrftoken</code> (qua một endpoint GET đặt cookie CSRF); gửi đăng nhập bằng POST kèm header <code>X-CSRFToken</code>; backend tạo session và đặt cookie <code>sessionid</code>; mọi request sau gửi bằng <code>credentials: "include"</code>; mọi request ghi (POST/PUT/PATCH/DELETE) gửi <code>X-CSRFToken</code>. DRF <code>SessionAuthentication</code> bắt buộc CSRF cho người dùng đã đăng nhập.</li>
+<li>CORS: đã có <code>CORS_ALLOWED_ORIGINS</code> (dev <code>http://localhost:3000</code> theo <code>.env.example</code>) và <code>CORS_ALLOW_CREDENTIALS = True</code>. Origin phải liệt kê cụ thể, không dùng <code>*</code> khi bật credential.</li>
+<li><strong><code>CSRF_TRUSTED_ORIGINS</code></strong> đã có trong settings.py: đọc từ biến môi trường cùng tên, mặc định bằng <code>CORS_ALLOWED_ORIGINS</code> (dev: <code>http://localhost:3000</code>). Django kiểm header <code>Origin</code> của request ghi theo danh sách này; thiếu thì POST từ frontend khác origin bị 403 CSRF. Kiểm bằng <code>src/backend/tests/test_settings.py</code>.</li>
+<li>Production: ưu tiên phục vụ frontend và API cùng origin qua reverse proxy, để giảm cấu hình CORS/CSRF (đề xuất, phụ thuộc TBD-02). Nếu khác origin thì đặt <code>CORS_ALLOWED_ORIGINS</code>, <code>CSRF_TRUSTED_ORIGINS</code> đúng tên miền HTTPS, và xem lại <code>SameSite</code> của cookie.</li>
+<li><strong>Đề xuất cho production</strong> (chưa có trong repo): bật <code>SECURE_SSL_REDIRECT</code>, <code>SESSION_COOKIE_SECURE</code>, <code>CSRF_COOKIE_SECURE</code>, HSTS; giới hạn quyền xem <code>/api/schema/</code> và <code>/api/docs/</code>; đặt <code>ALLOWED_HOSTS</code> và <code>CORS_ALLOWED_ORIGINS</code> đúng tên miền thật.</li>
+</ul>
+<h2 id="viec-con-mo">Việc còn mở</h2>
+<table>
+<thead>
+<tr>
+<th>Việc</th>
+<th>Mã / chủ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quyền thật của token CVAT, endpoint thật</td>
+<td>TBD-01</td>
+</tr>
+<tr>
+<td>Phần cứng, vùng mạng, secret store</td>
+<td>TBD-02</td>
+</tr>
+<tr>
+<td>Thời hạn lưu audit</td>
+<td>TBD-15</td>
+</tr>
+<tr>
+<td>RPO/RTO</td>
+<td>TBD-17</td>
+</tr>
+<tr>
+<td>Thời hạn lease</td>
+<td>TBD-09</td>
+</tr>
+<tr>
+<td>Gán người/tài khoản Quality Assurance Lead, Quality Control Admin</td>
+<td>Phiếu chốt R, định hướng phân công — chưa thực hiện</td>
+</tr>
+<tr>
+<td>Xác thực SSO OIDC (A mục 21) so với phiên đăng nhập LabelX (SRS)</td>
+<td>Chưa chốt; hiện theo SRS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="threat-model.html">threat-model.md</a></li>
+<li><a href="compliance.html">compliance.md</a></li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,390 @@
+% =====================================================================
+\chapter{Use case}
+\label{ch:usecase}
+% =====================================================================
+
+\section{Sơ đồ use case tổng}
+Hình~\ref{fig:usecase} thể hiện 14 use case của M13: UC-01 đến UC-11 thuộc luồng
+lõi được nghiệm thu; UC-12 đến UC-14 là use case hỗ trợ ở mức cần thiết. Quyền
+theo H: QA Lead \emph{chạy/xem} phân tích, QC Admin \emph{cấu hình}. CVAT và
+Detector là tác nhân hệ thống.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}
+  % ranh giới hệ thống
+  \draw[lxnavy, thick, rounded corners=4pt, fill=lxgrayl!40] (-4.2,-7.6) rectangle (4.2,7.4);
+  \node[font=\sffamily\small\bfseries, text=lxnavy] at (0,7.0) {LabelX — M13 Reviewer Prioritization};
+  % use case cột trái
+  \node[usecase] (u1)  at (-2.0, 5.8) {UC-01 Tạo snapshot từ CVAT};
+  \node[usecase] (u2)  at (-2.0, 4.4) {UC-02 Chạy phân tích nghi vấn};
+  \node[usecase] (u3)  at (-2.0, 3.0) {UC-03 Chấm điểm \& xếp hạng frame};
+  \node[usecase] (u4)  at (-2.0, 1.6) {UC-04 Làm việc theo hàng đợi ưu tiên};
+  \node[usecase] (u5)  at (-2.0, 0.2) {UC-05 Xem bằng chứng \& quyết định};
+  \node[usecase] (u6)  at (-2.0,-1.2) {UC-06 Chuyển cấp \& phân xử};
+  \node[usecase] (u7)  at (-2.0,-2.6) {UC-07 Rework \& kiểm lại sau sửa};
+  % use case cột phải
+  \node[usecase] (u8)  at ( 2.0, 5.8) {UC-08 Lập \& khoá reference};
+  \node[usecase] (u9)  at ( 2.0, 4.4) {UC-09 Đo Recall@20\%};
+  \node[usecase] (u10) at ( 2.0, 3.0) {UC-10 Đo effort baseline/assisted};
+  \node[usecase] (u11) at ( 2.0, 1.6) {UC-11 Xem \& xuất báo cáo hiệu quả};
+  \node[usecase, fill=lxamberl, draw=lxamber] (u12) at ( 2.0,-1.2) {UC-12 Tra cứu guideline};
+  \node[usecase, fill=lxamberl, draw=lxamber] (u13) at ( 2.0,-2.6) {UC-13 Quản lý quyền \& audit};
+  \node[font=\sffamily\scriptsize, text=lxamber] at (2.0,-3.6) {(hỗ trợ)};
+  \node[usecase, fill=lxamberl, draw=lxamber] (u14) at (0,-5.4) {UC-14 Kiểm Quality Gate tối thiểu};
+  % actor
+  \pic at (-7.0, 1.4) {actor=Reviewer};
+  \pic at (-7.0,-3.4) {actor=Annotator};
+  \pic at (-7.0, 5.2) {actor={QC Admin}};
+  \pic at ( 7.0, 4.6) {actor={QA Lead}};
+  \pic at ( 7.0, 0.6) {actor={Product /\\Data Owner}};
+  \node[ext, text width=16mm] (cvat) at (-7.0,-6.2) {«system»\\CVAT};
+  \node[ext, text width=16mm] (det) at ( 7.0,-4.0) {«system»\\Detector};
+  % liên kết actor
+  \coordinate (rv) at (-6.6,1.8); \coordinate (an) at (-6.6,-3.0);
+  \coordinate (qa) at (-6.6,5.6); \coordinate (ql) at (6.6,5.0);
+  \coordinate (po) at (6.6,1.0);
+  \foreach \uc in {u4,u5,u6,u7} \draw[lxnavy] (rv) -- (\uc.west);
+  \draw[lxnavy] (rv) -- (u12.west);
+  \draw[lxnavy] (an) -- (u7.west);
+  \foreach \uc in {u1,u2,u3} \draw[lxnavy] (qa) -- (\uc.west);
+  \draw[lxnavy] (qa) -- (u13.north west);
+  \foreach \uc in {u6,u8,u9,u11,u14} \draw[lxnavy] (ql) -- (\uc.east);
+  \draw[lxnavy] (ql) -- (u2.north east);
+  \foreach \uc in {u10,u11} \draw[lxnavy] (po) -- (\uc.east);
+  \draw[lxnavy] (cvat.north) -- (u1.south west);
+  \draw[lxnavy] (cvat.east) -- (u7.south);
+  \draw[lxnavy] (det.north) -- (u2.east);
+  % include / extend
+  \draw[arrd] (u2) -- node[lbl, right]{«include»} (u1);
+  \draw[arrd] (u3) -- node[lbl, right]{«include»} (u2);
+  \draw[arrd] (u5) -- node[lbl, right]{«include»} (u4);
+  \draw[arrd] (u6) -- node[lbl, right]{«extend»} (u5);
+  \draw[arrd] (u7) -- node[lbl, right]{«extend»} (u5);
+  \draw[arrd] (u12) -- node[lbl, above]{«extend»} (u5);
+  \draw[arrd] (u9) -- node[lbl, right]{«include»} (u8);
+  \draw[arrd] (u14) -- node[lbl, left]{«include»} (u7);
+\end{tikzpicture}}
+\caption{Sơ đồ use case tổng của M13}
+\label{fig:usecase}
+\end{figure}
+
+\section{Danh sách use case}
+\begin{xltabular}{\linewidth}{@{}L{1.4cm}L{4.6cm}L{3.2cm}L{1.2cm}Y@{}}
+\caption{Danh sách use case}\label{tab:uclist}\\
+\toprule
+\textbf{Mã} & \textbf{Tên} & \textbf{Actor chính} & \textbf{Ưu tiên} & \textbf{Mục tiêu}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Tên} & \textbf{Actor chính} & \textbf{Ưu tiên} & \textbf{Mục tiêu}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+UC-01 & Tạo snapshot từ CVAT & QA Lead (chạy), QC Admin (cấu hình) & \must & R-01\\
+UC-02 & Chạy phân tích nghi vấn & QA Lead (chạy), QC Admin (cấu hình) & \must & R-01, R-02\\
+UC-03 & Chấm điểm và xếp hạng frame & Hệ thống & \must & KPI-1\\
+UC-04 & Làm việc theo hàng đợi ưu tiên & Reviewer & \must & KPI-2\\
+UC-05 & Xem bằng chứng và quyết định & Reviewer & \must & R-02, KPI-2\\
+UC-06 & Chuyển cấp và phân xử & QA Lead & \must & R-02\\
+UC-07 & Rework và kiểm lại sau sửa & Reviewer, Annotator & \must & R-03\\
+UC-08 & Lập và khoá reference & QA Lead & \must & R-04\\
+UC-09 & Đo Recall@20\% & QA Lead & \must & KPI-1, R-04\\
+UC-10 & Đo effort baseline/assisted & Product Owner & \must & KPI-2, R-07\\
+UC-11 & Xem và xuất báo cáo hiệu quả & Product Owner, QA Lead & \must & KPI-1, KPI-2\\
+UC-12 & Tra cứu guideline & Reviewer & \should & R-02\\
+UC-13 & Quản lý quyền và audit & QC Admin & \must & R-05\\
+UC-14 & Kiểm Quality Gate tối thiểu & QA Lead & \should & R-03, R-06\\
+\end{xltabular}
+
+\section{Đặc tả use case}
+\label{sec:ucspec}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-01 · Tạo snapshot từ CVAT}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead (khởi tạo); QC Admin (cấu hình phạm vi, kết nối); CVAT (hệ thống nguồn).\\
+Mô tả & Đọc annotation, metadata và ảnh của phạm vi đã chọn từ CVAT, chuẩn hoá, tính hash và khoá thành snapshot bất biến.\\
+Tiền điều kiện & Token CVAT được cấu hình ở backend; actor có quyền chạy phân tích trên dataset (QA Lead) theo scope; phạm vi (project/task/job) đã chọn.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Actor chọn dataset và phạm vi, bấm \emph{Tạo snapshot}.
+  \item Hệ thống đọc danh sách job, frame, annotation và ảnh qua CVAT API (chỉ đọc).
+  \item Hệ thống chuẩn hoá JSON annotation theo job, tính hash từng job và hash tổng.
+  \item Hệ thống đọc lại dấu thời gian/hash cập nhật của từng job để kiểm drift.
+  \item Không có drift: hệ thống lưu ảnh, checksum, assignee từng job, taxonomy và guideline version; khoá snapshot.
+  \item Hệ thống ghi audit và hiển thị snapshot với revision hash.
+\end{enumerate}\\
+Luồng thay thế &
+\textbf{4a.} Có drift: hệ thống huỷ khoá, báo các job đã đổi, cho phép thử lại; không tạo snapshot một phần.\newline
+\textbf{2a.} Annotation không phải Bounding box: bỏ qua, ghi số lượng vào báo cáo snapshot (ngoài phạm vi).\\
+Ngoại lệ & CVAT không phản hồi hoặc từ chối quyền: snapshot ở trạng thái Failed, ghi lỗi, không ảnh hưởng snapshot cũ.\newline
+Actor không có quyền trong scope: backend từ chối (403), ghi audit.\\
+Hậu điều kiện & Snapshot bất biến, có hash; có thể chạy UC-02.\\
+Yêu cầu & \req{FR-SNP-01}…\req{FR-SNP-08}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-02 · Chạy phân tích nghi vấn}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead (chạy); QC Admin (cấu hình engine, ngưỡng); Detector (hệ thống).\\
+Mô tả & Chạy các engine MVP trên một snapshot, sinh candidate kèm evidence, cập nhật coverage ledger.\\
+Tiền điều kiện & Snapshot đã khoá; cấu hình phân tích (engine, ngưỡng, seed, model artifact) có version.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Actor chọn snapshot và cấu hình, xem ước lượng thời gian và phạm vi áp dụng từng engine, bấm \emph{Chạy}.
+  \item Hệ thống tạo QC Run (Queued), chia shard theo frame, đưa vào hàng đợi CPU/GPU.
+  \item Worker CPU chạy Schema/Taxonomy, Geometry, Duplicate/Overlap.
+  \item Worker GPU chạy Detector theo lô; worker CPU chạy matching với annotation.
+  \item Mỗi shard ghi candidate, evidence và cập nhật ledger (eligible/completed units) trong cùng transaction.
+  \item Khi mọi shard xong, hệ thống gộp candidate thành issue (dedup) và kích hoạt UC-03.
+\end{enumerate}\\
+Luồng thay thế &
+\textbf{4a.} Detector lỗi trên một số frame: retry tối đa theo cấu hình; còn lỗi thì frame đó Failed cho engine này, run ở trạng thái Partial.\newline
+\textbf{1a.} Không có Detector khả dụng: engine Mô hình độc lập Not checked; run vẫn chạy các engine khác.\\
+Ngoại lệ & Actor huỷ run: dừng nhận shard mới, giữ kết quả đã xong, run Cancelled.\newline
+Actor không có quyền chạy hoặc sửa cấu hình: backend từ chối (403).\newline
+Metric engine: chỉ chạy khi có GT đã khoá cho phạm vi (B-05, B-20); thiếu GT thì Not checked, không hiển thị accuracy.\\
+Hậu điều kiện & Run Completed/Partial/Failed/Cancelled; ledger phản ánh đúng phần chưa kiểm.\\
+Yêu cầu & \req{FR-ENG-01}…\req{FR-ENG-10}, \req{FR-AGG-01}…\req{FR-AGG-06}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-03 · Chấm điểm và xếp hạng frame}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Hệ thống (tự động sau UC-02); QC Admin (chọn version công thức).\\
+Mô tả & Tính điểm rủi ro \(s(f)\) cho mọi frame trong snapshot, xếp hạng, lưu đóng góp từng candidate để giải thích.\\
+Tiền điều kiện & Run ở trạng thái Completed hoặc Partial; công thức điểm có version đã kích hoạt.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Hệ thống tính xác suất hiệu chỉnh \(q_i\) cho từng issue theo nhóm lỗi (mục~\ref{sec:fr-rnk}).
+  \item Hệ thống tính \(s(f)\) theo công thức (mục~\ref{sec:fr-rnk}), kể cả frame không có candidate (điểm nền).
+  \item Hệ thống sắp xếp giảm dần, phá hoà bằng khoá cố định, lưu rank và version.
+  \item Hệ thống chọn lát kiểm tra ngẫu nhiên độc lập với ranking (seed cố định).
+  \item Hệ thống đánh dấu frame chưa được engine bắt buộc kiểm (Not checked/Failed) để hiển thị riêng.
+\end{enumerate}\\
+Luồng thay thế & \textbf{2a.} Run Partial: frame thiếu kết quả engine vẫn có điểm nhưng mang cờ ``thiếu bằng chứng''; không được coi là điểm thấp an toàn.\\
+Hậu điều kiện & Mỗi frame có đúng một (score, rank, score\_version) cho run.\\
+Yêu cầu & \req{FR-RNK-01}…\req{FR-RNK-09}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-04 · Làm việc theo hàng đợi ưu tiên}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Reviewer.\\
+Mô tả & Reviewer nhận frame/issue theo thứ tự ưu tiên; hệ thống cấp lease để tránh trùng việc.\\
+Tiền điều kiện & Đã có ranking; reviewer có quyền Review trong scope; frame không do reviewer gán nhãn.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Reviewer mở Review Queues, chọn hàng đợi \emph{Theo rủi ro} hoặc \emph{Kiểm tra ngẫu nhiên}.
+  \item Hệ thống hiển thị danh sách frame theo rank với số issue, nhóm lỗi, lý do xếp hạng.
+  \item Reviewer bấm \emph{Bắt đầu review}; hệ thống cấp lease frame kế tiếp chưa có người giữ.
+  \item Hệ thống mở Review Workspace (UC-05) và bắt đầu ghi effort.
+\end{enumerate}\\
+Luồng thay thế & \textbf{3a.} Frame kế tiếp do chính reviewer gán nhãn: hệ thống bỏ qua và cấp frame sau (self-review).\newline
+\textbf{3b.} Lease hết hạn (thời hạn \TBD[-09], gia hạn khi có thao tác): frame trở về hàng đợi.\newline
+\textbf{3c.} Hai reviewer cùng bấm: lease được cấp nguyên tử (một transaction, khoá dòng); người thứ hai nhận frame kế tiếp.\newline
+\textbf{2a.} Hàng đợi rỗng hoặc mọi frame còn lại là self-review: hiển thị ``không còn việc hợp lệ''.\\
+Hậu điều kiện & Frame ở trạng thái Đang review, có lease.\\
+Yêu cầu & \req{FR-REV-01}…\req{FR-REV-04}, \req{FR-SEC-03}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-05 · Xem bằng chứng và quyết định}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Reviewer.\\
+Mô tả & Reviewer xem frame với annotation hiện tại và đề xuất của Detector, đọc evidence của từng issue, ra quyết định có lý do; có thể tạo issue mới cho lỗi không có candidate.\\
+Tiền điều kiện & Reviewer giữ lease frame.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Hệ thống hiển thị ảnh, annotation (nét liền), dự đoán Detector (nét đứt), danh sách issue của frame.
+  \item Reviewer chọn issue; hệ thống hiển thị evidence (lớp, confidence, IoU, rule vi phạm), guideline liên quan và case tương tự.
+  \item Reviewer chọn \emph{Xác nhận lỗi}, \emph{Bác bỏ}, \emph{Chưa chắc chắn} hoặc \emph{Chuyển cấp trên}; với xác nhận chọn nhóm lỗi và mức độ.
+  \item Reviewer có thể bấm \emph{Yêu cầu sửa} cho lỗi đã xác nhận (UC-07).
+  \item Reviewer đánh dấu frame \emph{Đã review xong}; hệ thống lưu quyết định, actor, revision, lý do, thời gian; trả lease.
+\end{enumerate}\\
+Luồng thay thế & \textbf{3a.} Lỗi không có candidate: reviewer bấm vào vùng ảnh/object để tạo issue thủ công (nguồn = reviewer).\newline
+\textbf{3b.} Chuyển cấp trên: issue sang UC-06.\\
+Ngoại lệ & Snapshot bị thay bởi revision mới trong lúc review: quyết định vẫn gắn revision cũ; hệ thống cảnh báo.\newline
+Lease đã hết hạn hoặc đã cấp cho người khác: backend từ chối lưu, yêu cầu nhận lại frame.\newline
+Reviewer là assignee của job tại snapshot (mở trực tiếp qua URL): backend từ chối lưu quyết định (self-review, B-12).\\
+Ghi chú KPI & Chỉ lỗi thuộc E1–E3 được đối chiếu với reference để tính KPI. Cảnh báo cấu trúc, box thừa (BR-06), lỗi độ khít biên được ghi nhận nhưng không tính KPI.\\
+Hậu điều kiện & Mọi issue của frame có quyết định hoặc đang chờ phân xử; effort được ghi.\\
+Yêu cầu & \req{FR-REV-05}…\req{FR-REV-12}, \req{FR-EVL-06}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-06 · Chuyển cấp và phân xử}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead (adjudicator); Reviewer (người chuyển).\\
+Mô tả & Phân xử issue chưa đủ căn cứ hoặc reviewer bất đồng; ghi Guideline Gap khi guideline thiếu.\\
+Tiền điều kiện & Issue ở trạng thái Chuyển cấp trên hoặc Chưa chắc chắn.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item QA Lead mở Escalations, chọn case.
+  \item Hệ thống hiển thị quyết định từng reviewer, evidence, rule áp dụng.
+  \item QA Lead chọn \emph{Xác nhận lỗi}, \emph{Bác bỏ} hoặc \emph{Guideline còn thiếu}, chọn nhãn đúng và rule, nhập lý do.
+  \item QA Lead chọn \emph{Tạo yêu cầu sửa} hoặc \emph{Chỉ ghi nhận}.
+  \item Hệ thống lưu phân xử, lưu thành Decision Case (có version) để tra cứu ở UC-12.
+\end{enumerate}\\
+Luồng thay thế & \textbf{3a.} Guideline còn thiếu: tạo Guideline Gap gắn rule; issue giữ trạng thái chờ đến khi guideline có version mới.\\
+Hậu điều kiện & Issue có kết luận cuối hoặc gắn Guideline Gap.\\
+Yêu cầu & \req{FR-ESC-01}…\req{FR-ESC-05}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-07 · Rework và kiểm lại sau sửa}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Reviewer (yêu cầu, xác minh); Annotator (sửa); CVAT.\\
+Mô tả & Lỗi đã xác nhận được sửa trên CVAT; hệ thống tạo snapshot mới, chạy lại engine bị ảnh hưởng, reviewer xác minh; cuối cùng chạy QC run cuối trên revision đã sửa (B-03).\\
+Tiền điều kiện & Issue ở trạng thái Đã xác nhận.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Reviewer tạo yêu cầu sửa: việc cần làm, mức độ, hạn, annotator.
+  \item Annotator mở deep link sang đúng job/frame trên CVAT, sửa, bấm \emph{Đã sửa} trên LabelX.
+  \item Hệ thống tạo snapshot mới cho các job bị ảnh hưởng, chạy lại engine liên quan trên frame đã sửa (re-check).
+  \item Reviewer xem kết quả re-check và frame mới, chọn \emph{Đạt} hoặc \emph{Chưa đạt}.
+  \item Khi mọi yêu cầu sửa của phạm vi đã đạt, hệ thống tạo snapshot toàn phạm vi trên revision mới và QC run cuối (is\_final), liên kết các verification trước đó.
+  \item Chỉ khi run cuối Completed và ledger đủ coverage engine bắt buộc, báo cáo và gate (UC-14) mới trỏ run này.
+\end{enumerate}\\
+Luồng thay thế & \textbf{4a.} Chưa đạt: yêu cầu mở lại (Reopened), quay về bước 2.\newline
+\textbf{3a.} Re-check phát hiện lỗi mới do sửa: tạo issue mới gắn revision mới.\newline
+\textbf{6a.} Run cuối Partial/Failed/Cancelled hoặc phát sinh issue mới: gate chưa đạt; issue mới vào hàng đợi; không coi phạm vi đã hoàn tất.\newline
+\textbf{2a.} Người verify là annotator đã sửa: backend từ chối.\\
+Hậu điều kiện & Issue Resolved chỉ khi verify trên revision đã sửa; snapshot gốc giữ nguyên.\\
+Yêu cầu & \req{FR-RWK-01}…\req{FR-RWK-07}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-08 · Lập và khoá reference}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead; hai người xác minh.\\
+Mô tả & Lập GT độc lập cho tập đánh giá, suy ra tập lỗi, duyệt và khoá version (mục~\ref{sec:reference}).\\
+Tiền điều kiện & Snapshot tập đánh giá đã khoá; người xác minh không có quyền xem ranking, risk score và candidate của tập này (BR-10).\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item QA Lead tạo phiên reference, chọn snapshot, giao hai người xác minh.
+  \item Mỗi người gán GT độc lập (trong CVAT, task riêng) và nhập vào LabelX.
+  \item Hệ thống matching hai bản GT, đưa phần không khớp cho QA Lead phân xử.
+  \item Hệ thống suy ra \(\mathcal{E}\) theo BR-01…BR-07, hiển thị để duyệt.
+  \item QA Lead duyệt; nếu sửa mapping thì hệ thống suy lại (BR-14); QA Lead khoá version.
+  \item Hệ thống báo cáo tỉ lệ khớp hai bản GT trước phân xử (BR-11) và kiểm tập đánh giá không chứa case đã dùng hiệu chỉnh (BR-16).
+\end{enumerate}\\
+Ngoại lệ & Người xác minh là annotator của frame: hệ thống chặn giao việc.\\
+Hậu điều kiện & GT và \(\mathcal{E}\) khoá version cùng mapping, ngưỡng, thuật toán.\\
+Yêu cầu & \req{FR-EVL-01}…\req{FR-EVL-05}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-09 · Đo Recall@20\%}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead.\\
+Mô tả & Tính KPI-1 trên tập held-out, so với ranking đối chứng, kèm khoảng tin cậy.\\
+Tiền điều kiện & Reference khoá; ranking của held-out đã tính bằng version công thức đã khoá trên tập hiệu chỉnh.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item QA Lead chọn run, reference version, \(k\) (mặc định 20\%).
+  \item Hệ thống kiểm \(|\mathcal{E}| \ge E_{min}\); tính Recall@k, recall theo nhóm lỗi, theo slice, recall theo frame có lỗi.
+  \item Hệ thống tính các đường đối chứng (ngẫu nhiên nhiều seed, heuristic) và khoảng tin cậy bootstrap.
+  \item Hệ thống lưu evaluation run với đầy đủ provenance.
+\end{enumerate}\\
+Luồng thay thế & \textbf{2a.} \(|\mathcal{E}| < E_{min}\): ghi ``không đủ mẫu'', không kết luận.\\
+Quy tắc & Chỉ đếm lỗi E1–E3 theo BR-01…BR-07; loại đối tượng ignore khỏi tử số và mẫu số; box thừa, cảnh báo cấu trúc và độ khít biên báo cáo riêng.\newline
+Recall@20\% đo khả năng xếp hạng, không thay thế phép đo accuracy của engine. Accuracy của Detector (Metric engine) đo riêng trên GT đã khoá; Model Orchestrator tổng hợp kết quả có provenance (B-05).\\
+Yêu cầu & \req{FR-EVL-07}…\req{FR-EVL-10}, \req{FR-EVL-15}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-10 · Đo effort baseline/assisted}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Product Owner (thiết kế thí nghiệm); Reviewer (tham gia); QA Lead (giám sát).\\
+Mô tả & Chạy thí nghiệm hai nhánh theo thiết kế ở mục~\ref{sec:kpi2}, ghi effort tự động, tính KPI-2 và kiểm định chất lượng tương đương.\\
+Tiền điều kiện & Thiết kế thí nghiệm (phân nhóm, quy tắc dừng, \(\delta\)) đã khoá; reference của dữ liệu thí nghiệm đã khoá.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Product Owner tạo thí nghiệm, gán reviewer vào nhánh theo thiết kế chéo.
+  \item Nhánh baseline: Workspace ẩn ranking và evidence, frame theo thứ tự gốc.
+  \item Nhánh assisted: Workspace hiển thị ranking và evidence, dừng theo quy tắc đã khoá.
+  \item Hệ thống ghi effort theo hoạt động (review, cảnh báo sai, phân xử, re-check).
+  \item Kết thúc: hệ thống tính \(T_A, T_B, \rho_A, \rho_B\), KPI-2, KPI-2b và kiểm định non-inferiority.
+\end{enumerate}\\
+Yêu cầu & \req{FR-EVL-11}…\req{FR-EVL-16}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-11 · Xem và xuất báo cáo hiệu quả}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Product Owner, QA Lead.\\
+Mô tả & Xem báo cáo KPI-1, KPI-2, guardrail, coverage, có ghi cỡ mẫu và phương pháp; xuất PDF/CSV/JSON.\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Actor chọn evaluation run/thí nghiệm.
+  \item Hệ thống hiển thị: đường Recall@k, bảng theo nhóm lỗi và slice, effort hai nhánh, residual, guardrail, coverage từng engine.
+  \item Actor xuất báo cáo; tệp xuất ghi version của snapshot, run, công thức, reference.
+\end{enumerate}\\
+Quy tắc & Chỉ số chưa đủ dữ liệu hiển thị Not checked/không đủ mẫu, không hiển thị 0\% hay đạt.\\
+Yêu cầu & \req{FR-RPT-01}…\req{FR-RPT-06}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-12 · Tra cứu guideline (hỗ trợ)}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & Reviewer.\\
+Mô tả & Từ issue, xem rule guideline liên quan theo rule ID + version + section và các Decision Case đã duyệt (B-13); không dùng RAG.\\
+Luồng chính & Hệ thống tra mapping (nhóm lỗi, lớp) $\rightarrow$ rule ID; hiển thị trích đoạn, version, section; liệt kê case đã phân xử cùng rule.\\
+Yêu cầu & \req{FR-GDL-01}…\req{FR-GDL-04}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-13 · Quản lý quyền và audit (hỗ trợ)}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QC Admin; Super Admin (ghi đè có lý do).\\
+Mô tả & Gán vai trò theo scope dataset; xem nhật ký kiểm toán append-only.\\
+Quy tắc & Backend luôn kiểm quyền; ẩn nút chỉ để thuận tiện. Người duyệt khác người yêu cầu. Ghi đè của Super Admin phải có lý do và gắn nhãn trong audit.\\
+Yêu cầu & \req{FR-SEC-01}…\req{FR-SEC-07}\\
+\bottomrule
+\end{xltabular}
+
+% ---------------------------------------------------------------------
+\subsection*{UC-14 · Kiểm Quality Gate tối thiểu (hỗ trợ)}
+\begin{xltabular}{\linewidth}{@{}>{\bfseries}L{3.2cm}Y@{}}
+\toprule
+Actor & QA Lead (xem, đề nghị waiver); người có quyền duyệt ngoại lệ (khác người đề nghị).\\
+Mô tả & Tính từng điều kiện gate trên QC run cuối; hiển thị nguồn, cỡ mẫu, kết quả; xử lý waiver theo policy. Không bao gồm phát hành dataset đầy đủ.\\
+Tiền điều kiện & Có QC run cuối (UC-07) hoặc run gốc nếu chưa có rework (ghi rõ).\\
+Luồng chính &
+\begin{enumerate}[nosep]
+  \item Hệ thống tính từng điều kiện theo FR-GTE-01, mỗi điều kiện có nguồn, mẫu số, cỡ mẫu.
+  \item Điều kiện thiếu dữ liệu hoặc engine bắt buộc Not checked/Partial/Failed: \emph{chưa đạt}.
+  \item QA Lead xem kết quả; nếu có điều kiện chưa đạt và policy cho phép, tạo đề nghị waiver với lý do, evidence, hạn.
+  \item Người duyệt khác người đề nghị duyệt/từ chối; waiver chỉ hiệu lực sau duyệt.
+\end{enumerate}\\
+Ngoại lệ & Người duyệt trùng người đề nghị: backend từ chối. Waiver hết hạn: điều kiện trở lại chưa đạt.\\
+Yêu cầu & \req{FR-GTE-01}…\req{FR-GTE-04}\\
+\bottomrule
+\end{xltabular}

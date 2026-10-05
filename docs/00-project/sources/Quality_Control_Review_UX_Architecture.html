@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quality Control Review — UX & Information Architecture</title>
+<style>
+:root{--bg:#f3f5f9;--paper:#fff;--ink:#172033;--muted:#647187;--line:#dce3ed;--nav:#17263d;--blue:#3269c8;--bluebg:#edf3ff;--green:#16845b;--greenbg:#e9f7f0;--amber:#a96808;--amberbg:#fff5e1;--red:#b83f4b;--redbg:#ffedf0;--purple:#7657b5;--shadow:0 8px 26px #1b2a4410}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.hero{background:linear-gradient(130deg,#142238,#294a78 65%,#3269c8);color:#fff;padding:68px max(5vw,24px) 58px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800;opacity:.8}.hero h1{font-size:clamp(34px,5vw,58px);line-height:1.08;max-width:950px;margin:18px 0}.hero p{font-size:18px;color:#dce7f8;max-width:900px}.chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:25px}.chip{border:1px solid #ffffff66;border-radius:30px;padding:6px 12px;font-size:12px}
+.shell{max-width:1540px;margin:auto;padding:28px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:26px}nav{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow)}nav b{display:block;margin-bottom:10px}nav a{display:block;padding:5px 7px;border-radius:6px;color:#46536a;font-size:12px}nav a:hover{background:var(--bluebg);text-decoration:none}
+main{min-width:0}.section{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:clamp(21px,3vw,36px);margin-bottom:22px;box-shadow:var(--shadow)}h2{font-size:27px;line-height:1.2;margin:0 0 17px}h3{font-size:19px;margin:27px 0 10px}h4{font-size:15px;margin:0 0 7px}p{margin:8px 0 13px}.lead{font-size:17px;color:#3c4960}.muted{color:var(--muted)}.small{font-size:12px}.callout,.warning,.good{padding:13px 16px;border-left:4px solid var(--blue);background:var(--bluebg);border-radius:0 9px 9px 0;margin:14px 0}.warning{border-color:var(--amber);background:var(--amberbg)}.good{border-color:var(--green);background:var(--greenbg)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.card{border:1px solid var(--line);border-radius:11px;padding:15px;background:#fff;min-width:0;overflow-wrap:anywhere}.card p:last-child,.card ul:last-child{margin-bottom:0}.tag{display:inline-block;background:var(--bluebg);color:#2857a5;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:800;margin:2px}
+table{width:100%;border-collapse:collapse;margin:13px 0;font-size:13px}th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}th{background:#f2f5fa;color:#34415a}tr:last-child td{border-bottom:0}
+code{background:#eef2f8;border-radius:4px;padding:1px 4px;font-size:.92em}pre code{background:none;padding:0}pre{white-space:pre-wrap;overflow:auto;background:#101c2d;color:#e7efff;border-radius:11px;padding:15px;font:12px/1.55 ui-monospace,Consolas,monospace}.figure{margin:15px 0;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#f8faff}.figure svg{width:100%;height:auto;display:block}.caption{padding:7px 11px;background:#fff;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.flow{display:flex;gap:7px;align-items:stretch;flex-wrap:wrap;margin:13px 0}.step{flex:1 1 125px;text-align:center;padding:11px;border:1px solid #cbd8ea;border-radius:9px;background:#f6f9ff;font-size:12px;font-weight:650}.arrow{align-self:center;color:var(--blue);font-weight:800}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.kpi{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}.kpi b{font-size:23px;display:block}.kpi span{font-size:11px;color:var(--muted)}
+.footer{max-width:1500px;margin:auto;padding:0 28px 35px;color:var(--muted);font-size:11px}
+@media(max-width:900px){.shell{grid-template-columns:1fr;padding:15px}nav{position:static;max-height:none}.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}td code{word-break:break-word}.grid,.grid3{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.hero{padding:45px 22px}.section{padding:19px}}
+@media print{body{background:#fff}.shell{display:block;padding:0}nav{display:none}.section{box-shadow:none;break-inside:avoid;margin:10px 0}.hero{padding:30px}.figure{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="hero">
+ <div class="eyebrow">Annotation Studio · Product UX Specification</div>
+ <h1>Quality Control Review</h1>
+ <p>Information Architecture, Navigation, Review Workspace, Calibration &amp; Audit, Quality Reporting, Release Governance và System Architecture</p>
+ <div class="chips"><span class="chip">Workspace: Hybrid</span><span class="chip">Workflow: Hybrid</span><span class="chip">AI Assistant: Panel</span><span class="chip">CVAT-integrated</span><span class="chip">Human-in-the-loop</span><span class="chip">Version 2.2 · 04/10/2026</span></div>
+</header>
+<div class="shell">
+<nav><b>Contents</b>
+<a href="#direction">Định hướng đã chốt</a><a href="#principles">Nguyên tắc UX</a><a href="#functional">Kiến trúc chức năng</a><a href="#ia">Information Architecture</a><a href="#navigation">Navigation & Context</a><a href="#context">Chọn ngữ cảnh QC</a><a href="#dashboard">QC Dashboard</a><a href="#analysis">QC Analysis</a><a href="#reviewcenter">Review Center</a><a href="#workspace">Review Workspace</a><a href="#assistant">AI Assistant Panel</a><a href="#calibration">Calibration & Audit</a><a href="#reports">Quality Report & Release</a><a href="#flows">User Flows</a><a href="#roles">Phân quyền</a><a href="#components">Frontend Components</a><a href="#roadmap">Implementation Roadmap</a><a href="#mvp">MVP Scope</a><a href="#decisions">UX Decisions</a><a href="#appendix">Data contracts</a><a href="#system">System Architecture</a><a href="#cvat">Tích hợp CVAT</a><a href="#datamodel">Data Model</a><a href="#states">State machines</a><a href="#aggregation">Aggregation &amp; Priority</a><a href="#api">API &amp; Events</a><a href="#screens2">Màn hình bổ sung</a><a href="#nfr">Edge cases &amp; NFR</a><a href="#security">Bảo mật &amp; Audit</a><a href="#measurement">Đo hiệu quả</a><a href="#acceptance">Acceptance Criteria</a><a href="#changelog">Change log</a></nav>
+<main>
+
+<section class="section" id="direction">
+<h2>1. Định hướng UX đã chốt</h2>
+<p class="lead">Quality Control Review là một module trong Annotation Studio, tổ chức nghiệp vụ QC riêng nhưng giữ CVAT làm annotation canvas. Reviewer có thể xử lý theo từng issue hoặc kiểm tra toàn frame. AI Assistant nằm trong panel có context theo issue/frame đang mở.</p>
+<table><tr><th>Lựa chọn</th><th>Ý nghĩa trong thiết kế</th></tr>
+<tr><td><b>Workspace = Hybrid</b></td><td>QC có navigation, dashboard và review workflow riêng. Khi cần thao tác annotation, workspace tích hợp CVAT hoặc mở CVAT ở chế độ toàn màn hình, giữ nguyên task/job/frame/context.</td></tr>
+<tr><td><b>Review workflow = Hybrid</b></td><td>Issue Review xử lý candidate đã được hệ thống phát hiện; Frame Review rà soát toàn bộ annotation và tạo issue mới nếu phát hiện lỗi chưa có candidate.</td></tr>
+<tr><td><b>AI Assistant = Panel</b></td><td>Panel cạnh canvas hiển thị evidence, guideline RAG, explanation và adjudication history. AI hỗ trợ quyết định, không tự xác nhận defect, sửa nhãn hoặc release dataset.</td></tr></table>
+<div class="callout"><b>Định vị sản phẩm:</b> Annotation Studio là lớp Annotation Governance &amp; Quality Platform chạy bao quanh CVAT: setup → knowledge → annotation runtime → evidence → QC → versioning → release. Không xây dựng một annotation editor thứ hai.</div>
+<div class="warning"><b>Phạm vi giai đoạn hiện tại:</b> chỉ xây module <b>Quality Control</b>. Datasets &amp; Collections, Knowledge và Admin của Annotation Studio tạm cắt khỏi mockup và MVP. QC đọc dataset/job trực tiếp từ CVAT qua adapter (mục 21) và chỉ quản lý guideline ở mức version mapping và guideline gap.</div>
+</section>
+
+<section class="section" id="principles">
+<h2>2. Nguyên tắc UX và nghiệp vụ</h2>
+<div class="grid">
+<div class="card"><h4>Review Workspace là trung tâm</h4><p>Dashboard giúp giám sát; QC Analysis tạo candidate; Workspace là nơi con người đối chiếu annotation, evidence và guideline để quyết định.</p></div>
+<div class="card"><h4>Giữ nguyên context</h4><p>Chuyển issue/frame, mở guideline hoặc mở CVAT không làm mất Dataset, QC Run, Job, Frame, Issue và revision.</p></div>
+<div class="card"><h4>Candidate không phải defect</h4><p>Candidate từ rule/model/VLM chỉ là nghi vấn. Reviewer xác nhận, bác bỏ, yêu cầu sửa hoặc chuyển QA phân xử.</p></div>
+<div class="card"><h4>Coverage không đồng nghĩa pass</h4><p>Không có issue chỉ có ý nghĩa khi biết rõ engine nào đã chạy, phạm vi nào đã kiểm tra và phần nào chưa được kiểm tra.</p></div>
+<div class="card"><h4>Random và risk sampling riêng biệt</h4><p>Random audit ước lượng chất lượng; risk sampling ưu tiên tìm lỗi. Báo cáo riêng hoặc hiệu chỉnh trọng số nếu muốn suy rộng.</p></div>
+<div class="card"><h4>Versioned &amp; traceable</h4><p>Snapshot, annotation revision, taxonomy, guideline, model/config, reviewer decision và release manifest đều có định danh/version.</p></div>
+</div>
+</section>
+
+<section class="section" id="functional">
+<h2>3. Kiến trúc chức năng Quality Control</h2>
+<div class="grid">
+<div class="card"><h4>01 · QC Dashboard</h4><ul><li>Quality Summary</li><li>Execution Status &amp; Coverage</li><li>Review Progress</li><li>Risk Distribution</li><li>Quality Trend</li></ul></div>
+<div class="card"><h4>02 · QC Analysis</h4><ul><li>Snapshot Manager</li><li>Candidate Discovery</li><li>Schema/Taxonomy Validation</li><li>Geometry &amp; Dimension Validation</li><li>Duplicate/Overlap</li><li>Metric Engine &amp; Sampling</li><li>Execution Tracker</li></ul></div>
+<div class="card"><h4>03 · Review Center</h4><ul><li>Review Queues</li><li>Issue &amp; Frame Review</li><li>Review Workspace</li><li>Decision Management</li><li>Rework Tracking</li><li>Review History</li></ul></div>
+<div class="card"><h4>04 · Evidence &amp; Guideline <span class="tag">nav: Adjudication &amp; Guidelines</span></h4><ul><li>Visual Evidence</li><li>Selective VLM</li><li>Guideline RAG</li><li>Decision Retrieval</li><li>Evidence Comparison</li><li>Guideline Gap Detection</li><li>Adjudication</li></ul></div>
+<div class="card"><h4>05 · Calibration &amp; Audit</h4><ul><li>Ground Truth Benchmark</li><li>Random Audit</li><li>Risk Sampling</li><li>Reviewer Calibration</li><li>Model Calibration</li><li>QC Performance Evaluation</li></ul></div>
+<div class="card"><h4>06 · Quality Report &amp; Release</h4><ul><li>Quality Report</li><li>Issue &amp; Conflict Summary</li><li>Per-class / per-scene metrics</li><li>Quality Gate</li><li>Release Manifest</li><li>Dataset Versioning &amp; History</li></ul></div>
+</div>
+<h3>3.1. End-to-end QC architecture</h3>
+<div class="figure"><svg viewBox="0 0 1100 470" role="img" aria-label="QC architecture diagram">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="#3269c8"/></marker></defs>
+<g font-family="Arial" fill="#172033" text-anchor="middle">
+<rect x="20" y="25" width="160" height="58" rx="9" fill="#edf3ff" stroke="#3269c8"/><text x="100" y="49" font-size="14" font-weight="bold">CVAT Job</text><text x="100" y="67" font-size="11">Task / frame / labels</text>
+<rect x="220" y="25" width="165" height="58" rx="9" fill="#edf3ff" stroke="#3269c8"/><text x="302" y="49" font-size="14" font-weight="bold">QC Snapshot</text><text x="302" y="67" font-size="11">Immutable revision context</text>
+<rect x="425" y="13" width="220" height="82" rx="9" fill="#f2f7ff" stroke="#8aa8d8"/><text x="535" y="37" font-size="14" font-weight="bold">QC Analysis</text><text x="535" y="57" font-size="11">Rules · Geometry · Model M2</text><text x="535" y="74" font-size="11">Metrics · Sampling · VLM triggers</text>
+<rect x="685" y="25" width="165" height="58" rx="9" fill="#fff5e1" stroke="#c18a2c"/><text x="767" y="49" font-size="14" font-weight="bold">Issue Aggregation</text><text x="767" y="67" font-size="11">Dedup · Priority</text>
+<rect x="890" y="25" width="180" height="58" rx="9" fill="#e9f7f0" stroke="#16845b"/><text x="980" y="49" font-size="14" font-weight="bold">Review Queues</text><text x="980" y="67" font-size="11">Issue / audit / uncertain</text>
+<path d="M180 54H220M385 54H425M645 54H685M850 54H890" stroke="#3269c8" stroke-width="2" marker-end="url(#a)"/>
+<rect x="745" y="150" width="325" height="100" rx="10" fill="#f4efff" stroke="#8b70c6"/><text x="907" y="177" font-size="14" font-weight="bold">Evidence &amp; AI Assistance</text><text x="907" y="199" font-size="11">Selective VLM · Guideline RAG</text><text x="907" y="218" font-size="11">Adjudication history · Evidence package</text>
+<rect x="380" y="150" width="325" height="100" rx="10" fill="#edf3ff" stroke="#3269c8"/><text x="542" y="177" font-size="14" font-weight="bold">Review Workspace</text><text x="542" y="199" font-size="11">CVAT Canvas · Issue Details</text><text x="542" y="218" font-size="11">AI Panel · Human decision</text>
+<path d="M980 83V125H907V150M745 200H705" fill="none" stroke="#3269c8" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890 83V120H542V150" fill="none" stroke="#3269c8" stroke-width="2" marker-end="url(#a)"/>
+<rect x="380" y="315" width="325" height="90" rx="10" fill="#e9f7f0" stroke="#16845b"/><text x="542" y="342" font-size="14" font-weight="bold">QA / Adjudication</text><text x="542" y="364" font-size="11">Calibration · Audit · Guideline feedback</text><text x="542" y="383" font-size="11">Confirm / Reject / Rework / Escalate</text>
+<rect x="745" y="315" width="325" height="90" rx="10" fill="#fff5e1" stroke="#c18a2c"/><text x="907" y="342" font-size="14" font-weight="bold">Report &amp; Release</text><text x="907" y="364" font-size="11">Quality Gate · Manifest · Versioning</text><text x="907" y="383" font-size="11">Authorized human approval</text>
+<path d="M542 250V315M705 360H745" stroke="#3269c8" stroke-width="2" marker-end="url(#a)"/>
+<text x="25" y="448" text-anchor="start" font-size="11" fill="#647187">Background workers chạy bất đồng bộ. Engine lỗi/chưa chạy phải được biểu diễn là PARTIAL hoặc NOT_CHECKED, không phải PASS.</text>
+</g></svg><div class="caption">Luồng tổng thể từ CVAT đến QC, review, calibration, report và release.</div></div>
+<h3>3.2. Trách nhiệm các engine</h3>
+<table><tr><th>Engine / Service</th><th>Trách nhiệm</th><th>Đầu ra UX</th></tr>
+<tr><td>Rule Engine</td><td>Schema, taxonomy, required attributes, tọa độ, geometry bất hợp lệ.</td><td>Rule ID, lỗi xác định, vị trí tái hiện.</td></tr>
+<tr><td>Geometry Engine</td><td>BBox/polygon/polyline/skeleton, outlier hình học, dimension profile khi có cơ sở đo.</td><td>Geometry evidence, mức lệch, threshold/version.</td></tr>
+<tr><td>Detector / Classifier M2</td><td>Candidate độc lập, disagreement, missing candidate.</td><td>Prediction, confidence, model version.</td></tr>
+<tr><td>Metric Engine</td><td>Matching, IoU, precision/recall, Dice/mIoU tùy loại annotation và có GT.</td><td>Metric, phạm vi mẫu, matching details.</td></tr>
+<tr><td>VLM Worker</td><td>Kiểm tra có chọn lọc candidate cần hiểu nội dung ảnh.</td><td>Visual evidence và structured response.</td></tr>
+<tr><td>RAG Service</td><td>Truy xuất đúng guideline/case/version; giải thích căn cứ.</td><td>Rule ID, trích dẫn, ví dụ, uncertainty.</td></tr>
+<tr><td>Review Workflow</td><td>Decision, rework, adjudication, audit trail.</td><td>Issue lifecycle và decision log.</td></tr>
+<tr><td>Calibration / Release</td><td>Benchmark, audit, hiệu chỉnh, quality gate, manifest.</td><td>Calibration result, report, release status.</td></tr></table>
+</section>
+
+<section class="section" id="ia">
+<h2>4. Information Architecture</h2>
+<p>Navigation gồm hai tầng: toàn Annotation Studio và module Quality Control. Các module nghiệp vụ được tổ chức theo công việc người dùng, không theo tên service backend.</p>
+<div class="figure"><svg viewBox="0 0 1000 330" role="img" aria-label="Product navigation"><rect x="25" y="18" width="950" height="292" rx="16" fill="#fff" stroke="#dce3ed"/><rect x="45" y="36" width="910" height="48" rx="8" fill="#17263d"/><text x="68" y="66" font-size="18" fill="#fff" font-weight="bold">Annotation Studio</text><g font-family="Arial" font-size="15" fill="#34415a"><text x="85" y="126">Overview</text><text x="85" y="166">Datasets &amp; Collections</text><text x="85" y="206">Annotation Workspace</text><rect x="65" y="221" width="870" height="43" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="85" y="248" fill="#2857a5" font-weight="bold">Quality Control</text><text x="900" y="248" fill="#2857a5" text-anchor="end" font-size="12">Current module</text><text x="85" y="292">Guidelines &amp; Knowledge</text></g></svg><div class="caption">Quality Control là module cấp sản phẩm trong Annotation Studio.</div></div>
+<h3>4.1. QC navigation tree</h3>
+<pre>Quality Control
+├── QC Home (chọn Dataset / Version)
+├── Overview
+│   ├── Quality Summary
+│   ├── QC Execution & Coverage
+│   ├── Review Progress
+│   ├── Risk Distribution
+│   └── Quality Trend
+├── QC Analysis
+│   ├── Dataset & Snapshot
+│   ├── Analysis Configuration
+│   ├── Candidate Discovery
+│   ├── Deterministic QC
+│   ├── Independent Model Analysis
+│   ├── Metric Engine
+│   ├── Quality Sampling
+│   └── Execution History
+├── Review Center
+│   ├── Risk-prioritized Queue
+│   ├── Random Audit Queue
+│   ├── Uncertain / Escalated Queue
+│   ├── Resolved Queue
+│   ├── Review Workspace
+│   └── Rework Tracking
+├── Adjudication & Guidelines
+│   ├── Uncertain / Escalated Adjudication
+│   ├── Guideline Gaps
+│   └── Decision Cases
+├── Calibration & Audit
+│   ├── Ground Truth Benchmark
+│   ├── Random Audit
+│   ├── Risk Sampling
+│   ├── Reviewer Calibration
+│   ├── Model Calibration
+│   └── QC Performance Evaluation
+├── Reports & Releases
+│   ├── Quality Report
+│   ├── Issue & Conflict Summary
+│   ├── Per-class / Per-scene Analysis
+│   ├── Root-cause Analysis
+│   ├── Quality Gate
+│   ├── Release Manifest
+│   └── Release History
+└── QC Configuration
+    ├── Rules & Thresholds
+    ├── Sampling Policies
+    ├── Model Configuration
+    ├── Guideline Version Mapping
+    └── Workflow & Permissions</pre>
+<h3>4.2. Navigation theo nhiệm vụ</h3>
+<div class="grid"><div class="card"><h4>QC Lead</h4><p>Overview → QC Analysis → Calibration &amp; Audit → Reports &amp; Releases.</p></div><div class="card"><h4>Reviewer</h4><p>Review Center → Queue → Review Workspace → Decision.</p></div><div class="card"><h4>QA / Adjudicator</h4><p>Adjudication &amp; Guidelines → Adjudication → Guideline Gap → Calibration.</p></div><div class="card"><h4>Annotator</h4><p>Rework Tracking → Open in CVAT → Submit for verification.</p></div></div>
+</section>
+
+<section class="section" id="navigation">
+<h2>5. Navigation, breadcrumb và context</h2>
+<h3>5.1. Breadcrumb</h3><pre>Annotation Studio
+  / Quality Control
+  / Review Center
+  / Risk-prioritized
+  / Issue #QC-00128</pre>
+<p>Header của Workspace luôn giữ Dataset/version, QC Run, Task/Job, Frame, Issue hiện tại/tổng số issue, Reviewer và trạng thái đồng bộ annotation.</p>
+<h3>5.2. Chuyển chế độ review</h3>
+<div class="grid"><div class="card"><span class="tag">ISSUE REVIEW</span><h4>Object / issue-level</h4><ul><li>Một candidate cụ thể.</li><li>Next/Previous Issue.</li><li>Highlight annotation liên quan.</li><li>Decision áp dụng cho issue đang mở.</li></ul><p class="small muted">Ví dụ: QC-00128 · Wrong Class · Frame 00428 · Object #18.</p></div><div class="card"><span class="tag">FRAME REVIEW</span><h4>Frame-level</h4><ul><li>Hiển thị toàn bộ annotation.</li><li>Điều hướng frame trước/sau.</li><li>Tạo issue mới khi phát hiện lỗi.</li><li>Liên kết một decision với nhiều issue nếu phù hợp.</li></ul><p class="small muted">Ví dụ: Frame 00428 · 12 annotations · 2 existing issues.</p></div></div>
+<div class="warning"><b>State preservation:</b> chuyển mode không reset frame, issue, zoom/pan, filter và panel context. Khi quay lại Issue Review, khôi phục đúng issue đang xử lý.</div>
+<h3>5.3. Điểm truy cập</h3><ul><li>Dataset → Quality Control → QC Run.</li><li>CVAT Job → <code>Open QC Review</code>.</li><li>Notification/deep link → mở thẳng Issue Workspace.</li><li><b>QC Home</b> → chọn Dataset → mở Overview của run mới nhất.</li></ul>
+<h3 id="context">5.4. Chọn ngữ cảnh QC (Context selection &amp; scope)</h3>
+<p>Mọi màn hình QC hoạt động trong một <b>QC Context</b> rõ ràng. Người dùng luôn biết đang QC dataset nào, run nào, task nào, job nào. Phân cấp bám theo CVAT:</p>
+<div class="flow"><div class="step">Dataset<br><span class="small muted">CVAT project + version</span></div><div class="arrow">→</div><div class="step">QC Run<br><span class="small muted">gắn 1 snapshot</span></div><div class="arrow">→</div><div class="step">Phạm vi<br><span class="small muted">toàn dataset / task / job</span></div><div class="arrow">→</div><div class="step">Frame<br><span class="small muted">trong Workspace</span></div><div class="arrow">→</div><div class="step">Issue</div></div>
+<table><tr><th>Thành phần</th><th>Hành vi</th></tr>
+<tr><td>QC Home</td><td>Trang vào của module, liệt kê dataset lấy từ CVAT: version, số task/job/frame, last QC run, coverage, open issues, gate status. Dataset chưa có run hiển thị “Chưa có QC run, tạo snapshot”.</td></tr>
+<tr><td>Dataset switcher</td><td>Chip <b>Dataset ▾</b> trên context bar, chọn dataset và version. Version đã release mở ở chế độ chỉ xem lịch sử.</td></tr>
+<tr><td>Run switcher</td><td>Chip <b>QC Run ▾</b> liệt kê các run của dataset kèm trạng thái. Snapshot hiển thị theo run, không chọn riêng.</td></tr>
+<tr><td>Scope picker</td><td>Chip <b>Phạm vi ▾</b> mở cây Task → Job (assignee, CVAT stage, frame range, số issue). Chọn: toàn dataset, một task hoặc một job.</td></tr>
+<tr><td>Áp dụng scope</td><td>Overview, Review Center (queue và count), Rework, Calibration và Reports đều lọc theo scope và ghi nhãn “Phạm vi: …”. Report và gate của <b>release</b> luôn tính trên toàn dataset; scope chỉ là lát cắt xem.</td></tr>
+<tr><td>Drill-down</td><td>Bảng “Theo Task / Job” ở Overview; click một dòng sẽ đặt scope.</td></tr>
+<tr><td>Workspace</td><td>Context bar hiện Dataset · Run · Task · Job (assignee, stage) · Frame · Issue n/N. Next issue sang job khác thì chip Job cập nhật và có thông báo.</td></tr>
+<tr><td>URL</td><td>Context được serialize vào URL, ví dụ <code>#/review/risk?ds=rv-urban-1.4&amp;run=QC-091&amp;task=T-118&amp;job=2272</code>. Deep link và reload khôi phục đúng context.</td></tr>
+<tr><td>Quyền</td><td>Chỉ hiện dataset/task/job trong phạm vi được giao. Annotator chỉ thấy job của mình; mục ngoài phạm vi hiển thị khóa.</td></tr>
+<tr><td>Đổi context khi đang dở việc</td><td>Nếu có decision chưa lưu thì hỏi xác nhận; lease của issue đang mở được trả lại.</td></tr></table>
+</section>
+
+<section class="section" id="dashboard">
+<h2>6. Màn hình Overview — QC Dashboard</h2>
+<p>Dashboard phục vụ QC Lead/QA theo dõi tình trạng kiểm tra và workload. Không dùng một điểm tổng hợp để che khuất coverage thấp hoặc lỗi nghiêm trọng theo class.</p>
+<div class="figure"><svg viewBox="0 0 1100 520" role="img" aria-label="QC Dashboard UI mockup">
+<rect width="1100" height="520" fill="#f3f5f9"/><rect width="190" height="520" fill="#17263d"/><text x="22" y="39" fill="#fff" font-size="18" font-weight="bold">Annotation Studio</text><g fill="#cbd7e8" font-size="12"><text x="24" y="96">Overview</text><text x="24" y="132">Datasets</text><text x="24" y="168">Annotation</text></g><rect x="12" y="187" width="166" height="36" rx="6" fill="#3269c8"/><text x="24" y="210" fill="#fff" font-size="12" font-weight="bold">Quality Control</text><g fill="#cbd7e8" font-size="11"><text x="24" y="254">Overview</text><text x="24" y="284">QC Analysis</text><text x="24" y="314">Review Center</text><text x="24" y="344">Calibration &amp; Audit</text><text x="24" y="374">Reports &amp; Releases</text></g>
+<text x="220" y="42" fill="#172033" font-size="22" font-weight="bold">Quality Control Overview</text><text x="220" y="65" fill="#647187" font-size="12">Dataset: Example Dataset · v1.4 · QC Run #QC-091</text>
+<g><rect x="220" y="90" width="200" height="88" rx="9" fill="#fff" stroke="#dce3ed"/><rect x="435" y="90" width="200" height="88" rx="9" fill="#fff" stroke="#dce3ed"/><rect x="650" y="90" width="200" height="88" rx="9" fill="#fff" stroke="#dce3ed"/><rect x="865" y="90" width="200" height="88" rx="9" fill="#fff" stroke="#dce3ed"/><g fill="#647187" font-size="11"><text x="237" y="116">Total Frames</text><text x="452" y="116">QC Coverage</text><text x="667" y="116">Candidate Issues</text><text x="882" y="116">Confirmed Defects</text></g><g fill="#172033" font-size="26" font-weight="bold"><text x="237" y="151">12,500</text><text x="452" y="151">92.4%</text><text x="667" y="151">384</text><text x="882" y="151">126</text></g></g>
+<rect x="220" y="198" width="520" height="275" rx="9" fill="#fff" stroke="#dce3ed"/><text x="242" y="228" fill="#172033" font-size="14" font-weight="bold">QC Execution Status</text><g fill="#46536a" font-size="11"><text x="242" y="269">Schema / Taxonomy</text><text x="242" y="313">Geometry</text><text x="242" y="357">Duplicate</text><text x="242" y="401">Independent Model</text><text x="242" y="445">VLM Verification</text></g><g><rect x="390" y="254" width="300" height="12" rx="6" fill="#e7ebf2"/><rect x="390" y="254" width="300" height="12" rx="6" fill="#16845b"/><rect x="390" y="298" width="300" height="12" rx="6" fill="#e7ebf2"/><rect x="390" y="298" width="265" height="12" rx="6" fill="#16845b"/><rect x="390" y="342" width="300" height="12" rx="6" fill="#e7ebf2"/><rect x="390" y="342" width="280" height="12" rx="6" fill="#16845b"/><rect x="390" y="386" width="300" height="12" rx="6" fill="#e7ebf2"/><rect x="390" y="386" width="225" height="12" rx="6" fill="#c18a2c"/><rect x="390" y="430" width="300" height="12" rx="6" fill="#e7ebf2"/><rect x="390" y="430" width="130" height="12" rx="6" fill="#b83f4b"/></g>
+<rect x="760" y="198" width="305" height="275" rx="9" fill="#fff" stroke="#dce3ed"/><text x="782" y="228" fill="#172033" font-size="14" font-weight="bold">Review Workload</text><g font-size="12" fill="#46536a"><text x="782" y="270">Risk-prioritized</text><text x="1035" y="270" text-anchor="end">124</text><text x="782" y="310">Random Audit</text><text x="1035" y="310" text-anchor="end">50</text><text x="782" y="350">Uncertain / Escalated</text><text x="1035" y="350" text-anchor="end">18</text><text x="782" y="390">Resolved</text><text x="1035" y="390" text-anchor="end">242</text></g><rect x="782" y="420" width="260" height="30" rx="6" fill="#edf3ff"/><text x="912" y="440" text-anchor="middle" fill="#2857a5" font-size="11" font-weight="bold">Open Review Center →</text></svg><div class="caption">Dashboard wireframe minh họa. Số liệu giả lập, chỉ dùng để thể hiện cấu trúc UI.</div></div>
+<div class="kpis"><div class="kpi"><b>12,500</b><span>Total frames</span></div><div class="kpi"><b>92.4%</b><span>QC coverage</span></div><div class="kpi"><b>384</b><span>Candidate issues</span></div><div class="kpi"><b>126</b><span>Confirmed defects</span></div></div>
+<h3>6.1. Các vùng nội dung</h3><ul><li><b>Quality Summary:</b> frame/object count, candidate, confirmed defect, unresolved, rework pending.</li><li><b>Execution Status:</b> trạng thái theo từng engine và coverage; thể hiện failed/partial/not checked.</li><li><b>Review Progress:</b> queue size, reviewed, pending, escalated, reopened.</li><li><b>Risk Distribution:</b> class, issue type, severity, scene/camera, sampling source.</li><li><b>Quality Trend:</b> theo batch/version, luôn kèm phạm vi dữ liệu và phương pháp đo.</li></ul>
+</section>
+
+<section class="section" id="analysis">
+<h2>7. Màn hình QC Analysis</h2>
+<p>QC Lead tạo snapshot, chọn engine, cấu hình rule/threshold và sampling, chạy QC, theo dõi execution rồi publish candidate vào Review Center.</p>
+<div class="flow"><div class="step">Select Dataset &amp; Revision</div><div class="arrow">→</div><div class="step">Create Snapshot</div><div class="arrow">→</div><div class="step">Configure Engines</div><div class="arrow">→</div><div class="step">Run Analysis</div><div class="arrow">→</div><div class="step">Aggregate Issues</div><div class="arrow">→</div><div class="step">Publish Queues</div></div>
+<h3>7.1. Snapshot Manager</h3><ul><li>Dataset/version và annotation revision.</li><li>Task/job/frame scope.</li><li>Taxonomy version, guideline version, model versions.</li><li>QC configuration, sampling seed và execution metadata.</li><li>Snapshot immutable; thay đổi annotation tạo revision/snapshot mới.</li></ul>
+<h3>7.2. Engine Configuration</h3>
+<table><tr><th>Engine</th><th>Thông tin cấu hình</th><th>Trạng thái kết quả</th></tr><tr><td>Schema / Taxonomy</td><td>Taxonomy scope, required attributes, shape mapping.</td><td>Checked / Issue found / Failed.</td></tr><tr><td>Geometry</td><td>Shape-specific rules, bounds, tolerance, outlier profile.</td><td>Checked / Issue found / Partial.</td></tr><tr><td>Duplicate / Overlap</td><td>Matching strategy, IoU/overlap threshold, class scope.</td><td>Candidate + evidence.</td></tr><tr><td>Independent model</td><td>Model version, class mapping, confidence threshold.</td><td>Agreement/disagreement/missing candidate.</td></tr><tr><td>Metrics</td><td>GT set, matching threshold, micro/macro, per-class.</td><td>Metric hoặc Not evaluable.</td></tr><tr><td>Sampling</td><td>Random seed, sample size, risk criteria.</td><td>Sample manifest.</td></tr></table>
+<div class="warning">Nếu một engine chưa chạy hoặc lỗi, dashboard phải thể hiện NOT_CHECKED/PARTIAL/FAILED. Không được hiển thị dataset như đã QC đạt.</div>
+</section>
+
+<section class="section" id="reviewcenter">
+<h2>8. Màn hình Review Center</h2>
+<p>Review Center là điểm vào công việc hàng ngày của Reviewer. Queue cần phân tách theo mục tiêu và nguồn mẫu, không chỉ sắp xếp theo một điểm risk duy nhất.</p>
+<div class="grid3"><div class="card"><h4>Risk-prioritized</h4><p>Candidate có disagreement, rule violation, geometry anomaly, VLM flag hoặc temporal inconsistency.</p></div><div class="card"><h4>Random Audit</h4><p>Frame chọn ngẫu nhiên độc lập với cảnh báo để phát hiện residual defect và ước lượng chất lượng.</p></div><div class="card"><h4>Uncertain / Escalated</h4><p>Candidate chưa đủ căn cứ, guideline mơ hồ hoặc reviewer bất đồng cần QA/Lead phân xử.</p></div></div>
+<div class="figure"><svg viewBox="0 0 1050 400" role="img" aria-label="Review Center queue mockup"><rect width="1050" height="400" fill="#f4f6fa"/><rect x="20" y="20" width="1010" height="360" rx="13" fill="#fff" stroke="#dce3ed"/><text x="48" y="57" font-size="21" font-weight="bold" fill="#172033">Review Center</text><text x="48" y="80" font-size="11" fill="#647187">Dataset: Example Dataset · QC Run #QC-091</text><rect x="48" y="103" width="205" height="37" rx="7" fill="#edf3ff" stroke="#3269c8"/><text x="150" y="127" text-anchor="middle" fill="#2857a5" font-size="12" font-weight="bold">Risk-prioritized · 124</text><rect x="264" y="103" width="175" height="37" rx="7" fill="#fff" stroke="#dce3ed"/><text x="351" y="127" text-anchor="middle" fill="#46536a" font-size="12">Random Audit · 50</text><rect x="450" y="103" width="190" height="37" rx="7" fill="#fff" stroke="#dce3ed"/><text x="545" y="127" text-anchor="middle" fill="#46536a" font-size="12">Uncertain · 18</text><rect x="651" y="103" width="155" height="37" rx="7" fill="#fff" stroke="#dce3ed"/><text x="728" y="127" text-anchor="middle" fill="#46536a" font-size="12">Resolved · 242</text><g font-size="11" fill="#46536a"><text x="50" y="174" font-weight="bold">ISSUE</text><text x="250" y="174" font-weight="bold">TYPE</text><text x="405" y="174" font-weight="bold">FRAME / OBJECT</text><text x="600" y="174" font-weight="bold">SOURCE</text><text x="765" y="174" font-weight="bold">PRIORITY</text><text x="900" y="174" font-weight="bold">STATUS</text></g><g stroke="#e5e9f0"><path d="M45 185H1005M45 235H1005M45 285H1005M45 335H1005"/></g><g font-size="12" fill="#172033"><text x="50" y="215">QC-00128</text><text x="250" y="215">Wrong Class</text><text x="405" y="215">Frame 00428 · #18</text><text x="600" y="215">M2 disagreement</text><text x="765" y="215" fill="#b83f4b">High</text><text x="900" y="215">Pending</text><text x="50" y="265">QC-00129</text><text x="250" y="265">Geometry</text><text x="405" y="265">Frame 00431 · #07</text><text x="600" y="265">Rule G-014</text><text x="765" y="265" fill="#a96808">Medium</text><text x="900" y="265">In review</text><text x="50" y="315">QC-00130</text><text x="250" y="315">Possible Missing</text><text x="405" y="315">Frame 00436 · —</text><text x="600" y="315">Random audit</text><text x="765" y="315" fill="#16845b">Audit</text><text x="900" y="315">Pending</text></g></svg><div class="caption">Review Center wireframe: queue tabs, filterable issue table, source và priority. Ví dụ minh họa.</div></div>
+<h3>8.1. Filters và grouping</h3><ul><li>Dataset, QC Run, Task, Job, Frame range.</li><li>Issue type, class, attribute, shape type.</li><li>Severity, priority, confidence, evidence completeness.</li><li>Candidate source: rule, M2, VLM, metric, random audit, manual finding.</li><li>Status: pending, in review, uncertain, rework, resolved, rejected, reopened.</li><li>Annotator, reviewer, camera/scene, guideline version.</li></ul>
+<h3>8.2. Issue lifecycle</h3><pre>Candidate
+  → Pending Review
+  → In Review
+      ├── Confirm → Confirmed Defect → Rework → Verify → Closed
+      ├── Reject → False Positive / Rejected
+      ├── Uncertain → QA Adjudication
+      └── Escalate → Lead / Guideline Decision
+  → Reopen (nếu verification không đạt hoặc revision bị thay đổi)</pre>
+</section>
+
+<section class="section" id="workspace">
+<h2>9. Review Workspace — màn hình trung tâm</h2>
+<p>Workspace chia thành ba vùng: CVAT canvas, issue detail/decision và AI Assistant panel. Các vùng có thể resize/collapse nhưng phải giữ context đồng bộ.</p>
+<div class="figure"><svg viewBox="0 0 1200 660" role="img" aria-label="Review Workspace detailed UI"><rect width="1200" height="660" fill="#f1f4f8"/><rect x="16" y="14" width="1168" height="48" rx="8" fill="#17263d"/><text x="36" y="44" fill="#fff" font-size="16" font-weight="bold">Review Workspace</text><text x="1160" y="43" fill="#dce7f8" font-size="11" text-anchor="end">Dataset v1.4 · QC Run #091 · Job 2272 · Frame 00428 · QC-00128</text>
+<rect x="16" y="76" width="770" height="500" rx="9" fill="#fff" stroke="#dce3ed"/><rect x="28" y="88" width="746" height="42" rx="6" fill="#f4f6fa"/><text x="45" y="114" fill="#34415a" font-size="12" font-weight="bold">CVAT Canvas</text><text x="755" y="114" fill="#647187" font-size="11" text-anchor="end">Issue Review | Frame Review</text>
+<rect x="55" y="155" width="690" height="385" rx="5" fill="#dbe4ed"/><rect x="55" y="155" width="690" height="385" rx="5" fill="#dbe4ed"/><path d="M55 425L745 425M55 450L745 450" stroke="#fff" stroke-width="5"/><path d="M300 155L300 540M500 155L500 540" stroke="#c3cfdb" stroke-width="2"/><rect x="390" y="300" width="150" height="95" fill="none" stroke="#d94855" stroke-width="3"/><text x="392" y="290" fill="#b83f4b" font-size="12" font-weight="bold">Object #18 · Candidate</text><rect x="180" y="340" width="75" height="55" fill="none" stroke="#16845b" stroke-width="2"/><text x="180" y="331" fill="#16845b" font-size="10">Object #12</text>
+<rect x="802" y="76" width="180" height="500" rx="9" fill="#fff" stroke="#dce3ed"/><text x="820" y="108" font-size="14" font-weight="bold" fill="#172033">Issue Details</text><text x="820" y="139" font-size="11" fill="#647187">QC-00128</text><rect x="820" y="154" width="145" height="25" rx="12" fill="#ffedf0"/><text x="892" y="171" text-anchor="middle" font-size="10" fill="#b83f4b">Possible Wrong Class</text><g font-size="11" fill="#46536a"><text x="820" y="211">Current label</text><text x="820" y="231" font-weight="bold" fill="#172033">car</text><text x="820" y="270">Frame / Object</text><text x="820" y="290" font-weight="bold" fill="#172033">00428 / #18</text><text x="820" y="329">Candidate source</text><text x="820" y="349" font-weight="bold" fill="#172033">Model M2 disagreement</text></g><rect x="820" y="390" width="145" height="35" rx="6" fill="#edf3ff"/><text x="892" y="412" text-anchor="middle" font-size="11" fill="#2857a5">View full evidence</text><rect x="820" y="440" width="145" height="32" rx="6" fill="#e9f7f0"/><text x="892" y="460" text-anchor="middle" font-size="11" fill="#16845b">Confirm</text><rect x="820" y="480" width="145" height="32" rx="6" fill="#ffedf0"/><text x="892" y="500" text-anchor="middle" font-size="11" fill="#b83f4b">Reject</text>
+<rect x="998" y="76" width="186" height="500" rx="9" fill="#fff" stroke="#dce3ed"/><text x="1016" y="108" font-size="14" font-weight="bold" fill="#172033">AI Assistant</text><g font-size="10" fill="#2857a5"><text x="1016" y="139">Evidence · Guideline</text><text x="1016" y="155">Explanation · History</text></g><rect x="1014" y="176" width="154" height="105" rx="7" fill="#f4efff"/><text x="1025" y="198" font-size="11" fill="#5d4397" font-weight="bold">Model evidence</text><text x="1025" y="219" font-size="10" fill="#46536a">M2 predicts: truck</text><text x="1025" y="238" font-size="10" fill="#46536a">Annotation: car</text><text x="1025" y="257" font-size="10" fill="#46536a">Confidence: illustrative</text><rect x="1014" y="294" width="154" height="120" rx="7" fill="#edf3ff"/><text x="1025" y="316" font-size="11" fill="#2857a5" font-weight="bold">Guideline reference</text><text x="1025" y="338" font-size="10" fill="#46536a">Vehicle taxonomy</text><text x="1025" y="357" font-size="10" fill="#46536a">Rule VEH-03</text><text x="1025" y="376" font-size="10" fill="#46536a">Guideline v1.2</text><rect x="1014" y="430" width="154" height="95" rx="7" fill="#f4f6fa"/><text x="1025" y="452" font-size="10" fill="#46536a">Assistant provides</text><text x="1025" y="470" font-size="10" fill="#46536a">evidence only. Human</text><text x="1025" y="488" font-size="10" fill="#46536a">owns final decision.</text>
+<rect x="16" y="590" width="1168" height="52" rx="8" fill="#fff" stroke="#dce3ed"/><text x="35" y="621" font-size="12" fill="#46536a">Decision: Confirm · Reject · Uncertain · Rework · Escalate</text><text x="1160" y="621" text-anchor="end" font-size="11" fill="#647187">Previous Issue  |  Save Decision  |  Next Issue</text></svg><div class="caption">Workspace wireframe: CVAT canvas bên trái, Issue Details ở giữa, AI Assistant panel bên phải. Mockup không phải ảnh chụp sản phẩm thực tế.</div></div>
+<h3>9.1. Vùng CVAT Canvas</h3><ul><li>Hiển thị frame gốc và toàn bộ annotation.</li><li>Highlight annotation đang được review.</li><li>Overlay độc lập cho annotation hiện tại, pre-label M1, independent model M2 và candidate geometry.</li><li>Zoom/pan, toggle overlay, chọn object, frame navigation.</li><li>Chế độ Issue Review tập trung object; Frame Review hiển thị toàn bộ annotation.</li><li>Click issue phải đưa canvas đến đúng frame và object; click object trong Frame Review có thể tạo issue.</li></ul>
+<h3>9.2. Issue Details</h3><ul><li>Issue ID, candidate type, status, severity/priority.</li><li>Current annotation và candidate proposal tách biệt.</li><li>Source engine, rule ID, model/version, confidence.</li><li>Frame/object reference và revision.</li><li>Decision controls, comment, history và rework action.</li></ul>
+<h3>9.3. Decision semantics</h3>
+<table><tr><th>Decision</th><th>Ý nghĩa</th><th>Hệ thống thực hiện</th></tr><tr><td>Confirm</td><td>Candidate phản ánh defect thật.</td><td>Yêu cầu chọn defect type đã xác nhận, severity, rationale; chuyển Confirmed Defect.</td></tr><tr><td>Reject</td><td>Annotation hiện tại hợp lệ hoặc candidate sai.</td><td>Lưu false-positive/rejected reason; không sửa annotation.</td></tr><tr><td>Uncertain</td><td>Chưa đủ căn cứ hoặc rule mơ hồ.</td><td>Chuyển Uncertain queue, giữ evidence và câu hỏi cần phân xử.</td></tr><tr><td>Rework</td><td>Cần annotator sửa.</td><td>Tạo Rework Request có issue, vị trí, rule, revision gốc và hành động cần sửa.</td></tr><tr><td>Escalate</td><td>Cần QA/Lead quyết định.</td><td>Chuyển adjudication queue, giữ nguyên lịch sử và context.</td></tr></table>
+<div class="warning">Candidate type không tự động trở thành defect type. Ví dụ candidate “Possible Wrong Class” có thể được reviewer xác nhận là “Correct Annotation” và reject candidate.</div>
+</section>
+
+<section class="section" id="assistant">
+<h2>10. AI Assistant Panel — Context-aware Review Assistant</h2>
+<p>Panel không phải chatbot tổng quát. Đây là một evidence assistant nhận context của issue/frame đang mở và cung cấp nguồn chứng cứ có thể truy nguyên.</p>
+<div class="grid">
+<div class="card"><h4>Evidence</h4><p>Rule Engine finding, M1/M2 prediction, VLM output, crop/overlay, confidence, model version.</p></div>
+<div class="card"><h4>Guideline</h4><p>Rule definition, class/attribute scope, ví dụ đã duyệt, document/version/section và link nguồn.</p></div>
+<div class="card"><h4>Explanation</h4><p>Vì sao candidate được tạo, tín hiệu nào hỗ trợ, tín hiệu nào còn thiếu và giới hạn kết luận.</p></div>
+<div class="card"><h4>History</h4><p>Adjudication cases tương tự, quyết định cuối, guideline version và lý do được QA phê duyệt.</p></div>
+</div>
+<h3>10.1. Context tự động đồng bộ</h3><pre>ReviewContext {
+  datasetId, datasetVersion,
+  scope,
+  snapshotId,
+  qcRunId,
+  mode: "issue" | "frame",
+  issueId?,
+  taskId,
+  jobId,
+  frameIndex,
+  annotationRevision,
+  guidelineVersion
+}</pre>
+<p>Khi reviewer chuyển issue, panel tự nạp evidence và guideline đúng issue mới. Khi đổi frame hoặc revision, assistant phải cập nhật context; không được dùng lại kết quả của issue trước.</p>
+<h3>10.2. Ranh giới quyền hạn AI</h3><ul><li>AI được truy xuất guideline, tóm tắt evidence, so sánh model/annotation và đề xuất câu hỏi review.</li><li>AI không tự confirm/reject issue, không tự sửa annotation, không đóng issue và không release dataset.</li><li>VLM chưa được xác minh không tự động trở thành defect nghiệm thu.</li><li>RAG chỉ truy xuất căn cứ; phép đo geometry/metric do engine xác định thực hiện.</li></ul>
+</section>
+
+<section class="section" id="calibration">
+<h2>11. Calibration &amp; Audit</h2>
+<p>Đây là module dành cho QC Lead và QA để đánh giá chất lượng của chính quy trình QC, model và reviewer. Không phải màn hình làm việc chính của Reviewer thông thường.</p>
+<h3>11.1. Information Architecture của module</h3>
+<div class="grid3"><div class="card"><h4>Ground Truth Benchmark</h4><p>Tạo/import benchmark, chuyên gia duyệt, chuyển acceptance/completed, quản lý validation set và honeypots.</p></div><div class="card"><h4>Random Audit</h4><p>Chọn frame ngẫu nhiên độc lập với cảnh báo, lưu seed và sample manifest, đo residual defect.</p></div><div class="card"><h4>Risk Sampling</h4><p>Lấy mẫu theo disagreement, class khó, geometry anomaly, occlusion, small objects hoặc camera/scene.</p></div><div class="card"><h4>Reviewer Calibration</h4><p>Hidden anchor cases, so sánh reviewer với adjudicator, agreement và critical-error miss rate.</p></div><div class="card"><h4>Model Calibration</h4><p>Đánh giá confidence/threshold theo class và slice; theo dõi trước/sau hiệu chỉnh.</p></div><div class="card"><h4>QC Performance Evaluation</h4><p>Issue precision, false alarm, residual defect, coverage, latency/cost và lỗi bị bỏ sót.</p></div></div>
+<h3>11.2. Calibration & Audit screen</h3>
+<div class="figure"><svg viewBox="0 0 1100 510" role="img" aria-label="Calibration audit UI"><rect width="1100" height="510" fill="#f3f5f9"/><rect x="20" y="18" width="1060" height="474" rx="13" fill="#fff" stroke="#dce3ed"/><text x="48" y="55" font-size="22" font-weight="bold" fill="#172033">Calibration &amp; Audit</text><text x="48" y="79" font-size="11" fill="#647187">Evaluation scope: Dataset / Batch / QC Run · Benchmark version · Sampling period</text>
+<g><rect x="48" y="102" width="235" height="78" rx="8" fill="#edf3ff" stroke="#dce3ed"/><rect x="300" y="102" width="235" height="78" rx="8" fill="#e9f7f0" stroke="#dce3ed"/><rect x="552" y="102" width="235" height="78" rx="8" fill="#fff5e1" stroke="#dce3ed"/><rect x="804" y="102" width="235" height="78" rx="8" fill="#f4efff" stroke="#dce3ed"/><g fill="#647187" font-size="11"><text x="65" y="126">Reviewer Agreement</text><text x="317" y="126">Agent Issue Precision</text><text x="569" y="126">Residual Defect Rate</text><text x="821" y="126">Benchmark Coverage</text></g><g fill="#172033" font-size="25" font-weight="bold"><text x="65" y="159">94.2%</text><text x="317" y="159">87.5%</text><text x="569" y="159">3.8%</text><text x="821" y="159">76.0%</text></g></g>
+<rect x="48" y="200" width="490" height="250" rx="8" fill="#fff" stroke="#dce3ed"/><text x="68" y="229" font-size="14" font-weight="bold" fill="#172033">Audit breakdown</text><g font-size="11" fill="#46536a"><text x="68" y="267">Sampling stream</text><text x="270" y="267">Samples</text><text x="365" y="267">Confirmed errors</text><text x="68" y="305">Random audit</text><text x="270" y="305">100</text><text x="365" y="305">8</text><text x="68" y="345">Risk sampling</text><text x="270" y="345">100</text><text x="365" y="345">35</text><text x="68" y="385">Benchmark</text><text x="270" y="385">200</text><text x="365" y="385">24</text></g><text x="68" y="425" font-size="10" fill="#647187">Illustrative values only · report sample scope and method.</text>
+<rect x="558" y="200" width="481" height="250" rx="8" fill="#fff" stroke="#dce3ed"/><text x="578" y="229" font-size="14" font-weight="bold" fill="#172033">Calibration tasks</text><g font-size="11" fill="#46536a"><text x="578" y="269">Reviewer A</text><text x="1008" y="269" text-anchor="end">40 / 45 agreement</text><text x="578" y="309">Reviewer B</text><text x="1008" y="309" text-anchor="end">43 / 45 agreement</text><text x="578" y="349">Model M2</text><text x="1008" y="349" text-anchor="end">Missing candidate evaluation</text><text x="578" y="389">Geometry Engine</text><text x="1008" y="389" text-anchor="end">Threshold evaluation</text></g></svg><div class="caption">Calibration &amp; Audit mockup. Toàn bộ số liệu trong hình là ví dụ giả lập, không phải kết quả đo thực tế.</div></div>
+<h3>11.3. Chỉ số cần theo dõi</h3>
+<table><tr><th>Metric</th><th>Định nghĩa / mục đích</th><th>Diễn giải</th></tr>
+<tr><td>Reviewer Agreement</td><td>Mức thống nhất giữa reviewer và adjudicator/anchor cases.</td><td>Đánh giá tính nhất quán quyết định; cần xem theo loại issue và độ khó.</td></tr>
+<tr><td>Agent Issue Precision</td><td>Trong số candidate Agent đưa ra, tỷ lệ candidate được reviewer xác nhận là defect.</td><td>Đo độ hữu ích của candidate; không phản ánh lỗi Agent bỏ sót.</td></tr>
+<tr><td>Residual Defect Rate</td><td>Tỷ lệ lỗi còn lại phát hiện trong random audit sau quy trình QC.</td><td>Đo lỗi lọt qua QC; báo cáo sample size và phương pháp lấy mẫu.</td></tr>
+<tr><td>Critical Error Miss Rate</td><td>Tỷ lệ lỗi nghiêm trọng trong anchor/benchmark mà reviewer không phát hiện.</td><td>Phục vụ reviewer calibration và quy trình escalation.</td></tr>
+<tr><td>Model Precision / Recall</td><td>Chỉ tính khi có Ground Truth phù hợp cùng scope/taxonomy.</td><td>Không dùng agreement giữa model và annotator thay cho accuracy.</td></tr>
+<tr><td>Coverage</td><td>Tỷ lệ frame/object thực sự đã được engine kiểm tra trên phạm vi xác định.</td><td>Phân biệt checked, partial, failed và not checked.</td></tr></table>
+<h3>11.4. Sampling policy</h3>
+<div class="figure"><svg viewBox="0 0 950 220" role="img" aria-label="Two sampling streams"><rect x="20" y="15" width="910" height="190" rx="12" fill="#fff" stroke="#dce3ed"/><rect x="55" y="75" width="170" height="60" rx="9" fill="#edf3ff" stroke="#3269c8"/><text x="140" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#172033">Review Sampling</text><text x="140" y="119" text-anchor="middle" font-size="11" fill="#647187">Two independent streams</text><path d="M225 105H295V55H345M295 105V155H345" stroke="#3269c8" stroke-width="2" fill="none"/><rect x="345" y="25" width="235" height="60" rx="9" fill="#e9f7f0" stroke="#16845b"/><text x="462" y="50" text-anchor="middle" font-size="14" font-weight="bold" fill="#172033">Random Audit Sample</text><text x="462" y="68" text-anchor="middle" font-size="11" fill="#46536a">Estimate dataset quality</text><rect x="345" y="125" width="235" height="60" rx="9" fill="#fff5e1" stroke="#c18a2c"/><text x="462" y="150" text-anchor="middle" font-size="14" font-weight="bold" fill="#172033">Risk-prioritized Sample</text><text x="462" y="168" text-anchor="middle" font-size="11" fill="#46536a">Find defects efficiently</text><path d="M580 55H650M580 155H650" stroke="#3269c8" stroke-width="2"/><rect x="650" y="25" width="235" height="60" rx="9" fill="#f4f6fa" stroke="#aab5c5"/><text x="767" y="50" text-anchor="middle" font-size="13" font-weight="bold" fill="#172033">Population estimate</text><text x="767" y="68" text-anchor="middle" font-size="10" fill="#647187">Random / weighted design</text><rect x="650" y="125" width="235" height="60" rx="9" fill="#f4f6fa" stroke="#aab5c5"/><text x="767" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#172033">Issue discovery</text><text x="767" y="168" text-anchor="middle" font-size="10" fill="#647187">Do not infer population rate</text></svg><div class="caption">Hai sampling stream phải được báo cáo riêng; không suy ra tỷ lệ lỗi toàn dataset từ risk sample thiên lệch.</div></div>
+<h3>11.5. Calibration workflow</h3><ol><li>QA chọn benchmark/anchor set và khóa đáp án.</li><li>Phân phối hidden cases cho reviewer theo phạm vi quyền hạn.</li><li>Reviewer đánh giá độc lập, không thấy đáp án chuẩn.</li><li>So sánh với adjudicator: agreement, critical misses, false alarms.</li><li>QA phân tích disagreement theo issue type/class/guideline.</li><li>Điều chỉnh hướng dẫn, threshold hoặc training; lưu version.</li><li>Chạy lại calibration trên tập phù hợp để kiểm tra tác động.</li></ol>
+<div class="warning"><b>Không trộn hai loại calibration:</b> reviewer calibration đánh giá người review; model calibration đánh giá confidence/threshold của model. Chúng có tập dữ liệu, metric và hành động điều chỉnh khác nhau.</div>
+</section>
+
+<section class="section" id="reports">
+<h2>12. Quality Report &amp; Release</h2>
+<p>Reports &amp; Releases cung cấp bằng chứng nghiệm thu theo dataset, project, task và job. Báo cáo phải giải thích phạm vi đánh giá, nguồn ground truth, coverage, giới hạn và các phần chưa đủ dữ liệu.</p>
+<h3>12.1. Information Architecture của báo cáo</h3>
+<div class="grid3"><div class="card"><h4>Executive Summary</h4><p>Dataset/version, QC Run, scope, trạng thái gate, số frame/object, coverage và defect status.</p></div><div class="card"><h4>QC Execution</h4><p>Engine run, pass/issue/partial/failed, execution time, model/config version, frame coverage.</p></div><div class="card"><h4>Issue &amp; Conflict</h4><p>Issue theo type/class/severity/status/source; confusion matrix và conflict details.</p></div><div class="card"><h4>Metrics</h4><p>Precision/recall/IoU/Dice/Jaccard/mIoU theo shape phù hợp; micro/macro/worst class.</p></div><div class="card"><h4>Audit &amp; Calibration</h4><p>Random audit, risk sample, benchmark, reviewer agreement, model calibration.</p></div><div class="card"><h4>Release Manifest</h4><p>Artifact version, snapshot, taxonomy/guideline, QC config, decision log, approval và timestamp.</p></div></div>
+<h3>12.2. Quality Report screen</h3>
+<div class="figure"><svg viewBox="0 0 1100 540" role="img" aria-label="Quality report UI"><rect width="1100" height="540" fill="#f3f5f9"/><rect x="20" y="18" width="1060" height="504" rx="13" fill="#fff" stroke="#dce3ed"/><text x="48" y="55" font-size="22" font-weight="bold" fill="#172033">Quality Report</text><text x="48" y="80" font-size="11" fill="#647187">Dataset release candidate · v1.4 · QC Run #QC-091 · Report generated 04 Oct 2026</text><rect x="48" y="100" width="1004" height="45" rx="7" fill="#fff5e1" stroke="#c18a2c"/><text x="68" y="128" font-size="13" font-weight="bold" fill="#8b5708">Release status: BLOCKED — unresolved critical issues / incomplete coverage</text>
+<g><rect x="48" y="165" width="230" height="76" rx="8" fill="#f4f6fa" stroke="#dce3ed"/><rect x="294" y="165" width="230" height="76" rx="8" fill="#f4f6fa" stroke="#dce3ed"/><rect x="540" y="165" width="230" height="76" rx="8" fill="#f4f6fa" stroke="#dce3ed"/><rect x="786" y="165" width="266" height="76" rx="8" fill="#f4f6fa" stroke="#dce3ed"/><g fill="#647187" font-size="11"><text x="65" y="189">Frames in scope</text><text x="311" y="189">QC coverage</text><text x="557" y="189">Open confirmed defects</text><text x="803" y="189">Rework completion</text></g><g fill="#172033" font-size="23" font-weight="bold"><text x="65" y="221">12,500</text><text x="311" y="221">92.4%</text><text x="557" y="221">12</text><text x="803" y="221">86.0%</text></g></g>
+<rect x="48" y="260" width="490" height="220" rx="8" fill="#fff" stroke="#dce3ed"/><text x="68" y="289" font-size="14" font-weight="bold" fill="#172033">Issue breakdown by category</text><g font-size="11" fill="#46536a"><text x="68" y="326">Wrong class</text><text x="68" y="359">Geometry</text><text x="68" y="392">Missing object</text><text x="68" y="425">Attribute / tracking</text></g><g><rect x="200" y="313" width="260" height="10" rx="5" fill="#e7ebf2"/><rect x="200" y="313" width="170" height="10" rx="5" fill="#3269c8"/><rect x="200" y="346" width="260" height="10" rx="5" fill="#e7ebf2"/><rect x="200" y="346" width="120" height="10" rx="5" fill="#3269c8"/><rect x="200" y="379" width="260" height="10" rx="5" fill="#e7ebf2"/><rect x="200" y="379" width="90" height="10" rx="5" fill="#3269c8"/><rect x="200" y="412" width="260" height="10" rx="5" fill="#e7ebf2"/><rect x="200" y="412" width="55" height="10" rx="5" fill="#3269c8"/></g>
+<rect x="558" y="260" width="494" height="220" rx="8" fill="#fff" stroke="#dce3ed"/><text x="578" y="289" font-size="14" font-weight="bold" fill="#172033">Release gate checklist</text><g font-size="11" fill="#46536a"><text x="578" y="326">✓ Snapshot and version integrity</text><text x="578" y="359">✓ Benchmark report attached</text><text x="578" y="392">! QC coverage threshold not met</text><text x="578" y="425">! Critical rework remains open</text><text x="578" y="458">○ Awaiting authorized approval</text></g></svg><div class="caption">Quality Report wireframe. Status và số liệu chỉ minh họa; hệ thống thực tế phải lấy từ QC run.</div></div>
+<h3>12.3. Metric policy theo loại annotation</h3>
+<table><tr><th>Loại dữ liệu</th><th>Phép đo</th><th>Lưu ý bắt buộc</th></tr><tr><td>BBox</td><td>One-to-one matching, IoU, precision/recall, missing/extra object, class mismatch.</td><td>Tách geometry matching và class evaluation.</td></tr><tr><td>Semantic segmentation</td><td>Per-class IoU, mIoU, Dice, boundary quality, coverage.</td><td>Tính theo pixel; xử lý class vắng mặt và ignore region.</td></tr><tr><td>Polygon</td><td>Overlap, boundary distance, self-intersection, area/coverage.</td><td>Dùng tolerance phù hợp và rule visibility.</td></tr><tr><td>Polyline</td><td>Distance/tolerance, coverage, direction nếu guideline yêu cầu.</td><td>Không đánh giá như vùng diện tích nếu chưa định nghĩa buffer.</td></tr><tr><td>Attributes / Tracks</td><td>Attribute match, ID consistency, temporal continuity.</td><td>So khớp frame đơn lẻ không chứng minh continuity của track.</td></tr></table>
+<h3>12.4. Báo cáo phải có các lát cắt</h3><ul><li>Project / dataset / version / task / job / frame range.</li><li>Class, shape type, attribute và worst-performing label.</li><li>Camera, scene, time/weather/domain slice nếu có metadata đáng tin cậy.</li><li>Candidate source và engine version.</li><li>Random audit và risk sampling được tách riêng.</li><li>Benchmark sample size, GT version, metric configuration và confidence/limitations.</li><li>Conflict/confusion matrix, unresolved issue và rework status.</li><li>Export: PDF/CSV/JSON hoặc report bundle có manifest.</li></ul>
+<h3>12.5. Quality Gate và Release Manifest</h3>
+<table><tr><th>Gate</th><th>Điều kiện kiểm tra</th><th>Hành động khi không đạt</th></tr><tr><td>Coverage</td><td>Đạt phạm vi engine/frame tối thiểu theo policy.</td><td>Chạy bổ sung hoặc ghi nhận waiver được duyệt.</td></tr><tr><td>Critical issues</td><td>Không còn critical confirmed defect chưa xử lý.</td><td>Rework và verify.</td></tr><tr><td>Rework</td><td>Các request bắt buộc đã được xác minh/đóng.</td><td>Trả về annotator/reviewer.</td></tr><tr><td>Benchmark &amp; Audit</td><td>Có kết quả trên đúng scope; đạt ngưỡng đã cấu hình.</td><td>Bổ sung mẫu/benchmark hoặc ghi rõ not evaluable.</td></tr><tr><td>Version integrity</td><td>Annotation, taxonomy, guideline, model/config và snapshot khớp.</td><td>Tạo QC run mới trên revision nhất quán.</td></tr><tr><td>Approval</td><td>Người có thẩm quyền phê duyệt.</td><td>Giữ trạng thái pending/blocked.</td></tr></table>
+<pre>ReleaseManifest {
+  dataset_id,
+  dataset_version,
+  snapshot_id,
+  annotation_revision,
+  taxonomy_version,
+  guideline_version,
+  qc_run_id,
+  qc_configuration_version,
+  benchmark_version,
+  audit_sample_manifest,
+  confirmed_issue_summary,
+  rework_status,
+  quality_report_id,
+  approved_by,
+  approved_at,
+  release_artifacts
+}</pre>
+<div class="good"><b>Nguyên tắc:</b> Release chỉ được tạo sau khi gate đạt và có approval hợp lệ. Agent không tự quyết định release; mọi waiver phải có người chịu trách nhiệm, lý do và audit log.</div>
+</section>
+
+<section class="section" id="flows">
+<h2>13. User Flows chi tiết</h2>
+<h3>Flow A — QC Lead tạo và chạy QC Analysis</h3>
+<div class="figure"><svg viewBox="0 0 1000 230" role="img" aria-label="QC analysis flow"><g font-family="Arial" text-anchor="middle" font-size="12" fill="#172033"><rect x="15" y="75" width="130" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="80" y="102" font-weight="bold">Select Dataset</text><text x="80" y="120">Revision / scope</text><rect x="180" y="75" width="130" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="245" y="102" font-weight="bold">QC Snapshot</text><text x="245" y="120">Immutable</text><rect x="345" y="75" width="130" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="410" y="102" font-weight="bold">Configure</text><text x="410" y="120">Engines / policy</text><rect x="510" y="75" width="130" height="65" rx="8" fill="#fff5e1" stroke="#c18a2c"/><text x="575" y="102" font-weight="bold">Run QC</text><text x="575" y="120">Execution tracker</text><rect x="675" y="75" width="130" height="65" rx="8" fill="#f4efff" stroke="#8b70c6"/><text x="740" y="102" font-weight="bold">Aggregate</text><text x="740" y="120">Dedup / priority</text><rect x="840" y="75" width="145" height="65" rx="8" fill="#e9f7f0" stroke="#16845b"/><text x="912" y="102" font-weight="bold">Publish Queues</text><text x="912" y="120">Review Center</text><path d="M145 107H180M310 107H345M475 107H510M640 107H675M805 107H840" stroke="#3269c8" stroke-width="2"/></g></svg></div>
+<ol><li>Chọn dataset, annotation revision và phạm vi job/frame.</li><li>Tạo immutable snapshot; kiểm tra taxonomy/guideline/model version.</li><li>Chọn QC engines, rules, thresholds và sampling policies.</li><li>Chạy analysis; theo dõi success/partial/failed theo engine.</li><li>Aggregate và deduplicate candidate; giữ provenance từng candidate.</li><li>Publish queue. Candidate có đủ evidence có thể review trước khi engine bất đồng bộ khác hoàn tất.</li></ol>
+<h3>Flow B — Reviewer xử lý Issue</h3>
+<div class="figure"><svg viewBox="0 0 1000 190" role="img" aria-label="Issue review flow"><g font-family="Arial" text-anchor="middle" font-size="12" fill="#172033"><rect x="20" y="55" width="135" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="87" y="82" font-weight="bold">Open Queue</text><text x="87" y="100">Select issue</text><rect x="185" y="55" width="145" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="257" y="82" font-weight="bold">Load Workspace</text><text x="257" y="100">Frame + overlay</text><rect x="360" y="55" width="145" height="65" rx="8" fill="#f4efff" stroke="#8b70c6"/><text x="432" y="82" font-weight="bold">Inspect Evidence</text><text x="432" y="100">AI + guideline</text><rect x="535" y="55" width="145" height="65" rx="8" fill="#fff5e1" stroke="#c18a2c"/><text x="607" y="82" font-weight="bold">Human Decision</text><text x="607" y="100">5 decisions</text><rect x="710" y="55" width="125" height="65" rx="8" fill="#e9f7f0" stroke="#16845b"/><text x="772" y="82" font-weight="bold">Save Log</text><text x="772" y="100">Update state</text><rect x="865" y="55" width="115" height="65" rx="8" fill="#edf3ff" stroke="#3269c8"/><text x="922" y="82" font-weight="bold">Next Issue</text><text x="922" y="100">Preserve context</text><path d="M155 87H185M330 87H360M505 87H535M680 87H710M835 87H865" stroke="#3269c8" stroke-width="2"/></g></svg></div>
+<ol><li>Reviewer mở queue, chọn issue.</li><li>Workspace load đúng frame/object/revision và highlight annotation.</li><li>Panel tải evidence, guideline, case history.</li><li>Reviewer chọn Confirm, Reject, Uncertain, Rework hoặc Escalate.</li><li>Hệ thống lưu decision, rationale, actor, timestamp và issue history.</li><li>Next Issue chỉ chuyển sau khi decision được lưu thành công.</li></ol>
+<h3>Flow C — Frame Review / Random Audit</h3><ol><li>Reviewer mở frame theo sample manifest hoặc chuyển từ Issue Review.</li><li>Canvas hiển thị toàn bộ annotation trong frame.</li><li>Reviewer rà soát cả object đã có và vùng có khả năng bị bỏ sót.</li><li>Nếu không có lỗi, Mark Frame Reviewed và lưu audit record.</li><li>Nếu phát hiện lỗi, chọn object/vùng hoặc tạo issue mới, gán issue type/severity và evidence.</li><li>Issue mới được đưa vào queue; audit record vẫn lưu nguồn mẫu và kết quả.</li></ol>
+<h3>Flow D — Annotator Rework</h3><ol><li>Annotator nhận Rework Request có issue, frame, object, defect đã xác nhận, rule và revision gốc.</li><li>Mở đúng frame trong CVAT, sửa annotation và lưu revision mới.</li><li>Submit for Verification.</li><li>Reviewer kiểm tra revision mới; chạy lại các QC checks bị ảnh hưởng.</li><li>Đạt yêu cầu thì close issue; không đạt thì rework lại. Snapshot QC gốc vẫn bất biến.</li></ol>
+<h3>Flow E — QA Adjudication &amp; Guideline Gap</h3><ol><li>QA mở Uncertain/Escalated issue, xem evidence, guideline và các quyết định tương tự.</li><li>Nếu guideline rõ: adjudicate theo rule hiện hành.</li><li>Nếu guideline thiếu/mâu thuẫn: tạo Guideline Gap, liên kết case và đề xuất sửa.</li><li>Lead/mentor có thẩm quyền phê duyệt guideline version mới.</li><li>Phân tích job/class/frame bị ảnh hưởng và tạo targeted rework nếu cần.</li></ol>
+<h3>Flow F — Quality Gate &amp; Release</h3><ol><li>Mở Quality Report và kiểm tra scope, QC coverage, confirmed issue, rework status.</li><li>Kiểm benchmark/audit, metric validity và version integrity.</li><li>Nếu gate chưa đạt: hiển thị blocked reasons và action cần thực hiện.</li><li>Nếu đạt: yêu cầu release approval từ người có quyền.</li><li>Tạo manifest, lưu approval/time và phát hành dataset version.</li></ol>
+</section>
+
+<section class="section" id="roles">
+<h2>14. Phân quyền theo vai trò</h2>
+<table><tr><th>Chức năng</th><th>Annotator</th><th>Reviewer</th><th>QA / Lead</th><th>QC Admin</th><th>Super Admin</th></tr>
+<tr><td>QC Dashboard</td><td>Giới hạn</td><td>Xem</td><td>Đầy đủ</td><td>Đầy đủ</td><td>Đầy đủ</td></tr>
+<tr><td>QC Analysis</td><td>—</td><td>—</td><td>Run / xem</td><td>Cấu hình</td><td>Run / cấu hình</td></tr>
+<tr><td>Review Queue / Workspace</td><td>—</td><td>Review</td><td>Review / giám sát</td><td>Xem</td><td>Review / giám sát</td></tr>
+<tr><td>Frame Review</td><td>—</td><td>Có</td><td>Có</td><td>Có</td><td>Có</td></tr>
+<tr><td>Rework</td><td>Thực hiện</td><td>Yêu cầu / verify</td><td>Yêu cầu / giám sát</td><td>—</td><td>Thực hiện / verify</td></tr>
+<tr><td>Adjudication</td><td>—</td><td>—</td><td>Có</td><td>—</td><td>Có (override)</td></tr>
+<tr><td>Guideline Approval</td><td>—</td><td>—</td><td>Người được cấp quyền</td><td>—</td><td>Có (override)</td></tr>
+<tr><td>Calibration &amp; Audit</td><td>Tham gia khi được phân</td><td>Tham gia</td><td>Quản lý</td><td>Cấu hình</td><td>Quản lý / cấu hình</td></tr>
+<tr><td>Release Approval</td><td>—</td><td>—</td><td>Người được cấp quyền</td><td>—</td><td>Có (override)</td></tr>
+<tr><td>QC Configuration</td><td>—</td><td>—</td><td>Giới hạn</td><td>Có</td><td>Có (gồm Permissions)</td></tr></table>
+<div class="warning">Backend phải enforce permission. Reviewer không được review annotation do chính mình tạo; không chỉ ẩn nút ở frontend.</div>
+<div class="callout"><b>Super Admin</b> có toàn quyền trên mọi chức năng QC, kể cả quản lý Workflow &amp; Permissions. Có ba rào chắn: (1) mọi thao tác được audit với badge Super Admin; (2) hành động thuộc vai trò nghiệp vụ (decision, adjudication, waiver, approve release, guideline approval) bắt buộc nhập <i>lý do override</i>; (3) vẫn áp dụng separation of duties: không tự duyệt waiver/release do chính mình yêu cầu và không review annotation do chính mình tạo. Số tài khoản Super Admin nên giới hạn tối thiểu. </div>
+<h3>14.1. Giao diện theo vai trò</h3>
+<ul><li><b>Chỉ hiện chức năng của vai trò:</b> sidebar, tab con, nút hành động và form chỉ hiển thị phần vai trò hiện tại được dùng. Group không còn mục nào thì ẩn cả group.</li>
+<li><b>Chặn theo ngữ cảnh vẫn hiển thị:</b> lease của người khác, self-review, separation of duties và gate chưa đạt hiện nút disabled kèm lý do, vì đây không phải chuyện thiếu quyền.</li>
+<li><b>Truy cập trực tiếp bằng URL</b> vào chức năng không có quyền: hiện trang “Không đủ quyền” nêu quyền cần có và cách xin quyền. Backend luôn enforce.</li>
+<li><b>Màn hình mặc định theo vai trò:</b> Reviewer → Review Center · QA Lead → QC Home/Overview · Annotator → Rework Tracking (việc của tôi) · QC Admin → QC Configuration · Super Admin → QC Home.</li></ul>
+<h3>14.2. Giới thiệu chức năng khi hover</h3>
+<p>Mục sidebar, tab con, chip ngữ cảnh, badge trạng thái engine và nút hành động chính đều có tooltip giới thiệu. Tooltip hiện khi hover hoặc focus bằng bàn phím (gắn <code>aria-describedby</code>); trên thiết bị cảm ứng dùng biểu tượng ⓘ. Nội dung theo cấu trúc:</p>
+<pre>Tên chức năng
+Dùng để: 1–2 câu mô tả mục đích
+Ai dùng: các vai trò
+Kết quả: trạng thái chuyển sang gì   (với nút hành động)
+Phím tắt: …                          (nếu có)</pre>
+<p class="small muted">Nội dung tooltip quản lý tập trung (ví dụ <code>FEATURE_HELP</code>) và lấy từ chính tài liệu này để tránh lệch nghĩa.</p>
+</section>
+
+<section class="section" id="components">
+<h2>15. Frontend Components &amp; Context Contract</h2>
+<table><tr><th>Component</th><th>Trách nhiệm</th><th>Màn hình</th></tr>
+<tr><td><code>QCSidebar</code></td><td>Navigation module QC</td><td>Toàn bộ QC</td></tr><tr><td><code>DatasetContextBar</code></td><td>Dataset, version, QC Run, scope</td><td>Toàn bộ QC</td></tr><tr><td><code>QCSummaryCards</code></td><td>KPI/summary</td><td>Dashboard</td></tr><tr><td><code>QCExecutionTable</code></td><td>Engine status/coverage</td><td>Dashboard, Analysis</td></tr><tr><td><code>QCModuleSelector</code></td><td>Chọn engine/rule/sampling</td><td>Analysis</td></tr><tr><td><code>QCQueueTabs</code></td><td>Queue theo mục tiêu</td><td>Review Center</td></tr><tr><td><code>IssueTable</code></td><td>Candidate/issue list</td><td>Review Center</td></tr><tr><td><code>ReviewModeSwitcher</code></td><td>Issue/Frame mode</td><td>Workspace</td></tr><tr><td><code>CVATCanvasAdapter</code></td><td>Canvas, frame, annotation bridge</td><td>Workspace</td></tr><tr><td><code>AnnotationLayerControl</code></td><td>Toggle overlay M1/M2/current/candidate</td><td>Workspace</td></tr><tr><td><code>IssueDetailPanel</code></td><td>Issue metadata và decision</td><td>Workspace</td></tr><tr><td><code>AIAssistantPanel</code></td><td>Evidence/RAG/explanation/history</td><td>Workspace</td></tr><tr><td><code>ReviewDecisionBar</code></td><td>Confirm/Reject/Uncertain/Rework/Escalate</td><td>Workspace</td></tr><tr><td><code>CalibrationMetrics</code></td><td>Audit/calibration metrics</td><td>Calibration</td></tr><tr><td><code>ReleaseGateChecklist</code></td><td>Gate status và blocker</td><td>Reports</td></tr></table>
+<p>Component bổ sung trong v2.0:</p>
+<table><tr><th>Component</th><th>Trách nhiệm</th><th>Màn hình</th></tr>
+<tr><td><code>QCContextSwitcher</code> / <code>ScopePicker</code></td><td>Chọn Dataset/version, QC Run, phạm vi Task/Job; đồng bộ URL</td><td>Toàn bộ QC</td></tr>
+<tr><td><code>QCHome</code></td><td>Danh sách dataset từ CVAT với trạng thái QC</td><td>QC Home</td></tr>
+<tr><td><code>QCViewer</code></td><td>Render frame + annotation tại revision + overlay (read-only), zoom/pan, chọn object</td><td>Workspace, Rework verify</td></tr>
+<tr><td><code>LeaseIndicator</code></td><td>Claim/heartbeat/release, hiển thị người đang review</td><td>Review Center, Workspace</td></tr>
+<tr><td><code>RevisionDriftBanner</code></td><td>Cảnh báo annotation đổi sau snapshot và lựa chọn context</td><td>Workspace</td></tr>
+<tr><td><code>DecisionForm</code></td><td>Trường bắt buộc theo từng decision, idempotent save</td><td>Workspace, Adjudication</td></tr>
+<tr><td><code>ShortcutLayer</code></td><td>Phím tắt và cheatsheet (mục 27.2)</td><td>Workspace</td></tr>
+<tr><td><code>ReworkList</code> / <code>VerifyCompare</code></td><td>Việc rework của annotator; so sánh trước/sau khi verify</td><td>Rework Tracking</td></tr>
+<tr><td><code>AdjudicationPanel</code> / <code>GuidelineGapForm</code></td><td>Phân xử và tạo guideline gap kèm impact</td><td>Adjudication &amp; Guidelines</td></tr>
+<tr><td><code>ConfigVersionEditor</code></td><td>Draft/diff/publish ConfigVersion</td><td>QC Configuration</td></tr>
+<tr><td><code>WaiverDialog</code> / <code>ManifestViewer</code></td><td>Waiver có người chịu trách nhiệm; xem manifest</td><td>Reports &amp; Releases</td></tr></table>
+<h3>15.1. Gợi ý cấu trúc frontend</h3>
+<pre>src/
+├── modules/quality-control/
+│   ├── pages/
+│   │   ├── QCDashboard.tsx
+│   │   ├── QCAnalysis.tsx
+│   │   ├── ReviewCenter.tsx
+│   │   ├── ReviewWorkspace.tsx
+│   │   ├── ReworkTracking.tsx
+│   │   ├── AdjudicationGuidelines.tsx
+│   │   ├── CalibrationAudit.tsx
+│   │   ├── ReportsReleases.tsx
+│   │   └── QCConfiguration.tsx
+│   ├── components/
+│   │   ├── navigation/
+│   │   ├── dashboard/
+│   │   ├── analysis/
+│   │   ├── review-queue/
+│   │   ├── review-workspace/
+│   │   ├── ai-assistant/
+│   │   ├── calibration/
+│   │   └── release/
+│   ├── hooks/
+│   ├── services/
+│   ├── stores/
+│   ├── types/
+│   └── routes/
+└── integrations/cvat/
+    ├── CVATCanvasAdapter.tsx
+    ├── CVATFrameNavigator.ts
+    ├── CVATAnnotationBridge.ts
+    └── CVATRevisionSync.ts</pre>
+<h3>15.2. Shared Review Context</h3>
+<pre>interface QCContext {
+  datasetId: string;          // CVAT project + dataset version
+  datasetVersion: string;
+  qcRunId: string;
+  snapshotId: string;         // suy ra từ run
+  scope: { level: "dataset" | "task" | "job"; taskId?: string; jobId?: string };
+}
+
+interface ReviewContext extends QCContext {
+  mode: "issue" | "frame";
+  issueId?: string;
+  taskId: string;
+  jobId: string;
+  frameIndex: number;
+  annotationRevision: string;
+  guidelineVersion: string;
+}</pre>
+<p>Context này là hợp đồng đồng bộ giữa CVAT Canvas, Issue Details, AI Assistant, Frame Navigator và Review History. Khi chuyển mode hoặc route, state phải được serialize/restore an toàn.</p>
+</section>
+
+<section class="section" id="roadmap">
+<h2>16. Implementation Roadmap</h2>
+<div class="flow"><div class="step">P0<br>Foundation</div><div class="arrow">→</div><div class="step">P1<br>Deterministic QC</div><div class="arrow">→</div><div class="step">P2<br>Independent Discovery</div><div class="arrow">→</div><div class="step">P3<br>Review Experience</div><div class="arrow">→</div><div class="step">P4<br>AI Assistance</div><div class="arrow">→</div><div class="step">P5/P6<br>Calibration &amp; Release</div></div>
+<table><tr><th>Phase</th><th>Scope</th><th>UX deliverable</th></tr><tr><td>P0 · Foundation</td><td>Snapshot, Issue Management, CVAT Adapter, context/permission.</td><td>Navigation shell, Dataset Context Bar, issue deep link.</td></tr><tr><td>P1 · Deterministic QC</td><td>Schema, taxonomy, geometry, duplicate.</td><td>QC Analysis basic, execution status, candidate list.</td></tr><tr><td>P2 · Independent Discovery</td><td>M2, missing/changed, matching, disagreement.</td><td>Candidate provenance, evidence completeness.</td></tr><tr><td>P3 · Review Experience</td><td>Queue, Workspace, Issue/Frame Review, decisions, rework.</td><td>Core reviewer experience.</td></tr><tr><td>P4 · AI Assistance</td><td>Selective VLM, RAG, evidence aggregation.</td><td>AI Assistant Panel.</td></tr><tr><td>P5 · Calibration</td><td>Random audit, benchmark, reviewer/model calibration.</td><td>Calibration &amp; Audit.</td></tr><tr><td>P6 · Release</td><td>Report, quality gate, manifest, versioning.</td><td>Reports &amp; Releases.</td></tr></table>
+<p>P3 có thể phát triển song song P1/P2 khi Issue schema và API contract đã ổn định. Không cần đợi toàn bộ AI engine hoàn thành mới xây Review Workspace.</p>
+<h3>16.1. Kế hoạch MVP theo sprint build (đề xuất)</h3>
+<table><tr><th>Tuần</th><th>Mục tiêu</th><th>Kết quả kiểm chứng được</th></tr>
+<tr><td>Tuần 1</td><td>P0 + một phần P1: CVAT adapter (đọc job, export snapshot, hash), data model, Schema/Geometry/Duplicate engine, Review Center cơ bản.</td><td>Một run thật trên job CVAT sinh candidate có provenance.</td></tr>
+<tr><td>Tuần 2</td><td>P3: Workspace (QC Viewer, Issue/Frame Review, decision, lease, drift), Rework + verify, audit event.</td><td>Vòng candidate → decision → rework → verify chạy end-to-end.</td></tr>
+<tr><td>Tuần 3</td><td>P4 tối thiểu (Evidence + Guideline RAG có trích dẫn), random audit manifest, Quality Report + gate cơ bản; đo baseline và pilot (mục 29).</td><td>Report có coverage, residual defect từ random audit và số đo công sức.</td></tr></table>
+</section>
+
+<section class="section" id="mvp">
+<h2>17. MVP UX Scope</h2>
+<p>MVP cần tạo được vòng QC thực tế: chạy một số deterministic checks → tạo candidate → reviewer mở đúng frame trong CVAT → xem evidence/guideline → quyết định → rework/verify → có audit trail và report cơ bản.</p>
+<div class="grid">
+<div class="card"><h4>Bắt buộc trong MVP</h4><ul><li>QC navigation + context bar.</li><li>Snapshot và QC execution status.</li><li>Issue Queue và filter cơ bản.</li><li>Review Workspace tích hợp CVAT.</li><li>Issue Review + Frame Review.</li><li>AI Panel: Evidence + Guideline.</li><li>Confirm/Reject/Uncertain/Rework/Escalate.</li><li>Rework verification và decision history.</li><li>Audit sample record và report cơ bản.</li><li>Lease, revision drift, phím tắt decision.</li><li>Instrumentation đo baseline/pilot (mục 29).</li></ul></div>
+<div class="card"><h4>Để giai đoạn sau</h4><ul><li>Root-cause analytics nâng cao.</li><li>Reviewer calibration với hidden anchor set.</li><li>Model confidence calibration tự động.</li><li>Advanced benchmark dashboard.</li><li>Release analytics và trend dài hạn.</li><li>Guideline impact analysis tự động.</li><li>Complex consensus workflow.</li></ul></div>
+</div>
+</section>
+
+<section class="section" id="decisions">
+<h2>18. Các UX decisions nên đóng băng</h2>
+<table><tr><th>Vấn đề</th><th>Quyết định đề xuất</th><th>Lý do</th></tr><tr><td>Default review mode</td><td>Issue Review</td><td>Phù hợp xử lý candidate hàng ngày.</td></tr><tr><td>Frame Review access</td><td>Chuyển mode ngay trong Workspace</td><td>Không mất context, canvas và panel.</td></tr><tr><td>AI Panel</td><td>Mặc định mở, có thể collapse</td><td>Evidence là phần quan trọng của quyết định.</td></tr><tr><td>Next Issue</td><td>Chuyển sau khi lưu decision thành công</td><td>Tránh mất quyết định chưa persist.</td></tr><tr><td>Rework</td><td>Tạo request, revision mới, reviewer verify</td><td>Giữ snapshot và audit history.</td></tr><tr><td>Uncertain</td><td>Queue riêng</td><td>Không ép reviewer kết luận khi thiếu căn cứ.</td></tr><tr><td>Frame audit</td><td>Mark as Reviewed rõ ràng</td><td>Mở frame không đồng nghĩa đã kiểm tra.</td></tr><tr><td>CVAT integration</td><td>QC Viewer read-only + sửa trong CVAT qua deep link (ADR-03); nhúng cvat-canvas để giai đoạn sau</td><td>Giữ một annotation editor duy nhất, vẫn hiển thị được overlay M2/candidate.</td></tr><tr><td>Confirm vs Rework</td><td>Rework = Confirm + yêu cầu sửa; Confirmed không sửa phải thành Known Defect</td><td>Không có defect “lơ lửng” ngoài report.</td></tr><tr><td>Hiển thị theo quyền</td><td>Chỉ hiện chức năng của vai trò; tooltip giới thiệu khi hover</td><td>Giao diện gọn theo nhiệm vụ; người dùng mới hiểu chức năng mà không cần tài liệu.</td></tr><tr><td>Đồng thời</td><td>Lease 15 phút + optimistic version</td><td>Tránh hai người quyết định cùng một issue.</td></tr><tr><td>Release</td><td>Gate + authorized approval</td><td>Agent không tự phát hành.</td></tr></table>
+<div class="good"><b>Kết luận thiết kế:</b> Dashboard quản lý tình hình; QC Analysis tạo candidate; Review Workspace xử lý quyết định; Calibration &amp; Audit đánh giá độ tin cậy của người và hệ thống QC; Quality Report &amp; Release cung cấp bằng chứng nghiệm thu và phát hành có kiểm soát.</div>
+</section>
+
+<section class="section" id="appendix">
+<h2>19. Data contracts và lưu ý triển khai</h2>
+<h3>19.1. Issue record tối thiểu</h3>
+<pre>Issue {
+  issueId,
+  snapshotId,
+  qcRunId,
+  datasetId,
+  taskId,
+  jobId,
+  frameIndex,
+  annotationRef?,
+  candidateType,
+  confirmedDefectType?,
+  sourceEngines[],
+  evidenceRefs[],
+  guidelineRefs[],
+  severity?,
+  priority?,
+  status,
+  reviewerDecision?,
+  decisionRationale?,
+  createdAt,
+  updatedAt
+}</pre>
+<h3>19.2. Audit event tối thiểu</h3>
+<pre>ReviewAuditEvent {
+  eventId,
+  issueId?,
+  frameId?,
+  actorId,
+  actorRole,
+  action,
+  previousState?,
+  newState?,
+  annotationRevision?,
+  evidenceRefs[],
+  rationale?,
+  timestamp
+}</pre>
+<h3>19.3. Report provenance</h3><ul><li>Mọi metric phải kèm metric definition, threshold, matching policy, sample size và GT version.</li><li>Metric không thể tính phải hiển thị Not evaluable/Insufficient data, không hiển thị 0% hoặc pass.</li><li>Benchmark chỉ hỗ trợ kết luận trong đúng frame/class/scope có GT tương ứng.</li><li>Report lưu cả kết quả engine và quyết định người dùng; không ghi đè candidate ban đầu bằng kết luận reviewer.</li><li>Release manifest trỏ về report, snapshot, guideline/taxonomy và approval record.</li></ul>
+<h3>19.4. Các nguyên tắc kỹ thuật liên quan CVAT</h3><ul><li>CVAT tiếp tục quản lý annotation editor và job lifecycle trong phạm vi tích hợp đã chọn.</li><li>Adapter cần map task/job/frame/shape/track và revision; không giả định mọi deployment/edition CVAT có cùng tính năng QC.</li><li>Không coi một lần mở canvas là audit completion; cần explicit review event.</li><li>Rework revision không được sửa ngược snapshot QC đã dùng để đánh giá.</li><li>Phân quyền review độc lập với quyền annotate; backend kiểm tra reviewer không phải người tạo annotation.</li></ul>
+</section>
+
+<section class="section" id="system">
+<h2>20. Kiến trúc hệ thống (System Architecture)</h2>
+<p class="lead">Phần này chuyển kiến trúc chức năng ở mục 3 thành kiến trúc triển khai ở mức đủ để đội dev bắt tay: thành phần, ranh giới dữ liệu, luồng bất đồng bộ và các quyết định kiến trúc (ADR) cần đóng băng cho MVP.</p>
+<div class="figure"><svg viewBox="0 0 1100 560" role="img" aria-label="Sơ đồ kiến trúc hệ thống QC">
+<defs><marker id="sa" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="#3269c8"/></marker></defs>
+<g font-family="Arial" font-size="13" fill="#172033">
+<text x="20" y="30" font-size="11" fill="#647187" font-weight="bold">CLIENT</text>
+<rect x="20" y="40" width="520" height="62" rx="10" fill="#edf3ff" stroke="#3269c8"/><text x="280" y="66" text-anchor="middle" font-weight="bold">QC Web App (React + TS)</text><text x="280" y="86" text-anchor="middle" font-size="11" fill="#46536a">Dashboard · Analysis · Review Center · Workspace (QC Viewer) · Calibration · Reports</text>
+<rect x="580" y="40" width="250" height="62" rx="10" fill="#fff5e1" stroke="#a96808"/><text x="705" y="66" text-anchor="middle" font-weight="bold">CVAT UI</text><text x="705" y="86" text-anchor="middle" font-size="11" fill="#46536a">Annotation editor duy nhất</text>
+<rect x="870" y="40" width="210" height="62" rx="10" fill="#fff" stroke="#dce3ed"/><text x="975" y="66" text-anchor="middle" font-weight="bold">Identity (OIDC)</text><text x="975" y="86" text-anchor="middle" font-size="11" fill="#46536a">SSO dùng chung CVAT</text>
+<text x="20" y="140" font-size="11" fill="#647187" font-weight="bold">API</text>
+<rect x="20" y="150" width="810" height="50" rx="10" fill="#17263d"/><text x="425" y="181" text-anchor="middle" fill="#fff" font-weight="bold">QC API (FastAPI) · REST /api/qc/v1 · SSE events · RBAC + scope · Idempotency</text>
+<line x1="280" y1="102" x2="280" y2="148" stroke="#3269c8" stroke-width="2" marker-end="url(#sa)"/>
+<text x="20" y="235" font-size="11" fill="#647187" font-weight="bold">CORE MODULES (modular monolith)</text>
+<g font-size="12">
+<rect x="20" y="245" width="150" height="70" rx="9" fill="#fff" stroke="#3269c8"/><text x="95" y="274" text-anchor="middle" font-weight="bold">Snapshot &amp; Run</text><text x="95" y="294" text-anchor="middle" font-size="10" fill="#647187">snapshot, run, engine run</text>
+<rect x="185" y="245" width="150" height="70" rx="9" fill="#fff" stroke="#3269c8"/><text x="260" y="274" text-anchor="middle" font-weight="bold">Issue &amp; Review</text><text x="260" y="294" text-anchor="middle" font-size="10" fill="#647187">aggregation, lease, decision</text>
+<rect x="350" y="245" width="150" height="70" rx="9" fill="#fff" stroke="#3269c8"/><text x="425" y="274" text-anchor="middle" font-weight="bold">Evidence &amp; RAG</text><text x="425" y="294" text-anchor="middle" font-size="10" fill="#647187">evidence pkg, guideline</text>
+<rect x="515" y="245" width="150" height="70" rx="9" fill="#fff" stroke="#3269c8"/><text x="590" y="274" text-anchor="middle" font-weight="bold">Calibration</text><text x="590" y="294" text-anchor="middle" font-size="10" fill="#647187">sampling, benchmark</text>
+<rect x="680" y="245" width="150" height="70" rx="9" fill="#fff" stroke="#3269c8"/><text x="755" y="274" text-anchor="middle" font-weight="bold">Report &amp; Release</text><text x="755" y="294" text-anchor="middle" font-size="10" fill="#647187">gate, waiver, manifest</text>
+</g>
+<line x1="425" y1="200" x2="425" y2="243" stroke="#3269c8" stroke-width="2" marker-end="url(#sa)"/>
+<rect x="870" y="150" width="210" height="165" rx="10" fill="#fff5e1" stroke="#a96808"/><text x="975" y="176" text-anchor="middle" font-weight="bold">CVAT Adapter</text><text x="975" y="200" text-anchor="middle" font-size="11">REST: jobs, labels,</text><text x="975" y="216" text-anchor="middle" font-size="11">annotations, frames</text><text x="975" y="240" text-anchor="middle" font-size="11">Webhook: update:job</text><text x="975" y="264" text-anchor="middle" font-size="11">Revision hash / drift</text><text x="975" y="288" text-anchor="middle" font-size="11">Deep link · CVAT issues</text>
+<line x1="830" y1="175" x2="868" y2="175" stroke="#a96808" stroke-width="2" marker-end="url(#sa)"/>
+<line x1="975" y1="150" x2="760" y2="104" stroke="#a96808" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="830" y="350" text-anchor="end" font-size="11" fill="#647187" font-weight="bold">ASYNC (job queue + workers)</text>
+<rect x="20" y="360" width="810" height="70" rx="10" fill="#f6f9ff" stroke="#cbd8ea"/>
+<g font-size="11" text-anchor="middle"><rect x="35" y="375" width="100" height="40" rx="7" fill="#fff" stroke="#dce3ed"/><text x="85" y="399">Schema/Rule</text><rect x="145" y="375" width="100" height="40" rx="7" fill="#fff" stroke="#dce3ed"/><text x="195" y="399">Geometry</text><rect x="255" y="375" width="100" height="40" rx="7" fill="#fff" stroke="#dce3ed"/><text x="305" y="399">Duplicate</text><rect x="365" y="375" width="110" height="40" rx="7" fill="#fff" stroke="#7657b5"/><text x="420" y="399">M2 (GPU)</text><rect x="485" y="375" width="100" height="40" rx="7" fill="#fff" stroke="#dce3ed"/><text x="535" y="399">Metric</text><rect x="595" y="375" width="100" height="40" rx="7" fill="#fff" stroke="#dce3ed"/><text x="645" y="399">Sampling</text><rect x="705" y="375" width="110" height="40" rx="7" fill="#fff" stroke="#7657b5"/><text x="760" y="399">VLM (selective)</text></g>
+<line x1="95" y1="315" x2="95" y2="358" stroke="#3269c8" stroke-width="2" marker-end="url(#sa)"/>
+<text x="20" y="465" font-size="11" fill="#647187" font-weight="bold">STORAGE</text>
+<rect x="20" y="475" width="260" height="62" rx="10" fill="#e9f7f0" stroke="#16845b"/><text x="150" y="500" text-anchor="middle" font-weight="bold">PostgreSQL</text><text x="150" y="520" text-anchor="middle" font-size="11">transactional · audit append-only · outbox</text>
+<rect x="295" y="475" width="260" height="62" rx="10" fill="#e9f7f0" stroke="#16845b"/><text x="425" y="500" text-anchor="middle" font-weight="bold">Object storage (S3/MinIO)</text><text x="425" y="520" text-anchor="middle" font-size="11">snapshot export · crops · report · manifest</text>
+<rect x="570" y="475" width="260" height="62" rx="10" fill="#e9f7f0" stroke="#16845b"/><text x="700" y="500" text-anchor="middle" font-weight="bold">pgvector + Redis</text><text x="700" y="520" text-anchor="middle" font-size="11">guideline/case index · queue · lease cache</text>
+<line x1="425" y1="430" x2="425" y2="473" stroke="#16845b" stroke-width="2" marker-end="url(#sa)"/>
+<rect x="870" y="360" width="210" height="177" rx="10" fill="#fff" stroke="#dce3ed"/><text x="975" y="386" text-anchor="middle" font-weight="bold">Ranh giới AI</text><text x="975" y="410" text-anchor="middle" font-size="11">M2 / VLM / RAG chỉ ghi</text><text x="975" y="426" text-anchor="middle" font-size="11">Candidate + Evidence.</text><text x="975" y="450" text-anchor="middle" font-size="11">Service account AI không</text><text x="975" y="466" text-anchor="middle" font-size="11">có quyền gọi decision,</text><text x="975" y="482" text-anchor="middle" font-size="11">gate hay release API.</text>
+</g></svg><div class="caption">Kiến trúc triển khai đề xuất cho MVP: một QC API dạng modular monolith, worker pool bất đồng bộ, CVAT là hệ thống nguồn annotation và là editor duy nhất.</div></div>
+
+<h3>20.1. Thành phần và trách nhiệm</h3>
+<table><tr><th>Thành phần</th><th>Trách nhiệm</th><th>Công nghệ đề xuất</th></tr>
+<tr><td>QC Web App</td><td>Toàn bộ màn hình QC; QC Viewer read-only vẽ frame + annotation + overlay; giữ <code>ReviewContext</code>; prefetch issue kế tiếp.</td><td>React + TypeScript, router theo deep link, state store (Zustand/Redux), Canvas/WebGL cho viewer.</td></tr>
+<tr><td>QC API</td><td>REST + SSE, xác thực OIDC, RBAC theo project/dataset, idempotency, optimistic concurrency, outbox event.</td><td>Python FastAPI (gần hệ sinh thái ML của engine), SQLAlchemy, Alembic.</td></tr>
+<tr><td>Snapshot &amp; Run</td><td>Export annotation từ CVAT, tính revision hash, khóa snapshot, điều phối engine run theo shard, tổng hợp coverage.</td><td>Module trong QC API; export lưu object storage.</td></tr>
+<tr><td>Issue &amp; Review</td><td>Aggregation/dedup/priority, queue, lease, decision, rework, verification, adjudication.</td><td>Module trong QC API; transaction + audit event cùng transaction.</td></tr>
+<tr><td>Engine workers</td><td>Chạy rule, geometry, duplicate, M2, metric, sampling, VLM theo hợp đồng engine (20.3); idempotent theo shard.</td><td>Celery/RQ + Redis; worker GPU tách hàng đợi riêng cho M2/VLM.</td></tr>
+<tr><td>Evidence &amp; RAG</td><td>Đóng gói evidence (crop, overlay, prediction), truy xuất guideline/case có version, sinh explanation có trích dẫn.</td><td>pgvector cho guideline chunk và decision case; LLM/VLM qua gateway có log.</td></tr>
+<tr><td>Calibration</td><td>Sample manifest (seed), benchmark/GT version, anchor set, tính metric theo scope.</td><td>Module trong QC API + worker Metric.</td></tr>
+<tr><td>Report &amp; Release</td><td>Sinh report có provenance, đánh giá gate, waiver, approval, manifest bất biến.</td><td>Module trong QC API; report render HTML/PDF + JSON bundle.</td></tr>
+<tr><td>CVAT Adapter</td><td>Bao toàn bộ giao tiếp CVAT; map task/job/frame/shape/track; phát hiện drift; tạo deep link; mirror rework thành CVAT issue (tùy chọn).</td><td>Python client gọi CVAT REST; nhận webhook.</td></tr></table>
+
+<h3>20.2. Quyết định kiến trúc (ADR) cho MVP</h3>
+<table><tr><th>ADR</th><th>Quyết định</th><th>Lý do / hệ quả</th></tr>
+<tr><td>ADR-01</td><td>Modular monolith + worker pool, chưa tách microservice.</td><td>Đội nhỏ, sprint ngắn. Ranh giới module giữ bằng package và bảng riêng để tách sau.</td></tr>
+<tr><td>ADR-02</td><td>Mọi engine đọc <b>snapshot</b> đã export, không đọc CVAT live.</td><td>Kết quả tái lập được; annotation đổi trong lúc chạy không làm sai lệch run.</td></tr>
+<tr><td>ADR-03</td><td>Workspace dùng <b>QC Viewer read-only</b>; sửa annotation luôn trong CVAT qua deep link giữ job/frame.</td><td>CVAT không hiển thị overlay ngoài (M2, candidate geometry). Viewer không phải editor nên vẫn giữ nguyên tắc một editor duy nhất. Nhúng <code>cvat-canvas</code> là phương án giai đoạn sau.</td></tr>
+<tr><td>ADR-04</td><td>Transactional outbox trong PostgreSQL; Redis chỉ là hàng đợi/cache.</td><td>Decision và audit event commit cùng transaction; không mất event khi Redis lỗi.</td></tr>
+<tr><td>ADR-05</td><td>Engine là plugin theo hợp đồng chung, có <code>engineVersion</code> + <code>configVersion</code>.</td><td>Thêm engine mới không sửa luồng review; mọi candidate truy nguyên được.</td></tr>
+<tr><td>ADR-06</td><td>Audit log append-only (không cấp UPDATE/DELETE), có thể nối hash chain.</td><td>Bằng chứng nghiệm thu không bị sửa ngược.</td></tr>
+<tr><td>ADR-07</td><td>AI chỉ ghi Candidate/Evidence; service account AI không có quyền decision/gate/release.</td><td>Ranh giới mục 10.2 được enforce ở backend, không chỉ ở UI.</td></tr></table>
+
+<h3>20.3. Hợp đồng engine</h3>
+<pre>EngineJob {
+  runId, engine, engineVersion, configVersion,
+  snapshotId, shard: { jobId, frameFrom, frameTo },
+  attempt
+}
+
+EngineResult {
+  status: "CHECKED" | "ISSUE_FOUND" | "PARTIAL" | "FAILED" | "NOT_CHECKED",
+  coverage: { framesInScope, framesChecked, objectsChecked,
+              skipped: [{ frameIndex?, reason }] },
+  candidates: Candidate[],      // immutable, có provenance
+  metrics?: MetricResult[],     // kèm definition, threshold, sample size, GT version
+  durationMs, costEstimate?, error?
+}</pre>
+<p>Worker phải idempotent theo <code>(runId, engine, shard)</code>. Shard lỗi được retry có giới hạn; hết retry thì engine run là <b>PARTIAL</b> hoặc <b>FAILED</b> kèm danh sách phạm vi chưa kiểm tra. Không bao giờ quy đổi thành CHECKED.</p>
+</section>
+
+<section class="section" id="cvat">
+<h2>21. Tích hợp CVAT</h2>
+<p>CVAT là hệ thống nguồn của annotation và là editor duy nhất. QC không ghi trực tiếp annotation. Các điểm tích hợp dưới đây cần xác minh trên đúng phiên bản CVAT đang deploy trước khi chốt.</p>
+<table><tr><th>Điểm tích hợp</th><th>Cách làm</th><th>Lưu ý</th></tr>
+<tr><td>Định danh &amp; quyền</td><td>SSO OIDC dùng chung; map user QC ↔ user CVAT. Adapter gọi API bằng service account, token chỉ ở server.</td><td>Kiểm tra “reviewer ≠ annotator” dựa trên assignee của job tại thời điểm snapshot. CVAT không lưu tin cậy người tạo từng shape.</td></tr>
+<tr><td>Đọc dữ liệu</td><td>Task/job/label meta, annotations của job, frame image (chất lượng nén cho viewer, gốc cho engine).</td><td>Cache frame theo <code>(jobId, frame, quality)</code>; prefetch các frame của issue kế tiếp.</td></tr>
+<tr><td>Snapshot</td><td>Export annotation từng job sang object storage (JSON chuẩn hóa) và tính <code>revisionHash</code> = hash nội dung đã chuẩn hóa.</td><td>CVAT không có “annotation revision” chính thức. Revision trong tài liệu này là hash do QC tính.</td></tr>
+<tr><td>Phát hiện drift</td><td>Webhook <code>update:job</code> kích hoạt tính lại hash. Ngoài ra kiểm tra hash khi mở issue và định kỳ cho job đang có issue mở.</td><td>Drift làm hiện banner trong Workspace (mục 27) và đánh dấu issue liên quan cần re-check.</td></tr>
+<tr><td>Sửa annotation</td><td>Deep link full-screen tới job và frame, ví dụ <code>{cvat}/tasks/{taskId}/jobs/{jobId}?frame={n}</code>.</td><td>Tham số URL phụ thuộc phiên bản. Adapter tạo link tập trung tại một chỗ.</td></tr>
+<tr><td>Rework hiển thị trong CVAT</td><td>Tùy chọn: mirror Rework Request thành CVAT issue/comment tại vị trí object.</td><td>Annotator thấy yêu cầu ngay trong editor. Nguồn sự thật vẫn là Rework Request trong QC.</td></tr>
+<tr><td>Job stage</td><td>Tùy chọn: chuyển stage job (annotation ↔ validation) khi gửi rework/verify.</td><td>Chỉ bật khi quy trình dự án dùng stage CVAT; nếu không thì chỉ quản lý trong QC.</td></tr></table>
+<h3>21.1. Trình tự Rework ↔ CVAT</h3>
+<pre>Reviewer  ── Rework decision ──▶ QC API ── tạo ReworkRequest(revision gốc R1) ──▶ (tuỳ chọn) CVAT issue
+Annotator ── Open in CVAT (deep link job/frame) ──▶ sửa ──▶ CVAT lưu
+CVAT ── webhook update:job ──▶ Adapter ── hash mới R2 ──▶ ReworkRequest.candidateRevision = R2
+Annotator ── Submit for verification ──▶ QC API ── chạy lại engine bị ảnh hưởng trên R2 (scope: object/frame)
+Reviewer  ── Verify Pass/Fail ──▶ Issue Closed | Rework lại      (Snapshot SNP gốc giữ nguyên R1)</pre>
+</section>
+
+<section class="section" id="datamodel">
+<h2>22. Domain Data Model</h2>
+<p>Hai khái niệm bắt buộc tách bạch: <b>Candidate</b> là phát hiện thô, bất biến, của một engine. <b>Issue</b> là đơn vị công việc review, gom một hoặc nhiều candidate, hoặc được tạo thủ công từ Frame Review. Quyết định của reviewer gắn với Issue và không ghi đè Candidate.</p>
+<pre>Dataset 1─* DatasetVersion 1─* Snapshot 1─* QCRun *─1 ConfigVersion
+                                   │            │
+                                   │            ├─* EngineRun 1─* Candidate *─1 Issue
+                                   │            └─* SampleManifest 1─* SampleItem 1─0..1 FrameAuditRecord
+Issue 1─* Decision          Issue 1─* EvidenceItem        Issue 1─* ReworkRequest 1─* Verification
+Issue *─* GuidelineGap ─▶ GuidelineVersion                Issue 0..1─1 IssueLease
+Benchmark(GT version) 1─* BenchmarkItem    CalibrationSession 1─* CalibrationResponse
+QualityReport 1─1 GateEvaluation 1─* GateCheck 1─0..1 Waiver
+Release 1─1 ReleaseManifest ─▶ QualityReport, Snapshot, ConfigVersion, GuidelineVersion
+AuditEvent (append-only) ─▶ bất kỳ entity nào ở trên</pre>
+<table><tr><th>Entity</th><th>Trường chính</th><th>Ghi chú</th></tr>
+<tr><td>Snapshot</td><td>id, datasetVersionId, scope(jobs/frames), revisionHashes{jobId:hash}, taxonomyVersion, guidelineVersion, exportUri, createdBy, createdAt</td><td>Bất biến sau khi tạo.</td></tr>
+<tr><td>QCRun</td><td>id, snapshotId, configVersionId, status, engines[], startedAt, finishedAt, publishedAt</td><td>Một snapshot có thể có nhiều run.</td></tr>
+<tr><td>EngineRun</td><td>id, runId, engine, engineVersion, status, coverage, durationMs, error</td><td>Nguồn dữ liệu cho bảng Execution Status.</td></tr>
+<tr><td>Candidate</td><td>id, engineRunId, frameIndex, annotationRef?, proposedGeometry?, candidateType, ruleId?, confidence?, evidenceRefs[]</td><td>Bất biến.</td></tr>
+<tr><td>Issue</td><td>xem 19.1 + version, queue, origin(candidate|manual|audit), candidateIds[], trackRange?</td><td><code>version</code> dùng cho optimistic concurrency.</td></tr>
+<tr><td>Decision</td><td>id, issueId, decision, confirmedDefectType?, severity?, rationale, questions?, assignee?, actorId, annotationRevision, guidelineVersion, createdAt</td><td>Không sửa; quyết định mới thay quyết định cũ bằng bản ghi mới.</td></tr>
+<tr><td>ReworkRequest</td><td>id, issueId, assigneeId, instruction, baseRevision, candidateRevision?, status, attempt, dueAt</td><td>Liên kết CVAT issue nếu mirror.</td></tr>
+<tr><td>FrameAuditRecord</td><td>id, sampleItemId?, jobId, frameIndex, reviewerId, outcome(no_issue|issues_found|skipped), issueIds[], durationMs</td><td>Chỉ tạo bằng hành động “Mark Frame Reviewed”.</td></tr>
+<tr><td>GuidelineGap</td><td>id, ruleId?, description, linkedIssueIds[], proposal, status, resolvedInVersion?, impactScope</td><td>Nối vào quy trình guideline version.</td></tr>
+<tr><td>GateCheck / Waiver</td><td>gate, status, evidenceRef, reason; waiver: owner, rationale, expiresAt, approvedBy</td><td>Người duyệt waiver ≠ người yêu cầu.</td></tr>
+<tr><td>ConfigVersion</td><td>id, rules, thresholds, sampling, models, priorityWeights, status(draft|published), publishedBy</td><td>Run chỉ tham chiếu config đã publish.</td></tr></table>
+</section>
+
+<section class="section" id="states">
+<h2>23. State machines</h2>
+<h3>23.1. Issue</h3>
+<table><tr><th>Từ</th><th>Sự kiện</th><th>Đến</th><th>Actor</th><th>Điều kiện (guard)</th></tr>
+<tr><td>—</td><td>publish / manual create</td><td>Pending Review</td><td>System / Reviewer</td><td>Run đã publish hoặc tạo từ Frame Review.</td></tr>
+<tr><td>Pending Review</td><td>claim</td><td>In Review</td><td>Reviewer</td><td>Không có lease còn hạn; reviewer ≠ annotator của job.</td></tr>
+<tr><td>In Review</td><td>release / lease hết hạn</td><td>Pending Review</td><td>Reviewer / System</td><td>Không có decision đã lưu.</td></tr>
+<tr><td>In Review</td><td>Confirm</td><td>Confirmed Defect</td><td>Reviewer</td><td>Có defect type, severity, rationale.</td></tr>
+<tr><td>In Review</td><td>Rework</td><td>Rework Requested</td><td>Reviewer</td><td>Ngầm định Confirm + có hướng dẫn sửa; tạo ReworkRequest.</td></tr>
+<tr><td>In Review</td><td>Reject</td><td>Rejected</td><td>Reviewer</td><td>Có lý do false positive.</td></tr>
+<tr><td>In Review</td><td>Uncertain</td><td>Awaiting Adjudication</td><td>Reviewer</td><td>Có câu hỏi cần phân xử.</td></tr>
+<tr><td>In Review</td><td>Escalate</td><td>Escalated</td><td>Reviewer</td><td>Có người nhận và lý do.</td></tr>
+<tr><td>Awaiting Adjudication / Escalated</td><td>adjudicate</td><td>Confirmed / Rework Requested / Rejected</td><td>QA Lead</td><td>Ghi rule căn cứ và version.</td></tr>
+<tr><td>Awaiting Adjudication / Escalated</td><td>link guideline gap</td><td>On Hold (Guideline)</td><td>QA Lead</td><td>Gap mở; issue chờ guideline version mới.</td></tr>
+<tr><td>On Hold (Guideline)</td><td>guideline version approved</td><td>Awaiting Adjudication</td><td>System</td><td>Phân xử lại theo version mới.</td></tr>
+<tr><td>Confirmed Defect</td><td>accept as known / request rework</td><td>Closed (Known) / Rework Requested</td><td>QA Lead / Reviewer</td><td>Known defect phải xuất hiện trong report.</td></tr>
+<tr><td>Rework Requested</td><td>submit</td><td>Pending Verification</td><td>Annotator</td><td>Revision mới khác revision gốc.</td></tr>
+<tr><td>Pending Verification</td><td>verify pass / fail</td><td>Closed / Rework Requested</td><td>Reviewer</td><td>Engine bị ảnh hưởng đã chạy lại; fail tăng <code>attempt</code>.</td></tr>
+<tr><td>Closed / Rejected</td><td>reopen</td><td>Pending Review</td><td>Reviewer / QA / System</td><td>Revision đổi ở object liên quan hoặc audit phát hiện lại.</td></tr>
+<tr><td>bất kỳ (chưa đóng)</td><td>supersede</td><td>Superseded</td><td>System</td><td>Run mới trên snapshot mới thay thế; giữ liên kết.</td></tr></table>
+<div class="callout"><b>Làm rõ Confirm và Rework:</b> Confirm ghi nhận defect là thật. Rework là Confirm cộng yêu cầu sửa, thực hiện trong một bước. Một Confirmed Defect không sửa phải được QA chấp nhận thành Known Defect và liệt kê trong report. Như vậy không có defect nào “lơ lửng”.</div>
+<h3>23.2. QC Run, Frame audit, Release</h3>
+<div class="grid3">
+<div class="card"><h4>QC Run</h4><p class="small">Draft → Snapshotting → Queued → Running → Completed | Partial | Failed → Published → Archived. Cancel được từ Queued/Running. Publish có thể diễn ra theo từng engine khi evidence đủ.</p></div>
+<div class="card"><h4>Frame audit</h4><p class="small">Sampled → Opened → Reviewed (no issue) | Reviewed (issues found) | Skipped (bắt buộc lý do). Mở frame không đổi trạng thái thành Reviewed.</p></div>
+<div class="card"><h4>Release</h4><p class="small">Draft → Gate Evaluating → Blocked | Ready → Pending Approval → Approved → Published. Có thể Rejected hoặc Revoked; revoke giữ manifest và ghi lý do.</p></div></div>
+</section>
+
+<section class="section" id="aggregation">
+<h2>24. Candidate Aggregation &amp; Prioritization</h2>
+<div class="flow"><div class="step">Normalize<br><span class="small muted">class map, geometry</span></div><div class="arrow">→</div><div class="step">Group key<br><span class="small muted">frame + object / IoU</span></div><div class="arrow">→</div><div class="step">Merge<br><span class="small muted">giữ mọi provenance</span></div><div class="arrow">→</div><div class="step">Score<br><span class="small muted">priority</span></div><div class="arrow">→</div><div class="step">Route<br><span class="small muted">queue</span></div></div>
+<h3>24.1. Quy tắc gộp</h3><ul>
+<li><b>Có annotationRef:</b> cùng frame, cùng object, cùng nhóm candidate (class / geometry / attribute) thì gộp thành một issue.</li>
+<li><b>Missing object (không có annotationRef):</b> gom các proposal cùng frame có IoU ≥ 0,5 và cùng nhóm class.</li>
+<li><b>Temporal:</b> lỗi lặp lại của cùng track ở các frame liên tiếp gộp thành một <i>track issue</i> có frame range. Giới hạn độ dài để reviewer vẫn xem được.</li>
+<li>Khác nhóm (ví dụ wrong class và geometry trên cùng object) thì giữ các issue riêng nhưng liên kết với nhau, hiển thị chung trong Workspace.</li></ul>
+<h3>24.2. Điểm ưu tiên</h3>
+<pre>priority = S × (0.5·C + 0.3·A + 0.2·R)
+  S: severity weight   critical 1.0 · major 0.6 · minor 0.3   (theo candidate type + class policy)
+  C: confidence đã hiệu chỉnh của nguồn mạnh nhất (rule xác định = 1.0)
+  A: mức đồng thuận nguồn độc lập  = số nguồn độc lập / số nguồn có thể áp dụng
+  R: rủi ro tiên nghiệm của class/slice (tỷ lệ defect lịch sử, đã làm mượt)
+Bucket: High ≥ 0.6 · Medium 0.3–0.6 · Low &lt; 0.3</pre>
+<div class="warning">Trọng số trên là giá trị khởi điểm. Chúng được lưu trong <code>ConfigVersion</code> và phải hiệu chỉnh bằng dữ liệu pilot (Agent Issue Precision theo bucket). Item random audit <b>không</b> được chấm điểm, cũng không trộn vào queue risk.</div>
+<h3>24.3. Kiểm soát nhiễu</h3><ul>
+<li>Nếu một engine gắn cờ vượt ngưỡng tỷ lệ frame đã cấu hình, engine run bị đánh dấu <i>noisy</i>. Lead phải xem trước khi publish.</li>
+<li>Issue có evidence chưa đủ, ví dụ VLM còn chạy, vẫn được publish với nhãn “evidence pending”. Panel tự cập nhật khi evidence về.</li>
+<li>Không tự đóng issue theo confidence. Mọi issue cần decision của người.</li></ul>
+</section>
+
+<section class="section" id="api">
+<h2>25. API &amp; Event Contract</h2>
+<table><tr><th>Nhóm</th><th>Endpoint (<code>/api/qc/v1</code>)</th><th>Ghi chú</th></tr>
+<tr><td>Dataset / Scope</td><td><code>GET /datasets</code> · <code>GET /datasets/{id}/versions</code> · <code>GET /datasets/{id}/tasks?include=jobs</code> · <code>GET /datasets/{id}/runs</code></td><td>Đọc qua CVAT adapter, lọc theo quyền. Mọi endpoint list/summary nhận <code>?taskId=&amp;jobId=</code>.</td></tr>
+<tr><td>Snapshot / Run</td><td><code>POST /snapshots</code> · <code>POST /runs</code> · <code>GET /runs/{id}</code> · <code>GET /runs/{id}/engines</code> · <code>POST /runs/{id}/publish</code> · <code>POST /runs/{id}/cancel</code></td><td>Run tham chiếu ConfigVersion đã publish.</td></tr>
+<tr><td>Queue / Issue</td><td><code>GET /issues?queue=&amp;type=&amp;class=&amp;source=&amp;status=</code> · <code>GET /issues/{id}</code> · <code>POST /issues</code> (manual)</td><td>Cursor pagination; trả kèm counts theo queue.</td></tr>
+<tr><td>Lease</td><td><code>POST /issues/{id}/claim</code> · <code>POST /issues/{id}/heartbeat</code> · <code>DELETE /issues/{id}/claim</code></td><td>Lease 15 phút, gia hạn bằng heartbeat.</td></tr>
+<tr><td>Decision</td><td><code>POST /issues/{id}/decisions</code></td><td>Bắt buộc <code>Idempotency-Key</code> và <code>If-Match: version</code>.</td></tr>
+<tr><td>Review context</td><td><code>GET /review-context?issueId=</code> · <code>GET /frames/{jobId}/{frame}/review-context</code> · <code>POST /frames/{jobId}/{frame}/audit-records</code></td><td>Trả frame, annotation tại revision, overlay, issue liên quan, drift.</td></tr>
+<tr><td>Evidence / AI</td><td><code>GET /issues/{id}/evidence</code> · <code>POST /issues/{id}/assistant/query</code></td><td>Response luôn kèm source refs; không có endpoint AI ghi decision.</td></tr>
+<tr><td>Rework</td><td><code>GET /rework-requests?assignee=me</code> · <code>POST /rework-requests/{id}/submit</code> · <code>POST /rework-requests/{id}/verify</code></td><td>Verify kích hoạt re-check theo scope.</td></tr>
+<tr><td>Adjudication / Guideline</td><td><code>POST /issues/{id}/adjudications</code> · <code>POST /guideline-gaps</code> · <code>PATCH /guideline-gaps/{id}</code></td><td>Chỉ QA Lead.</td></tr>
+<tr><td>Calibration</td><td><code>POST /sample-manifests</code> · <code>GET /calibration/summary</code> · <code>POST /calibration-sessions</code></td><td>Seed lưu trong manifest.</td></tr>
+<tr><td>Report / Release</td><td><code>POST /reports</code> · <code>POST /releases</code> · <code>POST /releases/{id}/gate-evaluations</code> · <code>POST /releases/{id}/waivers</code> · <code>POST /releases/{id}/approve</code></td><td>Approve kiểm tra gate và quyền ở server.</td></tr>
+<tr><td>Config</td><td><code>GET/POST /config-versions</code> · <code>POST /config-versions/{id}/publish</code></td><td>Draft → published, không sửa bản đã publish.</td></tr></table>
+<h3>25.1. Ví dụ decision request</h3>
+<pre>POST /api/qc/v1/issues/QC-00128/decisions
+Idempotency-Key: 6f1c…   If-Match: "7"
+{
+  "decision": "rework",
+  "confirmedDefectType": "wrong_class",
+  "severity": "major",
+  "rationale": "Xe tải nhỏ có thùng hàng rời — VEH-03 quy định là truck",
+  "instruction": "Đổi class object #18 từ car sang truck",
+  "context": { "snapshotId": "SNP-014", "annotationRevision": "a91f3c",
+               "guidelineVersion": "1.2", "mode": "issue" }
+}
+→ 201 { issue: { status: "rework_requested", version: 8 }, reworkRequestId, auditEventId }
+→ 409 LEASE_CONFLICT | VERSION_CONFLICT   → 412 REVISION_DRIFT   → 403 SELF_REVIEW_FORBIDDEN</pre>
+<h3>25.2. Domain events (outbox → SSE / notification)</h3>
+<p class="small"><code>snapshot.created</code> · <code>run.engine.progress</code> · <code>run.completed</code> · <code>issue.published</code> · <code>issue.claimed</code> · <code>issue.decided</code> · <code>rework.requested</code> · <code>rework.submitted</code> · <code>rework.verified</code> · <code>cvat.revision.drift</code> · <code>guideline.gap.created</code> · <code>guideline.version.approved</code> · <code>gate.evaluated</code> · <code>release.approved</code></p>
+</section>
+
+<section class="section" id="screens2">
+<h2>26. Màn hình bổ sung</h2>
+<h3>26.1. QC Configuration</h3>
+<table><tr><th>Tab</th><th>Nội dung</th><th>Quy tắc</th></tr>
+<tr><td>Rules &amp; Thresholds</td><td>Danh sách rule (ID, mô tả, scope class/shape, severity mặc định, threshold, version, bật/tắt).</td><td>Sửa tạo draft ConfigVersion; có diff với bản đang publish.</td></tr>
+<tr><td>Sampling Policies</td><td>Random: sample size/tỷ lệ, seed, stratify theo job/scene. Risk: tiêu chí và quota.</td><td>Seed được ghi vào manifest mỗi run.</td></tr>
+<tr><td>Model Configuration</td><td>M2 version, class mapping với taxonomy, confidence threshold theo class, VLM trigger.</td><td>Class chưa map hiển thị cảnh báo; engine coi class đó là NOT_CHECKED.</td></tr>
+<tr><td>Guideline Version Mapping</td><td>Guideline version ↔ taxonomy version ↔ dataset version; rule ID ↔ section.</td><td>Run không cho chạy khi mapping thiếu.</td></tr>
+<tr><td>Workflow &amp; Permissions</td><td>Ma trận quyền (mục 14), lease timeout, chính sách self-review, người duyệt waiver/release.</td><td>Chỉ QC Admin; thay đổi được audit.</td></tr></table>
+<h3>26.2. Rework Tracking</h3>
+<div class="grid"><div class="card"><h4>Annotator view</h4><ul><li>Danh sách “Việc của tôi”: issue, job/frame/object, defect đã xác nhận, rule + trích guideline, hướng dẫn sửa, revision gốc, hạn.</li><li>Hành động: <b>Open in CVAT</b> (deep link), <b>Submit for verification</b> (chỉ bật khi phát hiện revision mới), hỏi lại reviewer.</li></ul></div>
+<div class="card"><h4>Reviewer / Lead view</h4><ul><li>Hàng đợi Pending Verification với so sánh trước/sau (revision gốc ↔ mới) và kết quả re-check.</li><li>Pass → Closed; Fail → trả lại kèm lý do và attempt +1. Lead xem SLA, số lần trả lại và annotator.</li></ul></div></div>
+<h3>26.3. Adjudication &amp; Guidelines</h3>
+<p>Module này hiện thực nhóm chức năng “04 · Evidence &amp; Guideline” trong cây điều hướng. Nó gồm ba phần:</p>
+<ul><li><b>Adjudication:</b> queue Uncertain/Escalated, xem song song quyết định và câu hỏi của reviewer, evidence, guideline đang áp dụng và case tương tự. Kết quả là phân xử theo rule hiện hành hoặc liên kết Guideline Gap.</li>
+<li><b>Guideline Gaps:</b> form gồm rule liên quan, mô tả chỗ thiếu/mâu thuẫn, case liên kết và đề xuất sửa. Trạng thái Open → Proposed → Approved (vX.Y) / Rejected. Phần impact cho biết job/class/frame bị ảnh hưởng và nút tạo targeted rework.</li>
+<li><b>Decision Cases:</b> thư viện case đã phân xử, có version guideline. Đây là nguồn cho tab History của AI Panel.</li></ul>
+<h3>26.4. Release History</h3>
+<p>Danh sách release (version, ngày, người duyệt, gate kèm waiver nếu có, link manifest/report), so sánh hai release (số issue, metric, thay đổi guideline) và hành động Revoke có lý do.</p>
+<h3>26.5. Trạng thái màn hình bắt buộc</h3>
+<table><tr><th>Trạng thái</th><th>Hiển thị</th></tr>
+<tr><td>Loading</td><td>Skeleton giữ layout; Workspace hiện frame trước, evidence sau.</td></tr>
+<tr><td>Empty queue</td><td>Nói rõ lý do (chưa publish run / đã xử lý hết / filter quá hẹp) và hành động kế tiếp.</td></tr>
+<tr><td>Evidence pending / failed</td><td>Nhãn riêng trên panel; không thay bằng nội dung suy đoán.</td></tr>
+<tr><td>CVAT không truy cập được</td><td>Viewer dùng ảnh cache nếu có; tắt “Edit in CVAT”; báo trạng thái đồng bộ.</td></tr>
+<tr><td>Không đủ quyền</td><td>Giải thích quyền cần có thay vì ẩn trang im lặng.</td></tr></table>
+</section>
+
+<section class="section" id="nfr">
+<h2>27. Concurrency, edge cases &amp; yêu cầu phi chức năng</h2>
+<h3>27.1. Edge cases</h3>
+<table><tr><th>Tình huống</th><th>Xử lý</th></tr>
+<tr><td>Hai reviewer cùng mở một issue</td><td>Lease 15 phút + heartbeat. Người thứ hai xem read-only, thấy “đang được X review”. Decision kiểm tra <code>If-Match</code>.</td></tr>
+<tr><td>Annotation đổi sau snapshot</td><td>Banner drift với hai lựa chọn: <i>Review trên revision mới nhất</i> (ghi revision mới vào decision) hoặc <i>Giữ context snapshot</i>. Decision luôn lưu revision đã nhìn.</td></tr>
+<tr><td>Object bị xóa trong CVAT</td><td>Issue chuyển “needs re-check”; reviewer reject (đã giải quyết) hoặc reopen.</td></tr>
+<tr><td>Engine lỗi giữa chừng</td><td>Shard retry; hết retry thì PARTIAL kèm phạm vi chưa kiểm tra; dashboard và gate phản ánh.</td></tr>
+<tr><td>Lưu decision thất bại</td><td>Giữ form và nội dung đã nhập, cho phép thử lại với cùng Idempotency-Key; Next Issue vẫn khóa.</td></tr>
+<tr><td>Guideline version đổi khi đang review</td><td>Thông báo trong panel; decision ghi version đã dùng; issue đang On Hold được đưa lại vào adjudication.</td></tr>
+<tr><td>Reviewer là annotator của job</td><td>Issue hiển thị khóa với lý do; server trả 403 SELF_REVIEW_FORBIDDEN.</td></tr>
+<tr><td>Mất mạng tạm thời</td><td>Không cho decision offline; hiển thị trạng thái và tự kết nối lại SSE.</td></tr></table>
+<h3>27.2. Phím tắt Review Workspace</h3>
+<table><tr><th>Phím</th><th>Hành động</th><th>Phím</th><th>Hành động</th></tr>
+<tr><td><code>C</code></td><td>Confirm</td><td><code>J</code> / <code>K</code></td><td>Issue kế tiếp / trước (sau khi đã lưu)</td></tr>
+<tr><td><code>R</code></td><td>Reject</td><td><code>F</code></td><td>Chuyển Issue ↔ Frame Review</td></tr>
+<tr><td><code>U</code></td><td>Uncertain</td><td><code>1</code>–<code>4</code></td><td>Tab Evidence / Guideline / Explanation / History</td></tr>
+<tr><td><code>W</code></td><td>Rework</td><td><code>O</code></td><td>Bật/tắt overlay đang chọn</td></tr>
+<tr><td><code>E</code></td><td>Escalate</td><td><code>?</code></td><td>Bảng phím tắt</td></tr></table>
+<p class="small muted">Phím tắt bị vô hiệu khi focus ở ô nhập liệu. Mọi thao tác đều có nút tương ứng.</p>
+<h3>27.3. Mục tiêu phi chức năng (đề xuất, cần xác nhận khi pilot)</h3>
+<table><tr><th>Hạng mục</th><th>Mục tiêu</th></tr>
+<tr><td>Mở Workspace từ queue</td><td>p95 ≤ 2 s (evidence tính sẵn, frame cache)</td></tr>
+<tr><td>Chuyển issue kế tiếp</td><td>p95 ≤ 1 s nhờ prefetch 3 issue tiếp theo</td></tr>
+<tr><td>Lưu decision</td><td>p95 ≤ 500 ms</td></tr>
+<tr><td>Deterministic engines</td><td>Chạy song song theo shard; thời gian theo dõi trên Execution Tracker, có ước lượng còn lại</td></tr>
+<tr><td>Audit</td><td>100% decision, waiver, approval, config publish có AuditEvent</td></tr>
+<tr><td>Khả năng truy cập</td><td>Thao tác chính dùng được bằng bàn phím, focus hiển thị rõ, tương phản tối thiểu WCAG AA, trạng thái không chỉ dựa vào màu</td></tr></table>
+</section>
+
+<section class="section" id="security">
+<h2>28. Bảo mật, audit và quản trị dữ liệu</h2>
+<div class="grid">
+<div class="card"><h4>Phân quyền</h4><ul><li>RBAC theo vai trò cộng scope project/dataset, enforce ở server.</li><li>Tách nhiệm vụ: annotator ≠ reviewer của cùng job; người duyệt waiver/release ≠ người yêu cầu.</li><li>Service account AI chỉ có quyền ghi Candidate và Evidence.</li><li>Super Admin: toàn quyền nhưng mọi override cần lý do và được audit; định kỳ rà soát danh sách tài khoản Super Admin.</li></ul></div>
+<div class="card"><h4>Audit</h4><ul><li>AuditEvent append-only, ghi trong cùng transaction với thay đổi trạng thái.</li><li>Lưu actor, role, revision, guideline version và evidence refs.</li><li>Export audit theo release cho nghiệm thu.</li></ul></div>
+<div class="card"><h4>Dữ liệu ảnh &amp; AI</h4><ul><li>Frame có thể chứa mặt người, biển số. Ưu tiên VLM self-host; chỉ gửi API ngoài khi được phép, gửi crop tối thiểu.</li><li>Log prompt/response của RAG/VLM, gắn với evidence để truy vết.</li></ul></div>
+<div class="card"><h4>Bí mật &amp; tích hợp</h4><ul><li>Token CVAT chỉ ở server; webhook có chữ ký.</li><li>Manifest và report release là bất biến, có checksum.</li></ul></div></div>
+</section>
+
+<section class="section" id="measurement">
+<h2>29. Đo hiệu quả QC tool (baseline và pilot)</h2>
+<p>Sản phẩm phải chứng minh giảm công sức review mà chất lượng không giảm. Các chỉ số dưới đây lấy trực tiếp từ AuditEvent nên không cần nhập tay.</p>
+<table><tr><th>Chỉ số</th><th>Cách đo</th><th>Mục đích</th></tr>
+<tr><td>Thời gian review mỗi issue / mỗi frame</td><td>Từ claim đến decision; từ open đến Mark Reviewed (median, p90)</td><td>Công sức reviewer</td></tr>
+<tr><td>Frame được kiểm / giờ</td><td>FrameAuditRecord + issue decision theo người theo giờ</td><td>Năng suất</td></tr>
+<tr><td>Agent Issue Precision theo bucket</td><td>Confirmed / tổng candidate đã quyết định</td><td>Độ hữu ích của candidate; hiệu chỉnh trọng số</td></tr>
+<tr><td>Residual Defect Rate</td><td>Random audit sau QC, có khoảng tin cậy và sample size</td><td>Chất lượng không giảm</td></tr>
+<tr><td>Critical Error Miss Rate</td><td>Trên anchor/benchmark</td><td>An toàn của quy trình</td></tr>
+<tr><td>Rework cycle time và tỷ lệ trả lại</td><td>Requested → Closed; số attempt</td><td>Hiệu quả vòng sửa</td></tr></table>
+<div class="callout"><b>Thiết kế pilot:</b> lấy baseline là review thủ công trên một tập job. Pilot chạy QC tool trên tập job tương đương (cùng loại dữ liệu và taxonomy). So sánh công sức, residual defect và critical miss trên cùng phương pháp random audit. Không ghi bất kỳ kết luận nào thành kết quả nghiệm thu chính thức khi chưa có xác nhận.</div>
+</section>
+
+<section class="section" id="acceptance">
+<h2>30. UX Acceptance Criteria</h2>
+<div class="grid">
+<div class="card"><h4>Navigation &amp; context</h4><ul><li>Người dùng xác định được dataset, snapshot, QC Run, task, job, frame và issue hiện tại.</li><li>Chọn và đổi được dataset, run, phạm vi task/job từ mọi màn hình; dữ liệu lọc đúng và URL khôi phục được context.</li><li>Deep link mở đúng issue và frame nếu quyền hợp lệ.</li><li>Chuyển Issue/Frame mode không mất issue, frame, zoom/pan, filter.</li><li>Mỗi vai trò chỉ thấy chức năng và hành động của mình; deep link không có quyền hiện trang “Không đủ quyền”; backend enforce quyền.</li><li>Mục nav, tab, chip ngữ cảnh và nút chính có tooltip giới thiệu, dùng được bằng bàn phím.</li></ul></div>
+<div class="card"><h4>Review experience</h4><ul><li>Issue mở đúng job/frame và highlight đúng annotation.</li><li>Overlay current/M1/M2/candidate bật tắt độc lập.</li><li>Frame Review hiển thị toàn bộ annotation, tạo được issue mới, có Mark Frame Reviewed.</li><li>Decision lưu actor, timestamp, rationale, revision, guideline version; Next Issue chỉ sau khi lưu thành công.</li><li>Lease, drift và self-review được hiển thị và chặn đúng.</li><li>Toàn bộ decision thực hiện được bằng phím tắt.</li></ul></div>
+<div class="card"><h4>AI Assistant</h4><ul><li>Panel cập nhật khi issue/frame/revision thay đổi; không dùng lại kết quả issue trước.</li><li>Guideline hiển thị document/version/section nguồn.</li><li>Phân biệt rõ model output, rule result và human decision.</li><li>Thiếu căn cứ thì thể hiện uncertainty; AI không có hành động decision.</li></ul></div>
+<div class="card"><h4>QC &amp; release state</h4><ul><li>NOT_CHECKED/PARTIAL/FAILED không hiển thị như pass.</li><li>Random audit và risk sampling báo cáo riêng.</li><li>Rework tạo revision mới và có verification.</li><li>Gate hiển thị từng điều kiện kèm evidence; approval cần quyền và gate đạt hoặc waiver hợp lệ.</li></ul></div></div>
+</section>
+
+<section class="section" id="changelog">
+<h2>31. Lịch sử thay đổi và câu hỏi mở</h2>
+<table><tr><th>Phiên bản</th><th>Nội dung</th></tr>
+<tr><td>1.0 · 04/10/2026</td><td>UX &amp; IA hợp nhất (mục 1–19).</td></tr>
+<tr><td>2.0 · 04/10/2026</td><td>Thêm kiến trúc hệ thống và ADR, tích hợp CVAT, data model, state machine, aggregation/priority, API &amp; event, màn hình QC Configuration / Rework / Adjudication &amp; Guidelines / Release History, edge case và NFR, phím tắt, bảo mật, đo hiệu quả, acceptance criteria. Đưa “Adjudication &amp; Guidelines” vào cây điều hướng. Làm rõ Confirm và Rework. Thu hẹp phạm vi giai đoạn hiện tại chỉ còn module QC.</td></tr><tr><td>2.1 · 04/10/2026</td><td>Thêm vai trò Super Admin toàn quyền (có lý do override và audit). Navigation hiển thị khóa thay vì ẩn (đã thay ở 2.2).</td></tr><tr><td>2.2 · 04/10/2026</td><td>Thêm QC Home và chọn ngữ cảnh Dataset → QC Run → Task/Job (mục 5.4), <code>QCContext</code>, API dataset/scope. Giao diện chỉ hiện chức năng của vai trò (14.1), tooltip giới thiệu chức năng (14.2).</td></tr></table>
+<h3>Câu hỏi cần chốt</h3><ul>
+<li>Phiên bản CVAT đang deploy: tham số deep link, danh sách webhook event, API issue/comment.</li>
+<li>Ngưỡng gate (coverage tối thiểu, số critical cho phép) và người có quyền duyệt release/waiver.</li>
+<li>Model M2 và VLM dùng cho pilot; được phép gửi ảnh ra API ngoài hay chỉ self-host.</li>
+<li>Tập job dùng làm baseline và tập job pilot.</li></ul>
+</section>
+
+</main>
+</div>
+<footer class="footer">Tài liệu thiết kế hợp nhất: định hướng Navigation &amp; QC Review, Calibration &amp; Audit, Quality Report &amp; Release. Các hình UI là wireframe SVG tự dựng để minh họa cấu trúc, không phải screenshot sản phẩm. Các số liệu xuất hiện trong mockup đều là dữ liệu giả lập. Version 2.2 · 04/10/2026 · Tài liệu thiết kế đề xuất, chưa phải mô tả hệ thống đã triển khai. Mockup tương tác: <a href="QC_Review_Studio_Mockup.html">QC_Review_Studio_Mockup.html</a>.</footer>
+</body>
+</html>

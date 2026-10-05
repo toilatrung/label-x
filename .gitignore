@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / Next.js (chi tiết thêm ở src/frontend/.gitignore)
+node_modules/
+.next/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Local data
+*.sqlite3
+media/
+staticfiles/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local CI evidence and isolated tool cache (not application release data)
+.ci-artifacts/
+.cache/
+
+# Backup của installer agentic-sdlc-kit
+*.backup-agentic-sdlc-kit*
+
+# LaTeX build
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.xdv

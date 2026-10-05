@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Release History</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="reports" active-item="release" readonly="{{true}}" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="release" step="release" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Release History</h1>
+<p class="lx-lead">Lịch sử các lần phát hành của Road Vision Urban. Mỗi lần phát hành có manifest ghi lại đầy đủ snapshot, phiên bản, quyết định và người phê duyệt.</p>
+</div>
+</div>
+
+<div class="lx-cols">
+
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Các lần phát hành</h2></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Phiên bản</th><th>Quality Control Run</th><th class="r">Frame</th><th>Phê duyệt bởi</th><th>Ngày</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr aria-selected="true"><td class="lx-cell__main">Road Vision Urban v1.3</td><td class="lx-mono">#QC-077</td><td class="r">11,800</td><td class="lx-muted">Chi Lâm</td><td class="lx-muted">2026-09-10</td><td><span class="lx-badge lx-badge--success">Released</span></td></tr>
+<tr><td class="lx-cell__main">Road Vision Urban v1.2</td><td class="lx-mono">#QC-061</td><td class="r">10,400</td><td class="lx-muted">Chi Lâm</td><td class="lx-muted">2026-08-14</td><td><span class="lx-badge lx-badge--success">Released</span></td></tr>
+<tr><td class="lx-cell__main">Road Vision Urban v1.1</td><td class="lx-mono">#QC-044</td><td class="r">9,000</td><td class="lx-muted">Minh Đức</td><td class="lx-muted">2026-07-02</td><td><span class="lx-badge lx-badge--success">Released</span></td></tr>
+<tr><td class="lx-cell__main">Road Vision Urban v1.4</td><td class="lx-mono">#QC-091</td><td class="r">12,500</td><td class="lx-subtle">—</td><td class="lx-subtle">—</td><td><span class="lx-badge lx-badge--danger">Blocked</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card lx-side" style="flex-basis: 420px">
+<div class="lx-card__head"><h2 class="lx-h2">Manifest · v1.3</h2>
+<a class="lx-iconbtn" href="#" data-tip="Tải manifest (JSON)" aria-label="Tải manifest (JSON)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v7M5 7l3 3 3-3M3 13h10"></path></svg></a></div>
+<div class="lx-card__body">
+<dl class="lx-kv">
+<dt>Snapshot</dt><dd class="lx-mono">SNP-011</dd>
+<dt>Annotation revision</dt><dd class="lx-mono">f02a6d</dd>
+<dt>Taxonomy</dt><dd>v3</dd>
+<dt>Guideline</dt><dd>v1.2</dd>
+<dt>Cấu hình kiểm tra</dt><dd>v6</dd>
+<dt>Benchmark</dt><dd>v1.1</dd>
+<dt>Lỗi đã xác nhận</dt><dd>98 · tất cả đã đóng</dd>
+<dt>Báo cáo</dt><dd class="lx-mono">RPT-077</dd>
+<dt>Phê duyệt</dt><dd>Chi Lâm · 2026-09-10 16:42</dd>
+</dl>
+</div>
+</section>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

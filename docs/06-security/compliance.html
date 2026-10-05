@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tuân thủ và dữ liệu LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/06-security/compliance.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / compliance</span><span class="sp"></span>
+<a href="compliance.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>security-compliance</span><b>title</b><span>Tuân thủ và dữ liệu LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[compliance, data-privacy, bdd100k, license, retention]</span><b>priority</b><span>2</span></div>
+<h1 id="tuan-thu-va-du-lieu-labelx">Tuân thủ và dữ liệu LabelX</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Ghi các ràng buộc tuân thủ cho dữ liệu và kết quả của LabelX ở pilot M13: giấy phép dữ liệu, riêng tư ảnh, lưu trữ và bằng chứng kiểm toán. Repo <strong>chưa có</strong> văn bản pháp lý hay đánh giá tuân thủ nào. Những gì chưa được xác nhận được ghi rõ là TBD.</p>
+<h2 id="1-du-lieu-bdd100k">1. Dữ liệu BDD100K</h2>
+<p>Nguồn: SRS <code>03-data-errors.tex</code> (mục Dữ liệu BDD100K cho M13), <code>01-introduction.tex</code> (tài liệu tham khảo).</p>
+<ul>
+<li>M13 dùng phần <strong>2D object detection</strong> của BDD100K: ảnh camera hành trình 1280×720, Bounding box cho 10 lớp đối tượng giao thông.</li>
+<li>Bộ dữ liệu được trích dẫn trong SRS: F. Yu và cộng sự, <em>BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning</em>, CVPR 2020.</li>
+<li>Danh sách ảnh cụ thể (tập <code>val</code> hay <code>train</code>) và số frame của tập hiệu chỉnh/held-out: <strong>TBD-03</strong>.</li>
+<li>Nguồn annotation cần review (đội gán nhãn tạo mới trên CVAT hay nhãn gốc BDD100K): <strong>TBD-04</strong>.</li>
+</ul>
+<h3 id="giay-phep-va-ieu-khoan-su-dung-tbd-18">Giấy phép và điều khoản sử dụng — TBD-18</h3>
+<table>
+<thead>
+<tr>
+<th>Câu hỏi cần xác nhận</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Giấy phép/điều khoản sử dụng BDD100K có cho phép mục đích của dự án (nội bộ, thương mại hay nghiên cứu) không</td>
+<td><strong>TBD-18</strong> — chưa xác nhận (SRS <code>11-traceability.tex</code>: Data Owner, trước nạp dữ liệu)</td>
+</tr>
+<tr>
+<td>Có được lưu bản sao ảnh trong Object Storage nội bộ và tạo crop evidence không</td>
+<td><strong>TBD-18</strong> (phần lưu trữ nội bộ)</td>
+</tr>
+<tr>
+<td>Có được dùng ảnh để huấn luyện/hiệu chỉnh Detector và phân phối model artifact không</td>
+<td><strong>TBD</strong> — ngoài nội dung TBD-18 hiện ghi; đề xuất Data Owner xác nhận cùng TBD-18</td>
+</tr>
+<tr>
+<td>Có được đưa ảnh/crop vào báo cáo xuất (PDF, CSV, JSON) chia sẻ ngoài đội không</td>
+<td><strong>TBD</strong> — ngoài nội dung TBD-18 hiện ghi; đề xuất Data Owner xác nhận cùng TBD-18</td>
+</tr>
+<tr>
+<td>Yêu cầu ghi công/trích dẫn khi công bố kết quả</td>
+<td><strong>TBD</strong> — ngoài nội dung TBD-18 hiện ghi; đề xuất Data Owner xác nhận cùng TBD-18</td>
+</tr>
+</tbody>
+</table>
+<p>Người chịu trách nhiệm đề xuất: <strong>Data Owner</strong> (SRS <code>00-frontmatter.tex</code>: "Data/Model Owner — Dữ liệu BDD100K, Detector baseline"). Hạn chốt theo SRS: <strong>trước nạp dữ liệu</strong> (TBD-18). Tài liệu này không diễn giải điều khoản giấy phép, vì repo chưa có văn bản giấy phép làm căn cứ.</p>
+<h2 id="2-rieng-tu-du-lieu-anh-nfr-09">2. Riêng tư dữ liệu ảnh (NFR-09)</h2>
+<ul>
+<li>Ảnh BDD100K <strong>chỉ lưu trong Object Storage nội bộ</strong>; <strong>không gửi ảnh ra dịch vụ ngoài</strong> trong pilot (NFR-09). Cách kiểm: rà soát cấu hình.</li>
+<li>Detector chạy trong GPU worker nội bộ; không gửi ảnh ra ngoài (SRS <code>09-interfaces.tex</code>, giao diện mô hình).</li>
+<li>Ảnh camera hành trình có thể chứa <strong>mặt người, biển số</strong> (A mục 28).</li>
+<li>Engine thị giác – ngôn ngữ (VLM): SRS đề xuất <strong>không bật</strong> trong pilot M13, cần Product Owner duyệt (<strong>TBD-08</strong>, FR-ENG-10).</li>
+<li>Khác biệt nguồn: A mục 28 cho phép "chỉ gửi API ngoài khi được phép, gửi crop tối thiểu". SRS NFR-09 (bản đã duyệt) cấm gửi ảnh ra ngoài trong pilot. <strong>Áp dụng NFR-09.</strong> Mọi thay đổi sau pilot cần change request.</li>
+<li>Kiểm tra tối thiểu khi rà soát cấu hình (đề xuất): không có endpoint hay khoá API của dịch vụ suy luận bên ngoài trong biến môi trường; <code>OBJECT_STORAGE_ENDPOINT_URL</code> trỏ tới storage nội bộ; bucket không bật truy cập công khai.</li>
+</ul>
+<h2 id="3-luu-tru-va-ket-thuc-luu-nfr-08">3. Lưu trữ và kết thúc lưu (NFR-08)</h2>
+<ul>
+<li>Audit, evidence, snapshot, reference được giữ chừng nào dataset còn cần quản lý hoặc đối chiếu. Kết thúc lưu do <strong>người quản lý dữ liệu xác nhận</strong> và được ghi audit (NFR-08; phiếu chốt R, định hướng lưu).</li>
+<li>Thời hạn lưu audit tối thiểu: <strong>TBD-15</strong>.</li>
+<li>Không tự đặt ngày xoá, không tự xoá dữ liệu nghiệp vụ. Chỉ dọn cache/crop tạm tái tạo được.</li>
+<li>Chi tiết: <a href="security-policies.html">security-policies.md</a> mục 8.</li>
+</ul>
+<h2 id="4-bang-chung-kiem-toan-va-nghiem-thu">4. Bằng chứng kiểm toán và nghiệm thu</h2>
+<ul>
+<li>Mục tiêu R-05 "Phân quyền và kiểm toán mọi quyết định": backend chặn self-review/ngoài scope; audit đủ actor/revision/lý do (R, ma trận R-01…R-07; SRS AC-05, AC-11).</li>
+<li>Mọi số liệu hiển thị có provenance truy về run, snapshot, version (NFR-14).</li>
+<li>A mục 28 đề xuất export audit theo release cho nghiệm thu. Phát hành nằm ngoài phạm vi M13 (FR-GTE-04), nên đây là việc sau M13.</li>
+<li>Pre-registration tham số đánh giá, audit mọi thay đổi version để tránh chỉnh sau khi thấy held-out (RK-09).</li>
+</ul>
+<h2 id="5-giay-phep-phan-mem">5. Giấy phép phần mềm</h2>
+<ul>
+<li><code>LICENSE.agentic-sdlc-kit</code> ở gốc repo là giấy phép của bộ kit quy trình. Repo <strong>chưa có</strong> file giấy phép cho chính mã nguồn LabelX.</li>
+<li>Giấy phép dependency (Python trong <code>src/backend/uv.lock</code>, Node trong <code>src/frontend/package-lock.json</code>) <strong>chưa được rà soát</strong>. Đề xuất bổ sung bước kiểm giấy phép dependency khi có CI (xem <a href="../08-devops/ci-cd.html">../08-devops/ci-cd.md</a>).</li>
+</ul>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="threat-model.html">threat-model.md</a></li>
+<li><a href="security-policies.html">security-policies.md</a></li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yêu cầu nghiệp vụ và hệ thống — SRS M13 — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/01-business/requirements.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / requirements</span><span class="sp"></span>
+<a href="requirements.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>business-requirements</span><b>title</b><span>Yêu cầu nghiệp vụ và hệ thống — SRS M13</span><b>type</b><span>reference</span><b>domain</b><span>business</span><b>module</b><span>requirements</span><b>tags</b><span>[requirements, functional, non-functional, kpi, m13]</span><b>priority</b><span>1</span></div>
+<h1 id="yeu-cau-nghiep-vu-va-he-thong-srs-m13">Yêu cầu nghiệp vụ và hệ thống — SRS M13</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Tóm tắt có thể tra cứu của các yêu cầu trong SRS M13 của LabelX (người dùng chấp nhận nội dung 05/10/2026, chờ ký theo vai trò): mục tiêu, KPI, phạm vi, yêu cầu chức năng, phi chức năng và tiêu chí nghiệm thu, giữ nguyên mã định danh.</p>
+<p>Nguồn chuẩn: <a href="labelX.html">labelX.html</a> (bản HTML) và <code>docs/label-x_system-requirement-specification/</code> (bản LaTeX), SRS M13 v1.0, 05/10/2026. Khi có khác biệt, bản LaTeX là gốc; HTML được sinh lại bằng <code>python3 scripts/srs_tex2html.py</code>.</p>
+<h2 id="pham-vi">Phạm vi</h2>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Nội dung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Lõi — nghiệm thu</strong></td>
+<td>Đọc annotation và ảnh từ CVAT, tạo snapshot bất biến; chạy các engine phát hiện nghi vấn cho Bounding box; hợp nhất candidate; tính điểm rủi ro frame và xếp hạng; hàng đợi ưu tiên; Review Workspace hiển thị bằng chứng; quyết định xác nhận/bác bỏ/chưa chắc chắn; phân xử; đo Recall@20% và mức giảm công sức review; báo cáo hiệu quả.</td>
+</tr>
+<tr>
+<td><strong>Hỗ trợ — mức cần thiết</strong></td>
+<td>Tra cứu guideline theo rule ID/version; yêu cầu sửa (rework) và kiểm lại sau sửa; phân quyền và nhật ký kiểm toán; Quality Gate tối thiểu để không phát hành dữ liệu chưa xác minh.</td>
+</tr>
+<tr>
+<td><strong>Ngoài phạm vi bản đầu</strong></td>
+<td>Temporal/track, polygon, polyline, video (B-09); ghi annotation ngược vào CVAT (B-18); Diff/pre-label, vehicle profile, feedback loop (B-16); Classifier thứ hai (B-07); Guideline RAG (B-13); phát hành dataset đầy đủ và quản trị nền tảng ngoài mức tối thiểu.</td>
+</tr>
+<tr>
+<td><strong>Đề xuất thu hẹp — cần duyệt</strong></td>
+<td>Engine mô hình thị giác – ngôn ngữ (VLM) không bật trong pilot M13. Đây là <em>đề xuất thu hẹp cho pilot M13, cần Product Owner duyệt</em>; nó không kế thừa từ B-08. Quyết định B-08 (pipeline candidate → chọn theo policy → worker kiểm chọn lọc) vẫn là kiến trúc đã chốt. Nếu đề xuất bị bác, VLM chạy theo B-08 với hạn mức 400 candidate/run, tối đa 3 lần thử, và hết hạn mức thì ghi phần chưa kiểm (TBD-08).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="muc-tieu-va-chi-so-thanh-cong">Mục tiêu và chỉ số thành công</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Chỉ số</th>
+<th>Định nghĩa</th>
+<th>Ngưỡng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KPI-1</td>
+<td>Recall lỗi trong top 20% frame</td>
+<td>Số lỗi đã xác minh nằm trong 20% frame đầu / tổng số lỗi đã xác minh của tập held-out. Đo <em>khả năng xếp hạng</em>. Chỉ tính khi $|E| \ge E_{min}$; dưới ngưỡng ghi "không đủ mẫu", không kết luận đạt/trượt.</td>
+<td>TBD-K1; $E_{min}$ TBD-K4</td>
+</tr>
+<tr>
+<td>KPI-2</td>
+<td>Mức giảm công sức review</td>
+<td>$1 - T_A/T_B$, effort gồm review, xử lý cảnh báo sai, phân xử, kiểm lại sau sửa.</td>
+<td>TBD-K2</td>
+</tr>
+<tr>
+<td>KPI-2b</td>
+<td>Recall phát hiện thực tế</td>
+<td>Chỉ số phụ đo trong thí nghiệm KPI-2: số lỗi reference reviewer thực sự xác nhận / tổng số lỗi reference của phần dữ liệu đó, theo từng nhánh.</td>
+<td>Báo cáo, không có ngưỡng</td>
+</tr>
+<tr>
+<td>G-1</td>
+<td>Chất lượng tương đương</td>
+<td>Non-inferiority một phía ($\alpha = 0,025$): cận trên khoảng tin cậy 95% của $\rho_A - \rho_B$ nhỏ hơn $\delta$.</td>
+<td>$\delta$ TBD-K3</td>
+</tr>
+<tr>
+<td>G-2</td>
+<td>Gate: lỗi nghiêm trọng</td>
+<td>Số issue mức nghiêm trọng đã xác nhận còn mở trên run cuối.</td>
+<td>0 (cấu hình pilot)</td>
+</tr>
+<tr>
+<td>G-2b</td>
+<td>Thí nghiệm: lỗi nghiêm trọng</td>
+<td>Lỗi nghiêm trọng của reference còn lại (kể cả chưa có issue) ở assisted không nhiều hơn baseline.</td>
+<td>Không nhiều hơn</td>
+</tr>
+<tr>
+<td>G-5</td>
+<td>Thí nghiệm: box thừa</td>
+<td>Box thừa (BR-06) trong annotation cuối của assisted không nhiều hơn baseline quá $\delta_{fp}$.</td>
+<td>$\delta_{fp}$ TBD-K3</td>
+</tr>
+<tr>
+<td>G-3</td>
+<td>Đồng thuận reviewer</td>
+<td>Số quyết định của reviewer trùng kết luận adjudicator / tổng quyết định được chấm, trên tập case chuẩn (theo H, PerformanceEvaluation). Quyết định "Chưa chắc chắn" tính là không trùng; mỗi reviewer tính riêng rồi báo cáo cả trung vị. Không thay thế accuracy của engine.</td>
+<td>$\ge 90%$ (cấu hình pilot)</td>
+</tr>
+<tr>
+<td>G-4</td>
+<td>Residual vận hành</td>
+<td>Tỉ lệ frame còn lỗi ước lượng từ lát kiểm tra ngẫu nhiên (theo H), dùng khi không có reference toàn tập. Khác $\rho$ của thí nghiệm.</td>
+<td>$\le 5%$ (cấu hình pilot)</td>
+</tr>
+</tbody>
+</table>
+<p>Ngưỡng G-2, G-3, G-4 là cấu hình khởi điểm pilot đã chốt (nguồn R); ngưỡng KPI-1/KPI-2 chốt từ đo baseline trước khi chạy held-out (B-14).</p>
+<h2 id="yeu-cau-chuc-nang">Yêu cầu chức năng</h2>
+<p>Ưu tiên MoSCoW: M = Must, S = Should, C = Could.</p>
+<h3 id="snp-cvat-adapter-va-snapshot">SNP — CVAT Adapter và Snapshot</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-SNP-01</code></td>
+<td>Adapter phải chỉ dùng thao tác đọc của CVAT API (project, task, job, frame meta, annotation, media). Không có đường gọi nào tạo/sửa/xoá annotation trên CVAT.</td>
+<td>M</td>
+<td>UC-01; B-18</td>
+</tr>
+<tr>
+<td><code>FR-SNP-02</code></td>
+<td>Token CVAT phải lưu ở backend (secret store), không gửi xuống client.</td>
+<td>M</td>
+<td>UC-01; B-12</td>
+</tr>
+<tr>
+<td><code>FR-SNP-03</code></td>
+<td>Hệ thống phải chuẩn hoá annotation từng job thành JSON chuẩn (sắp xếp khoá, toạ độ làm tròn cố định) và tính hash SHA-256 từng job và hash tổng.</td>
+<td>M</td>
+<td>UC-01; B-02; R-01</td>
+</tr>
+<tr>
+<td><code>FR-SNP-04</code></td>
+<td>Trước khi khoá, hệ thống phải đọc lại thông tin cập nhật của từng job; nếu khác lần đọc đầu thì không khoá và báo danh sách job bị drift.</td>
+<td>M</td>
+<td>UC-01; B-02</td>
+</tr>
+<tr>
+<td><code>FR-SNP-05</code></td>
+<td>Snapshot phải lưu: ảnh và checksum, mapping frame (job/task/frame nguồn), assignee từng job tại thời điểm snapshot, taxonomy version, guideline version, người tạo.</td>
+<td>M</td>
+<td>UC-01; B-12</td>
+</tr>
+<tr>
+<td><code>FR-SNP-06</code></td>
+<td>Snapshot đã khoá là bất biến; mọi thay đổi annotation tạo snapshot mới có <code>parent_snapshot</code>.</td>
+<td>M</td>
+<td>B-02, B-03</td>
+</tr>
+<tr>
+<td><code>FR-SNP-07</code></td>
+<td>Shape không phải Bounding box phải được bỏ qua và đếm trong báo cáo snapshot là "ngoài phạm vi".</td>
+<td>M</td>
+<td>Phạm vi M13</td>
+</tr>
+<tr>
+<td><code>FR-SNP-08</code></td>
+<td>Hệ thống phải tạo deep link mở đúng job và frame trên CVAT cho mỗi frame/issue.</td>
+<td>M</td>
+<td>UC-07; B-18</td>
+</tr>
+<tr>
+<td><code>FR-SNP-09</code></td>
+<td>Hệ thống nên hỗ trợ tạo snapshot gia tăng chỉ cho các job bị ảnh hưởng bởi rework.</td>
+<td>S</td>
+<td>UC-07</td>
+</tr>
+</tbody>
+</table>
+<h3 id="eng-engine-phan-tich-nghi-van">ENG — Engine phân tích nghi vấn</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-ENG-01</code></td>
+<td>QC Run phải ghi: snapshot, config version, seed, version từng engine, model artifact + checksum, người chạy, thời điểm.</td>
+<td>M</td>
+<td>UC-02; R-01</td>
+</tr>
+<tr>
+<td><code>FR-ENG-02</code></td>
+<td><strong>Schema/Taxonomy</strong> phải kiểm: lớp thuộc taxonomy version; thuộc tính bắt buộc có giá trị hợp lệ; sinh cảnh báo cấu trúc có rule ID, expected/actual.</td>
+<td>M</td>
+<td>UC-02</td>
+</tr>
+<tr>
+<td><code>FR-ENG-03</code></td>
+<td><strong>Geometry</strong> phải kiểm: $x_1&lt;x_2, y_1&lt;y_2$; toạ độ trong ảnh với dung sai 2 px; diện tích ≥ 24 px$^2$ (G-014). Không kiểm độ khít biên (G-009 giữ Not checked).</td>
+<td>M</td>
+<td>UC-02; B-06</td>
+</tr>
+<tr>
+<td><code>FR-ENG-04</code></td>
+<td><strong>Duplicate/Overlap</strong> phải sinh candidate E3 cho cặp annotation có IoU $\ge 0,85$ (D-002), kèm IoU và lớp của hai box. Candidate chỉ là nghi vấn.</td>
+<td>M</td>
+<td>UC-02; E3</td>
+</tr>
+<tr>
+<td><code>FR-ENG-05</code></td>
+<td><strong>Mô hình độc lập</strong> phải chạy một Detector baseline đã freeze (artifact, version, checksum, mapping lớp sang 10 lớp BDD100K) trên mọi frame trong phạm vi áp dụng.</td>
+<td>M</td>
+<td>UC-02; B-07</td>
+</tr>
+<tr>
+<td><code>FR-ENG-06</code></td>
+<td>Matching dự đoán–annotation phải theo mục tương ứng trong labelX.html: không phụ thuộc lớp, loại cạnh dưới $\tau_m$ trước khi tối ưu, tối đa số cặp rồi tổng IoU, phá hoà tất định.</td>
+<td>M</td>
+<td>B-21</td>
+</tr>
+<tr>
+<td><code>FR-ENG-07</code></td>
+<td>Dự đoán không ghép với confidence $\ge \tau_{E1}$ sinh candidate E1; cặp ghép khác lớp với confidence lớp dự đoán $\ge \tau_{E2}$ sinh candidate E2. Ngưỡng có version, chọn trên tập hiệu chỉnh.</td>
+<td>M</td>
+<td>E1, E2</td>
+</tr>
+<tr>
+<td><code>FR-ENG-08</code></td>
+<td>Evidence của candidate phải gồm: box và lớp dự đoán, confidence, IoU, cặp ambiguous (nếu có), crop ảnh, rule liên quan.</td>
+<td>M</td>
+<td>R-02</td>
+</tr>
+<tr>
+<td><code>FR-ENG-09</code></td>
+<td>Nếu không có Detector khả dụng, engine Mô hình độc lập phải ở trạng thái Not checked; không được sinh ranking giả từ engine thiếu.</td>
+<td>M</td>
+<td>B-07, B-19</td>
+</tr>
+<tr>
+<td><code>FR-ENG-10</code></td>
+<td>Engine VLM: đề xuất không bật trong pilot M13, cần Product Owner duyệt (TBD-08). Nếu đề xuất bị bác hoặc VLM được bật, phải theo B-08: pipeline candidate → chọn theo policy → worker kiểm chọn lọc; tối đa 400 candidate mỗi run; tối đa 3 lần thử tổng cộng mỗi lượt kiểm (tính cả retry); hết hạn mức thì ghi phần chưa kiểm, không pass/reject; timeout cụ thể lấy từ đo pilot; ảnh không gửi ra ngoài khi chưa được phép.</td>
+<td>C</td>
+<td>B-08</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agg-candidate-issue-va-coverage-ledger">AGG — Candidate, Issue và Coverage ledger</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-AGG-01</code></td>
+<td>Candidate và Issue phải là hai thực thể riêng; candidate không bao giờ bị sửa sau khi ghi.</td>
+<td>M</td>
+<td>B-10</td>
+</tr>
+<tr>
+<td><code>FR-AGG-02</code></td>
+<td>Mỗi đơn vị xử lý phải có khoá idempotent (snapshot, engine, config, model, shard); retry không tạo candidate hay issue trùng.</td>
+<td>M</td>
+<td>B-10; R-01</td>
+</tr>
+<tr>
+<td><code>FR-AGG-03</code></td>
+<td>Candidate được gộp thành issue theo <code>dedup_key</code> = (snapshot, frame, đối tượng tham chiếu, nhóm lỗi), có version policy gộp.</td>
+<td>M</td>
+<td>B-10; BR-08</td>
+</tr>
+<tr>
+<td><code>FR-AGG-04</code></td>
+<td>Coverage ledger phải ghi theo từng engine: đơn vị áp dụng, số đơn vị eligible, completed, failed, not checked, kèm lý do; không loại đơn vị lỗi khỏi mẫu số.</td>
+<td>M</td>
+<td>B-04; R-06</td>
+</tr>
+<tr>
+<td><code>FR-AGG-05</code></td>
+<td>Trạng thái công khai của engine chỉ gồm Checked, Partial, Failed, Not checked, Running; không có trạng thái nào được hiển thị như "đạt" khi engine chưa hoàn tất.</td>
+<td>M</td>
+<td>B-19</td>
+</tr>
+<tr>
+<td><code>FR-AGG-06</code></td>
+<td>Ghi candidate, evidence và cập nhật ledger của một shard phải trong cùng transaction.</td>
+<td>M</td>
+<td>R-01</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rnk-cham-iem-rui-ro-va-xep-hang">RNK — Chấm điểm rủi ro và xếp hạng</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-RNK-01</code></td>
+<td>Hệ thống phải tính $s(f)$ cho <em>mọi</em> frame của snapshot trong phạm vi run, kể cả frame không có candidate.</td>
+<td>M</td>
+<td>UC-03; KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-RNK-02</code></td>
+<td>Công thức điểm (đặc trưng, tham số, mô hình nền, ngưỡng) phải có version, lưu kèm mỗi ranking, và không đổi được sau khi khoá.</td>
+<td>M</td>
+<td>UC-03; R-01</td>
+</tr>
+<tr>
+<td><code>FR-RNK-03</code></td>
+<td>Với cùng snapshot, config, score version và seed, ranking phải tái lập giống hệt.</td>
+<td>M</td>
+<td>R-01</td>
+</tr>
+<tr>
+<td><code>FR-RNK-04</code></td>
+<td>Phá hoà phải tất định theo hash(frame_key, seed).</td>
+<td>M</td>
+<td>KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-RNK-05</code></td>
+<td>Hệ thống phải lưu đóng góp $n_i q_i$ của từng issue và điểm nền $h(f)$ vào $s(f)$ để hiển thị "vì sao frame được xếp cao".</td>
+<td>M</td>
+<td>UC-04; R-02</td>
+</tr>
+<tr>
+<td><code>FR-RNK-06</code></td>
+<td>Frame có engine bắt buộc ở trạng thái Not checked/Failed phải mang cờ "thiếu bằng chứng" trong hàng đợi, không được ẩn.</td>
+<td>M</td>
+<td>B-19; R-06</td>
+</tr>
+<tr>
+<td><code>FR-RNK-07</code></td>
+<td>Hệ thống phải tạo lát kiểm tra ngẫu nhiên $r%$ frame (TBD-10) bằng seed cố định, độc lập với ranking, hiển thị ở hàng đợi riêng và báo cáo riêng.</td>
+<td>M</td>
+<td>R-04</td>
+</tr>
+<tr>
+<td><code>FR-RNK-08</code></td>
+<td>Hệ thống phải tạo được các ranking đối chứng trên cùng snapshot: ngẫu nhiên (nhiều seed) và heuristic (số annotation giảm dần; max confidence).</td>
+<td>M</td>
+<td>UC-09; KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-RNK-09</code></td>
+<td>Hệ thống nên hỗ trợ biến thể xếp hạng theo kỳ vọng lỗi trên thời gian review ước lượng $s(f)/\hat t(f)$ để tối ưu KPI-2.</td>
+<td>C</td>
+<td>KPI-2</td>
+</tr>
+<tr>
+<td><code>FR-RNK-10</code></td>
+<td>Hiệu chỉnh xác suất phải được kiểm bằng dự đoán ngoài fold (cross-validation theo video) trên tập hiệu chỉnh: Brier score và đường reliability theo E1/E2/E3; kết quả lưu cùng score version.</td>
+<td>M</td>
+<td>KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-RNK-11</code></td>
+<td>Trước khi khoá score version, chạy ablation trên tập hiệu chỉnh: bỏ điểm nền, bỏ từng nhóm đặc trưng, so với <code>score_v0</code> và heuristic; chọn version theo Recall@20% ngoài fold.</td>
+<td>M</td>
+<td>KPI-1; B-14</td>
+</tr>
+<tr>
+<td><code>FR-RNK-12</code></td>
+<td>Mỗi issue lưu neo và $n_i$ theo bảng tương ứng trong labelX.html; quy tắc tạo neo có version cùng policy gộp.</td>
+<td>M</td>
+<td>BR-01…BR-04</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rev-hang-oi-va-review-workspace">REV — Hàng đợi và Review Workspace</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-REV-01</code></td>
+<td>Review Queues phải có ít nhất hai hàng đợi tách theo nguồn: <em>Theo rủi ro</em> (thứ tự rank) và <em>Kiểm tra ngẫu nhiên</em>; lọc theo nhóm lỗi, nguồn, phạm vi.</td>
+<td>M</td>
+<td>UC-04; H</td>
+</tr>
+<tr>
+<td><code>FR-REV-02</code></td>
+<td>Mỗi dòng hàng đợi hiển thị: frame, rank, số issue theo nhóm, nguồn, mức ưu tiên, trạng thái, reviewer giữ lease.</td>
+<td>M</td>
+<td>UC-04</td>
+</tr>
+<tr>
+<td><code>FR-REV-03</code></td>
+<td><em>Bắt đầu review</em> cấp lease frame kế tiếp chưa có người giữ, bỏ qua frame mà reviewer là assignee tại snapshot.</td>
+<td>M</td>
+<td>UC-04; B-12</td>
+</tr>
+<tr>
+<td><code>FR-REV-04</code></td>
+<td>Lease có thời hạn TBD-09, gia hạn khi có thao tác; hết hạn thì frame về hàng đợi.</td>
+<td>M</td>
+<td>UC-04</td>
+</tr>
+<tr>
+<td><code>FR-REV-05</code></td>
+<td>Workspace phải hiển thị ảnh với annotation (nét liền) và dự đoán Detector (nét đứt), bật/tắt từng lớp hiển thị, phóng to và di chuyển.</td>
+<td>M</td>
+<td>UC-05; H</td>
+</tr>
+<tr>
+<td><code>FR-REV-06</code></td>
+<td>Workspace phải có hai chế độ: <em>Issue Review</em> (theo từng issue) và <em>Frame Review</em> (toàn frame).</td>
+<td>M</td>
+<td>UC-05; H</td>
+</tr>
+<tr>
+<td><code>FR-REV-07</code></td>
+<td>Panel issue phải hiển thị evidence (FR-ENG-08), trạng thái từng engine (kể cả Failed/Not checked), guideline và case tương tự (UC-12).</td>
+<td>M</td>
+<td>UC-05; R-02</td>
+</tr>
+<tr>
+<td><code>FR-REV-08</code></td>
+<td>Quyết định gồm: Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên, Yêu cầu sửa; xác nhận bắt buộc chọn nhóm lỗi và mức độ; bác bỏ, chưa chắc chắn và chuyển cấp bắt buộc lý do.</td>
+<td>M</td>
+<td>UC-05; R-02</td>
+</tr>
+<tr>
+<td><code>FR-REV-09</code></td>
+<td>Reviewer phải tạo được issue thủ công bằng cách chọn object hoặc vẽ vùng trên ảnh, nguồn ghi là "reviewer".</td>
+<td>M</td>
+<td>UC-05; E1</td>
+</tr>
+<tr>
+<td><code>FR-REV-10</code></td>
+<td>Mọi quyết định lưu actor, thời điểm, revision, lý do, rule ID và ghi audit trong cùng transaction.</td>
+<td>M</td>
+<td>R-05; B-12</td>
+</tr>
+<tr>
+<td><code>FR-REV-11</code></td>
+<td>Phím tắt cho các quyết định và chuyển frame/issue.</td>
+<td>S</td>
+<td>KPI-2</td>
+</tr>
+<tr>
+<td><code>FR-REV-12</code></td>
+<td>Nút <em>Mở trong CVAT</em> mở deep link đúng job/frame.</td>
+<td>M</td>
+<td>B-18</td>
+</tr>
+<tr>
+<td><code>FR-REV-13</code></td>
+<td><em>Đã review xong</em> chỉ cho phép khi mọi issue của frame đã có quyết định hoặc đang chờ phân xử; khi lưu, hệ thống trả lease và dừng ghi effort của frame.</td>
+<td>M</td>
+<td>UC-05</td>
+</tr>
+<tr>
+<td><code>FR-REV-14</code></td>
+<td>Backend từ chối lưu mọi quyết định khi lease đã hết hạn hoặc thuộc người khác (409), và khi reviewer là assignee của job tại snapshot (403), kể cả khi mở frame trực tiếp bằng URL.</td>
+<td>M</td>
+<td>UC-05; B-12</td>
+</tr>
+</tbody>
+</table>
+<h3 id="esc-chuyen-cap-va-phan-xu">ESC — Chuyển cấp và phân xử</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-ESC-01</code></td>
+<td>Escalations phải liệt kê issue Chưa chắc chắn/Chuyển cấp, kèm quyết định từng reviewer và evidence.</td>
+<td>M</td>
+<td>UC-06</td>
+</tr>
+<tr>
+<td><code>FR-ESC-02</code></td>
+<td>Kết luận phân xử: Xác nhận lỗi, Bác bỏ, Guideline còn thiếu; bắt buộc rule áp dụng, nhãn đúng (nếu có), lý do.</td>
+<td>M</td>
+<td>UC-06</td>
+</tr>
+<tr>
+<td><code>FR-ESC-03</code></td>
+<td>Người phân xử phải khác người đã chuyển cấp.</td>
+<td>M</td>
+<td>B-12</td>
+</tr>
+<tr>
+<td><code>FR-ESC-04</code></td>
+<td>Phân xử được lưu thành Decision Case có version, tra cứu được ở UC-12.</td>
+<td>M</td>
+<td>B-13</td>
+</tr>
+<tr>
+<td><code>FR-ESC-05</code></td>
+<td><em>Guideline còn thiếu</em> tạo Guideline Gap gắn rule; issue chờ đến khi guideline có version mới.</td>
+<td>S</td>
+<td>UC-06</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rwk-rework-va-kiem-lai">RWK — Rework và kiểm lại</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-RWK-01</code></td>
+<td>Yêu cầu sửa gồm: issue, việc cần sửa, annotator, hạn, mức độ, deep link.</td>
+<td>M</td>
+<td>UC-07</td>
+</tr>
+<tr>
+<td><code>FR-RWK-02</code></td>
+<td>Annotator chỉ thấy yêu cầu sửa của mình; sửa trên CVAT, bấm <em>Đã sửa</em> trên LabelX.</td>
+<td>M</td>
+<td>UC-07; B-18</td>
+</tr>
+<tr>
+<td><code>FR-RWK-03</code></td>
+<td>Khi <em>Đã sửa</em>, hệ thống tạo snapshot mới cho job bị ảnh hưởng; nếu revision không đổi thì từ chối với thông báo "chưa có thay đổi".</td>
+<td>M</td>
+<td>UC-07; B-02</td>
+</tr>
+<tr>
+<td><code>FR-RWK-04</code></td>
+<td>Hệ thống chạy lại các engine liên quan trên frame đã sửa (re-check) và hiển thị kết quả cho reviewer.</td>
+<td>M</td>
+<td>UC-07; R-03</td>
+</tr>
+<tr>
+<td><code>FR-RWK-05</code></td>
+<td>Issue chỉ chuyển Đã đóng khi reviewer verify đạt trên revision mới; người verify khác annotator đã sửa.</td>
+<td>M</td>
+<td>R-03; H</td>
+</tr>
+<tr>
+<td><code>FR-RWK-06</code></td>
+<td>Khi mọi yêu cầu sửa trong phạm vi đã đóng, hệ thống tạo snapshot toàn phạm vi trên revision đã sửa và QC run cuối (<code>is_final</code>), liên kết các verification trước đó. Run gốc giữ nguyên để kiểm toán.</td>
+<td>M</td>
+<td>B-03; R-03</td>
+</tr>
+<tr>
+<td><code>FR-RWK-08</code></td>
+<td>Báo cáo và gate chỉ chuyển sang trỏ run cuối khi run cuối Completed và coverage engine bắt buộc đạt theo ledger. Run cuối Partial/Failed/Cancelled hoặc phát sinh issue mới: issue mới vào hàng đợi, gate chưa đạt, phạm vi chưa hoàn tất.</td>
+<td>M</td>
+<td>B-03, B-15</td>
+</tr>
+<tr>
+<td><code>FR-RWK-07</code></td>
+<td>Rework Tracking hiển thị: chờ sửa, chờ xác minh, hoàn thành, tỉ lệ đóng, quá hạn.</td>
+<td>S</td>
+<td>H</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gdl-tra-cuu-guideline">GDL — Tra cứu guideline</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-GDL-01</code></td>
+<td>Lưu guideline theo version với rule ID, section, nội dung trích; nội dung soạn và duyệt ở nơi soạn guideline.</td>
+<td>S</td>
+<td>B-13</td>
+</tr>
+<tr>
+<td><code>FR-GDL-02</code></td>
+<td>QC Admin cấu hình mapping (nhóm lỗi, lớp, cặp lớp) → rule ID.</td>
+<td>S</td>
+<td>B-13</td>
+</tr>
+<tr>
+<td><code>FR-GDL-03</code></td>
+<td>Workspace hiển thị rule theo mapping, version đang áp dụng cho snapshot và các Decision Case cùng rule.</td>
+<td>S</td>
+<td>UC-12</td>
+</tr>
+<tr>
+<td><code>FR-GDL-04</code></td>
+<td>Không dùng retrieval ngữ nghĩa/RAG trong M13.</td>
+<td>M</td>
+<td>B-13</td>
+</tr>
+</tbody>
+</table>
+<h3 id="evl-reference-o-luong-va-effort">EVL — Reference, đo lường và effort</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-EVL-01</code></td>
+<td>Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html.</td>
+<td>M</td>
+<td>UC-08; BR-11</td>
+</tr>
+<tr>
+<td><code>FR-EVL-02</code></td>
+<td>Người được giao lập GT/xác minh của tập đánh giá không có quyền xem ranking, risk score, candidate của tập đó.</td>
+<td>M</td>
+<td>BR-10</td>
+</tr>
+<tr>
+<td><code>FR-EVL-03</code></td>
+<td>Hệ thống suy ra $E$ theo BR-01…BR-07 và hiển thị để duyệt; sửa mapping thì suy lại, không xoá lỗi trực tiếp.</td>
+<td>M</td>
+<td>UC-08; BR-14</td>
+</tr>
+<tr>
+<td><code>FR-EVL-04</code></td>
+<td>Khoá reference cùng: GT version, snapshot đầu vào, mapping, $\tau_m$, $a_{min}$, version thuật toán.</td>
+<td>M</td>
+<td>BR-13; B-20</td>
+</tr>
+<tr>
+<td><code>FR-EVL-05</code></td>
+<td>Chống rò rỉ dữ liệu: (a) tập hiệu chỉnh và held-out không giao nhau theo video nguồn; hệ thống từ chối dùng held-out để học tham số điểm; (b) đối chiếu danh sách ảnh huấn luyện của Detector với held-out, có giao nhau thì chặn đánh giá (AS-03); (c) loại case guideline/hiệu chỉnh khỏi GT held-out (BR-16). Kết quả kiểm lưu cùng evaluation run.</td>
+<td>M</td>
+<td>AS-03; BR-16</td>
+</tr>
+<tr>
+<td><code>FR-EVL-06</code></td>
+<td>Effort log tự động ghi theo frame và hoạt động (xem frame, xử lý issue, phân xử, re-check/verify) với thời gian hoạt động thực; khoảng không thao tác quá $t_{idle}$ (TBD-11) không tính.</td>
+<td>M</td>
+<td>UC-05; KPI-2</td>
+</tr>
+<tr>
+<td><code>FR-EVL-07</code></td>
+<td>Tính Recall@k theo phương trình tương ứng trong labelX.html với $k$ cấu hình (mặc định 0,2), làm tròn $\lceil kN \rceil$.</td>
+<td>M</td>
+<td>UC-09; KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-EVL-08</code></td>
+<td>Báo cáo kèm: recall theo nhóm lỗi, theo slice (ngày/đêm, thời tiết, kích thước), recall theo frame có lỗi, đường Recall@k với $k$ từ 5% đến 100%.</td>
+<td>M</td>
+<td>UC-09</td>
+</tr>
+<tr>
+<td><code>FR-EVL-09</code></td>
+<td>Tính khoảng tin cậy 95% bằng bootstrap theo cụm video nguồn ($B \ge 1000$ lần lặp), và hiệu số so với từng ranking đối chứng.</td>
+<td>M</td>
+<td>UC-09</td>
+</tr>
+<tr>
+<td><code>FR-EVL-10</code></td>
+<td>Không tính KPI khi $|E| &lt; E_{min}$; ghi "không đủ mẫu".</td>
+<td>M</td>
+<td>KPI-1</td>
+</tr>
+<tr>
+<td><code>FR-EVL-11</code></td>
+<td>Tạo thí nghiệm effort: phân reviewer vào nhánh theo thiết kế chéo, khoá quy tắc dừng, $\delta$, cỡ mẫu trước khi bắt đầu.</td>
+<td>M</td>
+<td>UC-10; KPI-2</td>
+</tr>
+<tr>
+<td><code>FR-EVL-12</code></td>
+<td>Ở nhánh baseline, Workspace phải ẩn ranking, risk score và evidence của engine; frame theo thứ tự gốc.</td>
+<td>M</td>
+<td>UC-10</td>
+</tr>
+<tr>
+<td><code>FR-EVL-13</code></td>
+<td>Tính $T_A, T_B$, KPI-2, KPI-2b, residual $\rho_A, \rho_B$ trên reference và kiểm định non-inferiority theo mục tương ứng trong labelX.html.</td>
+<td>M</td>
+<td>UC-10</td>
+</tr>
+<tr>
+<td><code>FR-EVL-14</code></td>
+<td>Evaluation run lưu provenance: snapshot, run, score version, reference version, thí nghiệm, tham số, thời điểm, người chạy.</td>
+<td>M</td>
+<td>B-05; R-04</td>
+</tr>
+<tr>
+<td><code>FR-EVL-15</code></td>
+<td>Metric engine (Precision/Recall của Detector theo lớp) chỉ tính trên GT đã khoá; thiếu GT thì Not checked.</td>
+<td>S</td>
+<td>B-05</td>
+</tr>
+<tr>
+<td><code>FR-EVL-16</code></td>
+<td>Tính đồng thuận reviewer (G-3) theo định nghĩa ở bảng tương ứng trong labelX.html trên tập case chuẩn.</td>
+<td>S</td>
+<td>G-3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rpt-bao-cao-hieu-qua">RPT — Báo cáo hiệu quả</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-RPT-01</code></td>
+<td>Báo cáo hiệu quả hiển thị KPI-1, KPI-2, KPI-2b, G-1…G-4, mỗi chỉ số có cỡ mẫu, mẫu số, phương pháp, khoảng tin cậy.</td>
+<td>M</td>
+<td>UC-11</td>
+</tr>
+<tr>
+<td><code>FR-RPT-02</code></td>
+<td>Kết quả kiểm tra ngẫu nhiên và theo rủi ro được báo cáo riêng, không gộp.</td>
+<td>M</td>
+<td>R-04; H</td>
+</tr>
+<tr>
+<td><code>FR-RPT-03</code></td>
+<td>Chỉ số chưa đủ dữ liệu hiển thị Not checked/không đủ mẫu; không hiển thị 0% hay đạt.</td>
+<td>M</td>
+<td>B-05, B-19</td>
+</tr>
+<tr>
+<td><code>FR-RPT-04</code></td>
+<td>Coverage hiển thị theo từng engine với mẫu số áp dụng; coverage chung chỉ là tiến độ.</td>
+<td>M</td>
+<td>B-04</td>
+</tr>
+<tr>
+<td><code>FR-RPT-05</code></td>
+<td>Xuất PDF, CSV, JSON; tệp xuất ghi version snapshot, run, score, reference.</td>
+<td>S</td>
+<td>H</td>
+</tr>
+<tr>
+<td><code>FR-RPT-06</code></td>
+<td>Báo cáo trỏ QC run cuối khi run cuối thoả FR-RWK-08; nếu chưa thì ghi rõ đang dùng run gốc và lý do.</td>
+<td>M</td>
+<td>B-03</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec-phan-quyen-va-kiem-toan">SEC — Phân quyền và kiểm toán</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-SEC-01</code></td>
+<td>Phân quyền theo vai trò và scope dataset theo bảng tương ứng trong labelX.html; backend kiểm mọi request.</td>
+<td>M</td>
+<td>UC-13; R-05</td>
+</tr>
+<tr>
+<td><code>FR-SEC-02</code></td>
+<td>Identity mapping giữa tài khoản LabelX và người dùng CVAT được lưu và dùng cho kiểm self-review.</td>
+<td>M</td>
+<td>B-12</td>
+</tr>
+<tr>
+<td><code>FR-SEC-03</code></td>
+<td>Backend từ chối quyết định review khi reviewer là assignee của job tại snapshot.</td>
+<td>M</td>
+<td>B-12</td>
+</tr>
+<tr>
+<td><code>FR-SEC-04</code></td>
+<td>Người duyệt (waiver, khoá reference, phân xử) khác người yêu cầu; không được dùng tài khoản khác của cùng người.</td>
+<td>M</td>
+<td>B-11, B-12</td>
+</tr>
+<tr>
+<td><code>FR-SEC-05</code></td>
+<td>Audit log append-only, ghi trong cùng transaction với thao tác: actor, hành động, đối tượng, trước/sau, revision, lý do.</td>
+<td>M</td>
+<td>B-12; R-05</td>
+</tr>
+<tr>
+<td><code>FR-SEC-06</code></td>
+<td>Ghi đè của Super Admin bắt buộc lý do, gắn nhãn trong audit, vẫn chịu self-review và tách nhiệm vụ.</td>
+<td>M</td>
+<td>H</td>
+</tr>
+<tr>
+<td><code>FR-SEC-07</code></td>
+<td>Màn hình xem audit lọc theo actor, đối tượng, thời gian.</td>
+<td>S</td>
+<td>UC-13</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gte-quality-gate-toi-thieu">GTE — Quality Gate tối thiểu</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Ưu tiên</th>
+<th>Truy vết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FR-GTE-01</code></td>
+<td>Gate tính trên QC run cuối với các điều kiện cấu hình pilot: coverage engine bắt buộc ≥ 95% (mẫu số theo ledger), lỗi nghiêm trọng chưa đóng = 0, rework bắt buộc verify 100%, residual ≤ 5%, đồng thuận reviewer ≥ 90%.</td>
+<td>M</td>
+<td>B-15; R-06</td>
+</tr>
+<tr>
+<td><code>FR-GTE-02</code></td>
+<td>Điều kiện thiếu dữ liệu (cỡ mẫu chưa đủ, engine Not checked) là <em>chưa đạt</em>, không tự đạt.</td>
+<td>M</td>
+<td>B-15, B-19</td>
+</tr>
+<tr>
+<td><code>FR-GTE-03</code></td>
+<td>Waiver theo policy từng điều kiện: lý do, evidence, hạn hiệu lực, người duyệt khác người yêu cầu; chỉ hiệu lực sau duyệt; hết hạn thì điều kiện trở lại chưa đạt.</td>
+<td>S</td>
+<td>B-11</td>
+</tr>
+<tr>
+<td><code>FR-GTE-04</code></td>
+<td>Phát hành dataset đầy đủ nằm ngoài phạm vi; M13 chỉ hiển thị kết quả gate.</td>
+<td>M</td>
+<td>Phạm vi</td>
+</tr>
+</tbody>
+</table>
+<h2 id="yeu-cau-phi-chuc-nang">Yêu cầu phi chức năng</h2>
+<p>Các con số là đề xuất khởi điểm; ngưỡng nghiệm thu chốt sau khi đo pilot (B-14).</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nhóm</th>
+<th>Yêu cầu</th>
+<th>Cách kiểm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NFR-01</code></td>
+<td>Hiệu năng UI</td>
+<td>Mở frame kế tiếp trong Workspace (ảnh + annotation + issue): đề xuất p95 ≤ 1,5 s, cache ấm (TBD-13).</td>
+<td>Đo log client trong pilot.</td>
+</tr>
+<tr>
+<td><code>NFR-02</code></td>
+<td>Hiệu năng UI</td>
+<td>Lưu quyết định review: đề xuất p95 ≤ 500 ms (TBD-13).</td>
+<td>Đo log API trong pilot.</td>
+</tr>
+<tr>
+<td><code>NFR-03</code></td>
+<td>Thông lượng</td>
+<td>Thời gian QC Run cho 10.000 frame (CPU engine + Detector + xếp hạng) ≤ TBD-13 trên phần cứng chốt ở TBD-02.</td>
+<td>Đo trên pilot.</td>
+</tr>
+<tr>
+<td><code>NFR-04</code></td>
+<td>Tái lập</td>
+<td>Cùng input, config, version, seed cho kết quả giống hệt (hash). Detector chạy chế độ suy luận tất định hoặc lưu prediction để tái dùng.</td>
+<td>AC-01.</td>
+</tr>
+<tr>
+<td><code>NFR-05</code></td>
+<td>Tin cậy</td>
+<td>Shard lỗi được retry tối đa TBD-14 lần với backoff; lỗi còn lại ghi Failed cho đơn vị đó, không làm hỏng run; worker chết giữa chừng không mất kết quả đã commit.</td>
+<td>Kiểm thử ép lỗi.</td>
+</tr>
+<tr>
+<td><code>NFR-06</code></td>
+<td>Toàn vẹn</td>
+<td>Blob (ảnh, crop evidence) được upload lên Object Storage <em>trước</em>, với khoá theo hash nội dung (ghi lại là idempotent); sau đó metadata candidate, evidence, ledger của shard được commit trong một transaction PostgreSQL. Blob không có metadata trỏ tới sau $t_{gc}$ được job dọn dẹp xoá. Quyết định và audit ghi trong một transaction.</td>
+<td>Kiểm thử ngắt giữa upload và commit.</td>
+</tr>
+<tr>
+<td><code>NFR-07</code></td>
+<td>Bảo mật</td>
+<td>Token CVAT chỉ ở backend; HTTPS; mật khẩu/secret không xuất hiện trong log; phân quyền kiểm ở backend cho mọi endpoint.</td>
+<td>Rà soát bảo mật, kiểm thử API.</td>
+</tr>
+<tr>
+<td><code>NFR-08</code></td>
+<td>Kiểm toán, lưu trữ</td>
+<td>Audit log append-only (không có API sửa/xoá). Audit, evidence, snapshot và reference được giữ chừng nào dataset còn cần quản lý hoặc đối chiếu; việc kết thúc lưu do người quản lý dữ liệu xác nhận và được ghi audit. Thời hạn tối thiểu TBD-15.</td>
+<td>Kiểm thử API, rà soát DB grant.</td>
+</tr>
+<tr>
+<td><code>NFR-09</code></td>
+<td>Riêng tư dữ liệu</td>
+<td>Ảnh BDD100K chỉ lưu trong Object Storage nội bộ; không gửi ảnh ra dịch vụ ngoài trong pilot.</td>
+<td>Rà soát cấu hình.</td>
+</tr>
+<tr>
+<td><code>NFR-10</code></td>
+<td>Khả dụng</td>
+<td>Giao diện theo LabelX Design System: trung tính, table-first, trạng thái dùng nhãn chữ (không chỉ màu), tương phản WCAG AA.</td>
+<td>Review UI.</td>
+</tr>
+<tr>
+<td><code>NFR-11</code></td>
+<td>Khả dụng</td>
+<td>Đề xuất: reviewer mới hoàn thành đúng quy trình một frame có 3 issue sau buổi làm quen (thời lượng TBD-11).</td>
+<td>Quan sát trong buổi làm quen (EX-08).</td>
+</tr>
+<tr>
+<td><code>NFR-12</code></td>
+<td>Quan sát</td>
+<td>Log có cấu trúc kèm run_id, snapshot_id, request_id; metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi.</td>
+<td>Kiểm tra dashboard vận hành.</td>
+</tr>
+<tr>
+<td><code>NFR-13</code></td>
+<td>Khả năng mở rộng</td>
+<td>Engine được đăng ký qua interface chung (input, output, trạng thái, ledger) để thêm engine (VLM, Classifier, temporal) mà không sửa luồng review.</td>
+<td>Review kiến trúc.</td>
+</tr>
+<tr>
+<td><code>NFR-14</code></td>
+<td>Tính đúng của số liệu</td>
+<td>Mọi số liệu hiển thị có provenance truy về run, snapshot, version; không hiển thị số liệu không có nguồn.</td>
+<td>AC-10.</td>
+</tr>
+<tr>
+<td><code>NFR-15</code></td>
+<td>Đồng thời</td>
+<td>Không có hai reviewer giữ cùng lease ở mọi mức tải; số reviewer đồng thời mục tiêu lấy từ kế hoạch pilot (đề xuất 10).</td>
+<td>Kiểm thử tải.</td>
+</tr>
+<tr>
+<td><code>NFR-16</code></td>
+<td>Sao lưu</td>
+<td>Sao lưu PostgreSQL và Object Storage (bật versioning) theo cùng lịch; khôi phục được snapshot, ảnh, evidence, quyết định, reference, effort log nhất quán với nhau. RPO/RTO TBD-17.</td>
+<td>Diễn tập khôi phục.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="tieu-chi-nghiem-thu">Tiêu chí nghiệm thu</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Tiêu chí</th>
+<th>Mục tiêu</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC-01</td>
+<td>Tạo hai lần QC Run cùng snapshot, config, score version, seed cho ra candidate, issue, ranking giống hệt: so hash của nội dung đã chuẩn hoá (bỏ ID sinh tự động, thời điểm, run_id; sắp theo khoá tự nhiên).</td>
+<td>R-01</td>
+<td>FR-AGG-02, FR-RNK-03</td>
+</tr>
+<tr>
+<td>AC-02</td>
+<td>Ép lỗi một shard rồi retry: số issue không đổi, không có bản trùng.</td>
+<td>R-01</td>
+<td>FR-AGG-02</td>
+</tr>
+<tr>
+<td>AC-03</td>
+<td>Sửa annotation trên CVAT trong lúc tạo snapshot: snapshot không được khoá, báo job drift.</td>
+<td>R-01</td>
+<td>FR-SNP-04</td>
+</tr>
+<tr>
+<td>AC-04</td>
+<td>Mọi candidate hiển thị trong Workspace có evidence; không issue nào được đóng hoặc xác nhận mà không có quyết định của người.</td>
+<td>R-02</td>
+<td>FR-REV-07, FR-REV-08</td>
+</tr>
+<tr>
+<td>AC-05</td>
+<td>Reviewer là assignee của job tại snapshot gửi quyết định qua API: bị từ chối, có audit.</td>
+<td>R-05</td>
+<td>FR-SEC-03</td>
+</tr>
+<tr>
+<td>AC-06</td>
+<td>Issue chỉ Đã đóng sau verify trên revision mới; báo cáo trỏ QC run cuối.</td>
+<td>R-03</td>
+<td>FR-RWK-05, FR-RWK-06</td>
+</tr>
+<tr>
+<td>AC-07</td>
+<td>Engine Not checked/Failed hiển thị đúng trạng thái; gate không đạt khi thiếu dữ liệu.</td>
+<td>R-06</td>
+<td>FR-AGG-05, FR-GTE-02</td>
+</tr>
+<tr>
+<td>AC-08</td>
+<td>Recall@20% trên held-out đạt tiêu chí mục tương ứng trong labelX.html, kèm đối chứng và khoảng tin cậy. Chỉ đánh giá được sau khi TBD-K1, TBD-K4 đã chốt; trước đó trạng thái là "chưa xác định".</td>
+<td>KPI-1, R-04</td>
+<td>FR-EVL-07…10</td>
+</tr>
+<tr>
+<td>AC-09</td>
+<td>Thí nghiệm effort đạt tiêu chí mục tương ứng trong labelX.html. Chỉ đánh giá được sau khi TBD-K2, TBD-K3, TBD-12 đã chốt; trước đó trạng thái là "chưa xác định".</td>
+<td>KPI-2, R-07</td>
+<td>FR-EVL-11…13</td>
+</tr>
+<tr>
+<td>AC-10</td>
+<td>Báo cáo hiệu quả có đủ cỡ mẫu, mẫu số, phương pháp, provenance; random và risk báo cáo riêng.</td>
+<td>R-04</td>
+<td>FR-RPT-01…04</td>
+</tr>
+<tr>
+<td>AC-11</td>
+<td>Audit log có đủ actor, đối tượng, trước/sau, lý do cho mọi quyết định, phân xử, waiver, khoá reference.</td>
+<td>R-05</td>
+<td>FR-SEC-05</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gia-inh-va-phu-thuoc">Giả định và phụ thuộc</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Giả định / phụ thuộc</th>
+<th>Nếu sai thì</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AS-01</td>
+<td>CVAT cho phép đọc job, frame, annotation, media qua API với token backend; xác định được thay đổi giữa hai lần đọc.</td>
+<td>Không khoá được snapshot nhất quán; chặn toàn bộ luồng.</td>
+</tr>
+<tr>
+<td>AS-02</td>
+<td>Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum.</td>
+<td>Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.</td>
+</tr>
+<tr>
+<td>AS-03</td>
+<td>Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện).</td>
+<td>Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.</td>
+</tr>
+<tr>
+<td>AS-04</td>
+<td>QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo.</td>
+<td>Không đo được KPI-1/KPI-2 (B-20).</td>
+</tr>
+<tr>
+<td>AS-05</td>
+<td>Có ít nhất 4 reviewer tham gia thí nghiệm effort, trình độ tương đương.</td>
+<td>Không cân bằng được hai nhánh; KPI-2 kém tin cậy.</td>
+</tr>
+<tr>
+<td>AS-06</td>
+<td>Guideline gán nhãn BDD100K của dự án có rule ID và version.</td>
+<td>Workspace chỉ hiện guideline dạng văn bản, không truy vết rule.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="tham-so-con-mo">Tham số còn mở</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nội dung</th>
+<th>Người chốt</th>
+<th>Hạn chốt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TBD-01</td>
+<td>Phiên bản CVAT được pin, URL, quyền token, danh sách endpoint thật.</td>
+<td>Chủ CVAT, Tech Lead</td>
+<td>Trước build adapter</td>
+</tr>
+<tr>
+<td>TBD-02</td>
+<td>Cấu hình phần cứng app server, GPU server.</td>
+<td>Tech Lead</td>
+<td>Trước build</td>
+</tr>
+<tr>
+<td>TBD-03</td>
+<td>Danh sách ảnh BDD100K, $N$ của tập hiệu chỉnh và held-out.</td>
+<td>Data Owner, QA Lead</td>
+<td>Trước lập reference</td>
+</tr>
+<tr>
+<td>TBD-04</td>
+<td>Nguồn annotation cần review; có dùng lỗi chèn hay không.</td>
+<td>Product Owner, QA Lead</td>
+<td>Trước lập reference</td>
+</tr>
+<tr>
+<td>TBD-05</td>
+<td>$\tau_m$, $\tau_{amb}$ cho matching.</td>
+<td>QA Lead, đội mô hình</td>
+<td>Trước lập reference</td>
+</tr>
+<tr>
+<td>TBD-06</td>
+<td>$a_{min}$ và quy tắc ignore theo occlusion/truncation.</td>
+<td>QA Lead</td>
+<td>Trước lập reference</td>
+</tr>
+<tr>
+<td>TBD-07</td>
+<td>Định nghĩa mức độ nghiêm trọng theo lớp và kích thước.</td>
+<td>QA Lead</td>
+<td>Trước pilot</td>
+</tr>
+<tr>
+<td>TBD-08</td>
+<td>Duyệt đề xuất không bật VLM trong pilot M13.</td>
+<td>Product Owner</td>
+<td>Trước pilot</td>
+</tr>
+<tr>
+<td>TBD-09</td>
+<td>Thời hạn lease và quy tắc gia hạn.</td>
+<td>Product Owner</td>
+<td>Trước build review</td>
+</tr>
+<tr>
+<td>TBD-10</td>
+<td>Tỉ lệ lát kiểm tra ngẫu nhiên $r$.</td>
+<td>QA Lead</td>
+<td>Trước pilot</td>
+</tr>
+<tr>
+<td>TBD-11</td>
+<td>Ngưỡng không thao tác $t_{idle}$; thời lượng buổi làm quen.</td>
+<td>Product Owner</td>
+<td>Trước thí nghiệm</td>
+</tr>
+<tr>
+<td>TBD-12</td>
+<td>Cỡ mẫu thí nghiệm effort (frame, reviewer).</td>
+<td>Product Owner</td>
+<td>Sau pilot nhỏ</td>
+</tr>
+<tr>
+<td>TBD-13</td>
+<td>Mục tiêu thời gian QC Run và độ trễ UI (NFR-01…03).</td>
+<td>Tech Lead</td>
+<td>Sau đo pilot</td>
+</tr>
+<tr>
+<td>TBD-14</td>
+<td>Số lần retry và backoff.</td>
+<td>Tech Lead</td>
+<td>Sau đo pilot</td>
+</tr>
+<tr>
+<td>TBD-15</td>
+<td>Thời hạn lưu audit log.</td>
+<td>Product Owner</td>
+<td>Trước triển khai</td>
+</tr>
+<tr>
+<td>TBD-16</td>
+<td>$n_{min}$ issue dương mỗi nhóm để học score.</td>
+<td>Đội mô hình</td>
+<td>Trước khoá score</td>
+</tr>
+<tr>
+<td>TBD-17</td>
+<td>RPO/RTO cho sao lưu PostgreSQL và Object Storage.</td>
+<td>Tech Lead</td>
+<td>Trước triển khai</td>
+</tr>
+<tr>
+<td>TBD-19</td>
+<td>Danh sách điều kiện gate được phép waiver và policy từng điều kiện (B-11).</td>
+<td>Product Owner, QA Lead</td>
+<td>Trước pilot</td>
+</tr>
+<tr>
+<td>TBD-20</td>
+<td>Tham số kỹ thuật phụ: timeout mỗi lượt kiểm VLM (nếu bật), $t_{gc}$ dọn blob mồ côi, $\varepsilon$ của <code>score_v0</code>, số chữ số làm tròn toạ độ khi chuẩn hoá hash.</td>
+<td>Tech Lead, đội mô hình</td>
+<td>Trước build tương ứng</td>
+</tr>
+<tr>
+<td>TBD-21</td>
+<td>Đặc tả chi tiết Model Orchestrator (đầu vào, đầu ra, provenance) cho tổng hợp kết quả đánh giá engine (B-05).</td>
+<td>Đội mô hình</td>
+<td>Trước đo Metric engine</td>
+</tr>
+<tr>
+<td>TBD-18</td>
+<td>Xác nhận giấy phép và điều khoản sử dụng BDD100K cho mục đích pilot và lưu trữ nội bộ.</td>
+<td>Data Owner</td>
+<td>Trước nạp dữ liệu</td>
+</tr>
+<tr>
+<td>TBD-K1</td>
+<td>Ngưỡng đạt KPI-1.</td>
+<td>Product Owner</td>
+<td>Trước chạy held-out</td>
+</tr>
+<tr>
+<td>TBD-K2</td>
+<td>Ngưỡng đạt KPI-2.</td>
+<td>Product Owner</td>
+<td>Trước thí nghiệm</td>
+</tr>
+<tr>
+<td>TBD-K3</td>
+<td>Biên non-inferiority $\delta$ và $\delta_{fp}$.</td>
+<td>Product Owner, QA Lead</td>
+<td>Trước thí nghiệm</td>
+</tr>
+<tr>
+<td>TBD-K4</td>
+<td>$E_{min}$, $E_{min,g}$.</td>
+<td>QA Lead</td>
+<td>Trước chạy held-out</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rui-ro">Rủi ro</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Rủi ro</th>
+<th>Khả năng</th>
+<th>Tác động</th>
+<th>Giảm thiểu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RK-01</td>
+<td>Detector baseline yếu trên ảnh đêm, đối tượng nhỏ ⇒ ít candidate E1/E2 đúng, KPI-1 thấp.</td>
+<td>TB</td>
+<td>Cao</td>
+<td>Báo cáo theo slice; điểm nền $h(f)$ dùng đặc trưng ngày/đêm; cân nhắc Detector khác sau pilot (B-07).</td>
+</tr>
+<tr>
+<td>RK-02</td>
+<td>Detector đã thấy ảnh held-out khi huấn luyện ⇒ recall bị thổi phồng.</td>
+<td>TB</td>
+<td>Cao</td>
+<td>FR-EVL-05(b); chọn held-out từ phần chắc chắn không dùng huấn luyện.</td>
+</tr>
+<tr>
+<td>RK-03</td>
+<td>Reference chậm hoặc tốn công (hai người gán toàn bộ).</td>
+<td>Cao</td>
+<td>Cao</td>
+<td>Bắt đầu sớm (B-20); giới hạn $N$ theo power analysis; dùng CVAT task riêng cho người xác minh.</td>
+</tr>
+<tr>
+<td>RK-04</td>
+<td>Reviewer ở nhánh assisted tin máy quá mức (automation bias), bỏ qua lỗi không có candidate.</td>
+<td>TB</td>
+<td>Cao</td>
+<td>Lát ngẫu nhiên; Frame Review luôn hiển thị toàn ảnh; đo KPI-2b và residual.</td>
+</tr>
+<tr>
+<td>RK-05</td>
+<td>Effort log sai do reviewer bỏ máy, mở nhiều tab.</td>
+<td>TB</td>
+<td>TB</td>
+<td>Ngưỡng $t_{idle}$; một lease mỗi reviewer; loại phiên bất thường theo quy tắc khoá trước.</td>
+</tr>
+<tr>
+<td>RK-06</td>
+<td>CVAT API không cho kiểm drift tin cậy.</td>
+<td>Thấp</td>
+<td>Cao</td>
+<td>Thử adapter trên CVAT thật trước build (B-02); phương án dự phòng: tạm khoá sửa phạm vi khi export.</td>
+</tr>
+<tr>
+<td>RK-07</td>
+<td>Ít lỗi E3 tự nhiên ⇒ không đủ mẫu kết luận theo nhóm.</td>
+<td>Cao</td>
+<td>Thấp</td>
+<td>$E_{min,g}$; chỉ kết luận KPI tổng; lỗi chèn báo cáo riêng (BR-15).</td>
+</tr>
+<tr>
+<td>RK-08</td>
+<td>Guideline BDD100K của dự án chưa có rule ID rõ.</td>
+<td>TB</td>
+<td>TB</td>
+<td>QA Lead chuẩn hoá rule tối thiểu cho 10 lớp trước pilot (AS-06).</td>
+</tr>
+<tr>
+<td>RK-09</td>
+<td>Thay đổi tham số sau khi thấy kết quả held-out.</td>
+<td>TB</td>
+<td>Cao</td>
+<td>Pre-registration (bảng tương ứng trong labelX.html); audit mọi thay đổi version.</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

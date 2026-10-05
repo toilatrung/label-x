@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch pilot và nghiệm thu — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/09-testing/acceptance-pilot.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / acceptance-pilot</span><span class="sp"></span>
+<a href="acceptance-pilot.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>testing-acceptance-pilot</span><b>title</b><span>Kế hoạch pilot và nghiệm thu</span><b>type</b><span>reference</span><b>domain</b><span>testing</span><b>module</b><span>quality-control</span><b>tags</b><span>[testing, acceptance, pilot, experiment]</span><b>priority</b><span>1</span></div>
+<h1 id="ke-hoach-pilot-va-nghiem-thu">Kế hoạch pilot và nghiệm thu</h1>
+<p>Pilot chứng minh R-04 và R-07 (đo trên reference, hiệu quả review có căn cứ) và đánh giá AC-08, AC-09, AC-10. Nguồn: R <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (B-14, B-15, B-20, cấu hình MVP, phân công và vận hành), SRS <a href="../label-x_system-requirement-specification/sections/07-evaluation.tex">07-evaluation.tex</a>, <a href="../label-x_system-requirement-specification/sections/11-traceability.tex">11-traceability.tex</a>, T §7 (thiết kế pilot).</p>
+<blockquote>
+<p>Ngưỡng H (Coverage 95%, critical 0, rework verify 100%, residual ≤ 5%, agreement ≥ 90%) là <strong>cấu hình khởi điểm pilot</strong>, chưa là cam kết nghiệm thu. Ngưỡng accuracy engine và năng suất review chốt từ phép đo, không tự đặt số (R B-14).</p>
+</blockquote>
+<h2 id="1-ieu-kien-tien-quyet">1. Điều kiện tiên quyết</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Điều kiện</th>
+<th>Chủ trì</th>
+<th>Mã mở</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>CVAT URL, phiên bản pin, quyền token, endpoint thật; adapter chứng minh hash ổn định, drift, frame mapping</td>
+<td>Chủ CVAT, Tech Lead</td>
+<td>TBD-01</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Phần cứng app server, GPU</td>
+<td>Tech Lead</td>
+<td>TBD-02</td>
+</tr>
+<tr>
+<td>2a</td>
+<td>Giấy phép và điều khoản sử dụng BDD100K cho pilot và lưu trữ nội bộ được xác nhận — <strong>trước khi nạp dữ liệu</strong></td>
+<td>Data Owner</td>
+<td>TBD-18</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Danh sách ảnh BDD100K, <code>N</code> tập hiệu chỉnh và held-out (tách theo video nguồn)</td>
+<td>Data Owner, QA Lead</td>
+<td>TBD-03</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Nguồn annotation cần review; có dùng lỗi chèn không</td>
+<td>Product Owner, QA Lead</td>
+<td>TBD-04</td>
+</tr>
+<tr>
+<td>4a</td>
+<td><code>a_min</code> và quy tắc ignore theo occlusion/truncation — <strong>trước khi lập reference</strong> (cùng TBD-03, TBD-04, TBD-05)</td>
+<td>QA Lead</td>
+<td>TBD-06</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Detector baseline: artifact, checksum, mapping 10 lớp, xác nhận không huấn luyện trên held-out</td>
+<td>Data/Model Owner</td>
+<td>AS-02, AS-03</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Guideline BDD100K có rule ID + version cho 10 lớp</td>
+<td>QA Lead</td>
+<td>AS-06; RK-08</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Định nghĩa mức nghiêm trọng</td>
+<td>QA Lead</td>
+<td>TBD-07</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Quyết định VLM trong pilot</td>
+<td>Product Owner</td>
+<td>TBD-08</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Người: QA Lead + ít nhất hai người xác minh; ≥ 4 reviewer tương đương; người duyệt waiver/phát hành khác người yêu cầu</td>
+<td>Product Owner</td>
+<td>AS-04, AS-05</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Lease, <code>r</code>, <code>t_idle</code></td>
+<td>Product Owner, QA Lead</td>
+<td>TBD-09, TBD-10, TBD-11</td>
+</tr>
+</tbody>
+</table>
+<p>Thứ tự theo phụ thuộc (R §7): xác minh nền backend và quyền CVAT → Dataset/shape/taxonomy → artifact/mapping/reference → policy required units → kiểm pilot/gate. Không có mốc thời gian hay ngân sách trong nguồn.</p>
+<h2 id="2-giai-oan-pilot">2. Giai đoạn pilot</h2>
+<h3 id="p0-kiem-nen-tren-cvat-that">P0 — Kiểm nền trên CVAT thật</h3>
+<ul>
+<li>Chạy adapter chỉ đọc trên job pilot thật; chứng minh hash ổn định, phát hiện drift (AC-03), deep link đúng.</li>
+<li>Chạy toàn luồng UC-01…UC-07 trên phạm vi nhỏ (kịch bản <a href="e2e-testing.html">e2e-testing.md</a>); kiểm R-01, R-02, R-03, R-05, R-06 (AC-01…07, AC-11).</li>
+</ul>
+<h3 id="p1-lap-reference-uc-08">P1 — Lập reference (UC-08)</h3>
+<ul>
+<li>Tập hiệu chỉnh và held-out tách theo video; GT độc lập hai người, QA Lead phân xử, suy ra <code>E</code>, khoá (BR-10…BR-16).</li>
+<li>Báo tỉ lệ khớp hai bản GT trước phân xử (BR-11).</li>
+<li>Reference là phụ thuộc bắt buộc của mọi phép đo accuracy (R B-20). Chưa có reference ⇒ accuracy "chưa đánh giá".</li>
+</ul>
+<h3 id="p2-pilot-nho-tren-tap-hieu-chinh">P2 — Pilot nhỏ trên tập hiệu chỉnh</h3>
+<p>Mục đích (SRS 07; R cấu hình vận hành):</p>
+<ul>
+<li>Chọn <code>τ_conf</code>, <code>τ_E1</code>, <code>τ_E2</code>; học và hiệu chỉnh score (FR-RNK-10), ablation (FR-RNK-11); chọn score version theo Recall@20% ngoài fold. Đủ nhãn hay dùng <code>score_v0</code> tuỳ <code>n_min</code> (TBD-16).</li>
+<li>Chọn <code>k*</code> theo EX-06 và <code>r</code>.</li>
+<li>Đo phương sai effort và residual để power analysis 80% ⇒ cỡ mẫu frame, reviewer (<strong>TBD-12</strong>).</li>
+<li>Đo thời gian để đặt timeout từng tác vụ (đọc CVAT, Detector theo lô, VLM nếu bật), số retry (<strong>TBD-14</strong>), mục tiêu hiệu năng (<strong>TBD-13</strong>), hạn mức tổng.</li>
+<li>Đo residual baseline nhỏ làm căn cứ chọn <code>δ</code> (<strong>TBD-K3</strong>).</li>
+<li>Chốt K1, K2 từ baseline trên tập hiệu chỉnh <strong>trước</strong> khi chạy held-out (SRS 02 decisionbox; B-14).</li>
+</ul>
+<h3 id="p3-ang-ky-truoc-pre-registration">P3 — Đăng ký trước (pre-registration)</h3>
+<p>Khoá trong LabelX (SRS 07 bảng khoá): Detector (Data/Model Owner); score version (QC Admin); reference + <code>τ_m</code>, <code>a_min</code>, <code>E_min</code> (QA Lead); K1, K2, <code>δ</code> (Product Owner); thí nghiệm — seed D1/D2 và AB/BA, <code>k*</code>, <code>r</code>, <code>t_idle</code>, cỡ mẫu, mô hình phân tích, độ nhạy, <code>δ</code>, <code>δ_fp</code> (Product Owner). Đổi sau khoá ghi lý do; kết quả bản cũ vẫn báo cáo (RK-09).</p>
+<h3 id="p4-kpi-1-tren-held-out-uc-09-ac-08">P4 — KPI-1 trên held-out (UC-09, AC-08)</h3>
+<ul>
+<li>Ranking bằng score version đã khoá; Recall@20% theo lỗi, đối chứng ngẫu nhiên/heuristic/oracle, cluster bootstrap theo video.</li>
+<li>Đạt khi cận dưới CI ≥ K1 và cận dưới CI của hiệu số với ngẫu nhiên và heuristic mật độ &gt; 0. Chi tiết: <a href="../12-ai/evaluation.html#3-kpi-1--recall20">evaluation.md §3</a>.</li>
+</ul>
+<h3 id="p5-thi-nghiem-effort-uc-10-ac-09">P5 — Thí nghiệm effort (UC-10, AC-09)</h3>
+<p>Thiết kế chéo AB/BA; quy tắc (SRS 07):</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EX-01</td>
+<td>Gán reviewer ngẫu nhiên (seed khoá trước) vào AB/BA, phân tầng theo kinh nghiệm và điểm calibration; 4 reviewer là sàn, số thực tế từ power analysis (TBD-12)</td>
+</tr>
+<tr>
+<td>EX-02</td>
+<td>D1, D2 chia ngẫu nhiên theo video, phân tầng theo slice và số lỗi reference; không giao tập hiệu chỉnh; mỗi frame đúng một reviewer</td>
+</tr>
+<tr>
+<td>EX-03</td>
+<td>Mỗi nhánh có bản sao annotation riêng (CVAT task riêng) từ cùng snapshot đầu vào</td>
+</tr>
+<tr>
+<td>EX-04</td>
+<td>Baseline: toàn bộ frame theo thứ tự gốc; ẩn ranking, risk score, evidence; sửa/verify như assisted</td>
+</tr>
+<tr>
+<td>EX-05</td>
+<td>Assisted: <code>R = T_k*(π) ∪ U</code>, <code>U</code> là <code>⌈rN⌉</code> frame ngẫu nhiên ngoài <code>T_k*</code>; hết <code>T_k*</code> theo rank rồi tới <code>U</code></td>
+</tr>
+<tr>
+<td>EX-06</td>
+<td><code>k*</code> nhỏ nhất trên lưới {10%, 15%, …, 100%} mà residual dự kiến của assisted (ngoài fold) không vượt baseline quá <code>δ/2</code></td>
+</tr>
+<tr>
+<td>EX-07</td>
+<td>Kết thúc nhánh khi mọi frame review xong, mọi issue (kể cả từ re-check và run cuối) có kết luận, mọi rework đã verify</td>
+</tr>
+<tr>
+<td>EX-08</td>
+<td>Chống carryover: khoá guideline và kho case; case phát sinh không hiển thị cho nhánh khác tới khi kết thúc; buổi làm quen như nhau</td>
+</tr>
+<tr>
+<td>EX-09</td>
+<td>Cùng QA Lead phân xử, cùng quy tắc verify, cùng quyền tra guideline</td>
+</tr>
+<tr>
+<td>EX-10</td>
+<td>Reviewer không biết reference; người lập reference không tham gia trên cùng dữ liệu</td>
+</tr>
+</tbody>
+</table>
+<p>Đạt KPI-2 khi: bác H0 non-inferiority về <code>ρ</code>; cận dưới CI của <code>1 − T_A/T_B</code> ≥ K2; đạt G-2b và G-5; không đổi chiều khi chỉ dùng đợt 1. Chi tiết: <a href="../12-ai/evaluation.html#4-kpi-2--giảm-effort-chất-lượng-tương-đương">evaluation.md §4</a>.</p>
+<h3 id="p6-gate-va-bao-cao-uc-11-uc-14-ac-10">P6 — Gate và báo cáo (UC-11, UC-14, AC-10)</h3>
+<ul>
+<li>Gate trên QC run cuối với ngưỡng cấu hình pilot; thiếu dữ liệu ⇒ chưa đạt; residual (G-4) từ lát ngẫu nhiên, không trộn mẫu theo rủi ro (R B-15).</li>
+<li>Báo cáo đủ cỡ mẫu, mẫu số, phương pháp, CI, provenance; random và risk riêng.</li>
+</ul>
+<h2 id="3-phan-cong-inh-huong-a-phe-duyet-r">3. Phân công (định hướng đã phê duyệt — R)</h2>
+<table>
+<thead>
+<tr>
+<th>Việc</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reference, held-out</td>
+<td>QA Lead chịu trách nhiệm; người có chuyên môn duyệt/khoá; reviewer/annotator được giao chuẩn bị, không tự review annotation của mình</td>
+</tr>
+<tr>
+<td>Guideline</td>
+<td>QA Lead duyệt nội dung/version; QC Admin cấu hình mapping</td>
+</tr>
+<tr>
+<td>Phân xử</td>
+<td>QA Lead</td>
+</tr>
+<tr>
+<td>Waiver, duyệt phát hành</td>
+<td>Người được cấp quyền, khác người yêu cầu; chưa có người đủ quyền thì chờ</td>
+</tr>
+<tr>
+<td>Cấu hình hệ thống, timeout, hạn mức</td>
+<td>QC Admin phối hợp backend/đội mô hình</td>
+</tr>
+<tr>
+<td>Thiết kế và khoá thí nghiệm, ngưỡng KPI</td>
+<td>Product Owner</td>
+</tr>
+<tr>
+<td>Khoá artifact Detector</td>
+<td>Data/Model Owner</td>
+</tr>
+</tbody>
+</table>
+<p>Product Owner và Data/Model Owner không thao tác review, chỉ xem báo cáo hiệu quả (UC-11) và khoá phần mình phụ trách; họ <strong>không</strong> được là reviewer trong thí nghiệm mình thiết kế (SRS 06, đoạn sau ma trận quyền).</p>
+<p>Phê duyệt định hướng không chứng minh tài khoản đã được cấp quyền hay pilot đã chạy (R).</p>
+<h2 id="4-ket-qua-co-the-co">4. Kết quả có thể có</h2>
+<table>
+<thead>
+<tr>
+<th>Kết quả</th>
+<th>Điều kiện</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đạt</td>
+<td>Tiêu chí KPI tương ứng thoả trên held-out/thí nghiệm, guardrail đạt</td>
+</tr>
+<tr>
+<td>Không đạt</td>
+<td>Đủ mẫu, tiêu chí không thoả</td>
+</tr>
+<tr>
+<td>Không đủ mẫu</td>
+<td><code>|E| &lt; E_min</code> hoặc cỡ mẫu dưới power analysis — không kết luận</td>
+</tr>
+<tr>
+<td>Chưa xác định</td>
+<td>Ngưỡng TBD-K1/K2/K3/K4/TBD-12 chưa chốt</td>
+</tr>
+</tbody>
+</table>
+<p>R-07 và KPI-2 hiện ở mức "Không đủ dữ liệu" (R §3). Sau pilot, VLM/RAG/Classifier chỉ được xem xét nếu ablation chứng minh lợi ích và quyền/budget đáp ứng (R thứ tự triển khai bước 4–5).</p>
+<h2 id="5-rui-ro-pilot-srs-11">5. Rủi ro pilot (SRS 11)</h2>
+<p>RK-01 Detector yếu ban đêm/vật nhỏ; RK-02 leakage held-out; RK-03 reference chậm/tốn công; RK-04 automation bias; RK-05 effort log sai; RK-06 CVAT không kiểm drift tin cậy; RK-07 ít lỗi E3; RK-08 guideline thiếu rule ID; RK-09 đổi tham số sau khi thấy held-out. Biện pháp giảm thiểu theo bảng rủi ro SRS.</p>
+</article></main></body></html>

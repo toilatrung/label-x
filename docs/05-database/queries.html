@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Truy vấn quan trọng — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/05-database/queries.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / queries</span><span class="sp"></span>
+<a href="queries.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>database-queries</span><b>title</b><span>Truy vấn quan trọng</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>quality-control</span><b>tags</b><span>[database, queries, lease, ranking, coverage]</span><b>priority</b><span>2</span></div>
+<h1 id="truy-van-quan-trong">Truy vấn quan trọng</h1>
+<p>Tên bảng và cột theo <a href="schema.html">schema.md</a>. Tham số được đánh dấu <code>:ten</code>. Trong mã, các truy vấn này viết bằng Django ORM (<code>select_for_update(skip_locked=True)</code>, <code>bulk_create(ignore_conflicts=True)</code>…) hoặc <code>RawSQL</code> khi ORM không diễn đạt được.</p>
+<h2 id="q1-cap-lease-frame-ke-tiep-post-apiqueuesnamenext">Q1 — Cấp lease frame kế tiếp (<code>POST /api/queues/{name}/next</code>)</h2>
+<p>Yêu cầu:</p>
+<ul>
+<li>Không có hai reviewer giữ cùng một <strong>frame</strong> trong một run, kể cả khi frame có mặt ở cả hai queue <code>risk</code> và <code>random</code> (FR-REV-03, NFR-15). Lease được khoá theo <code>(run_id, frame_id)</code>, không theo <code>review_item</code>.</li>
+<li>Bỏ qua frame mà reviewer là assignee tại snapshot (FR-REV-03).</li>
+<li>Thiếu identity mapping thì từ chối (fail closed), không ngầm cho qua (FR-SEC-02, 03).</li>
+<li>Mỗi reviewer chỉ giữ một lease (RK-05).</li>
+<li>PostgreSQL là nguồn chuẩn của lease (SRS <code>tab:modules</code>).</li>
+</ul>
+<pre class="highlight"><code class="language-sql">BEGIN;
+-- 0a. Fail closed: reviewer phải có identity mapping
+SELECT 1 FROM identity_mapping WHERE user_id = :reviewer_id;
+--     không có dòng → ROLLBACK, 403 IDENTITY_MAPPING_MISSING (lỗi cấu hình, báo QC Admin)
+
+-- 0b. Đã có lease còn hạn thì trả lại chính lease đó (idempotent)
+SELECT l.* FROM review_lease l
+ WHERE l.holder_user_id = :reviewer_id AND l.status = 'active' AND l.expires_at &gt; now();
+
+-- 1. Chọn và khoá một review_item
+SELECT ri.id, ri.frame_id
+  FROM review_item ri
+  JOIN frame f         ON f.id = ri.frame_id
+  JOIN snapshot_job sj ON sj.snapshot_id = f.snapshot_id AND sj.cvat_job_id = f.cvat_job_id
+ WHERE ri.run_id = :run_id
+   AND ri.queue  = :queue                                   -- 'risk' | 'random'
+   AND ri.state IN ('unreviewed', 'in_review')
+   -- chặn self-review; job có assignee CVAT nhưng chưa map identity thì KHÔNG cấp (fail closed)
+   AND (sj.assignee_cvat_user_id IS NULL
+        OR (sj.assignee_user_id IS NOT NULL AND sj.assignee_user_id &lt;&gt; :reviewer_id))
+   -- frame chưa có lease còn hạn ở BẤT KỲ queue nào
+   AND NOT EXISTS (SELECT 1 FROM review_lease l
+                    WHERE l.run_id = ri.run_id AND l.frame_id = ri.frame_id
+                      AND l.status = 'active' AND l.expires_at &gt; now())
+ ORDER BY ri.rank
+ LIMIT 1
+ FOR UPDATE OF ri SKIP LOCKED;
+
+-- 2. Thu hồi lease đã hết hạn của frame này (ở mọi queue)
+UPDATE review_lease SET status = 'expired'
+ WHERE run_id = :run_id AND frame_id = :frame_id AND status = 'active' AND expires_at &lt;= now();
+
+-- 3. Cấp lease theo frame; xung đột thì frame vừa bị reviewer khác lấy qua queue khác
+INSERT INTO review_lease (run_id, frame_id, review_item_id, holder_user_id, acquired_at, expires_at, status)
+VALUES (:run_id, :frame_id, :item_id, :reviewer_id, now(), now() + :lease_ttl, 'active')   -- :lease_ttl = TBD-09
+ON CONFLICT (run_id, frame_id) WHERE status = 'active' DO NOTHING
+RETURNING id;
+--    không có dòng trả về → lặp lại bước 1 (frame kế tiếp), giới hạn số vòng
+UPDATE review_item SET state = 'in_review', lease_id = :new_lease_id WHERE id = :item_id;
+INSERT INTO audit_log (...) VALUES (...);                   -- cùng transaction
+COMMIT;</code></pre>
+<p>Ghi chú:</p>
+<ul>
+<li><code>SKIP LOCKED</code> giúp các reviewer đồng thời không phải chờ nhau. Khoá dòng chỉ bảo vệ từng <code>review_item</code>; ràng buộc theo frame giữa hai queue do partial unique index <code>(run_id, frame_id) WHERE status='active'</code> bảo đảm (bước 3).</li>
+<li>Job không có assignee trên CVAT (<code>assignee_cvat_user_id</code> NULL) thì không có căn cứ self-review, và vẫn được cấp. Việc này có chấp nhận được trong pilot hay không <strong>cần QA Lead xác nhận</strong>.</li>
+<li>Kiểm tra fail-closed cũng được lặp lại khi lưu quyết định, phân xử và verify (Q2).</li>
+</ul>
+<h2 id="q2-kiem-lease-khi-luu-quyet-inh-fr-rev-14">Q2 — Kiểm lease khi lưu quyết định (FR-REV-14)</h2>
+<pre class="highlight"><code class="language-sql">SELECT l.id FROM review_lease l
+  JOIN issue i ON i.run_id = l.run_id AND i.frame_id = l.frame_id
+ WHERE l.id = :lease_id AND i.id = :issue_id AND l.holder_user_id = :actor_id
+   AND l.status = 'active' AND l.expires_at &gt; now()
+ FOR UPDATE OF l;
+-- không có dòng → 409 LEASE_CONFLICT
+-- actor không có identity mapping, hoặc job có assignee CVAT chưa map → 403 IDENTITY_MAPPING_MISSING (fail closed)
+-- assignee tại snapshot = actor → 403 SELF_REVIEW_FORBIDDEN</code></pre>
+<h2 id="q3-ranking-co-phan-trang-get-apirunsidranking">Q3 — Ranking có phân trang (<code>GET /api/runs/{id}/ranking</code>)</h2>
+<pre class="highlight"><code class="language-sql">SELECT fr.frame_id, fr.rank, fr.score, fr.missing_evidence,
+       count(*) FILTER (WHERE i.family = 'E1') AS e1,
+       count(*) FILTER (WHERE i.family = 'E2') AS e2,
+       count(*) FILTER (WHERE i.family = 'E3') AS e3
+  FROM frame_risk fr
+  LEFT JOIN issue i ON i.run_id = fr.run_id AND i.frame_id = fr.frame_id
+ WHERE fr.run_id = :run_id AND fr.score_version_id = :score_version_id
+   AND fr.rank &gt; :cursor_rank                    -- cursor pagination
+ GROUP BY fr.frame_id, fr.rank, fr.score, fr.missing_evidence
+ ORDER BY fr.rank
+ LIMIT 50;</code></pre>
+<p>Tính và lưu ranking (<code>ranking.score_run</code>):</p>
+<ul>
+<li>Tính <code>s(f) = Σ n_i·q_i + h(f)</code> cho <strong>mọi</strong> frame (FR-RNK-01).</li>
+<li>Phá hoà tất định (FR-RNK-04):</li>
+</ul>
+<pre class="highlight"><code class="language-sql">SELECT frame_id, row_number() OVER (
+         ORDER BY score DESC, sha256(convert_to(frame_key || :seed, 'UTF8'))) AS rank
+  FROM tmp_scores;</code></pre>
+<h2 id="q4-coverage-ledger-theo-engine-get-apirunsidledger-gate">Q4 — Coverage ledger theo engine (<code>GET /api/runs/{id}/ledger</code>, gate)</h2>
+<pre class="highlight"><code class="language-sql">SELECT engine,
+       count(*) FILTER (WHERE applicability = 'eligible')                        AS eligible,
+       count(*) FILTER (WHERE applicability = 'eligible' AND status = 'completed') AS completed,
+       count(*) FILTER (WHERE applicability = 'eligible' AND status = 'failed')    AS failed,
+       count(*) FILTER (WHERE applicability = 'eligible' AND status = 'not_checked') AS not_checked,
+       count(*) FILTER (WHERE applicability = 'not_triggered')                   AS not_triggered,
+       round(100.0 * count(*) FILTER (WHERE applicability = 'eligible' AND status = 'completed')
+             / NULLIF(count(*) FILTER (WHERE applicability = 'eligible'), 0), 2) AS coverage_pct
+  FROM ledger_entry
+ WHERE run_id = :run_id
+ GROUP BY engine;</code></pre>
+<ul>
+<li>Mẫu số giữ cả đơn vị <code>failed</code> (B-04; FR-AGG-04). <code>not_triggered</code> không nằm trong mẫu số (SRS <code>tab:enginestates</code>).</li>
+<li><code>coverage_pct</code> NULL (không có đơn vị eligible) thì hiển thị Not checked, <strong>không</strong> hiển thị 0% hay đạt (FR-RPT-03).</li>
+<li>Gate coverage: mọi engine có <code>engine_result.required = true</code> phải ≥ 95% trên run cuối (FR-GTE-01).</li>
+</ul>
+<p>Cờ thiếu bằng chứng của frame (FR-RNK-06):</p>
+<pre class="highlight"><code class="language-sql">UPDATE frame_risk fr SET missing_evidence = true
+ WHERE fr.run_id = :run_id AND EXISTS (
+   SELECT 1 FROM ledger_entry le JOIN engine_result er
+          ON er.run_id = le.run_id AND er.engine = le.engine AND er.required
+    WHERE le.run_id = fr.run_id AND le.frame_id = fr.frame_id
+      AND le.applicability = 'eligible' AND le.status IN ('failed', 'not_checked', 'pending'));</code></pre>
+<h2 id="q5-ghi-ket-qua-shard-idempotent-fr-agg-02-06">Q5 — Ghi kết quả shard idempotent (FR-AGG-02, 06)</h2>
+<pre class="highlight"><code class="language-sql">BEGIN;
+SELECT status FROM work_unit WHERE id = :wu FOR UPDATE;        -- 'completed' → COMMIT, kết thúc
+INSERT INTO candidate (...) VALUES (...) ON CONFLICT (run_id, fingerprint) DO NOTHING;
+INSERT INTO evidence  (...) VALUES (...) ON CONFLICT (candidate_id, type, payload_sha256) DO NOTHING;
+INSERT INTO ledger_entry (...) VALUES (...)
+  ON CONFLICT (run_id, engine, unit_type, unit_ref) DO UPDATE SET status = EXCLUDED.status, reason = EXCLUDED.reason;
+UPDATE work_unit SET status = 'completed', finished_at = now() WHERE id = :wu;
+COMMIT;</code></pre>
+<p>Blob evidence được upload <strong>trước</strong> BEGIN (NFR-06; <a href="../11-integrations/object-storage.html">object-storage.md</a>).</p>
+<h2 id="q6-gop-issue-fr-agg-03">Q6 — Gộp issue (FR-AGG-03)</h2>
+<pre class="highlight"><code class="language-sql">INSERT INTO issue (run_id, snapshot_id, frame_id, family, anchor, n_i, dedup_key, policy_version, origin, state)
+SELECT ... FROM candidate c WHERE c.run_id = :run_id
+ON CONFLICT (run_id, dedup_key) DO NOTHING;
+
+INSERT INTO issue_candidate (issue_id, candidate_id)
+SELECT i.id, c.id FROM candidate c JOIN issue i ON i.run_id = c.run_id AND i.dedup_key = c.dedup_key
+ WHERE c.run_id = :run_id
+ON CONFLICT (candidate_id) DO NOTHING;</code></pre>
+<h2 id="q7-ieu-kien-a-review-xong-fr-rev-13">Q7 — Điều kiện "Đã review xong" (FR-REV-13)</h2>
+<pre class="highlight"><code class="language-sql">SELECT count(*) FROM issue i
+ WHERE i.run_id = :run_id AND i.frame_id = :frame_id
+   AND i.state IN ('pending_review', 'in_review');   -- &gt; 0 → 409</code></pre>
+<h2 id="q8-gate-loi-nghiem-trong-chua-ong-va-rework-chua-verify-fr-gte-01">Q8 — Gate: lỗi nghiêm trọng chưa đóng và rework chưa verify (FR-GTE-01)</h2>
+<p>Gate chỉ tính trên <strong>một</strong> run: run cuối (<code>is_final</code>) khi run đó thoả FR-RWK-08 (Completed, coverage engine bắt buộc đạt). Nếu chưa có run như vậy thì dùng run gốc, và báo cáo phải ghi rõ lý do (FR-RPT-06). Không gộp issue từ các snapshot lịch sử khác của dataset.</p>
+<pre class="highlight"><code class="language-sql">WITH g AS (
+  SELECT id, coalesce(origin_run_id, id) AS origin_id
+    FROM qc_run WHERE id = :gate_run_id            -- run cuối, hoặc run gốc theo FR-RPT-06
+)
+SELECT
+  (SELECT count(*) FROM issue i, g
+    WHERE i.run_id = g.id
+      AND i.severity = 'critical' AND i.state NOT IN ('closed', 'rejected'))   AS critical_open,
+  (SELECT count(*) FROM rework_request rr JOIN issue i ON i.id = rr.issue_id, g
+    WHERE i.run_id IN (g.id, g.origin_id)          -- vòng review của đúng scope này
+      AND i.state &lt;&gt; 'closed')                                                 AS rework_unverified;</code></pre>
+<p>Ghi chú:</p>
+<ul>
+<li><code>origin_run_id</code> của run cuối trỏ tới run gốc của cùng scope (<code>dataset_id</code>, <code>scope_hash</code>). Các run re-check nằm trong <code>rework_recheck</code> và không được tính riêng.</li>
+<li>Giá trị <code>severity</code> theo lớp và kích thước được định nghĩa ở <strong>TBD-07</strong>. Trong lúc chưa có định nghĩa, điều kiện này là <code>insufficient_data</code>, tức chưa đạt (FR-GTE-02).</li>
+</ul>
+</article></main></body></html>

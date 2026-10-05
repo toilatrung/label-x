@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An toàn AI và xử lý dữ liệu — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/12-ai/safety-and-data.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / safety-and-data</span><span class="sp"></span>
+<a href="safety-and-data.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>ai-safety-and-data</span><b>title</b><span>An toàn AI và xử lý dữ liệu</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, safety, data-handling, human-in-the-loop]</span><b>priority</b><span>1</span></div>
+<h1 id="an-toan-ai-va-xu-ly-du-lieu">An toàn AI và xử lý dữ liệu</h1>
+<p>Các ràng buộc bắt buộc với mọi thành phần AI (Detector, ranking, VLM nếu bật) trong LabelX. Nguồn: R <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (R-02, B-05, B-08, B-12, B-18, cấu hình vận hành), SRS <a href="../label-x_system-requirement-specification/sections/08-nonfunctional.tex">08-nonfunctional.tex</a>, <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a>, H ReviewWorkspace/ModelsGuidelines/QualityGate.</p>
+<h2 id="1-con-nguoi-quyet-inh">1. Con người quyết định</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S-01</td>
+<td>Candidate là nghi vấn; chỉ người (Reviewer, QA Lead) xác nhận, bác bỏ, phân xử. Trợ lý chỉ cung cấp bằng chứng.</td>
+<td>R R-02; H ReviewWorkspace; SRS 02 §Bối cảnh</td>
+</tr>
+<tr>
+<td>S-02</td>
+<td>Không có đường API nào để AI ghi <code>ReviewDecision</code>, phân xử, waiver, gate hay phê duyệt. Service account của worker AI chỉ ghi Candidate/Evidence.</td>
+<td>A ADR-07; R R-02</td>
+</tr>
+<tr>
+<td>S-03</td>
+<td>Không tự đóng/xác nhận issue theo confidence; mọi issue cần quyết định của người (AC-04).</td>
+<td>A §24.3; SRS AC-04</td>
+</tr>
+<tr>
+<td>S-04</td>
+<td>Mô hình chưa xác minh không tự biến candidate thành lỗi đã xác nhận.</td>
+<td>H ModelsGuidelines</td>
+</tr>
+<tr>
+<td>S-05</td>
+<td>Hệ thống không tự quyết định phát hành; gate chỉ tính điều kiện, người có quyền duyệt.</td>
+<td>H QualityGate; R F-08</td>
+</tr>
+<tr>
+<td>S-06</td>
+<td>Model không dùng làm Ground Truth hay trọng tài; accuracy chỉ đo trên reference đã duyệt.</td>
+<td>R B-05; SRS BR-17</td>
+</tr>
+<tr>
+<td>S-07</td>
+<td>Confidence không phải xác suất lỗi hay độ chính xác; agreement không gọi là accuracy.</td>
+<td>R B-07, B-21</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-giam-thien-lech-do-tu-ong-hoa-automation-bias">2. Giảm thiên lệch do tự động hoá (automation bias)</h2>
+<ul>
+<li>Lát kiểm tra ngẫu nhiên độc lập ranking để thấy lỗi không có candidate (FR-RNK-07; RK-04).</li>
+<li>Frame Review luôn hiển thị toàn ảnh; reviewer tạo được issue thủ công cho lỗi không có candidate (FR-REV-06, FR-REV-09).</li>
+<li>Đo KPI-2b (recall phát hiện thực tế) và residual ở cả hai nhánh thí nghiệm (SRS 07).</li>
+<li>Nhánh baseline ẩn ranking/score/evidence (FR-EVL-12). T gợi ý hạn chế gợi ý AI ở vòng đầu random audit — chưa là yêu cầu SRS.</li>
+</ul>
+<h2 id="3-du-lieu-khong-gui-ra-ngoai">3. Dữ liệu không gửi ra ngoài</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D-00</td>
+<td>Giấy phép và điều khoản sử dụng BDD100K cho pilot và lưu trữ nội bộ phải được Data Owner xác nhận trước khi nạp dữ liệu (<strong>TBD-18</strong>).</td>
+<td>SRS 11</td>
+</tr>
+<tr>
+<td>D-01</td>
+<td>Ảnh BDD100K chỉ lưu trong Object Storage nội bộ (S3-compatible hiện có); không gửi ảnh ra dịch vụ ngoài trong pilot.</td>
+<td>NFR-09</td>
+</tr>
+<tr>
+<td>D-02</td>
+<td>Detector chạy trong GPU worker nội bộ.</td>
+<td>SRS 09 §Giao diện mô hình</td>
+</tr>
+<tr>
+<td>D-03</td>
+<td>VLM (nếu bật): ảnh không gửi ra ngoài khi chưa được phép; self-host hay API ngoài chưa chốt.</td>
+<td>FR-ENG-10; R B-08</td>
+</tr>
+<tr>
+<td>D-04</td>
+<td>Token CVAT chỉ ở backend (secret store), không xuống client, không xuất hiện trong log.</td>
+<td>FR-SNP-02; NFR-07</td>
+</tr>
+<tr>
+<td>D-05</td>
+<td>Adapter CVAT chỉ dùng thao tác đọc; không ghi annotation. Service account CVAT chỉ đọc.</td>
+<td>FR-SNP-01; R B-18</td>
+</tr>
+<tr>
+<td>D-06</td>
+<td>Truy cập media theo quyền dự án; backend kiểm quyền mọi request và lọc danh sách theo scope.</td>
+<td>FR-SEC-01; R B-12</td>
+</tr>
+</tbody>
+</table>
+<p>Dev local dùng SeaweedFS thay Object Storage (xem <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>); không đưa ảnh dữ liệu thật lên dịch vụ ngoài.</p>
+<h2 id="4-tach-tap-du-lieu-va-chong-ro-ri">4. Tách tập dữ liệu và chống rò rỉ</h2>
+<ul>
+<li>Tập hiệu chỉnh ↔ held-out không giao theo video; Detector không huấn luyện trên held-out (AS-03); case phân xử dùng hiệu chỉnh tách khỏi GT held-out (FR-EVL-05; BR-16). Chi tiết: <a href="detector.html#7-chống-leakage-as-03">detector.md §7</a>, <a href="evaluation.html#2-phân-chia-dữ-liệu-và-chống-rò-rỉ">evaluation.md §2</a>.</li>
+<li>Người xác minh reference mù với ranking/candidate (BR-10).</li>
+<li>Pre-registration: khoá tham số trước khi chạy held-out; không chỉnh sau khi thấy kết quả (RK-09).</li>
+</ul>
+<h2 id="5-provenance-va-kiem-toan">5. Provenance và kiểm toán</h2>
+<ul>
+<li>Mọi candidate truy về engine/model version, artifact checksum, config, run, snapshot (FR-ENG-01).</li>
+<li>Mọi số liệu hiển thị có provenance; số liệu chưa đủ dữ liệu hiển thị Not checked / không đủ mẫu (NFR-14; FR-RPT-03).</li>
+<li>Audit append-only, cùng transaction, cho quyết định, phân xử, waiver, khoá reference, thay đổi cấu hình/version (FR-SEC-05; AC-11).</li>
+</ul>
+<h2 id="6-luu-giu-du-lieu">6. Lưu giữ dữ liệu</h2>
+<ul>
+<li>Giữ snapshot, reference version, evidence nguồn, quyết định/audit, report khi dataset còn cần quản lý/đối chiếu; kết thúc lưu do người quản lý dữ liệu xác nhận và ghi audit (R cấu hình vận hành "retention"; NFR-08).</li>
+<li>Cache/crop tạm chỉ dọn khi không còn công việc dùng và tái tạo được từ nguồn giữ nguyên; blob không có metadata trỏ tới sau <code>t_gc</code> được job dọn (NFR-06; <code>t_gc</code>: <strong>TBD-20</strong>).</li>
+<li>Thời hạn lưu tối thiểu audit: <strong>TBD-15</strong>. RPO/RTO sao lưu: <strong>TBD-17</strong>. Chưa tự đặt số ngày/tháng.</li>
+</ul>
+<h2 id="7-phan-quyen-lien-quan-ai-va-anh-gia">7. Phân quyền liên quan AI và đánh giá</h2>
+<ul>
+<li>Self-review bị chặn ở backend theo assignee tại snapshot (FR-SEC-03; AC-05).</li>
+<li>Người duyệt (waiver, khoá reference, phân xử) khác người yêu cầu; không dùng tài khoản khác của cùng người (FR-SEC-04).</li>
+<li>Super Admin không là người duyệt mặc định; ghi đè có lý do, gắn nhãn audit (FR-SEC-06).</li>
+</ul>
+<h2 id="8-ngoai-pham-vi-mvp">8. Ngoài phạm vi MVP</h2>
+<p>Guideline RAG/LLM trả lời câu hỏi (A "AI Assistant Panel", <code>assistant/query</code>) không thuộc MVP (R B-13; FR-GDL-04). Annotation writeback từ AI hay từ QC không thuộc MVP (R B-18).</p>
+</article></main></body></html>

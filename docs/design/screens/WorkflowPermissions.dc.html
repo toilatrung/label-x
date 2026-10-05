@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Workflow và Permissions</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="configuration" active-item="permissions" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Workflow và Permissions</h1>
+<p class="lx-lead">Phân quyền theo vai trò và các quy tắc quy trình. Backend luôn kiểm tra quyền; việc ẩn nút trên giao diện chỉ để thuận tiện.</p>
+</div>
+</div>
+
+<div class="lx-cols">
+
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Quyền theo vai trò</h2></div>
+<div class="lx-scroll">
+<table class="lx-table lx-matrix" style="min-width: 760px">
+<thead><tr><th>Chức năng</th><th class="c">Annotator</th><th class="c">Reviewer</th><th class="c">Quality Assurance Lead</th><th class="c">Quality Control Admin</th><th class="c">Super Admin</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Quality Summary</td><td class="c">Giới hạn</td><td class="c lx-yes">Xem</td><td class="c lx-yes">Đầy đủ</td><td class="c lx-yes">Đầy đủ</td><td class="c lx-yes">Đầy đủ</td></tr>
+<tr><td class="lx-cell__main">Quality Analysis</td><td class="c lx-no">—</td><td class="c lx-no">—</td><td class="c lx-yes">Chạy / xem</td><td class="c lx-yes">Cấu hình</td><td class="c lx-yes">Chạy / cấu hình</td></tr>
+<tr><td class="lx-cell__main">Review Queues và Workspace</td><td class="c lx-no">—</td><td class="c lx-yes">Review</td><td class="c lx-yes">Review / giám sát</td><td class="c lx-yes">Xem</td><td class="c lx-yes">Review / giám sát</td></tr>
+<tr><td class="lx-cell__main">Rework</td><td class="c lx-yes">Thực hiện</td><td class="c lx-yes">Yêu cầu / xác minh</td><td class="c lx-yes">Yêu cầu / giám sát</td><td class="c lx-no">—</td><td class="c lx-yes">Thực hiện / xác minh</td></tr>
+<tr><td class="lx-cell__main">Adjudication</td><td class="c lx-no">—</td><td class="c lx-no">—</td><td class="c lx-yes">Có</td><td class="c lx-no">—</td><td class="c lx-yes">Có (ghi đè)</td></tr>
+<tr><td class="lx-cell__main">Calibration và Audit</td><td class="c lx-yes">Tham gia</td><td class="c lx-yes">Tham gia</td><td class="c lx-yes">Quản lý</td><td class="c lx-yes">Cấu hình</td><td class="c lx-yes">Quản lý / cấu hình</td></tr>
+<tr><td class="lx-cell__main">Phê duyệt phát hành</td><td class="c lx-no">—</td><td class="c lx-no">—</td><td class="c lx-yes">Người được cấp quyền</td><td class="c lx-no">—</td><td class="c lx-yes">Có (ghi đè)</td></tr>
+<tr><td class="lx-cell__main">Configuration</td><td class="c lx-no">—</td><td class="c lx-no">—</td><td class="c lx-yes">Giới hạn</td><td class="c lx-yes">Có</td><td class="c lx-yes">Có, gồm cả Permissions</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<aside class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Quy tắc quy trình</h2></div>
+<div class="lx-card__body lx-stack" style="gap: 14px">
+<div class="lx-row" style="justify-content: space-between; flex-wrap: nowrap"><div><div class="lx-cell__main">Reviewer không review annotation của chính mình</div><div class="lx-hint">Backend từ chối khi trùng người</div></div><label class="lx-switch"><input type="checkbox" checked="" aria-label="Không tự review"><span></span></label></div>
+<div class="lx-row" style="justify-content: space-between; flex-wrap: nowrap"><div><div class="lx-cell__main">Ghi đè của Super Admin phải có lý do</div><div class="lx-hint">Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline</div></div><label class="lx-switch"><input type="checkbox" checked="" aria-label="Lý do ghi đè"><span></span></label></div>
+<div class="lx-row" style="justify-content: space-between; flex-wrap: nowrap"><div><div class="lx-cell__main">Mọi thao tác ghi nhật ký kiểm toán</div><div class="lx-hint">Gắn nhãn Super Admin khi dùng quyền ghi đè</div></div><label class="lx-switch"><input type="checkbox" checked="" disabled="" aria-label="Nhật ký kiểm toán"><span></span></label></div>
+<div class="lx-row" style="justify-content: space-between; flex-wrap: nowrap"><div><div class="lx-cell__main">Yêu cầu xác minh sau khi sửa</div><div class="lx-hint">Issue chỉ đóng sau khi reviewer xác minh</div></div><label class="lx-switch"><input type="checkbox" checked="" aria-label="Xác minh sau sửa"><span></span></label></div>
+</div>
+</aside>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

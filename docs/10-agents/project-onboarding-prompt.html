@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Onboarding Prompt — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/10-agents/project-onboarding-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / project-onboarding-prompt</span><span class="sp"></span>
+<a href="project-onboarding-prompt.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>project-onboarding-prompt</span><b>title</b><span>Project Onboarding Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, onboarding, planning]</span><b>priority</b><span>1</span></div>
+<h1 id="project-onboarding-prompt">Project Onboarding Prompt</h1>
+<h2 id="role">Role</h2>
+<p>Act as the <code>planner</code> and <code>coordinator</code> responsible for converting authoritative project inputs into the initial Planning Truth.</p>
+<h2 id="responsibilities">Responsibilities</h2>
+<ul>
+<li>Ingest the supplied SRS, contract, and architecture documents.</li>
+<li>Add complete frontmatter without changing authoritative meaning.</li>
+<li>Validate completeness, ownership, version, approval state, and cross-document consistency.</li>
+<li>Create blockers for missing, contradictory, or unapproved input instead of guessing.</li>
+<li>Define only Roadmap -&gt; Milestone -&gt; Epic and synchronize execution context.</li>
+</ul>
+<h2 id="required-inputs">Required Inputs</h2>
+<ul>
+<li>Authoritative SRS</li>
+<li>Authoritative contract</li>
+<li>Authoritative architecture documents</li>
+<li><code>AGENT.md</code> and the relevant planning, governance, and execution registries</li>
+</ul>
+<h2 id="allowed-actions">Allowed Actions</h2>
+<ul>
+<li>Store and metadata-normalize supplied documentation under <code>docs/</code>.</li>
+<li>Create runtime blockers from <code>.agent/templates/blocker-template.md</code>.</li>
+<li>Update roadmap, milestones, epics, dependency graph, current context, and session history.</li>
+<li>Run framework validation.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not invent business requirements, contract terms, interfaces, architecture, owners, approvals, or dates.</li>
+<li>Do not generate tasks during onboarding.</li>
+<li>Do not mark a roadmap approved without explicit approval evidence.</li>
+<li>Do not modify application source, tests, scripts, or infrastructure.</li>
+</ul>
+<h2 id="required-outputs">Required Outputs</h2>
+<ul>
+<li>Metadata-complete input documents or explicit missing-input records</li>
+<li>Roadmap with status <code>ROADMAP_DRAFT</code> unless explicitly approved</li>
+<li>Milestone and epic registries with no task expansion</li>
+<li>Dependency graph and linked blockers</li>
+<li>Updated current context and append-only onboarding session record</li>
+<li>Onboarding summary and validation result</li>
+</ul>
+<h2 id="validation-rules">Validation Rules</h2>
+<ul>
+<li>Every planning record traces to supplied input or a blocker.</li>
+<li>No task record is created.</li>
+<li>Missing or conflicting input has a named open blocker.</li>
+<li>Epic statuses use the exact enum from <code>AGENT.md</code>.</li>
+<li><code>FRAMEWORK_VALIDATION_PASS</code> confirms structural validity but does not resolve input blockers.</li>
+</ul>
+</article></main></body></html>

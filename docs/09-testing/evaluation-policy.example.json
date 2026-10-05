@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "draft",
+  "approved_decision": null,
+  "reference_version": null,
+  "reference_sha256": null,
+  "model_sha256": null,
+  "score_version": null,
+  "minimum_reference_errors": null,
+  "minimum_errors_per_group": null,
+  "minimum_recall_at_20": null,
+  "minimum_effort_reduction": null,
+  "residual_non_inferiority_margin": null,
+  "false_positive_non_inferiority_margin": null,
+  "maximum_ui_p95_ms": null,
+  "maximum_run_duration_ms": null
+}

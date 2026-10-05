@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Ground Truth Benchmark</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="calibration" active-item="benchmark" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Ground Truth Benchmark</h1>
+<p class="lx-lead">Tập chuẩn do chuyên gia duyệt và khoá đáp án. Metric về độ chính xác chỉ tính khi có Ground Truth đúng phạm vi và taxonomy.</p>
+</div>
+<div class="lx-actions"><button class="lx-btn">Nhập từ CVAT</button><button class="lx-btn lx-btn--primary">Tạo benchmark</button></div>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Các phiên bản benchmark</h2></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 640px">
+<thead><tr><th>Phiên bản</th><th>Phạm vi</th><th class="r">Frame</th><th>Chuyên gia duyệt</th><th>Trạng thái</th><th></th></tr></thead>
+<tbody>
+<tr aria-selected="true"><td class="lx-cell__main">Benchmark v1.2</td><td class="lx-muted">Road Vision Urban · Taxonomy v3</td><td class="r">200</td><td class="lx-muted">Chi Lâm</td><td><span class="lx-badge lx-badge--success">Đã khoá</span></td><td class="r"><a class="lx-iconbtn" href="Calibration.dc.html" data-tip="Xem benchmark" aria-label="Xem benchmark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+<tr><td class="lx-cell__main">Benchmark v1.1</td><td class="lx-muted">Road Vision Urban · Taxonomy v2</td><td class="r">150</td><td class="lx-muted">Chi Lâm</td><td><span class="lx-badge">Đã thay thế</span></td><td class="r"><a class="lx-iconbtn" href="Calibration.dc.html" data-tip="Xem benchmark" aria-label="Xem benchmark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+<tr><td class="lx-cell__main">Benchmark v1.3</td><td class="lx-muted">Road Vision Urban · Taxonomy v3</td><td class="r">240</td><td class="lx-muted">Chưa phân công</td><td><span class="lx-badge lx-badge--info">Đang duyệt</span></td><td class="r"><a class="lx-iconbtn" href="Calibration.dc.html" data-tip="Xem benchmark" aria-label="Xem benchmark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Benchmark v1.2</h2><span class="lx-badge lx-badge--success">Đã khoá</span></div>
+<div class="lx-card__body lx-stack">
+<dl class="lx-kv">
+<dt>Benchmark coverage</dt><dd>76.0% dataset</dd>
+<dt>Frame chuẩn</dt><dd>200 frame · 1,184 object</dd>
+<dt>Frame bẫy (honeypot)</dt><dd>30 frame ẩn cho reviewer</dd>
+<dt>Taxonomy</dt><dd>v3</dd>
+<dt>Khoá lúc</dt><dd>2026-09-28 10:15</dd>
+</dl>
+<div class="lx-callout lx-callout--info"><span class="lx-callout__text" style="font-size: 13px">Benchmark đã khoá không thể sửa. Cần thay đổi thì tạo phiên bản mới.</span></div>
+</div>
+</section>
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

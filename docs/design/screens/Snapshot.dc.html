@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Snapshot</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="analysis" active-item="snapshot" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="analysis" step="snapshot" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Snapshot</h1>
+<p class="lx-lead">Snapshot khoá một phiên bản annotation để kiểm tra. Snapshot không thể sửa; nếu annotation thay đổi, hệ thống tạo revision và snapshot mới.</p>
+</div>
+<div class="lx-actions"><a class="lx-btn" href="SnapshotHistory.dc.html">Lịch sử snapshot</a></div>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Tạo snapshot mới</h2></div>
+<div class="lx-card__body lx-stack">
+<div class="lx-grid lx-grid--3">
+<div class="lx-field"><label class="lx-label" for="ds">Dataset</label><input id="ds" class="lx-input" readonly="" value="Road Vision Urban · v1.4"></div>
+<div class="lx-field"><label class="lx-label" for="rev">Annotation revision</label><select id="rev" class="lx-select"><option>a91f3c · mới nhất (2026-10-04 06:41)</option><option>7be204 · 2026-10-02 17:10</option></select></div>
+<div class="lx-field"><label class="lx-label" for="seed">Mã hạt giống lấy mẫu (seed)</label><input id="seed" class="lx-input" value="20261004"><span class="lx-hint">Giữ nguyên để tái lập mẫu</span></div>
+</div>
+
+<div class="lx-field">
+<span class="lx-label">Phạm vi kiểm tra</span>
+<div class="lx-card" style="border-color: var(--border)">
+<table class="lx-table">
+<thead><tr><th style="width: 40px"><input type="checkbox" checked="" aria-label="Chọn tất cả" style="accent-color: var(--primary)"></th><th>Task / Job</th><th>Người thực hiện · Giai đoạn</th><th class="r">Frame</th></tr></thead>
+<tbody>
+<tr><td><input type="checkbox" checked="" aria-label="T-118" style="accent-color: var(--primary)"></td><td class="lx-cell__main">T-118 · Urban day</td><td class="lx-muted">3 job</td><td class="r">600</td></tr>
+<tr><td><input type="checkbox" checked="" aria-label="T-119" style="accent-color: var(--primary)"></td><td class="lx-cell__main">T-119 · Urban night</td><td class="lx-muted">2 job</td><td class="r">6,000</td></tr>
+<tr><td><input type="checkbox" checked="" aria-label="T-120" style="accent-color: var(--primary)"></td><td class="lx-cell__main">T-120 · Urban rain</td><td class="lx-muted">2 job</td><td class="r">5,900</td></tr>
+</tbody>
+</table>
+</div>
+<span class="lx-hint">Chọn cả Task hoặc từng Job. Hiện chọn 3 task · 7 job · 12,500 frame.</span>
+</div>
+
+<div class="lx-field"><label class="lx-label" for="note">Ghi chú</label><textarea id="note" class="lx-textarea" placeholder="Ví dụ: Snapshot sau đợt sửa lỗi hình học tuần 40"></textarea></div>
+<div class="lx-actions" style="justify-content: flex-end"><button class="lx-btn">Huỷ</button><a class="lx-btn lx-btn--primary" href="AnalysisConfig.dc.html">Tạo snapshot và cấu hình →</a></div>
+</div>
+</section>
+
+<section class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Snapshot đang dùng</h2><span class="lx-badge lx-badge--success">Đã khoá</span></div>
+<div class="lx-card__body">
+<dl class="lx-kv">
+<dt>Mã snapshot</dt><dd class="lx-mono">SNP-014</dd>
+<dt>Annotation revision</dt><dd class="lx-mono">a91f3c</dd>
+<dt>Taxonomy</dt><dd>v3</dd>
+<dt>Guideline</dt><dd>v1.2</dd>
+<dt>Mô hình độc lập</dt><dd>Detector v2.3 · Classifier v1.8</dd>
+<dt>Cấu hình kiểm tra</dt><dd>v7</dd>
+<dt>Seed lấy mẫu</dt><dd class="lx-mono">20261004</dd>
+<dt>Tạo bởi</dt><dd>Mocking User · 2026-10-04 06:50</dd>
+</dl>
+</div>
+</section>
+</div>
+
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

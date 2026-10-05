@@ -1,0 +1,21 @@
+Review tĩnh; chưa chạy XeLaTeX trên TeXPage. Không sửa file. Các vị trí dưới đây thuộc `sections/05-dynamics.tex`, trừ khi ghi khác.
+
+1. **(A) Khả năng lỗi biên dịch cao — `05-dynamics.tex:104,156,187,202`:** Nội dung `\mess` chứa dấu ngoặc tròn: `enqueue(...)`, `retry (...)`, `effort.start(...)`, `effort.stop(...)`. `pgf-umlsd` dùng cả nội dung message để tạo tên node `(#3 from/to)`; dấu `)` có thể kết thúc tên node sớm, gây lỗi TikZ. Nên bỏ ngoặc khỏi message hoặc dùng macro gửi message với tên node riêng. [Mã nguồn tác giả](https://raw.githubusercontent.com/xuyuan/pgf-umlsd/master/pgf-umlsd.sty).
+
+2. **(A) Không thấy lỗi cú pháp — `05-dynamics.tex:17,93,95,96,101,109,118,158,258,295,350`:** `newthread` hai đối số, `newinst[dist]`, `call` bốn đối số, `callself` ba đối số với return `{}`, `sdblock` hai đối số đều hợp lệ. Math đã nằm trong `$...$`; `resizebox` quanh `sequencediagram`, tên làn được nhóm `{...}`, và `to[bend ...]` không phải lỗi biên dịch.
+
+3. **(B) Sai actor — `05-dynamics.tex:76,95,134`:** QC Admin đang khởi tạo snapshot/chạy phân tích; UC-01/02 giao QA Lead chạy, QC Admin cấu hình (`04-usecases.tex:104,133`), phù hợp ma trận quyền H.
+
+4. **(B) Lệch quyết định — `05-dynamics.tex:79`:** “Không bật VLM” trái B-08=A đã chốt pipeline kiểm chọn lọc, tối đa 400 candidate/run, ba lần thử tổng cộng (`architecture_review.html:69`).
+
+5. **(B) Thiếu guard — `05-dynamics.tex:196,375,379,384`:** SD-3 chỉ kiểm self-review khi nhận việc; cần kiểm lại lúc lưu theo assignee **job tại snapshot**, kể cả URL trực tiếp. `uncertain/escalate` thiếu lease hợp lệ; `verify_fail` thiếu chặn người sửa tự verify (`04-usecases.tex:218,219,265`).
+
+6. **(B) QC run cuối chưa đầy đủ — `05-dynamics.tex:234,353,354`:** Thiếu snapshot **toàn phạm vi**, liên kết verification, điều kiện Completed + coverage bắt buộc; thiếu nhánh lỗi/issue mới quay lại review. “Đóng hết issue” chưa đủ để Hoàn tất (`04-usecases.tex:260,261,264`).
+
+7. **(B) Thiếu mapping B-19 — `05-dynamics.tex:145,166`:** Chưa thể hiện applicability/reason, Not checked khi thiếu model/reference; không phân biệt không trigger với lỗi thực thi và waiver được duyệt.
+
+8. **(C) Lease ngược — `05-dynamics.tex:332`:** Vẽ Chờ review → Đang review khi hết hạn, ngược bảng tại dòng 376.
+
+9. **(B/C) Nhánh giả — `05-dynamics.tex:118,143`:** `sdblock` chỉ tạo khung; Locked rồi Failed vẫn được vẽ tuần tự, “Song song” vẫn nối tiếp. Cần operand/guard và phân cách rõ.
+
+10. **(B/C) Thiếu luồng — `05-dynamics.tex:51,53,380,386`:** Workflow bỏ qua quyết định phân xử qua cạnh trực tiếp; Guideline Gap thiếu vòng chờ version mới; bảng thiếu giữ nguyên khi ghi Gap. Override giữ nguyên trạng thái chưa mô tả ghi đè quyết định/phân xử theo H.

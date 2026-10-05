@@ -1,0 +1,19 @@
+1. **main.tex:18 — (A) Chắc chắn:** Thiếu các file `04-usecases` đến `12-appendix` được nạp tại dòng 18–28. Với thư mục hiện tại, XeLaTeX dừng ở `sections/04-usecases.tex`. Cần bổ sung đủ chín file trước khi tải lên TeXPage.
+
+2. **preamble.tex:10 — (A) Không thấy lỗi ở các cấu hình bị nghi ngờ:** Tên file TeX Gyre đúng; `babelprovide` dòng 30 hợp lệ; package không thấy xung đột. `pics/actor/.style` dòng 151 nhận `#1` đúng, không bắt buộc đổi sang `.style args`. `shapes.multipart` đã nạp cho `rectangle split`; caption của `xltabular` có `\\` đúng; ký tự đặc biệt đã escape ở vị trí cần thiết. Đối chiếu [TeX Gyre](https://ctan.org/pkg/tex-gyre), [Babel](https://tug.ctan.org/language/babel/base/babel.pdf), [TikZ](https://tikz.dev/tikz-pics), [xltabular](https://ctan.org/pkg/xltabular). Đây là kiểm tra tĩnh, chưa xác nhận môi trường TeXPage.
+
+3. **sections/01-introduction.tex:75 — (A) Cảnh báo tham chiếu:** Label chưa tồn tại: `ch:eval`, `ch:trace`, `ch:usecase`, `ch:arch`, `ch:func`, `sec:fr-eng`, `sec:fr-rnk`, `tab:tbd`, `sec:kpi1`, `sec:kpi2`; thêm `app:decisions` tại `02-overview.tex:186`. Chỉ gây `??`, không tự làm dừng biên dịch.
+
+4. **sections/01-introduction.tex:64 — (B):** VLM mặc định tắt là thay đổi phạm vi so với B-08 đã chọn pipeline kiểm chọn lọc; phương án tắt pilot là lựa chọn B không được chọn. Cần ghi đây là đề xuất thu hẹp cần duyệt, không coi đã kế thừa quyết định chốt.
+
+5. **sections/03-data-errors.tex:151 — (B):** Reference chỉ gồm tập lỗi chưa đủ để thực hiện metric engine theo B-05/B-20. Cần phân biệt reference lỗi phục vụ ranking với annotation chuẩn đầy đủ phục vụ Precision/Recall, kèm scope và version.
+
+6. **sections/03-data-errors.tex:141 — (C):** BR-01 giới hạn một lỗi mỗi đối tượng/nhóm, nhưng BR-02 đếm E3 là `m−1`, E2 theo annotation; BR-03 lại đếm một E3. Cần thống nhất đơn vị lỗi, ID reference và quy tắc ghép issue trước tính KPI.
+
+7. **sections/03-data-errors.tex:120 — (C):** Hungarian tối đa IoU rồi lọc ngưỡng có thể bỏ mất cặp hợp lệ. Cần loại cạnh dưới ngưỡng trước tối ưu, cho phép unmatched; ưu tiên số cặp hợp lệ rồi tổng IoU. Định nghĩa rõ cách xử lý ambiguous và thứ tự lọc confidence.
+
+8. **sections/02-overview.tex:46 — (C):** Recall@20% đo lỗi *nằm trong* frame được chọn, chưa đo lỗi reviewer thực sự tìm thấy. Cần tách khả năng ưu tiên khỏi hiệu quả phát hiện thực tế; quy định trường hợp reference không có lỗi.
+
+9. **sections/02-overview.tex:88 — (C):** Đồng thuận reviewer–adjudicator trên case chuẩn không đồng nhất đồng thuận giữa reviewer theo B-15. Cần tách chỉ số, mẫu số và cách tính.
+
+Không sửa file, không biên dịch local.

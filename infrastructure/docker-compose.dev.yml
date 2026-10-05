@@ -1,0 +1,52 @@
+# Dịch vụ hạ tầng cho môi trường dev local (DEC-001).
+# Chạy: docker compose -f infrastructure/docker-compose.dev.yml up -d
+# SeaweedFS chỉ thay Object Storage ở local; môi trường thật dùng Object Storage hiện có (S3-compatible).
+# CVAT không nằm ở đây: adapter đọc instance CVAT đang triển khai (B-18, chỉ đọc).
+name: labelx-dev
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: labelx
+      POSTGRES_USER: labelx
+      POSTGRES_PASSWORD: labelx
+    ports: ["5432:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labelx -d labelx"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  # S3-compatible cho dev local (image minio/minio đã ngừng phát hành trên Docker Hub).
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=1024
+    ports: ["9000:9000"]
+    volumes:
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9333/cluster/status || exit 1"]
+      interval: 5s
+      retries: 20
+
+  seaweedfs-init:
+    image: chrislusf/seaweedfs:latest
+    depends_on:
+      seaweedfs: {condition: service_healthy}
+    entrypoint: >
+      /bin/sh -ec "for b in labelx-snapshots labelx-evidence labelx-reports; do
+      echo \"s3.bucket.create -name $$b\" | weed shell -master=seaweedfs:9333; done"
+
+volumes:
+  postgres-data:
+  seaweedfs-data:

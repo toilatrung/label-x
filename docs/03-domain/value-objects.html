@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Value object của module Quality Control — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/03-domain/value-objects.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 03-domain / value-objects</span><span class="sp"></span>
+<a href="value-objects.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>domain-value-objects</span><b>title</b><span>Value object của module Quality Control</span><b>type</b><span>reference</span><b>domain</b><span>domain</span><b>module</b><span>quality-control</span><b>tags</b><span>[domain, value-objects, bbox, risk-score]</span><b>priority</b><span>2</span></div>
+<h1 id="value-object-cua-module-quality-control">Value object của module Quality Control</h1>
+<p>Value object là giá trị bất biến, so sánh theo nội dung, không có định danh riêng. Các aggregate dùng chúng ở <a href="aggregates.html">aggregates.md</a>; quy tắc tính toán ở <a href="services.html">services.md</a>.</p>
+<p>Nguồn chính: SRS <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>, <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a>, <a href="../label-x_system-requirement-specification/sections/07-evaluation.tex">07-evaluation.tex</a>; R <a href="../00-project/sources/architecture_review.html">architecture_review.html</a>. Giá trị chưa chốt ghi mã TBD của SRS <a href="../label-x_system-requirement-specification/sections/11-traceability.tex">11-traceability.tex</a>.</p>
+<h2 id="bbox">BBox</h2>
+<ul>
+<li><strong>Biểu diễn</strong>: <code>(x1, y1, x2, y2)</code> theo hệ toạ độ pixel ảnh gốc (SRS 09 §Giao diện mô hình). Ảnh BDD100K 1280×720 (SRS 03).</li>
+<li><strong>Hợp lệ cấu trúc</strong> (Geometry, FR-ENG-03; R B-06):</li>
+<li><code>x1 &lt; x2</code> và <code>y1 &lt; y2</code>.</li>
+<li>Nằm trong ảnh với dung sai 2 px.</li>
+<li>Diện tích ≥ 24 px² (rule G-014). Dưới ngưỡng là <strong>cảnh báo cấu trúc</strong>, không tự là lỗi (SRS 03).</li>
+<li><strong>Không</strong> kiểm độ khít biên (G-009 giữ Not checked khi chưa có biên tham chiếu) (R B-06).</li>
+<li><strong>Phép toán</strong>: <code>area()</code>, <code>iou(other)</code>. IoU tính <strong>không xét lớp</strong> khi matching (SRS 03 §Matching).</li>
+<li>Chuẩn hoá toạ độ để hash: làm tròn cố định (FR-SNP-03); số chữ số làm tròn là <strong>TBD-20</strong> — chốt trước khi build adapter, ghi vào version thuật toán chuẩn hoá.</li>
+</ul>
+<h2 id="labelclass">LabelClass</h2>
+<ul>
+<li>Một trong 10 lớp BDD100K: <code>car</code>, <code>truck</code>, <code>bus</code>, <code>train</code>, <code>motorcycle</code>, <code>bicycle</code>, <code>pedestrian</code>, <code>rider</code>, <code>traffic light</code>, <code>traffic sign</code> (SRS 03).</li>
+<li>Lớp ngoài taxonomy version của dataset ⇒ cảnh báo Schema/Taxonomy (FR-ENG-02).</li>
+<li>Lớp của Detector phải ánh xạ qua bảng mapping có version; lớp chưa map hiện thiếu coverage, không tự suy tên lớp (R cấu hình MVP "Model artifact/class mapping").</li>
+</ul>
+<h2 id="revisionhash">RevisionHash</h2>
+<ul>
+<li><strong>Định nghĩa</strong>: SHA-256 của JSON annotation đã chuẩn hoá (sắp xếp khoá, toạ độ làm tròn cố định), tính cho từng job và hash tổng của snapshot (FR-SNP-03; R B-02).</li>
+<li>CVAT không có "annotation revision" chính thức; revision là hash do LabelX tính (A §21).</li>
+<li><strong>Bất biến dùng</strong>: revision CVAT mới phải khác revision gốc mới được nhận "Đã sửa" (FR-RWK-03); quyết định và verification gắn revision cụ thể (FR-REV-10).</li>
+</ul>
+<h2 id="snapshotscope">SnapshotScope</h2>
+<ul>
+<li>Tập (project, task, job) đã chọn; mapping frame sang job/task/frame nguồn (FR-SNP-05). Shape không phải Bounding box bị đếm "ngoài phạm vi" (FR-SNP-07).</li>
+</ul>
+<h2 id="imagechecksum-va-contentkey">ImageChecksum và ContentKey</h2>
+<ul>
+<li>Checksum ảnh lưu cùng snapshot (FR-SNP-05).</li>
+<li>Blob (ảnh, crop evidence) dùng khoá theo hash nội dung để upload lên Object Storage là idempotent (NFR-06).</li>
+</ul>
+<h2 id="errorfamily">ErrorFamily</h2>
+<p>Ba nhóm lỗi đo KPI của bản đầu (SRS 03 §Taxonomy nhóm lỗi):</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Tên</th>
+<th>Neo (anchor) của lỗi/issue</th>
+<th>Nguồn candidate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Thiếu box</td>
+<td>Lỗi: đối tượng GT. Issue: vùng box dự đoán không ghép (gộp các dự đoán chồng nhau IoU ≥ <code>τ_m</code>)</td>
+<td>Detector: dự đoán không ghép, confidence ≥ <code>τ_E1</code></td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Sai lớp</td>
+<td>Lỗi: đối tượng GT. Issue: annotation trong cặp ghép khác lớp</td>
+<td>Detector: cặp IoU ≥ <code>τ_m</code>, lớp khác, confidence ≥ <code>τ_E2</code></td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Trùng box</td>
+<td>Lỗi: annotation dư. Issue: cụm annotation nối nhau bởi cặp IoU ≥ 0,85</td>
+<td>Duplicate/Overlap (D-002); Detector bổ trợ</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Không thuộc E1–E3 (ghi nhận, ngoài KPI): box thừa không có đối tượng (BR-06), độ khít biên, box quá nhỏ, sai thuộc tính, lỗi track (SRS 03).</li>
+<li>Cảnh báo cấu trúc (Schema/Geometry) là một loại riêng, không phải ErrorFamily.</li>
+<li>Ngưỡng <code>τ_E1</code>, <code>τ_E2</code> chọn trên tập hiệu chỉnh, có version (FR-ENG-07); <code>τ_m</code> là <strong>TBD-05</strong> (SRS đề xuất 0,5, chưa chốt).</li>
+<li><strong>Mâu thuẫn ghi nhận</strong>: H (AnalysisConfig, RulesThresholds D-002) ghi Duplicate "cùng lớp". SRS FR-ENG-04 sinh candidate cho cặp IoU ≥ 0,85 kèm lớp hai box và dùng "cùng lớp hay khác lớp" làm đặc trưng E3 (FR-RNK bảng đặc trưng); BR-05 không xét lớp của annotation dư. Xử lý: SRS thắng — candidate E3 không lọc theo lớp; "cùng lớp" là đặc trưng.</li>
+</ul>
+<h2 id="severity">Severity</h2>
+<ul>
+<li>Ba mức: Nghiêm trọng / Trung bình / Nhẹ (H ReviewWorkspace, RulesThresholds; SRS BR-09).</li>
+<li>Định nghĩa theo lớp và kích thước do QA Lead chốt: <strong>TBD-07</strong>. Dùng cho gate G-2 (lỗi nghiêm trọng chưa đóng = 0) và G-2b.</li>
+<li>Bắt buộc khi Xác nhận lỗi (FR-REV-08).</li>
+<li>Tier P0–P3 của T và bucket High/Medium/Low của A không dùng làm Severity (R B-10).</li>
+</ul>
+<h2 id="dedupkey">DedupKey</h2>
+<ul>
+<li><code>dedup_key = (snapshot, frame, đối tượng tham chiếu, nhóm lỗi)</code> kèm version policy gộp (FR-AGG-03; R B-10).</li>
+<li>Đối tượng tham chiếu: annotation ID (E2, E3 — với E3 là cụm), hoặc vùng dự đoán đã gộp (E1).</li>
+<li>Candidate cùng <code>dedup_key</code> gộp vào một issue; khác nhóm lỗi trên cùng object là issue riêng.</li>
+</ul>
+<h2 id="idempotencykey">IdempotencyKey</h2>
+<ul>
+<li>Đơn vị xử lý: <code>(snapshot, engine, config, model, shard)</code> (FR-AGG-02). Retry cùng khoá không tạo candidate/issue trùng (AC-02).</li>
+<li>Sự kiện client (effort): <code>event_id</code> UUID (SRS 12).</li>
+</ul>
+<h2 id="issueanchor-va-maxerrorcount-n_i">IssueAnchor và MaxErrorCount (<code>n_i</code>)</h2>
+<ul>
+<li>Mỗi issue lưu neo và <code>n_i</code>: E1 → 1, E2 → 1, E3 (cụm <code>m</code> box) → <code>m − 1</code> (FR-RNK-12; SRS 06 bảng neo). Quy tắc tạo neo có version cùng policy gộp.</li>
+</ul>
+<h2 id="riskscore">RiskScore</h2>
+<ul>
+<li><strong>Định nghĩa</strong>: <code>s(f) = Σ_{i ∈ I_f} n_i·q_i + h(f)</code> (SRS 06 §Mô hình điểm).</li>
+<li><code>q_i</code>: xác suất issue trùng ít nhất một lỗi, học ở cấp issue (logistic theo nhóm, có thể hiệu chỉnh isotonic).</li>
+<li><code>h(f) ≥ 0</code>: điểm nền cho lỗi không có issue (hồi quy Poisson).</li>
+<li><strong>Đi kèm</strong>: <code>score_version</code>, rank, đóng góp từng issue và điểm nền (FR-RNK-05). Phá hoà theo <code>SHA256(frame_key ‖ seed)</code> (FR-RNK-04).</li>
+<li><strong>Bất biến</strong>: score version khoá thì không đổi (FR-RNK-02). <code>score_v0</code> dùng khi chưa đủ nhãn — báo cáo phải ghi rõ (SRS 06).</li>
+<li>Chi tiết: <a href="../12-ai/risk-scoring.html">../12-ai/risk-scoring.md</a>.</li>
+</ul>
+<h2 id="coverageunit">CoverageUnit</h2>
+<p>Đơn vị áp dụng của từng engine trong ledger (R cấu hình MVP "Required units"; B-04):</p>
+<table>
+<thead>
+<tr>
+<th>Engine</th>
+<th>Đơn vị</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema / Taxonomy, Geometry</td>
+<td>annotation/shape áp dụng</td>
+</tr>
+<tr>
+<td>Duplicate / Overlap</td>
+<td>frame và cặp so được</td>
+</tr>
+<tr>
+<td>Mô hình độc lập (Detector)</td>
+<td>frame</td>
+</tr>
+<tr>
+<td>Mô hình thị giác – ngôn ngữ</td>
+<td>candidate được trigger</td>
+</tr>
+<tr>
+<td>Metric</td>
+<td>reference scope</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Bộ đếm: eligible, completed, failed, not checked + lý do (FR-AGG-04). Coverage engine = completed / eligible; không loại đơn vị lỗi khỏi mẫu số.</li>
+<li>Coverage frame chung chỉ là tiến độ xem, không dùng cho gate (FR-RPT-04).</li>
+</ul>
+<h2 id="enginestatus-va-applicabilityreason">EngineStatus và ApplicabilityReason</h2>
+<ul>
+<li><code>EngineStatus ∈ {Running, Checked, Partial, Failed, Not checked}</code> (FR-AGG-05).</li>
+<li><code>ApplicabilityReason ∈ {disabled, no_model, no_reference, not_applicable, not_triggered}</code> (SRS 05 bảng trạng thái engine).</li>
+</ul>
+<h2 id="reviewdecisiontype">ReviewDecisionType</h2>
+<ul>
+<li><code>{Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Chuyển cấp trên, Yêu cầu sửa}</code> (FR-REV-08). Kết luận phân xử: <code>{Xác nhận lỗi, Bác bỏ, Guideline còn thiếu}</code> (FR-ESC-02).</li>
+</ul>
+<h2 id="guidelineref">GuidelineRef</h2>
+<ul>
+<li><code>(rule_id, guideline_version, section)</code> (R B-13; FR-GDL-01). Ví dụ trên H: <code>VEH-03 · Guideline v1.2 · mục 3.2</code> — chỉ minh hoạ.</li>
+</ul>
+<h2 id="seed">Seed</h2>
+<ul>
+<li>Seed khoá trước cho: phá hoà ranking, lát kiểm tra ngẫu nhiên (<code>r</code> — <strong>TBD-10</strong>), ranking đối chứng ngẫu nhiên, bootstrap, chia D1/D2 và gán chuỗi AB/BA (SRS 06, 07). Seed lưu trong run/manifest (H Snapshot, RulesThresholds).</li>
+</ul>
+<h2 id="effortactivity">EffortActivity</h2>
+<ul>
+<li><code>{view, issue, adjudicate, recheck, fix}</code> với <code>active_ms</code> (SRS 12). <code>fix</code> (t_fix) không cộng vào T của KPI-2, chỉ báo cáo riêng (SRS 07).</li>
+</ul>
+<h2 id="gatethreshold">GateThreshold</h2>
+<ul>
+<li>Cặp (điều kiện, ngưỡng, nguồn, scope, mẫu số, cỡ mẫu tối thiểu). Giá trị cấu hình pilot: xem <a href="aggregates.html#15-qualitygateevaluation-gatecondition-và-waiver">aggregates.md</a>. Tiêu chí "đủ dữ liệu" cho residual/agreement (cỡ mẫu, khoảng tin cậy) chưa chốt (R B-15).</li>
+</ul>
+</article></main></body></html>

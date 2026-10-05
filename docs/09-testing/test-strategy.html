@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chiến lược kiểm thử toàn bộ giai đoạn LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/09-testing/test-strategy.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / test-strategy</span><span class="sp"></span>
+<a href="test-strategy.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>labelx-test-strategy</span><b>title</b><span>Chiến lược kiểm thử toàn bộ giai đoạn LabelX</span><b>type</b><span>reference</span><b>domain</b><span>testing</span><b>module</b><span>repository</span><b>tags</b><span>[testing, ci, phases, acceptance]</span><b>priority</b><span>2</span></div>
+<h1 id="chien-luoc-kiem-thu-labelx">Chiến lược kiểm thử LabelX</h1>
+<h2 id="pham-vi-va-nguon-chuan">Phạm vi và nguồn chuẩn</h2>
+<p>Đầu ra theo yêu cầu người dùng: thiết kế CI/CD và kiểm thử mọi giai đoạn. Stack giữ <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>; quyết định nghiệp vụ giữ <a href="../00-project/sources/architecture_review.html">architecture_review.html</a>. <a href="../00-project/sources/QC_Engine_Review_Report.html#roadmap">Roadmap T</a> A–F và <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html#roadmap">roadmap A</a> P0–P6 chỉ được dùng ánh xạ giai đoạn kiểm thử, không tự tạo milestone/epic hoặc deadline.</p>
+<p>SRS LaTeX M13 v1.0 là <strong>bản đề xuất để duyệt</strong> (00-frontmatter.tex). Test FR/AC/NFR trong ma trận là traceability tới bản đề xuất, không tự chốt TBD hay mở rộng scope. M13 có Ranking/Evaluation và chỉ hiển thị gate, không phát hành Dataset đầy đủ (FR-GTE-04). Hồ sơ intake Markdown của kit vẫn trống; không đổi trạng thái intake hoặc roadmap trong tác vụ này.</p>
+<h2 id="tinh-trang-hien-tai">Tình trạng hiện tại</h2>
+<p>Scaffold có Django/DRF, Celery, Next.js; chưa có adapter/engine/review/ranking nghiệp vụ. Chỉ SCF-01 đang bind test smoke OpenAPI có sẵn. Frontend chưa chọn test runner theo DEC-001; lint/typecheck/build không được báo thành UI test hay end-to-end test đã đạt.</p>
+<p>Ma trận máy đọc: <a href="test-matrix.json">test-matrix.json</a>, 12 nhóm giai đoạn, 62 ca kiểm. Mỗi ca có yêu cầu nguồn, fixture, expected result và trạng thái implemented/planned. Ca planned không được skip thành pass. Test runner giai đoạn trả BLOCKED khi thiếu binding, fixture/reference/policy hoặc dependency evidence.</p>
+<h2 id="cac-tang-kiem-thu">Các tầng kiểm thử</h2>
+<ol>
+<li>Unit: tính toán thuần, biên rule/geometry/matching, canonical hash, counting/ranking/KPI.</li>
+<li>Contract: adapter allowlist theo CVAT version, OpenAPI/frontend type, payload/status/version/provenance. Export POST chỉ được phép nếu contract đã xác minh là thao tác đọc; không blanket chặn mọi POST.</li>
+<li>Integration: PostgreSQL thật, Celery worker và Redis thật khi kiểm async, Object Storage namespace tạm; atomicity/idempotency/audit/lease.</li>
+<li>End-to-end: trình duyệt → queue/workspace → quyết định → CVAT giả lập revision → verify → final run/report. Driver frontend cần chọn trong task riêng; test direct API không thay browser test.</li>
+<li>Evaluation: reference/held-out/model/score/policy đã khoá; accuracy engine riêng reviewer agreement. Không gọi model confidence là Ground Truth.</li>
+<li>Fault/load/recovery: worker chết, storage/Redis lỗi, race lease, backup/restore và migration. Chỉ chạy namespace staging chuyên dụng; không thử phá dữ liệu thật từ pull request.</li>
+</ol>
+<h2 id="du-lieu-kiem-thu">Dữ liệu kiểm thử</h2>
+<p>Pull request dùng synthetic image/annotation, mock CVAT và Detector stub; không cần token thật, không gửi ảnh ra ngoài, không dùng held-out để chỉnh test cho dễ pass. Integration dùng PostgreSQL thay SQLite cho lock/constraint; eager Celery chỉ dùng unit, không chứng minh broker/worker hoạt động.</p>
+<p>Live CVAT/model/reference chạy thủ công trên main ở runner riêng, có environment approval và dữ liệu read-only. Không publish ảnh/annotation/secret lên GitHub artifacts; chỉ metadata không nhạy cảm, checksum và report đã loại dữ liệu riêng. Fixture store sống ở hệ thống nội bộ.</p>
+<h2 id="ieu-kien-chuyen-giai-oan">Điều kiện chuyển giai đoạn</h2>
+<p>Tất cả ca bắt buộc của nhóm phải được bind test executable và passed; không zero-test/all-skipped. Evidence cùng commit và có dependency phase passed. Reference có version, scope và provenance; policy số học không null/TBD và có quyết định phê duyệt trước benchmark. Ngưỡng Coverage/residual/agreement đã chốt chỉ là cấu hình pilot của ứng dụng, không thay kết quả nghiệm thu engine.</p>
+<p>AC-08 phụ thuộc TBD-K1/K4; AC-09 phụ thuộc TBD-K2/K3/TBD-12. Chưa chốt thì ghi BLOCKED/insufficient data, không tự đặt recall, effort gain, latency hoặc coverage code tối thiểu. NFR latency đề xuất không tự thành SLA.</p>
+<h2 id="trach-nhiem-va-tach-nhiem-vu">Trách nhiệm và tách nhiệm vụ</h2>
+<p>Implementer viết test và cung cấp evidence; reviewer độc lập kiểm contract/oracle; Quality Assurance Lead quản lý reference/held-out/policy; Quality Control Admin vận hành runner; người đủ quyền khác requester duyệt CD/waiver/release. Không tự đánh dấu accepted QA hoặc task done từ một job CI.</p>
+<h2 id="ma-tran-truy-vet">Ma trận truy vết</h2>
+<p>R-01: SNP/AGG/RNK; R-02: ENG/MAT/REV; R-03: RWK/REL; R-04: REF/MET/KPI/RPT; R-05: SNP/SEC/AUD; R-06: AGG/RNK/GTE; R-07: EFF/KPI. Từng ca chi tiết nằm trong JSON và <a href="../../ci_cd_testing.html">bản HTML</a>.</p>
+<h2 id="lenh-kiem-tra">Lệnh kiểm tra</h2>
+<pre class="highlight"><code class="language-bash">node --test scripts/ci/tests/*.test.cjs
+node scripts/ci/quality-gate.cjs validate-plan
+node scripts/ci/render-plan.cjs --check
+node scripts/ci/quality-gate.cjs run --phase scaffold</code></pre>
+<p>Lệnh run cần uv/Python và PostgreSQL cho pytest. Giai đoạn chưa có code/test trả nonzero BLOCKED là kết quả đúng, không phải đã có lỗi nghiệp vụ. Hướng dẫn workflow tại <a href="../08-devops/ci-cd.html">CI/CD</a>.</p>
+</article></main></body></html>

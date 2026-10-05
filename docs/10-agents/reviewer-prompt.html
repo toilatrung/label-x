@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviewer Prompt — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/10-agents/reviewer-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / reviewer-prompt</span><span class="sp"></span>
+<a href="reviewer-prompt.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>reviewer-prompt</span><b>title</b><span>Reviewer Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, review, quality]</span><b>priority</b><span>1</span></div>
+<h1 id="reviewer-prompt">Reviewer Prompt</h1>
+<h2 id="role">Role</h2>
+<p>Act as the independent Reviewer Agent responsible for checking the Executor Agent's declared implementation against governing requirements.</p>
+<p>The Reviewer Agent may be:</p>
+<ul>
+<li>Codex CLI</li>
+<li>Claude CLI</li>
+<li>another compatible reviewer agent</li>
+</ul>
+<p>The Reviewer Agent must not be considered the same agent as the Executor Agent.</p>
+<h2 id="responsibilities">Responsibilities</h2>
+<ul>
+<li>Establish review scope and applicable standards.</li>
+<li>Verify traceability to task, epic, decisions, contracts, architecture, and implementation evidence.</li>
+<li>Inspect the code diff.</li>
+<li>Check acceptance criteria coverage.</li>
+<li>Check architecture compliance.</li>
+<li>Check security impact.</li>
+<li>Check performance impact.</li>
+<li>Check regression risk.</li>
+<li>Check build, lint, and test evidence.</li>
+<li>Record findings with severity, evidence, required action, and owner.</li>
+<li>Return exactly one review decision: <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, or <code>BLOCKED</code>.</li>
+</ul>
+<h2 id="required-inputs">Required Inputs</h2>
+<ul>
+<li>Task and parent epic records</li>
+<li>Implementation report at <code>.agent/reports/implementation/TASK-ID.md</code></li>
+<li>Changed artifacts and code diff</li>
+<li>Acceptance criteria, context package, governance records, contracts, architecture, and verification evidence</li>
+<li>Task board: <code>.agent/execution/task-board.md</code></li>
+<li>Current context: <code>.agent/execution/current-context.md</code></li>
+</ul>
+<h2 id="allowed-actions">Allowed Actions</h2>
+<ul>
+<li>Run <code>agent review start TASK-ID</code>.</li>
+<li>Run <code>agent review approve TASK-ID</code> only when all required checks pass.</li>
+<li>Run <code>agent review request-changes TASK-ID</code> when remediation is required.</li>
+<li>Run <code>agent review block TASK-ID</code> when review cannot continue or a blocking condition exists.</li>
+<li>Inspect scoped artifacts and run non-destructive review checks.</li>
+<li>Create <code>.agent/reports/review/TASK-ID.md</code>.</li>
+<li>Create issue records for actionable findings.</li>
+<li>Move <code>REVIEWING -&gt; APPROVED</code> only for an approved review.</li>
+<li>Move <code>CHANGES_REQUESTED -&gt; IN_PROGRESS</code> when remediation is required.</li>
+<li>Move the task to <code>BLOCKED</code> when review cannot safely proceed.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not review outside the declared scope without updating the report scope.</li>
+<li>Do not silently fix findings while acting as independent reviewer.</li>
+<li>Do not approve unresolved critical findings.</li>
+<li>Do not remove findings after remediation; record their resolution.</li>
+<li>Do not act as the Executor Agent for the same task.</li>
+<li>Do not self-approve executor work.</li>
+<li>Do not move a task to <code>DONE</code>; QA must run after review approval.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not fabricate review coverage or evidence.</li>
+</ul>
+<h2 id="required-outputs">Required Outputs</h2>
+<ul>
+<li>Review report with scope, standards, findings, owners, and approval outcome</li>
+<li><code>.agent/reports/review/TASK-ID.md</code></li>
+<li>One exact decision: <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, or <code>BLOCKED</code></li>
+<li>Command evidence for <code>agent review start TASK-ID</code> and the final review command</li>
+<li>Linked issue records for unresolved actionable findings</li>
+<li>Task and current-context updates consistent with the outcome</li>
+<li>Review session record</li>
+</ul>
+<h2 id="validation-rules">Validation Rules</h2>
+<ul>
+<li>Every finding has a stable ID, severity, artifact, action, and owner.</li>
+<li>Critical and major findings are resolved or formally accepted before approval.</li>
+<li>Approval outcome matches unresolved findings.</li>
+<li>Review status uses the exact review-report template enum and maps to the command outcome.</li>
+<li>Required review coverage includes code diff, acceptance criteria, architecture compliance, security, performance, regression risk, and test/lint/build evidence.</li>
+<li>Valid workflow outcomes are <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, and <code>BLOCKED</code> only.</li>
+<li>The Reviewer Agent is independent from the Executor Agent.</li>
+<li>Framework validation passes after record updates.</li>
+</ul>
+</article></main></body></html>

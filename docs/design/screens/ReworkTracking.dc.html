@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Rework Tracking</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="review" active-item="rework" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="review" step="rework" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Rework Tracking</h1>
+<p class="lx-lead">Theo dõi các yêu cầu sửa từ lúc tạo đến khi được xác minh. Annotator sửa trực tiếp trên CVAT; snapshot gốc luôn giữ nguyên.</p>
+</div>
+</div>
+
+<div class="lx-grid lx-grid--4">
+<div class="lx-metric"><span class="lx-metric__k">Tổng yêu cầu sửa</span><span class="lx-metric__v">86</span><span class="lx-metric__n">Từ 126 lỗi đã xác nhận</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Chờ sửa</span><span class="lx-metric__v">5</span><span class="lx-metric__n">Annotator chưa nộp lại</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Chờ xác minh</span><span class="lx-metric__v">7</span><span class="lx-metric__n">Reviewer cần kiểm tra revision mới</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Hoàn thành</span><span class="lx-metric__v">86.0%</span><div class="lx-progress" role="img" aria-label="Hoàn thành 86%"><i style="width: 86%"></i></div><span class="lx-metric__n">74 / 86 yêu cầu đã đóng</span></div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}<span class="lx-count">{{t.count}}</span></button>
+</sc-for>
+</div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 900px">
+<thead><tr><th>Mã yêu cầu</th><th>Issue</th><th>Frame · Object</th><th>Việc cần sửa</th><th>Annotator</th><th>Hạn</th><th>Mức độ</th><th></th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<tr><td class="lx-mono">{{r.id}}</td><td class="lx-mono">{{r.issue}}</td><td class="lx-muted">{{r.where}}</td><td>{{r.action}}</td><td class="lx-muted">{{r.who}}</td><td class="lx-muted">{{r.due}}</td><td><span class="{{r.sevCls}}">{{r.sev}}</span></td>
+<td class="r"><a class="lx-iconbtn" href="ReviewWorkspace.dc.html" data-tip="{{r.tip}}" aria-label="{{r.tip}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'todo';
+    const B = (c) => 'lx-badge' + (c ? ' lx-badge--' + c : '');
+    const DATA = {
+      todo: { tip: 'Xem yêu cầu', rows: [
+        ['RW-0212','QC-00061','Frame 00104 · #12','Đổi nhãn car → truck','Bình Hồ','2026-10-06','Nghiêm trọng','danger'],
+        ['RW-0213','QC-00064','Frame 00118 · #08','Xoá bản ghi trùng #08','Bình Hồ','2026-10-06','Trung bình','warning'],
+        ['RW-0215','QC-00067','Frame 00131 · —','Thêm bounding box cho xe máy bị thiếu','An Nguyễn','2026-10-07','Nghiêm trọng','danger'],
+        ['RW-0216','QC-00075','Frame 00160 · #03','Chỉnh lại biên polygon','Chi Lâm','2026-10-07','Nhẹ',''],
+        ['RW-0219','QC-00081','Frame 00188 · #15','Bổ sung thuộc tính occluded','Chi Lâm','2026-10-08','Nhẹ',''] ] },
+      verify: { tip: 'Xác minh revision mới', rows: [
+        ['RW-0198','QC-00044','Frame 00071 · #02','Đã đổi nhãn bus → truck','An Nguyễn','2026-10-05','Nghiêm trọng','danger'],
+        ['RW-0201','QC-00049','Frame 00082 · #09','Đã chỉnh bounding box','Bình Hồ','2026-10-05','Trung bình','warning'],
+        ['RW-0203','QC-00052','Frame 00090 · #11','Đã xoá bản ghi trùng','Chi Lâm','2026-10-05','Trung bình','warning'],
+        ['RW-0204','QC-00055','Frame 00095 · —','Đã thêm object bị thiếu','An Nguyễn','2026-10-05','Nghiêm trọng','danger'],
+        ['RW-0207','QC-00058','Frame 00099 · #04','Đã chỉnh biên polygon','Bình Hồ','2026-10-06','Nhẹ',''] ] },
+      closed: { tip: 'Xem lịch sử yêu cầu', rows: [
+        ['RW-0150','QC-00012','Frame 00020 · #03','Đã đổi nhãn van → car','Chi Lâm','2026-10-02','Trung bình','warning'],
+        ['RW-0151','QC-00013','Frame 00022 · #07','Đã chỉnh bounding box','Chi Lâm','2026-10-02','Nhẹ',''],
+        ['RW-0153','QC-00017','Frame 00031 · —','Đã thêm người đi bộ bị thiếu','An Nguyễn','2026-10-02','Nghiêm trọng','danger'],
+        ['RW-0158','QC-00021','Frame 00040 · #05','Đã xoá bản ghi trùng','Bình Hồ','2026-10-03','Trung bình','warning'],
+        ['RW-0161','QC-00026','Frame 00049 · #10','Đã bổ sung thuộc tính','Bình Hồ','2026-10-03','Nhẹ',''] ] }
+    };
+    const TABS = [['todo','Chờ sửa',5],['verify','Chờ xác minh',7],['closed','Đã đóng',74]];
+    return {
+      tabs: TABS.map(([k, label, count]) => ({ label, count, selected: cur === k, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) })),
+      rows: DATA[cur].rows.map(([id, issue, where, action, who, due, sev, c]) => ({ id, issue, where, action, who, due, sev, sevCls: B(c), tip: DATA[cur].tip }))
+    };
+  }
+}
+</script>
+</body>
+</html>

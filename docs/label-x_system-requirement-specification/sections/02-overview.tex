@@ -1,0 +1,235 @@
+% =====================================================================
+\chapter{Bài toán và mô tả tổng quan}
+\label{ch:overview}
+% =====================================================================
+
+\section{Bối cảnh}
+Trong quy trình gán nhãn hiện tại, reviewer kiểm tra annotation theo thứ tự job
+hoặc frame. Cách làm này có ba hạn chế:
+
+\begin{enumerate}
+  \item \textbf{Lỗi phân bố không đều.} Phần lớn frame không có lỗi; lỗi tập
+        trung ở cảnh đông đối tượng, đối tượng nhỏ, bị che, ban đêm, thời tiết
+        xấu. Review tuần tự dồn phần lớn công sức vào frame sạch.
+  \item \textbf{Thiếu bằng chứng tại chỗ.} Reviewer phải tự phát hiện lỗi thiếu
+        box hoặc sai lớp bằng mắt; không có gợi ý nơi cần nhìn, guideline liên
+        quan hay case đã phân xử.
+  \item \textbf{Không đo được hiệu quả.} Không có reference độc lập nên không
+        biết bao nhiêu lỗi còn sót, và không so sánh được cách làm mới với cách cũ.
+\end{enumerate}
+
+M13 giải quyết bài toán \emph{ưu tiên}: với ngân sách review hữu hạn, chọn
+frame nào để xem trước sao cho bắt được nhiều lỗi thật nhất, đồng thời cho
+reviewer bằng chứng đủ để ra quyết định nhanh và đúng. Quyết định cuối cùng
+luôn thuộc về con người; trợ lý không tự xác nhận lỗi (R-02).
+
+\section{Phát biểu bài toán}
+\label{sec:problem}
+
+\paragraph{Ký hiệu.}
+\begin{itemize}
+  \item \(F = \{f_1, \dots, f_N\}\): tập \(N\) frame trong phạm vi đánh giá (một snapshot).
+  \item \(\mathcal{E}\): tập lỗi đã xác minh độc lập (reference) trên \(F\). Mỗi
+        lỗi \(e \in \mathcal{E}\) thuộc đúng một frame \(\phi(e) \in F\) và một
+        nhóm lỗi \(g(e) \in \{E1, E2, E3\}\).
+  \item \(C_f\): tập candidate do các engine sinh ra trên frame \(f\); mỗi
+        candidate \(c\) có đặc trưng \(\mathbf{x}_c\) và nhóm lỗi dự kiến \(g(c)\).
+  \item \(s: F \to \mathbb{R}\): hàm điểm rủi ro; \(\pi\) là hoán vị của \(F\)
+        theo \(s\) giảm dần, phá hoà theo khoá cố định.
+  \item \(T_k(\pi)\): tập \(\lceil kN \rceil\) frame đầu của \(\pi\) với \(k \in (0,1]\).
+\end{itemize}
+
+\paragraph{Mục tiêu 1 — bắt lỗi sớm.}
+Tìm \(s\) (thuộc họ hàm được chốt version trước khi đo) sao cho
+\begin{equation}
+  \mathrm{Recall@}k(\pi) \;=\;
+  \frac{\bigl|\{e \in \mathcal{E} : \phi(e) \in T_k(\pi)\}\bigr|}{|\mathcal{E}|}
+  \label{eq:recallk}
+\end{equation}
+đạt giá trị lớn tại \(k = 0{,}2\) và vượt có ý nghĩa thống kê so với các ranking
+đối chứng (ngẫu nhiên, heuristic) trên tập held-out.
+
+\paragraph{Mục tiêu 2 — giảm công sức với chất lượng tương đương.}
+Gọi \(T_B\), \(T_A\) là tổng effort của quy trình baseline và assisted trên cùng
+khối lượng dữ liệu; \(\rho_B\), \(\rho_A\) là tỉ lệ lỗi còn sót (residual) sau
+mỗi quy trình. Mục tiêu:
+\begin{equation}
+  \text{giảm effort} \;=\; 1 - \frac{T_A}{T_B} \;\text{ lớn nhất có thể,}
+  \quad\text{với ràng buộc}\quad \rho_A - \rho_B \le \delta .
+  \label{eq:effort}
+\end{equation}
+\(T_A\) bắt buộc gồm thời gian xử lý cảnh báo sai và thời gian kiểm lại sau sửa.
+Định nghĩa chi tiết, biên \(\delta\) và thiết kế thí nghiệm ở chương~\ref{ch:eval}.
+
+\begin{notebox}[Vì sao đếm theo lỗi, không theo frame]
+Một frame có thể chứa nhiều lỗi. Đếm theo frame (``frame có lỗi'') sẽ đánh giá
+như nhau một frame có 1 lỗi và một frame có 6 lỗi. KPI của M13 đếm theo
+\emph{lỗi đã xác minh}, đúng với đề bài. Recall theo frame có lỗi vẫn được báo
+cáo như chỉ số phụ (mục~\ref{sec:kpi1}).
+\end{notebox}
+
+\section{Mục tiêu nghiệp vụ và chỉ số thành công}
+\label{sec:kpis}
+
+\begin{xltabular}{\linewidth}{@{}L{1.5cm}L{3.6cm}Y L{2.2cm}@{}}
+\caption{Chỉ số thành công của M13}\label{tab:kpis}\\
+\toprule
+\textbf{Mã} & \textbf{Chỉ số} & \textbf{Định nghĩa ngắn} & \textbf{Ngưỡng đạt}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Chỉ số} & \textbf{Định nghĩa ngắn} & \textbf{Ngưỡng đạt}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+KPI-1 & Recall lỗi trong top 20\% frame & Số lỗi đã xác minh nằm trong 20\% frame đầu / tổng số lỗi đã xác minh của tập held-out. Đo \emph{khả năng xếp hạng}. Chỉ tính khi $|\mathcal{E}| \ge E_{min}$; dưới ngưỡng ghi ``không đủ mẫu'', không kết luận đạt/trượt. & \TBD[-K1]; $E_{min}$ \TBD[-K4]\\
+KPI-2 & Mức giảm công sức review & \(1 - T_A/T_B\), effort gồm review, xử lý cảnh báo sai, phân xử, kiểm lại sau sửa. & \TBD[-K2]\\
+KPI-2b & Recall phát hiện thực tế & Chỉ số phụ đo trong thí nghiệm KPI-2: số lỗi reference reviewer thực sự xác nhận / tổng số lỗi reference của phần dữ liệu đó, theo từng nhánh. & Báo cáo, không có ngưỡng\\
+G-1 & Chất lượng tương đương & Non-inferiority một phía (\(\alpha = 0{,}025\)): cận trên khoảng tin cậy 95\% của \(\rho_A - \rho_B\) nhỏ hơn \(\delta\). & \(\delta\) \TBD[-K3]\\
+G-2 & Gate: lỗi nghiêm trọng & Số issue mức nghiêm trọng đã xác nhận còn mở trên run cuối. & 0 (cấu hình pilot)\\
+G-2b & Thí nghiệm: lỗi nghiêm trọng & Lỗi nghiêm trọng của reference còn lại (kể cả chưa có issue) ở assisted không nhiều hơn baseline. & Không nhiều hơn\\
+G-5 & Thí nghiệm: box thừa & Box thừa (BR-06) trong annotation cuối của assisted không nhiều hơn baseline quá \(\delta_{fp}\). & \(\delta_{fp}\) \TBD[-K3]\\
+G-3 & Đồng thuận reviewer & Số quyết định của reviewer trùng kết luận adjudicator / tổng quyết định được chấm, trên tập case chuẩn (theo H, PerformanceEvaluation). Quyết định ``Chưa chắc chắn'' tính là không trùng; mỗi reviewer tính riêng rồi báo cáo cả trung vị. Không thay thế accuracy của engine. & \(\ge 90\%\) (cấu hình pilot)\\
+G-4 & Residual vận hành & Tỉ lệ frame còn lỗi ước lượng từ lát kiểm tra ngẫu nhiên (theo H), dùng khi không có reference toàn tập. Khác \(\rho\) của thí nghiệm. & \(\le 5\%\) (cấu hình pilot)\\
+\end{xltabular}
+
+\begin{decisionbox}
+Ngưỡng G-2, G-3, G-4 là \emph{cấu hình khởi điểm pilot} đã chốt trong nguồn R
+(Coverage 95\%, critical chưa đóng 0, rework verify 100\%, residual \(\le 5\%\),
+agreement \(\ge 90\%\)). Đây chưa phải bằng chứng đạt. Ngưỡng KPI-1, KPI-2 được
+đặt từ phép đo baseline trên tập hiệu chỉnh, \emph{trước} khi chạy held-out
+(B-14).
+\end{decisionbox}
+
+\section{Bối cảnh hệ thống}
+Hình~\ref{fig:context} thể hiện M13 trong môi trường: các tác nhân con người,
+CVAT là hệ thống nguồn chỉ đọc, kho đối tượng lưu ảnh và evidence, và
+Detector là mô hình độc lập chạy trên GPU worker.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=8mm and 14mm]
+  \node[boxb, minimum width=46mm, minimum height=26mm, font=\sffamily\small\bfseries] (sys)
+    {LabelX\\[2pt]\normalfont\scriptsize Module QC · M13 Reviewer Prioritization};
+  % người
+  \pic at (-6.2, 1.6) {actor=Reviewer};
+  \pic at (-6.2,-1.2) {actor=Annotator};
+  \pic at (6.2, 1.6) {actor={QA Lead}};
+  \pic at (6.2,-1.2) {actor={QC Admin}};
+  \pic at (0, 3.4) {actor={Product / Data Owner}};
+  % hệ thống ngoài
+  \node[ext, below left=18mm and 4mm of sys, text width=26mm] (cvat) {CVAT\\\scriptsize (nguồn annotation, editor)};
+  \node[ext, below=18mm of sys, text width=24mm] (obj) {Object Storage\\\scriptsize (ảnh, evidence)};
+  \node[ext, below right=18mm and 4mm of sys, text width=26mm] (det) {Detector baseline\\\scriptsize (GPU worker)};
+  % luồng
+  \draw[arr] (-5.7,1.9) -- node[lbl, above, sloped]{review, quyết định} (sys.west |- 0,0.6);
+  \draw[arr] (sys.west |- 0,-0.4) -- node[lbl, below, sloped]{yêu cầu sửa, deep link} (-5.7,-0.9);
+  \draw[arr] (5.7,1.9) -- node[lbl, above, sloped]{phân xử, reference} (sys.east |- 0,0.6);
+  \draw[arr] (5.7,-0.9) -- node[lbl, below, sloped]{cấu hình, quyền} (sys.east |- 0,-0.4);
+  \draw[arr] (0,2.6) -- node[lbl, right]{báo cáo hiệu quả} (sys.north);
+  \draw[arr] (cvat.north) -- node[lbl, sloped, above]{đọc (chỉ đọc)} (sys.south west);
+  \draw[arr, <->] (obj.north) -- (sys.south);
+  \draw[arr, <->] (det.north) -- node[lbl, sloped, above]{inference} (sys.south east);
+  \draw[arrd] (-6.2,-2.2) |- node[lbl, pos=0.75]{sửa annotation} (cvat.west);
+\end{tikzpicture}
+\caption{Sơ đồ ngữ cảnh hệ thống (context diagram)}
+\label{fig:context}
+\end{figure}
+
+\section{Chức năng chính}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm and 5mm]
+  \node[boxg, text width=30mm] (m1) {\textbf{1. Thu thập}\\CVAT Adapter (chỉ đọc)\\Snapshot \& hash\\Kiểm drift};
+  \node[boxg, text width=30mm, right=of m1] (m2) {\textbf{2. Phân tích nghi vấn}\\Schema/Taxonomy\\Geometry · Duplicate\\Detector + Matching};
+  \node[boxg, text width=30mm, right=of m2] (m3) {\textbf{3. Hợp nhất \& xếp hạng}\\Candidate $\rightarrow$ Issue\\Risk score $s(f)$\\Ranking + audit slice};
+  \node[boxg, text width=30mm, right=of m3] (m4) {\textbf{4. Review \& phân xử}\\Hàng đợi ưu tiên\\Workspace + evidence\\Escalation};
+  \node[boxa, text width=30mm, below=9mm of m2] (s1) {\textbf{Hỗ trợ}\\Guideline lookup\\Rework + re-check\\Gate tối thiểu};
+  \node[boxgr, text width=30mm, below=9mm of m4] (m5) {\textbf{5. Đo \& báo cáo}\\Reference \& Recall@k\\Effort log\\Báo cáo hiệu quả};
+  \node[boxa, text width=30mm, below=9mm of m3] (s2) {\textbf{Nền tảng}\\RBAC · Lease\\Audit append-only\\Coverage ledger};
+  \draw[arr] (m1)--(m2); \draw[arr] (m2)--(m3); \draw[arr] (m3)--(m4); \draw[arr] (m4)--(m5);
+  \draw[arrd] (m4.south west) -- (s1.north east);
+  \draw[arrd] (s1.west) -| (m1.south);
+\end{tikzpicture}
+\caption{Sơ đồ khối chức năng}
+\label{fig:functions}
+\end{figure}
+
+\section{Lớp người dùng}
+\label{sec:users}
+\begin{xltabular}{\linewidth}{@{}L{3cm}Y L{3.6cm}@{}}
+\caption{Lớp người dùng và quyền chính}\label{tab:users}\\
+\toprule
+\textbf{Vai trò} & \textbf{Mô tả và nhiệm vụ trong M13} & \textbf{Quyền chính}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Vai trò} & \textbf{Mô tả} & \textbf{Quyền chính}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+Reviewer & Người dùng chính. Làm việc theo hàng đợi ưu tiên, xem bằng chứng, ra quyết định, yêu cầu sửa, xác minh sau sửa. & Review; yêu cầu/xác minh rework. Không review annotation của mình.\\
+Annotator & Sửa annotation trên CVAT theo yêu cầu rework; tham gia calibration. & Xem yêu cầu sửa của mình; thực hiện rework trên CVAT.\\
+Quality Assurance Lead & Phân xử, quản lý nội dung guideline, chịu trách nhiệm reference và tập held-out; duyệt ngoại lệ khi được cấp quyền. & Adjudication; quản lý audit/calibration; duyệt waiver (khác người yêu cầu).\\
+Quality Control Admin & Cấu hình kỹ thuật: engine, ngưỡng, policy version, mapping guideline, scope quyền. & Configuration (engine, ngưỡng, quyền). Không chạy phân tích (theo H: QA Lead chạy/xem).\\
+Product / Data Owner & Chốt phạm vi, ngưỡng KPI, đọc báo cáo hiệu quả; quản lý dữ liệu BDD100K và artifact Detector. & Xem báo cáo; duyệt tiêu chí.\\
+Super Admin & Quản trị hệ thống. Không là người duyệt mặc định; mọi ghi đè phải có lý do và gắn nhãn trong audit. & Ghi đè có lý do; vẫn chịu self-review và tách nhiệm vụ.\\
+\end{xltabular}
+
+\section{Môi trường vận hành}
+\begin{itemize}
+  \item \textbf{Máy chủ ứng dụng:} Linux, Django + DRF, PostgreSQL, Redis, Celery worker CPU.
+  \item \textbf{GPU worker:} chạy Detector theo lô (batch inference). Phần cứng cụ thể \TBD[-02].
+  \item \textbf{CVAT:} phiên bản đang triển khai, được pin sau khi kiểm API (\TBD[-01]).
+  \item \textbf{Object Storage:} hệ thống hiện có (S3-compatible), lưu ảnh snapshot và evidence.
+  \item \textbf{Client:} trình duyệt desktop hiện hành (Chrome/Edge/Firefox), độ phân giải tối thiểu 1440$\times$900.
+\end{itemize}
+
+\section{Ràng buộc thiết kế}
+\label{sec:constraints}
+Các quyết định sau đã chốt và ràng buộc thiết kế M13. Danh sách đầy đủ B-01…B-21
+ở Phụ lục~\ref{app:decisions}.
+
+\begin{xltabular}{\linewidth}{@{}L{1.2cm}L{4cm}Y@{}}
+\caption{Ràng buộc thiết kế chính kế thừa từ quyết định đã chốt}\label{tab:constraints}\\
+\toprule
+\textbf{Mã} & \textbf{Chủ đề} & \textbf{Ràng buộc đối với M13}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Chủ đề} & \textbf{Ràng buộc}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+B-01 & Backend & Modular monolith + worker pool: Django + DRF, PostgreSQL, Celery + Redis, Object Storage. FastAPI chỉ khi đã có backend FastAPI được xác minh.\\
+B-02 & Snapshot & Export từng job, chuẩn hoá, hash, kiểm drift trước khi khoá; lưu ảnh và metadata.\\
+B-03 & Revision phát hành & Sau rework tạo snapshot + QC run cuối trên revision đã sửa; báo cáo trỏ run cuối.\\
+B-04 & Coverage & Coverage theo từng engine với mẫu số áp dụng; không loại frame lỗi khỏi mẫu số.\\
+B-06 & Geometry & Chỉ kiểm cấu trúc/bounds/diện tích; không suy biên vật thể khi thiếu tham chiếu.\\
+B-07 & Mô hình độc lập & Một Detector baseline, freeze artifact/checksum, mapping lớp; Classifier chưa bật.\\
+B-10 & Chạy lại & Candidate và Issue tách riêng; retry idempotent; dedup theo scope/object/nhóm lỗi.\\
+B-12 & Quyền & Scope quyền, assignee tại snapshot, tách người yêu cầu/duyệt, audit append-only cùng transaction.\\
+B-13 & Guideline & Tra cứu trực tiếp rule ID + version + section + case đã duyệt; không RAG.\\
+B-17 & Trạng thái & Bảng transition/event/actor/guard dùng trạng thái của H.\\
+B-18 & Ghi CVAT & Adapter chỉ đọc; sửa annotation qua deep link trên CVAT.\\
+B-19 & Trạng thái công khai & Not checked/Partial/Failed không bao giờ thành đạt.\\
+B-20, B-05 & Reference \& metric & Reference được duyệt và khoá trước khi đo; metric tính trên reference; không dùng model làm trọng tài.\\
+B-21 & Matching & Matching là bước của Mô hình độc lập để sinh candidate; agreement không gọi là Precision/Recall.\\
+\end{xltabular}
+
+\section{Giả định và phụ thuộc}
+\label{sec:assumptions}
+\begin{xltabular}{\linewidth}{@{}L{1.3cm}Y L{3.4cm}@{}}
+\caption{Giả định và phụ thuộc}\label{tab:assumptions}\\
+\toprule
+\textbf{Mã} & \textbf{Giả định / phụ thuộc} & \textbf{Nếu sai thì}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Giả định / phụ thuộc} & \textbf{Nếu sai thì}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+AS-01 & CVAT cho phép đọc job, frame, annotation, media qua API với token backend; xác định được thay đổi giữa hai lần đọc. & Không khoá được snapshot nhất quán; chặn toàn bộ luồng.\\
+AS-02 & Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. & Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.\\
+AS-03 & Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). & Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.\\
+AS-04 & QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. & Không đo được KPI-1/KPI-2 (B-20).\\
+AS-05 & Có ít nhất 4 reviewer tham gia thí nghiệm effort, trình độ tương đương. & Không cân bằng được hai nhánh; KPI-2 kém tin cậy.\\
+AS-06 & Guideline gán nhãn BDD100K của dự án có rule ID và version. & Workspace chỉ hiện guideline dạng văn bản, không truy vết rule.\\
+\end{xltabular}

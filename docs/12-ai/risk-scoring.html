@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô hình điểm rủi ro frame — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/12-ai/risk-scoring.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / risk-scoring</span><span class="sp"></span>
+<a href="risk-scoring.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>ai-risk-scoring</span><b>title</b><span>Mô hình điểm rủi ro frame</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, ranking, risk-score, calibration]</span><b>priority</b><span>1</span></div>
+<h1 id="mo-hinh-iem-rui-ro-frame">Mô hình điểm rủi ro frame</h1>
+<p>Điểm rủi ro <code>s(f)</code> xếp hạng frame để reviewer xem trước frame có nhiều lỗi kỳ vọng nhất trong ngân sách review hữu hạn (KPI-1). Nguồn chính: SRS <a href="../label-x_system-requirement-specification/sections/06-functional.tex">06-functional.tex</a> §Module RNK, <a href="../label-x_system-requirement-specification/sections/02-overview.tex">02-overview.tex</a> §Phát biểu bài toán.</p>
+<h2 id="1-lap-luan">1. Lập luận</h2>
+<p>KPI-1 đếm <strong>lỗi</strong> trong ngân sách tính bằng <strong>số frame</strong>. Nếu mỗi lỗi chỉ tính một lần và điểm frame là kỳ vọng số lỗi đã hiệu chỉnh tốt, thì sắp frame theo kỳ vọng số lỗi tối đa kỳ vọng Recall@k. Hai điều kiện này không tự đúng; chúng được kiểm bằng hiệu chỉnh ngoài fold và ablation trên tập hiệu chỉnh, và chỉ kết luận trên held-out (SRS 06; FR-RNK-10, FR-RNK-11).</p>
+<h2 id="2-cong-thuc">2. Công thức</h2>
+<h3 id="buoc-1-neo-va-so-loi-toi-a-n_i">Bước 1 — Neo và số lỗi tối đa <code>n_i</code></h3>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Neo issue</th>
+<th><code>n_i</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Vùng box dự đoán không ghép; dự đoán chồng nhau IoU ≥ <code>τ_m</code> gộp một vùng</td>
+<td>1</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Annotation trong cặp ghép khác lớp</td>
+<td>1</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Cụm annotation nối bởi cặp IoU ≥ 0,85; cụm <code>m</code> box</td>
+<td><code>m − 1</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="buoc-2-xac-suat-cap-issue-q_i">Bước 2 — Xác suất cấp issue <code>q_i</code></h3>
+<pre class="highlight"><code>q_i = σ(w_g · x_i + b_g)</code></pre>
+<ul>
+<li>Học trực tiếp ở cấp issue theo nhóm <code>g ∈ {E1, E2, E3}</code>; <strong>không</strong> gộp noisy-OR từ candidate (các candidate cùng issue dùng chung bằng chứng, phụ thuộc nhau).</li>
+<li><code>x_i</code> tổng hợp đặc trưng candidate của issue (giá trị lớn nhất, số engine cùng chỉ ra, có cặp ambiguous…).</li>
+<li>Nhãn học: "issue trùng ít nhất một lỗi trong <code>E</code>" trên tập hiệu chỉnh. Với E3, <code>q_i</code> là xác suất cụm là trùng thật; kỳ vọng số lỗi <code>n_i·q_i</code>.</li>
+<li>Sau logistic có thể hiệu chỉnh isotonic nếu đường reliability lệch.</li>
+</ul>
+<h3 id="buoc-3-iem-nen-hf">Bước 3 — Điểm nền <code>h(f)</code></h3>
+<ul>
+<li><code>h(f) ≥ 0</code> ước lượng số lỗi trong frame <strong>không</strong> khớp issue nào; hồi quy Poisson trên đặc trưng frame.</li>
+<li>Nhãn chỉ đếm lỗi chưa có issue ⇒ không đếm lại lỗi đã có issue.</li>
+</ul>
+<h3 id="buoc-4-iem-frame">Bước 4 — Điểm frame</h3>
+<pre class="highlight"><code>s(f) = Σ_{i ∈ I_f} n_i · q_i + h(f)</code></pre>
+<p>Hoà điểm phá theo <code>SHA256(frame_key ‖ seed)</code> (FR-RNK-04).</p>
+<h2 id="3-ac-trung-goi-y-chot-tren-tap-hieu-chinh">3. Đặc trưng gợi ý (chốt trên tập hiệu chỉnh)</h2>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Đặc trưng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Confidence lớn nhất trong vùng; lớp dự đoán; log diện tích; IoU lớn nhất với annotation bất kỳ; có cặp ambiguous; vị trí mép ảnh</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Confidence lớp dự đoán; chênh confidence lớp dự đoán và lớp annotation; cặp lớp (ví dụ <code>car</code>/<code>truck</code>); IoU cặp ghép; diện tích</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>IoU lớn nhất trong cụm; cùng lớp hay khác lớp; số dự đoán Detector phủ cụm; <code>m</code></td>
+</tr>
+<tr>
+<td><code>h(f)</code></td>
+<td>Số annotation; số đối tượng nhỏ; ngày/đêm; thời tiết; số cảnh báo cấu trúc; cờ engine bắt buộc chưa kiểm</td>
+</tr>
+</tbody>
+</table>
+<p>Thuộc tính cảnh (thời tiết, loại cảnh, thời điểm) dùng phân tầng/báo cáo slice và làm đặc trưng nền, không phải nhãn cần kiểm (SRS 03).</p>
+<h2 id="4-phien-ban-0-score_v0">4. Phiên bản 0 (<code>score_v0</code>)</h2>
+<p>Mỗi nhóm cần ít nhất <code>n_min</code> issue dương trên tập hiệu chỉnh để học <code>w_g</code> (<code>n_min</code>: <strong>TBD-16</strong>). Chưa đủ thì dùng <code>score_v0</code>:</p>
+<ul>
+<li><code>q_i</code> = confidence lớn nhất của Detector (E1, E2); <code>q_i = 0,5</code> (E3).</li>
+<li><code>h(f) = ε · số annotation</code>, <code>ε</code> nhỏ — chỉ để frame không có issue được sắp theo mật độ thay vì theo hash. Giá trị <code>ε</code>: <strong>TBD-20</strong> (Tech Lead, đội mô hình); ghi vào score version khi chốt.</li>
+<li>Báo cáo phải ghi rõ đang dùng <code>score_v0</code>; confidence không phải xác suất annotation sai.</li>
+</ul>
+<h2 id="5-hieu-chinh-va-ablation-truoc-khi-khoa-score-version">5. Hiệu chỉnh và ablation (trước khi khoá score version)</h2>
+<table>
+<thead>
+<tr>
+<th>Yêu cầu</th>
+<th>Nội dung</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hiệu chỉnh ngoài fold</td>
+<td>Cross-validation <strong>theo video</strong> trên tập hiệu chỉnh; báo Brier score và đường reliability theo E1/E2/E3; lưu cùng score version</td>
+<td>FR-RNK-10</td>
+</tr>
+<tr>
+<td>Ablation</td>
+<td>Bỏ điểm nền; bỏ từng nhóm đặc trưng; so với <code>score_v0</code> và heuristic; chọn version theo Recall@20% ngoài fold</td>
+<td>FR-RNK-11; R B-14</td>
+</tr>
+<tr>
+<td>Biến thể effort</td>
+<td><code>s(f) / t̂(f)</code> (kỳ vọng lỗi trên thời gian review ước lượng) để tối ưu KPI-2 — Could</td>
+<td>FR-RNK-09</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Không dùng held-out để học hay chọn tham số (FR-EVL-05a). Thay đổi sau khi thấy kết quả held-out bị cấm (RK-09; pre-registration).</li>
+<li>Mục khoá trước khi đo (SRS 07 bảng khoá, dòng Score version): đặc trưng, tham số <code>w_g</code>, <code>b_g</code>, mô hình điểm nền <code>h(f)</code>, <code>τ_E1</code>, <code>τ_E2</code>, seed phá hoà — người khoá: QC Admin.</li>
+</ul>
+<h2 id="6-quy-tac-van-hanh">6. Quy tắc vận hành</h2>
+<ul>
+<li>Tính cho mọi frame của snapshot, kể cả frame không có candidate (FR-RNK-01).</li>
+<li>Score version bất biến sau khoá, lưu kèm mỗi ranking (FR-RNK-02); tái lập giống hệt (FR-RNK-03).</li>
+<li>Lưu đóng góp <code>n_i·q_i</code> và <code>h(f)</code> để giải thích (FR-RNK-05).</li>
+<li>Frame có engine bắt buộc Not checked/Failed mang cờ "thiếu bằng chứng", hàng đợi riêng (FR-RNK-06).</li>
+<li>Lát ngẫu nhiên <code>r%</code> (<strong>TBD-10</strong>) độc lập ranking (FR-RNK-07).</li>
+<li>Ranking đối chứng: ngẫu nhiên nhiều seed, heuristic mật độ, heuristic max confidence (FR-RNK-08).</li>
+</ul>
+<h2 id="7-khong-dung-trong-mvp">7. Không dùng trong MVP</h2>
+<ul>
+<li>Công thức priority của A <code>S × (0.5·C + 0.3·A + 0.2·R)</code> và bucket High/Medium/Low; tier P0–P3 của T. R B-10 yêu cầu không lấy công thức cũ làm chuẩn; SRS thay bằng mô hình trên.</li>
+</ul>
+<p>Liên quan: <a href="evaluation.html">evaluation.md</a>, <a href="detector.html">detector.md</a>, <a href="../03-domain/value-objects.html#riskscore">../03-domain/value-objects.md</a>.</p>
+</article></main></body></html>

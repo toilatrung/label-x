@@ -1,0 +1,24 @@
+{
+ "v": 3,
+ "assetGroups": {},
+ "blobs": {},
+ "createdOnFiles": {
+  "at": "2026-10-04T11:05:22Z",
+  "v": 1
+ },
+ "docs": {
+  "sections": []
+ },
+ "groups": [],
+ "lastChange": {
+  "by": "Quality Control Novaon Group",
+  "at": "2026-10-04T11:57:16Z",
+  "via": "Cowork",
+  "note": "Added IconButton, Tabs, MetricTile, DropdownMenu; navigation dropdowns; full-name wording"
+ },
+ "layout": "files",
+ "libraries": [],
+ "namespace": "LabelX",
+ "sections": {},
+ "title": "LabelX"
+}

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Analysis Configuration</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="analysis" active-item="config" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+<dc-import name="FlowNav" flow="analysis" step="config" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Analysis Configuration</h1>
+<p class="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot SNP-014. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p>
+</div>
+</div>
+
+<div class="lx-cols">
+<div class="lx-main lx-stack">
+
+<section class="lx-card">
+<div class="lx-card__head"><h2 class="lx-h2">Engine kiểm tra</h2><span class="lx-hint">5 / 6 engine đang bật</span></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 680px">
+<thead><tr><th style="width: 64px">Bật</th><th>Engine</th><th>Cấu hình hiện tại</th><th></th></tr></thead>
+<tbody>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="Schema / Taxonomy"><span></span></label></td><td><div class="lx-cell__main">Schema / Taxonomy</div><div class="lx-cell__sub">Xác định · chạy nhanh</div></td><td class="lx-muted">Taxonomy v3 · thuộc tính bắt buộc theo từng lớp</td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh cấu hình engine" aria-label="Chỉnh cấu hình engine"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="Geometry"><span></span></label></td><td><div class="lx-cell__main">Geometry</div><div class="lx-cell__sub">Xác định</div></td><td class="lx-muted">Dung sai biên 2 px · diện tích tối thiểu 24 px²</td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh cấu hình engine" aria-label="Chỉnh cấu hình engine"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="Duplicate / Overlap"><span></span></label></td><td><div class="lx-cell__main">Duplicate / Overlap</div><div class="lx-cell__sub">Xác định</div></td><td class="lx-muted">Intersection over Union ≥ 0.85 · cùng lớp</td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh cấu hình engine" aria-label="Chỉnh cấu hình engine"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="Mô hình độc lập"><span></span></label></td><td><div class="lx-cell__main">Mô hình độc lập</div><div class="lx-cell__sub">Chạy nền · mất vài giờ</div></td><td class="lx-muted">Detector v2.3 · ngưỡng tin cậy 0.60</td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh cấu hình engine" aria-label="Chỉnh cấu hình engine"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" checked="" aria-label="Mô hình thị giác – ngôn ngữ"><span></span></label></td><td><div class="lx-cell__main">Mô hình thị giác – ngôn ngữ</div><div class="lx-cell__sub">Chỉ chạy trên candidate cần hiểu nội dung ảnh</div></td><td class="lx-muted">Tối đa 400 candidate mỗi lần chạy</td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh cấu hình engine" aria-label="Chỉnh cấu hình engine"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td><label class="lx-switch"><input type="checkbox" aria-label="Metric"><span></span></label></td><td><div class="lx-cell__main">Metric</div><div class="lx-cell__sub">Cần Ground Truth</div></td><td><span class="lx-badge lx-badge--warning">Chưa có Ground Truth</span></td><td class="r"><a class="lx-iconbtn" href="Benchmark.dc.html" data-tip="Chọn benchmark Ground Truth" aria-label="Chọn benchmark Ground Truth"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="lx-card">
+<div class="lx-card__head"><h2 class="lx-h2">Lấy mẫu</h2><a class="lx-link" href="AuditSampling.dc.html" style="font-size: 13px">Xem chi tiết lấy mẫu</a></div>
+<div class="lx-card__body lx-grid lx-grid--3">
+<div class="lx-field"><label class="lx-label" for="r1">Kiểm tra ngẫu nhiên · số frame</label><input id="r1" class="lx-input" value="100"><span class="lx-hint">Dùng để ước lượng chất lượng toàn Dataset</span></div>
+<div class="lx-field"><label class="lx-label" for="r2">Lấy mẫu theo rủi ro · số frame</label><input id="r2" class="lx-input" value="100"><span class="lx-hint">Dùng để tìm lỗi, không suy ra tỷ lệ lỗi</span></div>
+<div class="lx-field"><label class="lx-label" for="r3">Tiêu chí rủi ro</label><select id="r3" class="lx-select"><option>Bất đồng mô hình, lớp khó, vật thể nhỏ</option><option>Chỉ bất đồng mô hình</option></select></div>
+</div>
+</section>
+
+</div>
+
+<aside class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Sẵn sàng chạy</h2></div>
+<div class="lx-card__body lx-stack">
+<dl class="lx-kv">
+<dt>Snapshot</dt><dd class="lx-mono">SNP-014 · a91f3c</dd>
+<dt>Phạm vi</dt><dd>3 task · 7 job · 12,500 frame</dd>
+<dt>Engine</dt><dd>5 bật · 1 tắt</dd>
+<dt>Thời gian dự kiến</dt><dd>Khoảng 2 giờ 40 phút</dd>
+</dl>
+<div class="lx-callout lx-callout--warning"><span class="lx-callout__text" style="font-size: 13px">Metric đang tắt, nên báo cáo sẽ ghi Metric là Not checked.</span></div>
+<ol class="lx-muted" style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 22px">
+<li>Chạy các engine song song</li><li>Gộp issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li>
+</ol>
+<a class="lx-btn lx-btn--primary" href="ExecutionHistory.dc.html" style="justify-content: center">Chạy phân tích</a>
+</div>
+</aside>
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

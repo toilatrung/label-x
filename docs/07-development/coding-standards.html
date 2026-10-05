@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coding standards LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/07-development/coding-standards.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / coding-standards</span><span class="sp"></span>
+<a href="coding-standards.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>development-coding-standards</span><b>title</b><span>Coding standards LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, coding-standards, ruff, mypy, eslint, typescript]</span><b>priority</b><span>2</span></div>
+<h1 id="coding-standards-labelx">Coding standards LabelX</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Quy ước viết mã cho <code>src/backend</code> (Python/Django) và <code>src/frontend</code> (Next.js/TypeScript). Phần "Cấu hình công cụ" chép đúng cấu hình đang có trong repo. Phần "Quy tắc kiến trúc" lấy từ quyết định đã chốt (<code>CLAUDE.md</code>, DEC-001, B-10, B-12, B-18). Mọi kiểm tra tự động chạy bằng <code>make lint</code> và <code>make typecheck</code> (xem <a href="tooling.html">tooling.md</a>).</p>
+<h2 id="1-inh-dang-chung-editorconfig">1. Định dạng chung (<code>.editorconfig</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Áp dụng</th>
+<th>Quy tắc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mọi file</td>
+<td>UTF-8, xuống dòng LF, có dòng trống cuối file, bỏ khoảng trắng cuối dòng, thụt lề 2 dấu cách</td>
+</tr>
+<tr>
+<td><code>*.py</code></td>
+<td>Thụt lề 4 dấu cách</td>
+</tr>
+<tr>
+<td><code>*.md</code></td>
+<td>Không bỏ khoảng trắng cuối dòng (giữ ngắt dòng Markdown)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-backend-python">2. Backend Python</h2>
+<h3 id="cau-hinh-cong-cu-srcbackendpyprojecttoml">Cấu hình công cụ (<code>src/backend/pyproject.toml</code>)</h3>
+<ul>
+<li><strong>Python</strong>: <code>requires-python = "&gt;=3.12"</code>; ruff <code>target-version = "py312"</code>; mypy <code>python_version = "3.12"</code>.</li>
+<li><strong>Ruff</strong>: <code>line-length = 100</code>. Các rule bật: <code>E</code>, <code>F</code>, <code>W</code> (pycodestyle/pyflakes), <code>I</code> (sắp xếp import), <code>B</code> (bugbear), <code>UP</code> (pyupgrade), <code>DJ</code> (Django), <code>S</code> (bandit/bảo mật). Bỏ <code>S101</code> (cho phép <code>assert</code>). Thư mục <code>**/tests/**</code> bỏ toàn bộ nhóm <code>S</code>.</li>
+<li><strong>Ruff format</strong> là formatter duy nhất; <code>make lint</code> chạy <code>ruff format --check</code>, <code>make format</code> tự sửa.</li>
+<li><strong>mypy</strong>: <code>strict = true</code>, <code>ignore_missing_imports = true</code>, plugin <code>mypy_django_plugin.main</code> và <code>mypy_drf_plugin.main</code>, <code>django_settings_module = "config.settings"</code>. Stub dev: <code>django-stubs</code>, <code>djangorestframework-stubs</code>, <code>celery-types</code>.</li>
+<li>Hiện trạng: <code>make typecheck</code> chỉ chạy <code>mypy config</code>. Khi thêm app nghiệp vụ, phải thêm package đó vào lệnh typecheck trong <code>scripts/init-develop-environment.mk</code>. Việc này <strong>chưa làm</strong>, vì chưa có app nào.</li>
+<li><strong>pytest</strong>: <code>DJANGO_SETTINGS_MODULE = "config.settings"</code>, file test <code>test_*.py</code> hoặc <code>*_tests.py</code>. Dev dependency có <code>pytest-django</code>, <code>factory-boy</code>. Hiện có <code>src/backend/tests/test_smoke.py</code>.</li>
+</ul>
+<h3 id="quy-uoc-ma">Quy ước mã</h3>
+<ul>
+<li>Kiến trúc <strong>modular monolith</strong>: mỗi module nghiệp vụ là một Django app, đăng ký trong <code>INSTALLED_APPS</code> khi epic tương ứng được triển khai (chú thích trong <code>settings.py</code>). Danh sách module theo SRS chương 10: CVAT Adapter, Snapshot, QC Orchestrator, Aggregation, Ranking, Review Workflow, Evaluation, Auth/RBAC/Audit/Guideline. Tên package cụ thể <strong>chưa chốt</strong>.</li>
+<li>Mọi giá trị môi trường đọc qua <code>django-environ</code> từ biến môi trường/<code>.env</code>; thêm biến mới thì cập nhật <code>src/backend/.env.example</code> (không chứa secret thật).</li>
+<li>API dùng DRF + <code>drf-spectacular</code>. Mặc định đã cấu hình: <code>SessionAuthentication</code>, <code>IsAuthenticated</code>, <code>DjangoFilterBackend</code>, <code>CursorPagination</code> (<code>PAGE_SIZE = 50</code>). Schema OpenAPI là hợp đồng duy nhất để sinh type cho frontend (DEC-001).</li>
+<li>Phản hồi lỗi có <code>code</code>, <code>message</code>, <code>request_id</code>; dùng đúng mã 400/403/404/409/422 theo SRS <code>09-interfaces.tex</code> (hợp đồng lỗi).</li>
+<li>Lưu file qua <code>STORAGES["default"]</code> (S3, <code>file_overwrite: False</code>). Không ghi thẳng ra đĩa local.</li>
+</ul>
+<h2 id="3-frontend-typescript">3. Frontend TypeScript</h2>
+<h3 id="cau-hinh-cong-cu">Cấu hình công cụ</h3>
+<ul>
+<li><strong>Next.js 16.3.8</strong>, <strong>React 19.2.8</strong>, TypeScript 5 (<code>src/frontend/package.json</code>). <code>engines.node &gt;= 22</code>.</li>
+<li><strong>Đọc <code>src/frontend/AGENTS.md</code> trước khi viết code</strong>: Next 16 có thay đổi phá vỡ so với bản cũ; tra hướng dẫn trong <code>node_modules/next/dist/docs/</code>.</li>
+<li><strong>tsconfig</strong>: <code>strict: true</code>, <code>noEmit</code>, <code>module: esnext</code>, <code>moduleResolution: bundler</code>, <code>isolatedModules</code>, <code>jsx: react-jsx</code>, alias <code>@/*</code> → <code>./src/*</code>.</li>
+<li><strong>ESLint 9</strong> flat config (<code>eslint.config.mjs</code>): <code>eslint-config-next/core-web-vitals</code> + <code>eslint-config-next/typescript</code>; bỏ qua <code>.next/**</code>, <code>out/**</code>, <code>build/**</code>, <code>next-env.d.ts</code>.</li>
+<li><code>npm run typecheck</code> = <code>next typegen &amp;&amp; tsc --noEmit</code>.</li>
+<li>Gọi API bằng <code>openapi-fetch</code>. Type sinh bằng <code>npm run gen:api</code> (<code>openapi-typescript</code> từ <code>http://localhost:8000/api/schema/</code> ra <code>src/lib/api/schema.d.ts</code>). Không viết tay type cho payload API. Quản lý dữ liệu server bằng TanStack Query.</li>
+<li>Test runner frontend: <strong>chưa có</strong> (DEC-001: vitest bị loại khỏi scaffold do lỗi npm peer-set; chọn lại khi có epic frontend).</li>
+</ul>
+<h3 id="ui-theo-design-system-labelx">UI theo Design System LabelX</h3>
+<p>Nguồn: <code>.agent/skills/labelx-design/SKILL.md</code>, <code>docs/design/README.md</code>; repo đã chép <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
+<ul>
+<li>Chỉ dùng token và class <code>lx-*</code>. Không hard-code màu, bo góc hay khoảng cách mà token đã có. Thiếu class thì thêm vào Design System trước.</li>
+<li>Trung tính, bảng là chính (table-first); font Inter cho chữ, JetBrains Mono chỉ cho định danh; khoảng cách theo bậc 4/8/12/16/24/32.</li>
+<li>Góc vuông mặc định; viền 1px thay cho bóng đổ (bóng chỉ dùng cho dropdown).</li>
+<li>Trạng thái luôn có chữ (<code>StatusBadge</code>), không chỉ dựa vào màu. Engine không chạy hiển thị "Not checked", không bao giờ "passed". Tương phản tối thiểu 4.5:1 (WCAG AA, NFR-10).</li>
+<li>Thao tác trên dòng dùng <code>lx-iconbtn</code> có <code>data-tip</code> và <code>aria-label</code> cùng cụm động từ tiếng Việt. Mỗi vùng chỉ có một nút primary.</li>
+<li>Giao diện tiếng Việt; thuật ngữ miền giữ tiếng Anh (Dataset, Quality Control Run, Snapshot, Coverage, Gate, Issue, Rework, Release). Viết đầy đủ, không viết tắt "QC", "IoU", "GT" trên UI.</li>
+<li>Khi làm màn hình mới, dùng skill <code>labelx-design</code> (<code>.agent/skills/labelx-design/SKILL.md</code>).</li>
+</ul>
+<h2 id="4-quy-tac-kien-truc-bat-buoc">4. Quy tắc kiến trúc bắt buộc</h2>
+<table>
+<thead>
+<tr>
+<th>Quy tắc</th>
+<th>Cách áp dụng</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Celery task idempotent</strong></td>
+<td>Chạy lại cùng khoá không tạo bản ghi trùng: khoá theo <code>(run, engine, shard)</code>, T đề xuất snapshot + step + frame + config/model version. Blob ghi trước với khoá theo hash nội dung, rồi commit metadata trong một transaction. Settings đã bật <code>CELERY_TASK_ACKS_LATE</code>, <code>CELERY_TASK_REJECT_ON_WORKER_LOST</code>, <code>CELERY_WORKER_PREFETCH_MULTIPLIER = 1</code>, nên task <strong>có thể chạy lại</strong>. Hết retry thì ghi Failed/Partial kèm phạm vi chưa kiểm, không quy thành Checked</td>
+<td><code>CLAUDE.md</code>; B-10; NFR-05, NFR-06; A mục 20.3; T mục 6</td>
+</tr>
+<tr>
+<td><strong>Timeout theo loại task</strong></td>
+<td>Đặt riêng cho đọc CVAT, Detector theo lô, kiểm thị giác – ngôn ngữ. <strong>Chưa đặt số</strong> khi chưa đo pilot; số lần retry là TBD-14</td>
+<td><code>settings.py</code> (chú thích); phiếu chốt B-10</td>
+</tr>
+<tr>
+<td><strong>Quyền kiểm ở API</strong></td>
+<td>Mỗi view/action DRF có permission theo vai trò + scope; self-review và tách nhiệm vụ kiểm ở backend; không dựa vào việc ẩn nút</td>
+<td><code>CLAUDE.md</code>; B-12; FR-SEC-01…06</td>
+</tr>
+<tr>
+<td><strong>Không ghi CVAT</strong></td>
+<td>CVAT adapter chỉ gọi thao tác đọc; không viết hàm tạo/sửa/xoá annotation; sửa bằng deep link (dựng URL tập trung ở adapter)</td>
+<td><code>CLAUDE.md</code>; B-18; FR-SNP-01, FR-SNP-08</td>
+</tr>
+<tr>
+<td><strong>Engine đọc snapshot, không đọc CVAT live</strong></td>
+<td>Worker engine nhận dữ liệu từ snapshot đã export</td>
+<td>ADR-02</td>
+</tr>
+<tr>
+<td><strong>Audit cùng transaction</strong></td>
+<td>Ghi AuditEvent trong cùng transaction với thay đổi trạng thái; không có API sửa/xoá audit</td>
+<td>FR-SEC-05; ADR-04, ADR-06</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL là nguồn chuẩn của lease</strong></td>
+<td>Cấp lease bằng khoá dòng trong transaction; Redis chỉ là broker/cache</td>
+<td>SRS 10, bảng trách nhiệm module</td>
+</tr>
+<tr>
+<td><strong>Không đổi stack</strong></td>
+<td>Không đổi framework/thư viện chính khi chưa có change request được duyệt</td>
+<td><code>CLAUDE.md</code>; DEC-001; <code>AGENT.md</code> (Change Request Rule)</td>
+</tr>
+<tr>
+<td><strong>Không log secret</strong></td>
+<td>Không log token CVAT, mật khẩu, secret</td>
+<td>NFR-07; <a href="../13-observability/logging.html">../13-observability/logging.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-tai-lieu-markdown">5. Tài liệu Markdown</h2>
+<p>Mọi file <code>.md</code> trong <code>docs/</code> và <code>.agent/</code> bắt đầu bằng YAML frontmatter gồm đúng 7 trường bắt buộc, không rỗng: (1) <code>id</code> (duy nhất, ổn định), (2) <code>title</code>, (3) <code>type</code>, (4) <code>domain</code>, (5) <code>module</code>, (6) <code>tags</code>, (7) <code>priority</code> (1…5) (<code>AGENT.md</code>, Metadata Standard). Link nội bộ phải trỏ tới file tồn tại. Kiểm bằng <code>make validate-kit</code>.</p>
+</article></main></body></html>

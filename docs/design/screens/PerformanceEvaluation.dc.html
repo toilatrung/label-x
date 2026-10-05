@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Performance Evaluation</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="calibration" active-item="performance" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Performance Evaluation</h1>
+<p class="lx-lead">Đánh giá chất lượng của chính quy trình kiểm tra: mức thống nhất của reviewer, độ chính xác của candidate và lỗi còn sót. Luôn ghi kèm cỡ mẫu và phương pháp.</p>
+</div>
+<div class="lx-actions">
+<select class="lx-select lx-select--inline" aria-label="Phạm vi đánh giá"><option>Phạm vi: Quality Control Run #QC-091</option><option>Toàn dataset</option></select>
+<select class="lx-select lx-select--inline" aria-label="Benchmark"><option>Benchmark v1.2</option><option>Benchmark v1.1</option></select>
+</div>
+</div>
+
+<div class="lx-grid lx-grid--4">
+<div class="lx-metric"><span class="lx-metric__k">Mức thống nhất của reviewer</span><span class="lx-metric__v">94.1%</span><span class="lx-metric__n">So với adjudicator trên 135 case chuẩn</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Độ chính xác của candidate</span><span class="lx-metric__v">87.5%</span><span class="lx-metric__n">Candidate được xác nhận là lỗi thật</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Tỷ lệ lỗi còn sót</span><span class="lx-metric__v is-warn">4.0%</span><span class="lx-metric__n">Từ 100 frame kiểm tra ngẫu nhiên</span></div>
+<div class="lx-metric"><span class="lx-metric__k">Benchmark coverage</span><span class="lx-metric__v is-warn">76.0%</span><div class="lx-progress lx-progress--warn" role="img" aria-label="76%"><i style="width: 76%"></i></div><span class="lx-metric__n">Phần dataset có Ground Truth</span></div>
+</div>
+
+<div class="lx-cols">
+<section class="lx-card lx-main">
+<div class="lx-card__head"><h2 class="lx-h2">Kết quả theo luồng lấy mẫu</h2></div>
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 520px">
+<thead><tr><th>Luồng lấy mẫu</th><th class="r">Số mẫu</th><th class="r">Lỗi đã xác nhận</th><th class="r">Tỷ lệ</th><th>Dùng để</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Kiểm tra ngẫu nhiên</td><td class="r">100</td><td class="r">4</td><td class="r">4.0%</td><td class="lx-muted">Ước lượng chất lượng toàn dataset</td></tr>
+<tr><td class="lx-cell__main">Lấy mẫu theo rủi ro</td><td class="r">100</td><td class="r">35</td><td class="r">35.0%</td><td class="lx-muted">Tìm lỗi · không suy ra tỷ lệ chung</td></tr>
+<tr><td class="lx-cell__main">Benchmark</td><td class="r">200</td><td class="r">24</td><td class="r">12.0%</td><td class="lx-muted">Đo reviewer và mô hình</td></tr>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Hai luồng ngẫu nhiên và theo rủi ro được báo cáo riêng, không gộp.</span></div>
+</section>
+
+<section class="lx-card lx-side">
+<div class="lx-card__head"><h2 class="lx-h2">Việc hiệu chỉnh đang chạy</h2><a class="lx-link" href="Calibration.dc.html" style="font-size: 13px">Mở Calibration</a></div>
+<ul class="lx-list">
+<li><div class="lx-row" style="justify-content: space-between"><span class="lx-cell__main">Reviewer Bình Hồ</span><span class="lx-num">40 / 45</span></div><div class="lx-progress" style="margin-top: 6px"><i style="width: 89%"></i></div></li>
+<li><div class="lx-row" style="justify-content: space-between"><span class="lx-cell__main">Reviewer An Nguyễn</span><span class="lx-num">43 / 45</span></div><div class="lx-progress" style="margin-top: 6px"><i style="width: 96%"></i></div></li>
+<li><div class="lx-cell__main">Mô hình độc lập</div><div class="lx-cell__sub">Đánh giá candidate bị thiếu</div></li>
+<li><div class="lx-cell__main">Geometry engine</div><div class="lx-cell__sub">Đánh giá ngưỡng</div></li>
+</ul>
+</section>
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

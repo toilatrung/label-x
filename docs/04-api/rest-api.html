@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REST API LabelX QC — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/04-api/rest-api.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / rest-api</span><span class="sp"></span>
+<a href="rest-api.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>api-rest</span><b>title</b><span>REST API LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, rest, drf, contract, idempotency]</span><b>priority</b><span>1</span></div>
+<h1 id="rest-api-labelx-qc">REST API LabelX QC</h1>
+<h2 id="1-quy-uoc-chung">1. Quy ước chung</h2>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Quy ước</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kiểu</td>
+<td>REST JSON qua Django REST framework; schema OpenAPI sinh bằng drf-spectacular tại <code>/api/schema/</code>, giao diện xem tại <code>/api/docs/</code></td>
+<td>SRS §9.3; <a href="../../src/backend/config/urls.py">urls.py</a></td>
+</tr>
+<tr>
+<td>Tiền tố</td>
+<td><code>/api/…</code>, theo đúng bảng <code>tab:api</code> của SRS. A §25 dùng <code>/api/qc/v1</code>; tiền tố này <strong>không</strong> được dùng</td>
+<td>SRS §9.3</td>
+</tr>
+<tr>
+<td>Xác thực</td>
+<td>Session đăng nhập LabelX (<code>SessionAuthentication</code>). Request ghi phải gửi CSRF token</td>
+<td>SRS §9.3; settings <code>REST_FRAMEWORK</code></td>
+</tr>
+<tr>
+<td>Phân quyền</td>
+<td>Mặc định <code>IsAuthenticated</code>. Mỗi view còn kiểm vai trò <strong>và</strong> scope dataset; danh sách luôn được lọc theo scope</td>
+<td>FR-SEC-01; B-12</td>
+</tr>
+<tr>
+<td>Phân trang</td>
+<td><code>CursorPagination</code>, <code>PAGE_SIZE=50</code></td>
+<td>settings</td>
+</tr>
+<tr>
+<td>Thời gian</td>
+<td>ISO 8601 có múi giờ; server dùng <code>USE_TZ=True</code></td>
+<td>settings</td>
+</tr>
+<tr>
+<td>Tác vụ dài</td>
+<td>Trả <code>202 Accepted</code> + <code>id</code>. Client theo dõi trạng thái bằng GET</td>
+<td>SRS §9.3 (POST /snapshots)</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>Mọi thao tác ghi được audit trong cùng transaction. Lỗi 403 và 409 cũng được audit</td>
+<td>FR-SEC-05; SRS §9.3.1</td>
+</tr>
+</tbody>
+</table>
+<p>Viết tắt vai trò: AN = Annotator, RV = Reviewer, QA = QA Lead, AD = QC Admin, SA = Super Admin. Quyền theo SRS <code>tab:rbac</code> và H <code>WorkflowPermissions.dc.html</code>.</p>
+<h2 id="2-hop-ong-loi">2. Hợp đồng lỗi</h2>
+<p>Mọi phản hồi lỗi có dạng:</p>
+<pre class="highlight"><code class="language-json">{ "code": "LEASE_CONFLICT", "message": "Lease đã hết hạn hoặc thuộc người khác", "request_id": "…", "details": {} }</code></pre>
+<table>
+<thead>
+<tr>
+<th>HTTP</th>
+<th>Ý nghĩa</th>
+<th><code>code</code> (đề xuất)</th>
+<th>Ví dụ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Dữ liệu không hợp lệ</td>
+<td><code>VALIDATION_ERROR</code></td>
+<td>Bác bỏ thiếu lý do; xác nhận thiếu nhóm lỗi hoặc mức độ</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Không có quyền, ngoài scope, hoặc vi phạm tách nhiệm vụ</td>
+<td><code>FORBIDDEN</code>, <code>OUT_OF_SCOPE</code>, <code>SELF_REVIEW_FORBIDDEN</code>, <code>SAME_REQUESTER_APPROVER</code>, <code>IDENTITY_MAPPING_MISSING</code></td>
+<td>Self-review; người duyệt trùng người đề nghị; ngoài scope; thiếu identity mapping</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Không tìm thấy</td>
+<td><code>NOT_FOUND</code></td>
+<td>Issue không thuộc snapshot đang xem</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Xung đột trạng thái</td>
+<td><code>LEASE_CONFLICT</code>, <code>INVALID_TRANSITION</code>, <code>REVISION_UNCHANGED</code>, <code>IDEMPOTENCY_KEY_REUSED</code></td>
+<td>Lease hết hạn; chuyển trạng thái không có trong bảng; báo "Đã sửa" khi hash không đổi</td>
+</tr>
+<tr>
+<td>422</td>
+<td>Không đủ điều kiện nghiệp vụ</td>
+<td><code>BUSINESS_RULE_UNMET</code>, <code>INSUFFICIENT_SAMPLE</code></td>
+<td>Khoá reference khi còn bất đồng chưa phân xử; đánh giá khi số lỗi trong tập E &lt; E_min</td>
+</tr>
+</tbody>
+</table>
+<p>(nguồn: SRS <code>tab:apierrors</code>). Giá trị <code>code</code> là đề xuất, đặt theo A §25.1 (<code>LEASE_CONFLICT</code>, <code>SELF_REVIEW_FORBIDDEN</code>). A còn có mã <code>412 REVISION_DRIFT</code>; SRS không dùng 412, nên trường hợp này được trả bằng <strong>409</strong> <code>INVALID_TRANSITION</code>, kèm <code>details.drift_jobs</code>.</p>
+<h2 id="3-idempotency">3. Idempotency</h2>
+<ul>
+<li>Mọi <code>POST</code> có tác dụng phụ đều nhận header <code>Idempotency-Key</code> (UUID do client sinh). Server lưu bộ <code>(user_id, key, method, path, request_hash, status, response_body)</code> với UNIQUE <code>(user_id, key)</code>.</li>
+<li>Gửi lại cùng key với cùng body: trả lại đúng phản hồi cũ, không xử lý lần nữa.</li>
+<li>Gửi lại cùng key với body khác: trả <code>409 IDEMPOTENCY_KEY_REUSED</code>.</li>
+<li>Đề xuất: header này là bắt buộc với <code>POST /api/issues/{id}/decisions</code>, <code>…/adjudications</code>, <code>/api/rework/*</code> và <code>/api/waivers/*</code>, vì client có thể thử lại sau lỗi mạng (A §27.1, "Lưu decision thất bại"). <code>/api/effort-events</code> dùng <code>client_event_id</code> thay cho header. Mức "bắt buộc" <strong>chưa có hiệu lực</strong> cho tới khi Tech Lead xác nhận.</li>
+<li>Các thao tác chạy nền (retry shard, huỷ) dựa vào khoá idempotent của <code>work_unit</code> (FR-AGG-02), nên không phụ thuộc header này. Xem <a href="event-contracts.html">event-contracts.md</a>.</li>
+<li>A §25 còn đề xuất <code>If-Match: version</code> (optimistic concurrency). Đề xuất này <strong>chưa được áp dụng</strong>: SRS dùng lease cùng các guard trong bảng transition. Nếu sau này cần thì phải có quyết định mới.</li>
+</ul>
+<p>Ghi chú nguồn: SRS chỉ yêu cầu retry idempotent ở tầng xử lý. Header <code>Idempotency-Key</code> là đề xuất thiết kế lấy từ A §25, cần Tech Lead xác nhận.</p>
+<h2 id="4-bang-endpoint">4. Bảng endpoint</h2>
+<h3 id="41-endpoint-theo-srs-93-tabapi">4.1 Endpoint theo SRS §9.3 (<code>tab:api</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Mô tả</th>
+<th>Quyền</th>
+<th>Idempotency</th>
+<th>Yêu cầu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/snapshots</code></td>
+<td>Tạo snapshot cho scope dataset/project/task/job; trả 202 + id</td>
+<td>QA, SA (chạy)</td>
+<td>Key; trùng scope đang <code>pending/exporting</code> → 409</td>
+<td>UC-01; FR-SNP</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/snapshots/{id}</code></td>
+<td>Trạng thái, hash từng job, hash tổng, drift</td>
+<td>QA, AD, SA</td>
+<td>—</td>
+<td>FR-SNP-03, 04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/runs</code></td>
+<td>Tạo QC Run trên snapshot <code>locked</code> + config version đã publish</td>
+<td>QA, SA</td>
+<td>Key</td>
+<td>UC-02; FR-ENG-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}</code></td>
+<td>Trạng thái run, trạng thái từng engine, <code>is_final</code></td>
+<td>QA, AD, RV (xem), SA</td>
+<td>—</td>
+<td>FR-AGG-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/runs/{id}/cancel</code></td>
+<td>Huỷ run ở trạng thái Queued/Running</td>
+<td>QA, SA</td>
+<td>Gọi lại khi đã Cancelled → 200</td>
+<td>State machine QC Run</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/runs/{id}/retry-failed</code></td>
+<td>Chạy lại các đơn vị <code>failed</code></td>
+<td>QA, SA</td>
+<td>Theo <code>work_unit.idempotency_key</code></td>
+<td>FR-AGG-02; NFR-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}/ledger</code></td>
+<td>Coverage theo engine: eligible/completed/failed/not checked + lý do</td>
+<td>QA, AD, SA</td>
+<td>—</td>
+<td>FR-AGG-04; FR-RPT-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}/ranking</code></td>
+<td>Ranking frame (cursor); lọc theo queue, nhóm lỗi, nguồn</td>
+<td>QA, RV, SA; <strong>không</strong> cho người lập GT của tập đánh giá</td>
+<td>—</td>
+<td>FR-RNK; FR-EVL-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/queues/{name}/next</code></td>
+<td>Cấp lease frame kế tiếp; <code>name</code> ∈ <code>risk</code>, <code>random</code></td>
+<td>RV, QA, SA</td>
+<td>Nếu đã giữ một lease còn hạn thì trả lại chính lease đó</td>
+<td>UC-04; FR-REV-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/leases/{id}/renew</code></td>
+<td>Gia hạn lease</td>
+<td>Người đang giữ lease</td>
+<td>Tự nhiên idempotent</td>
+<td>FR-REV-04; TBD-09</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/frames/{id}/issues</code></td>
+<td>Issue và evidence của frame, trạng thái engine, rule áp dụng</td>
+<td>RV, QA, SA (theo scope)</td>
+<td>—</td>
+<td>FR-REV-07</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/frames/{id}/complete</code></td>
+<td>"Đã review xong": kiểm FR-REV-13, trả lease, dừng effort</td>
+<td>Người giữ lease</td>
+<td>Gọi lại → 200</td>
+<td>FR-REV-13</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/issues</code></td>
+<td>Tạo issue thủ công (<code>origin=reviewer</code>)</td>
+<td>RV, QA, SA (có lease frame)</td>
+<td>Key</td>
+<td>FR-REV-09</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/issues/{id}/decisions</code></td>
+<td>Lưu quyết định</td>
+<td>RV, QA, SA (ghi đè có lý do)</td>
+<td>Key (đề xuất)</td>
+<td>UC-05; FR-REV-08, 10, 14</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/issues/{id}/adjudications</code></td>
+<td>Phân xử</td>
+<td>QA, SA; khác người đã chuyển cấp</td>
+<td>Key (đề xuất)</td>
+<td>UC-06; FR-ESC-02, 03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/rework</code></td>
+<td>Tạo yêu cầu sửa</td>
+<td>RV, QA, SA</td>
+<td>Key (đề xuất)</td>
+<td>FR-RWK-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/rework/{id}/submitted</code></td>
+<td>Annotator báo đã sửa; tạo snapshot gia tăng</td>
+<td>AN là assignee của yêu cầu, SA</td>
+<td>Key (đề xuất); hash không đổi → 409</td>
+<td>FR-RWK-02, 03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/rework/{id}/verify</code></td>
+<td>Verify đạt hoặc chưa đạt</td>
+<td>RV, SA; khác annotator đã sửa</td>
+<td>Key (đề xuất)</td>
+<td>FR-RWK-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/guidelines/rules/{rule_id}?version=</code></td>
+<td>Rule theo guideline version của snapshot, kèm Decision Case</td>
+<td>RV, QA, AD, SA</td>
+<td>—</td>
+<td>FR-GDL-03; UC-12</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/references</code></td>
+<td>Tạo phiên reference; nhập GT (hai bản độc lập)</td>
+<td>QA, SA; RV khi được giao lập GT</td>
+<td>Key</td>
+<td>UC-08; FR-EVL-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/references/{id}/lock</code></td>
+<td>Khoá reference</td>
+<td>QA, SA; khác người lập GT</td>
+<td>Gọi lại khi đã khoá → 200</td>
+<td>FR-EVL-04; FR-SEC-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/effort-events</code></td>
+<td>Ghi sự kiện effort theo lô</td>
+<td>Người dùng đang review</td>
+<td><code>client_event_id</code> UNIQUE</td>
+<td>FR-EVL-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/evaluations</code></td>
+<td>Chạy đánh giá KPI; trả 202</td>
+<td>QA, SA (UC-09); Product Owner (UC-10)</td>
+<td>Key</td>
+<td>UC-09, UC-10</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/evaluations/{id}</code></td>
+<td>Kết quả và provenance</td>
+<td>QA, AD, SA, Product Owner</td>
+<td>—</td>
+<td>FR-EVL-14</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}/gate</code></td>
+<td>Kết quả từng điều kiện gate</td>
+<td>QA, AD, SA, RV (xem)</td>
+<td>—</td>
+<td>UC-14; FR-GTE-01, 02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/waivers</code></td>
+<td>Đề nghị waiver cho một điều kiện gate</td>
+<td>RV, QA</td>
+<td>Key</td>
+<td>FR-GTE-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/waivers/{id}/approve</code></td>
+<td>Duyệt hoặc từ chối waiver</td>
+<td>QA được cấp quyền, khác người đề nghị</td>
+<td>Key</td>
+<td>B-11; FR-SEC-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/reports/{id}?format=</code></td>
+<td>Xuất báo cáo; <code>format</code> ∈ pdf, csv, json</td>
+<td>QA, AD, SA đầy đủ; RV xem; AN giới hạn; Product Owner, Data/Model Owner xem</td>
+<td>—</td>
+<td>FR-RPT-05</td>
+</tr>
+</tbody>
+</table>
+<p>Ghi chú về Product Owner và Data/Model Owner (SRS ch.6, đoạn dưới <code>tab:rbac</code>): hai vai trò này không thao tác review. Quyền của họ: xem báo cáo hiệu quả (UC-11); Product Owner tạo và khoá thiết kế thí nghiệm effort (UC-10, FR-EVL-11); Data/Model Owner khoá artifact Detector. Họ không được làm reviewer trong thí nghiệm do chính mình thiết kế. Hai vai trò này cần được thêm vào <code>role_assignment</code> (<a href="../05-database/schema.html">schema.md</a>).</p>
+<h3 id="42-endpoint-bo-sung-lay-tu-a-khop-yeu-cau-srs">4.2 Endpoint bổ sung (lấy từ A, khớp yêu cầu SRS)</h3>
+<p>Đây là các endpoint đọc hoặc cấu hình mà SRS yêu cầu chức năng nhưng không liệt kê đường dẫn. Đường dẫn là đề xuất.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Mục đích</th>
+<th>Quyền</th>
+<th>Căn cứ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/datasets</code></td>
+<td>Danh sách dataset (CVAT project + version) theo scope</td>
+<td>Mọi vai trò có scope</td>
+<td>H <code>Main.dc.html</code>; A §25; UC-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/datasets/{id}/tasks?include=jobs</code></td>
+<td>Cây task/job để chọn scope snapshot</td>
+<td>QA, AD, SA</td>
+<td>A §25; H <code>Snapshot.dc.html</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs?dataset=</code></td>
+<td>Lịch sử run</td>
+<td>QA, AD, SA</td>
+<td>H <code>ExecutionHistory.dc.html</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/issues/{id}</code></td>
+<td>Chi tiết issue, lịch sử quyết định</td>
+<td>RV, QA, SA</td>
+<td>A §25</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/escalations</code></td>
+<td>Issue Chờ phân xử, kèm quyết định từng reviewer</td>
+<td>QA, SA</td>
+<td>FR-ESC-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/rework?assignee=me</code></td>
+<td>Yêu cầu sửa của tôi</td>
+<td>AN</td>
+<td>FR-RWK-02; A §25</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/config-versions</code>, <code>POST /api/config-versions/{id}/publish</code></td>
+<td>Cấu hình engine, ngưỡng, model có version; bản đã publish không sửa được</td>
+<td>AD (sửa), QA (xem)</td>
+<td>FR-ENG-01; A §25</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/audit?actor=&amp;object=&amp;from=&amp;to=</code></td>
+<td>Xem audit</td>
+<td>AD, SA</td>
+<td>FR-SEC-07</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Không</strong> triển khai: <code>/releases*</code>, <code>/assistant/query</code>, <code>/sample-manifests</code>, <code>/calibration-sessions</code>, <code>/review-context</code>, SSE events (A §25). Lý do: ngoài phạm vi M13, hoặc đã bị B-13/FR-GTE-04 loại. Xem <a href="../02-architecture/decisions.html">decisions.md</a>.</p>
+<h2 id="5-requestresponse-chinh">5. Request/response chính</h2>
+<h3 id="51-post-apisnapshots">5.1 <code>POST /api/snapshots</code></h3>
+<pre class="highlight"><code class="language-json">// request
+{ "dataset_id": 3, "scope": { "cvat_task_ids": [118], "cvat_job_ids": [2272, 2273] }, "note": "pilot M13" }
+// 202
+{ "id": 14, "status": "pending" }
+// GET /api/snapshots/14 sau khi xong
+{ "id": 14, "status": "locked", "revision_hash": "sha256:…", "parent_snapshot_id": null,
+  "jobs": [{ "cvat_job_id": 2272, "job_hash": "sha256:…", "assignee_user_id": 41 }],
+  "taxonomy_version": "v3", "guideline_version": "1.2", "out_of_scope_shapes": 0,
+  "drift_jobs": [], "locked_at": "2026-10-04T06:50:00+07:00" }</code></pre>
+<p>Snapshot <code>failed</code> trả <code>failure_reason: "drift_detected"</code> và danh sách <code>drift_jobs</code> (FR-SNP-04).</p>
+<h3 id="52-post-apiruns">5.2 <code>POST /api/runs</code></h3>
+<pre class="highlight"><code class="language-json">// request
+{ "snapshot_id": 14, "config_version_id": 7, "seed": 20261004 }
+// 201
+{ "id": 91, "status": "queued", "is_final": false }
+// GET /api/runs/91
+{ "id": 91, "status": "partial", "is_final": false, "config_version_id": 7, "seed": 20261004,
+  "model_artifact": { "name": "detector", "version": "…", "checksum": "sha256:…" },
+  "engines": [
+    { "engine": "schema", "status": "checked" },
+    { "engine": "detector", "status": "partial", "failed_units": 12 },
+    { "engine": "metric", "status": "not_checked", "reason": "no_reference" } ] }</code></pre>
+<p>Trả 422 nếu snapshot chưa <code>locked</code> hoặc config chưa publish.</p>
+<h3 id="53-post-apiqueuesrisknext">5.3 <code>POST /api/queues/risk/next</code></h3>
+<pre class="highlight"><code class="language-json">// request
+{ "run_id": 91 }
+// 200
+{ "lease": { "id": 5512, "frame_id": 428, "expires_at": "…" }, "frame": { "id": 428, "rank": 12, "missing_evidence": false } }
+// 204 khi hàng đợi đã hết frame phù hợp</code></pre>
+<h3 id="54-post-apiissuesiddecisions">5.4 <code>POST /api/issues/{id}/decisions</code></h3>
+<pre class="highlight"><code class="language-json">// headers: Idempotency-Key: 6f1c…
+{ "lease_id": 5512, "decision": "confirm", "family": "E2", "severity": "medium",
+  "reason": "Xe tải nhỏ có thùng hàng rời", "rule_id": "VEH-03", "override_reason": null }
+// 201
+{ "decision_id": 9001, "issue": { "id": 128, "state": "confirmed" }, "audit_id": 77120 }</code></pre>
+<p>Giá trị <code>decision</code> ∈ <code>confirm</code>, <code>reject</code>, <code>uncertain</code>, <code>escalate</code>, <code>request_fix</code> (FR-REV-08).</p>
+<table>
+<thead>
+<tr>
+<th>Điều kiện</th>
+<th>Mã lỗi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>confirm</code> thiếu <code>family</code> hoặc <code>severity</code></td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>reject</code>, <code>uncertain</code> hoặc <code>escalate</code> thiếu <code>reason</code></td>
+<td>400</td>
+</tr>
+<tr>
+<td>Reviewer là assignee của job tại snapshot</td>
+<td>403 <code>SELF_REVIEW_FORBIDDEN</code></td>
+</tr>
+<tr>
+<td>Lease hết hạn hoặc thuộc người khác</td>
+<td>409 <code>LEASE_CONFLICT</code></td>
+</tr>
+<tr>
+<td>Chuyển trạng thái không có trong bảng</td>
+<td>409 <code>INVALID_TRANSITION</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-post-apiwaiversidapprove">5.5 <code>POST /api/waivers/{id}/approve</code></h3>
+<pre class="highlight"><code class="language-json">{ "approve": true, "reason": "…" }</code></pre>
+<p>Trả 403 <code>SAME_REQUESTER_APPROVER</code> nếu người duyệt trùng người đề nghị. Waiver phải có <code>reason</code>, <code>evidence_uri</code> và <code>expires_at</code> khi tạo (400 nếu thiếu). Danh sách điều kiện gate được phép waiver và policy từng điều kiện: <strong>TBD-19</strong>. Điều kiện không nằm trong danh sách thì trả 422.</p>
+<h2 id="6-bat-bien-backend-kiem-o-moi-endpoint">6. Bất biến backend kiểm ở mọi endpoint</h2>
+<ol>
+<li>Scope dataset của người gọi. Đối tượng ngoài scope trả <strong>403</strong> <code>OUT_OF_SCOPE</code>, theo bảng mã lỗi SRS §9.3.1. Danh sách luôn được lọc theo scope nên không liệt kê đối tượng ngoài scope.</li>
+<li>Thiếu identity mapping (FR-SEC-02) thì backend <strong>từ chối</strong> (fail closed) mọi thao tác review, phân xử và verify với 403 <code>IDENTITY_MAPPING_MISSING</code>, kèm thông báo lỗi cấu hình cho QC Admin. Không ngầm cho qua.</li>
+<li>Self-review được xác định theo <code>snapshot_job.assignee_user_id</code>, thông qua identity mapping (FR-SEC-02, 03).</li>
+<li>Tách nhiệm vụ: người duyệt khác người yêu cầu (FR-SEC-04).</li>
+<li>Super Admin ghi đè phải gửi <code>override_reason</code>. Audit được gắn nhãn ghi đè, và SA <strong>vẫn</strong> chịu self-review (FR-SEC-06).</li>
+<li>Người lập GT của tập đánh giá không đọc được ranking, risk score hay candidate của tập đó (FR-EVL-02).</li>
+<li>Worker Detector không có quyền gọi API ghi quyết định (A ADR-07).</li>
+</ol>
+</article></main></body></html>

@@ -1,0 +1,325 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AnalysisConfig.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "is_interactive": true,
+      "title": "04 · Analysis Configuration",
+      "w": 1440,
+      "x": 1560,
+      "y": 1800
+    },
+    "AuditSampling.dc.html": {
+      "expand": "fill",
+      "h": 820,
+      "is_interactive": true,
+      "title": "13 · Audit Sampling",
+      "w": 1440,
+      "x": 3120,
+      "y": 5960
+    },
+    "Benchmark.dc.html": {
+      "expand": "fill",
+      "h": 700,
+      "is_interactive": true,
+      "title": "12 · Ground Truth Benchmark",
+      "w": 1440,
+      "x": 1560,
+      "y": 5960
+    },
+    "Calibration.dc.html": {
+      "expand": "fill",
+      "h": 680,
+      "is_interactive": true,
+      "title": "14 · Calibration",
+      "w": 1440,
+      "x": 4680,
+      "y": 5960
+    },
+    "ContextBarStates.dc.html": {
+      "h": 400,
+      "title": "Thanh ngữ cảnh · các trạng thái",
+      "w": 1200,
+      "x": 3120,
+      "y": 0
+    },
+    "Dashboard.dc.html": {
+      "expand": "fill",
+      "h": 1480,
+      "is_interactive": true,
+      "title": "02 · Quality Summary",
+      "w": 1440,
+      "x": 1560,
+      "y": 0
+    },
+    "Escalations.dc.html": {
+      "expand": "fill",
+      "h": 980,
+      "is_interactive": true,
+      "title": "09 · Escalations",
+      "w": 1440,
+      "x": 0,
+      "y": 4660
+    },
+    "ExecutionHistory.dc.html": {
+      "expand": "fill",
+      "h": 820,
+      "is_interactive": true,
+      "title": "05 · Execution History",
+      "w": 1440,
+      "x": 3120,
+      "y": 1800
+    },
+    "FlowNav.dc.html": {
+      "h": 120,
+      "w": 1392,
+      "x": 6200,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 760,
+      "is_interactive": true,
+      "title": "01 · Quality Control Home",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "ModelsGuidelines.dc.html": {
+      "expand": "fill",
+      "h": 640,
+      "is_interactive": true,
+      "title": "19 · Models và Guidelines",
+      "w": 1440,
+      "x": 1560,
+      "y": 8440
+    },
+    "NavigationMenu.dc.html": {
+      "h": 360,
+      "is_interactive": true,
+      "title": "Thanh điều hướng · menu mở",
+      "w": 1440,
+      "x": 0,
+      "y": 9620
+    },
+    "PerformanceEvaluation.dc.html": {
+      "expand": "fill",
+      "h": 800,
+      "is_interactive": true,
+      "title": "11 · Performance Evaluation",
+      "w": 1440,
+      "x": 0,
+      "y": 5960
+    },
+    "QualityGate.dc.html": {
+      "expand": "fill",
+      "h": 820,
+      "is_interactive": true,
+      "title": "16 · Quality Gate",
+      "w": 1440,
+      "x": 1560,
+      "y": 7100
+    },
+    "QualityReport.dc.html": {
+      "expand": "fill",
+      "h": 1020,
+      "is_interactive": true,
+      "title": "15 · Quality Report",
+      "w": 1440,
+      "x": 0,
+      "y": 7100
+    },
+    "ReleaseHistory.dc.html": {
+      "expand": "fill",
+      "h": 760,
+      "is_interactive": true,
+      "title": "17 · Release History",
+      "w": 1440,
+      "x": 3120,
+      "y": 7100
+    },
+    "ReviewQueues.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "06 · Review Queues",
+      "w": 1440,
+      "x": 0,
+      "y": 3300
+    },
+    "ReviewWorkspace.dc.html": {
+      "expand": "fill",
+      "h": 1040,
+      "is_interactive": true,
+      "title": "07 · Review Workspace",
+      "w": 1440,
+      "x": 1560,
+      "y": 3300
+    },
+    "ReworkTracking.dc.html": {
+      "expand": "fill",
+      "h": 820,
+      "is_interactive": true,
+      "title": "08 · Rework Tracking",
+      "w": 1440,
+      "x": 3120,
+      "y": 3300
+    },
+    "RulesThresholds.dc.html": {
+      "expand": "fill",
+      "h": 760,
+      "is_interactive": true,
+      "title": "18 · Rules và Thresholds",
+      "w": 1440,
+      "x": 0,
+      "y": 8440
+    },
+    "Snapshot.dc.html": {
+      "expand": "fill",
+      "h": 1180,
+      "is_interactive": true,
+      "title": "03 · Snapshot",
+      "w": 1440,
+      "x": 0,
+      "y": 1800
+    },
+    "SnapshotHistory.dc.html": {
+      "expand": "fill",
+      "h": 640,
+      "is_interactive": true,
+      "title": "03 · Lịch sử snapshot",
+      "w": 1440,
+      "x": 4680,
+      "y": 1800
+    },
+    "TopBar.dc.html": {
+      "h": 100,
+      "is_interactive": true,
+      "title": "Thành phần · Thanh điều hướng",
+      "w": 1440,
+      "x": 1560,
+      "y": 9620
+    },
+    "WorkflowPermissions.dc.html": {
+      "expand": "fill",
+      "h": 860,
+      "is_interactive": true,
+      "title": "20 · Workflow và Permissions",
+      "w": 1440,
+      "x": 3120,
+      "y": 8440
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-04T10:20:00Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/code/artifact/49b5baaf-f4b8-42d1-b770-94f2c7dd4d91",
+      "copiedAt": "2026-10-04T10:20:00Z",
+      "namespace": "labelx",
+      "title": "LabelX",
+      "version": "1791111930-47f8"
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "n1": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Overview",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "n2": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Quality Analysis",
+      "w": 240,
+      "x": 0,
+      "y": 1560
+    },
+    "n3": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Review Center",
+      "w": 240,
+      "x": 0,
+      "y": 3060
+    },
+    "n4": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Escalations",
+      "w": 240,
+      "x": 0,
+      "y": 4420
+    },
+    "n5": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Calibration & Audit",
+      "w": 240,
+      "x": 0,
+      "y": 5720
+    },
+    "n6": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Reports & Releases",
+      "w": 240,
+      "x": 0,
+      "y": 6860
+    },
+    "n7": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Configuration",
+      "w": 240,
+      "x": 0,
+      "y": 8200
+    },
+    "n8": {
+      "kind": "title1",
+      "maxW": 3000,
+      "text": "Điều hướng",
+      "w": 240,
+      "x": 0,
+      "y": 9380
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Dashboard.dc.html",
+    "ContextBarStates.dc.html",
+    "Snapshot.dc.html",
+    "SnapshotHistory.dc.html",
+    "AnalysisConfig.dc.html",
+    "ExecutionHistory.dc.html",
+    "ReviewQueues.dc.html",
+    "ReviewWorkspace.dc.html",
+    "ReworkTracking.dc.html",
+    "Escalations.dc.html",
+    "PerformanceEvaluation.dc.html",
+    "Benchmark.dc.html",
+    "AuditSampling.dc.html",
+    "Calibration.dc.html",
+    "QualityReport.dc.html",
+    "QualityGate.dc.html",
+    "ReleaseHistory.dc.html",
+    "RulesThresholds.dc.html",
+    "ModelsGuidelines.dc.html",
+    "WorkflowPermissions.dc.html",
+    "NavigationMenu.dc.html",
+    "TopBar.dc.html",
+    "FlowNav.dc.html"
+  ],
+  "pages": [],
+  "title": "LabelX Quality Control Screens"
+}

@@ -1,0 +1,13 @@
+1. **Cao — ERD khác nghĩa bản gốc:** `docs/01-business/labelX.html#fig-3-4` mất thực thể `AuditLog`, mất liên kết Candidate–Frame; đổi nhiều bội số `1..*` thành `0..*`. Frame–FrameRisk từ “1/run” thành `0..1` làm sai ý nghĩa lưu điểm qua nhiều run. Đối chiếu `sections/03-data-errors.tex:284–298` trong thư mục LaTeX SRS.
+
+2. **Cao — Phê duyệt chưa có bằng chứng nhất quán:** `docs/01-business/srs.md:20,23,35` khẳng định chủ dự án đã duyệt; `requirements.md:15` gọi yêu cầu “đã duyệt”. Nhưng `sections/00-frontmatter.tex:23` ghi “bản đề xuất để duyệt”, bảng phê duyệt còn trống. `architecture_review.html#overview` xác nhận quyết định kiến trúc/MVP, chưa chứng minh phê duyệt toàn bộ SRS. HTML dòng 141 còn bỏ trạng thái “đề xuất”.
+
+3. **Trung bình — Workflow mất trách nhiệm Annotator:** `labelX.html#fig-5-1` đặt “Sửa trên CVAT qua deep link” trong làn CVAT và bỏ làn Annotator. TikZ gốc có sáu làn, thao tác sửa thuộc Annotator (`sections/05-dynamics.tex:18,37`). Điều này biến hành động người dùng thành hành động của hệ thống.
+
+4. **Trung bình — Ký hiệu toán Markdown sai:** `domain-model.md:27–28` và `requirements.md:72` dùng `\tau_E1`, `\tau_E2` thay vì `\tau_{E1}`, `\tau_{E2}`. Các dạng `a_min`, `t_idle`, `\delta_fp`, `E_min,g` cũng chỉ đưa một ký tự xuống chỉ số, khác LaTeX gốc (`requirements.md:163,165,282–283`). Cần nhóm chỉ số bằng `{…}`.
+
+5. **Thấp — Bảng thuật ngữ có nội dung thừa:** `labelX.html#tab-1-2` hiển thị chữ `l` trước cả năm tiêu đề nhóm. Regex tại `scripts/srs_tex2html.py:395` không xử lý ngoặc lồng trong `\multicolumn{2}{@{}l}{…}`, khiến phần định dạng lọt vào nội dung.
+
+6. **Thấp — Dẫn mục không tồn tại:** `docs/01-business/srs.md:43` dẫn ma trận nghiệm thu ở **7.5**; vị trí đúng là **7.4** (`labelX.html#s-7-4`).
+
+7. **Kiểm tra đạt và giới hạn:** Chín Markdown đúng trường frontmatter bắt buộc, enum/priority và ID duy nhất; các liên kết Markdown nội bộ đều tồn tại. HTML đủ **64 bảng, 21 hình, 2 công thức đánh số**, không thấy anchor thiếu/trùng hay mã FR/UC/NFR/AC/BR bị mất. Chưa thấy lỗi escape `<`, `>`, `&` trong phần chuyển đổi văn bản/toán. Đây là kiểm tra tĩnh; chưa xác nhận render Mermaid/KaTeX qua CDN trong trình duyệt. Không sửa file.

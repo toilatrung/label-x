@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Template — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: .agent/templates/task-template.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / task-template</span><span class="sp"></span>
+<a href="task-template.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>task-template</span><b>title</b><span>Task Template</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[task, execution, template]</span><b>priority</b><span>2</span></div>
+<h1 id="task-template">Task Template</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Use this template to define one bounded, independently verifiable unit of authorized epic work.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Task ID</strong>: <code>T-&lt;number&gt;</code></li>
+<li><strong>Epic ID</strong>: <code>E-&lt;number&gt;</code></li>
+<li><strong>Title</strong>: <code>&lt;required&gt;</code></li>
+<li><strong>Owner</strong>: <code>&lt;required-person-or-agent-id&gt;</code></li>
+<li><strong>Status</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+<li><strong>Created Date</strong>: <code>YYYY-MM-DD</code></li>
+<li><strong>Target Date</strong>: <code>YYYY-MM-DD</code></li>
+<li><strong>Priority</strong>: <code>1 | 2 | 3 | 4 | 5</code></li>
+</ul>
+<h2 id="objective">Objective</h2>
+<p>State the single deliverable or state change this task must produce.</p>
+<h2 id="scope">Scope</h2>
+<h3 id="included">Included</h3>
+<ul>
+<li><code>&lt;required-work-item&gt;</code></li>
+</ul>
+<h3 id="excluded">Excluded</h3>
+<ul>
+<li><code>&lt;required-exclusion-or-none&gt;</code></li>
+</ul>
+<h2 id="preconditions">Preconditions</h2>
+<ul>
+<li>[ ] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[ ] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available.</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Context Package</strong>: <code>&lt;path&gt;</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#&lt;epic-anchor&gt;</code></li>
+<li><strong>Decisions</strong>: <code>&lt;paths-or-none&gt;</code></li>
+<li><strong>Risks</strong>: <code>&lt;paths-or-none&gt;</code></li>
+<li><strong>Blockers</strong>: <code>&lt;paths-or-none&gt;</code></li>
+<li><strong>Change Requests</strong>: <code>&lt;paths-or-none&gt;</code></li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[ ] <code>&lt;required-observable-condition&gt;</code></li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h2 id="verification-requirements">Verification Requirements</h2>
+<ul>
+<li><strong>Automated Checks</strong>: <code>&lt;commands-or-none-with-reason&gt;</code></li>
+<li><strong>Manual Checks</strong>: <code>&lt;steps-or-none-with-reason&gt;</code></li>
+<li><strong>Expected Evidence</strong>: <code>&lt;report-paths-logs-or-artifacts&gt;</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not perform work outside the stated scope.</li>
+<li>Do not execute without an authorized parent epic.</li>
+<li>Do not mark status <code>done</code> before verification completes.</li>
+<li>Do not fabricate test, review, report, or commit evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Register the task in <code>.agent/execution/task-board.md</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Replace every <code>&lt;required...&gt;</code> placeholder; use <code>none</code> only where explicitly allowed.</li>
+</ul>
+</article></main></body></html>

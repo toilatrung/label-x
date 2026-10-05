@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software Requirements Specification Intake — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/01-business/srs.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / srs</span><span class="sp"></span>
+<a href="srs.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>project-srs</span><b>title</b><span>Software Requirements Specification Intake</span><b>type</b><span>reference</span><b>domain</b><span>business</span><b>module</b><span>repository</span><b>tags</b><span>[srs, requirements, intake]</span><b>priority</b><span>1</span></div>
+<h1 id="software-requirements-specification-intake">Software Requirements Specification Intake</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Track ingestion and validation of the authoritative Software Requirements Specification for project onboarding.</p>
+<h2 id="input-status">Input Status</h2>
+<ul>
+<li><strong>Status</strong>: <code>provided</code></li>
+<li><strong>Authority</strong>: <code>accepted-by-project-owner-pending-role-signoff</code></li>
+<li><strong>Source Artifact</strong>: <code>docs/01-business/labelX.html</code></li>
+<li><strong>Ingested Date</strong>: <code>2026-10-05</code></li>
+<li><strong>Validated By</strong>: <code>project-owner</code></li>
+</ul>
+<h2 id="required-content">Required Content</h2>
+<ul>
+<li>Project objectives and scope boundaries</li>
+<li>Stakeholders and user classes</li>
+<li>Functional requirements with stable identifiers</li>
+<li>Non-functional requirements with measurable criteria</li>
+<li>Assumptions, constraints, exclusions, and acceptance criteria</li>
+</ul>
+<h2 id="validation-result">Validation Result</h2>
+<p>SRS M13 v1.0 (05/10/2026) của LabelX — chức năng <strong>M13 Reviewer Prioritization Assistant</strong> (tên đề tài đăng ký: Annotation QC Studio) — đã được cung cấp. Ngày 2026-10-05 người dùng (project owner) chấp nhận nội dung trong phiên làm việc ("Ổn rồi") và yêu cầu dùng làm SRS. Bảng ký phê duyệt theo vai trò trong SRS (Product Owner, QA Lead, QC Admin, Tech Lead, Data/Model Owner) <strong>chưa được ký</strong>; các quyết định kiến trúc/MVP đã chốt riêng trong <code>docs/00-project/sources/architecture_review.html</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Nội dung bắt buộc</th>
+<th>Vị trí trong SRS</th>
+<th>Kết quả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mục tiêu và ranh giới phạm vi</td>
+<td>Chương 1.2, 2.2–2.3</td>
+<td>Có: phạm vi lõi/hỗ trợ/ngoài phạm vi, KPI-1, KPI-2, guardrail G-1…G-5</td>
+</tr>
+<tr>
+<td>Stakeholder và lớp người dùng</td>
+<td>Chương 2.6, ma trận quyền chương 6</td>
+<td>Có</td>
+</tr>
+<tr>
+<td>Yêu cầu chức năng có mã ổn định</td>
+<td>Chương 6 (<code>FR-&lt;MODULE&gt;-xx</code>), use case chương 4 (<code>UC-01</code>…<code>UC-14</code>)</td>
+<td>Có</td>
+</tr>
+<tr>
+<td>Yêu cầu phi chức năng đo được</td>
+<td>Chương 8 (<code>NFR-01</code>…<code>NFR-16</code>)</td>
+<td>Có; ngưỡng số là đề xuất, chốt sau pilot (B-14)</td>
+</tr>
+<tr>
+<td>Giả định, ràng buộc, loại trừ, nghiệm thu</td>
+<td>Chương 2.8–2.9, 7.4 (<code>AC-01</code>…<code>AC-11</code>), 11.3 (TBD)</td>
+<td>Có; 21 tham số TBD có người chốt và hạn chốt</td>
+</tr>
+</tbody>
+</table>
+<p>Bằng chứng kiểm tra:</p>
+<ul>
+<li>Nguồn đầu vào đã chốt: <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, cấu hình MVP, R-01…R-07), <code>docs/design/</code> (25 màn hình), <code>docs/00-project/sources/QC_Engine_Review_Report.html</code>, <code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code>, <code>docs/00-project/sources/mermaid-diagram.png</code>, và stack ở <code>.agent/governance/decisions/DEC-001.md</code>.</li>
+<li>Từng chương được Codex CLI review độc lập; kết quả lưu ở <code>docs/label-x_system-requirement-specification/.review/</code>.</li>
+<li>Bản LaTeX là gốc (biên dịch XeLaTeX trên TeXPage); bản HTML sinh bằng <code>python3 scripts/srs_tex2html.py</code>.</li>
+</ul>
+<p>Giới hạn: SRS chưa có kết quả đo; các ngưỡng KPI, cỡ mẫu, phiên bản CVAT và phần cứng còn TBD (xem <a href="requirements.html">requirements.md</a>, mục Tham số còn mở).</p>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li>SRS (HTML): <a href="labelX.html">labelX.html</a></li>
+<li>SRS (LaTeX): <code>docs/label-x_system-requirement-specification/main.tex</code></li>
+<li>Requirements: <a href="requirements.html">requirements.md</a></li>
+<li>Use cases: <a href="use-cases.html">use-cases.md</a></li>
+<li>Domain model: <a href="domain-model.html">domain-model.md</a></li>
+<li>Decision: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li>Roadmap: <code>.agent/planning/roadmap.md</code></li>
+<li>Epic registry: <code>.agent/planning/epics.md</code></li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not change baselined requirements without an approved change request in <code>.agent/governance/change-requests/</code>.</li>
+<li>Do not edit <code>labelX.html</code> by hand; change the LaTeX source and regenerate.</li>
+<li>Do not record role sign-off as complete until the approval table in the SRS is signed.</li>
+<li>Do not treat TBD parameters or illustrative numbers as accepted thresholds.</li>
+<li>Do not create implementation tasks from this intake record without an approved epic.</li>
+</ul>
+</article></main></body></html>

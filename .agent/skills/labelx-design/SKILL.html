@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SKILL — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: .agent/skills/labelx-design/SKILL.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / skills / labelx-design / SKILL</span><span class="sp"></span>
+<a href="SKILL.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>name</b><span>labelx-design</span><b>description</b><span>Design and build screens, components and copy for LabelX, the Quality Control module around CVAT. Use for any new or changed LabelX screen, mockup, Design System component or UI text so it stays neutral, table-first and consistent.</span></div>
+<h1 id="labelx-design-skill">LabelX design skill</h1>
+<p>LabelX is an enterprise Quality Control module that runs around CVAT. Users are Quality Control Leads, Reviewers, Quality Assurance staff and Annotators working long sessions on dense data. The interface is quiet, neutral and table-first. It must not look "AI-generated": no gradients, no glow, no decorative illustration, no emoji.</p>
+<h2 id="sources-of-truth">Sources of truth</h2>
+<ul>
+<li>Design System document: <code>docs/design/design-system.md</code> (principles, content rules, layout, states, every component).</li>
+<li>Design System "LabelX" in <code>docs/design/design-system/</code> (tokens in <code>tokens.json</code>, classes <code>lx-*</code> in <code>components/bundle.css</code>, one README per component). The frontend copy lives in <code>src/frontend/src/styles/tokens.css</code> and <code>labelx.css</code>.</li>
+<li>Design canvas "LabelX Quality Control Screens" in <code>docs/design/screens/</code> (one <code>.dc.html</code> per screen, shared <code>TopBar</code> and <code>FlowNav</code> components, <code>canvas.json</code> for the board layout).</li>
+<li>Always reuse tokens and <code>lx-*</code> classes. Never hard-code a colour, radius or spacing that a token already covers.</li>
+</ul>
+<h2 id="principles">Principles</h2>
+<ol>
+<li>Neutral first. Surface on canvas; text <code>ink</code>, <code>ink-muted</code>, <code>ink-subtle</code>. The only action colour is graphite <code>primary</code> (#1f2933).</li>
+<li>Red is for the logo X (<code>brand</code>) and blocking states (<code>danger</code>) only.</li>
+<li>State is always a word: use <code>StatusBadge</code> with text. The one exception is the Quality Control Run dot, which carries a tooltip and aria-label.</li>
+<li>Context is always visible: every screen sits under the context bar (Dataset, Quality Control Run, Snapshot, Phạm vi, Guideline, Taxonomy). Dataset, Run and Phạm vi open selection menus and update the other chips.</li>
+<li>Square by default: cards, tables, panels, buttons, inputs are square. Only small elements are rounded: badges and tags (4px), context chips (pill), switches, avatar, status dots, floating dropdown cards (6px).</li>
+<li>Borders, not shadows: 1px <code>border</code>; shadow only on dropdown cards.</li>
+<li>Row actions are borderless icon buttons (<code>lx-iconbtn</code>) with <code>data-tip</code> and <code>aria-label</code> carrying the same Vietnamese verb phrase. Page-level actions use boxed <code>lx-btn</code>; one primary per region.</li>
+<li>Rebalance content: each screen is neither crowded nor empty. Related lists become tabs inside one page; a history or log opens from a button on its own page.</li>
+</ol>
+<h2 id="navigation-model">Navigation model</h2>
+<p>Top bar: graphite background, white text, logo "Label" white and X red, 7 modules, user menu at the right (role label "Super Admin").</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Overview</td>
+<td>Dropdown: Quality Control Home, Quality Summary</td>
+</tr>
+<tr>
+<td>Quality Analysis</td>
+<td>Direct link. Flow of 3 steps: Snapshot, Analysis Configuration, Execution History. Snapshot history is a separate page opened by a button</td>
+</tr>
+<tr>
+<td>Review Center</td>
+<td>Direct link. Flow of 3 steps: Review Queues, Review Workspace, Rework Tracking</td>
+</tr>
+<tr>
+<td>Escalations</td>
+<td>Direct link. One page with tabs: Guideline Gaps, Decision Cases, Adjudication (gaps and cases first)</td>
+</tr>
+<tr>
+<td>Calibration &amp; Audit</td>
+<td>Dropdown: Performance Evaluation, Ground Truth Benchmark, Audit Sampling, Calibration</td>
+</tr>
+<tr>
+<td>Reports &amp; Releases</td>
+<td>Direct link. Flow of 3 steps: Quality Report, Quality Gate, Release History</td>
+</tr>
+<tr>
+<td>Configuration</td>
+<td>Dropdown: Rules &amp; Thresholds, Models &amp; Guidelines, Workflow &amp; Permissions</td>
+</tr>
+</tbody>
+</table>
+<p>Rules:
+- Screens that always follow each other are merged into one feature with <code>FlowNav</code> (back and forward arrow buttons with tooltips naming the neighbouring step). Do not list them as separate dropdown items.
+- Only independent screens live in a dropdown. A dropdown is a white floating card with a small pointer, label left, 16px line icon right, hairline separators, 15px text; the active item has a light fill; descriptions only as hover tooltips. Text colour inside menus is <code>ink-muted</code>/<code>ink</code>, never the white text of the dark bar.
+- User menu: attached under the user button, icon on the left, items Hồ sơ, Cài đặt, Đăng xuất.
+- Do not add a second navigation row.</p>
+<h2 id="layout-and-type">Layout and type</h2>
+<ul>
+<li>App frame: top bar (56px) then context bar (44px) then content on canvas with 24px gutter; content max width 1440.</li>
+<li>Page header: <code>lx-h1</code> 22/28 plus one <code>lx-lead</code> sentence or two; primary action at the right.</li>
+<li>Lists: <code>lx-card</code> containing optional tabs and toolbar, then <code>lx-table</code>. Numbers right-aligned in tabular figures; two-line cells with <code>lx-cell__main</code> and <code>lx-cell__sub</code>.</li>
+<li>Spacing steps 4, 8, 12, 16, 24, 32 only.</li>
+<li>Inter for text, JetBrains Mono for identifiers only. Weight 600 for emphasis, never above 700 except the logo.</li>
+<li>Icons: 16px, 1.5px stroke, <code>currentColor</code>, one icon per meaning (arrow = open, pencil = edit, clock = history, plus = create, download = export).</li>
+</ul>
+<h2 id="content-rules">Content rules</h2>
+<ul>
+<li>UI language is Vietnamese; domain terms stay in English: Dataset, Quality Control Run, Snapshot, Coverage, Gate, Issue, Rework, Release.</li>
+<li>Write names in full. Never "QC", "IoU", "GT": write Quality Control, Intersection over Union, Ground Truth. Allowed: product and format names (CVAT, PDF, CSV, JSON) and identifiers (<code>#QC-091</code>, <code>SNP-014</code>, <code>rev a91f3c</code>).</li>
+<li>Sentence case for titles and buttons; UPPERCASE only in table headers and badges.</li>
+<li>Numbers with thousands separators (12,500), empty value is an em dash. No exclamation marks, no marketing tone.</li>
+<li>Keep data consistent across screens: 12,500 frames; coverage 92.4% (threshold 95%); 384 candidates; 126 confirmed errors; 86 rework requests (74 closed = 86.0%, 12 open); random audit 4/100 = 4.0%; reviewer agreement 94.1%.</li>
+<li>Domain rules to respect: Dataset = CVAT project + version; a Quality Control Run is bound to an immutable Snapshot; decisions are Xác nhận lỗi, Bác bỏ, Chưa chắc chắn, Yêu cầu sửa, Chuyển cấp trên; assistant models only provide evidence, the reviewer decides; engines that did not run are "Not checked", never "passed"; random audit estimates quality, risk sampling only finds errors.</li>
+</ul>
+<h2 id="states">States</h2>
+<p>Pass or done = success; partial or needs attention = warning; blocking = danger; in progress = info; inert = neutral. Every text colour holds at least 4.5:1 on its soft ground. Focus ring 2px <code>focus</code> with 2px offset on every interactive element.</p>
+<h2 id="working-checklist-for-a-new-screen">Working checklist for a new screen</h2>
+<ol>
+<li>Pick the module and decide: independent screen (dropdown item) or a step (add to a flow) or a tab inside an existing page.</li>
+<li>Build with <code>TopBar</code> (active, active-item) and, if a step, <code>FlowNav</code> (flow, step).</li>
+<li>Use only DS tokens and <code>lx-*</code> classes; add a new class to the Design System first if one is missing.</li>
+<li>Check: square corners, state as words, row actions as icon buttons with tooltips, no abbreviations, numbers consistent with the data above, all states of the context bar still correct.</li>
+<li>Reply to review comments in the thread and resolve them when done.</li>
+</ol>
+</article></main></body></html>

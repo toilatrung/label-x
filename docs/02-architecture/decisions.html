@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quyết định kiến trúc B-01…B-21 và DEC-001 — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/02-architecture/decisions.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / decisions</span><span class="sp"></span>
+<a href="decisions.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>architecture-decisions</span><b>title</b><span>Quyết định kiến trúc B-01…B-21 và DEC-001</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>quality-control</span><b>tags</b><span>[architecture, decisions, adr, mvp]</span><b>priority</b><span>1</span></div>
+<h1 id="quyet-inh-kien-truc">Quyết định kiến trúc</h1>
+<h2 id="muc-ich">Mục đích</h2>
+<p>Tài liệu này ghi lại các quyết định kiến trúc đã chốt cho module Quality Control (QC) của LabelX. Nguồn chính là bản rà soát <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (gọi là <strong>nguồn R</strong>). Người dùng đã chốt 21/21 mục vào ngày 05/10/2026: 20 mục chọn phương án A, riêng B-05 chọn phương án B. Tài liệu cũng ghi stack đã chốt trong <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>.</p>
+<p>Quy ước:</p>
+<ul>
+<li>"Đã chốt" nghĩa là đã chọn hướng thiết kế. Nó <strong>không</strong> có nghĩa là tính năng đã được triển khai hay đã đạt nghiệm thu (nguồn: R mục 1, mục 7).</li>
+<li>Cột "Hệ quả" nêu ràng buộc mà thiết kế, mã nguồn và kiểm thử phải tuân theo. Mỗi hệ quả kèm mã yêu cầu SRS liên quan nếu có.</li>
+<li>Các tên nguồn: H là các màn hình <code>docs/design/screens</code>; A là <code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code>; T là <code>docs/00-project/sources/QC_Engine_Review_Report.html</code>; L là <code>docs/00-project/sources/mermaid-diagram.png</code>. SRS là bộ tài liệu LaTeX trong <a href="../label-x_system-requirement-specification/main.tex">docs/label-x_system-requirement-specification</a>.</li>
+</ul>
+<h2 id="dec-001-stack-mvp">DEC-001 — Stack MVP</h2>
+<table>
+<thead>
+<tr>
+<th>Hạng mục</th>
+<th>Lựa chọn</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>Django 5.2 LTS, Django REST framework, drf-spectacular (OpenAPI), kiến trúc modular monolith</td>
+<td>DEC-001; R cấu hình MVP "Backend"; L khối "Django / DRF - Modular Monolith"</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>Celery 5 + Redis 7 (broker/result), django-celery-beat; worker kiểm xác định và worker model tách khỏi API</td>
+<td>DEC-001; R B-01</td>
+</tr>
+<tr>
+<td>CSDL</td>
+<td>PostgreSQL 17</td>
+<td>DEC-001; <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a></td>
+</tr>
+<tr>
+<td>Lưu blob</td>
+<td>Object Storage S3-compatible qua django-storages; dev local dùng SeaweedFS</td>
+<td>DEC-001; compose</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Next.js 16, React 19, TypeScript, TanStack Query; type sinh từ OpenAPI</td>
+<td>DEC-001</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td>Python 3.12 (uv); Node từ 22 trở lên</td>
+<td>DEC-001; <a href="../../src/backend/pyproject.toml">pyproject.toml</a></td>
+</tr>
+</tbody>
+</table>
+<p>R cho phép ngoại lệ giữ FastAPI nếu đã có backend FastAPI chạy ổn định. Ngoại lệ này <strong>không áp dụng</strong>. Lý do: <em>tại thời điểm ra DEC-001</em>, repository chưa có backend nào (nguồn: DEC-001, "Rationale"). Hiện repository đã có scaffold Django ở <code>src/backend</code> theo DEC-001 (cấu hình <code>config/</code>, chưa có app nghiệp vụ). A §20.1 đề xuất FastAPI, SQLAlchemy và Alembic. Đề xuất đó bị thay bằng Django ORM và Django migrations.</p>
+<h2 id="bang-b-01b-21">Bảng B-01…B-21</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Vấn đề</th>
+<th>Phương án chọn</th>
+<th>Hệ quả bắt buộc cho thiết kế</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B-01</td>
+<td>Có sơ đồ thành phần nhưng backend và hợp đồng chưa được xác nhận với H</td>
+<td><strong>A</strong>: modular monolith + worker pool; chốt schema/API chung</td>
+<td>Một ứng dụng Django gồm nhiều app theo module. Engine chạy trong Celery worker, không chạy trong request API. Hợp đồng duy nhất là OpenAPI do drf-spectacular sinh ra (SRS ch.10).</td>
+</tr>
+<tr>
+<td>B-02</td>
+<td>Chưa chốt cách tạo revision và snapshot nhất quán từ CVAT</td>
+<td><strong>A</strong>: export từng job, chuẩn hoá, hash, kiểm lại trước khi khoá, lưu ảnh và metadata</td>
+<td>Mỗi job có hash SHA-256 của JSON chuẩn hoá, kèm một hash tổng. Trước khi khoá, hệ thống đọc lại <code>updated_date</code> của job; nếu có drift thì không khoá. Ảnh được lưu kèm checksum (FR-SNP-03…05).</td>
+</tr>
+<tr>
+<td>B-03</td>
+<td>Rework tạo revision mới nhưng chưa rõ revision nào được phát hành</td>
+<td><strong>A</strong>: tạo snapshot và QC Run cuối trên revision đã sửa, liên kết các verification trước đó</td>
+<td>Thêm cờ <code>qc_run.is_final</code>. Báo cáo và gate chỉ trỏ run cuối khi run đó Completed và coverage đạt. Run gốc giữ nguyên để kiểm toán (FR-RWK-06, FR-RWK-08, FR-RPT-06).</td>
+</tr>
+<tr>
+<td>B-04</td>
+<td>T có công thức coverage, nhưng eligibility và gate của H chưa được ánh xạ</td>
+<td><strong>A</strong>: coverage theo từng engine, mẫu số là các đơn vị áp dụng</td>
+<td>Ledger lưu riêng từng engine. Đơn vị lỗi không bị loại khỏi mẫu số. Coverage chung chỉ dùng để xem tiến độ (FR-AGG-04, FR-RPT-04).</td>
+</tr>
+<tr>
+<td>B-05</td>
+<td>Metric chưa chạy nhưng báo cáo vẫn hiện độ chính xác</td>
+<td><strong>B</strong>: khối đánh giá engine riêng, tính metric trên reference theo B-20; Model Orchestrator tổng hợp</td>
+<td>Có bảng <code>evaluation_run</code> lưu provenance. Khi thiếu reference, trạng thái là Not checked, không bao giờ hiện 0% hay pass. Không dùng model làm trọng tài (FR-EVL-14, FR-EVL-15, FR-RPT-03).</td>
+</tr>
+<tr>
+<td>B-06</td>
+<td>Geometry được gọi là kiểm xác định nhưng có rule cần biết biên vật thể</td>
+<td><strong>A</strong>: Geometry tự động chỉ kiểm cấu trúc, bounds và diện tích</td>
+<td>Kiểm <code>x1&lt;x2</code>, <code>y1&lt;y2</code>, bounds với dung sai 2 px, diện tích từ 24 px² trở lên (G-014). G-009 luôn là Not checked (FR-ENG-03).</td>
+</tr>
+<tr>
+<td>B-07</td>
+<td>Chưa chốt dùng một hay hai mô hình độc lập</td>
+<td><strong>A</strong>: pilot Detector trước</td>
+<td>Chỉ dùng một Detector baseline đã freeze (artifact, version, checksum, mapping lớp). Classifier không bật mặc định. Nếu không có Detector thì engine là Not checked (FR-ENG-05, FR-ENG-09).</td>
+</tr>
+<tr>
+<td>B-08</td>
+<td>Chạy song song chưa xử lý phụ thuộc candidate của VLM</td>
+<td><strong>A</strong>: pipeline candidate → chọn theo policy → worker kiểm chọn lọc</td>
+<td>Nếu bật: tối đa 400 candidate mỗi run, tối đa 3 lần thử mỗi lượt (đã gồm retry). Hết hạn mức thì ghi "chưa kiểm". Pilot M13 đề xuất <strong>không bật</strong> VLM (TBD-08; FR-ENG-10).</td>
+</tr>
+<tr>
+<td>B-09</td>
+<td>T đưa Temporal / Track trở lại phạm vi</td>
+<td><strong>A</strong>: không kiểm tự động trong giai đoạn đầu</td>
+<td>Không có engine temporal. Lỗi track chỉ do người review ghi nhận. Ngoài phạm vi MVP.</td>
+</tr>
+<tr>
+<td>B-10</td>
+<td>Chạy lại và gộp issue chưa có khoá, provenance và lifecycle</td>
+<td><strong>A</strong>: Candidate và Issue tách riêng, retry idempotent, dedup theo scope/object/family và policy version</td>
+<td>Khoá idempotent của đơn vị xử lý là <code>(snapshot, engine, config, model, shard)</code>. <code>dedup_key</code> là <code>(snapshot, frame, đối tượng, nhóm lỗi)</code>. Candidate không sửa được sau khi ghi (FR-AGG-01…03).</td>
+</tr>
+<tr>
+<td>B-11</td>
+<td>Waiver lỗi nghiêm trọng và Rework được mở rộng nhưng chưa có guard</td>
+<td><strong>A</strong>: giữ scope waiver của H, nhưng mỗi điều kiện phải có policy; người duyệt khác người yêu cầu; bắt buộc lý do, hạn và evidence</td>
+<td>Có CHECK <code>approved_by &lt;&gt; requested_by</code>. Waiver chỉ có hiệu lực sau khi duyệt. Hết hạn thì điều kiện trở lại "chưa đạt" (FR-GTE-03, FR-SEC-04).</td>
+</tr>
+<tr>
+<td>B-12</td>
+<td>Tách nhiệm vụ và audit transaction chưa được tái xác nhận</td>
+<td><strong>A</strong>: scope quyền, assignee tại snapshot, tách người yêu cầu và người duyệt, audit append-only cùng transaction</td>
+<td>Backend kiểm quyền trên mọi endpoint. Self-review được xác định theo assignee tại snapshot. Audit ghi trong cùng transaction với thao tác. Token CVAT chỉ nằm ở backend (FR-SEC-01…06).</td>
+</tr>
+<tr>
+<td>B-13</td>
+<td>L và T có RAG nhưng H chưa chốt cơ chế tra cứu guideline</td>
+<td><strong>A</strong>: tra cứu trực tiếp theo rule ID + guideline version + section, cộng case đã duyệt</td>
+<td>Không dùng retrieval ngữ nghĩa, Vector Index hay pgvector trong MVP (FR-GDL-04). RAG để sau MVP.</td>
+</tr>
+<tr>
+<td>B-14</td>
+<td>Pilot có chỉ số nhưng chưa có ngưỡng chứng minh</td>
+<td><strong>A</strong>: chạy một pilot đại diện, đo baseline thủ công rồi mới đặt tiêu chí</td>
+<td>Không tự đặt ngưỡng accuracy hay năng suất. Timeout, retry và budget lấy từ phép đo pilot (TBD-13, TBD-14).</td>
+</tr>
+<tr>
+<td>B-15</td>
+<td>Quality Gate chưa phản ánh ngưỡng audit và reviewer</td>
+<td><strong>A</strong>: mỗi ngưỡng là một gate riêng, có nguồn, scope, cỡ mẫu và tiêu chí đủ dữ liệu</td>
+<td>Có các bảng <code>gate_check</code> riêng theo điều kiện. Thiếu dữ liệu thì "chưa đạt" (FR-GTE-01, FR-GTE-02).</td>
+</tr>
+<tr>
+<td>B-16</td>
+<td>Diff/pre-label và các feature mở rộng chưa được ánh xạ vào H</td>
+<td><strong>A</strong>: ánh xạ feature vào sáu engine/module của H</td>
+<td>Diff, profile camera, Vehicle plausibility và Feedback loop <strong>ngoài phạm vi MVP</strong>. MVP chỉ làm ảnh + Bounding box.</td>
+</tr>
+<tr>
+<td>B-17</td>
+<td>Sơ đồ chưa có trạng thái, actor và nhánh huỷ</td>
+<td><strong>A</strong>: chốt bảng transition/event/actor/guard dùng trạng thái của H</td>
+<td>Dùng state machine trong SRS §5 (bảng <code>tab:transitions</code>). Chuyển trạng thái không có trong bảng thì trả 409.</td>
+</tr>
+<tr>
+<td>B-18</td>
+<td>Writeback annotation trong T vượt ranh giới "chỉ sửa trên CVAT"</td>
+<td><strong>A</strong>: adapter chỉ đọc, sửa qua deep link sang CVAT</td>
+<td>Không có đường gọi nào ghi annotation lên CVAT. Mirror issue/comment chỉ làm khi API và quyền đã được xác minh, và không thuộc MVP (FR-SNP-01, FR-SNP-08).</td>
+</tr>
+<tr>
+<td>B-19</td>
+<td>NOT_REQUIRED, abstain, exception chưa ánh xạ trạng thái hiển thị của H</td>
+<td><strong>A</strong>: giữ trạng thái công khai của H</td>
+<td>Trạng thái công khai gồm Checked, Partial, Failed, Not checked, Running. Lý do áp dụng (<code>disabled</code>, <code>no_model</code>, <code>no_reference</code>, <code>not_applicable</code>, <code>not_triggered</code>) lưu riêng trong ledger (FR-AGG-05, SRS <code>tab:enginestates</code>).</td>
+</tr>
+<tr>
+<td>B-20</td>
+<td>Đo recall/precision ở giai đoạn B nhưng Ground Truth giao ở giai đoạn C</td>
+<td><strong>A</strong>: chuẩn bị một reference đã duyệt trước khi đo</td>
+<td>Reference phải được khoá (GT, mapping, ngưỡng, version thuật toán) trước khi đo. QA Lead chịu trách nhiệm (FR-EVL-01…05).</td>
+</tr>
+<tr>
+<td>B-21</td>
+<td>Matching (không cần GT) bị gộp với Metric (cần GT)</td>
+<td><strong>A</strong>: matching là một bước của Mô hình độc lập để sinh candidate</td>
+<td>Matching một-một, không xét lớp. Kết quả là association, không phải Precision/Recall (FR-ENG-06, SRS §3 "Matching").</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cau-hinh-mvp-a-chot-sau-muc">Cấu hình MVP đã chốt (sáu mục)</h2>
+<p>Nguồn: R mục 7, "Cấu hình MVP đã chốt".</p>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Phương án</th>
+<th>Còn mở</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>Django + DRF, PostgreSQL, Celery + Redis, Object Storage hiện có</td>
+<td>Cấu hình phần cứng — TBD-02</td>
+</tr>
+<tr>
+<td>CVAT</td>
+<td>Giữ phiên bản đang triển khai; adapter chỉ đọc; deep link; polling có checkpoint nếu không có webhook</td>
+<td>Phiên bản pin, URL, quyền token — TBD-01</td>
+</tr>
+<tr>
+<td>Taxonomy/shape</td>
+<td>Ảnh + Bounding box; khoá taxonomy và guideline version</td>
+<td>Danh sách ảnh và N — TBD-03; nguồn annotation — TBD-04</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Một Detector baseline đã freeze, bảng mapping lớp</td>
+<td>Artifact thật, ngưỡng <code>τ</code> — TBD-05</td>
+</tr>
+<tr>
+<td>Required units</td>
+<td>Ledger theo engine: Schema/Geometry theo annotation; Duplicate theo frame/cặp; Detector theo frame; VLM theo candidate được trigger; Metric theo scope reference</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Gate/pilot</td>
+<td>Coverage 95%; critical chưa đóng = 0; rework verify 100%; residual tối đa 5%; reviewer agreement tối thiểu 90% (cấu hình khởi điểm pilot, chưa phải cam kết nghiệm thu)</td>
+<td>Ngưỡng KPI — TBD-K1…K4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="muc-tieu-kiem-chung-r-01r-07">Mục tiêu kiểm chứng R-01…R-07</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Mục tiêu</th>
+<th>Yêu cầu SRS chính</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R-01</td>
+<td>Tái lập kết quả trên dữ liệu đã khoá; retry không tạo issue trùng</td>
+<td>FR-SNP-03…06, FR-ENG-01, FR-AGG-02, FR-AGG-06, FR-RNK-03</td>
+</tr>
+<tr>
+<td>R-02</td>
+<td>Candidate có evidence, người review ra quyết định</td>
+<td>FR-ENG-08, FR-REV-07…10, FR-ESC-01…04</td>
+</tr>
+<tr>
+<td>R-03</td>
+<td>Verify và phát hành đúng revision đã sửa</td>
+<td>FR-RWK-01…08</td>
+</tr>
+<tr>
+<td>R-04</td>
+<td>Đo chất lượng đúng reference và mẫu</td>
+<td>FR-EVL-01…05, FR-EVL-14, FR-RPT-01…03</td>
+</tr>
+<tr>
+<td>R-05</td>
+<td>Phân quyền và audit đầy đủ</td>
+<td>FR-SEC-01…07, FR-REV-14</td>
+</tr>
+<tr>
+<td>R-06</td>
+<td>Coverage/Gate phản ánh phần chưa kiểm</td>
+<td>FR-AGG-04, FR-AGG-05, FR-RNK-06, FR-GTE-01…02</td>
+</tr>
+<tr>
+<td>R-07</td>
+<td>Hiệu quả review có căn cứ</td>
+<td>FR-EVL-06, FR-EVL-11…13</td>
+</tr>
+</tbody>
+</table>
+<p>(nguồn: R mục 3; SRS <code>tab:trace</code> trong <a href="../label-x_system-requirement-specification/sections/11-traceability.tex">11-traceability.tex</a>)</p>
+<h2 id="noi-dung-nguon-at-bi-loai-hoac-hoan">Nội dung nguồn A/T bị loại hoặc hoãn</h2>
+<p>Các mục sau <strong>không phải yêu cầu MVP</strong>. Không được triển khai nếu chưa có quyết định mới.</p>
+<table>
+<thead>
+<tr>
+<th>Nội dung</th>
+<th>Nguồn đề xuất</th>
+<th>Lý do loại hoặc hoãn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FastAPI, SQLAlchemy, Alembic</td>
+<td>A §20.1</td>
+<td>DEC-001 chọn Django</td>
+</tr>
+<tr>
+<td>Guideline RAG, pgvector, Vector Index</td>
+<td>A §20, L, T §3</td>
+<td>B-13, FR-GDL-04</td>
+</tr>
+<tr>
+<td>Temporal / Track engine</td>
+<td>T §3–4</td>
+<td>B-09</td>
+</tr>
+<tr>
+<td>Diff Engine, pre-label review, Vehicle plausibility, Specialized Classifier</td>
+<td>T §3–4</td>
+<td>B-16, B-07</td>
+</tr>
+<tr>
+<td>Annotation writeback lên CVAT</td>
+<td>T §6</td>
+<td>B-18</td>
+</tr>
+<tr>
+<td>Release, Manifest, Revoke, Release History</td>
+<td>A §23.2, §25; H ReleaseHistory</td>
+<td>FR-GTE-04: phát hành đầy đủ nằm ngoài phạm vi M13</td>
+</tr>
+<tr>
+<td>SSO OIDC dùng chung CVAT</td>
+<td>A §20</td>
+<td>SRS §9.3: xác thực theo phiên đăng nhập LabelX</td>
+</tr>
+<tr>
+<td>AI Assistant query (<code>/assistant/query</code>)</td>
+<td>A §25</td>
+<td>B-13; ngoài phạm vi</td>
+</tr>
+<tr>
+<td>Trạng thái Issue: Known Defect, Superseded, On Hold</td>
+<td>A §23.1</td>
+<td>SRS <code>tab:transitions</code> theo H; không có các trạng thái này</td>
+</tr>
+<tr>
+<td>Trạng thái run Draft/Snapshotting/Published/Archived</td>
+<td>A §23.2</td>
+<td>SRS state machine QC Run chỉ có Queued, Running, Completed, Partial, Failed, Cancelled</td>
+</tr>
+<tr>
+<td>NOT_REQUIRED, EXCEPTION_APPROVED</td>
+<td>T §6</td>
+<td>B-19: chỉ lưu làm lý do trong ledger, không phải trạng thái công khai</td>
+</tr>
+</tbody>
+</table>
+<h2 id="tai-lieu-lien-quan">Tài liệu liên quan</h2>
+<ul>
+<li><a href="system-design.html">Kiến trúc hệ thống</a></li>
+<li><a href="architecture.html">Intake kiến trúc</a></li>
+<li><a href="../04-api/rest-api.html">REST API</a></li>
+</ul>
+</article></main></body></html>

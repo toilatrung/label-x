@@ -1,0 +1,1102 @@
+{
+  "schema_version": 1,
+  "project": "LabelX",
+  "status": "test-design; not business acceptance",
+  "provider_assumption": "GitHub Actions; replace if user chooses another platform",
+  "sources": [
+    ".agent/governance/decisions/DEC-001.md",
+    "architecture_review.html",
+    "QC_Engine_Review_Report.html#roadmap",
+    "Quality_Control_Review_UX_Architecture.html#roadmap",
+    "docs/label-x_system-requirement-specification/sections/06-functional.tex",
+    "docs/label-x_system-requirement-specification/sections/07-evaluation.tex",
+    "docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex"
+  ],
+  "scope_note": "SRS M13 is a proposal, not an accepted scope amendment. RAG/Temporal/Classifier/full Dataset release remain post-MVP or feature-policy dependent. Application gate is not a CI deploy gate.",
+  "phases": [
+    {
+      "id": "scaffold",
+      "title": "Scaffold và công cụ CI",
+      "scope": "Hiện tại",
+      "source": "DEC-001; mã nguồn scaffold",
+      "dependencies": [],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p0_snapshot",
+      "title": "Nền tảng, CVAT và Snapshot",
+      "scope": "MVP",
+      "source": "T mục 8-A; A mục 16-P0; FR-SNP",
+      "dependencies": [
+        "scaffold"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p1_deterministic",
+      "title": "Kiểm xác định, aggregation và ledger",
+      "scope": "MVP",
+      "source": "T mục 8-A; A mục 16-P1; FR-ENG/AGG",
+      "dependencies": [
+        "p0_snapshot"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p2_discovery",
+      "title": "Detector và matching độc lập",
+      "scope": "MVP",
+      "source": "T mục 8-B; A mục 16-P2; FR-ENG",
+      "dependencies": [
+        "p1_deterministic"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "ranking",
+      "title": "Ranking và đối chứng M13",
+      "scope": "MVP theo SRS dự thảo",
+      "source": "SRS 06-functional FR-RNK",
+      "dependencies": [
+        "p2_discovery"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p3_review",
+      "title": "Review, phân xử, rework và quyền",
+      "scope": "MVP",
+      "source": "A mục 16-P3; FR-REV/ESC/RWK/SEC/GDL",
+      "dependencies": [
+        "p0_snapshot",
+        "p1_deterministic"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p5_evaluation",
+      "title": "Reference, held-out, calibration và pilot",
+      "scope": "MVP",
+      "source": "T mục 8-C; A mục 16-P5; FR-EVL; AC-08/09",
+      "dependencies": [
+        "p2_discovery",
+        "ranking",
+        "p3_review"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p6_gate_report",
+      "title": "Report, gate và revision cuối",
+      "scope": "MVP; M13 chỉ hiển thị gate",
+      "source": "A mục 16-P6; T mục 8-E; FR-RPT/GTE",
+      "dependencies": [
+        "p3_review",
+        "p5_evaluation"
+      ],
+      "required_for_mvp": true
+    },
+    {
+      "id": "p4_ai",
+      "title": "Kiểm thị giác–ngôn ngữ, RAG và classifier",
+      "scope": "Theo scope được duyệt; RAG/Classifer sau MVP",
+      "source": "T mục 8-D/E; A mục 16-P4; B-08/B-13",
+      "dependencies": [
+        "p2_discovery",
+        "p5_evaluation"
+      ],
+      "required_for_mvp": false
+    },
+    {
+      "id": "temporal",
+      "title": "Temporal và video/track",
+      "scope": "Sau MVP",
+      "source": "T mục 8-E; B-09",
+      "dependencies": [
+        "p2_discovery",
+        "p5_evaluation"
+      ],
+      "required_for_mvp": false
+    },
+    {
+      "id": "release_full",
+      "title": "Phát hành Dataset đầy đủ",
+      "scope": "Sau M13; chưa coi scope đã duyệt",
+      "source": "H ReleaseHistory; B-03; SRS FR-GTE-04",
+      "dependencies": [
+        "p6_gate_report"
+      ],
+      "required_for_mvp": false
+    },
+    {
+      "id": "continuous",
+      "title": "Continuous Quality Control và vận hành",
+      "scope": "Sau MVP và kiểm trên staging trước",
+      "source": "T mục 8-F; NFR-05/06/08/12/16",
+      "dependencies": [
+        "p6_gate_report"
+      ],
+      "required_for_mvp": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "SCF-01",
+      "phase": "scaffold",
+      "level": "integration",
+      "requirements": [
+        "DEC-001"
+      ],
+      "scenario": "Django phục vụ OpenAPI schema",
+      "expected": "HTTP 200 và test smoke hiện có chạy trên PostgreSQL tạm.",
+      "fixtures": "Django config + PostgreSQL",
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/test_smoke.py::test_openapi_schema_is_served"
+    },
+    {
+      "id": "SNP-01",
+      "phase": "p0_snapshot",
+      "level": "contract",
+      "requirements": [
+        "FR-SNP-01",
+        "R-05"
+      ],
+      "scenario": "Adapter gửi request ngoài allowlist hoặc ghi annotation",
+      "expected": "Chặn mọi annotation mutation; export có POST chỉ được phép nếu là thao tác đọc đã xác minh trong contract CVAT.",
+      "fixtures": "CVAT mock theo version; request recorder",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SNP-02",
+      "phase": "p0_snapshot",
+      "level": "unit",
+      "requirements": [
+        "FR-SNP-03",
+        "AC-01"
+      ],
+      "scenario": "Đổi thứ tự JSON/annotation không đổi nội dung",
+      "expected": "Hash chuẩn hoá giống; đổi geometry/class/thuộc tính phải đổi hash.",
+      "fixtures": "Hai export tương đương và một export đổi nhãn",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SNP-03",
+      "phase": "p0_snapshot",
+      "level": "integration",
+      "requirements": [
+        "FR-SNP-04",
+        "AC-03"
+      ],
+      "scenario": "Job thay đổi giữa hai lần đọc khi tạo snapshot",
+      "expected": "Không khoá snapshot; liệt kê job drift; không lưu bản dữ liệu trộn.",
+      "fixtures": "CVAT mock trả R1 rồi R2",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SNP-04",
+      "phase": "p0_snapshot",
+      "level": "integration",
+      "requirements": [
+        "FR-SNP-05",
+        "FR-SNP-06"
+      ],
+      "scenario": "Khoá rồi thử sửa snapshot; mapping frame khác thứ tự job",
+      "expected": "Snapshot bất biến; ảnh/checksum/assignee/version giữ đúng; parent snapshot mới.",
+      "fixtures": "Object Storage tạm + multi-job/frame fixture",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SNP-05",
+      "phase": "p0_snapshot",
+      "level": "e2e",
+      "requirements": [
+        "FR-SNP-08",
+        "FR-REV-12"
+      ],
+      "scenario": "Mở issue bằng deep link CVAT",
+      "expected": "Đúng job/frame; token không xuất hiện trong URL/client/log.",
+      "fixtures": "Synthetic image + task/job/frame mapping",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "ENG-01",
+      "phase": "p1_deterministic",
+      "level": "unit",
+      "requirements": [
+        "FR-ENG-02"
+      ],
+      "scenario": "Lớp không thuộc taxonomy hoặc thiếu thuộc tính bắt buộc",
+      "expected": "Candidate có rule ID và expected/actual, không tự confirm defect.",
+      "fixtures": "Taxonomy version + annotation hợp lệ/sai",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "ENG-02",
+      "phase": "p1_deterministic",
+      "level": "unit",
+      "requirements": [
+        "FR-ENG-03",
+        "B-06"
+      ],
+      "scenario": "Bounds/diện tích ở dưới, bằng và trên ngưỡng H; toạ độ đảo",
+      "expected": "Kiểm đúng 2 px, 24 px² theo convention; G-009 Not checked, không đo tightness giả.",
+      "fixtures": "Bounding box boundary fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "ENG-03",
+      "phase": "p1_deterministic",
+      "level": "unit",
+      "requirements": [
+        "FR-ENG-04"
+      ],
+      "scenario": "Duplicate ở dưới/bằng/trên Intersection over Union 0.85",
+      "expected": "Candidate đúng cặp/IoU/lớp; hai object thật vẫn cần reviewer, không tự đóng.",
+      "fixtures": "Cặp box/cluster chồng lấn",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AGG-01",
+      "phase": "p1_deterministic",
+      "level": "integration",
+      "requirements": [
+        "FR-AGG-01",
+        "FR-AGG-02",
+        "AC-02"
+      ],
+      "scenario": "Replay shard và retry sau worker chết",
+      "expected": "Candidate/issue không trùng, candidate cũ bất biến; provenance không mất.",
+      "fixtures": "PostgreSQL + worker thật + shard replay",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AGG-02",
+      "phase": "p1_deterministic",
+      "level": "integration",
+      "requirements": [
+        "FR-AGG-03"
+      ],
+      "scenario": "Nhiều nguồn cùng object; khác nhóm lỗi",
+      "expected": "Gộp đúng dedup key/version; giữ nguồn và quyết định riêng khi cần.",
+      "fixtures": "Multi-source candidates",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AGG-03",
+      "phase": "p1_deterministic",
+      "level": "integration",
+      "requirements": [
+        "FR-AGG-04",
+        "FR-AGG-05",
+        "AC-07"
+      ],
+      "scenario": "Frame lỗi decode, unsupported shape, engine tắt, partial",
+      "expected": "Không bỏ failed khỏi mẫu số; status/applicability đúng; không biến thiếu kiểm thành pass.",
+      "fixtures": "Eligible/completed/failed/not-checked ledger",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AGG-04",
+      "phase": "p1_deterministic",
+      "level": "fault",
+      "requirements": [
+        "FR-AGG-06",
+        "NFR-06"
+      ],
+      "scenario": "Ngắt giữa upload blob và commit metadata; rollback decision/audit",
+      "expected": "Không có ledger completed/candidate tham chiếu blob thiếu; transaction nhất quán; orphan chỉ dọn theo policy.",
+      "fixtures": "Object Storage fault + PostgreSQL rollback",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "DET-01",
+      "phase": "p2_discovery",
+      "level": "contract",
+      "requirements": [
+        "FR-ENG-05",
+        "FR-ENG-09"
+      ],
+      "scenario": "Model checksum sai, class unmapped, chưa có artifact",
+      "expected": "Không suy luận với artifact sai; không có model thì Not checked; không ranking giả.",
+      "fixtures": "Detector stub + artifact manifest",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "DET-02",
+      "phase": "p2_discovery",
+      "level": "integration",
+      "requirements": [
+        "FR-ENG-05",
+        "NFR-04"
+      ],
+      "scenario": "Batch xử lý frame thành công và lỗi; rerun prediction",
+      "expected": "Mọi required frame có ledger; transform đúng; prediction/config/model hash truy nguyên.",
+      "fixtures": "Synthetic images + frozen stub; GPU thật ở evaluation",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "MAT-01",
+      "phase": "p2_discovery",
+      "level": "unit",
+      "requirements": [
+        "FR-ENG-06"
+      ],
+      "scenario": "Matching một-một, sai class, đông object và cạnh dưới threshold",
+      "expected": "Geometry trước class; loại cạnh dưới threshold trước tối ưu; max cardinality rồi IoU, tie tất định.",
+      "fixtures": "Ambiguous/dense association fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "MAT-02",
+      "phase": "p2_discovery",
+      "level": "unit",
+      "requirements": [
+        "FR-ENG-07",
+        "FR-ENG-08",
+        "B-21"
+      ],
+      "scenario": "Unmatched prediction, matched wrong class, không Ground Truth",
+      "expected": "Sinh missing/class candidate theo policy; có evidence; không gọi disagreement là accuracy.",
+      "fixtures": "Prediction/annotation without Ground Truth",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "MAT-03",
+      "phase": "p2_discovery",
+      "level": "integration",
+      "requirements": [
+        "FR-ENG-08",
+        "AC-04"
+      ],
+      "scenario": "Crop lệch, sai frame/revision, transform resize",
+      "expected": "Bằng chứng đúng frame và original coordinates; evidence sai bị từ chối/pending.",
+      "fixtures": "Image/crop/checksum fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RNK-01",
+      "phase": "ranking",
+      "level": "unit",
+      "requirements": [
+        "FR-RNK-01",
+        "FR-RNK-03",
+        "FR-RNK-04",
+        "AC-01"
+      ],
+      "scenario": "Có frame không candidate và frame hoà điểm; rerun",
+      "expected": "Ranking mọi frame, tie hash(frame_key,seed), canonical result hash tái lập.",
+      "fixtures": "Fixed score/seed snapshot",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RNK-02",
+      "phase": "ranking",
+      "level": "unit",
+      "requirements": [
+        "FR-RNK-05",
+        "FR-RNK-12"
+      ],
+      "scenario": "Cụm duplicate nhiều box; điểm nền và nhiều candidate một issue",
+      "expected": "Đếm tối đa m-1 lỗi cho cụm; không double count; giải thích n_i q_i + h(f).",
+      "fixtures": "Issue anchors + duplicate cluster",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RNK-03",
+      "phase": "ranking",
+      "level": "integration",
+      "requirements": [
+        "FR-RNK-02",
+        "FR-RNK-06"
+      ],
+      "scenario": "Score version khoá; engine bắt buộc Failed/Not checked",
+      "expected": "Không đổi score đã khoá; frame thiếu evidence không bị xếp thấp rồi ẩn.",
+      "fixtures": "Score/config version + ledger",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RNK-04",
+      "phase": "ranking",
+      "level": "unit",
+      "requirements": [
+        "FR-RNK-07",
+        "FR-RNK-08"
+      ],
+      "scenario": "Random sample và risk ranking có cùng seed/scope",
+      "expected": "Sample ngẫu nhiên độc lập, tái lập; đối chứng dùng cùng frame universe; báo cáo riêng.",
+      "fixtures": "Random manifest + baseline rankings",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RNK-05",
+      "phase": "ranking",
+      "level": "evaluation",
+      "requirements": [
+        "FR-RNK-10",
+        "FR-RNK-11"
+      ],
+      "scenario": "Out-of-fold/calibration và ablation",
+      "expected": "Group split theo video, không dùng held-out học score; thiếu labels ghi score_v0, không xác suất đã hiệu chỉnh.",
+      "fixtures": "Approved calibration split + score manifest",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REV-01",
+      "phase": "p3_review",
+      "level": "e2e",
+      "requirements": [
+        "FR-REV-01",
+        "FR-REV-05",
+        "FR-REV-06",
+        "FR-REV-07"
+      ],
+      "scenario": "Chuyển Issue/Frame mode, filter/overlay/next issue",
+      "expected": "Đúng scope/frame/evidence; giữ context; trạng thái thiếu evidence rõ.",
+      "fixtures": "Browser synthetic dataset + authenticated roles",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REV-02",
+      "phase": "p3_review",
+      "level": "concurrency",
+      "requirements": [
+        "FR-REV-03",
+        "FR-REV-04",
+        "FR-REV-14",
+        "NFR-15"
+      ],
+      "scenario": "Hai reviewer claim cùng frame; lease hết hạn hoặc sai owner",
+      "expected": "Một owner duy nhất; ghi decision bị chặn 409 khi lease sai/hết hạn; không phụ thuộc Redis lock.",
+      "fixtures": "PostgreSQL transaction + parallel clients",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REV-03",
+      "phase": "p3_review",
+      "level": "integration",
+      "requirements": [
+        "FR-REV-08",
+        "FR-REV-10",
+        "FR-REV-13",
+        "AC-04"
+      ],
+      "scenario": "Confirm thiếu lý do/severity; lỗi lưu; hoàn tất frame khi issue chưa quyết định",
+      "expected": "Guard từ chối; decision+audit atomic; không next/complete khi save thất bại.",
+      "fixtures": "Decision variants + rollback",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SEC-01",
+      "phase": "p3_review",
+      "level": "security",
+      "requirements": [
+        "FR-SEC-01",
+        "FR-SEC-02",
+        "FR-SEC-03",
+        "AC-05"
+      ],
+      "scenario": "Cross-project read/list, self-review, deep link trực tiếp",
+      "expected": "API deny/filter đúng; self-review dựa assignee snapshot; không lộ data qua counts/export.",
+      "fixtures": "Identity mapping + two project scopes",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "SEC-02",
+      "phase": "p3_review",
+      "level": "security",
+      "requirements": [
+        "FR-SEC-04",
+        "FR-SEC-06"
+      ],
+      "scenario": "Tự duyệt; cùng người dùng tài khoản khác; Super Admin override",
+      "expected": "Tách người thật; override có lý do và audit, vẫn chịu self-review/tách nhiệm vụ.",
+      "fixtures": "Two identities + linked accounts",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "ESC-01",
+      "phase": "p3_review",
+      "level": "integration",
+      "requirements": [
+        "FR-ESC-01",
+        "FR-ESC-02",
+        "FR-ESC-03"
+      ],
+      "scenario": "Reviewer bất đồng hoặc guideline thiếu/đổi version",
+      "expected": "Chỉ vai trò đủ quyền phân xử; giữ evidence/history; thiếu rule không tự ép sửa.",
+      "fixtures": "Approved rule + guideline gap",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RWK-01",
+      "phase": "p3_review",
+      "level": "integration",
+      "requirements": [
+        "FR-RWK-02",
+        "FR-RWK-03",
+        "FR-RWK-04",
+        "FR-RWK-05",
+        "AC-06"
+      ],
+      "scenario": "Submit không đổi revision; verify cùng người sửa; recheck fail",
+      "expected": "Không đóng issue sai; recheck đúng revision mới; fail trả rework và giữ snapshot gốc.",
+      "fixtures": "CVAT R1/R2 mock + role fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RWK-02",
+      "phase": "p3_review",
+      "level": "e2e",
+      "requirements": [
+        "FR-RWK-06",
+        "FR-RWK-08",
+        "AC-06"
+      ],
+      "scenario": "Vòng candidate → quyết định → sửa CVAT → verify → final run",
+      "expected": "Snapshot/run cuối liên kết verify; Partial/Failed/cancelled/new issue không chuyển report/gate thành hoàn tất.",
+      "fixtures": "Synthetic end-to-end revisions",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "GDL-01",
+      "phase": "p3_review",
+      "level": "integration",
+      "requirements": [
+        "FR-GDL-01",
+        "FR-GDL-03",
+        "FR-GDL-04"
+      ],
+      "scenario": "Lookup guideline rule ID/version và case khác scope",
+      "expected": "Đúng rule/section/version; không retrieval RAG trong MVP; thiếu mapping báo thiếu căn cứ.",
+      "fixtures": "Versioned guideline/cases",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AUD-01",
+      "phase": "p3_review",
+      "level": "integration",
+      "requirements": [
+        "FR-SEC-05",
+        "NFR-08",
+        "AC-11"
+      ],
+      "scenario": "Decision/waiver/reference lock; thử update/delete audit",
+      "expected": "Audit đủ actor/before-after/revision/reason; append-only được enforce, không chỉ ẩn UI.",
+      "fixtures": "DB grants + transaction fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REF-01",
+      "phase": "p5_evaluation",
+      "level": "integration",
+      "requirements": [
+        "FR-EVL-01",
+        "FR-EVL-03",
+        "FR-EVL-04"
+      ],
+      "scenario": "Hai bản Ground Truth độc lập bất đồng; reference khoá",
+      "expected": "Phân xử trước khoá; version/mapping/counting policy nhất quán; không dùng model làm trọng tài mặc định.",
+      "fixtures": "Expert/adjudicated synthetic reference",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REF-02",
+      "phase": "p5_evaluation",
+      "level": "security",
+      "requirements": [
+        "FR-EVL-02",
+        "FR-EVL-05"
+      ],
+      "scenario": "Reference author xem ranking; video/train/guideline cases lọt held-out",
+      "expected": "Chặn leak; split không giao theo video; benchmark bị contaminated không đạt.",
+      "fixtures": "Split manifests + training inventory",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "MET-01",
+      "phase": "p5_evaluation",
+      "level": "unit",
+      "requirements": [
+        "FR-EVL-15",
+        "B-05",
+        "B-20"
+      ],
+      "scenario": "Thiếu reference hoặc metric thuộc run/snapshot khác",
+      "expected": "Not checked/insufficient data; không 0%/pass; engine metric tách reviewer calibration.",
+      "fixtures": "Missing/stale Ground Truth version",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "KPI-01",
+      "phase": "p5_evaluation",
+      "level": "unit",
+      "requirements": [
+        "FR-EVL-07",
+        "FR-EVL-10"
+      ],
+      "scenario": "Recall@k trên reference nhỏ; ceil(kN), zero errors, đủ/thiếu mẫu",
+      "expected": "Đếm lỗi không phải frame; denominator đúng; insufficient sample không kết luận đạt.",
+      "fixtures": "Tiny hand-computed reference",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "KPI-02",
+      "phase": "p5_evaluation",
+      "level": "evaluation",
+      "requirements": [
+        "FR-EVL-08",
+        "FR-EVL-09",
+        "AC-08"
+      ],
+      "scenario": "Held-out + baseline random/heuristic + intervals theo video",
+      "expected": "Recall@20%/slice/CI/provenance đầy đủ; TBD-K1/K4 chưa duyệt thì BLOCKED, không tự chọn threshold.",
+      "fixtures": "Locked reference/model/score + approved policy",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "EFF-01",
+      "phase": "p5_evaluation",
+      "level": "integration",
+      "requirements": [
+        "FR-EVL-06",
+        "FR-EVL-11",
+        "FR-EVL-12"
+      ],
+      "scenario": "Idle, nhiều tab, rework, baseline nhìn evidence",
+      "expected": "Effort tính thời gian hoạt động gồm false alarm/recheck; baseline không lộ assisted evidence; policy khoá trước.",
+      "fixtures": "Event timeline + branch fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "EFF-02",
+      "phase": "p5_evaluation",
+      "level": "evaluation",
+      "requirements": [
+        "FR-EVL-13",
+        "FR-EVL-14",
+        "AC-09"
+      ],
+      "scenario": "So effort/residual/false additions giữa hai nhánh",
+      "expected": "Non-inferiority và hiệu quả theo policy duyệt; thiếu TBD-K2/K3/TBD-12 thì không nghiệm thu.",
+      "fixtures": "Pilot assignment + reference + preregistration",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RPT-01",
+      "phase": "p6_gate_report",
+      "level": "integration",
+      "requirements": [
+        "FR-RPT-01",
+        "FR-RPT-02",
+        "FR-RPT-03",
+        "FR-RPT-04",
+        "AC-10"
+      ],
+      "scenario": "Report có random/risk, engine/calibration, thiếu metric",
+      "expected": "Cỡ mẫu/mẫu số/CI/scope/version đúng; không trộn stream; không số vô nguồn.",
+      "fixtures": "Report source records",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "GTE-01",
+      "phase": "p6_gate_report",
+      "level": "unit",
+      "requirements": [
+        "FR-GTE-01",
+        "FR-GTE-02",
+        "AC-07"
+      ],
+      "scenario": "Các ngưỡng pilot ở dưới/bằng/trên; missing/Partial reference",
+      "expected": "95%/0/100%/5%/90% áp đúng policy, không lấy reviewer agreement thay engine accuracy; thiếu dữ liệu chưa đạt.",
+      "fixtures": "Boundary gate fixtures theo cấu hình đã chốt",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "GTE-02",
+      "phase": "p6_gate_report",
+      "level": "integration",
+      "requirements": [
+        "FR-GTE-03",
+        "FR-SEC-04"
+      ],
+      "scenario": "Waiver chưa duyệt/hết hạn/sai condition/sai requester",
+      "expected": "Waiver chỉ có hiệu lực đúng scope, approval, expiry; không tự approve chính mình.",
+      "fixtures": "Versioned waiver + controlled clock",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RPT-02",
+      "phase": "p6_gate_report",
+      "level": "e2e",
+      "requirements": [
+        "FR-RPT-05",
+        "FR-RPT-06",
+        "FR-RWK-08"
+      ],
+      "scenario": "Xuất PDF/CSV/JSON và chuyển final run",
+      "expected": "Các định dạng truy cùng nguồn; final run không complete thì giữ lý do/run gốc, không phát hành Dataset giả.",
+      "fixtures": "Export files + final-run fixture",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "VLM-01",
+      "phase": "p4_ai",
+      "level": "integration",
+      "requirements": [
+        "FR-ENG-10",
+        "B-08"
+      ],
+      "scenario": "Candidate trigger, timeout, abstain và sai crop/revision",
+      "expected": "Không tự confirm; cap 400 candidate, 3 lần thử tổng; hết budget không pass/reject.",
+      "fixtures": "Model gateway fake; policy-approved feature flag",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "RAG-01",
+      "phase": "p4_ai",
+      "level": "integration",
+      "requirements": [
+        "B-13",
+        "T-3"
+      ],
+      "scenario": "Retrieval guideline/case sau MVP: stale version và wrong scope",
+      "expected": "Nguồn/section/version đúng; thiếu rule thì gap; không tự tạo kết luận đúng/sai.",
+      "fixtures": "Approved post-MVP corpus; no held-out leakage",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "CLS-01",
+      "phase": "p4_ai",
+      "level": "evaluation",
+      "requirements": [
+        "B-07",
+        "T-8E"
+      ],
+      "scenario": "Classifier trên slice khó hoặc không có camera profile",
+      "expected": "Abstain/unavailable rõ; lợi ích được đánh giá trên held-out trước bật.",
+      "fixtures": "Approved classifier/profile/reference",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "AI-01",
+      "phase": "p4_ai",
+      "level": "evaluation",
+      "requirements": [
+        "B-14",
+        "T-7"
+      ],
+      "scenario": "Ablation blind versus assisted",
+      "expected": "Lợi ích/false alarm/anchoring/latency đo theo policy; không giữ AI chỉ vì giải thích nghe hợp lý.",
+      "fixtures": "Approved AI evaluation protocol",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "TMP-01",
+      "phase": "temporal",
+      "level": "unit",
+      "requirements": [
+        "B-09",
+        "T-3"
+      ],
+      "scenario": "Track gap ở scene cut/outside/occlusion/frame stride",
+      "expected": "Không coi ra khỏi ảnh/scene cut là missing; continuity metric không dựa một frame.",
+      "fixtures": "Approved sequence fixtures",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "TMP-02",
+      "phase": "temporal",
+      "level": "evaluation",
+      "requirements": [
+        "B-09",
+        "T-8E"
+      ],
+      "scenario": "Mở scope video/track và map engine",
+      "expected": "Scope được duyệt trước; dữ liệu/reference và UI sequence đầy đủ; không tự thêm engine thứ bảy H.",
+      "fixtures": "Approved scope record + video reference",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REL-01",
+      "phase": "release_full",
+      "level": "e2e",
+      "requirements": [
+        "B-03",
+        "R-03",
+        "H-ReleaseHistory"
+      ],
+      "scenario": "Gate/approval → Dataset artifact/manifest",
+      "expected": "Artifact/report/snapshot/final revision cùng bản đã sửa; full release chỉ khi scope sau M13 được duyệt.",
+      "fixtures": "Approved release scope + immutable artifact",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "REL-02",
+      "phase": "release_full",
+      "level": "integration",
+      "requirements": [
+        "B-11",
+        "B-12"
+      ],
+      "scenario": "Revoke/expired waiver và ghi đè",
+      "expected": "Không sửa ngược manifest; giữ audit; quyền và tách nhiệm vụ đúng.",
+      "fixtures": "Release approval history",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-01",
+      "phase": "continuous",
+      "level": "fault",
+      "requirements": [
+        "NFR-05",
+        "NFR-06"
+      ],
+      "scenario": "Worker/Redis/Object Storage lỗi giữa run",
+      "expected": "Không mất kết quả committed; retry không duplicate; ledger/status chưa hoàn tất đúng.",
+      "fixtures": "Staging chaos fixture; isolated namespaces",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-02",
+      "phase": "continuous",
+      "level": "security",
+      "requirements": [
+        "NFR-07",
+        "NFR-09"
+      ],
+      "scenario": "Token trong log/client, request gửi ảnh ra ngoài",
+      "expected": "Không lộ secret; pilot dữ liệu nội bộ, không external image calls khi chưa được phép.",
+      "fixtures": "Redacted logs + network recorder",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-03",
+      "phase": "continuous",
+      "level": "load",
+      "requirements": [
+        "NFR-01",
+        "NFR-02",
+        "NFR-03",
+        "NFR-15"
+      ],
+      "scenario": "Tải API/lease/worker và lạnh/ấm cache",
+      "expected": "Concurrency invariant giữ đúng; latency/throughput báo điều kiện đo; TBD-13 chưa chốt không auto-pass.",
+      "fixtures": "Approved load profile + target hardware",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-04",
+      "phase": "continuous",
+      "level": "recovery",
+      "requirements": [
+        "NFR-16"
+      ],
+      "scenario": "Backup và restore PostgreSQL/Object Storage cùng mốc",
+      "expected": "Restore được snapshot/evidence/decision/reference/effort nhất quán; RPO/RTO theo policy được duyệt.",
+      "fixtures": "Isolated restore namespace; approved recovery policy",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-05",
+      "phase": "continuous",
+      "level": "integration",
+      "requirements": [
+        "NFR-08",
+        "B-14"
+      ],
+      "scenario": "Dọn cache/crop; Dataset còn cần đối chiếu",
+      "expected": "Không xoá nguồn bất biến hoặc evidence đang dùng; retention cần người quản lý xác nhận.",
+      "fixtures": "Referenced/unreferenced blob graph",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-06",
+      "phase": "continuous",
+      "level": "evaluation",
+      "requirements": [
+        "T-8F",
+        "NFR-12"
+      ],
+      "scenario": "Model/guideline drift và rollout phiên bản mới",
+      "expected": "Canary/rollback theo policy; giữ version cũ và audit; dashboard có run/snapshot/request provenance.",
+      "fixtures": "Frozen previous/new version + staging evaluation",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "API-01",
+      "phase": "p0_snapshot",
+      "level": "contract",
+      "requirements": [
+        "FR-SNP-01",
+        "NFR-14"
+      ],
+      "scenario": "OpenAPI thay field/type/status hoặc frontend SDK sinh từ schema cũ",
+      "expected": "So hợp đồng/version theo policy; type client sinh từ schema đúng; breaking change không âm thầm qua CI.",
+      "fixtures": "Schema snapshot + frontend generated types",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "ENG-04",
+      "phase": "p1_deterministic",
+      "level": "contract",
+      "requirements": [
+        "NFR-13",
+        "FR-ENG-01",
+        "FR-AGG-05"
+      ],
+      "scenario": "Engine output sai snapshot/frame/status/provenance hoặc partial thiếu skipped reason",
+      "expected": "Hợp đồng engine từ chối output sai; plugin hợp lệ dùng luồng review chung; engine mới vẫn cần scope được duyệt.",
+      "fixtures": "EngineJob/EngineResult fixtures theo A mục 20.3",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "UX-01",
+      "phase": "p3_review",
+      "level": "e2e",
+      "requirements": [
+        "FR-REV-11",
+        "NFR-10"
+      ],
+      "scenario": "Review bằng bàn phím, focus, nhãn trạng thái và lỗi form",
+      "expected": "Thao tác chính/shortcut hoạt động, không kích hoạt khi nhập text; focus/label/contrast phù hợp Design System, trạng thái không chỉ màu.",
+      "fixtures": "Browser + LabelX Design System + accessibility checks",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    },
+    {
+      "id": "OPS-07",
+      "phase": "continuous",
+      "level": "recovery",
+      "requirements": [
+        "NFR-16",
+        "B-03"
+      ],
+      "scenario": "Migration hoặc smoke staging lỗi sau deploy, promote nhầm artifact",
+      "expected": "Rollback/recovery dùng artifact và data plan được duyệt; production nhận cùng CI/test/staging SHA; không rebuild hoặc chạy phá dữ liệu thật.",
+      "fixtures": "Isolated staging + previous artifact + migration/backup manifest",
+      "implementation": "planned",
+      "runner": "unbound",
+      "test_nodeid": null
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Review Workspace</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="review" active-item="workspace" hint-size="100%,100px"></dc-import>
+<main class="lx-page" style="gap: 16px">
+<dc-import name="FlowNav" flow="review" step="workspace" hint-size="100%,48px"></dc-import>
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Review Workspace</h1>
+<p class="lx-lead">Đối chiếu annotation với bằng chứng và hướng dẫn, sau đó ra quyết định. Trợ lý chỉ cung cấp bằng chứng; quyết định cuối cùng luôn thuộc về người review.</p>
+</div>
+<div class="lx-actions"><span class="lx-hint">Job 2272 · An Nguyễn · validation</span><a class="lx-btn" href="ReviewQueues.dc.html">Về hàng đợi</a></div>
+</div>
+
+<div class="lx-ws">
+
+<section class="lx-stage" aria-label="Khung hình annotation từ CVAT">
+<div class="lx-stage__bar">
+<div class="lx-segment" role="group" aria-label="Chế độ review">
+<button aria-pressed="{{issueMode}}" onClick="{{setIssue}}">Issue Review</button>
+<button aria-pressed="{{frameMode}}" onClick="{{setFrame}}">Frame Review</button>
+</div>
+<span>Frame <b class="lx-num">00428</b> / 00599</span>
+<span style="flex: 1"></span>
+<label class="lx-check"><input type="checkbox" checked=""> Annotation hiện tại</label>
+<label class="lx-check"><input type="checkbox" checked=""> Đề xuất mô hình</label>
+<button class="lx-ghostbtn">Mở trong CVAT</button>
+</div>
+<div class="lx-stage__view">
+<svg viewBox="0 0 960 540" role="img" aria-label="Khung hình đường phố với annotation xe số 18 và đề xuất của mô hình">
+<rect width="960" height="540" fill="#2a2f37"></rect>
+<polygon points="0,540 960,540 960,330 600,230 360,230 0,330" fill="#353b45"></polygon>
+<line x1="480" y1="540" x2="480" y2="236" stroke="#59616e" stroke-width="3" stroke-dasharray="26 22"></line>
+<rect x="0" y="0" width="960" height="228" fill="#252a31"></rect>
+<g opacity="{{othersOpacity}}" font-family="Inter, sans-serif" font-size="14">
+<rect x="96" y="318" width="150" height="104" fill="none" stroke="#c7ccd4" stroke-width="2"></rect>
+<text x="96" y="310" fill="#e8eaee">car #12</text>
+<rect x="740" y="268" width="38" height="92" fill="none" stroke="#c7ccd4" stroke-width="2"></rect>
+<text x="700" y="260" fill="#e8eaee">pedestrian #07</text>
+<rect x="560" y="286" width="84" height="58" fill="none" stroke="#c7ccd4" stroke-width="2"></rect>
+<text x="560" y="278" fill="#e8eaee">car #21</text>
+</g>
+<rect x="300" y="296" width="200" height="140" fill="none" stroke="#5fd0c7" stroke-width="3" stroke-dasharray="10 6"></rect>
+<rect x="318" y="316" width="168" height="112" fill="none" stroke="#f2c14e" stroke-width="3"></rect>
+<g font-family="Inter, sans-serif" font-size="14" font-weight="600">
+<rect x="318" y="292" width="124" height="22" fill="#f2c14e"></rect><text x="326" y="308" fill="#1f2329">car #18 · hiện tại</text>
+<rect x="300" y="440" width="196" height="22" fill="#5fd0c7"></rect><text x="308" y="456" fill="#1f2329">mô hình: truck · 0.81</text>
+</g>
+</svg>
+</div>
+<div class="lx-stage__bar" style="border-top: 1px solid #343a43; border-bottom: 0">
+<button class="lx-ghostbtn">‹ Frame trước</button><button class="lx-ghostbtn">Frame sau ›</button>
+<span style="flex: 1"></span>
+<sc-if value="{{frameMode}}" hint-placeholder-val="{{false}}"><span>Nhấn vào một object để tạo issue mới.</span></sc-if>
+<sc-if value="{{issueMode}}" hint-placeholder-val="{{true}}"><span>Đường liền: annotation hiện tại · Đường đứt: đề xuất của mô hình</span></sc-if>
+</div>
+</section>
+
+<aside class="lx-ws__panel" aria-label="Chi tiết issue và quyết định">
+<div class="lx-ws__sec">
+<div class="lx-row" style="justify-content: space-between"><span><b class="lx-mono">QC-00128</b> <span class="lx-hint">· Issue 3 / 124</span></span><span><span class="lx-badge lx-badge--danger">Cao</span> <span class="lx-badge">Chờ review</span></span></div>
+<h2 class="lx-h2">Nghi sai nhãn: car hay truck</h2>
+<dl class="lx-kv">
+<dt>Frame · Object</dt><dd>00428 · #18</dd>
+<dt>Annotation hiện tại</dt><dd>car</dd>
+<dt>Nguồn</dt><dd>Mô hình độc lập bất đồng · revision <span class="lx-mono">a91f3c</span></dd>
+</dl>
+</div>
+
+<div class="lx-ws__sec">
+<h3 class="lx-h2" style="font-size: 13px">Bằng chứng</h3>
+<table class="lx-table" style="font-size: 12px">
+<tbody>
+<tr><td class="lx-muted">Annotation</td><td>car</td></tr>
+<tr><td class="lx-muted">Mô hình độc lập</td><td>truck · độ tin cậy 0.81</td></tr>
+<tr><td class="lx-muted">Mô hình thị giác – ngôn ngữ</td><td><span class="lx-badge lx-badge--danger">Failed</span> chưa có kết quả</td></tr>
+</tbody>
+</table>
+<details>
+<summary style="cursor: pointer; font-size: 13px; font-weight: 600">Hướng dẫn liên quan · Quy tắc VEH-03</summary>
+<p class="lx-muted" style="margin: 8px 0 0; font-size: 13px">Xe có thùng hàng rời phía sau cabin được gán nhãn <b>truck</b>. Xe chở người, mui kín liền khối gán nhãn <b>car</b>. <span class="lx-subtle">Guideline v1.2 · Phân loại phương tiện, mục 3.2</span></p>
+</details>
+<details>
+<summary style="cursor: pointer; font-size: 13px; font-weight: 600">Case tương tự đã phân xử (3)</summary>
+<p class="lx-muted" style="margin: 8px 0 0; font-size: 13px">CASE-021 · Xe bán tải thùng hở → <b>truck</b>. CASE-034 · Xe van → <b>car</b>. CASE-040 · Xe bán tải có nắp thùng → <b>truck</b>.</p>
+</details>
+</div>
+
+<div class="lx-ws__decide">
+<span class="lx-label">Quyết định</span>
+<div class="lx-choices">
+<label class="lx-choice"><input type="radio" name="d" checked=""><span>Xác nhận lỗi</span></label>
+<label class="lx-choice"><input type="radio" name="d"><span>Bác bỏ</span></label>
+<label class="lx-choice"><input type="radio" name="d"><span>Chưa chắc chắn</span></label>
+<label class="lx-choice"><input type="radio" name="d"><span>Yêu cầu sửa</span></label>
+<label class="lx-choice"><input type="radio" name="d"><span>Chuyển cấp trên</span></label>
+</div>
+<div class="lx-grid" style="grid-template-columns: 1fr 1fr; gap: 12px">
+<div class="lx-field"><label class="lx-label" for="dt">Loại lỗi đã xác nhận</label><select id="dt" class="lx-select"><option>Sai nhãn</option><option>Hình học</option><option>Thiếu object</option></select></div>
+<div class="lx-field"><label class="lx-label" for="sv">Mức độ</label><select id="sv" class="lx-select"><option>Nghiêm trọng</option><option>Trung bình</option><option>Nhẹ</option></select></div>
+</div>
+<div class="lx-field"><label class="lx-label" for="rs">Lý do</label><textarea id="rs" class="lx-textarea" placeholder="Ví dụ: Thùng hàng rời phía sau cabin, theo VEH-03 phải gán nhãn truck."></textarea></div>
+<div class="lx-row" style="justify-content: space-between"><button class="lx-btn lx-btn--ghost">‹ Issue trước</button><button class="lx-btn lx-btn--primary">Lưu và chuyển issue tiếp ›</button></div>
+</div>
+</aside>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const mode = (this.state && this.state.mode) || 'issue';
+    return {
+      issueMode: mode === 'issue',
+      frameMode: mode === 'frame',
+      othersOpacity: mode === 'frame' ? 1 : 0.3,
+      setIssue: () => this.setState({ mode: 'issue' }),
+      setFrame: () => this.setState({ mode: 'frame' })
+    };
+  }
+}
+</script>
+</body>
+</html>

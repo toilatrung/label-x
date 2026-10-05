@@ -1,0 +1,104 @@
+% =====================================================================
+%  Phụ lục
+% =====================================================================
+\chapter{Quyết định kiến trúc đã chốt}
+\label{app:decisions}
+Nguồn: bản rà soát kiến trúc đã chốt ngày 05/10/2026 (nguồn R). 20 quyết định
+chọn phương án A, B-05 chọn phương án B. Cột cuối nêu cách áp dụng cho M13.
+
+\begin{xltabular}{\linewidth}{@{}L{1.1cm}L{4.6cm}Y@{}}
+\caption{B-01…B-21 và cách áp dụng cho M13}\label{tab:decisions}\\
+\toprule
+\textbf{Mã} & \textbf{Phương án đã chốt} & \textbf{Áp dụng cho M13}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Mã} & \textbf{Phương án} & \textbf{Áp dụng cho M13}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+B-01 & Modular monolith + worker pool; Django + DRF, PostgreSQL, Celery + Redis, Object Storage. & Chương~\ref{ch:arch}.\\
+B-02 & Export từng job, chuẩn hoá, hash, kiểm drift trước khoá; lưu ảnh và metadata. & FR-SNP-03…05.\\
+B-03 & Snapshot và QC run cuối trên revision đã sửa, liên kết verification. & FR-RWK-06, FR-RWK-08.\\
+B-04 & Coverage theo từng engine với mẫu số áp dụng. & FR-AGG-04, FR-RPT-04.\\
+B-05 & Metric engine tính trên reference theo B-20; Model Orchestrator tổng hợp; không dùng model làm trọng tài. & GT dùng chung, FR-EVL-15, BR-17.\\
+B-06 & Geometry chỉ kiểm cấu trúc/bounds/diện tích. & FR-ENG-03; độ khít biên ngoài KPI.\\
+B-07 & Pilot một Detector baseline; Classifier chưa bật. & FR-ENG-05, FR-ENG-09.\\
+B-08 & Pipeline candidate $\rightarrow$ chọn theo policy $\rightarrow$ worker kiểm chọn lọc; 400 candidate/run, 3 lần thử. & Đề xuất không bật trong pilot, cần duyệt (FR-ENG-10, TBD-08).\\
+B-09 & Temporal/track ngoài phạm vi tự động giai đoạn đầu. & Ngoài phạm vi.\\
+B-10 & Candidate/Issue riêng, retry idempotent, dedup theo scope/object/nhóm, policy có version. & FR-AGG-01…03, FR-RNK-12.\\
+B-11 & Waiver theo policy từng điều kiện, người duyệt khác người yêu cầu, lý do/hạn/evidence. & FR-GTE-03.\\
+B-12 & Scope quyền, assignee tại snapshot, tách người yêu cầu/duyệt, audit append-only cùng transaction. & FR-SEC, FR-REV-14.\\
+B-13 & Tra cứu trực tiếp rule ID + version + section + case đã duyệt. & FR-GDL.\\
+B-14 & Pilot đại diện, đo baseline rồi đặt tiêu chí. & Chương~\ref{ch:eval}, pre-registration.\\
+B-15 & Gate riêng từng ngưỡng với nguồn, scope, cỡ mẫu, đủ dữ liệu. & FR-GTE-01…02.\\
+B-16 & Mapping feature vào sáu engine; không tự mở Diff/profile. & Ngoài phạm vi.\\
+B-17 & Bảng transition/event/actor/guard dùng trạng thái H. & Mục~\ref{sec:transitions}.\\
+B-18 & Adapter chỉ đọc; sửa qua deep link CVAT. & FR-SNP-01, FR-SNP-08.\\
+B-19 & Giữ trạng thái công khai H; applicability lưu riêng. & Mục~\ref{sec:enginestates}.\\
+B-20 & Reference được duyệt trước phép đo. & Mục~\ref{sec:reference}, UC-08.\\
+B-21 & Matching là bước của Mô hình độc lập để sinh candidate. & FR-ENG-06; mục~\ref{sec:counting}.\\
+\end{xltabular}
+
+\chapter{Ví dụ tính Recall@20\%}
+\label{app:example}
+Ví dụ dưới đây dùng số \emph{giả lập} để minh hoạ cách tính, không phải kết quả.
+
+Tập held-out có \(N = 10\) frame, reference có \(|\mathcal{E}| = 12\) lỗi.
+\(n_{20} = \lceil 0{,}2 \times 10 \rceil = 2\).
+
+\begin{xltabular}{\linewidth}{@{}C{1.4cm}C{1.6cm}C{1.6cm}C{2cm}Y@{}}
+\caption{Ví dụ giả lập: ranking và lỗi theo frame}\label{tab:example}\\
+\toprule
+\textbf{Rank} & \textbf{Frame} & \(s(f)\) & \textbf{Lỗi trong \(\mathcal{E}\)} & \textbf{Ghi chú}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Rank} & \textbf{Frame} & \(s(f)\) & \textbf{Lỗi} & \textbf{Ghi chú}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+1 & f07 & 2{,}31 & 4 & 2 E1, 1 E2, 1 E3\\
+2 & f02 & 1{,}48 & 3 & 2 E1, 1 E2\\
+3 & f09 & 1{,}10 & 1 & \\
+4 & f01 & 0{,}62 & 0 & cảnh báo sai\\
+5 & f05 & 0{,}40 & 2 & lỗi không có candidate\\
+6 & f03 & 0{,}31 & 0 & \\
+7 & f10 & 0{,}31 & 1 & hoà với f03, phá hoà bằng hash\\
+8 & f04 & 0{,}12 & 0 & \\
+9 & f06 & 0{,}05 & 1 & \\
+10 & f08 & 0{,}00 & 0 & \\
+\end{xltabular}
+
+\[
+  \mathrm{Recall@20\%} = \frac{4 + 3}{12} \approx 58{,}3\%, \qquad
+  \text{recall theo frame có lỗi} = \frac{2}{6} \approx 33{,}3\%.
+\]
+Ranking ngẫu nhiên có kỳ vọng \(2/10 = 20\%\) cho cả hai chỉ số. Với \(N = 10\),
+\(|\mathcal{E}| = 12\) nhỏ hơn mọi \(E_{min}\) hợp lý, nên trong thực tế ví dụ này
+phải ghi ``không đủ mẫu''.
+
+\chapter{Mẫu effort log}
+\label{app:effortlog}
+\begin{xltabular}{\linewidth}{@{}L{3cm}Y@{}}
+\caption{Trường của một sự kiện effort}\label{tab:effortlog}\\
+\toprule
+\textbf{Trường} & \textbf{Mô tả}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Trường} & \textbf{Mô tả}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\code{event\_id} & UUID, idempotent khi client gửi lại.\\
+\code{actor\_id} & Người thao tác.\\
+\code{experiment\_id}, \code{arm} & Thí nghiệm và nhánh (baseline/assisted), rỗng nếu ngoài thí nghiệm.\\
+\code{frame\_id}, \code{issue\_id} & Đối tượng đang xử lý.\\
+\code{activity} & \code{view}, \code{issue}, \code{adjudicate}, \code{recheck}, \code{fix}.\\
+\code{started\_at}, \code{ended\_at} & Thời điểm theo đồng hồ server.\\
+\code{active\_ms} & Thời gian hoạt động sau khi loại khoảng không thao tác quá \(t_{idle}\).\\
+\code{outcome} & Quyết định cuối (để phân loại \(t_{tp}\) và \(t_{fa}\) sau khi issue có kết luận).\\
+\end{xltabular}
+
+\begin{notebox}
+Một issue chỉ được xếp vào \(t_{tp}\) hay \(t_{fa}\) sau khi có kết luận cuối
+(kể cả phân xử). Vì vậy KPI-2 được tính sau khi mọi issue của thí nghiệm đã đóng.
+\end{notebox}

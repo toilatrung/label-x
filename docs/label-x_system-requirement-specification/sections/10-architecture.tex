@@ -1,0 +1,97 @@
+% =====================================================================
+\chapter{Kiến trúc tham chiếu}
+\label{ch:arch}
+% =====================================================================
+
+Kiến trúc theo B-01: \emph{modular monolith} Django + DRF cộng worker pool
+Celery + Redis, PostgreSQL cho dữ liệu quan hệ và trạng thái, Object Storage cho
+ảnh và evidence. Chương này chỉ mô tả mức đủ để hiểu ràng buộc; thiết kế chi tiết
+thuộc tài liệu thiết kế.
+
+\section{Sơ đồ thành phần}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=5mm and 6mm]
+  % frontend
+  \node[boxb, text width=40mm] (fe) {\textbf{Web client}\\Review Queues, Workspace,\\Escalations, Evaluation, Report};
+  % monolith
+  \node[draw=lxnavy, thick, rounded corners=3pt, minimum width=128mm, minimum height=40mm, below=10mm of fe, label={[font=\sffamily\scriptsize\bfseries, text=lxnavy, anchor=north west]north west:Django + DRF — Modular Monolith}] (mono) {};
+  \node[boxg, text width=24mm, anchor=north west] (m1) at ([xshift=4mm, yshift=-7mm]mono.north west) {CVAT Adapter\\\scriptsize chỉ đọc};
+  \node[boxg, text width=24mm, right=of m1] (m2) {Snapshot};
+  \node[boxg, text width=24mm, right=of m2] (m3) {QC Orchestrator\\\scriptsize run, shard, ledger};
+  \node[boxg, text width=24mm, right=of m3] (m4) {Aggregation\\\scriptsize candidate $\rightarrow$ issue};
+  \node[boxg, text width=24mm, below=4mm of m1] (m5) {Ranking};
+  \node[boxg, text width=24mm, right=of m5] (m6) {Review Workflow\\\scriptsize lease, decision, rework};
+  \node[boxg, text width=24mm, right=of m6] (m7) {Evaluation\\\scriptsize reference, KPI, effort};
+  \node[boxg, text width=24mm, right=of m7] (m8) {Auth, RBAC,\\Audit, Guideline};
+  % workers
+  \node[boxa, text width=34mm, below=12mm of mono.south, xshift=-40mm] (cw) {\textbf{Celery CPU workers}\\Schema, Geometry,\\Duplicate, Matching, Ranking};
+  \node[boxa, text width=34mm, right=8mm of cw] (gw) {\textbf{Celery GPU worker}\\Detector baseline};
+  \node[boxa, text width=28mm, right=8mm of gw] (rd) {\textbf{Redis}\\broker, cache};
+  % data
+  \node[boxgr, text width=30mm, below=10mm of cw] (pg) {\textbf{PostgreSQL}\\snapshot, run, issue, lease,\\decision, audit, effort};
+  \node[boxgr, text width=30mm, right=8mm of pg] (os) {\textbf{Object Storage}\\ảnh, evidence, báo cáo};
+  \node[boxgr, text width=28mm, right=8mm of os] (mr) {\textbf{Model artifact}\\checksum, mapping};
+  % external
+  \node[ext, text width=24mm, left=10mm of mono] (cvat) {CVAT};
+  % edges
+  \draw[arr, <->] (fe) -- node[lbl, right]{REST/JSON} (mono);
+  \draw[arr] (cvat) -- node[lbl, above]{đọc} (mono.west);
+  \draw[arr, <->] (mono.south) ++(-40mm,0) -- (cw.north);
+  \draw[arr, <->] (mono.south) ++(2mm,0) -- (gw.north);
+  \draw[arr, <->] (mono.south) ++(40mm,0) -- (rd.north);
+  \draw[arr, <->] (cw) -- (pg);
+  \draw[arr, <->] (gw) -- (os);
+  \draw[arr] (mr) -- (gw.south east);
+  \draw[arrd] (fe.west) -| node[lbl, pos=0.3, above]{deep link} (cvat.north);
+\end{tikzpicture}}
+\caption{Sơ đồ thành phần (component diagram)}
+\label{fig:components}
+\end{figure}
+
+\section{Trách nhiệm module}
+\begin{xltabular}{\linewidth}{@{}L{3.4cm}Y L{2.4cm}@{}}
+\caption{Trách nhiệm module backend}\label{tab:modules}\\
+\toprule
+\textbf{Module} & \textbf{Trách nhiệm} & \textbf{Yêu cầu}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Module} & \textbf{Trách nhiệm} & \textbf{Yêu cầu}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+CVAT Adapter & Gọi CVAT API chỉ đọc, chuẩn hoá, deep link. & FR-SNP\\
+Snapshot & Hash, drift, khoá, lineage revision. & FR-SNP\\
+QC Orchestrator & Tạo run, chia shard, phụ thuộc giữa bước (Detector trước matching), retry idempotent, huỷ, ledger. & FR-ENG, FR-AGG\\
+Aggregation & Gộp candidate thành issue theo dedup\_key và policy version. & FR-AGG\\
+Ranking & Tính \(q_i\), \(n_i q_i\), điểm nền \(h(f)\), \(s(f)\); phá hoà, lát ngẫu nhiên, ranking đối chứng. & FR-RNK\\
+Review Workflow & Hàng đợi, lease, quyết định, phân xử, rework, verify, state machine. PostgreSQL là nguồn chuẩn của lease (cấp bằng khoá dòng trong transaction); Redis chỉ là broker Celery và cache. & FR-REV, FR-ESC, FR-RWK\\
+Evaluation & Reference, suy ra lỗi, Recall@k, effort, non-inferiority, Metric engine, Model Orchestrator tổng hợp kết quả đánh giá engine. & FR-EVL, FR-RPT\\
+Auth/RBAC/Audit/Guideline & Quyền theo scope, identity mapping, audit append-only, rule lookup. & FR-SEC, FR-GDL\\
+\end{xltabular}
+
+\section{Sơ đồ triển khai}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=6mm and 8mm]
+  \node[draw=lxnavy, rounded corners=3pt, fill=lxgrayl, minimum width=50mm, minimum height=30mm, label={[font=\sffamily\scriptsize\bfseries]north:App server (Linux)}] (app) {};
+  \node[box, text width=40mm] at ([yshift=4mm]app.center) {Gunicorn + Django/DRF};
+  \node[box, text width=40mm] at ([yshift=-6mm]app.center) {Celery CPU workers};
+  \node[draw=lxnavy, rounded corners=3pt, fill=lxgrayl, minimum width=40mm, minimum height=30mm, right=of app, label={[font=\sffamily\scriptsize\bfseries]north:GPU server}] (gpu) {};
+  \node[box, text width=32mm] at (gpu.center) {Celery GPU worker\\Detector};
+  \node[draw=lxnavy, rounded corners=3pt, fill=lxgrayl, minimum width=40mm, minimum height=30mm, right=of gpu, label={[font=\sffamily\scriptsize\bfseries]north:Data}] (data) {};
+  \node[box, text width=32mm] at ([yshift=6mm]data.center) {PostgreSQL};
+  \node[box, text width=32mm] at ([yshift=-1mm]data.center) {Redis};
+  \node[box, text width=32mm] at ([yshift=-8mm]data.center) {Object Storage};
+  \node[ext, text width=30mm, below=10mm of app] (cv) {CVAT (hiện có)};
+  \node[ext, text width=30mm, below=10mm of gpu] (br) {Trình duyệt\\reviewer};
+  \draw[arr, <->] (app) -- (gpu);
+  \draw[arr, <->] (gpu) -- (data);
+  \draw[arr, <->] (app.north east) to[bend left=20] (data.north west);
+  \draw[arr] (cv) -- node[lbl, right]{HTTPS (đọc)} (app);
+  \draw[arr, <->] (br) -- node[lbl, sloped, above]{HTTPS} (app.south east);
+\end{tikzpicture}
+\caption{Sơ đồ triển khai (deployment diagram) — cấu hình phần cứng \TBD[-02]}
+\label{fig:deployment}
+\end{figure}

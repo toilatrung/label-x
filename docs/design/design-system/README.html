@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabelX Design System — tổng quan — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/design/design-system/README.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / design / design-system / README</span><span class="sp"></span>
+<a href="README.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>design-system-readme</span><b>title</b><span>LabelX Design System — tổng quan</span><b>type</b><span>reference</span><b>domain</b><span>design</span><b>module</b><span>design-system</span><b>tags</b><span>[design, design-system]</span><b>priority</b><span>2</span></div>
+<p>LabelX is the Quality Control module that runs around CVAT. Users are Quality Control Leads, Reviewers, Quality Assurance staff and Annotators working long sessions on dense data, so the interface is quiet, neutral and table-first: structure comes from borders and spacing, colour is reserved for meaning.</p>
+<h2 id="principles">Principles</h2>
+<ul>
+<li><strong>Neutral first.</strong> Surfaces are <code>surface</code> on <code>canvas</code>; text is <code>ink</code>, <code>ink-muted</code>, <code>ink-subtle</code>. The only action colour is graphite <code>primary</code>.</li>
+<li><strong>Red belongs to the logo and to blocking states.</strong> <code>brand</code> is used for the X in the wordmark and nowhere else. <code>danger</code> is for BLOCKED / FAILED / critical only.</li>
+<li><strong>State is always a word.</strong> Every status uses a <code>StatusBadge</code> with text; never a coloured dot or tinted row alone (the one exception is the Quality Control Run dot in <code>ContextChip</code>, which carries a tooltip and label).</li>
+<li><strong>Context is always visible.</strong> Every screen shows the context bar (Dataset · Quality Control Run · Snapshot · Phạm vi · Guideline · Taxonomy) under the top nav.</li>
+<li><strong>Sub-features live in dropdowns.</strong> Only tabs with independent screens (Overview, Calibration &amp; Audit, Configuration) open a dropdown menu listing its screens as a floating white card (soft shadow, small pointer toward the tab): label on the left, line icon on the right, hairline separators; descriptions appear only as a tooltip on hover; the active screen is highlighted. Do not add a second navigation row.</li>
+<li><strong>Sequential screens are one feature, without a dropdown.</strong> Tabs whose screens always follow each other (Quality Analysis, Review Center, Reports &amp; Releases) are a single nav button. Inside, a flow bar (<code>lx-flow</code>) shows the steps with back and forward arrow buttons, each with a tooltip naming the neighbouring step. A history or log that is not a step (Snapshot history) opens from a button on the page. Related lists that belong together (Escalations) are tabs inside one page.</li>
+<li><strong>Row actions are icon buttons.</strong> Actions inside table rows use <code>IconButton</code> (no box, tooltip on hover and focus, <code>aria-label</code> always set). Boxed <code>Button</code>s are for page-level actions and forms.</li>
+<li><strong>Square by default.</strong> Cards, tables, panels, buttons, inputs and the workspace have square corners. Only small elements are rounded: badges and tags (<code>radius-sm</code>), context chips (pill), switches, avatar, status dots, and floating dropdown cards (6px).</li>
+<li><strong>Borders, not shadows.</strong> Cards and tables use a 1px <code>border</code>; <code>shadow-menu</code> only for dropdowns.</li>
+</ul>
+<h2 id="content">Content</h2>
+<ul>
+<li>UI language is Vietnamese; domain terms stay in English as the team uses them: Dataset, Quality Control Run, Snapshot, Coverage, Gate, Issue, Rework, Release.</li>
+<li>Sentence case for titles and buttons ("Mở Dataset", "Tạo snapshot"); UPPERCASE only in table headers and badges (<code>label</code> style).</li>
+<li>IDs are written exactly and set in <code>code</code>: <code>#QC-091</code>, <code>SNP-014</code>, <code>rev a91f3c</code>.</li>
+<li>Numbers use thousands separators and tabular figures (<code>12,500</code>, <code>92.4%</code>). Empty values are an em dash <code>—</code>.</li>
+<li>Write names in full: "Quality Control", "Quality Assurance", "Intersection over Union", "Ground Truth". No abbreviations, except product and file-format names (CVAT, PDF, CSV, JSON) and identifiers such as <code>#QC-091</code>.</li>
+<li>No emoji, no exclamation marks, no marketing tone. Descriptions are one or two plain sentences in <code>ink-muted</code>.</li>
+</ul>
+<h2 id="layout">Layout</h2>
+<ul>
+<li>App frame: <code>TopNav</code> (<code>topnav-height</code>, graphite <code>primary</code> bar with white text; the open tab lightens slightly while its dropdown card floats below) → context bar (<code>contextbar-height</code>, on <code>canvas</code>) → content on <code>canvas</code> with a <code>space-6</code> gutter.</li>
+<li>Content max width 1440px. Page header: <code>page-title</code> + one <code>body</code> description in <code>ink-muted</code>, primary action at the right.</li>
+<li>Lists are <code>DataTable</code> inside a <code>.lx-card</code>, with a toolbar holding <code>SearchField</code> and a count.</li>
+<li>Spacing steps: <code>space-1</code> 4, <code>space-2</code> 8, <code>space-3</code> 12, <code>space-4</code> 16, <code>space-6</code> 24, <code>space-8</code> 32. Nothing in between.</li>
+<li>Radii: <code>radius-md</code> and <code>radius-lg</code> are 0 (square); <code>radius-sm</code> 4px for badges and tags; <code>radius-full</code> for context chips and round controls only.</li>
+</ul>
+<h2 id="type">Type</h2>
+<ul>
+<li>Inter (Google Fonts) for everything; JetBrains Mono for IDs only.</li>
+<li><code>page-title</code> 22/28 · <code>section-title</code> 15/22 · <code>body</code> 14/20 · <code>table</code> 13/20 · <code>caption</code> 12/16 · <code>label</code> 11/16 uppercase.</li>
+<li>Weight 600 for emphasis; never 700+ outside the logo.</li>
+</ul>
+<h2 id="colour-and-states">Colour and states</h2>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Badge</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pass / done</td>
+<td><code>success</code> on <code>success-soft</code></td>
+<td>CHECKED, RELEASED, OK</td>
+</tr>
+<tr>
+<td>Partial / needs attention</td>
+<td><code>warning</code> on <code>warning-soft</code></td>
+<td>PARTIAL, READY · chờ approve</td>
+</tr>
+<tr>
+<td>Blocking</td>
+<td><code>danger</code> on <code>danger-soft</code></td>
+<td>BLOCKED, FAILED</td>
+</tr>
+<tr>
+<td>In progress</td>
+<td><code>info</code> on <code>info-soft</code></td>
+<td>RUNNING, IN REVIEW</td>
+</tr>
+<tr>
+<td>Inert</td>
+<td><code>neutral</code> on <code>neutral-soft</code></td>
+<td>NOT CHECKED, —</td>
+</tr>
+</tbody>
+</table>
+<p>Every text colour above holds ≥4.5:1 on its soft ground. Focus ring: 2px solid <code>focus</code> with 2px offset on every interactive element.</p>
+<h2 id="iconography">Iconography</h2>
+<p>Line icons, 16px, 1.5px stroke, <code>currentColor</code> (Lucide style). Icons support a label, never replace it — except the search magnifier and dropdown chevron. No icons in the top nav tabs; dropdown items carry a right-aligned icon and the user menu a left-aligned icon.</p>
+<h2 id="logo">Logo</h2>
+<p>No logo file was provided: the wordmark is set in type — "Label" in white on the graphite bar (<code>ink</code> on light surfaces), "X" in <code>brand</code>, Inter 600/800, 20px.</p>
+</article></main></body></html>

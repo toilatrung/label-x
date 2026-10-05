@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cảnh báo và SLO LabelX — LabelX</title>
+<!-- generated-by: scripts/md2html.py -->
+<!-- Nguồn: docs/13-observability/alerts-and-slo.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 13-observability / alerts-and-slo</span><span class="sp"></span>
+<a href="alerts-and-slo.md">Nguồn Markdown</a></header>
+<main><article>
+<div class="meta"><b>id</b><span>observability-alerts-slo</span><b>title</b><span>Cảnh báo và SLO LabelX</span><b>type</b><span>reference</span><b>domain</b><span>observability</span><b>module</b><span>repository</span><b>tags</b><span>[observability, slo, alerts, nfr, tbd]</span><b>priority</b><span>3</span></div>
+<h1 id="canh-bao-va-slo-labelx">Cảnh báo và SLO LabelX</h1>
+<h2 id="trang-thai">Trạng thái</h2>
+<ul>
+<li><strong>Đã chốt (bắt buộc, không phải đề xuất):</strong> các ràng buộc đúng/sai sau:</li>
+<li>không có hai reviewer giữ cùng lease (NFR-15);</li>
+<li>adapter không ghi CVAT (FR-SNP-01, B-18);</li>
+<li>mọi quyết định có audit ghi cùng transaction (FR-SEC-05, B-12);</li>
+<li>retry không tạo issue trùng (B-10);</li>
+<li>log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code>, cùng metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi (NFR-12).</li>
+<li><strong>Đề xuất/TBD:</strong> tên metric, cách thu thập, kênh cảnh báo và mọi <strong>ngưỡng hiệu năng</strong> (SLO-01…04, SLO-09). SRS <code>08-nonfunctional.tex</code> ghi rõ: các con số trong bảng NFR là đề xuất khởi điểm, chưa có phép đo làm căn cứ. Theo B-14, ngưỡng nghiệm thu chỉ được chốt sau khi đo pilot trên phần cứng và mạng thật, với điều kiện đo ghi rõ (ảnh 1280×720 JPEG, mạng nội bộ, cache nguội/ấm, số người dùng đồng thời).</li>
+<li>Mục tiêu thời gian QC Run và độ trễ UI: <strong>TBD-13</strong> (Tech Lead, sau đo pilot). Số lần retry/backoff: <strong>TBD-14</strong>. RPO/RTO: <strong>TBD-17</strong>. Thời hạn lease: <strong>TBD-09</strong>.</li>
+<li>Repo <strong>chưa có</strong> hệ thống cảnh báo. Kênh nhận cảnh báo và người trực <strong>chưa xác định</strong>.</li>
+</ul>
+<h2 id="slo-va-rang-buoc">SLO và ràng buộc</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Chỉ số (SLI)</th>
+<th>Mục tiêu</th>
+<th>Nguồn</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SLO-01</td>
+<td>p95 thời gian mở frame kế tiếp trong Workspace (ảnh + annotation + issue), cache ấm</td>
+<td>≤ 1,5 s</td>
+<td>NFR-01</td>
+<td>Đề xuất, TBD-13</td>
+</tr>
+<tr>
+<td>SLO-02</td>
+<td>p95 độ trễ API lưu quyết định review</td>
+<td>≤ 500 ms</td>
+<td>NFR-02; A (bảng NFR: "Lưu decision p95 ≤ 500 ms")</td>
+<td>Đề xuất, TBD-13</td>
+</tr>
+<tr>
+<td>SLO-03</td>
+<td>Thời gian QC Run cho 10.000 frame (CPU engine + Detector + xếp hạng)</td>
+<td><strong>TBD-13</strong>, trên phần cứng TBD-02</td>
+<td>NFR-03</td>
+<td>Chưa có số</td>
+</tr>
+<tr>
+<td>SLO-04</td>
+<td>Tỉ lệ shard kết thúc Failed sau khi hết retry</td>
+<td>Chưa có số; đặt sau pilot</td>
+<td>NFR-05</td>
+<td>Chưa có số</td>
+</tr>
+<tr>
+<td>SLO-05</td>
+<td>Số frame có hơn một lease hợp lệ</td>
+<td>= 0 mọi lúc</td>
+<td>NFR-15</td>
+<td><strong>Đã chốt</strong> — ràng buộc đúng/sai</td>
+</tr>
+<tr>
+<td>SLO-06</td>
+<td>Retry tạo issue trùng</td>
+<td>= 0</td>
+<td>B-10; R-01</td>
+<td><strong>Đã chốt</strong> — ràng buộc đúng/sai</td>
+</tr>
+<tr>
+<td>SLO-07</td>
+<td>Lời gọi ghi tới CVAT</td>
+<td>= 0</td>
+<td>B-18; FR-SNP-01</td>
+<td><strong>Đã chốt</strong> — ràng buộc đúng/sai</td>
+</tr>
+<tr>
+<td>SLO-08</td>
+<td>Decision/waiver/approval/config publish có AuditEvent</td>
+<td>100%</td>
+<td>FR-SEC-05, B-12; A (bảng NFR: "Audit 100%")</td>
+<td><strong>Đã chốt</strong> — ràng buộc đúng/sai</td>
+</tr>
+<tr>
+<td>SLO-09</td>
+<td>Tuổi của bản sao lưu thành công gần nhất</td>
+<td>≤ RPO (<strong>TBD-17</strong>)</td>
+<td>NFR-16</td>
+<td>Chưa có số</td>
+</tr>
+</tbody>
+</table>
+<p>Khả dụng (uptime) của API: SRS <strong>không có</strong> yêu cầu. Không đặt SLO uptime khi chưa có căn cứ.</p>
+<h2 id="canh-bao-e-xuat">Cảnh báo đề xuất</h2>
+<p>Cảnh báo cho các ràng buộc đã chốt (idempotency, CVAT, lease, audit) là cách <strong>giám sát</strong> yêu cầu đã chốt; tên metric và cơ chế cảnh báo là đề xuất.</p>
+<p>Tên metric theo <a href="metrics.html">metrics.md</a>. Ngưỡng ghi "TBD" sẽ được đặt sau khi đo pilot. Không tự đặt số khi chưa có baseline (phiếu chốt B-10: "Chưa đặt số giây/phút khi chưa đo").</p>
+<table>
+<thead>
+<tr>
+<th>Cảnh báo</th>
+<th>Điều kiện</th>
+<th>Mức</th>
+<th>Hành động gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vi phạm idempotency</td>
+<td><code>labelx_duplicate_issue_on_retry_total</code> tăng</td>
+<td>Nghiêm trọng</td>
+<td>Dừng chạy lại; kiểm khoá dedup (B-10)</td>
+</tr>
+<tr>
+<td>Vi phạm ranh giới CVAT</td>
+<td><code>labelx_cvat_write_attempts_total</code> &gt; 0</td>
+<td>Nghiêm trọng</td>
+<td>Chặn ngay; rà soát code adapter (B-18)</td>
+</tr>
+<tr>
+<td>Lease trùng</td>
+<td><code>labelx_lease_double_holder</code> &gt; 0</td>
+<td>Nghiêm trọng</td>
+<td>Kiểm khoá dòng PostgreSQL cấp lease (NFR-15)</td>
+</tr>
+<tr>
+<td>Ghi audit lỗi</td>
+<td><code>labelx_audit_write_failures_total</code> tăng</td>
+<td>Nghiêm trọng</td>
+<td>Thao tác đã rollback; kiểm DB/quyền bảng audit</td>
+</tr>
+<tr>
+<td>Không có worker</td>
+<td><code>labelx_celery_workers_online{pool}</code> = 0 trong khi queue tương ứng &gt; 0</td>
+<td>Cao</td>
+<td>Khởi động lại worker; task acks late sẽ được giao lại</td>
+</tr>
+<tr>
+<td>Hàng đợi ứ</td>
+<td><code>labelx_celery_queue_length</code> hoặc <code>labelx_celery_task_wait_seconds</code> vượt ngưỡng trong N phút</td>
+<td>Cảnh báo</td>
+<td>Ngưỡng <strong>TBD</strong> sau pilot</td>
+</tr>
+<tr>
+<td>Shard Failed tăng</td>
+<td>Tỉ lệ <code>labelx_shard_failed_total</code> / tổng shard vượt ngưỡng</td>
+<td>Cảnh báo</td>
+<td>Xem <code>reason</code>; chạy lại bằng <code>retry-failed</code> sau khi sửa nguyên nhân. Ngưỡng <strong>TBD</strong></td>
+</tr>
+<tr>
+<td>CVAT lỗi/chậm</td>
+<td><code>labelx_cvat_request_errors_total</code> tăng liên tục hoặc p95 độ trễ vượt ngưỡng</td>
+<td>Cảnh báo</td>
+<td>Kiểm instance CVAT, token (TBD-01)</td>
+</tr>
+<tr>
+<td>Snapshot drift lặp lại</td>
+<td><code>labelx_snapshot_lock_total{outcome="drift"}</code> lặp lại trên cùng scope</td>
+<td>Thông tin</td>
+<td>Báo QA Lead; xem xét phương án tạm khoá sửa khi export (RK-06)</td>
+</tr>
+<tr>
+<td>Lưu quyết định chậm</td>
+<td>p95 <code>labelx_decision_save_seconds</code> vượt SLO-02</td>
+<td>Cảnh báo</td>
+<td>Chỉ bật sau khi SLO-02 được chốt</td>
+</tr>
+<tr>
+<td>Effort bất thường</td>
+<td><code>labelx_effort_idle_gaps_total</code> hoặc <code>labelx_effort_events_rejected_total</code> tăng đột biến</td>
+<td>Thông tin</td>
+<td>Báo người phụ trách thí nghiệm effort (RK-05)</td>
+</tr>
+<tr>
+<td>Sao lưu quá hạn</td>
+<td><code>time() - labelx_backup_last_success_timestamp</code> &gt; RPO</td>
+<td>Cao</td>
+<td>Kiểm job sao lưu (TBD-17)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="viec-can-lam-e-chot">Việc cần làm để chốt</h2>
+<ol>
+<li>Chọn công cụ metric/log/cảnh báo phù hợp hạ tầng (TBD-02), ghi decision.</li>
+<li>Chạy pilot với điều kiện đo theo B-14, lấy baseline p50/p95.</li>
+<li>Tech Lead chốt TBD-13, TBD-14; Product Owner chốt TBD-09; Tech Lead chốt TBD-17.</li>
+<li>Cập nhật bảng SLO và ngưỡng cảnh báo tại đây, kèm link phép đo.</li>
+</ol>
+<h2 id="lien-quan">Liên quan</h2>
+<ul>
+<li><a href="metrics.html">metrics.md</a></li>
+<li><a href="logging.html">logging.md</a></li>
+<li><a href="../08-devops/monitoring.html">../08-devops/monitoring.md</a></li>
+</ul>
+</article></main></body></html>

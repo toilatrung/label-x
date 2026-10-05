@@ -1,0 +1,25 @@
+1. **Mô tả sai hoặc gây hiểu nhầm về repo thật**
+
+   `docs/07-development/tooling.md:62`, `docs/08-devops/deployment.md:51`: gọi `dev-beat` là “lịch polling CVAT” khiến người đọc tưởng polling đã hoạt động. `scripts/Makefile:105` chỉ khởi động beat; `src/backend/config/celery.py:9` chỉ autodiscover, chưa có task polling hay lịch tương ứng.
+
+   `docs/08-devops/ci-cd.md:18`: nói pytest cần PostgreSQL/Redis/SeaweedFS. Test hiện tại (`src/backend/tests/test_smoke.py:6`) chỉ truy cập schema với database; chưa dùng Redis/S3. Cần phân biệt yêu cầu chạy toàn bộ môi trường dev với dependency thực tế của test.
+
+   Các phiên bản Django, PostgreSQL, Redis, Next.js, React và tên target make nhìn chung khớp cấu hình.
+
+2. **Mâu thuẫn với quyết định chốt/SRS**
+
+   `docs/13-observability/index.md:16`, `docs/13-observability/alerts-and-slo.md:14`: tuyên bố **mọi** SLO/trường log đều là đề xuất chưa duyệt, nhưng không có lease trùng, không ghi CVAT, audit mọi quyết định và log có cấu trúc là ràng buộc đã có trong NFR-12/15, FR-SNP-01, FR-SEC-05 và B-12/B-18. Chỉ tên metric, phương án thu thập và ngưỡng hiệu năng chưa chốt. Chính bảng tại `alerts-and-slo.md:26` cũng gọi chúng là ràng buộc đúng/sai.
+
+3. **Thiếu sót quan trọng**
+
+   `docs/06-security/security-policies.md:90`, `:92`: yêu cầu audit cùng transaction và ghi audit lỗi 403/409 nhưng thiếu cách giữ audit khi transaction bị rollback. Với `ATOMIC_REQUESTS=True` (`src/backend/config/settings.py:71`), cần mô tả đường ghi sự kiện từ chối ngoài giao dịch bị rollback và kiểm chứng audit vẫn tồn tại.
+
+   `docs/06-security/security-policies.md:109`, `docs/07-development/tooling.md:32`: thiếu luồng đăng nhập/session, cấp CSRF token và cấu hình origin tin cậy cho frontend `:3000` gọi API `:8000`. CORS kèm credential chưa đủ mô tả luồng POST có CSRF; `src/backend/config/urls.py:5` cũng chưa có endpoint đăng nhập API.
+
+   `docs/08-devops/deployment.md:68`: mới nêu sao lưu/diễn tập, thiếu quy trình khôi phục PostgreSQL–Object Storage nhất quán và tiêu chí xác nhận snapshot/evidence/decision/reference/effort đúng NFR-16; đây không chỉ là chờ số RPO/RTO.
+
+4. **Frontmatter/link**
+
+   `docs/07-development/coding-standards.md:83`: ghi “7 trường” nhưng liệt kê **8**, đúng với `AGENT.md`. Cần sửa số đếm.
+
+   Kiểm tra 16 tài liệu trong bốn thư mục: chưa phát hiện thiếu trường frontmatter, trùng `id` với tài liệu trong `docs/`/`.agent/`, hoặc link Markdown nội bộ trỏ tới file không tồn tại. Không sửa file.

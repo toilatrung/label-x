@@ -1,0 +1,19 @@
+Review tĩnh; chưa chạy XeLaTeX trên TeXPage vì phiên này không có công cụ/kết nối TeXPage. Không sửa file. Các tên file dưới đây thuộc đường dẫn đã cung cấp.
+
+1. **(A)** `04-usecases.tex:108`: Không thấy lỗi biên dịch khả năng cao. `enumerate` hợp lệ trong cột `Y` dạng đoạn văn (`preamble.tex:77`; [CTAN](https://ctan.org/pkg/tabularx)). Actor có `\\` tại dòng 40 được hỗ trợ bởi `align=center` (`preamble.tex:155`; [TikZ](https://tikz.dev/tikz-shapes)). `resizebox` tại dòng 13 đủ gói, đóng ngoặc đúng; `\&`, `\%`, `\_` đã escape. Rủi ro là hàng bảng dài không ngắt trang và chữ sơ đồ bị thu nhỏ.
+
+2. **(B)** `04-usecases.tex:129`: UC-02 chỉ giao QC Admin chạy phân tích, lệch `WorkflowPermissions.dc.html:36`: QA Lead chạy/xem, QC Admin cấu hình. Cần phân biệt quyền chạy với Configuration; bổ sung ngoại lệ backend từ chối quyền.
+
+3. **(B)** `04-usecases.tex:136`: Thiếu nhánh Metric engine dùng reference đã duyệt/khoá và Model Orchestrator tổng hợp theo B-05/B-20 (`architecture_review.html:69`). UC-09 đo Recall@20% không thay thế phép đo accuracy engine; thiếu reference phải Not checked (`AnalysisConfig.dc.html:42`).
+
+4. **(B)** `04-usecases.tex:185`: Self-review mới được xử lý bằng bỏ qua khi cấp việc. Thiếu kiểm tra backend khi mở trực tiếp/lưu quyết định/xác minh rework, dựa trên assignee tại snapshot; H yêu cầu từ chối (`WorkflowPermissions.dc.html:51`, B-12).
+
+5. **(B)** `04-usecases.tex:186`, `:205`: Lease thiếu thời hạn, gia hạn, cấp nguyên tử và từ chối ghi sau hết hạn/bị cấp lại. UC-05 cũng thiếu nhánh hết lease, frame không còn việc hợp lệ; UC-04 thiếu hàng đợi rỗng.
+
+6. **(B)** `04-usecases.tex:249`: Chỉ tạo run cuối rồi cho báo cáo/gate trỏ ngay là thiếu guard. Cần kiểm toàn phạm vi revision, liên kết verification trước đó, xử lý Partial/Failed/Cancelled và lỗi mới; chưa đủ coverage không được coi đạt (B-03/B-15).
+
+7. **(B)** `04-usecases.tex:34`, `:254`: Quality Gate tối thiểu có trên sơ đồ nhưng thiếu đặc tả: kiểm từng điều kiện, nguồn/cỡ mẫu, waiver đúng policy, người duyệt khác người yêu cầu, lý do/evidence/hạn. Không cần mở rộng sang phát hành dataset đầy đủ.
+
+8. **(C)** `04-usecases.tex:264`: Chỉ cấm xem ranking; chương 3 BR-10 (`03-data-errors.tex:165`) còn cấm risk score và candidate. UC-08 thiếu báo cáo tỷ lệ khớp trước phân xử theo BR-11 và tách case hiệu chỉnh/held-out theo BR-16.
+
+9. **(C)** `04-usecases.tex:203`, `:289`: Chưa giới hạn lỗi KPI ở E1–E3, loại ignore, tách cảnh báo cấu trúc/box thừa/tightness; có nguy cơ tính sai phạm vi chương 3 (`03-data-errors.tex:95`, `:215`).

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Models và Guidelines</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css">
+<link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f6f7f9}</style>
+</helmet>
+<div class="lx" style="min-height: 100vh; background: var(--canvas)">
+<dc-import name="TopBar" active="configuration" active-item="models" hint-size="100%,100px"></dc-import>
+<main class="lx-page">
+
+<div class="lx-head">
+<div class="lx-head__text">
+<h1 class="lx-h1">Models và Guidelines</h1>
+<p class="lx-lead">Cấu hình các mô hình dùng để kiểm tra độc lập và ánh xạ phiên bản guideline với taxonomy. Quality Control chỉ quản lý phiên bản, nội dung guideline được soạn ở nơi khác.</p>
+</div>
+</div>
+
+<section class="lx-card">
+<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isModels}}" hint-placeholder-val="{{true}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 760px">
+<thead><tr><th>Mô hình</th><th>Vai trò</th><th>Phiên bản</th><th>Ánh xạ lớp</th><th class="r">Ngưỡng tin cậy</th><th>Trạng thái</th><th></th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Detector</td><td class="lx-muted">Phát hiện object độc lập</td><td class="lx-mono">v2.3</td><td class="lx-muted">Taxonomy v3 · 12 lớp</td><td class="r">0.60</td><td><span class="lx-badge lx-badge--success">Đang dùng</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh mô hình" aria-label="Chỉnh mô hình"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td class="lx-cell__main">Classifier</td><td class="lx-muted">Kiểm tra lại nhãn của object</td><td class="lx-mono">v1.8</td><td class="lx-muted">Taxonomy v3 · 12 lớp</td><td class="r">0.70</td><td><span class="lx-badge lx-badge--success">Đang dùng</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh mô hình" aria-label="Chỉnh mô hình"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+<tr><td class="lx-cell__main">Mô hình thị giác – ngôn ngữ</td><td class="lx-muted">Kiểm tra có chọn lọc</td><td class="lx-mono">v0.9</td><td class="lx-muted">Mô tả bằng văn bản</td><td class="r lx-subtle">—</td><td><span class="lx-badge lx-badge--warning">Thử nghiệm</span></td><td class="r"><button class="lx-iconbtn" data-tip="Chỉnh mô hình" aria-label="Chỉnh mô hình"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z"></path></svg></button></td></tr>
+</tbody>
+</table>
+</div>
+<div class="lx-card__foot"><span>Mô hình chưa được xác minh không tự động biến candidate thành lỗi đã xác nhận.</span></div>
+</sc-if>
+
+<sc-if value="{{isGuideline}}" hint-placeholder-val="{{false}}">
+<div class="lx-scroll">
+<table class="lx-table" style="min-width: 680px">
+<thead><tr><th>Guideline</th><th>Taxonomy</th><th>Áp dụng cho Dataset</th><th>Hiệu lực từ</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr><td class="lx-cell__main">Guideline v1.2</td><td class="lx-muted">v3</td><td class="lx-muted">Road Vision Urban v1.3 – v1.4</td><td class="lx-muted">2026-08-20</td><td><span class="lx-badge lx-badge--success">Đang dùng</span></td></tr>
+<tr><td class="lx-cell__main">Guideline v1.3</td><td class="lx-muted">v3</td><td class="lx-muted">Chưa áp dụng</td><td class="lx-muted">Chờ phê duyệt</td><td><span class="lx-badge lx-badge--warning">Chờ phê duyệt</span></td></tr>
+<tr><td class="lx-cell__main">Guideline v1.1</td><td class="lx-muted">v2</td><td class="lx-muted">Road Vision Urban v1.1 – v1.2</td><td class="lx-muted">2026-06-01</td><td><span class="lx-badge">Đã thay thế</span></td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || 'models';
+    return {
+      isModels: cur === 'models', isGuideline: cur === 'guideline',
+      tabs: [['models','Mô hình'],['guideline','Phiên bản guideline']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>
