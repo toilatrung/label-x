@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch triển khai LabelX M13 — blocker cần chốt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;--border-strong:#cfd4dc;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;--info-soft:#e8f0fa;
+--ok:#1f7a4d;--ok-soft:#e5f4ec;--warn:#8a5300;--warn-soft:#fdf2d8;
+--font:Inter,"Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+.top{position:sticky;top:0;z-index:10;background:var(--primary);color:#fff;display:flex;align-items:center;gap:16px;padding:0 24px;height:52px}
+.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top .t{font-size:13px;color:#cfd4dc}.top .sp{flex:1}
+.prog{font-size:13px;color:#fff;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);
+background:var(--surface);color:var(--ink);font:500 13px var(--font);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--sunken)}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.ghost{background:transparent;color:#fff;border-color:#4b5563}.btn.ghost:hover{background:#374151}
+main{max-width:1180px;margin:0 auto;padding:24px 24px 80px}
+h1{font-size:24px;margin:8px 0 4px}h2{font-size:19px;margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+h3{font-size:16px;margin:24px 0 2px}h4{font-size:15px;margin:0;flex:1}
+.sub{color:var(--subtle);font-size:12.5px}.mono,.id{font-family:var(--mono);font-size:12px}td.id,.card .id{white-space:nowrap}
+.lead{color:var(--muted);max-width:860px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.tile .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}.tile .l{color:var(--subtle);font-size:12px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:var(--sunken);text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;color:var(--subtle);font-weight:600}
+th,td{border-bottom:1px solid var(--border);padding:8px 10px;vertical-align:top}td.num{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11.5px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--sunken);border:1px solid var(--border);color:var(--muted);white-space:nowrap;margin:1px 0}
+.chip.warn{background:var(--warn-soft);border-color:#f0d9a6;color:var(--warn)}.chip.ok{background:var(--ok-soft);border-color:#bfe3cf;color:var(--ok)}
+.chip.rec{background:var(--info-soft);border-color:#c5d8f0;color:var(--info)}
+.path{font-family:var(--mono);font-size:12px;background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.gate{margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin:12px 0;break-inside:avoid}
+.card header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card .q{font-weight:600;margin:8px 0}
+.picked{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+.picked.done{background:var(--ok-soft);color:var(--ok)}
+.facts{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:13px;background:var(--sunken);border-radius:6px;padding:10px 12px;margin:8px 0}
+.facts div{display:contents}.facts b{color:var(--muted);font-weight:600}
+.opts{display:grid;gap:8px;margin:10px 0}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer}
+.opt:hover{background:var(--sunken)}.opt.rec{border-color:#c5d8f0}
+.opt input{margin-top:3px;accent-color:var(--primary)}
+.opt.sel{background:var(--selected);border-color:var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+.ot{font-size:13.5px}.od{color:var(--muted);margin:2px 0 4px}
+.pc{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.why{font-size:13px;color:var(--muted);margin:6px 0}
+textarea{width:100%;min-height:44px;border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px;font:13px var(--font);resize:vertical}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:12px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.printonly{display:none}
+@media (max-width:720px){.top{flex-wrap:wrap;height:auto;padding:8px 16px}main{padding:16px}.facts{grid-template-columns:1fr}.top .t{display:none}.card header h4{flex-basis:100%;order:2}}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff;font-size:11.5px}.top,.toolbar,.noprint{display:none!important}.printonly{display:block}
+  main{max-width:none;padding:0}.card,.panel,.tbl,.tile{border-color:#ccc}
+  .opt{padding:6px 10px}.opt:not(.sel){opacity:.55}.opt.sel{opacity:1}
+  textarea{border:none;padding:0;min-height:0;resize:none}textarea:placeholder-shown{display:none}
+  h2{break-after:avoid}tr,.card{break-inside:avoid}a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="logo">Label<b>X</b></span><span class="t">Kế hoạch triển khai M13 · blocker cần chốt</span><span class="sp"></span>
+  <span class="prog" id="prog">Đã chốt 0/17</span>
+  <button class="btn ghost" id="copy" type="button">Sao chép phiếu chốt</button>
+  <button class="btn ghost" id="dl" type="button">Tải phiếu (.md)</button>
+  <button class="btn primary" id="pdf" type="button">Xuất PDF</button>
+</div>
+<main>
+<h1>Kế hoạch triển khai LabelX M13 và các blocker cần chốt</h1>
+<p class="sub">Lập ngày 06/10/2026 · Nguồn: SRS M13 v1.0, <span class="mono">.agent/planning/</span>, <span class="mono">.agent/governance/blockers/</span> · Planning thống nhất qua 3 vòng thảo luận Claude ↔ Codex</p>
+<p class="printonly sub" id="printstamp"></p>
+
+<h2>1. Tóm tắt</h2>
+<p class="lead">Roadmap <b>R-001</b> gồm 6 milestone và 24 epic, phủ mọi yêu cầu Must và Should của SRS. Roadmap đang ở trạng thái <b>nháp</b>: chưa duyệt, chưa tạo task. Còn <b>17 blocker</b> cần anh/chị chốt; mỗi blocker có phương án đề xuất. Chốt xong cổng <b>G1</b> (5 blocker) là đủ để bắt đầu lập trình M-01.</p>
+<div class="tiles">
+  <div class="tile"><div class="v">6</div><div class="l">Milestone</div></div>
+  <div class="tile"><div class="v">24</div><div class="l">Epic (đều ở trạng thái đề xuất)</div></div>
+  <div class="tile"><div class="v">17</div><div class="l">Blocker đang mở</div></div>
+  <div class="tile"><div class="v">4</div><div class="l">Blocker đã giải quyết</div></div>
+  <div class="tile"><div class="v">10</div><div class="l">Rủi ro theo dõi</div></div>
+</div>
+<div class="panel">
+<b>Đã có sẵn trên repo</b> (github.com/toilatrung/label-x, nhánh main, CI xanh): khung backend Django/DRF/Celery, frontend Next.js 16 với Design System, hạ tầng dev (PostgreSQL, Redis, S3), script cài môi trường cho Windows/Ubuntu, CI 4 job (framework, backend, frontend, bootstrap-windows), Dependabot. Chưa có mã nghiệp vụ.
+</div>
+
+<h2>2. Kế hoạch triển khai</h2>
+<p class="lead">Thứ tự theo bản rà soát kiến trúc đã chốt (mục 7) và charter: nền tảng → kiểm xác định → review/rework → reference và Detector → kiểm chứng → vận hành. Đây là thứ tự phụ thuộc, không phải lịch; SRS chưa có mốc thời gian.</p>
+<div class="tbl"><table>
+<thead><tr><th>Mã</th><th>Milestone</th><th>Epic</th><th>Nghiệm thu</th><th>Blocker mở</th></tr></thead>
+<tbody><tr><td class='id'>M-01</td><td><b>Nền tảng và hợp đồng triển khai</b><div class='sub'>Contract dữ liệu/API/state/lineage được review; nền backend+frontend có auth, RBAC theo scope, audit append-only, CI; guideline có version.</div></td><td><span class="chip ">E-01</span> <span class="chip ">E-02</span> <span class="chip ">E-03</span></td><td class='sub'>Contract E-01 được Tech Lead Backend + QA Lead review; kiểm thử quyền/audit (FR-SEC-01…07) xanh trên CI; `make check` chạy cả backend lẫn frontend.</td><td class='num'>5</td></tr><tr><td class='id'>M-02</td><td><b>Pipeline kiểm xác định tái lập</b><div class='sub'>Snapshot bất biến từ CVAT thật; QC Run với engine xác định, ledger, dedup và ranking score_v0 tái lập.</div></td><td><span class="chip ">E-04</span> <span class="chip ">E-05</span> <span class="chip ">E-08</span> <span class="chip ">E-09</span> <span class="chip ">E-11</span></td><td class='sub'>AC-01, AC-02, AC-03 đạt; engine thiếu/hỏng hiển thị Not checked/Failed (phần engine của AC-07).</td><td class='num'>6</td></tr><tr><td class='id'>M-03</td><td><b>Vòng review–rework khép kín</b><div class='sub'>Reviewer xử lý frame theo hàng đợi đến phân xử, sửa trên CVAT, verify và QC run cuối.</div></td><td><span class="chip ">E-13</span> <span class="chip ">E-14</span> <span class="chip ">E-15</span> <span class="chip ">E-16</span></td><td class='sub'>AC-04, AC-05, AC-06, AC-11 đạt; lease nguyên tử dưới tải đồng thời (NFR-15); transition ngoài bảng bị từ chối.</td><td class='num'>4</td></tr><tr><td class='id'>M-04</td><td><b>Reference và discovery</b><div class='sub'>Công cụ reference, reference tập hiệu chỉnh đã khoá; Detector sinh E1/E2; score được hiệu chỉnh và khoá version.</div></td><td><span class="chip ">E-06</span> <span class="chip ">E-07</span> <span class="chip ">E-10</span> <span class="chip ">E-12</span> <span class="chip ">E-17</span></td><td class='sub'>Reference hiệu chỉnh khoá version (FR-EVL-04); ngưỡng Detector chọn trên tập hiệu chỉnh; score version khoá kèm kết quả ngoài fold/ablation (FR-RNK-10, 11); TBD-08 có quyết định.</td><td class='num'>8</td></tr><tr><td class='id'>M-05</td><td><b>Kiểm chứng hiệu quả, gate và báo cáo</b><div class='sub'>Reference held-out/D1-D2 khoá; preregistration; thí nghiệm crossover; đánh giá KPI-1/KPI-2; báo cáo và Quality Gate.</div></td><td><span class="chip ">E-18</span> <span class="chip ">E-19</span> <span class="chip ">E-20</span> <span class="chip ">E-21</span> <span class="chip ">E-22</span></td><td class='sub'>AC-07, AC-08, AC-09, AC-10 đạt theo ngưỡng đã preregister (TBD-K1…K4); thiếu mẫu ghi &quot;không đủ mẫu&quot;, không kết luận đạt.</td><td class='num'>12</td></tr><tr><td class='id'>M-06</td><td><b>Vận hành và nghiệm thu tổng thể</b><div class='sub'>Hệ thống chạy trên môi trường mục tiêu, đo NFR, phục hồi được; bằng chứng nghiệm thu AC-01…AC-11 và R-01…R-07 đầy đủ.</div></td><td><span class="chip ">E-23</span> <span class="chip ">E-24</span></td><td class='sub'>NFR có ngưỡng đã duyệt được kiểm; diễn tập restore nhất quán (NFR-16); mọi Must + Should có evidence; blocker bắt buộc đóng.</td><td class='num'>2</td></tr></tbody></table></div>
+
+<h3>Đường găng</h3>
+<div class="path">E-01 → E-02 → E-03 → E-04 → E-08 → E-09 → E-11 → E-13 → E-14 → E-15 → E-16 → E-17 → E-18 → E-19 → E-20 → E-23 → E-24</div>
+<p class="sub">Nhánh reference (E-06 → E-07 → E-17 → E-18) cần nhiều nhân lực nhất (RISK-003). Nó chạy song song từ M-02 và có thể thành đường găng thực tế; nên chuẩn bị dữ liệu reference sớm.</p>
+
+<h3>Danh sách epic</h3>
+<div class="toolbar noprint">
+  <label class="sub" for="msf">Lọc milestone</label>
+  <select id="msf" class="btn"><option value="">Tất cả</option><option>M-01</option><option>M-02</option><option>M-03</option><option>M-04</option><option>M-05</option><option>M-06</option></select>
+</div>
+<div class="tbl"><table id="eps">
+<thead><tr><th>Epic</th><th>MS</th><th>Kết quả</th><th>Vai trò owner</th><th>Phụ thuộc</th><th>Trạng thái</th></tr></thead>
+<tbody><tr data-ms='M-01'><td class='id'>E-01</td><td class='id'>M-01</td><td><b>Hợp đồng triển khai M13, lineage và phép đo</b><div class='sub'>Có một contract duy nhất (entity, API, state machine, lỗi, engine interface, lineage, nối quyết định với reference) truy được tới FR/BR trước khi build.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>—</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B001, B007, B012</div></td></tr><tr data-ms='M-01'><td class='id'>E-02</td><td class='id'>M-01</td><td><b>Nền backend/frontend, auth, RBAC, audit, storage và CI</b><div class='sub'>Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-01</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B013, B014</div></td></tr><tr data-ms='M-01'><td class='id'>E-03</td><td class='id'>M-01</td><td><b>Guideline version và mapping rule</b><div class='sub'>Workspace tra được rule theo rule ID + version + section của snapshot, không dùng RAG.</div></td><td class='sub'>Quality Control Admin</td><td class='sub'>E-02</td><td><span class="chip ok">Sẵn sàng khi tới lượt</span><div class='sub'></div></td></tr><tr data-ms='M-02'><td class='id'>E-04</td><td class='id'>M-02</td><td><b>CVAT adapter chỉ đọc và snapshot bất biến</b><div class='sub'>Tạo snapshot bất biến, có hash, phát hiện drift, từ CVAT thật mà không có đường ghi annotation.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-02, E-03</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B004, B020</div></td></tr><tr data-ms='M-02'><td class='id'>E-05</td><td class='id'>M-02</td><td><b>Matching dùng chung, tất định</b><div class='sub'>Một thư viện matching một-một không phụ thuộc lớp dùng chung cho Detector–annotation, GT–annotation và GT–GT.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-02</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B015</div></td></tr><tr data-ms='M-04'><td class='id'>E-06</td><td class='id'>M-04</td><td><b>Công cụ reference: hai GT, phân xử, suy lỗi, khoá, leakage</b><div class='sub'>LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-04, E-05</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B005, B013, B018</div></td></tr><tr data-ms='M-04'><td class='id'>E-07</td><td class='id'>M-04</td><td><b>Bộ reference tập hiệu chỉnh đã khoá</b><div class='sub'>Có reference (GT + 𝓔) đã khoá cho tập hiệu chỉnh để chọn ngưỡng Detector, học score và chọn k*.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-06</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B015, B018, B020</div></td></tr><tr data-ms='M-02'><td class='id'>E-08</td><td class='id'>M-02</td><td><b>QC Orchestrator, shard, aggregation và coverage ledger</b><div class='sub'>QC Run chạy theo shard, chịu được retry/worker chết, gộp candidate thành issue và ghi coverage đúng mẫu số.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-04</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B007, B014</div></td></tr><tr data-ms='M-02'><td class='id'>E-09</td><td class='id'>M-02</td><td><b>Engine Schema/Taxonomy, Geometry, Duplicate/Overlap</b><div class='sub'>Ba engine xác định sinh cảnh báo cấu trúc và candidate E3 có evidence.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-08</td><td><span class="chip ok">Sẵn sàng khi tới lượt</span><div class='sub'></div></td></tr><tr data-ms='M-04'><td class='id'>E-10</td><td class='id'>M-04</td><td><b>Detector baseline, candidate E1/E2 và evidence</b><div class='sub'>Một Detector baseline đã freeze chạy trên GPU worker sinh candidate E1/E2 kèm evidence; thiếu model thì Not checked.</div></td><td class='sub'>Data/Model Owner</td><td class='sub'>E-05, E-08, E-07</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B005, B014</div></td></tr><tr data-ms='M-02'><td class='id'>E-11</td><td class='id'>M-02</td><td><b>Ranking, score_v0, giải thích, random slice và đối chứng</b><div class='sub'>Mọi frame có điểm và hạng tái lập, giải thích được, kèm lát ngẫu nhiên và ranking đối chứng.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-09</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B006, B007</div></td></tr><tr data-ms='M-04'><td class='id'>E-12</td><td class='id'>M-04</td><td><b>VLM có điều kiện theo TBD-08</b><div class='sub'>Thực hiện đúng nhánh đã duyệt cho FR-ENG-10: tắt có ghi nhận, hoặc bật theo pipeline B-08.</div></td><td class='sub'>Product Owner</td><td class='sub'>E-09, E-10</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B002</div></td></tr><tr data-ms='M-03'><td class='id'>E-13</td><td class='id'>M-03</td><td><b>Review Queues và lease nguyên tử</b><div class='sub'>Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-11</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B008, B013</div></td></tr><tr data-ms='M-03'><td class='id'>E-14</td><td class='id'>M-03</td><td><b>Review Workspace, quyết định và effort log</b><div class='sub'>Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-13, E-03</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B008, B013</div></td></tr><tr data-ms='M-03'><td class='id'>E-15</td><td class='id'>M-03</td><td><b>Escalation, phân xử, Decision Case và Guideline Gap</b><div class='sub'>Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-14</td><td><span class="chip ok">Sẵn sàng khi tới lượt</span><div class='sub'></div></td></tr><tr data-ms='M-03'><td class='id'>E-16</td><td class='id'>M-03</td><td><b>Rework, re-check, verify và QC run cuối</b><div class='sub'>Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-15, E-08</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B007, B011</div></td></tr><tr data-ms='M-04'><td class='id'>E-17</td><td class='id'>M-04</td><td><b>Hiệu chỉnh score, Metric engine và pilot nhỏ</b><div class='sub'>Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá; pilot nhỏ cho số liệu để tính cỡ mẫu.</div></td><td class='sub'>Data/Model Owner</td><td class='sub'>E-07, E-10, E-11, E-16</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B015, B021</div></td></tr><tr data-ms='M-05'><td class='id'>E-18</td><td class='id'>M-05</td><td><b>Reference held-out và D1/D2 đã khoá</b><div class='sub'>Reference độc lập, đã khoá cho tập held-out và dữ liệu thí nghiệm theo thiết kế được duyệt.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-17</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B005, B015, B017, B018, B019, B020</div></td></tr><tr data-ms='M-05'><td class='id'>E-19</td><td class='id'>M-05</td><td><b>Preregistration và thí nghiệm crossover</b><div class='sub'>Thí nghiệm baseline/assisted chạy đúng thiết kế đã khoá trước.</div></td><td class='sub'>Product Owner</td><td class='sub'>E-18, E-16</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B002, B015, B017, B018, B019</div></td></tr><tr data-ms='M-05'><td class='id'>E-20</td><td class='id'>M-05</td><td><b>Đánh giá KPI-1, KPI-2 và guardrail</b><div class='sub'>KPI-1, KPI-2, KPI-2b, G-1…G-5 tính đúng phương pháp đã preregister, có provenance.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-19</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B006, B012, B015, B021</div></td></tr><tr data-ms='M-05'><td class='id'>E-21</td><td class='id'>M-05</td><td><b>Báo cáo hiệu quả và xuất PDF/CSV/JSON</b><div class='sub'>Báo cáo đủ cỡ mẫu, mẫu số, phương pháp, CI, provenance; random và risk tách riêng; xuất được.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-20, E-16</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B012, B013</div></td></tr><tr data-ms='M-05'><td class='id'>E-22</td><td class='id'>M-05</td><td><b>Quality Gate tối thiểu và waiver</b><div class='sub'>Gate tính từng điều kiện trên run cuối, thiếu dữ liệu là chưa đạt, waiver có người duyệt khác người đề nghị.</div></td><td class='sub'>Quality Assurance Lead</td><td class='sub'>E-20, E-16</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B006, B011</div></td></tr><tr data-ms='M-06'><td class='id'>E-23</td><td class='id'>M-06</td><td><b>Vận hành, đo NFR, retention và backup/restore</b><div class='sub'>Hệ thống chạy trên môi trường mục tiêu, NFR đo trên phần cứng thật, khôi phục được nhất quán.</div></td><td class='sub'>Tech Lead Backend</td><td class='sub'>E-20</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B014</div></td></tr><tr data-ms='M-06'><td class='id'>E-24</td><td class='id'>M-06</td><td><b>Nghiệm thu độc lập và bàn giao M13</b><div class='sub'>Bằng chứng nghiệm thu đầy đủ cho mọi Must + Should, AC-01…AC-11, R-01…R-07.</div></td><td class='sub'>Product Owner</td><td class='sub'>E-12, E-21, E-22, E-23</td><td><span class="chip warn">Bị chặn</span><div class='sub'>B001</div></td></tr></tbody></table></div>
+
+<h2>3. Blocker cần chốt</h2>
+<p class="lead">Blocker xếp theo cổng: cổng nào chặn milestone sớm hơn thì nằm trước. Chọn một phương án cho mỗi blocker (đã đánh dấu phương án đề xuất), ghi chú nếu cần, rồi bấm <b>Sao chép phiếu chốt</b> hoặc <b>Tải phiếu</b> và gửi lại cho Claude để cập nhật vào <span class="mono">.agent/</span>. Lựa chọn được lưu tạm trên trình duyệt này.</p>
+<div class="toolbar noprint">
+  <button class="btn" id="allrec" type="button">Chọn tất cả theo đề xuất</button>
+  <button class="btn" id="reset" type="button">Xoá lựa chọn</button>
+  <a class="btn" href="#G1">G1 (5)</a><a class="btn" href="#G2">G2 (3)</a><a class="btn" href="#G3">G3 (2)</a><a class="btn" href="#G4">G4 (5)</a><a class="btn" href="#G5">G5 (2)</a>
+</div>
+<section class='gate' id='G1'><h3>G1 · Trước khi bắt đầu M-01 — Nền tảng và hợp đồng</h3><p class='sub'>Chặn E-01/E-02, tức là chặn mọi việc lập trình nghiệp vụ.</p>
+<article class="card" id="BLOCKER-001" data-rec="A">
+  <header><span class="id">BLOCKER-001</span><h4>SRS chờ ký theo vai trò; owner planning chưa gán</h4><span class="chip ">approval</span><span class="picked" data-for="BLOCKER-001">Chưa chốt</span></header>
+  <p class="q">Phê duyệt SRS v1.0 và gán người chịu trách nhiệm cho milestone/epic như thế nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>SRS v1.0 đã được người dùng chấp nhận nội dung (05/10/2026) nhưng bảng phê duyệt theo vai trò còn trống; owner của milestone/epic chưa được gán người.</span></div>
+    <div><b>Chặn</b><span>E-01, E-24</span></div>
+    <div><b>Người chốt</b><span>Product Owner M13 (cùng các vai trò trong bảng phê duyệt SRS)</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/00-frontmatter.tex — Bảng phê duyệt; AGENT.md — Epic Expansion Rule</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-001' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Ký SRS theo vai trò ngay; gán owner theo từng milestone, bắt đầu từ M-01</div><div class='od'>Năm vai trò ký bảng phê duyệt SRS. Gán người cho owner của M-01 (E-01, E-02, E-03) trước, các milestone sau gán khi tới gần. Sau đó duyệt roadmap R-001 bằng roadmap-lock-prompt.</div><div class='pc'><span><b>Ưu:</b> Mở khoá M-01 sớm nhất; không cần gán người cho 24 epic cùng lúc.</span><span><b>Nhược:</b> Owner của M-04…M-06 chưa rõ, phải nhắc lại khi tới.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-001' value='B'><div><div class='ot'><b>Phương án B</b> — Product Owner ký thay toàn bộ, gán đủ owner cho 24 epic một lần</div><div class='od'>Product Owner phê duyệt SRS thay các vai trò khác, gán toàn bộ owner ngay.</div><div class='pc'><span><b>Ưu:</b> Nhanh, một lần là xong.</span><span><b>Nhược:</b> Trái tách nhiệm vụ trong SRS (QA Lead chịu reference, Data/Model Owner chịu Detector); dễ phải sửa lại.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-001' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Giữ đúng trách nhiệm theo vai trò trong SRS mà không bắt chờ gán đủ 24 epic mới bắt đầu.</p>
+  <textarea name="BLOCKER-001-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-007" data-rec="A">
+  <header><span class="id">BLOCKER-007</span><h4>Lineage issue qua revision và neo issue cấu trúc/thủ công chưa có contract</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-007">Chưa chốt</span></header>
+  <p class="q">Nối issue qua các revision (sau rework) và đặt neo cho issue cấu trúc/thủ công thế nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>dedup_key chỉ định nghĩa cho đối tượng tham chiếu; bảng neo chỉ có E1/E2/E3; FR-RWK-06/08 cần nối verification cũ với issue run cuối nhưng chưa có quy tắc tương ứng.</span></div>
+    <div><b>Chặn</b><span>E-01, E-08, E-11, E-16</span></div>
+    <div><b>Người chốt</b><span>Tech Lead Backend, Quality Assurance Lead</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-AGG-03, FR-RNK-12, FR-RWK-05…08</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-007' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Theo ADR đề xuất: định danh đối tượng bằng cvat_shape_id + namespace nguồn, fallback matching chỉ để gợi ý</div><div class='od'>Issue gốc giữ verification của nó. Run cuối: nếu candidate cùng neo vẫn xuất hiện thì tạo issue mới liên kết issue gốc; không tự kế thừa quyết định. Issue cấu trúc neo theo (annotation, rule ID); issue thủ công neo theo (frame, vùng vẽ).</div><div class='pc'><span><b>Ưu:</b> Truy vết đầy đủ; tránh vòng lặp rework vô hạn; đúng FR-RWK-05…08.</span><span><b>Nhược:</b> Phải xây quan hệ liên kết issue.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-007' value='B'><div><div class='ot'><b>Phương án B</b> — Không nối: run cuối luôn tạo issue mới, reviewer xem lại tất cả</div><div class='od'>Mỗi run cuối độc lập; không có quan hệ giữa issue các revision.</div><div class='pc'><span><b>Ưu:</b> Đơn giản nhất.</span><span><b>Nhược:</b> Reviewer xử lý lại việc đã xong; tăng effort (ảnh hưởng KPI-2); khó truy vết.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-007' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> B làm tăng effort trong chính phép đo KPI-2 và phá truy vết của B-03.</p>
+  <textarea name="BLOCKER-007-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-012" data-rec="A">
+  <header><span class="id">BLOCKER-012</span><h4>Lineage báo cáo KPI (snapshot đầu vào) và báo cáo/gate (revision cuối)</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-012">Chưa chốt</span></header>
+  <p class="q">Báo cáo hiệu quả lấy số liệu từ snapshot nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>FR-RPT-06 chuyển báo cáo sang run cuối, nhưng KPI-1 phải dùng ranking và 𝓔 của snapshot đầu vào đã khoá.</span></div>
+    <div><b>Chặn</b><span>E-01, E-20, E-21</span></div>
+    <div><b>Người chốt</b><span>Quality Assurance Lead, Tech Lead Backend</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-RPT-06; docs/label-x_system-requirement-specification/sections/07-evaluation.tex KPI-1</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-012' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Báo cáo hai phần: KPI theo snapshot đầu vào đã khoá; chất lượng và gate theo run cuối</div><div class='od'>KPI-1/KPI-2 luôn tính trên snapshot đầu vào và reference đã khoá. Coverage, residual vận hành và gate tính trên run cuối. Mỗi phần ghi rõ nguồn.</div><div class='pc'><span><b>Ưu:</b> Đúng định nghĩa KPI và FR-RPT-06 cùng lúc.</span><span><b>Nhược:</b> Báo cáo dài hơn.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-012' value='B'><div><div class='ot'><b>Phương án B</b> — Toàn bộ báo cáo chuyển sang run cuối</div><div class='od'>Một nguồn duy nhất.</div><div class='pc'><span><b>Ưu:</b> Đơn giản.</span><span><b>Nhược:</b> Sai định nghĩa KPI-1 (phải dùng ranking của snapshot đầu vào).</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-012' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> B làm KPI-1 sai phương pháp đã preregister.</p>
+  <textarea name="BLOCKER-012-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-013" data-rec="A">
+  <header><span class="id">BLOCKER-013</span><h4>Thiết kế màn hình thiếu delta cho luồng M13</h4><span class="chip ">dependency</span><span class="picked" data-for="BLOCKER-013">Chưa chốt</span></header>
+  <p class="q">Bổ sung thiết kế cho các phần màn hình còn thiếu của luồng M13 khi nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>ReviewQueues là bảng issue, chưa có rank frame/đóng góp điểm; PerformanceEvaluation chưa có KPI/crossover/CI; chưa có màn auth/audit, hai GT, leakage, preregistration.</span></div>
+    <div><b>Chặn</b><span>E-02, E-06, E-13, E-14, E-21</span></div>
+    <div><b>Người chốt</b><span>Product Owner, Quality Control Admin</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/design/screens/; docs/label-x_system-requirement-specification/sections/09-interfaces.tex bảng màn hình</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-013' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Thiết kế bổ sung ngay trước epic dùng tới (just-in-time)</div><div class='od'>Đăng nhập/audit trước E-02; queue frame + đóng góp điểm trước E-13; Workspace delta trước E-14; reference hai GT trước E-06; thí nghiệm và KPI trước E-19/E-20.</div><div class='pc'><span><b>Ưu:</b> Không chặn M-01; thiết kế theo nhu cầu thật.</span><span><b>Nhược:</b> Phải lên lịch thiết kế đều đặn.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-013' value='B'><div><div class='ot'><b>Phương án B</b> — Thiết kế toàn bộ delta trước khi bắt đầu M-01</div><div class='od'>Một đợt thiết kế cho cả sáu nhóm màn.</div><div class='pc'><span><b>Ưu:</b> Nhìn được toàn cảnh UI.</span><span><b>Nhược:</b> Chặn M-01 không cần thiết.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-013' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Màn hình nghiệp vụ không cần cho E-01; chỉ phần đăng nhập/audit cần trước E-02.</p>
+  <textarea name="BLOCKER-013-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-014" data-rec="A">
+  <header><span class="id">BLOCKER-014</span><h4>Phần cứng, ngưỡng NFR, retry, retention/GC, RPO/RTO chưa chốt</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-014">Chưa chốt</span></header>
+  <p class="q">Chốt hạ tầng và công cụ kiểm thử nào trước khi build?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>TBD-02, 13, 14, 15, 17, 20 còn mở; compose hiện tại chỉ là dev; frontend chưa có test runner.</span></div>
+    <div><b>Chặn</b><span>E-02, E-08, E-10, E-23</span></div>
+    <div><b>Người chốt</b><span>Tech Lead Backend (Product Owner chốt retention)</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/11-traceability.tex; docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex; .agent/governance/decisions/DEC-001.md</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-014' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Chốt phần cứng tối thiểu và test runner frontend ngay; ngưỡng NFR, retry, retention chốt sau đo pilot</div><div class='od'>Trước M-02: cấu hình app server và GPU server (TBD-02), test runner frontend cho E-02. Sau pilot: TBD-13, 14; trước triển khai: TBD-15, 17, 20.</div><div class='pc'><span><b>Ưu:</b> Đúng thời điểm chốt trong bảng TBD của SRS; không bịa số trước khi đo.</span><span><b>Nhược:</b> Một số NFR chưa pass/fail được tới cuối dự án.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-014' value='B'><div><div class='ot'><b>Phương án B</b> — Chốt toàn bộ số liệu NFR ngay từ đầu</div><div class='od'>Đặt ngưỡng hiệu năng, retry, RPO/RTO trước khi build.</div><div class='pc'><span><b>Ưu:</b> Có mục tiêu sớm.</span><span><b>Nhược:</b> Trái B-14 (ngưỡng chốt từ đo); dễ đặt sai.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-014' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> B-14 yêu cầu ngưỡng chốt từ phép đo pilot.</p>
+  <textarea name="BLOCKER-014-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article></section><section class='gate' id='G2'><h3>G2 · Trước M-02 — Pipeline kiểm xác định</h3><p class='sub'>Chặn adapter CVAT, snapshot và lát kiểm tra ngẫu nhiên.</p>
+<article class="card" id="BLOCKER-004" data-rec="A">
+  <header><span class="id">BLOCKER-004</span><h4>CVAT thật chưa xác minh (TBD-01, AS-01)</h4><span class="chip ">external</span><span class="picked" data-for="BLOCKER-004">Chưa chốt</span></header>
+  <p class="q">Lấy CVAT thật ở đâu để xây và kiểm adapter? (TBD-01, AS-01)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>Chưa có URL, version, quyền token, endpoint thật, frame mapping và cách phát hiện drift trên CVAT đang triển khai.</span></div>
+    <div><b>Chặn</b><span>E-04</span></div>
+    <div><b>Người chốt</b><span>Chủ CVAT, Tech Lead Backend</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/11-traceability.tex TBD-01; docs/label-x_system-requirement-specification/sections/02-overview.tex AS-01; RK-06</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-004' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Dùng instance CVAT đang triển khai + service account chỉ đọc, làm spike adapter trước</div><div class='od'>Chủ CVAT cấp URL, phiên bản, service account chỉ đọc cho một project thử. Spike chứng minh đọc job/annotation/ảnh, hash ổn định và phát hiện drift (AC-03), rồi pin version.</div><div class='pc'><span><b>Ưu:</b> Kiểm đúng hệ thống thật; RK-06 được trả lời sớm nhất.</span><span><b>Nhược:</b> Phụ thuộc lịch của chủ CVAT.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-004' value='B'><div><div class='ot'><b>Phương án B</b> — Dựng CVAT dev riêng (cùng phiên bản) trong docker compose để xây song song</div><div class='od'>Thêm CVAT vào môi trường dev, build adapter trên đó; vẫn phải kiểm lại trên instance thật trước khi nghiệm thu E-04.</div><div class='pc'><span><b>Ưu:</b> Không phải chờ quyền; dev tự tạo dữ liệu thử.</span><span><b>Nhược:</b> Có thể khác cấu hình/quyền của instance thật; tốn thêm hạ tầng dev.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-004' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> B-02 yêu cầu kiểm API thật trước khi build; nếu chủ CVAT chậm thì dùng B làm phương án tạm, không thay A.</p>
+  <textarea name="BLOCKER-004-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-020" data-rec="A">
+  <header><span class="id">BLOCKER-020</span><h4>Điều khoản sử dụng BDD100K chưa xác nhận (TBD-18)</h4><span class="chip ">approval</span><span class="picked" data-for="BLOCKER-020">Chưa chốt</span></header>
+  <p class="q">Xác nhận được phép dùng BDD100K cho pilot và lưu trữ nội bộ chưa? (TBD-18)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>Chưa xác nhận giấy phép BDD100K cho pilot và lưu trữ nội bộ.</span></div>
+    <div><b>Chặn</b><span>E-04, E-07, E-18</span></div>
+    <div><b>Người chốt</b><span>Data/Model Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/11-traceability.tex TBD-18</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-020' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Data Owner rà điều khoản BDD100K và ghi xác nhận trước khi nạp dữ liệu</div><div class='od'>Ghi kết quả rà soát (phạm vi được phép, lưu trữ, chia sẻ) thành decision record.</div><div class='pc'><span><b>Ưu:</b> Đúng thứ tự trong SRS; chặn rủi ro pháp lý.</span><span><b>Nhược:</b> Cần Data Owner thực hiện trước M-02.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-020' value='B'><div><div class='ot'><b>Phương án B</b> — Dùng dữ liệu thay thế đã chắc chắn được phép</div><div class='od'>Đổi bộ dữ liệu pilot nếu điều khoản không phù hợp.</div><div class='pc'><span><b>Ưu:</b> Loại rủi ro giấy phép.</span><span><b>Nhược:</b> Phải sửa SRS (phạm vi BDD100K) qua change request.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-020' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> SRS đã chốt BDD100K; chỉ chuyển sang B nếu rà soát cho kết quả không phù hợp.</p>
+  <textarea name="BLOCKER-020-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-006" data-rec="A">
+  <header><span class="id">BLOCKER-006</span><h4>Mẫu G-4 sau sửa, mẫu số và cách kết luận gate chưa chốt</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-006">Chưa chốt</span></header>
+  <p class="q">Lấy mẫu và kết luận điều kiện gate G-4 (residual ≤ 5%) thế nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>G-4 là tỉ lệ frame còn lỗi từ lát ngẫu nhiên; chưa chốt revision lấy mẫu sau sửa, đủ mẫu và quy tắc kết luận residual ≤ 5%.</span></div>
+    <div><b>Chặn</b><span>E-11, E-20, E-22</span></div>
+    <div><b>Người chốt</b><span>Quality Assurance Lead, Product Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/02-overview.tex G-4; FR-RNK-07, FR-GTE-01/02; TBD-10, TBD-K4</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-006' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Lát ngẫu nhiên trên snapshot của run cuối; đạt khi cận trên khoảng tin cậy 95% ≤ 5%</div><div class='od'>Chọn r% frame bằng seed cố định trên toàn phạm vi của revision đã sửa (độc lập ranking, FR-RNK-07). Mẫu số = frame trong phạm vi. Đạt khi cận trên KTC 95% ≤ 5%; cỡ mẫu chưa đủ thì là chưa đạt (FR-GTE-02).</div><div class='pc'><span><b>Ưu:</b> Bảo thủ, đúng tinh thần &quot;thiếu dữ liệu không tự đạt&quot;.</span><span><b>Nhược:</b> Cần cỡ mẫu lớn hơn để đạt.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-006' value='B'><div><div class='ot'><b>Phương án B</b> — Lát ngẫu nhiên trên run cuối; đạt khi tỉ lệ điểm ≤ 5% với cỡ mẫu tối thiểu n</div><div class='od'>Cùng cách lấy mẫu, nhưng so ước lượng điểm với ngưỡng, kèm cỡ mẫu tối thiểu.</div><div class='pc'><span><b>Ưu:</b> Dễ đạt và dễ giải thích.</span><span><b>Nhược:</b> Có thể đạt nhờ may mắn khi mẫu nhỏ.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-006' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Gate dùng để chặn phát hành dữ liệu chưa xác minh; kết luận theo cận trên an toàn hơn. Mẫu U của thí nghiệm không dùng cho gate.</p>
+  <textarea name="BLOCKER-006-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article></section><section class='gate' id='G3'><h3>G3 · Trước M-03 — Vòng review–rework</h3><p class='sub'>Chặn queue/lease, workspace và run cuối.</p>
+<article class="card" id="BLOCKER-008" data-rec="A">
+  <header><span class="id">BLOCKER-008</span><h4>Lease hết hạn khi đã lưu một phần, resume, multi-tab (TBD-09)</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-008">Chưa chốt</span></header>
+  <p class="q">Lease review: thời hạn, gia hạn, xử lý khi hết hạn giữa chừng? (TBD-09)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>FR-REV-04 trả frame về hàng đợi khi hết lease, nhưng transition lease_expired yêu cầu chưa có quyết định đã lưu; chưa quy định một hay nhiều lease mỗi reviewer.</span></div>
+    <div><b>Chặn</b><span>E-13, E-14</span></div>
+    <div><b>Người chốt</b><span>Product Owner, Tech Lead Backend</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-REV-04; docs/label-x_system-requirement-specification/sections/05-dynamics.tex bảng transition; TBD-09; RK-05</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-008' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Một lease/reviewer; hết hạn thì giữ quyết định đã lưu, frame về hàng đợi ở trạng thái &quot;đang dở&quot;</div><div class='od'>Quyết định đã lưu không mất. Frame quay lại hàng đợi, ưu tiên trả về đúng reviewer cũ nếu họ nhận lại. Mỗi reviewer chỉ giữ một lease (chặn nhiều tab). Thời hạn và quy tắc gia hạn đo trong pilot rồi chốt.</div><div class='pc'><span><b>Ưu:</b> Không mất công; effort log sạch hơn (RK-05).</span><span><b>Nhược:</b> Bảng transition SRS cần thêm trạng thái &quot;đang dở&quot;.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-008' value='B'><div><div class='ot'><b>Phương án B</b> — Hết hạn thì huỷ toàn bộ quyết định chưa hoàn tất frame</div><div class='od'>Frame về trạng thái Chưa review như ban đầu.</div><div class='pc'><span><b>Ưu:</b> Trạng thái đơn giản.</span><span><b>Nhược:</b> Mất công reviewer; sai lệch effort.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-008' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Giữ công đã làm và khớp với ràng buộc một lease/reviewer của RK-05. Thời hạn cụ thể vẫn do Product Owner chốt sau đo pilot.</p>
+  <textarea name="BLOCKER-008-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-011" data-rec="A">
+  <header><span class="id">BLOCKER-011</span><h4>Run gốc/run cuối, Completed/coverage và waiver từng điều kiện (TBD-19)</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-011">Chưa chốt</span></header>
+  <p class="q">Khi không có rework thì gate tính trên run nào; điều kiện nào được phép waiver? (TBD-19)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>FR-GTE-01 tính gate trên run cuối, UC-14 cho phép run gốc khi chưa rework; danh sách điều kiện được waiver chưa chốt.</span></div>
+    <div><b>Chặn</b><span>E-16, E-22</span></div>
+    <div><b>Người chốt</b><span>Product Owner, Quality Assurance Lead</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-RWK-08, FR-GTE-01…03; docs/label-x_system-requirement-specification/sections/04-usecases.tex UC-14; TBD-19</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-011' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Không rework → run gốc Completed được đánh dấu run cuối; waiver chỉ cho coverage và đồng thuận reviewer</div><div class='od'>Không cần chạy lại vô ích. Lỗi nghiêm trọng chưa đóng và rework chưa verify không bao giờ được waiver.</div><div class='pc'><span><b>Ưu:</b> Nhanh; giữ các điều kiện an toàn cứng.</span><span><b>Nhược:</b> Cần sửa FR-GTE-01 cho rõ trường hợp không rework.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-011' value='B'><div><div class='ot'><b>Phương án B</b> — Luôn tạo snapshot + run cuối mới; mọi điều kiện đều có thể waiver theo policy</div><div class='od'>Thống nhất một luồng duy nhất.</div><div class='pc'><span><b>Ưu:</b> Đơn giản về luồng.</span><span><b>Nhược:</b> Tốn thêm một lần chạy; waiver lỗi nghiêm trọng làm yếu gate.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-011' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Giữ ý nghĩa của gate (không phát hành lỗi nghiêm trọng hay sửa chưa verify) mà không chạy thừa.</p>
+  <textarea name="BLOCKER-011-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article></section><section class='gate' id='G4'><h3>G4 · Trước M-04 — Reference và Detector</h3><p class='sub'>Chặn reference tập hiệu chỉnh, Detector và hiệu chỉnh score.</p>
+<article class="card" id="BLOCKER-002" data-rec="A">
+  <header><span class="id">BLOCKER-002</span><h4>Chưa quyết định bật/tắt VLM trong pilot (TBD-08)</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-002">Chưa chốt</span></header>
+  <p class="q">Có bật engine VLM (mô hình thị giác – ngôn ngữ) trong pilot M13 không? (TBD-08)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>SRS đề xuất không bật VLM trong pilot nhưng cần Product Owner duyệt; B-08 vẫn là kiến trúc đã chốt.</span></div>
+    <div><b>Chặn</b><span>E-12, E-19</span></div>
+    <div><b>Người chốt</b><span>Product Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-ENG-10; docs/label-x_system-requirement-specification/sections/11-traceability.tex TBD-08</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-002' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Không bật VLM trong pilot</div><div class='od'>Duyệt đề xuất thu hẹp của SRS. E-12 chỉ cần ghi trạng thái disabled/Not checked đúng; B-08 vẫn là kiến trúc cho giai đoạn sau.</div><div class='pc'><span><b>Ưu:</b> Bớt hẳn một nhánh hạ tầng GPU/model, giảm rủi ro dữ liệu (NFR-09). KPI M13 không phụ thuộc VLM.</span><span><b>Nhược:</b> Không có bằng chứng giá trị của VLM trong lần nghiệm thu này.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-002' value='B'><div><div class='ot'><b>Phương án B</b> — Bật VLM theo B-08</div><div class='od'>Pipeline candidate → policy → worker nội bộ, tối đa 400 candidate/run, 3 lần thử.</div><div class='pc'><span><b>Ưu:</b> Có thêm bằng chứng cho reviewer.</span><span><b>Nhược:</b> Phải chốt model, hạ tầng, timeout; thêm phụ thuộc vào đường găng.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-002' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Ba nhóm lỗi E1–E3 của M13 đã có engine phát hiện; VLM không nằm trên đường đo KPI.</p>
+  <textarea name="BLOCKER-002-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-005" data-rec="A">
+  <header><span class="id">BLOCKER-005</span><h4>Detector artifact, mapping 10 lớp và training manifest chưa xác nhận</h4><span class="chip ">dependency</span><span class="picked" data-for="BLOCKER-005">Chưa chốt</span></header>
+  <p class="q">Dùng Detector baseline nào và chứng minh nó chưa thấy tập held-out bằng cách nào?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>FR-ENG-05 cần artifact/checksum/mapping 10 lớp; FR-EVL-05(b) cần danh sách ảnh huấn luyện; màn ModelsGuidelines chỉ có giá trị minh hoạ.</span></div>
+    <div><b>Chặn</b><span>E-06, E-10, E-18</span></div>
+    <div><b>Người chốt</b><span>Data/Model Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/06-functional.tex FR-ENG-05, FR-EVL-05; docs/label-x_system-requirement-specification/sections/02-overview.tex AS-02, AS-03</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-005' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Detector nội bộ hiện có của đội mô hình</div><div class='od'>Bàn giao artifact, checksum, mapping 10 lớp BDD100K và danh sách ảnh đã huấn luyện (training manifest).</div><div class='pc'><span><b>Ưu:</b> Đúng model đội đang dùng; ngưỡng quen thuộc.</span><span><b>Nhược:</b> Chỉ dùng được nếu có đủ training manifest để kiểm AS-03.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-005' value='B'><div><div class='ot'><b>Phương án B</b> — Detector công khai huấn luyện trên tập train của BDD100K</div><div class='od'>Chọn một model công khai đã huấn luyện trên BDD100K train; lấy held-out từ phần val nên không giao với dữ liệu huấn luyện.</div><div class='pc'><span><b>Ưu:</b> Kiểm rò rỉ dữ liệu (FR-EVL-05b) đơn giản và rõ ràng.</span><span><b>Nhược:</b> Có thể yếu hơn model nội bộ; vẫn phải freeze artifact và kiểm giấy phép.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-005' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Ưu tiên model nội bộ nếu có training manifest; nếu không có manifest thì chọn B để bảo đảm AS-03.</p>
+  <textarea name="BLOCKER-005-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-018" data-rec="A">
+  <header><span class="id">BLOCKER-018</span><h4>Quy trình ngoài LabelX tạo task GT và bản sao annotation hai nhánh</h4><span class="chip ">dependency</span><span class="picked" data-for="BLOCKER-018">Chưa chốt</span></header>
+  <p class="q">Ai và bằng cách nào tạo task CVAT cho người lập GT và bản sao annotation cho hai nhánh thí nghiệm?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>UC-08 cần task CVAT riêng cho người xác minh; EX-03 cần bản sao annotation riêng mỗi nhánh; adapter chỉ đọc (B-18) nên việc chuẩn bị nằm ngoài LabelX và chưa có quy trình/người thực hiện.</span></div>
+    <div><b>Chặn</b><span>E-06, E-07, E-18, E-19</span></div>
+    <div><b>Người chốt</b><span>Quality Assurance Lead, Quality Control Admin, Chủ CVAT</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/04-usecases.tex UC-08; docs/label-x_system-requirement-specification/sections/07-evaluation.tex EX-03; FR-SNP-01</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-018' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — QC Admin tạo thủ công trên CVAT theo checklist; LabelX chỉ đọc theo quy ước tên/tag</div><div class='od'>Export/import trong CVAT theo checklist được duyệt; task đặt tên/tag theo quy ước để adapter nhận diện là GT hay nhánh A/B.</div><div class='pc'><span><b>Ưu:</b> Không vi phạm B-18 (LabelX không ghi); làm được ngay.</span><span><b>Nhược:</b> Thao tác tay, cần kiểm checklist.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-018' value='B'><div><div class='ot'><b>Phương án B</b> — Script riêng ngoài LabelX gọi API ghi của CVAT, do QC Admin chạy</div><div class='od'>Tự động hoá bước nhân bản task, vẫn nằm ngoài adapter.</div><div class='pc'><span><b>Ưu:</b> Nhanh, ít lỗi khi số task lớn.</span><span><b>Nhược:</b> Cần quyền ghi CVAT và rà soát bảo mật; thêm một công cụ phải bảo trì.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-018' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> Số task trong pilot nhỏ; giữ ranh giới chỉ đọc rõ ràng nhất.</p>
+  <textarea name="BLOCKER-018-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-021" data-rec="A">
+  <header><span class="id">BLOCKER-021</span><h4>Đặc tả Model Orchestrator chưa chốt (TBD-21)</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-021">Chưa chốt</span></header>
+  <p class="q">Model Orchestrator (tổng hợp kết quả đánh giá engine, B-05) cần đặc tả tới mức nào? (TBD-21)</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>B-05 cần Model Orchestrator tổng hợp kết quả đánh giá engine nhưng đầu vào/đầu ra/provenance chưa đặc tả.</span></div>
+    <div><b>Chặn</b><span>E-17, E-20</span></div>
+    <div><b>Người chốt</b><span>Đội mô hình</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/11-traceability.tex TBD-21; architecture_review.html B-05</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-021' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Đặc tả tối thiểu và xây trong E-17</div><div class='od'>Đầu vào: evaluation run + GT version. Đầu ra: bảng Precision/Recall theo lớp và theo slice, có provenance (snapshot, model checksum, reference version).</div><div class='pc'><span><b>Ưu:</b> Đủ cho FR-EVL-15 và báo cáo; không mở rộng scope.</span><span><b>Nhược:</b> Chưa phục vụ so sánh nhiều model.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-021' value='B'><div><div class='ot'><b>Phương án B</b> — Đặc tả đầy đủ cho nhiều model và so sánh</div><div class='od'>Hỗ trợ nhiều Detector/Classifier, so sánh phiên bản.</div><div class='pc'><span><b>Ưu:</b> Sẵn cho giai đoạn sau.</span><span><b>Nhược:</b> Vượt phạm vi M13 (B-07 chỉ một Detector).</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-021' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> M13 chỉ có một Detector baseline (B-07).</p>
+  <textarea name="BLOCKER-021-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-015" data-rec="A">
+  <header><span class="id">BLOCKER-015</span><h4>Tham số khoa học và nguồn lực cho các cổng đo</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-015">Chưa chốt</span></header>
+  <p class="q">Lịch chốt các tham số khoa học và nguồn lực đo lường?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>TBD-03…07, 10…12, 16, K1…K4 và nguồn lực AS-04 (QA Lead + 2 người xác minh), AS-05 (≥ 4 reviewer) chưa chốt.</span></div>
+    <div><b>Chặn</b><span>E-05, E-07, E-17, E-18, E-19, E-20</span></div>
+    <div><b>Người chốt</b><span>Theo từng TBD (Data Owner, QA Lead, Product Owner, đội mô hình)</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/11-traceability.tex; docs/label-x_system-requirement-specification/sections/02-overview.tex AS-04, AS-05; docs/label-x_system-requirement-specification/sections/07-evaluation.tex §7.3</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-015' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Chốt theo cổng: mỗi nhóm TBD chốt ngay trước epic cần nó</div><div class='od'>Trước lập reference (E-07): TBD-03, 04, 05, 06 và nguồn lực AS-04. Trước pilot: TBD-07, 10. Trước khoá score (E-17): TBD-16. Sau pilot nhỏ: TBD-12. Trước thí nghiệm/held-out: TBD-11, K1–K4 và AS-05.</div><div class='pc'><span><b>Ưu:</b> Khớp hạn chốt trong SRS; không chặn M-01…M-03.</span><span><b>Nhược:</b> Cần người theo dõi lịch chốt.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-015' value='B'><div><div class='ot'><b>Phương án B</b> — Một buổi workshop chốt toàn bộ ngay</div><div class='od'>Chốt tất cả TBD khoa học một lần.</div><div class='pc'><span><b>Ưu:</b> Gọn.</span><span><b>Nhược:</b> Nhiều tham số (K1–K4, TBD-12) chỉ chốt đúng được sau đo baseline/pilot (B-14).</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-015' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> SRS đã quy định hạn chốt từng TBD; chốt sớm KPI là trái pre-registration.</p>
+  <textarea name="BLOCKER-015-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article></section><section class='gate' id='G5'><h3>G5 · Trước M-05 — Kiểm chứng và thí nghiệm</h3><p class='sub'>Chặn reference held-out, preregistration và thí nghiệm effort.</p>
+<article class="card" id="BLOCKER-017" data-rec="A">
+  <header><span class="id">BLOCKER-017</span><h4>Quan hệ D1/D2 với tập held-out KPI-1 chưa xác định</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-017">Chưa chốt</span></header>
+  <p class="q">Dữ liệu thí nghiệm effort D1/D2 có thuộc tập held-out KPI-1 không?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>EX-02 chỉ nói D1/D2 không giao tập hiệu chỉnh; chưa rõ D1/D2 là held-out hay tập thứ ba.</span></div>
+    <div><b>Chặn</b><span>E-18, E-19</span></div>
+    <div><b>Người chốt</b><span>Product Owner, Quality Assurance Lead, Data Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/07-evaluation.tex EX-02; TBD-03, TBD-12</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-017' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — D1/D2 là hai nửa của tập held-out</div><div class='od'>Một tập đánh giá duy nhất, chia ngẫu nhiên theo video thành D1/D2. KPI-1 đo trên toàn tập; thí nghiệm effort chạy trên D1/D2.</div><div class='pc'><span><b>Ưu:</b> Chỉ phải lập reference cho hai tập (hiệu chỉnh + held-out), giảm mạnh RK-03.</span><span><b>Nhược:</b> Người tham gia thí nghiệm đã xem dữ liệu held-out — không ảnh hưởng KPI-1 vì KPI-1 không do người chấm.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-017' value='B'><div><div class='ot'><b>Phương án B</b> — D1/D2 là tập thứ ba, tách khỏi held-out</div><div class='od'>Ba tập độc lập: hiệu chỉnh, held-out, thí nghiệm.</div><div class='pc'><span><b>Ưu:</b> Độc lập tuyệt đối giữa hai phép đo.</span><span><b>Nhược:</b> Tăng khoảng 50% khối lượng reference.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-017' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> KPI-1 đo ranking tự động, không bị ảnh hưởng bởi việc reviewer xem dữ liệu; tiết kiệm đáng kể nhân lực reference.</p>
+  <textarea name="BLOCKER-017-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article>
+<article class="card" id="BLOCKER-019" data-rec="A">
+  <header><span class="id">BLOCKER-019</span><h4>Người biết GT tham gia phân xử thí nghiệm</h4><span class="chip ">decision</span><span class="picked" data-for="BLOCKER-019">Chưa chốt</span></header>
+  <p class="q">Người đã biết GT có được phân xử issue trong thí nghiệm effort không?</p>
+  <div class="facts">
+    <div><b>Hiện trạng</b><span>QA Lead phân xử bất đồng GT (BR-11) đã biết đáp án; EX-09 dùng cùng QA Lead phân xử hai nhánh; EX-10 loại người lập reference khỏi thí nghiệm.</span></div>
+    <div><b>Chặn</b><span>E-18, E-19</span></div>
+    <div><b>Người chốt</b><span>Product Owner</span></div>
+    <div><b>Căn cứ</b><span class="mono">docs/label-x_system-requirement-specification/sections/03-data-errors.tex BR-11; docs/label-x_system-requirement-specification/sections/07-evaluation.tex EX-09, EX-10</span></div>
+  </div>
+  <div class="opts"><label class='opt rec' data-k='A'><input type='radio' name='BLOCKER-019' value='A'><div><div class='ot'><b>Phương án A</b> <span class="chip rec">Đề xuất</span> — Tách vai trò: người phân xử GT khác người phân xử thí nghiệm</div><div class='od'>QA Lead phân xử bất đồng GT; một người phân xử khác (QA Lead thứ hai hoặc senior reviewer được cấp quyền) phân xử cho cả hai nhánh thí nghiệm.</div><div class='pc'><span><b>Ưu:</b> Giữ EX-09 (cùng người cho hai nhánh) và EX-10 (không biết đáp án).</span><span><b>Nhược:</b> Cần thêm một người đủ thẩm quyền.</span></div></div></label><label class='opt' data-k='B'><input type='radio' name='BLOCKER-019' value='B'><div><div class='ot'><b>Phương án B</b> — Cùng QA Lead, ghi nhận là hạn chế của thí nghiệm</div><div class='od'>Không tách vai trò; báo cáo nêu rõ hạn chế.</div><div class='pc'><span><b>Ưu:</b> Không cần thêm người.</span><span><b>Nhược:</b> Kết quả KPI-2 dễ bị phản biện.</span></div></div></label><label class='opt' data-k='X'><input type='radio' name='BLOCKER-019' value='X'><div><div class='ot'><b>Phương án khác</b> — ghi rõ ở ô ghi chú</div></div></label></div>
+  <p class="why"><b>Lý do đề xuất A:</b> KPI-2 là kết quả nghiệm thu chính; tránh thiên lệch do biết đáp án.</p>
+  <textarea name="BLOCKER-019-note" placeholder="Ghi chú / giá trị cụ thể / người được gán (không bắt buộc)"></textarea>
+</article></section>
+
+<h2>4. Đã giải quyết</h2>
+<div class="panel"><ul><li><b>BLOCKER-003</b> — Quyền chạy phân tích của QC Admin không nhất quán</li><li><b>BLOCKER-009</b> — Lý do cho quyết định &quot;Chưa chắc chắn&quot; không nhất quán</li><li><b>BLOCKER-010</b> — Mô hình điểm: cấp candidate/issue, tên đối chứng score_v0, ε chưa thống nhất</li><li><b>BLOCKER-016</b> — Reference phải phủ cả tập hiệu chỉnh</li></ul><p class="sub">Đã sửa trong SRS ngày 05/10/2026; phê duyệt cuối của SRS theo dõi ở BLOCKER-001.</p></div>
+
+<h2>5. Rủi ro theo dõi</h2>
+<div class="tbl"><table>
+<thead><tr><th>Mã</th><th>Rủi ro (nguồn)</th><th>Khả năng</th><th>Tác động</th><th>Giảm thiểu</th></tr></thead>
+<tbody><tr><td class='id'>RISK-001</td><td>Detector yếu trên ảnh đêm/đối tượng nhỏ<div class='sub'>RK-01</div></td><td>medium</td><td>high</td><td class='sub'>Báo cáo theo slice; h(f) dùng đặc trưng ngày/đêm</td></tr><tr><td class='id'>RISK-002</td><td>Detector đã thấy ảnh held-out khi huấn luyện<div class='sub'>RK-02</div></td><td>medium</td><td>high</td><td class='sub'>FR-EVL-05(b); chọn held-out từ phần chắc chắn không dùng huấn luyện</td></tr><tr><td class='id'>RISK-003</td><td>Reference chậm hoặc tốn công<div class='sub'>RK-03</div></td><td>high</td><td>high</td><td class='sub'>Bắt đầu chuẩn bị dữ liệu reference song song M-02/M-03; giới hạn N theo power analysis; task CVAT riêng</td></tr><tr><td class='id'>RISK-004</td><td>Automation bias ở nhánh assisted<div class='sub'>RK-04</div></td><td>medium</td><td>high</td><td class='sub'>Lát ngẫu nhiên; Frame Review hiển thị toàn ảnh; đo KPI-2b và residual</td></tr><tr><td class='id'>RISK-005</td><td>Effort log sai do bỏ máy, nhiều tab<div class='sub'>RK-05</div></td><td>medium</td><td>medium</td><td class='sub'>Ngưỡng t_idle; một lease mỗi reviewer; quy tắc loại phiên bất thường khoá trước</td></tr><tr><td class='id'>RISK-006</td><td>CVAT API không cho kiểm drift tin cậy<div class='sub'>RK-06</div></td><td>low</td><td>high</td><td class='sub'>Spike adapter trên CVAT thật trước build (B-02)</td></tr><tr><td class='id'>RISK-007</td><td>Ít lỗi E3 tự nhiên<div class='sub'>RK-07</div></td><td>high</td><td>low</td><td class='sub'>E_min,g; lỗi chèn báo cáo riêng (BR-15)</td></tr><tr><td class='id'>RISK-008</td><td>Guideline chưa có rule ID rõ<div class='sub'>RK-08</div></td><td>medium</td><td>medium</td><td class='sub'>QA Lead chuẩn hoá rule tối thiểu cho 10 lớp trước pilot (AS-06)</td></tr><tr><td class='id'>RISK-009</td><td>Đổi tham số sau khi thấy kết quả held-out<div class='sub'>RK-09</div></td><td>medium</td><td>high</td><td class='sub'>Preregistration (SRS §7.3); audit mọi thay đổi version</td></tr><tr><td class='id'>RISK-010</td><td>KPI trượt trên held-out<div class='sub'>Thảo luận Claude–Codex (G8)</div></td><td>medium</td><td>high</td><td class='sub'>Kiểm chứng kỹ trên tập hiệu chỉnh (ablation, ngoài fold) trước khi chạy held-out</td></tr></tbody></table></div>
+
+<h2>6. Sau khi chốt</h2>
+<ol class="lead">
+  <li>Gửi phiếu chốt cho Claude: blocker được ghi quyết định (decision record), chuyển trạng thái, và SRS được cập nhật qua phiên quản lý tài liệu nếu phương án đổi nội dung SRS.</li>
+  <li>Duyệt roadmap R-001 (roadmap-lock-prompt), gán người cho owner M-01.</li>
+  <li>Chuyển E-01 sang sẵn sàng (EPIC_READY) và tách task; bắt đầu lập trình.</li>
+  <li>Bật branch protection cho main (cần GitHub Pro vì repo đang private, hoặc chuyển public).</li>
+</ol>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const DATA = {"blockers": {"BLOCKER-001": {"title": "SRS chờ ký theo vai trò; owner planning chưa gán", "rec": "A", "opts": {"A": "Ký SRS theo vai trò ngay; gán owner theo từng milestone, bắt đầu từ M-01", "B": "Product Owner ký thay toàn bộ, gán đủ owner cho 24 epic một lần"}}, "BLOCKER-002": {"title": "Chưa quyết định bật/tắt VLM trong pilot (TBD-08)", "rec": "A", "opts": {"A": "Không bật VLM trong pilot", "B": "Bật VLM theo B-08"}}, "BLOCKER-004": {"title": "CVAT thật chưa xác minh (TBD-01, AS-01)", "rec": "A", "opts": {"A": "Dùng instance CVAT đang triển khai + service account chỉ đọc, làm spike adapter trước", "B": "Dựng CVAT dev riêng (cùng phiên bản) trong docker compose để xây song song"}}, "BLOCKER-005": {"title": "Detector artifact, mapping 10 lớp và training manifest chưa xác nhận", "rec": "A", "opts": {"A": "Detector nội bộ hiện có của đội mô hình", "B": "Detector công khai huấn luyện trên tập train của BDD100K"}}, "BLOCKER-006": {"title": "Mẫu G-4 sau sửa, mẫu số và cách kết luận gate chưa chốt", "rec": "A", "opts": {"A": "Lát ngẫu nhiên trên snapshot của run cuối; đạt khi cận trên khoảng tin cậy 95% ≤ 5%", "B": "Lát ngẫu nhiên trên run cuối; đạt khi tỉ lệ điểm ≤ 5% với cỡ mẫu tối thiểu n"}}, "BLOCKER-007": {"title": "Lineage issue qua revision và neo issue cấu trúc/thủ công chưa có contract", "rec": "A", "opts": {"A": "Theo ADR đề xuất: định danh đối tượng bằng cvat_shape_id + namespace nguồn, fallback matching chỉ để gợi ý", "B": "Không nối: run cuối luôn tạo issue mới, reviewer xem lại tất cả"}}, "BLOCKER-008": {"title": "Lease hết hạn khi đã lưu một phần, resume, multi-tab (TBD-09)", "rec": "A", "opts": {"A": "Một lease/reviewer; hết hạn thì giữ quyết định đã lưu, frame về hàng đợi ở trạng thái \"đang dở\"", "B": "Hết hạn thì huỷ toàn bộ quyết định chưa hoàn tất frame"}}, "BLOCKER-011": {"title": "Run gốc/run cuối, Completed/coverage và waiver từng điều kiện (TBD-19)", "rec": "A", "opts": {"A": "Không rework → run gốc Completed được đánh dấu run cuối; waiver chỉ cho coverage và đồng thuận reviewer", "B": "Luôn tạo snapshot + run cuối mới; mọi điều kiện đều có thể waiver theo policy"}}, "BLOCKER-012": {"title": "Lineage báo cáo KPI (snapshot đầu vào) và báo cáo/gate (revision cuối)", "rec": "A", "opts": {"A": "Báo cáo hai phần: KPI theo snapshot đầu vào đã khoá; chất lượng và gate theo run cuối", "B": "Toàn bộ báo cáo chuyển sang run cuối"}}, "BLOCKER-013": {"title": "Thiết kế màn hình thiếu delta cho luồng M13", "rec": "A", "opts": {"A": "Thiết kế bổ sung ngay trước epic dùng tới (just-in-time)", "B": "Thiết kế toàn bộ delta trước khi bắt đầu M-01"}}, "BLOCKER-014": {"title": "Phần cứng, ngưỡng NFR, retry, retention/GC, RPO/RTO chưa chốt", "rec": "A", "opts": {"A": "Chốt phần cứng tối thiểu và test runner frontend ngay; ngưỡng NFR, retry, retention chốt sau đo pilot", "B": "Chốt toàn bộ số liệu NFR ngay từ đầu"}}, "BLOCKER-015": {"title": "Tham số khoa học và nguồn lực cho các cổng đo", "rec": "A", "opts": {"A": "Chốt theo cổng: mỗi nhóm TBD chốt ngay trước epic cần nó", "B": "Một buổi workshop chốt toàn bộ ngay"}}, "BLOCKER-017": {"title": "Quan hệ D1/D2 với tập held-out KPI-1 chưa xác định", "rec": "A", "opts": {"A": "D1/D2 là hai nửa của tập held-out", "B": "D1/D2 là tập thứ ba, tách khỏi held-out"}}, "BLOCKER-018": {"title": "Quy trình ngoài LabelX tạo task GT và bản sao annotation hai nhánh", "rec": "A", "opts": {"A": "QC Admin tạo thủ công trên CVAT theo checklist; LabelX chỉ đọc theo quy ước tên/tag", "B": "Script riêng ngoài LabelX gọi API ghi của CVAT, do QC Admin chạy"}}, "BLOCKER-019": {"title": "Người biết GT tham gia phân xử thí nghiệm", "rec": "A", "opts": {"A": "Tách vai trò: người phân xử GT khác người phân xử thí nghiệm", "B": "Cùng QA Lead, ghi nhận là hạn chế của thí nghiệm"}}, "BLOCKER-020": {"title": "Điều khoản sử dụng BDD100K chưa xác nhận (TBD-18)", "rec": "A", "opts": {"A": "Data Owner rà điều khoản BDD100K và ghi xác nhận trước khi nạp dữ liệu", "B": "Dùng dữ liệu thay thế đã chắc chắn được phép"}}, "BLOCKER-021": {"title": "Đặc tả Model Orchestrator chưa chốt (TBD-21)", "rec": "A", "opts": {"A": "Đặc tả tối thiểu và xây trong E-17", "B": "Đặc tả đầy đủ cho nhiều model và so sánh"}}}};
+const KEY = "labelx-plan-review-v1";
+const ids = Object.keys(DATA.blockers);
+function load() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
+function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+function state() {
+  const s = {};
+  for (const id of ids) {
+    const r = document.querySelector(`input[name="${id}"]:checked`);
+    const n = document.querySelector(`textarea[name="${id}-note"]`).value.trim();
+    if (r || n) s[id] = { choice: r ? r.value : "", note: n };
+  }
+  return s;
+}
+function render() {
+  let done = 0;
+  for (const id of ids) {
+    const r = document.querySelector(`input[name="${id}"]:checked`);
+    document.querySelectorAll(`#${id} .opt`).forEach(o => o.classList.toggle("sel", !!r && o.dataset.k === r.value));
+    const p = document.querySelector(`.picked[data-for="${id}"]`);
+    if (r) { done++; p.textContent = r.value === "X" ? "Đã chốt: phương án khác" : "Đã chốt: " + r.value; p.classList.add("done"); }
+    else { p.textContent = "Chưa chốt"; p.classList.remove("done"); }
+  }
+  document.getElementById("prog").textContent = `Đã chốt ${done}/${ids.length}`;
+}
+function apply(s) {
+  for (const id of ids) {
+    const v = s[id] || {};
+    document.querySelectorAll(`input[name="${id}"]`).forEach(i => i.checked = i.value === v.choice);
+    document.querySelector(`textarea[name="${id}-note"]`).value = v.note || "";
+  }
+  render();
+}
+function ballot() {
+  const s = state(); const lines = ["# Phiếu chốt blocker — LabelX M13", "", "Ngày: " + new Date().toLocaleDateString("vi-VN"), ""];
+  for (const id of ids) {
+    const b = DATA.blockers[id], v = s[id] || {};
+    const c = v.choice ? (v.choice === "X" ? "Khác" : v.choice + " — " + b.opts[v.choice]) : "CHƯA CHỐT";
+    lines.push(`- ${id} (${b.title}): ${c}` + (v.note ? ` | Ghi chú: ${v.note}` : ""));
+  }
+  return lines.join("\n");
+}
+function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("on"); setTimeout(() => el.classList.remove("on"), 1800); }
+document.addEventListener("change", e => { if (e.target.matches("input[type=radio]")) { render(); save(state()); } });
+document.addEventListener("input", e => { if (e.target.matches("textarea")) save(state()); });
+document.getElementById("allrec").onclick = () => { const s = state(); for (const id of ids) s[id] = { choice: DATA.blockers[id].rec, note: (s[id] || {}).note || "" }; apply(s); save(s); toast("Đã chọn theo đề xuất"); };
+document.getElementById("reset").onclick = () => { if (confirm("Xoá toàn bộ lựa chọn và ghi chú?")) { apply({}); save({}); } };
+document.getElementById("copy").onclick = async () => {
+  const t = ballot();
+  try { await navigator.clipboard.writeText(t); toast("Đã sao chép phiếu chốt"); }
+  catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove(); toast("Đã sao chép phiếu chốt"); }
+};
+document.getElementById("dl").onclick = () => {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ballot()], { type: "text/markdown" }));
+  a.download = "phieu-chot-blocker-labelx.md"; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("pdf").onclick = () => window.print();
+window.addEventListener("beforeprint", () => {
+  document.getElementById("printstamp").textContent = "Bản in ngày " + new Date().toLocaleString("vi-VN") + " · " + document.getElementById("prog").textContent;
+  document.querySelectorAll("#eps tbody tr").forEach(r => r.style.display = "");
+});
+document.getElementById("msf").onchange = e => document.querySelectorAll("#eps tbody tr").forEach(r => r.style.display = !e.target.value || r.dataset.ms === e.target.value ? "" : "none");
+apply(load());
+</script>
+</body>
+</html>
