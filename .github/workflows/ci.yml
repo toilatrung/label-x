@@ -139,6 +139,8 @@ jobs:
         with:
           name: backend-${{ github.sha }}
           path: .ci-artifacts/
+          # .ci-artifacts là thư mục ẩn; upload-artifact@v7 mặc định bỏ qua file ẩn.
+          include-hidden-files: true
           if-no-files-found: error
 
   frontend:
@@ -170,4 +172,5 @@ jobs:
         with:
           name: frontend-${{ github.sha }}
           path: .ci-artifacts/frontend-build.tar.gz
+          include-hidden-files: true
           if-no-files-found: error

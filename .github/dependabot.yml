@@ -8,7 +8,27 @@ updates:
     directory: /src/backend
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
+    ignore:
+      # DEC-001 chốt Django 5.2 LTS; stub và Django phải cùng dòng 5.2.
+      - dependency-name: django
+        versions: [">=5.3"]
+      - dependency-name: django-stubs
+        versions: [">=5.3"]
+      # kombu[redis] (Celery) yêu cầu redis<6.5.
+      - dependency-name: redis
+        versions: [">=6.5"]
   - package-ecosystem: npm
     directory: /src/frontend
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
+    groups:
+      # react và react-dom phải cùng phiên bản.
+      react:
+        patterns: [react, react-dom, "@types/react", "@types/react-dom"]
+    ignore:
+      # eslint-config-next 16 chưa chạy được với eslint 10 (react/display-name lỗi getFilename).
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+      # Runtime và CI dùng Node 22; type Node giữ cùng major.
+      - dependency-name: "@types/node"
+        versions: [">=23"]
