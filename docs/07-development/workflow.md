@@ -78,6 +78,30 @@ Căn cứ hiện có trong repo:
 
 Đề xuất (cần decision): mỗi branch/PR gắn một `TASK-ID`, mô tả PR link tới implementation report và review report trong `.agent/reports/`, và chỉ merge khi review report là `APPROVED` và `make check` pass.
 
+## File riêng trong .agent/ khi nhiều dev cùng làm
+
+Áp dụng từ `CR-100` (mục "Per-User Agent Files" trong `AGENT.md`), để nhiều PR mở cùng lúc không conflict ở các file trạng thái dùng chung.
+
+| Vai trò | Được ghi trong `.agent/` |
+|---|---|
+| Dev / coding agent trên máy dev | Chỉ file riêng của mình: `<tên-file-chính>-@<github-username>.<đuôi>` cùng thư mục với file chính |
+| Integrator: PO Trịnh Quang Trung (`@toilatrung`) và QC được PO giao (`.github/agent-integrators.txt`) | File chính; gộp và xoá file riêng đã gộp |
+
+Ví dụ: muốn cập nhật `.agent/execution/current-context.md`, dev `dev1` tạo hoặc sửa `.agent/execution/current-context-@dev1.md` (chỉ ghi phần thay đổi của mình, giữ heading/cột của file chính, ghi base commit), rồi chạy `scripts/md2html.py` để sinh `current-context-@dev1.html`. Record governance mới: `.agent/governance/blockers/BLOCKER-031-@dev1.md` theo template; integrator đổi thành `BLOCKER-031.md` khi gộp.
+
+Quy trình:
+
+1. Dev mở PR như bình thường; chỉ đụng file riêng của mình trong `.agent/`.
+2. CI job `framework` chạy `scripts/ci/check-agent-ownership.cjs` trên mọi PR: fail nếu người mở PR không phải integrator mà sửa file chính, file riêng của người khác, `AGENT.md` hoặc danh sách integrator.
+3. Integrator định kỳ mở PR gộp: đưa nội dung file riêng vào file chính, xoá file riêng đã gộp trong cùng PR, ghi vào `.agent/execution/sessions-history.md`.
+4. PO thêm QC vào `.github/agent-integrators.txt` (và `.github/CODEOWNERS`) khi giao nhiệm vụ.
+
+Kiểm cục bộ trước khi đẩy PR:
+
+```bash
+PR_AUTHOR=<github-username> BASE_SHA=$(git merge-base origin/main HEAD) HEAD_SHA=HEAD node scripts/ci/check-agent-ownership.cjs
+```
+
 ## Liên quan
 
 - [tooling.md](tooling.md)

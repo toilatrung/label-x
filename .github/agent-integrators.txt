@@ -1,0 +1,5 @@
+# Integrators cho .agent/ (AGENT.md mục Per-User Agent Files, CR-100).
+# Mỗi dòng một GitHub username, không có @. Chỉ PO (@toilatrung) được sửa file này.
+# PO dự án: Trịnh Quang Trung
+toilatrung
+# QC được giao (PO thêm khi giao nhiệm vụ):

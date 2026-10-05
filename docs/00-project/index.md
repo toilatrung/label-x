@@ -15,6 +15,7 @@ Index framework identity, release, charter, stakeholder, and terminology documen
 
 ## Contents
 
+- [implementation-plan-review.html](implementation-plan-review.html) - Báo cáo kế hoạch triển khai, blocker và phương án chờ PO chốt (HTML viết tay)
 - [charter.md](charter.md) - Project charter của LabelX: vấn đề, phạm vi M13, KPI, ràng buộc
 - [stakeholders.md](stakeholders.md) - Vai trò, lớp người dùng, trách nhiệm phê duyệt
 - [glossary.md](glossary.md) - Thuật ngữ dùng chung (trích từ SRS M13)

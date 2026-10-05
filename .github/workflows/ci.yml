@@ -37,6 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # cần lịch sử base để kiểm quyền ghi .agent/ trên PR
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -52,6 +53,13 @@ jobs:
           node scripts/ci/render-plan.cjs --check
       - name: Test CI gates
         run: node --test scripts/ci/tests/*.test.cjs
+      - name: Per-user .agent files (AGENT.md, CR-100)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/ci/check-agent-ownership.cjs
       - name: Test development bootstrap safeguards
         run: |
           bash -n scripts/init-develop-environment.sh

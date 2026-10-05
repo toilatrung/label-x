@@ -122,6 +122,36 @@ ul.dir{columns:2;font-size:14px}
 <li>Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục <code>.git</code>.</li>
 </ul>
 <p>Đề xuất (cần decision): mỗi branch/PR gắn một <code>TASK-ID</code>, mô tả PR link tới implementation report và review report trong <code>.agent/reports/</code>, và chỉ merge khi review report là <code>APPROVED</code> và <code>make check</code> pass.</p>
+<h2 id="file-rieng-trong-agent-khi-nhieu-dev-cung-lam">File riêng trong .agent/ khi nhiều dev cùng làm</h2>
+<p>Áp dụng từ <code>CR-100</code> (mục "Per-User Agent Files" trong <code>AGENT.md</code>), để nhiều PR mở cùng lúc không conflict ở các file trạng thái dùng chung.</p>
+<table>
+<thead>
+<tr>
+<th>Vai trò</th>
+<th>Được ghi trong <code>.agent/</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dev / coding agent trên máy dev</td>
+<td>Chỉ file riêng của mình: <code>&lt;tên-file-chính&gt;-@&lt;github-username&gt;.&lt;đuôi&gt;</code> cùng thư mục với file chính</td>
+</tr>
+<tr>
+<td>Integrator: PO Trịnh Quang Trung (<code>@toilatrung</code>) và QC được PO giao (<code>.github/agent-integrators.txt</code>)</td>
+<td>File chính; gộp và xoá file riêng đã gộp</td>
+</tr>
+</tbody>
+</table>
+<p>Ví dụ: muốn cập nhật <code>.agent/execution/current-context.md</code>, dev <code>dev1</code> tạo hoặc sửa <code>.agent/execution/current-context-@dev1.md</code> (chỉ ghi phần thay đổi của mình, giữ heading/cột của file chính, ghi base commit), rồi chạy <code>scripts/md2html.py</code> để sinh <code>current-context-@dev1.html</code>. Record governance mới: <code>.agent/governance/blockers/BLOCKER-031-@dev1.md</code> theo template; integrator đổi thành <code>BLOCKER-031.md</code> khi gộp.</p>
+<p>Quy trình:</p>
+<ol>
+<li>Dev mở PR như bình thường; chỉ đụng file riêng của mình trong <code>.agent/</code>.</li>
+<li>CI job <code>framework</code> chạy <code>scripts/ci/check-agent-ownership.cjs</code> trên mọi PR: fail nếu người mở PR không phải integrator mà sửa file chính, file riêng của người khác, <code>AGENT.md</code> hoặc danh sách integrator.</li>
+<li>Integrator định kỳ mở PR gộp: đưa nội dung file riêng vào file chính, xoá file riêng đã gộp trong cùng PR, ghi vào <code>.agent/execution/sessions-history.md</code>.</li>
+<li>PO thêm QC vào <code>.github/agent-integrators.txt</code> (và <code>.github/CODEOWNERS</code>) khi giao nhiệm vụ.</li>
+</ol>
+<p>Kiểm cục bộ trước khi đẩy PR:</p>
+<pre class="highlight"><code class="language-bash">PR_AUTHOR=&lt;github-username&gt; BASE_SHA=$(git merge-base origin/main HEAD) HEAD_SHA=HEAD node scripts/ci/check-agent-ownership.cjs</code></pre>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
 <li><a href="tooling.html">tooling.md</a></li>

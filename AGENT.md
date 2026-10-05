@@ -124,6 +124,22 @@ priority: 1
 - Implementation must remain within the approved change and must link the change request from affected tasks, reports, and decisions.
 - A material deviation requires a new or superseding change request before work continues.
 
+## Per-User Agent Files
+
+Authorized by `.agent/governance/change-requests/CR-100.md`. Purpose: prevent merge conflicts when several developers open pull requests at the same time that touch shared state under `.agent/`.
+
+- **Integrators**: the project PO Trịnh Quang Trung (`@toilatrung`) and users the PO assigns the QC duty, listed one GitHub username per line in `.github/agent-integrators.txt`. Only the PO changes that list.
+- **Canonical file**: any file under `.agent/` whose name does not end in `-@<username>` (for example `.agent/execution/current-context.md` and its generated `.html`). Only integrators create, modify, rename, or delete canonical files.
+- **Per-user file**: `<canonical-name>-@<username>.<ext>` in the same directory as the canonical file, where `<username>` is the author's GitHub username in lower case (example: `.agent/execution/current-context-@dev1.md`, generated `current-context-@dev1.html`). A developer or coding agent on a developer machine writes only its own per-user files and never edits another user's per-user file.
+- **Content rules**:
+  - Shared execution, planning, and intelligence files (`current-context`, `task-board`, `sessions-history`, `roadmap`, `epics`, `milestones`, `dependency-graph`, code-graph and git-nexus maps): the per-user file holds only the author's additions or changes, keeps the canonical headings and table columns, and states the base commit it was written against.
+  - Governance and report records: a new record is created as `<RECORD-ID>-@<username>.md` using the matching template; a proposed change to an existing record is a full copy `<RECORD-ID>-@<username>.md` with the changes applied. Both must pass `make validate-kit`.
+  - Frontmatter `id` of a per-user file is `<canonical-id>-<username>` so ids stay unique.
+  - After editing `.md` outside `.agent/governance/` and `.agent/reports/`, regenerate HTML with `scripts/md2html.py`.
+- **Integration**: an integrator merges per-user files into the canonical files in a dedicated pull request, deletes the merged per-user files in the same pull request, resolves conflicts using the Conflict Handling order below, and records the integration in `.agent/execution/sessions-history.md`.
+- **Context retrieval**: agents read the canonical file first, then the per-user files of the same name when the current task depends on in-flight work by other users.
+- **Enforcement**: the `framework` CI job runs `scripts/ci/check-agent-ownership.cjs` on every pull request and fails when a non-integrator adds, modifies, renames, or deletes any `.agent/` path that is not their own per-user file, or modifies `AGENT.md` or `.github/agent-integrators.txt`. `.github/CODEOWNERS` requires integrator review for canonical `.agent/` files.
+
 ## Update Triggers
 
 Update this file only when an approved policy change modifies roles, lifecycle rules, metadata, governance, reporting, intelligence, context retrieval, or forbidden actions.
@@ -157,3 +173,4 @@ Update this file only when an approved policy change modifies roles, lifecycle r
 - Do not expose secrets, credentials, personal data, or restricted information.
 - Do not perform destructive or irreversible actions without explicit authorization.
 - Do not modify protected source directories during framework-only maintenance.
+- Do not modify canonical `.agent/` files or another user's per-user file unless you are an integrator listed in `.github/agent-integrators.txt`.
