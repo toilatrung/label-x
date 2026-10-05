@@ -120,10 +120,14 @@ def render(src: Path) -> str:
     text = src.read_text(encoding="utf-8-sig")
     meta, body_md = split_frontmatter(text)
     md = markdown.Markdown(
-        extensions=["tables", "toc", "sane_lists", "attr_list", "def_list", "pymdownx.superfences",
-                    "pymdownx.tilde"],
-        extension_configs={"pymdownx.superfences": {"custom_fences": [
-            {"name": "mermaid", "class": "mermaid", "format": mermaid_format}]}},
+        extensions=["tables", "toc", "sane_lists", "attr_list", "def_list", "pymdownx.highlight",
+                    "pymdownx.superfences", "pymdownx.tilde"],
+        extension_configs={
+            # Không dùng Pygments dù có cài: đầu ra phải giống nhau trên máy dev và runner CI.
+            "pymdownx.highlight": {"use_pygments": False},
+            "pymdownx.superfences": {"custom_fences": [
+                {"name": "mermaid", "class": "mermaid", "format": mermaid_format}]},
+        },
     )
     body = rewrite_links(md.convert(body_md), src)
     title = meta.get("title") or src.stem
