@@ -3,6 +3,7 @@
 // - người có cờ self-approve trong .github/pr-approvers.txt (PO) được tự duyệt PR của mình;
 // - PR của người khác cần comment "Đã xem và duyệt" của một approver khác tác giả,
 //   viết sau commit cuối của PR (push thêm commit thì phải duyệt lại).
+// - PR của thành viên phải nhắm nhánh develop; chỉ PO đưa develop vào main sau khi review toàn luồng (CR-104).
 // Kết quả ghi thành commit status "pr-approval" trên head commit để đặt làm required check.
 // CLI (CI): GITHUB_TOKEN=<token> REPO=<owner/repo> PR_NUMBER=<n> node scripts/ci/check-pr-approval.cjs
 const fs = require('node:fs'), path = require('node:path');
@@ -11,6 +12,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const APPROVERS_FILE = '.github/pr-approvers.txt';
 const APPROVAL_TEXT = 'Đã xem và duyệt';
 const CONTEXT = 'pr-approval';
+const INTEGRATION_BRANCH = 'develop', RELEASE_BRANCH = 'main';
 
 // Mỗi dòng: <username> [self-approve]; bỏ comment (#), @ và phân biệt hoa thường.
 function parseApprovers(text) {
@@ -29,10 +31,11 @@ const norm = s => String(s || '').normalize('NFC').trim().replace(/\s+/g, ' ').t
 const isApprovalText = body => norm(body) === norm(APPROVAL_TEXT);
 
 // comments: [{login, body, updatedAt}]; lastCommitDate: ISO string của commit cuối.
-function evaluate({author, approvers, selfApprovers, comments, lastCommitDate}) {
+function evaluate({author, approvers, selfApprovers, comments, lastCommitDate, base = INTEGRATION_BRANCH}) {
   const login = String(author || '').replace(/^@/, '').toLowerCase();
   if (!login) return {ok: false, reason: 'Không xác định được tác giả pull request.'};
   if (selfApprovers.has(login)) return {ok: true, reason: `@${login} được tự duyệt (PO, CR-102).`};
+  if (base === RELEASE_BRANCH) return {ok: false, reason: `PR phải nhắm nhánh ${INTEGRATION_BRANCH}, không vào ${RELEASE_BRANCH}; PO merge ${INTEGRATION_BRANCH} sang ${RELEASE_BRANCH} (CR-104).`};
   const since = Date.parse(lastCommitDate);
   const valid = comments.filter(c => {
     const by = String(c.login || '').toLowerCase();
@@ -69,7 +72,7 @@ async function main(env = process.env) {
     comments.push(...batch.map(c => ({login: c.user && c.user.login, body: c.body, updatedAt: c.updated_at})));
     if (batch.length < 100) break;
   }
-  const result = evaluate({author: pull.user.login, approvers, selfApprovers, comments,
+  const result = evaluate({author: pull.user.login, base: pull.base.ref, approvers, selfApprovers, comments,
     lastCommitDate: head.commit.committer.date});
   await api(token, `/repos/${repo}/statuses/${pull.head.sha}`, {
     method: 'POST',
