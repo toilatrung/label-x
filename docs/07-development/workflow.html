@@ -117,10 +117,11 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <p><strong>Chưa có căn cứ</strong> (chưa được quyết định trong repo; cần decision trước khi áp dụng):</p>
 <ul>
-<li>Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase), branch được bảo vệ.</li>
-<li>Mẫu PR, số người duyệt PR bắt buộc, quy ước commit message.</li>
-<li>Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục <code>.git</code>.</li>
+<li>Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase).</li>
+<li>Quy ước commit message.</li>
 </ul>
+<p>Người duyệt PR và cách ghi nhận duyệt: xem mục "Duyệt pull request" bên dưới (CR-102).
+- Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục <code>.git</code>.</p>
 <p>Đề xuất (cần decision): mỗi branch/PR gắn một <code>TASK-ID</code>, mô tả PR link tới implementation report và review report trong <code>.agent/reports/</code>, và chỉ merge khi review report là <code>APPROVED</code> và <code>make check</code> pass.</p>
 <h2 id="file-rieng-trong-agent-khi-nhieu-dev-cung-lam">File riêng trong .agent/ khi nhiều dev cùng làm</h2>
 <p>Áp dụng từ <code>CR-100</code> (mục "Per-User Agent Files" trong <code>AGENT.md</code>), để nhiều PR mở cùng lúc không conflict ở các file trạng thái dùng chung.</p>
@@ -152,6 +153,69 @@ ul.dir{columns:2;font-size:14px}
 </ol>
 <p>Kiểm cục bộ trước khi đẩy PR:</p>
 <pre class="highlight"><code class="language-bash">PR_AUTHOR=&lt;github-username&gt; BASE_SHA=$(git merge-base origin/main HEAD) HEAD_SHA=HEAD node scripts/ci/check-agent-ownership.cjs</code></pre>
+<h2 id="oi-phat-trien">Đội phát triển</h2>
+<p>Theo <code>.agent/governance/decisions/DEC-003.md</code> (2026-10-06); owner từng epic ở <code>.agent/planning/epics.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Thành viên</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung (<code>@toilatrung</code>)</td>
+<td>Product Owner, Solution Architect, Team Leader backend + frontend</td>
+</tr>
+<tr>
+<td>Nguyễn Xuân Việt Anh (<code>@Vietanhhhhhh2003</code>)</td>
+<td>Backend, Engine Developer, ML integration; Data/Model Owner (Detector)</td>
+</tr>
+<tr>
+<td>Lê Duy Nam (<code>@duy12345-6789</code>)</td>
+<td>Backend, dữ liệu và CVAT; Data/Model Owner (dữ liệu)</td>
+</tr>
+<tr>
+<td>Trần Đức Thọ (<code>@tdt2112</code>)</td>
+<td>Frontend</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà (<code>@DucHa180104</code>)</td>
+<td>Luồng review (backend + frontend); người duyệt QA/QC</td>
+</tr>
+</tbody>
+</table>
+<h2 id="duyet-pull-request">Duyệt pull request</h2>
+<p>Áp dụng từ <code>CR-102</code> (mục "Pull Request Approval" trong <code>AGENT.md</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Tác giả PR</th>
+<th>Ai duyệt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung (PO)</td>
+<td>Được tự review và tự duyệt</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà</td>
+<td>Trịnh Quang Trung</td>
+</tr>
+<tr>
+<td>Thành viên khác, Dependabot</td>
+<td>Trịnh Quang Trung hoặc Nguyễn Đức Hà</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Mọi PR không phải của PO đều phải được review; QA/QC xác nhận bởi Trịnh Quang Trung hoặc Nguyễn Đức Hà.</li>
+<li>Thông qua thì người duyệt comment vào PR đúng câu: <code>Đã xem và duyệt</code>. Yêu cầu sửa thì comment nội dung cần sửa, không dùng câu này.</li>
+<li>Đẩy thêm commit sau khi đã duyệt thì lần duyệt cũ mất hiệu lực; người duyệt xem lại và comment lại.</li>
+<li>Workflow <code>PR approval</code> (<code>.github/workflows/pr-approval.yml</code>) chạy khi mở/cập nhật PR và khi có comment, ghi status <code>pr-approval</code> lên commit cuối của PR. Nhánh <code>main</code> yêu cầu status này xanh trước khi merge.</li>
+<li>Danh sách người duyệt ở <code>.github/pr-approvers.txt</code>; chỉ PO sửa.</li>
+</ol>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
 <li><a href="tooling.html">tooling.md</a></li>

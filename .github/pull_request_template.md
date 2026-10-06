@@ -18,6 +18,10 @@
 - [ ] Sửa SRS LaTeX thì đã chạy `scripts/srs_tex2html.py` và `scripts/srs_tex2md.py`
 - [ ] Không commit secret (`.env`, `.env.local`, token CVAT)
 
+## Duyệt (CR-102)
+
+PR không phải của PO cần Trịnh Quang Trung hoặc Nguyễn Đức Hà review; thông qua thì người duyệt comment đúng câu `Đã xem và duyệt`. Đẩy thêm commit sau đó thì phải duyệt lại.
+
 ## Ràng buộc đã giữ
 
 - [ ] Adapter CVAT chỉ đọc; sửa annotation bằng deep link (B-18)

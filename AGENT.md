@@ -140,6 +140,16 @@ Authorized by `.agent/governance/change-requests/CR-100.md`. Purpose: prevent me
 - **Context retrieval**: agents read the canonical file first, then the per-user files of the same name when the current task depends on in-flight work by other users.
 - **Enforcement**: the `framework` CI job runs `scripts/ci/check-agent-ownership.cjs` on every pull request and fails when a non-integrator adds, modifies, renames, or deletes any `.agent/` path that is not their own per-user file, or modifies `AGENT.md` or `.github/agent-integrators.txt`. `.github/CODEOWNERS` requires integrator review for canonical `.agent/` files.
 
+## Pull Request Approval
+
+Authorized by `.agent/governance/change-requests/CR-102.md`. This section is the explicit governance record that permits the Product Owner self-approval exception referenced in Agent Roles.
+
+- **Approvers**: GitHub usernames in `.github/pr-approvers.txt`: the PO Trịnh Quang Trung (`@toilatrung`) and the QA/QC approver Nguyễn Đức Hà. Only the PO changes that list.
+- **PO self-approval**: a user flagged `self-approve` in that list (only the PO) may review and approve their own pull requests.
+- **Everyone else**: every pull request by any other author, human or bot, requires review, and QA/QC confirmation signed by an approver other than the author before it is approved or merged. An approver never approves their own pull request unless flagged `self-approve`.
+- **Approval signature**: the approver comments exactly `Đã xem và duyệt` on the pull request when it passes. Commits pushed after that comment void it; the approver reviews again and comments again. Change requests are given as review comments without that phrase.
+- **Enforcement**: `.github/workflows/pr-approval.yml` runs `scripts/ci/check-pr-approval.cjs` on pull request and comment events and sets the commit status `pr-approval` on the head commit; `pr-approval` is a required status check for `main`.
+
 ## Update Triggers
 
 Update this file only when an approved policy change modifies roles, lifecycle rules, metadata, governance, reporting, intelligence, context retrieval, or forbidden actions.
@@ -174,3 +184,4 @@ Update this file only when an approved policy change modifies roles, lifecycle r
 - Do not perform destructive or irreversible actions without explicit authorization.
 - Do not modify protected source directories during framework-only maintenance.
 - Do not modify canonical `.agent/` files or another user's per-user file unless you are an integrator listed in `.github/agent-integrators.txt`.
+- Do not approve or merge a pull request without the approval comment required by Pull Request Approval, and do not post that comment on behalf of an approver.

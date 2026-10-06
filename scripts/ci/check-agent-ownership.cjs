@@ -1,13 +1,13 @@
 'use strict';
 // Kiểm quy tắc AGENT.md "Per-User Agent Files" (CR-100) trên pull request:
 // người không thuộc .github/agent-integrators.txt chỉ được thêm/sửa/đổi tên/xoá file .agent/ của chính mình
-// (<tên>-@<username>.<đuôi>) và không được sửa AGENT.md hay danh sách integrator.
+// (<tên>-@<username>.<đuôi>) và không được sửa AGENT.md, danh sách integrator hay danh sách approver PR (CR-102).
 // CLI (CI): PR_AUTHOR=<login> BASE_SHA=<sha> HEAD_SHA=<sha> node scripts/ci/check-agent-ownership.cjs
 const fs = require('node:fs'), path = require('node:path'), {spawnSync} = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '../..');
 const INTEGRATORS_FILE = '.github/agent-integrators.txt';
-const PROTECTED = new Set(['AGENT.md', INTEGRATORS_FILE]);
+const PROTECTED = new Set(['AGENT.md', INTEGRATORS_FILE, '.github/pr-approvers.txt']);
 
 function parseIntegrators(text) {
   return new Set(text.split(/\r?\n/).map(l => l.replace(/#.*/, '').trim().replace(/^@/, '').toLowerCase()).filter(Boolean));
@@ -29,7 +29,7 @@ function evaluate({author, integrators, changes}) {
   for (const c of changes) {
     for (const p of [c.path, c.oldPath].filter(Boolean)) {
       if (PROTECTED.has(p)) {
-        violations.push(`${p}: chỉ integrator được sửa (AGENT.md, CR-100).`);
+        violations.push(`${p}: chỉ integrator được sửa (AGENT.md, CR-100, CR-102).`);
       } else if (p === '.agent' || p.startsWith('.agent/')) {
         const owner = perUserOwner(p);
         if (owner === null) violations.push(`${p}: file chính trong .agent/ — hãy ghi vào ${suggest(p, login)} (chỉ integrator gộp vào file chính).`);

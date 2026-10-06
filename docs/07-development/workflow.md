@@ -72,8 +72,10 @@ Căn cứ hiện có trong repo:
 
 **Chưa có căn cứ** (chưa được quyết định trong repo; cần decision trước khi áp dụng):
 
-- Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase), branch được bảo vệ.
-- Mẫu PR, số người duyệt PR bắt buộc, quy ước commit message.
+- Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase).
+- Quy ước commit message.
+
+Người duyệt PR và cách ghi nhận duyệt: xem mục "Duyệt pull request" bên dưới (CR-102).
 - Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục `.git`.
 
 Đề xuất (cần decision): mỗi branch/PR gắn một `TASK-ID`, mô tả PR link tới implementation report và review report trong `.agent/reports/`, và chỉ merge khi review report là `APPROVED` và `make check` pass.
@@ -101,6 +103,34 @@ Kiểm cục bộ trước khi đẩy PR:
 ```bash
 PR_AUTHOR=<github-username> BASE_SHA=$(git merge-base origin/main HEAD) HEAD_SHA=HEAD node scripts/ci/check-agent-ownership.cjs
 ```
+
+## Đội phát triển
+
+Theo `.agent/governance/decisions/DEC-003.md` (2026-10-06); owner từng epic ở `.agent/planning/epics.md`.
+
+| Thành viên | Vai trò |
+|---|---|
+| Trịnh Quang Trung (`@toilatrung`) | Product Owner, Solution Architect, Team Leader backend + frontend |
+| Nguyễn Xuân Việt Anh (`@Vietanhhhhhh2003`) | Backend, Engine Developer, ML integration; Data/Model Owner (Detector) |
+| Lê Duy Nam (`@duy12345-6789`) | Backend, dữ liệu và CVAT; Data/Model Owner (dữ liệu) |
+| Trần Đức Thọ (`@tdt2112`) | Frontend |
+| Nguyễn Đức Hà (`@DucHa180104`) | Luồng review (backend + frontend); người duyệt QA/QC |
+
+## Duyệt pull request
+
+Áp dụng từ `CR-102` (mục "Pull Request Approval" trong `AGENT.md`).
+
+| Tác giả PR | Ai duyệt |
+|---|---|
+| Trịnh Quang Trung (PO) | Được tự review và tự duyệt |
+| Nguyễn Đức Hà | Trịnh Quang Trung |
+| Thành viên khác, Dependabot | Trịnh Quang Trung hoặc Nguyễn Đức Hà |
+
+1. Mọi PR không phải của PO đều phải được review; QA/QC xác nhận bởi Trịnh Quang Trung hoặc Nguyễn Đức Hà.
+2. Thông qua thì người duyệt comment vào PR đúng câu: `Đã xem và duyệt`. Yêu cầu sửa thì comment nội dung cần sửa, không dùng câu này.
+3. Đẩy thêm commit sau khi đã duyệt thì lần duyệt cũ mất hiệu lực; người duyệt xem lại và comment lại.
+4. Workflow `PR approval` (`.github/workflows/pr-approval.yml`) chạy khi mở/cập nhật PR và khi có comment, ghi status `pr-approval` lên commit cuối của PR. Nhánh `main` yêu cầu status này xanh trước khi merge.
+5. Danh sách người duyệt ở `.github/pr-approvers.txt`; chỉ PO sửa.
 
 ## Liên quan
 

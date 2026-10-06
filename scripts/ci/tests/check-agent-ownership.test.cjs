@@ -53,8 +53,8 @@ test('rename is checked on both old and new paths', () => {
   assert.equal(run('dev1', [{status: 'R', oldPath: '.agent/execution/task-board.md', path: '.agent/execution/task-board-@dev1.md'}]).length, 1);
 });
 
-test('developer cannot change AGENT.md or the integrator list', () => {
-  assert.equal(run('dev1', [{status: 'M', path: 'AGENT.md'}, {status: 'M', path: '.github/agent-integrators.txt'}]).length, 2);
+test('developer cannot change AGENT.md, the integrator list or the PR approver list', () => {
+  assert.equal(run('dev1', [{status: 'M', path: 'AGENT.md'}, {status: 'M', path: '.github/agent-integrators.txt'}, {status: 'M', path: '.github/pr-approvers.txt'}]).length, 3);
 });
 
 test('PO and assigned QC may change canonical files', () => {
