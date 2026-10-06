@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Current Context — @tdt2112 — LabelX</title>
+<meta name="labelx:id" content="current-context-tdt2112">
+<meta name="labelx:title" content="Current Context — @tdt2112">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-002]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / current-context-@tdt2112</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>current-context-tdt2112</span><b>title</b><span>Current Context — @tdt2112</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-002]</span><b>priority</b><span>2</span></div>
+<h1 id="current-context-tdt2112">Current Context — @tdt2112</h1>
+<h2 id="purpose">Purpose</h2>
+<p>File riêng của Trần Đức Thọ (@tdt2112) theo CR-100: chỉ ghi trạng thái của task mình đang làm. Integrator gộp vào <code>.agent/execution/current-context.html</code>.</p>
+<ul>
+<li><strong>Base Commit</strong>: <code>28be098</code></li>
+<li><strong>Branch</strong>: <code>feat/T-002-e02-frontend-shell</code></li>
+</ul>
+<h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li>
+<li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+</ul>
+<h2 id="current-state">Current State</h2>
+<ul>
+<li><strong>Context Status</strong>: <code>current</code></li>
+<li><strong>Last Updated</strong>: <code>2026-10-06</code></li>
+<li><strong>Updated By</strong>: <code>tdt2112</code></li>
+<li><strong>Active Epic IDs</strong>: <code>E-02</code></li>
+<li><strong>Active Task IDs</strong>: <code>T-002</code></li>
+<li><strong>Active Blocker IDs</strong>: <code>none</code></li>
+<li><strong>Deadline</strong>: <code>2026-10-07 01:30</code></li>
+</ul>
+<h2 id="required-context">Required Context</h2>
+<p>Chi tiết task: <code>.agent/execution/task-board.html</code> mục T-002. Epic: <code>.agent/planning/epics.html</code> mục E-02.</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+<th>Authority</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/frontend/AGENTS.md</code></td>
+<td>Quy tắc Next.js 16 — đọc trước khi code</td>
+<td><code>source</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>.agent/skills/labelx-design/SKILL.md</code></td>
+<td>Skill labelx-design</td>
+<td><code>reference</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>docs/design/design-system.html</code></td>
+<td>Design System (mẫu tham khảo)</td>
+<td><code>reference</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>docs/design/screens/TopBar.dc.html</code></td>
+<td>Mẫu TopBar; xem thêm FlowNav, NavigationMenu, ContextBarStates, Main</td>
+<td><code>reference</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>.agent/governance/decisions/DEC-001.html</code></td>
+<td>Stack frontend; ghi chú test runner</td>
+<td><code>governance</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>.agent/governance/blockers/BLOCKER-014.html</code></td>
+<td>Chốt test runner frontend</td>
+<td><code>governance</code></td>
+<td><code>yes</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="expected-outputs">Expected Outputs</h2>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Required Path</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code và test trong phạm vi T-002</td>
+<td>nhánh <code>feat/T-002-e02-frontend-shell</code></td>
+<td><code>make check</code></td>
+</tr>
+<tr>
+<td>Implementation report</td>
+<td><code>.agent/reports/implementation/T-002-@tdt2112.html</code> (sao chép <code>.agent/templates/implementation-report-template.html</code>)</td>
+<td><code>make validate-kit</code></td>
+</tr>
+<tr>
+<td>Trạng thái task</td>
+<td><code>.agent/execution/task-board-@tdt2112.html</code></td>
+<td><code>make validate-kit</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Bắt đầu làm: đổi trạng thái T-002 sang <code>in-progress</code> trong <code>task-board-@tdt2112.html</code>; xong và có bằng chứng: <code>review</code>, rồi mở PR vào <code>main</code>.</li>
+<li>PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102; PR của Hà do Trịnh Quang Trung duyệt; PO tự duyệt PR của mình).</li>
+<li>Chỉ sửa file <code>.agent/</code> có hậu tố <code>-@tdt2112</code>. Tài liệu chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103).</li>
+</ul>
+</article></main></body></html>
