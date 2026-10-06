@@ -71,17 +71,368 @@ ul.dir{columns:2;font-size:14px}
 </thead>
 <tbody>
 <tr>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<td>T-001</td>
+<td>E-01</td>
+<td>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>pending</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-06</td>
+</tr>
+<tr>
+<td>T-002</td>
+<td>E-02</td>
+<td>App shell frontend, đăng nhập, test runner frontend</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>pending</td>
+<td>none (mock API tới khi T-001 xong)</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-06</td>
+</tr>
+<tr>
+<td>T-003</td>
+<td>E-03</td>
+<td>Guideline tĩnh có rule ID: nạp tệp, API tra rule, màn xem</td>
+<td>Nguyễn Đức Hà (@DucHa180104)</td>
+<td>pending</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-06</td>
+</tr>
+<tr>
+<td>T-004</td>
+<td>E-04</td>
+<td>CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>pending</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-06</td>
+</tr>
+<tr>
+<td>T-005</td>
+<td>E-10</td>
+<td>GPU worker Detector Faster R-CNN BDD100K: freeze checksum, inference ra JSON</td>
+<td>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</td>
+<td>pending</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-06</td>
 </tr>
 </tbody>
 </table>
-<p>No task records are registered.</p>
+<h2 id="task-details">Task Details</h2>
+<p>Đợt 1 giao ngày 2026-10-06, hạn <strong>01:30 ngày 2026-10-07</strong>. Mỗi task làm trên nhánh riêng, mở PR vào <code>main</code>; PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102), PR của Nguyễn Đức Hà do Trịnh Quang Trung duyệt. Cập nhật trạng thái trong file riêng <code>.agent/execution/task-board-@&lt;username&gt;.md</code> (CR-100), không sửa file này.</p>
+<h3 id="t-001">T-001</h3>
+<h4 id="record-metadata">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-001</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective">Objective</h4>
+<p>Có contract đầu tiên để các nhánh khác sinh type và mock: OpenAPI baseline cho M-01/M-02, state machine Issue/QC Run/frame (có trạng thái "đang dở"), ADR lineage và neo issue.</p>
+<h4 id="scope">Scope</h4>
+<h5 id="included">Included</h5>
+<ul>
+<li>OpenAPI baseline (drf-spectacular hoặc tệp YAML trong <code>docs/04-api/</code>) cho: auth/phiên, snapshot, QC Run, guideline rule, hàng đợi frame; hợp đồng lỗi 400/403/404/409/422 kèm code/message/request_id</li>
+<li>Bảng transition Issue, QC Run, frame theo SRS §5.3–5.5, thêm trạng thái frame "đang dở" (BLOCKER-008)</li>
+<li>ADR (decision record <code>accepted</code>): lineage qua revision bằng cvat_shape_id + namespace nguồn; neo issue cấu trúc/thủ công (BLOCKER-007)</li>
+<li>Ma trận actor/action/scope cho RBAC</li>
+</ul>
+<h5 id="excluded">Excluded</h5>
+<ul>
+<li>Implementation chức năng của các epic khác</li>
+</ul>
+<h4 id="preconditions">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available.</li>
+</ul>
+<h4 id="related-files">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@toilatrung.md</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.md</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+</ul>
+<h4 id="acceptance-criteria">Acceptance Criteria</h4>
+<ul>
+<li>[ ] OpenAPI hợp lệ (<code>manage.py spectacular --validate</code> hoặc trình validate OpenAPI) và frontend sinh được type (<code>npm run gen:api</code> hoặc từ tệp)</li>
+<li>[ ] Mỗi endpoint/transition có trích FR/BR/UC</li>
+<li>[ ] Hai ADR ghi thành decision record <code>accepted</code></li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make validate-kit; make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Thành viên khác đọc contract trong PR</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-001-@toilatrung.md</code></li>
+</ul>
+<h4 id="completion-criteria">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-002">T-002</h3>
+<h4 id="record-metadata_1">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-002</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>App shell frontend, đăng nhập, test runner frontend</code></li>
+<li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_1">Objective</h4>
+<p>Frontend có test runner chạy trong <code>make check</code> và CI, app shell theo Design System và màn đăng nhập gọi API qua client sinh từ OpenAPI.</p>
+<h4 id="scope_1">Scope</h4>
+<h5 id="included_1">Included</h5>
+<ul>
+<li>Chọn test runner frontend (gỡ một phần BLOCKER-014; DEC-001 ghi vitest từng lỗi npm peer-set — kiểm lại hoặc chọn công cụ khác), thêm <code>npm test</code>, đưa vào <code>make check</code> và job <code>frontend</code> của CI</li>
+<li>App shell: TopBar, FlowNav, ContextBar với class <code>lx-*</code>; <code>docs/design/</code> là mẫu tham khảo, không cần khớp pixel</li>
+<li>Màn đăng nhập/đăng xuất; guard route và ẩn menu theo vai trò; xử lý 401/403 chung</li>
+<li>Mock API theo contract T-001 khi backend auth chưa có</li>
+</ul>
+<h5 id="excluded_1">Excluded</h5>
+<ul>
+<li>Màn nghiệp vụ; backend auth (E-02 backend)</li>
+</ul>
+<h4 id="preconditions_1">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available.</li>
+</ul>
+<h4 id="related-files_1">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@tdt2112.md</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+</ul>
+<h4 id="acceptance-criteria_1">Acceptance Criteria</h4>
+<ul>
+<li>[ ] <code>npm run lint</code>, <code>npm run typecheck</code>, <code>npm test</code>, <code>npm run build</code> pass; test chạy trong CI</li>
+<li>[ ] Có ít nhất một test component cho app shell hoặc màn đăng nhập</li>
+<li>[ ] Đăng nhập (mock) → vào shell; vai trò không đủ quyền không thấy menu tương ứng</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_1">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm test &amp;&amp; npm run build</code></li>
+<li><strong>Manual Checks</strong>: <code>Mở trang đăng nhập và shell trên trình duyệt, chụp màn hình vào report</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-002-@tdt2112.md</code></li>
+</ul>
+<h4 id="completion-criteria_1">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-003">T-003</h3>
+<h4 id="record-metadata_2">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-003</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Title</strong>: <code>Guideline tĩnh có rule ID: nạp tệp, API tra rule, màn xem</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@DucHa180104)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_2">Objective</h4>
+<p>Workspace tra được rule theo rule ID từ guideline tĩnh nạp từ tệp (thay FR-GDL-01…03 theo CR-101), không dùng retrieval ngữ nghĩa (FR-GDL-04).</p>
+<h4 id="scope_2">Scope</h4>
+<h5 id="included_2">Included</h5>
+<ul>
+<li>Định dạng tệp guideline (rule ID, section, trích đoạn, mapping nhóm lỗi/lớp → rule ID) và tệp mẫu cho 10 lớp BDD100K</li>
+<li>Django app + model + lệnh nạp tệp idempotent; API đọc rule theo ID và theo nhóm lỗi/lớp; kiểm quyền ở API</li>
+<li>Màn xem guideline chỉ đọc (frontend)</li>
+<li>Test backend</li>
+</ul>
+<h5 id="excluded_2">Excluded</h5>
+<ul>
+<li>Versioning guideline và màn sửa (hoãn theo CR-101)</li>
+</ul>
+<h4 id="preconditions_2">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available.</li>
+</ul>
+<h4 id="related-files_2">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@ducha180104.md</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-03</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+</ul>
+<h4 id="acceptance-criteria_2">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Nạp tệp hai lần không tạo bản ghi trùng</li>
+<li>[ ] API trả rule theo ID và theo nhóm lỗi/lớp; ID không tồn tại trả 404 theo hợp đồng lỗi</li>
+<li>[ ] Màn xem hiển thị rule; <code>make check</code> pass</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_2">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Gọi API và mở màn xem trên trình duyệt</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-003-@ducha180104.md</code></li>
+</ul>
+<h4 id="completion-criteria_2">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-004">T-004</h3>
+<h4 id="record-metadata_3">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-004</code></li>
+<li><strong>Epic ID</strong>: <code>E-04</code></li>
+<li><strong>Title</strong>: <code>CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_3">Objective</h4>
+<p>CVAT dev chạy được bằng một lệnh make, có một task mẫu chứa ảnh BDD100K và annotation người học, và adapter backend đọc (chỉ đọc) job/annotation rồi tính SHA-256 ổn định.</p>
+<h4 id="scope_3">Scope</h4>
+<h5 id="included_3">Included</h5>
+<ul>
+<li>CVAT dev pin phiên bản (TBD-01) trong compose riêng hoặc <code>infrastructure/docker-compose.dev.yml</code>; lệnh make bật/tắt; tài liệu cài đặt</li>
+<li>Script ngoài LabelX nạp ảnh BDD100K mẫu + tệp annotation người học vào một task CVAT (quy ước tên/tag theo BLOCKER-018)</li>
+<li>Kiểm ảnh trong tệp người học thuộc BDD100K <code>val</code> hay <code>train</code>, ghi số lượng vào report (AS-03, leakage)</li>
+<li>Adapter chỉ đọc: liệt kê job, đọc annotation bbox, chuẩn hoá JSON, SHA-256 từng job; token ở backend; không có đường ghi</li>
+<li>Test adapter với dữ liệu ghi sẵn (không cần CVAT trong CI)</li>
+</ul>
+<h5 id="excluded_3">Excluded</h5>
+<ul>
+<li>Model snapshot, drift, màn Snapshot (task sau của E-04)</li>
+</ul>
+<h4 id="preconditions_3">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available.</li>
+</ul>
+<h4 id="related-files_3">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@duy12345-6789.md</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-04</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-004.md, .agent/governance/blockers/BLOCKER-018.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+</ul>
+<h4 id="acceptance-criteria_3">Acceptance Criteria</h4>
+<ul>
+<li>[ ] CVAT dev bật được bằng lệnh make, phiên bản được pin</li>
+<li>[ ] Đọc hai lần cùng dữ liệu cho cùng SHA-256; adapter không có hàm gọi API ghi</li>
+<li>[ ] Report ghi số ảnh val/train của tệp người học</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_3">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Bật CVAT dev, nạp task mẫu, chạy adapter đọc và in hash</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-004-@duy12345-6789.md</code></li>
+</ul>
+<h4 id="completion-criteria_3">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-005">T-005</h3>
+<h4 id="record-metadata_4">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-005</code></li>
+<li><strong>Epic ID</strong>: <code>E-10</code></li>
+<li><strong>Title</strong>: <code>GPU worker Detector Faster R-CNN BDD100K: freeze checksum, inference ra JSON</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_4">Objective</h4>
+<p>Có môi trường chạy Detector Faster R-CNN R-50-FPN 3x (model zoo BDD100K) tách khỏi backend, checkpoint đã freeze bằng SHA-256, và lệnh inference trên ảnh mẫu xuất dự đoán JSON theo toạ độ pixel gốc.</p>
+<h4 id="scope_4">Scope</h4>
+<h5 id="included_4">Included</h5>
+<ul>
+<li>Image/Dockerfile riêng cho GPU worker (MMDetection 2.x, mmcv-full) trong <code>infrastructure/</code>; chạy được cả CPU để thử</li>
+<li>Tải checkpoint <code>faster_rcnn_r50_fpn_3x_det_bdd100k.pth</code>, ghi SHA-256, version, mapping 10 lớp BDD100K</li>
+<li>Lệnh inference theo lô: đầu vào thư mục ảnh, đầu ra JSON (box pixel gốc, lớp, confidence)</li>
+<li>Đo thời gian/ảnh trên phần cứng đang có; ghi vào report làm đầu vào TBD-02 (BLOCKER-014)</li>
+</ul>
+<h5 id="excluded_4">Excluded</h5>
+<ul>
+<li>Sinh candidate E1/E2, evidence, gọi từ QC Orchestrator (task sau của E-10)</li>
+</ul>
+<h4 id="preconditions_4">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available.</li>
+</ul>
+<h4 id="related-files_4">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.md</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-10</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-005.md, .agent/governance/blockers/BLOCKER-014.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+</ul>
+<h4 id="acceptance-criteria_4">Acceptance Criteria</h4>
+<ul>
+<li>[ ] SHA-256 của checkpoint được ghi và kiểm lại khi nạp model (sai checksum thì từ chối chạy)</li>
+<li>[ ] Inference ≥ 10 ảnh BDD100K mẫu ra JSON đúng 10 lớp</li>
+<li>[ ] Report có thời gian/ảnh và cấu hình phần cứng đã dùng</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_4">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check (phần backend không đổi); test kiểm checksum</code></li>
+<li><strong>Manual Checks</strong>: <code>Chạy lệnh inference trên thư mục ảnh mẫu</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-005-@vietanhhhhhh2003.md</code></li>
+</ul>
+<h4 id="completion-criteria_4">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
 </article></main></body></html>

@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Quy trình ngoài LabelX tạo task GT và bản sao annotation hai nhánh`
 - **Owner**: `unassigned (vai trò chốt: Quality Assurance Lead)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `dependency`
 - **Priority**: `2`
 - **Created Date**: `2026-10-05`
@@ -37,7 +37,7 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/04-usecas
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
@@ -49,12 +49,18 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/04-usecas
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A: QC Admin tạo thủ công task GT và bản sao annotation hai nhánh trên CVAT theo checklist được duyệt; task đặt tên/tag theo quy ước để adapter nhận diện GT hay nhánh A/B; LabelX chỉ đọc. Checklist và quy ước tên/tag là sản phẩm của E-06.
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

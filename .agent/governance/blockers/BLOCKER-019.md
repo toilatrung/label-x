@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Người biết GT tham gia phân xử thí nghiệm`
 - **Owner**: `unassigned (vai trò chốt: Product Owner)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `decision`
 - **Priority**: `2`
 - **Created Date**: `2026-10-05`
@@ -37,7 +37,7 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/03-data-e
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
@@ -49,12 +49,18 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/03-data-e
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A: QA Lead phân xử bất đồng GT; một người khác (QA Lead thứ hai hoặc senior reviewer được cấp quyền) phân xử cả hai nhánh thí nghiệm. Người bổ sung được gán cùng nguồn lực AS-05 (BLOCKER-015).
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Thiết kế màn hình thiếu delta cho luồng M13`
 - **Owner**: `unassigned (vai trò chốt: Product Owner)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `dependency`
 - **Priority**: `2`
 - **Created Date**: `2026-10-05`
@@ -37,7 +37,7 @@ Bằng chứng: docs/design/screens/; docs/label-x_system-requirement-specificat
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
@@ -49,12 +49,18 @@ Bằng chứng: docs/design/screens/; docs/label-x_system-requirement-specificat
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án khác: thiết kế bổ sung just-in-time ngay trước epic dùng tới — đăng nhập/audit trước E-02; queue frame + đóng góp điểm trước E-13; Workspace delta trước E-14; reference hai GT trước E-06; thí nghiệm và KPI trước E-19/E-20. Kế hoạch bao gồm triển khai frontend trong từng epic có màn hình; thiết kế trong `docs/design/` chỉ là mẫu tham khảo khi code frontend, không phải đặc tả pixel. Cập nhật vào `.agent/planning/epics.md`.
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

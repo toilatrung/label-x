@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Lineage issue qua revision và neo issue cấu trúc/thủ công chưa có contract`
 - **Owner**: `unassigned (vai trò chốt: Tech Lead Backend)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `decision`
 - **Priority**: `1`
 - **Created Date**: `2026-10-05`
@@ -37,7 +37,7 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/06-functi
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
@@ -49,12 +49,18 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/06-functi
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A: định danh đối tượng qua revision bằng cvat_shape_id + namespace nguồn; fallback matching chỉ để gợi ý. Issue gốc giữ verification; run cuối gặp lại cùng neo thì tạo issue mới liên kết issue gốc, không tự kế thừa quyết định. Issue cấu trúc neo (annotation, rule ID); issue thủ công neo (frame, vùng vẽ). ADR ghi thành decision `accepted` trong E-01.
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

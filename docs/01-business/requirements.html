@@ -667,7 +667,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td><code>FR-EVL-01</code></td>
-<td>Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html.</td>
+<td>Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html. Pilot (v1.1, CR-101): nhập một GT là nhãn gốc BDD100K từ tệp, khoá theo checksum; nhập hai GT để giai đoạn sau.</td>
 <td>M</td>
 <td>UC-08; BR-11</td>
 </tr>
@@ -1110,17 +1110,17 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>AS-02</td>
-<td>Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum.</td>
+<td>Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. Pilot (v1.1): Faster R-CNN R-50-FPN 3x của model zoo BDD100K, huấn luyện trên tập <code>train</code>.</td>
 <td>Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.</td>
 </tr>
 <tr>
 <td>AS-03</td>
-<td>Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện).</td>
+<td>Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). Pilot (v1.1): danh sách ảnh huấn luyện là toàn bộ BDD100K <code>train</code>; ảnh thuộc <code>train</code> bị loại khỏi tập đánh giá.</td>
 <td>Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.</td>
 </tr>
 <tr>
 <td>AS-04</td>
-<td>QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo.</td>
+<td>QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K; QA Lead duyệt và khoá reference, không cần người xác minh.</td>
 <td>Không đo được KPI-1/KPI-2 (B-20).</td>
 </tr>
 <tr>
@@ -1166,7 +1166,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>TBD-04</td>
-<td>Nguồn annotation cần review; có dùng lỗi chèn hay không.</td>
+<td>Nguồn annotation cần review; có dùng lỗi chèn hay không. <strong>Đã chốt:</strong> tệp người học gán sẵn, không chèn lỗi (DEC-003).</td>
 <td>Product Owner, QA Lead</td>
 <td>Trước lập reference</td>
 </tr>
@@ -1214,9 +1214,9 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>TBD-12</td>
-<td>Cỡ mẫu thí nghiệm effort (frame, reviewer).</td>
+<td>Cỡ mẫu thí nghiệm effort (frame, reviewer). Pilot (v1.1, CR-101): theo nguồn lực reviewer ngoài, khoá trong preregistration, không chạy pilot nhỏ.</td>
 <td>Product Owner</td>
-<td>Sau pilot nhỏ</td>
+<td>19/10/2026</td>
 </tr>
 <tr>
 <td>TBD-13</td>

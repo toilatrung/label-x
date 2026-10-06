@@ -157,7 +157,7 @@ Ngưỡng G-2, G-3, G-4 là cấu hình khởi điểm pilot đã chốt (nguồ
 
 | Mã | Yêu cầu | Ưu tiên | Truy vết |
 |---|---|---|---|
-| `FR-EVL-01` | Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html. | M | UC-08; BR-11 |
+| `FR-EVL-01` | Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html. Pilot (v1.1, CR-101): nhập một GT là nhãn gốc BDD100K từ tệp, khoá theo checksum; nhập hai GT để giai đoạn sau. | M | UC-08; BR-11 |
 | `FR-EVL-02` | Người được giao lập GT/xác minh của tập đánh giá không có quyền xem ranking, risk score, candidate của tập đó. | M | BR-10 |
 | `FR-EVL-03` | Hệ thống suy ra $E$ theo BR-01…BR-07 và hiển thị để duyệt; sửa mapping thì suy lại, không xoá lỗi trực tiếp. | M | UC-08; BR-14 |
 | `FR-EVL-04` | Khoá reference cùng: GT version, snapshot đầu vào, mapping, $\tau_m$, $a_{min}$, version thuật toán. | M | BR-13; B-20 |
@@ -250,9 +250,9 @@ Các con số là đề xuất khởi điểm; ngưỡng nghiệm thu chốt sau
 | Mã | Giả định / phụ thuộc | Nếu sai thì |
 |---|---|---|
 | AS-01 | CVAT cho phép đọc job, frame, annotation, media qua API với token backend; xác định được thay đổi giữa hai lần đọc. | Không khoá được snapshot nhất quán; chặn toàn bộ luồng. |
-| AS-02 | Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. | Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2. |
-| AS-03 | Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). | Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ. |
-| AS-04 | QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. | Không đo được KPI-1/KPI-2 (B-20). |
+| AS-02 | Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. Pilot (v1.1): Faster R-CNN R-50-FPN 3x của model zoo BDD100K, huấn luyện trên tập `train`. | Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2. |
+| AS-03 | Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). Pilot (v1.1): danh sách ảnh huấn luyện là toàn bộ BDD100K `train`; ảnh thuộc `train` bị loại khỏi tập đánh giá. | Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ. |
+| AS-04 | QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K; QA Lead duyệt và khoá reference, không cần người xác minh. | Không đo được KPI-1/KPI-2 (B-20). |
 | AS-05 | Có ít nhất 4 reviewer tham gia thí nghiệm effort, trình độ tương đương. | Không cân bằng được hai nhánh; KPI-2 kém tin cậy. |
 | AS-06 | Guideline gán nhãn BDD100K của dự án có rule ID và version. | Workspace chỉ hiện guideline dạng văn bản, không truy vết rule. |
 
@@ -263,7 +263,7 @@ Các con số là đề xuất khởi điểm; ngưỡng nghiệm thu chốt sau
 | TBD-01 | Phiên bản CVAT được pin, URL, quyền token, danh sách endpoint thật. | Chủ CVAT, Tech Lead | Trước build adapter |
 | TBD-02 | Cấu hình phần cứng app server, GPU server. | Tech Lead | Trước build |
 | TBD-03 | Danh sách ảnh BDD100K, $N$ của tập hiệu chỉnh và held-out. | Data Owner, QA Lead | Trước lập reference |
-| TBD-04 | Nguồn annotation cần review; có dùng lỗi chèn hay không. | Product Owner, QA Lead | Trước lập reference |
+| TBD-04 | Nguồn annotation cần review; có dùng lỗi chèn hay không. **Đã chốt:** tệp người học gán sẵn, không chèn lỗi (DEC-003). | Product Owner, QA Lead | Trước lập reference |
 | TBD-05 | $\tau_m$, $\tau_{amb}$ cho matching. | QA Lead, đội mô hình | Trước lập reference |
 | TBD-06 | $a_{min}$ và quy tắc ignore theo occlusion/truncation. | QA Lead | Trước lập reference |
 | TBD-07 | Định nghĩa mức độ nghiêm trọng theo lớp và kích thước. | QA Lead | Trước pilot |
@@ -271,7 +271,7 @@ Các con số là đề xuất khởi điểm; ngưỡng nghiệm thu chốt sau
 | TBD-09 | Thời hạn lease và quy tắc gia hạn. | Product Owner | Trước build review |
 | TBD-10 | Tỉ lệ lát kiểm tra ngẫu nhiên $r$. | QA Lead | Trước pilot |
 | TBD-11 | Ngưỡng không thao tác $t_{idle}$; thời lượng buổi làm quen. | Product Owner | Trước thí nghiệm |
-| TBD-12 | Cỡ mẫu thí nghiệm effort (frame, reviewer). | Product Owner | Sau pilot nhỏ |
+| TBD-12 | Cỡ mẫu thí nghiệm effort (frame, reviewer). Pilot (v1.1, CR-101): theo nguồn lực reviewer ngoài, khoá trong preregistration, không chạy pilot nhỏ. | Product Owner | 19/10/2026 |
 | TBD-13 | Mục tiêu thời gian QC Run và độ trễ UI (NFR-01…03). | Tech Lead | Sau đo pilot |
 | TBD-14 | Số lần retry và backoff. | Tech Lead | Sau đo pilot |
 | TBD-15 | Thời hạn lưu audit log. | Product Owner | Trước triển khai |

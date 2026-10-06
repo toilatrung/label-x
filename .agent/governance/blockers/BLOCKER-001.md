@@ -13,9 +13,9 @@ priority: 2
 
 - **Blocker ID**: `BLOCKER-001`
 - **Title**: `SRS chờ ký theo vai trò; owner planning chưa gán`
-- **Owner**: `unassigned (vai trò chốt: Product Owner)`
+- **Owner**: `project-owner (Trịnh Quang Trung, @toilatrung)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `approval`
 - **Priority**: `1`
 - **Created Date**: `2026-10-05`
@@ -37,24 +37,30 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/00-frontm
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
 ## Resolution Plan
 
-- **Required Action**: Các vai trò trong bảng phê duyệt ký SRS; gán người cho owner từng epic; phê duyệt roadmap qua roadmap-lock-prompt.
-- **Responsible Owner**: `unassigned (vai trò: Product Owner)`
+- **Required Action**: Product Owner ký từng epic (ghi vào `.agent/planning/epics.md`) và gán task cho từng developer trước khi giao task.
+- **Responsible Owner**: `project-owner (Trịnh Quang Trung, @toilatrung)`
 - **Dependency or Approval**: `Product Owner`
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án khác: Product Owner ký từng epic và gán task cho từng developer trước khi giao task và triển khai. Điều kiện chặn chung (chờ các vai trò ký bảng phê duyệt SRS) được thay bằng cổng theo epic: một epic chỉ chuyển `EPIC_READY` khi Product Owner ghi chữ ký (người, ngày) vào epic đó trong `.agent/planning/epics.md` và mọi task có developer được gán. Bảng phê duyệt SRS theo vai trò vẫn trống nhưng không còn là điều kiện bắt đầu.
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

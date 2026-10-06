@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `CVAT thật chưa xác minh (TBD-01, AS-01)`
 - **Owner**: `unassigned (vai trò chốt: Tech Lead Backend)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `external`
 - **Priority**: `1`
 - **Created Date**: `2026-10-05`
@@ -37,24 +37,30 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/11-tracea
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
-- **Change Requests**: `none`
+- **Change Requests**: `.agent/governance/change-requests/CR-101.md`
 
 ## Resolution Plan
 
-- **Required Action**: Chủ CVAT cung cấp instance + service account chỉ đọc; spike adapter chứng minh đọc/hash/drift; pin version.
+- **Required Action**: Thêm CVAT dev (cùng phiên bản instance thật) vào `infrastructure/docker-compose.dev.yml`; chủ CVAT cung cấp phiên bản, URL và service account chỉ đọc cho lần kiểm trước nghiệm thu E-04.
 - **Responsible Owner**: `unassigned (vai trò: Tech Lead Backend)`
 - **Dependency or Approval**: `Tech Lead Backend`
-- **Workaround**: `none`
+- **Workaround**: `CVAT dev trong docker compose; gỡ khi adapter đã kiểm trên instance thật và pin phiên bản.`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
+
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Chốt 2026-10-06 (CR-101 được duyệt): pilot chạy trên CVAT do đội tự dựng, cùng phiên bản với CVAT dev trong docker compose; ảnh, GT và annotation BDD100K do đội nạp, nên instance này là "CVAT thật" của pilot và không cần instance của bên khác. Lê Duy Nam pin phiên bản CVAT khi dựng (TBD-01). Ghi chú cũ — phương án B: dựng CVAT dev riêng cùng phiên bản trong docker compose để xây adapter song song. Còn mở: (1) phiên bản CVAT của instance thật (TBD-01) để pin đúng phiên bản dev; (2) kiểm lại adapter trên instance thật (đọc job/annotation/ảnh, hash ổn định, phát hiện drift — AC-03) trước khi nghiệm thu E-04.
 
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Detector artifact, mapping 10 lớp và training manifest chưa xác nhận`
 - **Owner**: `unassigned (vai trò chốt: Data/Model Owner)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `dependency`
 - **Priority**: `1`
 - **Created Date**: `2026-10-05`
@@ -37,24 +37,30 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/06-functi
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md`
 - **Risks**: `none`
-- **Change Requests**: `none`
+- **Change Requests**: `.agent/governance/change-requests/CR-101.md`
 
 ## Resolution Plan
 
-- **Required Action**: Data/Model Owner bàn giao artifact, checksum, mapping, training manifest; không sao chép giá trị demo.
-- **Responsible Owner**: `unassigned (vai trò: Data/Model Owner)`
+- **Required Action**: Product Owner chọn một Detector công khai huấn luyện trên BDD100K train (đề xuất: Faster R-CNN R-50-FPN 3x hoặc Cascade R-CNN R-50-FPN 3x từ model zoo BDD100K, https://github.com/SysCV/bdd100k-models, Apache-2.0); Nguyễn Xuân Việt Anh freeze checkpoint (SHA-256), mapping 10 lớp; training manifest = danh sách ảnh BDD100K train; kiểm ảnh của tệp annotation người học không thuộc BDD100K train.
+- **Responsible Owner**: `Nguyễn Xuân Việt Anh`
 - **Dependency or Approval**: `Data/Model Owner`
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md`; `.agent/governance/decisions/DEC-003.md` (thay phương án A).
+- **Note**: Chốt 2026-10-06 (CR-101 được duyệt): Faster R-CNN R-50-FPN 3x của model zoo BDD100K (https://dl.cv.ethz.ch/bdd100k/det/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth, AP val 32,30, huấn luyện trên BDD100K train); E-10 freeze SHA-256 và mapping 10 lớp; training manifest = BDD100K train. Cập nhật 2026-10-06 (DEC-003): Product Owner không dùng Detector nội bộ; chuyển sang phương án B — Detector công khai huấn luyện trên BDD100K train, chờ chọn model cụ thể. Ghi chú cũ: phương án A đã chọn: dùng Detector nội bộ hiện có của đội mô hình. Còn chờ bàn giao artifact, checksum, mapping 10 lớp BDD100K và training manifest. Không có training manifest thì không kiểm được AS-03 — khi đó Product Owner chọn lại (phương án B: Detector công khai huấn luyện trên BDD100K train).
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

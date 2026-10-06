@@ -227,9 +227,9 @@ B-21 & Matching & Matching là bước của Mô hình độc lập để sinh c
 \bottomrule
 \endfoot
 AS-01 & CVAT cho phép đọc job, frame, annotation, media qua API với token backend; xác định được thay đổi giữa hai lần đọc. & Không khoá được snapshot nhất quán; chặn toàn bộ luồng.\\
-AS-02 & Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. & Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.\\
-AS-03 & Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). & Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.\\
-AS-04 & QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. & Không đo được KPI-1/KPI-2 (B-20).\\
+AS-02 & Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. Pilot (v1.1): Faster R-CNN R-50-FPN 3x của model zoo BDD100K, huấn luyện trên tập \code{train}. & Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.\\
+AS-03 & Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). Pilot (v1.1): danh sách ảnh huấn luyện là toàn bộ BDD100K \code{train}; ảnh thuộc \code{train} bị loại khỏi tập đánh giá. & Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.\\
+AS-04 & QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K; QA Lead duyệt và khoá reference, không cần người xác minh. & Không đo được KPI-1/KPI-2 (B-20).\\
 AS-05 & Có ít nhất 4 reviewer tham gia thí nghiệm effort, trình độ tương đương. & Không cân bằng được hai nhánh; KPI-2 kém tin cậy.\\
 AS-06 & Guideline gán nhãn BDD100K của dự án có rule ID và version. & Workspace chỉ hiện guideline dạng văn bản, không truy vết rule.\\
 \end{xltabular}

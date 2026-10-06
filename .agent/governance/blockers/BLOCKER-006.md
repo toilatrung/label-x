@@ -15,7 +15,7 @@ priority: 2
 - **Title**: `Mẫu G-4 sau sửa, mẫu số và cách kết luận gate chưa chốt`
 - **Owner**: `unassigned (vai trò chốt: Quality Assurance Lead)`
 - **Reporter**: `claude-code (planner), đồng thuận với codex`
-- **Status**: `open`
+- **Status**: `resolved`
 - **Blocker Type**: `decision`
 - **Priority**: `2`
 - **Created Date**: `2026-10-05`
@@ -37,7 +37,7 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/02-overvi
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
@@ -49,12 +49,18 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/02-overvi
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
 
+## Resolution Record
+
+- **Resolved Date**: `2026-10-06`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A: G-4 lấy lát ngẫu nhiên r% bằng seed cố định trên snapshot của run cuối (độc lập ranking, FR-RNK-07); mẫu số là frame trong phạm vi; đạt khi cận trên KTC 95% ≤ 5%; chưa đủ cỡ mẫu là chưa đạt (FR-GTE-02). Mẫu U của thí nghiệm không dùng cho gate. Giá trị r% chốt theo BLOCKER-015.
+
 ## Completion Criteria
 
-- [ ] The blocking condition no longer prevents affected work.
-- [ ] Resolution evidence is linked.
-- [ ] Affected epic and task statuses are updated.
-- [ ] Workaround removal is tracked when applicable.
+- [x] The blocking condition no longer prevents affected work.
+- [x] Resolution evidence is linked.
+- [x] Affected epic and task statuses are updated.
+- [x] Workaround removal is tracked when applicable.
 
 ## Forbidden Actions
 

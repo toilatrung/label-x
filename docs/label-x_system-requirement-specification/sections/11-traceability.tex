@@ -65,7 +65,7 @@ RK-09 & Thay đổi tham số sau khi thấy kết quả held-out. & TB & Cao & 
 TBD-01 & Phiên bản CVAT được pin, URL, quyền token, danh sách endpoint thật. & Chủ CVAT, Tech Lead & Trước build adapter\\
 TBD-02 & Cấu hình phần cứng app server, GPU server. & Tech Lead & Trước build\\
 TBD-03 & Danh sách ảnh BDD100K, \(N\) của tập hiệu chỉnh và held-out. & Data Owner, QA Lead & Trước lập reference\\
-TBD-04 & Nguồn annotation cần review; có dùng lỗi chèn hay không. & Product Owner, QA Lead & Trước lập reference\\
+TBD-04 & Nguồn annotation cần review; có dùng lỗi chèn hay không. \textbf{Đã chốt:} tệp người học gán sẵn, không chèn lỗi (DEC-003). & Product Owner, QA Lead & Trước lập reference\\
 TBD-05 & \(\tau_m\), \(\tau_{amb}\) cho matching. & QA Lead, đội mô hình & Trước lập reference\\
 TBD-06 & \(a_{min}\) và quy tắc ignore theo occlusion/truncation. & QA Lead & Trước lập reference\\
 TBD-07 & Định nghĩa mức độ nghiêm trọng theo lớp và kích thước. & QA Lead & Trước pilot\\
@@ -73,7 +73,7 @@ TBD-08 & Duyệt đề xuất không bật VLM trong pilot M13. & Product Owner 
 TBD-09 & Thời hạn lease và quy tắc gia hạn. & Product Owner & Trước build review\\
 TBD-10 & Tỉ lệ lát kiểm tra ngẫu nhiên \(r\). & QA Lead & Trước pilot\\
 TBD-11 & Ngưỡng không thao tác \(t_{idle}\); thời lượng buổi làm quen. & Product Owner & Trước thí nghiệm\\
-TBD-12 & Cỡ mẫu thí nghiệm effort (frame, reviewer). & Product Owner & Sau pilot nhỏ\\
+TBD-12 & Cỡ mẫu thí nghiệm effort (frame, reviewer). Pilot (v1.1, CR-101): theo nguồn lực reviewer ngoài, khoá trong preregistration, không chạy pilot nhỏ. & Product Owner & 19/10/2026\\
 TBD-13 & Mục tiêu thời gian QC Run và độ trễ UI (NFR-01…03). & Tech Lead & Sau đo pilot\\
 TBD-14 & Số lần retry và backoff. & Tech Lead & Sau đo pilot\\
 TBD-15 & Thời hạn lưu audit log. & Product Owner & Trước triển khai\\
@@ -87,4 +87,26 @@ TBD-K1 & Ngưỡng đạt KPI-1. & Product Owner & Trước chạy held-out\\
 TBD-K2 & Ngưỡng đạt KPI-2. & Product Owner & Trước thí nghiệm\\
 TBD-K3 & Biên non-inferiority \(\delta\) và \(\delta_{fp}\). & Product Owner, QA Lead & Trước thí nghiệm\\
 TBD-K4 & \(E_{min}\), \(E_{min,g}\). & QA Lead & Trước chạy held-out\\
+\end{xltabular}
+
+\section{Phạm vi pilot theo CR-101}
+\label{sec:pilot-scope}
+Product Owner duyệt ngày 06/10/2026 (\code{.agent/governance/change-requests/CR-101.md}): sản phẩm hoàn thiện 20/10/2026, thử nghiệm 20--23/10/2026, nghiệm thu 27/10/2026. Các yêu cầu dưới đây hoãn sang sau pilot; mọi yêu cầu khác giữ nguyên.
+
+\begin{xltabular}{\linewidth}{@{}L{3.6cm}L{1.6cm}Y@{}}
+\caption{Yêu cầu hoãn sau pilot M13}\label{tab:pilot-deferred}\\
+\toprule
+\textbf{Yêu cầu} & \textbf{Mức} & \textbf{Cách xử lý trong pilot}\\
+\midrule
+\endfirsthead
+\toprule \textbf{Yêu cầu} & \textbf{Mức} & \textbf{Cách xử lý trong pilot}\\ \midrule
+\endhead
+\bottomrule
+\endfoot
+FR-EVL-15 & Should & Metric engine và Model Orchestrator không xây; đặc tả tối thiểu giữ cho giai đoạn sau.\\
+FR-EVL-16 & Should & G-3 hiển thị Not checked; được waiver theo FR-GTE-03.\\
+FR-GDL-01…03 & Should & Guideline là tệp tĩnh có rule ID nạp lúc khởi tạo; FR-GDL-04 giữ.\\
+FR-SEC-07 & Should & Không có màn xem audit; audit vẫn ghi đầy đủ (FR-SEC-05).\\
+FR-REV-11, FR-ESC-05, FR-RWK-07, FR-SNP-09 & Should & Không xây trong pilot.\\
+FR-ENG-10, FR-RNK-09 & Could & VLM tắt (TBD-08); FR-RNK-09 ở backlog.\\
 \end{xltabular}

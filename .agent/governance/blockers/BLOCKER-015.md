@@ -37,17 +37,23 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/11-tracea
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
 ## Resolution Plan
 
-- **Required Action**: Chốt từng TBD theo người chốt và hạn chốt trong SRS bảng TBD.
+- **Required Action**: Chốt từng nhóm TBD đúng cổng nêu trên; ghi giá trị và người chốt vào bản ghi này hoặc decision riêng.
 - **Responsible Owner**: `unassigned (vai trò: Quality Assurance Lead)`
 - **Dependency or Approval**: `Quality Assurance Lead`
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
+
+## Resolution Record
+
+- **Resolved Date**: `pending`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A đã chọn: chốt theo cổng — trước E-07: TBD-03, 04, 05, 06 và nguồn lực AS-04; trước pilot: TBD-07, 10; trước khoá score (E-17): TBD-16; sau pilot nhỏ: TBD-12; trước thí nghiệm/held-out: TBD-11, K1–K4 và AS-05. Không chặn M-01…M-03; mỗi cổng mở khi nhóm TBD tương ứng được ghi nhận.
 
 ## Completion Criteria
 

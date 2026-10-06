@@ -44,7 +44,7 @@ Hoãn trong bản đầu: box lệch/lỏng (B-06), box quá nhỏ (chỉ là c�
 | BR-08 | Nhiều candidate từ nhiều engine trỏ cùng một (đối tượng, nhóm) được gộp thành một issue (B-10). Gộp candidate không thay đổi $E$. |
 | BR-09 | Mức độ nghiêm trọng (Nghiêm trọng / Trung bình / Nhẹ) do QA Lead định nghĩa theo lớp và kích thước TBD-07; dùng cho guardrail G-2. |
 | BR-10 | Người xác minh *không* được xem ranking, risk score hay candidate của tập đánh giá (mù với công cụ). |
-| BR-11 | Hai người gán GT độc lập trên toàn bộ frame; hai bản được ghép theo matching ở mục tương ứng trong labelX.html, phần không khớp do QA Lead phân xử. Tỉ lệ khớp trước phân xử được báo cáo. |
+| BR-11 | Hai người gán GT độc lập trên toàn bộ frame; hai bản được ghép theo matching ở mục tương ứng trong labelX.html, phần không khớp do QA Lead phân xử. Tỉ lệ khớp trước phân xử được báo cáo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K, không lập hai bản GT; báo cáo ghi rõ nguồn GT. |
 | BR-12 | Người xác minh không xác minh annotation do chính mình gán (self-review, B-12). |
 | BR-13 | GT, snapshot annotation đầu vào, mapping GT–annotation, các ngưỡng ($\tau_m$, $a_{min}$) và version thuật toán matching được khoá cùng nhau. Mọi chỉnh sửa sau khoá tạo version mới, ghi lý do; kết quả đo trỏ đúng version. |
 | BR-14 | Khi người duyệt bác một lỗi do matching sai, phải sửa mapping (ghi lý do) rồi *suy lại* $E$; không được xoá lỗi trực tiếp khỏi danh sách. |

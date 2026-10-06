@@ -37,17 +37,23 @@ Bằng chứng: docs/label-x_system-requirement-specification/sections/11-tracea
 
 - **Affected Records**: `.agent/planning/epics.md`
 - **Issues**: `none`
-- **Decisions**: `none`
+- **Decisions**: `.agent/governance/decisions/DEC-002.md`
 - **Risks**: `none`
 - **Change Requests**: `none`
 
 ## Resolution Plan
 
-- **Required Action**: Tech Lead chốt phần cứng trước build; ngưỡng NFR sau đo pilot; Product Owner chốt retention.
+- **Required Action**: Tech Lead chốt TBD-02 và test runner frontend ngay (trước E-02/M-02); TBD-13, 14 sau đo pilot; Product Owner chốt retention TBD-15, 17, 20 trước triển khai.
 - **Responsible Owner**: `unassigned (vai trò: Tech Lead Backend)`
 - **Dependency or Approval**: `Tech Lead Backend`
 - **Workaround**: `none`
 - **Verification Method**: Quyết định/bằng chứng được ghi thành decision record hoặc cập nhật SRS có version, liên kết vào đây.
+
+## Resolution Record
+
+- **Resolved Date**: `pending`
+- **Evidence**: `.agent/governance/decisions/DEC-002.md` — phiếu chốt của Product Owner ngày 2026-10-06.
+- **Note**: Phương án A đã chọn: chốt ngay phần cứng tối thiểu (TBD-02: app server, GPU server) trước M-02 và test runner frontend trong E-02; TBD-13, 14 chốt sau đo pilot; TBD-15, 17, 20 chốt trước triển khai. Blocker còn mở tới khi TBD-02 và test runner frontend được ghi nhận.
 
 ## Completion Criteria
 

@@ -80,5 +80,8 @@ Nhánh có thể thành đường găng thực tế:
 
 ## Notes
 
+- Lịch theo `CR-101` (duyệt 2026-10-06): E-01 07/10 → M-01 09/10 → M-02 14/10 → M-03 + reference + score khoá 16/10 → code freeze + preregistration 19/10 → thí nghiệm 20–23/10 → KPI/báo cáo/gate 26/10 → nghiệm thu E-24 27/10. Ngày mục tiêu từng epic ở `.agent/planning/epics.md`.
+- Với GT là nhãn gốc BDD100K (CR-101), nhánh reference `E-06 → E-07 → E-17 → E-18` không còn phụ thuộc nhân lực gán GT; nhánh Detector phụ thuộc E-10 (Faster R-CNN công khai, BLOCKER-005 đã giải quyết).
+
 - Cạnh là cổng hoàn tất outcome, không cấm chuẩn bị hay prototype song song.
 - `EDGE` loại `acceptance-gate` (E-10 → E-07): code Detector làm được sau E-05/E-08; chỉ nghiệm thu ngưỡng cần reference hiệu chỉnh.
