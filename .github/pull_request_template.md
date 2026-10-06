@@ -1,4 +1,4 @@
-<!-- Mô tả ngắn thay đổi và lý do. Viết tiếng Việt; giữ nguyên thuật ngữ domain (Snapshot, Issue, Rework...). -->
+<!-- Base phải là `develop` (CR-104); chỉ PO mở PR vào `main`. Mô tả ngắn thay đổi và lý do. Viết tiếng Việt; giữ nguyên thuật ngữ domain (Snapshot, Issue, Rework...). -->
 
 ## Thay đổi
 
