@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Software Requirements Specification Intake — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/01-business/srs.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="project-srs">
+<meta name="labelx:title" content="Software Requirements Specification Intake">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="business">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[srs, requirements, intake]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / srs</span><span class="sp"></span>
-<a href="srs.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / srs</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>project-srs</span><b>title</b><span>Software Requirements Specification Intake</span><b>type</b><span>reference</span><b>domain</b><span>business</span><b>module</b><span>repository</span><b>tags</b><span>[srs, requirements, intake]</span><b>priority</b><span>1</span></div>
 <h1 id="software-requirements-specification-intake">Software Requirements Specification Intake</h1>
@@ -100,21 +104,21 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <p>Bằng chứng kiểm tra:</p>
 <ul>
-<li>Nguồn đầu vào đã chốt: <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, cấu hình MVP, R-01…R-07), <code>docs/design/</code> (25 màn hình), <code>docs/00-project/sources/QC_Engine_Review_Report.html</code>, <code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code>, <code>docs/00-project/sources/mermaid-diagram.png</code>, và stack ở <code>.agent/governance/decisions/DEC-001.md</code>.</li>
+<li>Nguồn đầu vào đã chốt: <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, cấu hình MVP, R-01…R-07), <code>docs/design/</code> (25 màn hình), <code>docs/00-project/sources/QC_Engine_Review_Report.html</code>, <code>docs/00-project/sources/Quality_Control_Review_UX_Architecture.html</code>, <code>docs/00-project/sources/mermaid-diagram.png</code>, và stack ở <code>.agent/governance/decisions/DEC-001.html</code>.</li>
 <li>Từng chương được Codex CLI review độc lập; kết quả lưu ở <code>docs/label-x_system-requirement-specification/.review/</code>.</li>
 <li>Bản LaTeX là gốc (biên dịch XeLaTeX trên TeXPage); bản HTML sinh bằng <code>python3 scripts/srs_tex2html.py</code>.</li>
 </ul>
-<p>Giới hạn: SRS chưa có kết quả đo; các ngưỡng KPI, cỡ mẫu, phiên bản CVAT và phần cứng còn TBD (xem <a href="requirements.html">requirements.md</a>, mục Tham số còn mở).</p>
+<p>Giới hạn: SRS chưa có kết quả đo; các ngưỡng KPI, cỡ mẫu, phiên bản CVAT và phần cứng còn TBD (xem <a href="requirements.html">requirements.html</a>, mục Tham số còn mở).</p>
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li>SRS (HTML): <a href="labelX.html">labelX.html</a></li>
 <li>SRS (LaTeX): <code>docs/label-x_system-requirement-specification/main.tex</code></li>
-<li>Requirements: <a href="requirements.html">requirements.md</a></li>
-<li>Use cases: <a href="use-cases.html">use-cases.md</a></li>
-<li>Domain model: <a href="domain-model.html">domain-model.md</a></li>
-<li>Decision: <code>.agent/governance/decisions/DEC-001.md</code></li>
-<li>Roadmap: <code>.agent/planning/roadmap.md</code></li>
-<li>Epic registry: <code>.agent/planning/epics.md</code></li>
+<li>Requirements: <a href="requirements.html">requirements.html</a></li>
+<li>Use cases: <a href="use-cases.html">use-cases.html</a></li>
+<li>Domain model: <a href="domain-model.html">domain-model.html</a></li>
+<li>Decision: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li>Roadmap: <code>.agent/planning/roadmap.html</code></li>
+<li>Epic registry: <code>.agent/planning/epics.html</code></li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>

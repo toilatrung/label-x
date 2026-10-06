@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tooling và môi trường dev LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/07-development/tooling.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="development-tooling">
+<meta name="labelx:title" content="Tooling và môi trường dev LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[development, tooling, uv, node, make, docker]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,15 +42,14 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / tooling</span><span class="sp"></span>
-<a href="tooling.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / tooling</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>development-tooling</span><b>title</b><span>Tooling và môi trường dev LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, tooling, uv, node, make, docker]</span><b>priority</b><span>2</span></div>
 <h1 id="tooling-va-moi-truong-dev-labelx">Tooling và môi trường dev LabelX</h1>
 <h2 id="muc-ich">Mục đích</h2>
 <p>Mô tả công cụ và lệnh dev <strong>đang có trong repo</strong>. Nguồn: <code>scripts/init-develop-environment.mk</code> (được <code>Makefile</code> gốc <code>include</code>), <code>README.md</code>, <code>src/backend/pyproject.toml</code>, <code>src/frontend/package.json</code>, <code>infrastructure/docker-compose.dev.yml</code>.</p>
 <h2 id="1-yeu-cau-tren-may">1. Yêu cầu trên máy</h2>
-<p>Hướng dẫn cho máy chưa có công cụ: <code>env-setup.md</code> ở root project. Windows chạy <code>scripts/init-develop-environment.ps1</code>; Ubuntu/WSL chạy <code>scripts/init-develop-environment.sh</code>. Make là wrapper tùy chọn, không phải điều kiện để chạy bootstrap. Script chỉ báo hoàn thành setup sau kiểm kết nối dịch vụ, migrate, Django check và build frontend.</p>
+<p>Hướng dẫn cho máy chưa có công cụ: <code>env-setup.html</code> ở root project. Windows chạy <code>scripts/init-develop-environment.ps1</code>; Ubuntu/WSL chạy <code>scripts/init-develop-environment.sh</code>. Make là wrapper tùy chọn, không phải điều kiện để chạy bootstrap. Script chỉ báo hoàn thành setup sau kiểm kết nối dịch vụ, migrate, Django check và build frontend.</p>
 <table>
 <thead>
 <tr>
@@ -97,7 +101,7 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 <li><code>CORS_ALLOWED_ORIGINS=http://localhost:3000</code> và <code>CORS_ALLOW_CREDENTIALS = True</code> đã có (<code>.env.example</code>, <code>settings.py</code>).</li>
 <li><code>CSRF_TRUSTED_ORIGINS</code> đọc từ biến môi trường, mặc định bằng <code>CORS_ALLOWED_ORIGINS</code>, nên POST từ <code>localhost:3000</code> qua được kiểm CSRF Origin.</li>
 <li><strong>Chưa có</strong> endpoint đăng nhập API trong <code>src/backend/config/urls.py</code> (chỉ có <code>admin/</code>, <code>api/schema/</code>, <code>api/docs/</code>). Tài khoản từ <code>make superuser</code> chỉ đăng nhập được Django admin.</li>
-<li>Cả hai mục trên là việc mở. Luồng chi tiết: <a href="../06-security/security-policies.html">../06-security/security-policies.md</a> mục 9.</li>
+<li>Cả hai mục trên là việc mở. Luồng chi tiết: <a href="../06-security/security-policies.html">../06-security/security-policies.html</a> mục 9.</li>
 </ul>
 <h2 id="3-danh-sach-make-target-ung-theo-scriptsinit-develop-environmentmk">3. Danh sách make target (đúng theo <code>scripts/init-develop-environment.mk</code>)</h2>
 <p>Lệnh mặc định là <code>make help</code> (liệt kê target có chú thích <code>##</code>).</p>
@@ -311,8 +315,8 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 </ul>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="coding-standards.html">coding-standards.md</a></li>
-<li><a href="workflow.html">workflow.md</a></li>
-<li><a href="../08-devops/deployment.html">../08-devops/deployment.md</a></li>
+<li><a href="coding-standards.html">coding-standards.html</a></li>
+<li><a href="workflow.html">workflow.html</a></li>
+<li><a href="../08-devops/deployment.html">../08-devops/deployment.html</a></li>
 </ul>
 </article></main></body></html>

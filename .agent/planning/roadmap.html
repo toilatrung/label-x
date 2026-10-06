@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project Roadmap — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/planning/roadmap.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="roadmap-v1">
+<meta name="labelx:title" content="Project Roadmap">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[roadmap, milestones, planning]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / roadmap</span><span class="sp"></span>
-<a href="roadmap.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / roadmap</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>roadmap-v1</span><b>title</b><span>Project Roadmap</span><b>type</b><span>planning</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[roadmap, milestones, planning]</span><b>priority</b><span>1</span></div>
 <h1 id="project-roadmap">Project Roadmap</h1>
@@ -75,12 +79,12 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="basis">Basis</h2>
 <ul>
-<li>Nguồn: SRS M13 v1.0 (<code>docs/label-x_system-requirement-specification/sections/</code>), <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, R-01…R-07, mục 7 — thứ tự triển khai), <code>docs/00-project/charter.md</code>, <code>.agent/governance/decisions/DEC-001.md</code>.</li>
+<li>Nguồn: SRS M13 v1.0 (<code>docs/label-x_system-requirement-specification/sections/</code>), <code>docs/00-project/sources/architecture_review.html</code> (B-01…B-21, R-01…R-07, mục 7 — thứ tự triển khai), <code>docs/00-project/charter.html</code>, <code>.agent/governance/decisions/DEC-001.html</code>.</li>
 <li>Thứ tự milestone theo bản rà soát R và charter: nền tảng → kiểm xác định → review/rework → reference + discovery → kiểm chứng/gate/báo cáo → vận hành/nghiệm thu. Đây là thứ tự phụ thuộc, không phải lịch.</li>
 <li>Phạm vi hoàn thành: SRS v1.1 — mọi yêu cầu Must và Should trừ danh sách hoãn ở SRS mục "Phạm vi pilot theo CR-101"; FR-RNK-09 (Could) ở backlog; VLM tắt (<code>BLOCKER-002</code>).</li>
 <li>Lập qua ba vòng thảo luận độc lập Claude ↔ Codex ngày 2026-10-05; thống nhất 24 epic, 21 blocker, 10 risk.</li>
-<li>Trạng thái <code>ROADMAP_APPROVED</code> ngày 2026-10-06 theo <code>.agent/governance/decisions/DEC-004.md</code>: Product Owner duyệt <code>CR-101</code> (phạm vi MVP và lịch) và SRS v1.1. Sản phẩm hoàn thiện 2026-10-20; thử nghiệm 2026-10-20…23; nghiệm thu 2026-10-27.</li>
-<li>Phiếu chốt blocker 2026-10-06 (<code>.agent/governance/decisions/DEC-002.md</code>): Product Owner ký từng epic và gán task cho từng developer thay cho việc chờ ký SRS theo vai trò (<code>BLOCKER-001</code>); target window 3 tuần do Product Owner thông báo.</li>
+<li>Trạng thái <code>ROADMAP_APPROVED</code> ngày 2026-10-06 theo <code>.agent/governance/decisions/DEC-004.html</code>: Product Owner duyệt <code>CR-101</code> (phạm vi MVP và lịch) và SRS v1.1. Sản phẩm hoàn thiện 2026-10-20; thử nghiệm 2026-10-20…23; nghiệm thu 2026-10-27.</li>
+<li>Phiếu chốt blocker 2026-10-06 (<code>.agent/governance/decisions/DEC-002.html</code>): Product Owner ký từng epic và gán task cho từng developer thay cho việc chờ ký SRS theo vai trò (<code>BLOCKER-001</code>); target window 3 tuần do Product Owner thông báo.</li>
 <li>Kế hoạch gồm cả triển khai frontend: mỗi epic có màn hình phải xong cả backend và frontend chạy trên API thật. <code>docs/design/</code> là thiết kế mẫu để tham khảo khi code frontend; delta thiết kế bổ sung just-in-time trước epic dùng tới (<code>BLOCKER-013</code>).</li>
 <li>Khung 3 tuần so với phạm vi: SRS có 87 FR Must, 12 Should, 2 Could; chuỗi chi phối gồm 17 epic nối tiếp và M-04/M-05 cần nhân lực ngoài đội phát triển (reference hai GT, ≥ 4 reviewer, người phân xử thí nghiệm riêng). Phạm vi MVP chốt bằng <code>CR-101</code> (<code>RISK-011</code>).</li>
 </ul>

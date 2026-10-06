@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech stack MVP và cấu trúc repository — LabelX</title>
+<meta name="labelx:id" content="DEC-001">
+<meta name="labelx:title" content="Tech stack MVP và cấu trúc repository">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[decision, tech-stack, architecture, mvp]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-001</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-001</span><b>title</b><span>Tech stack MVP và cấu trúc repository</span><b>type</b><span>governance</span><b>domain</b><span>architecture</span><b>module</b><span>repository</span><b>tags</b><span>[decision, tech-stack, architecture, mvp]</span><b>priority</b><span>1</span></div>
+<h1 id="decision-tech-stack-mvp-va-cau-truc-repository">Decision: Tech stack MVP và cấu trúc repository</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-001</code></li>
+<li><strong>Title</strong>: <code>Tech stack MVP và cấu trúc repository</code></li>
+<li><strong>Owner</strong>: <code>project-owner</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>architecture</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-05</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-05</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Bản rà soát <code>docs/00-project/sources/architecture_review.html</code> (05/10/2026) ghi nhận người dùng đã chốt 21/21 mục B-01–B-21 và cấu hình MVP sáu mục ("Chốt phương án MVP này"). Backend, worker và kho dữ liệu đã chốt; frontend không được nêu trong bản rà soát và được người dùng chốt riêng trong phiên ngày 2026-10-05: "frontend thì dùng nextjs".</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Modular monolith + worker pool, worker kiểm xác định/model tách khỏi API (B-01).</li>
+<li>Adapter CVAT chỉ đọc; sửa annotation bằng deep link sang CVAT (B-18).</li>
+<li>Task phải idempotent dù có retry; quyền project/job kiểm ở API (B-10, B-12).</li>
+<li>Snapshot, evidence, report/manifest lưu bất biến trên Object Storage hiện có.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Benefits</th>
+<th>Costs and Risks</th>
+<th>Constraint Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Django + DRF, PostgreSQL, Celery + Redis, Object Storage</code></td>
+<td>Khớp sơ đồ L (Django/DRF modular monolith); admin, ORM, permission sẵn</td>
+<td>Phải giữ task idempotent; Celery cần vận hành Redis</td>
+<td><code>meets</code></td>
+</tr>
+<tr>
+<td><code>FastAPI</code></td>
+<td>Đội có thể đã quen</td>
+<td>Chỉ giữ nếu backend FastAPI hiện có được xác minh; chưa có bằng chứng</td>
+<td><code>partially-meets</code></td>
+</tr>
+<tr>
+<td><code>Next.js (App Router, TypeScript)</code> cho frontend</td>
+<td>Người dùng chốt; SSR/route typing; dùng được CSS <code>lx-*</code> của Design System</td>
+<td>Next 16 có thay đổi API so với bản cũ</td>
+<td><code>meets</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>Backend Django 5.2 LTS + Django REST framework + drf-spectacular (OpenAPI); PostgreSQL 17; Celery 5 + Redis 7 (broker/result, django-celery-beat); Object Storage S3-compatible qua django-storages (SeaweedFS chỉ cho dev local); frontend Next.js 16 + React 19 + TypeScript, TanStack Query, openapi-fetch/openapi-typescript sinh type từ OpenAPI; Design System LabelX (tokens.css + bundle.css). Python 3.12 quản lý bằng uv; Node &gt;= 22 với npm. Mã nguồn ở src/backend và src/frontend, hạ tầng dev ở infrastructure/.</code></li>
+<li><strong>Rationale</strong>: <code>Đúng cấu hình MVP đã chốt trong docs/00-project/sources/architecture_review.html; frontend theo chỉ định của người dùng. Ngoại lệ FastAPI không áp dụng vì repository chưa có backend.</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-05</code></li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>Một hợp đồng OpenAPI duy nhất sinh type cho frontend; dev mới cài toàn bộ bằng make setup.</code></li>
+<li><strong>Negative</strong>: <code>Chưa pin phiên bản CVAT/cvat-sdk; phải pin sau khi kiểm API instance thật. Frontend chưa có test runner (vitest bị loại khỏi scaffold do lỗi npm peer-set) — chọn lại khi có epic frontend.</code></li>
+<li><strong>Follow-up Work</strong>: <code>none</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>src/backend/pyproject.toml</code>, <code>src/frontend/package.json</code>, <code>infrastructure/docker-compose.dev.yml</code>, <code>scripts/Makefile</code></li>
+<li><strong>Epics or Tasks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-&lt;number&gt;.md</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Testing — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/09-testing/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="testing-overview">
+<meta name="labelx:title" content="Testing">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[testing, quality, strategy]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>testing-overview</span><b>title</b><span>Testing</span><b>type</b><span>reference</span><b>domain</b><span>testing</span><b>module</b><span>repository</span><b>tags</b><span>[testing, quality, strategy]</span><b>priority</b><span>2</span></div>
 <h1 id="testing">Testing</h1>
@@ -53,23 +57,23 @@ ul.dir{columns:2;font-size:14px}
 </thead>
 <tbody>
 <tr>
-<td><a href="test-strategy.html">test-strategy.md</a></td>
+<td><a href="test-strategy.html">test-strategy.html</a></td>
 <td>Tầng kiểm thử; ánh xạ AC-01…AC-11 và R-01…R-07 sang unit/integration/E2E/pilot; NFR</td>
 </tr>
 <tr>
-<td><a href="unit-testing.html">unit-testing.md</a></td>
+<td><a href="unit-testing.html">unit-testing.html</a></td>
 <td>pytest/pytest-django; quy tắc phải test: matching, suy ra lỗi, dedup, idempotency, state transition, quyền, coverage, scoring, thống kê</td>
 </tr>
 <tr>
-<td><a href="integration-testing.html">integration-testing.md</a></td>
+<td><a href="integration-testing.html">integration-testing.html</a></td>
 <td>PostgreSQL/Redis/SeaweedFS qua Docker Compose; Celery retry/idempotency; adapter CVAT giả lập; API DRF</td>
 </tr>
 <tr>
-<td><a href="e2e-testing.html">e2e-testing.md</a></td>
+<td><a href="e2e-testing.html">e2e-testing.html</a></td>
 <td>Kịch bản UC-01 → UC-11 qua API; E2E UI là TBD vì frontend chưa có test runner (DEC-001)</td>
 </tr>
 <tr>
-<td><a href="acceptance-pilot.html">acceptance-pilot.md</a></td>
+<td><a href="acceptance-pilot.html">acceptance-pilot.html</a></td>
 <td>Điều kiện tiên quyết, giai đoạn pilot, pre-registration, KPI-1, thí nghiệm effort EX-01…EX-10, gate</td>
 </tr>
 </tbody>

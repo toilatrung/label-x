@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chính sách bảo mật LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/06-security/security-policies.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="security-policies">
+<meta name="labelx:title" content="Chính sách bảo mật LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="security">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[security, rbac, separation-of-duties, audit, retention]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / security-policies</span><span class="sp"></span>
-<a href="security-policies.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / security-policies</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>security-policies</span><b>title</b><span>Chính sách bảo mật LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[security, rbac, separation-of-duties, audit, retention]</span><b>priority</b><span>1</span></div>
 <h1 id="chinh-sach-bao-mat-labelx">Chính sách bảo mật LabelX</h1>
@@ -169,7 +173,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Service account CVAT chỉ có quyền đọc (<code>.env.example</code>; B-18). Quyền thật của token còn <strong>TBD-01</strong>.</li>
 <li>Frontend chỉ biết <code>NEXT_PUBLIC_CVAT_BASE_URL</code> để dựng deep link (<code>src/frontend/.env.example</code>). Không đưa token hay secret vào biến <code>NEXT_PUBLIC_*</code>, vì biến này bị nhúng vào bundle trình duyệt.</li>
 <li>File <code>.env</code> và <code>.env.*</code> bị loại khỏi git (<code>.gitignore</code>, trừ <code>.env.example</code>). Credential trong <code>.env.example</code>, <code>infrastructure/docker-compose.dev.yml</code>, <code>infrastructure/seaweedfs/s3.json</code> <strong>chỉ dùng cho dev local</strong>; không dùng lại cho môi trường thật.</li>
-<li>Mật khẩu/secret không xuất hiện trong log (NFR-07). Xem <a href="../13-observability/logging.html">../13-observability/logging.md</a>.</li>
+<li>Mật khẩu/secret không xuất hiện trong log (NFR-07). Xem <a href="../13-observability/logging.html">../13-observability/logging.html</a>.</li>
 <li><code>make env</code> sinh <code>DJANGO_SECRET_KEY</code> ngẫu nhiên với tiền tố <code>dev-only-</code> cho local (<code>scripts/init-develop-environment.mk</code>).</li>
 </ul>
 <h2 id="7-audit-append-only-cung-transaction">7. Audit append-only cùng transaction</h2>
@@ -250,7 +254,7 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="threat-model.html">threat-model.md</a></li>
-<li><a href="compliance.html">compliance.md</a></li>
+<li><a href="threat-model.html">threat-model.html</a></li>
+<li><a href="compliance.html">compliance.html</a></li>
 </ul>
 </article></main></body></html>

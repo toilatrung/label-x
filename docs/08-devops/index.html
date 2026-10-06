@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DevOps — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/08-devops/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="devops-overview">
+<meta name="labelx:title" content="DevOps">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="devops">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[devops, delivery, deployment]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,16 +42,15 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>devops-overview</span><b>title</b><span>DevOps</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[devops, delivery, deployment]</span><b>priority</b><span>3</span></div>
 <h1 id="devops">DevOps</h1>
 <p>CI/CD, triển khai và giám sát LabelX. Repo hiện chỉ có môi trường dev local (Docker Compose cho hạ tầng + <code>make</code>). CI/CD và production <strong>chưa có</strong>; topology production chờ <strong>TBD-02</strong>.</p>
 <h2 id="noi-dung">Nội dung</h2>
 <ul>
-<li><a href="ci-cd.html">ci-cd.md</a> — hiện trạng (chưa có CI) và pipeline <strong>đề xuất</strong> chạy <code>make check</code>.</li>
-<li><a href="deployment.html">deployment.md</a> — topology tham chiếu (SRS chương 10, DEC-001), dev local bằng compose, các mục production còn TBD.</li>
-<li><a href="monitoring.html">monitoring.md</a> — điểm vào sang <a href="../13-observability/index.html">13-observability</a>.</li>
+<li><a href="ci-cd.html">ci-cd.html</a> — hiện trạng (chưa có CI) và pipeline <strong>đề xuất</strong> chạy <code>make check</code>.</li>
+<li><a href="deployment.html">deployment.html</a> — topology tham chiếu (SRS chương 10, DEC-001), dev local bằng compose, các mục production còn TBD.</li>
+<li><a href="monitoring.html">monitoring.html</a> — điểm vào sang <a href="../13-observability/index.html">13-observability</a>.</li>
 </ul>
 </article></main></body></html>

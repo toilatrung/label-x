@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI/CD và thiết kế kiểm thử các giai đoạn LabelX — LabelX</title>
+<meta name="labelx:id" content="labelx-ci-cd-testing-implementation-2026-10-05">
+<meta name="labelx:title" content="CI/CD và thiết kế kiểm thử các giai đoạn LabelX">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="devops">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[implementation, ci, cd, testing, phases]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / ci-cd-testing-2026-10-05</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>labelx-ci-cd-testing-implementation-2026-10-05</span><b>title</b><span>CI/CD và thiết kế kiểm thử các giai đoạn LabelX</span><b>type</b><span>report</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[implementation, ci, cd, testing, phases]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-report-template">Implementation Report Template</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>USER-CI-2026-10-05</code></li>
+<li><strong>Title</strong>: <code>CI/CD và thiết kế kiểm thử toàn bộ giai đoạn</code></li>
+<li><strong>Owner</strong>: <code>project-owner</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>direct-user-request; no registered task</code></li>
+<li><strong>Epic ID</strong>: <code>none; no registered epic</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-05</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: 12 nhóm/62 ca thiết kế kiểm thử; tài liệu chiến lược/CI/CD/unit/integration/E2E; workflow GitHub Actions CI, phase testing và CD preflight; cổng từ chối test chưa viết/skip/evidence sai commit/approval thiếu; export evidence đã loại thông tin riêng; HTML tự chứa từ ma trận JSON.</li>
+<li><strong>Not Implemented</strong>: adapter/engine/ranking/review/evaluation nghiệp vụ; frontend browser runner; deployment target/hooks; Git repository/remote/branch protection/environments; live CVAT/GPU/reference/pilot; phê duyệt QA độc lập.</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead>
+<tr>
+<th>File or Artifact</th>
+<th>Change Summary</th>
+<th>Task ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/09-testing/test-matrix.json</code></td>
+<td>62 ca, trạng thái planned/implemented và trace FR/AC/NFR/R</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>docs/09-testing/test-strategy.html</code> và guides</td>
+<td>Phạm vi, fixture, evaluation và điều kiện chuyển</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>docs/08-devops/ci-cd.html</code></td>
+<td>Triggers, artifact promotion, approvals, target setup</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ci.yml</code></td>
+<td>Scaffold checks PostgreSQL + Next lint/types/build</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>.github/workflows/phase-testing.yml</code></td>
+<td>Protected main/manual runner và redacted receipts</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>.github/workflows/cd.yml</code></td>
+<td>Trusted CI/test SHA, actual environment protection, staging trước production, hooks</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>scripts/ci/quality-gate.cjs</code>, <code>export-evidence.cjs</code>, <code>render-plan.cjs</code></td>
+<td>Kiểm cổng, export và HTML renderer</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>scripts/ci/tests/*.test.cjs</code></td>
+<td>Node tests cho gate/privacy/HTML, không phải test nghiệp vụ</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>ci_cd_testing.html</code></td>
+<td>Artifact đọc offline và in A4</td>
+<td>direct user request</td>
+</tr>
+<tr>
+<td><code>.gitignore</code></td>
+<td>Ignore cache/evidence local của CI</td>
+<td>direct user request</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html</code> hiện trống; authorization là yêu cầu người dùng trong phiên.</li>
+<li><strong>Context Packages</strong>: <code>none; bounded context DEC-001, source manifests/config, H/A/T/review và SRS LaTeX draft</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code>; không chuyển trạng thái task/epic chưa đăng ký.</li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code> và quyết định người dùng trong <code>docs/00-project/sources/architecture_review.html</code></li>
+<li><strong>Change Requests</strong>: <code>none; không sửa baseline stack/SRS/roadmap/operating policy</code></li>
+<li><strong>Risks or Blockers</strong>: hạn chế runtime và dữ liệu ghi ở Scope/Verification; không giả lập blocker đã xử lý.</li>
+<li><strong>Review Request</strong>: <code>pending independent reviewer</code></li>
+<li><strong>Commits</strong>: <code>none; workspace không có .git</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent task start TASK-ID</code></td>
+<td>not-run</td>
+<td>Không task/epic được đăng ký; không tạo lifecycle giả</td>
+</tr>
+<tr>
+<td><code>agent task verify TASK-ID</code></td>
+<td>not-run</td>
+<td>Không có agent CLI/task record</td>
+</tr>
+<tr>
+<td><code>agent task report TASK-ID --executor Codex</code></td>
+<td>not-run</td>
+<td>Report viết trực tiếp theo yêu cầu</td>
+</tr>
+<tr>
+<td><code>agent review request TASK-ID --reviewer independent</code></td>
+<td>not-run</td>
+<td>Chưa có review độc lập</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node --test scripts/ci/tests/*.test.cjs</code></td>
+<td>passed</td>
+<td>20 test điều khiển CI, export và HTML; không dùng làm acceptance nghiệp vụ</td>
+</tr>
+<tr>
+<td><code>node scripts/ci/quality-gate.cjs validate-plan</code></td>
+<td>passed</td>
+<td>12 phases, 62 cases, 1 ca smoke đã có mã</td>
+</tr>
+<tr>
+<td><code>node scripts/ci/render-plan.cjs --check</code></td>
+<td>passed</td>
+<td>HTML khớp manifest/renderer</td>
+</tr>
+<tr>
+<td>Parse YAML workflows bằng js-yaml có sẵn trong frontend</td>
+<td>passed</td>
+<td>3 workflow parse được; trigger/job/permission kiểm local</td>
+</tr>
+<tr>
+<td>New Markdown frontmatter/local links</td>
+<td>passed as limited static check</td>
+<td>6 file mới có metadata, 20 local links tồn tại; không thay Python kit validator</td>
+</tr>
+<tr>
+<td><code>node scripts/ci/quality-gate.cjs run --phase p0_snapshot</code></td>
+<td>passed as negative check</td>
+<td>BLOCKED exit 2 đúng vì các ca chưa implemented; không phải đã kiểm được adapter</td>
+</tr>
+<tr>
+<td><code>npm.cmd run lint</code></td>
+<td>failed</td>
+<td>.bin cài từ Linux không có eslint Windows shim; không phải lỗi lint source</td>
+</tr>
+<tr>
+<td><code>node node_modules/eslint/bin/eslint.js .</code></td>
+<td>passed</td>
+<td>ESLint frontend gọi trực tiếp, exit 0</td>
+</tr>
+<tr>
+<td><code>node node_modules/typescript/bin/tsc --noEmit</code></td>
+<td>passed with limitation</td>
+<td>Dùng generated types đã có; không thay Next typegen mới</td>
+</tr>
+<tr>
+<td><code>node node_modules/next/dist/bin/next typegen</code></td>
+<td>blocked</td>
+<td>Thiếu Windows SWC; tải package bị EACCES. CLI trả 0 nhưng log báo Unhandled Rejection; không ghi passed</td>
+</tr>
+<tr>
+<td>Backend pytest/Ruff/mypy/Django/migrations và <code>make check</code></td>
+<td>not-run</td>
+<td>Không có Python/Make/Docker local chạy được; tải Python bị socket permission chặn; .venv hiện có là Linux</td>
+</tr>
+<tr>
+<td><code>make validate-kit</code> / Python kit validator</td>
+<td>not-run</td>
+<td>Python/Make không khả dụng; chỉ frontmatter/links mới được kiểm tĩnh, không giả FRAMEWORK_VALIDATION_PASS</td>
+</tr>
+<tr>
+<td>Next production build</td>
+<td>not-run</td>
+<td>SWC prerequisite/typegen bị chặn, chưa có build mới</td>
+</tr>
+<tr>
+<td>GitHub CI/CD/live benchmark/load/restore</td>
+<td>not-run</td>
+<td>Chưa có Git remote/target/runner/reference/policy; không tác động external application</td>
+</tr>
+<tr>
+<td>Browser/A4 preview HTML</td>
+<td>not-run</td>
+<td>Phiên trước trình duyệt chặn file URL; HTML kiểm bằng DOM mô phỏng và print CSS, không nói đã render thật</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: GitHub Actions là assumption mặc định sau câu hỏi tùy chọn chưa có câu trả lời; thay provider nếu người dùng chọn khác. SRS M13 là draft, chỉ dùng trace test; chưa tạo epic/task/roadmap acceptance.</li>
+<li><strong>Approved By</strong>: authorization trực tiếp từ người dùng yêu cầu viết CI/CD testing; không ghi QA/release approval hay sửa DEC-001.</li>
+<li><strong>Known Limitations</strong>: nghiệp vụ chưa implement nên phase/CD gate còn BLOCKED; environment API access/protection và target hook cần cấu hình thực. Report là draft, không tự approve độc lập.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to the direct authorized user request; formal task registry remains empty.</li>
+<li>[x] Code/document checks performed and not-run limitations are explicit.</li>
+<li>[x] Workflow/doc scope does not change approved product architecture or invent KPI thresholds.</li>
+<li>[x] Missing tests/reference/policy/targets remain blocked rather than silently passed.</li>
+<li>[ ] Independent review and full Linux CI run completed.</li>
+<li>[ ] Project-native <code>make check</code> and Python framework validator passed.</li>
+<li>[ ] Git Nexus mapping updated when an actual commit exists.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not infer that the 62 designed cases have executable implementations or passed.</li>
+<li>Do not treat this draft as independent QA, task done, product acceptance or deployment authorization.</li>
+<li>Do not publish private image/reference/model credentials or raw evaluation logs.</li>
+<li>Do not silently replace future scope/policy TBD values with arbitrary numbers.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Runtime report stays in <code>.agent/reports/implementation/</code>; status draft until independent evidence is available.</li>
+<li>No final immutable report or accepted governance record was edited.</li>
+<li>Main readable deliverable: <code>ci_cd_testing.html</code>; executable files and docs are repository artifacts.</li>
+</ul>
+</article></main></body></html>

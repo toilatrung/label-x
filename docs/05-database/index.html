@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Database — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/05-database/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="database-overview">
+<meta name="labelx:title" content="Database">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="database">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[database, schema, migrations]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,17 +42,16 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>database-overview</span><b>title</b><span>Database</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>repository</span><b>tags</b><span>[database, schema, migrations]</span><b>priority</b><span>3</span></div>
 <h1 id="database">Database</h1>
 <p>Phần này mô tả schema PostgreSQL, quy tắc migration và các truy vấn quan trọng của LabelX QC. Nguồn: ERD trong SRS (<code>fig:erd</code>) và A §22. Stack: PostgreSQL 17 + Django ORM (DEC-001).</p>
 <h2 id="contents">Contents</h2>
 <ul>
-<li><a href="schema.html">schema.md</a> — các bảng, cột chính, khoá, ràng buộc unique cho idempotency và dedup, audit append-only</li>
-<li><a href="migrations.html">migrations.md</a> — quy tắc Django migrations, RunSQL cho append-only</li>
-<li><a href="queries.html">queries.md</a> — cấp lease bằng <code>SELECT … FOR UPDATE SKIP LOCKED</code>, ranking, coverage ledger, ghi shard idempotent, gate</li>
+<li><a href="schema.html">schema.html</a> — các bảng, cột chính, khoá, ràng buộc unique cho idempotency và dedup, audit append-only</li>
+<li><a href="migrations.html">migrations.html</a> — quy tắc Django migrations, RunSQL cho append-only</li>
+<li><a href="queries.html">queries.html</a> — cấp lease bằng <code>SELECT … FOR UPDATE SKIP LOCKED</code>, ranking, coverage ledger, ghi shard idempotent, gate</li>
 </ul>
-<p>Liên quan: <a href="../02-architecture/system-design.html">system-design.md</a>, <a href="../04-api/rest-api.html">rest-api.md</a>, <a href="../11-integrations/object-storage.html">object-storage.md</a>.</p>
+<p>Liên quan: <a href="../02-architecture/system-design.html">system-design.html</a>, <a href="../04-api/rest-api.html">rest-api.html</a>, <a href="../11-integrations/object-storage.html">object-storage.html</a>.</p>
 </article></main></body></html>

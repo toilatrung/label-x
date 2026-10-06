@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Architecture Document Intake — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/02-architecture/architecture.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="project-architecture">
+<meta name="labelx:title" content="Architecture Document Intake">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[architecture, design, intake]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / architecture</span><span class="sp"></span>
-<a href="architecture.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / architecture</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>project-architecture</span><b>title</b><span>Architecture Document Intake</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>repository</span><b>tags</b><span>[architecture, design, intake]</span><b>priority</b><span>1</span></div>
 <h1 id="architecture-document-intake">Architecture Document Intake</h1>
@@ -55,7 +59,7 @@ ul.dir{columns:2;font-size:14px}
 <li>A (kiến trúc UX, ADR, entity, API): <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html">Quality_Control_Review_UX_Architecture.html</a></li>
 <li>T (engine, contract xử lý, pilot): <a href="../00-project/sources/QC_Engine_Review_Report.html">QC_Engine_Review_Report.html</a></li>
 <li>L (sơ đồ thành phần): <a href="../00-project/sources/mermaid-diagram.png">mermaid-diagram.png</a></li>
-<li>Stack: <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>, <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a>, <a href="../../src/backend/pyproject.toml">pyproject.toml</a></li>
+<li>Stack: <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>, <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a>, <a href="../../src/backend/pyproject.toml">pyproject.toml</a></li>
 <li><strong>Ingested Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Validated By</strong>: <code>claude-agent (đối chiếu nguồn); cần project-owner xác nhận lần cuối</code></li>
 </ul>
@@ -71,31 +75,31 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td>Bối cảnh, ranh giới, thành phần, trách nhiệm</td>
-<td><a href="system-design.html">system-design.md</a> mục 1–3</td>
+<td><a href="system-design.html">system-design.html</a> mục 1–3</td>
 </tr>
 <tr>
 <td>Topology triển khai, phụ thuộc runtime</td>
-<td><a href="system-design.html">system-design.md</a> mục 9; <a href="diagrams/deployment.html">diagrams/deployment.md</a></td>
+<td><a href="system-design.html">system-design.html</a> mục 9; <a href="diagrams/deployment.html">diagrams/deployment.html</a></td>
 </tr>
 <tr>
 <td>Luồng dữ liệu, lưu trữ, ranh giới tích hợp</td>
-<td><a href="diagrams/data-flow.html">diagrams/data-flow.md</a>; <a href="../05-database/schema.html">schema</a>; <a href="../11-integrations/cvat.html">CVAT</a>; <a href="../11-integrations/object-storage.html">Object Storage</a></td>
+<td><a href="diagrams/data-flow.html">diagrams/data-flow.html</a>; <a href="../05-database/schema.html">schema</a>; <a href="../11-integrations/cvat.html">CVAT</a>; <a href="../11-integrations/object-storage.html">Object Storage</a></td>
 </tr>
 <tr>
 <td>Bảo mật, độ tin cậy, khả năng vận hành</td>
-<td><a href="system-design.html">system-design.md</a> mục 6–9</td>
+<td><a href="system-design.html">system-design.html</a> mục 6–9</td>
 </tr>
 <tr>
 <td>Ràng buộc, đánh đổi, quyết định, truy vết</td>
-<td><a href="decisions.html">decisions.md</a></td>
+<td><a href="decisions.html">decisions.html</a></td>
 </tr>
 </tbody>
 </table>
 <h2 id="validation-result">Validation Result</h2>
 <ul>
 <li>Đã đối chiếu 21 quyết định trong R với SRS (ch.5, 6, 9, 10) và DEC-001. Không có quyết định nào trong R bị SRS phủ định.</li>
-<li>Một số nội dung của A/T đã bị R thay đổi hoặc loại bỏ: FastAPI, RAG/pgvector, temporal, Diff, writeback, Release/Manifest, OIDC, các trạng thái Known Defect/Superseded/NOT_REQUIRED. Các nội dung này được ghi là ngoài phạm vi MVP trong <a href="decisions.html">decisions.md</a>.</li>
-<li>Các điểm mâu thuẫn còn lại giữa nguồn (lease, khoá idempotent, trạng thái engine, đường dẫn API) đã được xử lý theo SRS; xem <a href="system-design.html">system-design.md</a> mục 10.</li>
+<li>Một số nội dung của A/T đã bị R thay đổi hoặc loại bỏ: FastAPI, RAG/pgvector, temporal, Diff, writeback, Release/Manifest, OIDC, các trạng thái Known Defect/Superseded/NOT_REQUIRED. Các nội dung này được ghi là ngoài phạm vi MVP trong <a href="decisions.html">decisions.html</a>.</li>
+<li>Các điểm mâu thuẫn còn lại giữa nguồn (lease, khoá idempotent, trạng thái engine, đường dẫn API) đã được xử lý theo SRS; xem <a href="system-design.html">system-design.html</a> mục 10.</li>
 <li>Các tham số chưa chốt giữ nguyên mã TBD của SRS: TBD-01, 02, 05, 08, 09, 10, 13, 14, 15, 17.</li>
 <li>Blocker kiến trúc trước đây: <strong>resolved by source artifacts</strong> (không còn file blocker riêng trong repository).</li>
 </ul>

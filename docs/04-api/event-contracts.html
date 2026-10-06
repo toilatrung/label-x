@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hợp đồng Celery task và sự kiện — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/04-api/event-contracts.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="api-event-contracts">
+<meta name="labelx:title" content="Hợp đồng Celery task và sự kiện">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[api, events, celery, idempotency, retry]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / event-contracts</span><span class="sp"></span>
-<a href="event-contracts.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / event-contracts</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>api-event-contracts</span><b>title</b><span>Hợp đồng Celery task và sự kiện</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, events, celery, idempotency, retry]</span><b>priority</b><span>2</span></div>
 <h1 id="hop-ong-celery-task-va-su-kien">Hợp đồng Celery task và sự kiện</h1>
@@ -236,7 +240,7 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>qc.build_final_run</code></td>
 <td><code>{dataset_id, scope_hash}</code></td>
-<td>Partial UNIQUE <code>(dataset_id, scope_hash) WHERE is_final AND status IN ('queued','running')</code> trên <code>qc_run</code> (<a href="../05-database/schema.html">schema.md</a>)</td>
+<td>Partial UNIQUE <code>(dataset_id, scope_hash) WHERE is_final AND status IN ('queued','running')</code> trên <code>qc_run</code> (<a href="../05-database/schema.html">schema.html</a>)</td>
 <td>Snapshot toàn scope, sau đó run <code>is_final=true</code>, liên kết các verification (FR-RWK-06)</td>
 </tr>
 <tr>

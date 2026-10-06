@@ -1,5 +1,5 @@
 'use strict';
-// Kiểm quy tắc duyệt pull request (AGENT.md "Pull Request Approval", CR-102):
+// Kiểm quy tắc duyệt pull request (AGENT.html "Pull Request Approval", CR-102):
 // - người có cờ self-approve trong .github/pr-approvers.txt (PO) được tự duyệt PR của mình;
 // - PR của người khác cần comment "Đã xem và duyệt" của một approver khác tác giả,
 //   viết sau commit cuối của PR (push thêm commit thì phải duyệt lại).

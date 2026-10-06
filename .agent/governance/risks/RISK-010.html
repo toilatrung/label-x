@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KPI trượt trên held-out — LabelX</title>
+<meta name="labelx:id" content="risk-010">
+<meta name="labelx:title" content="KPI trượt trên held-out">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="risks">
+<meta name="labelx:tags" content="[risk, delivery, m13]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / risks / RISK-010</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>risk-010</span><b>title</b><span>KPI trượt trên held-out</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>risks</span><b>tags</b><span>[risk, delivery, m13]</span><b>priority</b><span>2</span></div>
+<h1 id="risk-010-kpi-truot-tren-held-out">RISK-010: KPI trượt trên held-out</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Risk ID</strong>: <code>RISK-010</code></li>
+<li><strong>Title</strong>: <code>KPI trượt trên held-out</code></li>
+<li><strong>Owner</strong>: <code>unassigned (vai trò: Product Owner)</code></li>
+<li><strong>Status</strong>: <code>identified</code></li>
+<li><strong>Category</strong>: <code>delivery</code></li>
+<li><strong>Probability</strong>: <code>medium</code></li>
+<li><strong>Impact</strong>: <code>high</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-05</code></li>
+<li><strong>Review Date</strong>: <code>not-set</code></li>
+</ul>
+<h2 id="risk-statement">Risk Statement</h2>
+<p>If KPI-1 hoặc KPI-2 không đạt trên held-out, then không nghiệm thu được, resulting in phải hiệu chỉnh lại và cần tập đánh giá độc lập mới.</p>
+<p>Nguồn: Thảo luận Claude–Codex (G8) (<code>docs/label-x_system-requirement-specification/sections/11-traceability.tex</code> bảng rủi ro — bổ sung).</p>
+<h2 id="exposure-assessment">Exposure Assessment</h2>
+<ul>
+<li><strong>Affected Scope</strong>: <code>E-20, E-24</code></li>
+<li><strong>Impact Description</strong>: phải hiệu chỉnh lại và cần tập đánh giá độc lập mới.</li>
+<li><strong>Detection Signals</strong>: AC-08/AC-09 không đạt</li>
+<li><strong>Assumptions</strong>: <code>none</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Epics or Tasks</strong>: <code>E-20, E-24</code></li>
+<li><strong>Decisions</strong>: <code>none</code></li>
+<li><strong>Issues or Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Evidence</strong>: <code>none</code></li>
+</ul>
+<h2 id="response-plan">Response Plan</h2>
+<ul>
+<li><strong>Strategy</strong>: <code>mitigate</code></li>
+<li><strong>Mitigation Actions</strong>: Kiểm chứng kỹ trên tập hiệu chỉnh (ablation, ngoài fold) trước khi chạy held-out</li>
+<li><strong>Contingency Actions</strong>: Change request; hiệu chỉnh trên tập hiệu chỉnh; đánh giá trên tập độc lập mới, không tái dùng held-out</li>
+<li><strong>Trigger Threshold</strong>: Cận dưới CI dưới ngưỡng TBD-K1/K2</li>
+<li><strong>Responsible Owner</strong>: <code>unassigned (vai trò: Product Owner)</code></li>
+</ul>
+<h2 id="review-record">Review Record</h2>
+<ul>
+<li><strong>Last Reviewed Date</strong>: <code>2026-10-05</code></li>
+<li><strong>Reviewed By</strong>: <code>claude-code, codex</code></li>
+<li><strong>Probability Change</strong>: <code>unchanged</code></li>
+<li><strong>Impact Change</strong>: <code>unchanged</code></li>
+<li><strong>Review Evidence</strong>: <code>.agent/planning/roadmap.html</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The risk is eliminated, accepted by an authorized owner, transferred, or converted to an issue after realization.</li>
+<li>[ ] Final status and supporting evidence are recorded.</li>
+<li>[ ] Related tasks, blockers, issues, and decisions are updated.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not close a risk solely because its review date passed.</li>
+<li>Do not accept a high or critical risk without an identified authorized owner.</li>
+<li>Do not use vague triggers or unowned mitigation actions.</li>
+<li>Do not delete prior assessments when exposure changes.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/risks/RISK-&lt;number&gt;.md</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

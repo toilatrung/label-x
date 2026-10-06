@@ -1,6 +1,6 @@
 # LabelX — cài đặt và chạy môi trường dev.
 #
-# Dev mới: xem env-setup.md; bootstrap không cần Make.
+# Dev mới: xem env-setup.html; bootstrap không cần Make.
 # Hoặc gọi trực tiếp: make -f scripts/init-develop-environment.mk setup
 #
 # Bootstrap Ubuntu/WSL: bash scripts/init-develop-environment.sh --install-global; Windows: script .ps1.

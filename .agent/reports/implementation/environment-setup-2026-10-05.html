@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap môi trường dev và hướng dẫn máy mới — LabelX</title>
+<meta name="labelx:id" content="labelx-environment-setup-implementation-2026-10-05">
+<meta name="labelx:title" content="Bootstrap môi trường dev và hướng dẫn máy mới">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[implementation, onboarding, bootstrap, windows, ubuntu]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / environment-setup-2026-10-05</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>labelx-environment-setup-implementation-2026-10-05</span><b>title</b><span>Bootstrap môi trường dev và hướng dẫn máy mới</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[implementation, onboarding, bootstrap, windows, ubuntu]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-report-template">Implementation Report Template</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi bằng chứng cho yêu cầu trực tiếp đổi tên scripts/Makefile, kiểm và bổ sung bootstrap máy mới, tạo env-setup.html. Không phê duyệt QA độc lập.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>USER-ENV-2026-10-05</code></li>
+<li><strong>Title</strong>: <code>Khởi tạo môi trường phát triển</code></li>
+<li><strong>Owner</strong>: <code>project-owner</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>direct-user-request; no registered task</code></li>
+<li><strong>Epic ID</strong>: <code>none; no registered epic</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-05</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: đổi tên Make adapter; bootstrap PowerShell/Ubuntu; opt-in công cụ máy; dependencies frozen; random secret và bảo toàn env; chặn endpoint ngoài local/mixed OS; kiểm dịch vụ/migrate/check/build; onboarding không yêu cầu Make; bootstrap tests trong CI.</li>
+<li><strong>Not Implemented</strong>: cài thật công cụ máy, kiểm máy sạch/real Docker, tự bật virtualization/WSL/khởi động lại/cấp quyền Docker, CVAT/model/reference, runtime Celery Windows, triển khai production.</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead>
+<tr>
+<th>File or Artifact</th>
+<th>Change Summary</th>
+<th>Task ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/init-develop-environment.mk</code>, <code>Makefile</code></td>
+<td>Rename; setup tuần tự qua Bash; quote đường dẫn; cleanup allowlist</td>
+<td>direct-user-request</td>
+</tr>
+<tr>
+<td><code>scripts/init-develop-environment.ps1</code>, <code>.sh</code></td>
+<td>Setup/Check/Plan; cài global có lựa chọn; lỗi trả nonzero</td>
+<td>direct-user-request</td>
+</tr>
+<tr>
+<td><code>scripts/development/</code></td>
+<td>Shared env/preflight, đọc kiểm PostgreSQL/Redis/S3, cleanup guard, 9 test</td>
+<td>direct-user-request</td>
+</tr>
+<tr>
+<td><code>infrastructure/docker-compose.dev.yml</code></td>
+<td>Bucket init fail-fast, bootstrap dùng compose run để nhận exit code</td>
+<td>direct-user-request</td>
+</tr>
+<tr>
+<td><code>env-setup.html</code>, <code>README.md</code>, docs development/devops/security</td>
+<td>Hướng dẫn máy chưa có Make/Bash/Git; cập nhật đường dẫn và hành vi</td>
+<td>direct-user-request</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ci.yml</code></td>
+<td>Kiểm bootstrap trên Linux và PowerShell/Node trên Windows, không cài global trong test</td>
+<td>direct-user-request</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: none; yêu cầu trực tiếp của người dùng.</li>
+<li><strong>Context Packages</strong>: <code>AGENT.html</code>, <code>.agent/governance/decisions/DEC-001.html</code>, cấu hình stack và docs liên quan.</li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code> (không đổi).</li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không đổi).</li>
+<li><strong>Decisions</strong>: DEC-001 giữ nguyên; tham chiếu tên scripts/Makefile trong quyết định đã accepted là lịch sử.</li>
+<li><strong>Change Requests</strong>: not applicable; không đổi operating policy.</li>
+<li><strong>Risks or Blockers</strong>: thiếu Docker và Python 3.12 native trên máy kiểm tra; tải công cụ Python/dependency bị chặn network.</li>
+<li><strong>Review Request</strong>: pending independent review.</li>
+<li><strong>Commits</strong>: none; workspace không có .git.</li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent task start TASK-ID</code></td>
+<td>not-run</td>
+<td>Không có task/epic đăng ký, yêu cầu trực tiếp</td>
+</tr>
+<tr>
+<td><code>agent task verify TASK-ID</code></td>
+<td>not-run</td>
+<td>Không có task ID</td>
+</tr>
+<tr>
+<td><code>agent task report TASK-ID --executor Codex</code></td>
+<td>not-run</td>
+<td>Báo cáo scoped viết trực tiếp</td>
+</tr>
+<tr>
+<td><code>agent review request TASK-ID --reviewer ...</code></td>
+<td>not-run</td>
+<td>Chưa có reviewer được chỉ định</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node --test scripts/development/tests/environment.test.cjs scripts/ci/tests/*.test.cjs</code></td>
+<td>passed</td>
+<td>29 test, 29 pass, 0 skip trên Windows</td>
+</tr>
+<tr>
+<td>PowerShell Parser.ParseFile</td>
+<td>passed</td>
+<td>Không lỗi AST</td>
+</tr>
+<tr>
+<td>Bash <code>-n</code> và <code>--plan</code> qua Git Bash</td>
+<td>passed</td>
+<td>Parse thành công; Plan không cài hoặc sửa file</td>
+</tr>
+<tr>
+<td>PowerShell <code>-Mode Plan</code></td>
+<td>passed</td>
+<td>Plan không cài; test thực thi</td>
+</tr>
+<tr>
+<td>PowerShell <code>-Mode Check</code></td>
+<td>failed</td>
+<td>Báo thiếu Docker, trả exit 1; không báo setup thành công</td>
+</tr>
+<tr>
+<td>GNU Make <code>--dry-run setup</code></td>
+<td>passed</td>
+<td>Chỉ gọi Bash bootstrap tuần tự, dùng mingw32-make có sẵn</td>
+</tr>
+<tr>
+<td><code>scripts/validate-framework.py</code> qua Python embedded có sẵn</td>
+<td>passed</td>
+<td>FRAMEWORK_VALIDATION_PASS; không kết nối MySQL</td>
+</tr>
+<tr>
+<td><code>make check</code>, <code>make validate-kit</code> theo uv/Python 3.12 chuẩn</td>
+<td>not-run</td>
+<td>Thiếu Docker và Python 3.12 native; dependency hiện tại thuộc Linux</td>
+</tr>
+<tr>
+<td>Freshness HTML bằng <code>scripts/md2html.py --check</code></td>
+<td>not-run</td>
+<td>Thiếu Markdown/pymdown-extensions; tải bị chặn. HTML các docs đã thay đổi đồng bộ theo nội dung, chưa có bằng chứng renderer chính thức</td>
+</tr>
+<tr>
+<td>Cài global/local end-to-end trên máy sạch</td>
+<td>not-run</td>
+<td>Không cài công cụ toàn cục hoặc migrate database khi kiểm tra</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: thêm bootstrap .ps1/.sh vì Make không thể là prerequisite trên máy mới và recipes cũ chỉ phù hợp Bash. Dùng Python embedded đã có để kiểm framework stdlib; đây không phải runtime project.</li>
+<li><strong>Approved By</strong>: yêu cầu người dùng trong phiên, không ghi thay quyết định stack.</li>
+<li><strong>Known Limitations</strong>: hỗ trợ auto global Windows và Ubuntu 22.04/24.04/26.04; WSL Docker Desktop integration có bước thủ công. Check không build frontend. Script không tự gỡ Docker cũ, cấp Docker group hoặc tạo CVAT/reference. CI mới chưa được chạy trên GitHub. Cần kiểm máy sạch trước phát hành bootstrap cho toàn đội.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task (direct request).</li>
+<li>[x] Acceptance criteria results and evidence are linked; kiểm máy sạch còn thiếu.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[ ] Git Nexus mappings are updated when commits exist (không có commit).</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<p>Không nhận QA độc lập/self-approval; không coi mock/Plan là cài thật; không ghi secret hoặc sửa accepted DEC-001.</p>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Báo cáo runtime ở <code>.agent/reports/implementation/</code>, trạng thái draft, không đổi task thành done.</p>
+</article></main></body></html>

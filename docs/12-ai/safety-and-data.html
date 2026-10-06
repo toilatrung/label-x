@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>An toàn AI và xử lý dữ liệu — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/12-ai/safety-and-data.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="ai-safety-and-data">
+<meta name="labelx:title" content="An toàn AI và xử lý dữ liệu">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="ai">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[ai, safety, data-handling, human-in-the-loop]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / safety-and-data</span><span class="sp"></span>
-<a href="safety-and-data.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / safety-and-data</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>ai-safety-and-data</span><b>title</b><span>An toàn AI và xử lý dữ liệu</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, safety, data-handling, human-in-the-loop]</span><b>priority</b><span>1</span></div>
 <h1 id="an-toan-ai-va-xu-ly-du-lieu">An toàn AI và xử lý dữ liệu</h1>
@@ -144,10 +148,10 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
-<p>Dev local dùng SeaweedFS thay Object Storage (xem <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>); không đưa ảnh dữ liệu thật lên dịch vụ ngoài.</p>
+<p>Dev local dùng SeaweedFS thay Object Storage (xem <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>); không đưa ảnh dữ liệu thật lên dịch vụ ngoài.</p>
 <h2 id="4-tach-tap-du-lieu-va-chong-ro-ri">4. Tách tập dữ liệu và chống rò rỉ</h2>
 <ul>
-<li>Tập hiệu chỉnh ↔ held-out không giao theo video; Detector không huấn luyện trên held-out (AS-03); case phân xử dùng hiệu chỉnh tách khỏi GT held-out (FR-EVL-05; BR-16). Chi tiết: <a href="detector.html#7-chống-leakage-as-03">detector.md §7</a>, <a href="evaluation.html#2-phân-chia-dữ-liệu-và-chống-rò-rỉ">evaluation.md §2</a>.</li>
+<li>Tập hiệu chỉnh ↔ held-out không giao theo video; Detector không huấn luyện trên held-out (AS-03); case phân xử dùng hiệu chỉnh tách khỏi GT held-out (FR-EVL-05; BR-16). Chi tiết: <a href="detector.html#7-chống-leakage-as-03">detector.html §7</a>, <a href="evaluation.html#2-phân-chia-dữ-liệu-và-chống-rò-rỉ">evaluation.html §2</a>.</li>
 <li>Người xác minh reference mù với ranking/candidate (BR-10).</li>
 <li>Pre-registration: khoá tham số trước khi chạy held-out; không chỉnh sau khi thấy kết quả (RK-09).</li>
 </ul>

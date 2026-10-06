@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sessions History — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/execution/sessions-history.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="sessions-history">
+<meta name="labelx:title" content="Sessions History">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[sessions, history, audit]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / sessions-history</span><span class="sp"></span>
-<a href="sessions-history.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / sessions-history</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>sessions-history</span><b>title</b><span>Sessions History</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[sessions, history, audit]</span><b>priority</b><span>3</span></div>
 <h1 id="sessions-history">Sessions History</h1>
@@ -72,7 +76,7 @@ ul.dir{columns:2;font-size:14px}
 <td>repository-setup</td>
 <td>completed</td>
 <td>Cài overlay agentic-sdlc-kit; scaffold src/backend (Django/DRF/Celery), src/frontend (Next.js 16), infrastructure dev, scripts/Makefile; ghi DEC-001.</td>
-<td><code>.agent/governance/decisions/DEC-001.md</code></td>
+<td><code>.agent/governance/decisions/DEC-001.html</code></td>
 <td>none</td>
 </tr>
 <tr>
@@ -83,7 +87,7 @@ ul.dir{columns:2;font-size:14px}
 <td>project-onboarding-planning</td>
 <td>completed</td>
 <td>Lập Planning Truth từ SRS M13 v1.0 qua 3 vòng thảo luận với Codex CLI: R-001 (ROADMAP_DRAFT), 6 milestone, 24 epic EPIC_PROPOSED, 21 blocker, 10 risk; không tạo task.</td>
-<td><code>.agent/planning/roadmap.md</code>, <code>.agent/planning/epics.md</code>, <code>.agent/planning/dependency-graph.md</code></td>
+<td><code>.agent/planning/roadmap.html</code>, <code>.agent/planning/epics.html</code>, <code>.agent/planning/dependency-graph.html</code></td>
 <td>none</td>
 </tr>
 <tr>
@@ -94,7 +98,18 @@ ul.dir{columns:2;font-size:14px}
 <td>DEC-002, DEC-003, DEC-004, CR-101, CR-102, T-001…T-005</td>
 <td>completed</td>
 <td>Ghi phiếu chốt blocker; phân vai đội; duyệt CR-101 (MVP 3 tuần, SRS v1.1) và khoá R-001 (ROADMAP_APPROVED); quy tắc duyệt PR CR-102; PO ký E-01, E-02, E-03, E-04, E-10 và giao task đợt 1 T-001…T-005 trên nhánh riêng.</td>
-<td><code>.agent/governance/decisions/DEC-004.md</code>, <code>.agent/governance/change-requests/CR-101.md</code>, <code>.agent/governance/change-requests/CR-102.md</code>, <code>.agent/execution/task-board.md</code></td>
+<td><code>.agent/governance/decisions/DEC-004.html</code>, <code>.agent/governance/change-requests/CR-101.html</code>, <code>.agent/governance/change-requests/CR-102.html</code>, <code>.agent/execution/task-board.html</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>SES-004</td>
+<td>2026-10-06</td>
+<td>2026-10-06</td>
+<td>claude-code cho Trịnh Quang Trung</td>
+<td>CR-103</td>
+<td>completed</td>
+<td>Chuyển toàn bộ tài liệu kit sang HTML nguồn (metadata trong thẻ meta labelx:*), xoá 157 file Markdown; validator đọc HTML; bỏ md2html.py; srs_tex2md.py thành srs_tex2docs.py ghi HTML.</td>
+<td><code>.agent/governance/change-requests/CR-103.html</code>, <code>scripts/kit_html.py</code></td>
 <td>none</td>
 </tr>
 </tbody>

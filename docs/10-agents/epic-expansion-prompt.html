@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Epic Expansion Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/epic-expansion-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="epic-expansion-prompt">
+<meta name="labelx:title" content="Epic Expansion Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, epic, tasks]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / epic-expansion-prompt</span><span class="sp"></span>
-<a href="epic-expansion-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / epic-expansion-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>epic-expansion-prompt</span><b>title</b><span>Epic Expansion Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, epic, tasks]</span><b>priority</b><span>1</span></div>
 <h1 id="epic-expansion-prompt">Epic Expansion Prompt</h1>
@@ -55,12 +59,12 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>One <code>EPIC_READY</code> epic with owner, scope, acceptance criteria, and dependencies</li>
 <li>Applicable context package, decisions, risks, blockers, and change requests</li>
-<li><code>.agent/templates/task-template.md</code></li>
+<li><code>.agent/templates/task-template.html</code></li>
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
 <ul>
-<li>Add task records to <code>.agent/execution/task-board.md</code> while the epic remains <code>EPIC_READY</code>.</li>
-<li>Add task dependency edges to <code>.agent/planning/dependency-graph.md</code>.</li>
+<li>Add task records to <code>.agent/execution/task-board.html</code> while the epic remains <code>EPIC_READY</code>.</li>
+<li>Add task dependency edges to <code>.agent/planning/dependency-graph.html</code>.</li>
 <li>Create or update a bounded context package.</li>
 <li>Transition the epic to <code>EPIC_IN_PROGRESS</code> only after expanded tasks validate and before any task starts.</li>
 <li>Update current context and session history.</li>

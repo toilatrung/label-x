@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Coding standards LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/07-development/coding-standards.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="development-coding-standards">
+<meta name="labelx:title" content="Coding standards LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[development, coding-standards, ruff, mypy, eslint, typescript]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,13 +42,12 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / coding-standards</span><span class="sp"></span>
-<a href="coding-standards.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / coding-standards</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>development-coding-standards</span><b>title</b><span>Coding standards LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, coding-standards, ruff, mypy, eslint, typescript]</span><b>priority</b><span>2</span></div>
 <h1 id="coding-standards-labelx">Coding standards LabelX</h1>
 <h2 id="muc-ich">Mục đích</h2>
-<p>Quy ước viết mã cho <code>src/backend</code> (Python/Django) và <code>src/frontend</code> (Next.js/TypeScript). Phần "Cấu hình công cụ" chép đúng cấu hình đang có trong repo. Phần "Quy tắc kiến trúc" lấy từ quyết định đã chốt (<code>CLAUDE.md</code>, DEC-001, B-10, B-12, B-18). Mọi kiểm tra tự động chạy bằng <code>make lint</code> và <code>make typecheck</code> (xem <a href="tooling.html">tooling.md</a>).</p>
+<p>Quy ước viết mã cho <code>src/backend</code> (Python/Django) và <code>src/frontend</code> (Next.js/TypeScript). Phần "Cấu hình công cụ" chép đúng cấu hình đang có trong repo. Phần "Quy tắc kiến trúc" lấy từ quyết định đã chốt (<code>CLAUDE.md</code>, DEC-001, B-10, B-12, B-18). Mọi kiểm tra tự động chạy bằng <code>make lint</code> và <code>make typecheck</code> (xem <a href="tooling.html">tooling.html</a>).</p>
 <h2 id="1-inh-dang-chung-editorconfig">1. Định dạng chung (<code>.editorconfig</code>)</h2>
 <table>
 <thead>
@@ -63,7 +67,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td><code>*.md</code></td>
-<td>Không bỏ khoảng trắng cuối dòng (giữ ngắt dòng Markdown)</td>
+<td>Không bỏ khoảng trắng cuối dòng</td>
 </tr>
 </tbody>
 </table>
@@ -97,7 +101,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Test runner frontend: <strong>chưa có</strong> (DEC-001: vitest bị loại khỏi scaffold do lỗi npm peer-set; chọn lại khi có epic frontend).</li>
 </ul>
 <h3 id="ui-theo-design-system-labelx">UI theo Design System LabelX</h3>
-<p>Nguồn: <code>.agent/skills/labelx-design/SKILL.md</code>, <code>docs/design/README.md</code>; repo đã chép <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
+<p>Nguồn: <code>.agent/skills/labelx-design/SKILL.md</code>, <code>docs/design/README.html</code>; repo đã chép <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
 <ul>
 <li>Chỉ dùng token và class <code>lx-*</code>. Không hard-code màu, bo góc hay khoảng cách mà token đã có. Thiếu class thì thêm vào Design System trước.</li>
 <li>Trung tính, bảng là chính (table-first); font Inter cho chữ, JetBrains Mono chỉ cho định danh; khoảng cách theo bậc 4/8/12/16/24/32.</li>
@@ -155,15 +159,15 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><strong>Không đổi stack</strong></td>
 <td>Không đổi framework/thư viện chính khi chưa có change request được duyệt</td>
-<td><code>CLAUDE.md</code>; DEC-001; <code>AGENT.md</code> (Change Request Rule)</td>
+<td><code>CLAUDE.md</code>; DEC-001; <code>AGENT.html</code> (Change Request Rule)</td>
 </tr>
 <tr>
 <td><strong>Không log secret</strong></td>
 <td>Không log token CVAT, mật khẩu, secret</td>
-<td>NFR-07; <a href="../13-observability/logging.html">../13-observability/logging.md</a></td>
+<td>NFR-07; <a href="../13-observability/logging.html">../13-observability/logging.html</a></td>
 </tr>
 </tbody>
 </table>
-<h2 id="5-tai-lieu-markdown">5. Tài liệu Markdown</h2>
-<p>Mọi file <code>.md</code> trong <code>docs/</code> và <code>.agent/</code> bắt đầu bằng YAML frontmatter gồm đúng 7 trường bắt buộc, không rỗng: (1) <code>id</code> (duy nhất, ổn định), (2) <code>title</code>, (3) <code>type</code>, (4) <code>domain</code>, (5) <code>module</code>, (6) <code>tags</code>, (7) <code>priority</code> (1…5) (<code>AGENT.md</code>, Metadata Standard). Link nội bộ phải trỏ tới file tồn tại. Kiểm bằng <code>make validate-kit</code>.</p>
+<h2 id="5-tai-lieu-html">5. Tài liệu HTML</h2>
+<p>Tài liệu trong <code>docs/</code> và <code>.agent/</code> chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103). Mỗi file khai báo trong <code>&lt;head&gt;</code> thẻ <code>&lt;meta name="labelx:…"&gt;</code> cho đúng 7 trường bắt buộc, không rỗng: (1) <code>id</code> (duy nhất, ổn định), (2) <code>title</code>, (3) <code>type</code>, (4) <code>domain</code>, (5) <code>module</code>, (6) <code>tags</code>, (7) <code>priority</code> (1…5) (<code>AGENT.html</code>, Metadata Standard). Link nội bộ phải trỏ tới file tồn tại. Kiểm bằng <code>make validate-kit</code>.</p>
 </article></main></body></html>

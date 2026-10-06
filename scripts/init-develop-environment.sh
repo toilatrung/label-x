@@ -74,7 +74,7 @@ done
 [[ "$(node -p 'process.platform')" == linux ]] || die 'WSL must use Linux Node/npm, not Windows executables. Install using --install-global in WSL.'
 [[ "$(node -p 'Number(process.versions.node.split(".")[0]) >= 22')" == true ]] || die 'Node >=22 required; rerun --install-global.'
 docker compose version
-docker info >/dev/null || die 'Docker unavailable or permission denied. Start Docker; on Ubuntu configure socket access (see tooling.md); on WSL enable Desktop integration. Then rerun.'
+docker info >/dev/null || die 'Docker unavailable or permission denied. Start Docker; on Ubuntu configure socket access (see docs/07-development/tooling.html); on WSL enable Desktop integration. Then rerun.'
 [[ "$(docker info --format '{{.OSType}}')" == linux ]] || die 'Linux containers are required.'
 case "$(docker context show)" in default|desktop-linux) ;; *) die 'Use a local Docker context, not a remote server.' ;; esac
 case "$(docker context inspect --format '{{.Endpoints.docker.Host}}')" in unix://*) ;; *) die 'Use a local Unix Docker socket, not a remote endpoint.' ;; esac

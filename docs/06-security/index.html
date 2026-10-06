@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Security — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/06-security/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="security-overview">
+<meta name="labelx:title" content="Security">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="security">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[security, compliance, threat-model]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,17 +42,16 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>security-overview</span><b>title</b><span>Security</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[security, compliance, threat-model]</span><b>priority</b><span>2</span></div>
 <h1 id="security">Security</h1>
 <p>Tài liệu bảo mật của LabelX: threat model, chính sách bảo mật và tuân thủ dữ liệu. Nội dung dựa trên quyết định đã chốt (B-11, B-12, B-18 trong <code>docs/00-project/sources/architecture_review.html</code>) và SRS đã duyệt (FR-SEC, NFR-07…09). Repo hiện mới có khung dự án, nên phần lớn biện pháp là <strong>yêu cầu phải hiện thực</strong>. Chúng chưa phải chức năng đã có.</p>
 <h2 id="noi-dung">Nội dung</h2>
 <ul>
-<li><a href="threat-model.html">threat-model.md</a> — tài sản, ranh giới tin cậy (CVAT, Object Storage, GPU worker, trình duyệt), mối đe doạ STRIDE và biện pháp.</li>
-<li><a href="security-policies.html">security-policies.md</a> — RBAC theo vai trò và scope, self-review theo assignee tại snapshot, tách người yêu cầu/duyệt, waiver, Super Admin ghi đè, token CVAT, audit append-only, lưu trữ.</li>
-<li><a href="compliance.html">compliance.md</a> — dữ liệu BDD100K (giấy phép: TBD), không gửi ảnh ra ngoài (NFR-09), lưu trữ, bằng chứng kiểm toán.</li>
+<li><a href="threat-model.html">threat-model.html</a> — tài sản, ranh giới tin cậy (CVAT, Object Storage, GPU worker, trình duyệt), mối đe doạ STRIDE và biện pháp.</li>
+<li><a href="security-policies.html">security-policies.html</a> — RBAC theo vai trò và scope, self-review theo assignee tại snapshot, tách người yêu cầu/duyệt, waiver, Super Admin ghi đè, token CVAT, audit append-only, lưu trữ.</li>
+<li><a href="compliance.html">compliance.html</a> — dữ liệu BDD100K (giấy phép: TBD), không gửi ảnh ra ngoài (NFR-09), lưu trữ, bằng chứng kiểm toán.</li>
 </ul>
 <h2 id="nguyen-tac-cung">Nguyên tắc cứng</h2>
 <ul>

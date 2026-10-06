@@ -1,4 +1,4 @@
-# Người duyệt pull request (AGENT.md mục Pull Request Approval, CR-102).
+# Người duyệt pull request (AGENT.html mục Pull Request Approval, CR-102).
 # Mỗi dòng: <github-username> [self-approve]. Chỉ PO (@toilatrung) được sửa file này.
 # Duyệt = comment đúng "Đã xem và duyệt" trên PR; approver không duyệt PR của chính mình,
 # trừ người có cờ self-approve.

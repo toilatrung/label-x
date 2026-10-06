@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Task Board — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/execution/task-board.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="task-board">
+<meta name="labelx:title" content="Task Board">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[tasks, execution, board]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board</span><span class="sp"></span>
-<a href="task-board.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>task-board</span><b>title</b><span>Task Board</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[tasks, execution, board]</span><b>priority</b><span>1</span></div>
 <h1 id="task-board">Task Board</h1>
@@ -163,12 +167,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files">Related Files</h4>
 <ul>
-<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@toilatrung.md</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-01</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.md</code></li>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@toilatrung.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Blockers</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria">Acceptance Criteria</h4>
 <ul>
@@ -181,13 +185,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Automated Checks</strong>: <code>make validate-kit; make check</code></li>
 <li><strong>Manual Checks</strong>: <code>Thành viên khác đọc contract trong PR</code></li>
-<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-001-@toilatrung.md</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-001-@toilatrung.html</code></li>
 </ul>
 <h4 id="completion-criteria">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-002">T-002</h3>
@@ -224,12 +228,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_1">Related Files</h4>
 <ul>
-<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@tdt2112.md</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-02</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md</code></li>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@tdt2112.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.md</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_1">Acceptance Criteria</h4>
 <ul>
@@ -242,13 +246,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm test &amp;&amp; npm run build</code></li>
 <li><strong>Manual Checks</strong>: <code>Mở trang đăng nhập và shell trên trình duyệt, chụp màn hình vào report</code></li>
-<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-002-@tdt2112.md</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-002-@tdt2112.html</code></li>
 </ul>
 <h4 id="completion-criteria_1">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-003">T-003</h3>
@@ -285,12 +289,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_2">Related Files</h4>
 <ul>
-<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@ducha180104.md</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-03</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@ducha180104.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-03</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Blockers</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_2">Acceptance Criteria</h4>
 <ul>
@@ -303,13 +307,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Automated Checks</strong>: <code>make check</code></li>
 <li><strong>Manual Checks</strong>: <code>Gọi API và mở màn xem trên trình duyệt</code></li>
-<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-003-@ducha180104.md</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-003-@ducha180104.html</code></li>
 </ul>
 <h4 id="completion-criteria_2">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-004">T-004</h3>
@@ -347,12 +351,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_3">Related Files</h4>
 <ul>
-<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@duy12345-6789.md</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-04</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-04</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-004.md, .agent/governance/blockers/BLOCKER-018.md</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-004.html, .agent/governance/blockers/BLOCKER-018.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_3">Acceptance Criteria</h4>
 <ul>
@@ -365,13 +369,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Automated Checks</strong>: <code>make check</code></li>
 <li><strong>Manual Checks</strong>: <code>Bật CVAT dev, nạp task mẫu, chạy adapter đọc và in hash</code></li>
-<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-004-@duy12345-6789.md</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code></li>
 </ul>
 <h4 id="completion-criteria_3">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-005">T-005</h3>
@@ -408,12 +412,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_4">Related Files</h4>
 <ul>
-<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.md</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#e-10</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-10</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-005.md, .agent/governance/blockers/BLOCKER-014.md</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-005.html, .agent/governance/blockers/BLOCKER-014.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_4">Acceptance Criteria</h4>
 <ul>
@@ -426,13 +430,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Automated Checks</strong>: <code>make check (phần backend không đổi); test kiểm checksum</code></li>
 <li><strong>Manual Checks</strong>: <code>Chạy lệnh inference trên thư mục ảnh mẫu</code></li>
-<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-005-@vietanhhhhhh2003.md</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-005-@vietanhhhhhh2003.html</code></li>
 </ul>
 <h4 id="completion-criteria_4">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 </article></main></body></html>

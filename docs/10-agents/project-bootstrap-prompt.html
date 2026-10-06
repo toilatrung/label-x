@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project Bootstrap Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/project-bootstrap-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="project-bootstrap-prompt">
+<meta name="labelx:title" content="Project Bootstrap Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, bootstrap, framework]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / project-bootstrap-prompt</span><span class="sp"></span>
-<a href="project-bootstrap-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / project-bootstrap-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>project-bootstrap-prompt</span><b>title</b><span>Project Bootstrap Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, bootstrap, framework]</span><b>priority</b><span>1</span></div>
 <h1 id="project-bootstrap-prompt">Project Bootstrap Prompt</h1>
@@ -46,7 +50,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Act as the <code>planner</code> and <code>coordinator</code> responsible for installing or verifying an empty Agentic SDLC Kit framework repository.</p>
 <h2 id="responsibilities">Responsibilities</h2>
 <ul>
-<li>Read <code>AGENT.md</code> as authoritative policy.</li>
+<li>Read <code>AGENT.html</code> as authoritative policy.</li>
 <li>Verify required directories, operating files, intelligence files, templates, and documentation indexes.</li>
 <li>Preserve lifecycle definitions, metadata rules, and runtime/template separation.</li>
 <li>Record factual bootstrap results without creating project scope or application data.</li>
@@ -54,7 +58,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-inputs">Required Inputs</h2>
 <ul>
 <li>Repository root</li>
-<li><code>AGENT.md</code></li>
+<li><code>AGENT.html</code></li>
 <li>Required framework structure and target framework version</li>
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
@@ -62,7 +66,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Create missing framework directories and keep files.</li>
 <li>Create or restore required framework documentation and reusable templates.</li>
 <li>Run <code>python scripts/validate-framework.py</code>.</li>
-<li>Append a factual bootstrap entry to <code>.agent/execution/sessions-history.md</code>.</li>
+<li>Append a factual bootstrap entry to <code>.agent/execution/sessions-history.html</code>.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
@@ -80,10 +84,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="validation-rules">Validation Rules</h2>
 <ul>
-<li>Every Markdown file has complete frontmatter and a unique ID.</li>
+<li>Every HTML document has complete <code>labelx:*</code> metadata and a unique ID.</li>
 <li>All 12 templates exist only under <code>.agent/templates/</code>.</li>
 <li>Governance and report directories contain only runtime records or keep files.</li>
 <li>Protected project directories remain empty except for keep files.</li>
-<li>Epic and task enums match <code>AGENT.md</code> and their templates.</li>
+<li>Epic and task enums match <code>AGENT.html</code> and their templates.</li>
 </ul>
 </article></main></body></html>

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Detector baseline (engine Mô hình độc lập) — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/12-ai/detector.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="ai-detector">
+<meta name="labelx:title" content="Detector baseline (engine Mô hình độc lập)">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="ai">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[ai, detector, model, bdd100k]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / detector</span><span class="sp"></span>
-<a href="detector.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / detector</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>ai-detector</span><b>title</b><span>Detector baseline (engine Mô hình độc lập)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, detector, model, bdd100k]</span><b>priority</b><span>1</span></div>
 <h1 id="detector-baseline-engine-mo-hinh-oc-lap">Detector baseline (engine Mô hình độc lập)</h1>
@@ -165,7 +169,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="5-tu-du-oan-toi-candidate">5. Từ dự đoán tới candidate</h2>
 <ol>
 <li>Lọc dự đoán theo <code>τ_conf</code>.</li>
-<li>Matching một-một không phụ thuộc lớp với annotation (xem <a href="../03-domain/services.html#1-matchingservice">../03-domain/services.md §1</a>).</li>
+<li>Matching một-một không phụ thuộc lớp với annotation (xem <a href="../03-domain/services.html#1-matchingservice">../03-domain/services.html §1</a>).</li>
 <li>Dự đoán không ghép, confidence ≥ <code>τ_E1</code> ⇒ candidate E1; cặp ghép khác lớp, confidence lớp dự đoán ≥ <code>τ_E2</code> ⇒ candidate E2 (FR-ENG-07).</li>
 <li>Evidence: box/lớp dự đoán, confidence, IoU, cặp ambiguous, crop, rule liên quan (FR-ENG-08).</li>
 </ol>
@@ -189,7 +193,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Precision/Recall của Detector theo lớp chỉ tính trên GT đã khoá; thiếu GT ⇒ Metric Not checked (FR-EVL-15; R B-05).</li>
 <li>Lớp không đủ mẫu ghi "không đủ mẫu" (H Calibration "Không đủ mẫu để đánh giá").</li>
 <li>Hiệu chỉnh mô hình tách khỏi hiệu chỉnh reviewer (H Calibration).</li>
-<li>Xem <a href="evaluation.html">evaluation.md</a>.</li>
+<li>Xem <a href="evaluation.html">evaluation.html</a>.</li>
 </ul>
 <h2 id="9-ngoai-pham-vi-mvp">9. Ngoài phạm vi MVP</h2>
 <ul>

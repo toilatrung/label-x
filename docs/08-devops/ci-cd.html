@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CI/CD và cổng kiểm thử LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/08-devops/ci-cd.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="labelx-ci-cd">
+<meta name="labelx:title" content="CI/CD và cổng kiểm thử LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="devops">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[ci, cd, github-actions, quality-gates]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / ci-cd</span><span class="sp"></span>
-<a href="ci-cd.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / ci-cd</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>labelx-ci-cd</span><b>title</b><span>CI/CD và cổng kiểm thử LabelX</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[ci, cd, github-actions, quality-gates]</span><b>priority</b><span>2</span></div>
 <h1 id="cicd-labelx">CI/CD LabelX</h1>
@@ -87,7 +91,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td><code>framework</code></td>
-<td><code>validate-framework.py</code>; ma trận test (<code>quality-gate.cjs validate-plan</code>, <code>render-plan.cjs --check</code>); <code>node --test scripts/ci/tests</code>; HTML sinh từ Markdown khớp (<code>scripts/md2html.py --check docs .agent</code>); SRS sinh lại từ LaTeX không đổi (<code>srs_tex2html.py</code>, <code>srs_tex2md.py</code> + <code>git diff --exit-code</code>)</td>
+<td><code>validate-framework.py</code>; ma trận test (<code>quality-gate.cjs validate-plan</code>, <code>render-plan.cjs --check</code>); <code>node --test scripts/ci/tests</code>; SRS sinh lại từ LaTeX không đổi (<code>srs_tex2html.py</code>, <code>srs_tex2docs.py</code> + <code>git diff --exit-code</code>). Tài liệu là HTML nguồn (CR-103), không có bước sinh từ Markdown</td>
 </tr>
 <tr>
 <td><code>backend</code></td>
@@ -100,7 +104,7 @@ ul.dir{columns:2;font-size:14px}
 </tbody>
 </table>
 <p>Bước <code>pytest</code> toàn bộ bảo đảm test mới của collaborator luôn chạy, kể cả khi chưa được đăng ký trong <code>test-matrix.json</code>; <code>quality-gate</code> vẫn chạy riêng để tạo bằng chứng truy vết theo phase.</p>
-<p>File hỗ trợ: <a href="../../.github/pull_request_template.html">pull_request_template.md</a> (checklist truy vết và ràng buộc B-10/B-12/B-18), <a href="../../.github/CODEOWNERS">CODEOWNERS</a> (mọi thay đổi cần review của <code>@toilatrung</code>), <a href="../../.github/dependabot.yml">dependabot.yml</a> (github-actions, uv, npm, hằng tuần).</p>
+<p>File hỗ trợ: <a href="../../.github/pull_request_template.md">pull_request_template.md</a> (checklist truy vết và ràng buộc B-10/B-12/B-18), <a href="../../.github/CODEOWNERS">CODEOWNERS</a> (mọi thay đổi cần review của <code>@toilatrung</code>), <a href="../../.github/dependabot.yml">dependabot.yml</a> (github-actions, uv, npm, hằng tuần).</p>
 <p>Cấu hình bảo vệ <code>main</code> trên GitHub (làm ở Settings/Rulesets, không nằm trong YAML): bắt buộc PR, bắt buộc 3 status check <code>framework</code>, <code>backend</code>, <code>frontend</code>, nhánh phải cập nhật với <code>main</code>, ít nhất 1 review và review của Code Owner, chặn force-push và xoá nhánh. Repo private cần gói GitHub Pro/Team để bật branch protection/rulesets.</p>
 <h2 id="dong-i-cicd">Dòng đi CI/CD</h2>
 <p>PR → quality checks → build artifacts cùng commit → phase tests + reference/evaluation khi đã có → review QA độc lập → staging smoke/migration rehearsal → approval environment → production hook → smoke → rollback hook khi deploy/smoke lỗi.</p>
@@ -119,11 +123,10 @@ ul.dir{columns:2;font-size:14px}
 </ol>
 <p>Environment evaluation cần TEST_DATABASE_URL, TEST_CELERY_BROKER_URL/RESULT_BACKEND, TEST_OBJECT_STORAGE_ENDPOINT_URL/ACCESS_KEY/SECRET_KEY và TEST_OBJECT_STORAGE_BUCKET của hạ tầng kiểm thử. Fixture phải dùng LABELX_TEST_NAMESPACE theo run/attempt; workflow serializes evaluation jobs để tránh chạy chung database/reference mutable. Raw logs nằm private, export-evidence chỉ publish counters/checksum/case IDs đã redacted. Credentials không đưa vào policy example hoặc source.</p>
 <h2 id="secrets-va-artifact">Secrets và artifact</h2>
-<p>PR jobs không có CVAT/model credentials. GitHub token chỉ contents:read/actions:read khi cần tải evidence; không pull_request_target, không token write mặc định. Không upload .env, token, ảnh, held-out hay prompt chứa dữ liệu riêng. Cache npm/uv chỉ dependency, không dataset/model riêng. CI artifact retention theo setting repository; đây không thay policy giữ snapshot/evidence/reference của sản phẩm.</p>
+<p>PR jobs không có CVAT/model credentials. GitHub token chỉ contents:read/actions:read khi cần tải evidence; không token write mặc định; ngoại lệ duy nhất là <code>pr-approval.yml</code> (CR-102) dùng <code>pull_request_target</code>, chỉ checkout nhánh mặc định và chỉ ghi commit status. Không upload .env, token, ảnh, held-out hay prompt chứa dữ liệu riêng. Cache npm/uv chỉ dependency, không dataset/model riêng. CI artifact retention theo setting repository; đây không thay policy giữ snapshot/evidence/reference của sản phẩm.</p>
 <h2 id="lenh-local">Lệnh local</h2>
 <pre class="highlight"><code class="language-bash">make check   # lint, typecheck, test, validate-kit (cần make infra-up)
-uv run --no-project --with markdown --with pymdown-extensions python scripts/md2html.py docs .agent
-python3 scripts/srs_tex2html.py &amp;&amp; python3 scripts/srs_tex2md.py
+python3 scripts/srs_tex2html.py &amp;&amp; uv run --no-project --with markdown --with pymdown-extensions python scripts/srs_tex2docs.py
 node --test scripts/ci/tests/*.test.cjs
 node scripts/ci/quality-gate.cjs validate-plan
 node scripts/ci/render-plan.cjs --check
@@ -136,6 +139,6 @@ node scripts/ci/quality-gate.cjs run --phase p0_snapshot</code></pre>
 <li><a href="https://docs.astral.sh/uv/guides/integration/github/">uv GitHub Actions</a>: uv sync --frozen và setup action.</li>
 <li><a href="https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers">GitHub service PostgreSQL</a>: DB tạm và healthcheck.</li>
 <li><a href="https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments">GitHub environments</a>: required reviewers/prevent self-review phải cấu hình ngoài YAML.</li>
-<li><a href="../09-testing/test-strategy.html">Test strategy</a>, <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>, SRS AC-01…AC-11 và NFR.</li>
+<li><a href="../09-testing/test-strategy.html">Test strategy</a>, <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>, SRS AC-01…AC-11 và NFR.</li>
 </ul>
 </article></main></body></html>

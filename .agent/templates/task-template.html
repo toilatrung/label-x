@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Task Template — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/templates/task-template.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="task-template">
+<meta name="labelx:title" content="Task Template">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[task, execution, template]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / task-template</span><span class="sp"></span>
-<a href="task-template.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / task-template</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>task-template</span><b>title</b><span>Task Template</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[task, execution, template]</span><b>priority</b><span>2</span></div>
 <h1 id="task-template">Task Template</h1>
@@ -75,7 +79,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Context Package</strong>: <code>&lt;path&gt;</code></li>
-<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.md#&lt;epic-anchor&gt;</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#&lt;epic-anchor&gt;</code></li>
 <li><strong>Decisions</strong>: <code>&lt;paths-or-none&gt;</code></li>
 <li><strong>Risks</strong>: <code>&lt;paths-or-none&gt;</code></li>
 <li><strong>Blockers</strong>: <code>&lt;paths-or-none&gt;</code></li>
@@ -96,7 +100,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.md</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
@@ -108,7 +112,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="output-requirements">Output Requirements</h2>
 <ul>
-<li>Register the task in <code>.agent/execution/task-board.md</code>.</li>
+<li>Register the task in <code>.agent/execution/task-board.html</code>.</li>
 <li>Preserve every heading in this template.</li>
 <li>Replace every <code>&lt;required...&gt;</code> placeholder; use <code>none</code> only where explicitly allowed.</li>
 </ul>

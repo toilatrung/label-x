@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Epics — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/planning/epics.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="epics-v1">
+<meta name="labelx:title" content="Epics">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[epics, planning]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / epics</span><span class="sp"></span>
-<a href="epics.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / epics</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>epics-v1</span><b>title</b><span>Epics</span><b>type</b><span>planning</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[epics, planning]</span><b>priority</b><span>2</span></div>
 <h1 id="epics">Epics</h1>
@@ -306,8 +310,8 @@ ul.dir{columns:2;font-size:14px}
 </tbody>
 </table>
 <h2 id="epic-details">Epic Details</h2>
-<p>Mỗi epic giữ cấu trúc của <code>.agent/templates/epic-template.md</code>. Không epic nào được mở rộng task khi còn <code>EPIC_PROPOSED</code>.</p>
-<p>Quy tắc bổ sung theo <code>.agent/governance/decisions/DEC-002.md</code> (2026-10-06):</p>
+<p>Mỗi epic giữ cấu trúc của <code>.agent/templates/epic-template.html</code>. Không epic nào được mở rộng task khi còn <code>EPIC_PROPOSED</code>.</p>
+<p>Quy tắc bổ sung theo <code>.agent/governance/decisions/DEC-002.html</code> (2026-10-06):</p>
 <ul>
 <li><strong>Ký epic</strong>: một epic chỉ chuyển <code>EPIC_READY</code> khi Product Owner ghi chữ ký vào trường <strong>PO Sign-off</strong> (người, ngày) và mọi task của epic có developer được gán (BLOCKER-001).</li>
 <li><strong>Frontend thuộc phạm vi epic</strong>: epic có màn hình gồm cả backend lẫn frontend (dòng <code>Frontend:</code> trong Included); epic chỉ xong khi màn hình chạy trên API thật.</li>
@@ -353,10 +357,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Main, ContextBarStates, WorkflowPermissions, AnalysisConfig, RulesThresholds</li>
@@ -421,12 +425,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_1">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Main, WorkflowPermissions, TopBar, FlowNav, NavigationMenu, ContextBarStates</li>
 </ul>
 <h4 id="acceptance-criteria_1">Acceptance Criteria</h4>
@@ -486,12 +490,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_2">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-008</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, RulesThresholds</li>
 </ul>
 <h4 id="acceptance-criteria_2">Acceptance Criteria</h4>
@@ -558,10 +562,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_3">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-006</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Snapshot, SnapshotHistory, Main</li>
@@ -622,10 +626,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_4">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: — (dùng trong Benchmark, ReviewWorkspace)</li>
@@ -690,12 +694,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_5">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-002</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark, Calibration</li>
 </ul>
 <h4 id="acceptance-criteria_5">Acceptance Criteria</h4>
@@ -754,12 +758,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_6">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-003</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark, Calibration</li>
 </ul>
 <h4 id="acceptance-criteria_6">Acceptance Criteria</h4>
@@ -826,10 +830,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_7">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ExecutionHistory</li>
@@ -890,10 +894,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_8">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, RulesThresholds, ExecutionHistory</li>
@@ -956,12 +960,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_9">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, AnalysisConfig, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_9">Acceptance Criteria</h4>
@@ -1026,10 +1030,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_10">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: ReviewQueues, AuditSampling, AnalysisConfig</li>
@@ -1089,10 +1093,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_11">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ModelsGuidelines, ExecutionHistory</li>
@@ -1153,10 +1157,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_12">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-005</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: ReviewQueues</li>
@@ -1223,12 +1227,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_13">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-004, RISK-005</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ReviewWorkspace</li>
 </ul>
 <h4 id="acceptance-criteria_13">Acceptance Criteria</h4>
@@ -1288,12 +1292,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_14">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-008</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Escalations</li>
 </ul>
 <h4 id="acceptance-criteria_14">Acceptance Criteria</h4>
@@ -1355,12 +1359,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_15">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ReworkTracking, SnapshotHistory, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_15">Acceptance Criteria</h4>
@@ -1420,12 +1424,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_16">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Calibration, PerformanceEvaluation, ModelsGuidelines</li>
 </ul>
 <h4 id="acceptance-criteria_16">Acceptance Criteria</h4>
@@ -1484,12 +1488,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_17">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-002, RISK-003</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark</li>
 </ul>
 <h4 id="acceptance-criteria_17">Acceptance Criteria</h4>
@@ -1550,12 +1554,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_18">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-004, RISK-009</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: PerformanceEvaluation, AuditSampling, ReviewWorkspace</li>
 </ul>
 <h4 id="acceptance-criteria_18">Acceptance Criteria</h4>
@@ -1615,12 +1619,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_19">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001, RISK-002, RISK-004, RISK-005, RISK-007, RISK-009, RISK-010</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: PerformanceEvaluation</li>
 </ul>
 <h4 id="acceptance-criteria_19">Acceptance Criteria</h4>
@@ -1677,10 +1681,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_20">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: QualityReport, PerformanceEvaluation</li>
@@ -1743,12 +1747,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_21">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: QualityGate, RulesThresholds</li>
 </ul>
 <h4 id="acceptance-criteria_21">Acceptance Criteria</h4>
@@ -1809,12 +1813,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_22">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.md</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: —</li>
 </ul>
 <h4 id="acceptance-criteria_22">Acceptance Criteria</h4>
@@ -1872,10 +1876,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_23">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md, .agent/governance/decisions/DEC-002.md, .agent/governance/decisions/DEC-003.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-009, RISK-010</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Toàn bộ màn trong SRS bảng 9.1</li>

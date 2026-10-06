@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent-Driven SDLC Framework — LabelX</title>
+<meta name="labelx:id" content="agent-driven-sdlc-framework">
+<meta name="labelx:title" content="Agent-Driven SDLC Framework">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[agents, governance, sdlc]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>AGENT</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>agent-driven-sdlc-framework</span><b>title</b><span>Agent-Driven SDLC Framework</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>repository</span><b>tags</b><span>[agents, governance, sdlc]</span><b>priority</b><span>1</span></div>
+<h1 id="agent-driven-sdlc-framework">Agent-Driven SDLC Framework</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Define the authoritative operating policy for task-driven agent work, lifecycle control, governance, reporting, and traceability in this repository.</p>
+<h2 id="ownership-and-access">Ownership and Access</h2>
+<ul>
+<li><strong>Owner</strong>: repository maintainers</li>
+<li><strong>Allowed Writers</strong>: repository maintainers and governance agents explicitly authorized to change operating policy</li>
+<li><strong>Allowed Readers</strong>: all authorized repository users and agents</li>
+<li><strong>Write Requirement</strong>: policy changes require an approved change request in <code>.agent/governance/change-requests/</code></li>
+</ul>
+<h2 id="agent-roles">Agent Roles</h2>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Responsibility</th>
+<th>Authorized Operating Writes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>coordinator</code></td>
+<td>Select authorized work, assemble context, and synchronize execution state</td>
+<td><code>.agent/execution/current-context.html</code>, <code>.agent/execution/task-board.html</code>, <code>.agent/execution/sessions-history.html</code></td>
+</tr>
+<tr>
+<td><code>planner</code></td>
+<td>Maintain roadmap, milestones, epics, and dependency integrity</td>
+<td><code>.agent/planning/</code></td>
+</tr>
+<tr>
+<td><code>implementer</code></td>
+<td>Execute authorized tasks and produce implementation evidence</td>
+<td>task-scoped files and <code>.agent/reports/implementation/</code></td>
+</tr>
+<tr>
+<td><code>reviewer</code></td>
+<td>Independently assess artifacts and record findings</td>
+<td><code>.agent/reports/review/</code>, issue records when findings require tracking</td>
+</tr>
+<tr>
+<td><code>qa</code></td>
+<td>Execute quality checks and record release recommendations</td>
+<td><code>.agent/reports/qa/</code>, issue and blocker records created from evidence</td>
+</tr>
+<tr>
+<td><code>governance</code></td>
+<td>Triage governance records and record authorized approvals</td>
+<td><code>.agent/governance/</code></td>
+</tr>
+<tr>
+<td><code>release-manager</code></td>
+<td>Authorize and record release execution</td>
+<td><code>.agent/reports/releases/</code> and release-related execution records</td>
+</tr>
+</tbody>
+</table>
+<p>One agent may hold multiple roles only when repository policy permits it. Approval and independent-review duties must not be self-approved unless an explicit governance record authorizes the exception.</p>
+<h2 id="context-retrieval-policy">Context Retrieval Policy</h2>
+<ul>
+<li>Context retrieval is task-driven. Select context from the active task's domain, module, parent epic, dependencies, governance links, and required outputs.</li>
+<li>There is no fixed required reading order.</li>
+<li>Treat <code>AGENT.html</code> as governing policy, not as the first item in an ordered context bundle.</li>
+<li>Read <code>.agent/execution/current-context.html</code> only when shared execution state is relevant to the task.</li>
+<li>Prefer metadata lookup by <code>id</code>, <code>title</code>, <code>type</code>, <code>domain</code>, <code>module</code>, <code>tags</code>, and <code>priority</code> before broader content search.</li>
+<li>Use the context package template for work requiring an explicit bounded context set.</li>
+<li>Repository-wide scans are allowed only for an explicitly authorized audit, migration, or validation task.</li>
+</ul>
+<h2 id="metadata-standard">Metadata Standard</h2>
+<p>Authorized by <code>.agent/governance/change-requests/CR-103.html</code>: HTML is the only document format for <code>docs/</code>, <code>.agent/</code>, and this policy. Markdown files are not created there (CR-103); files that tools require in Markdown (<code>CLAUDE.md</code>, <code>src/frontend/AGENTS.md</code>, skill <code>SKILL.md</code>, <code>README.md</code>, <code>.github/pull_request_template.md</code>) are the only exceptions. HTML files are the source and are edited directly.</p>
+<p>Every document must declare these non-empty fields as <code>&lt;meta&gt;</code> tags in <code>&lt;head&gt;</code>:</p>
+<pre class="highlight"><code class="language-html">&lt;meta name="labelx:id" content="unique-stable-id"&gt;
+&lt;meta name="labelx:title" content="Human-Readable Title"&gt;
+&lt;meta name="labelx:type" content="governance | planning | execution | report | intelligence | reference"&gt;
+&lt;meta name="labelx:domain" content="project-domain"&gt;
+&lt;meta name="labelx:module" content="owning-module-or-repository"&gt;
+&lt;meta name="labelx:tags" content="[searchable, labels]"&gt;
+&lt;meta name="labelx:priority" content="1"&gt;</code></pre>
+<ul>
+<li><code>id</code> must be unique and stable for the life of the document.</li>
+<li><code>priority</code> must be <code>1 | 2 | 3 | 4 | 5</code>, where <code>1</code> is highest.</li>
+<li><code>module</code> must be a stable module identifier or <code>repository</code> when no narrower module applies.</li>
+<li>Headings defined by an operating file or template must be preserved exactly for machine parsing: <code>&lt;h2&gt;</code> for stable headings, fields as <code>&lt;li&gt;&lt;strong&gt;Field&lt;/strong&gt;: &lt;code&gt;value&lt;/code&gt;&lt;/li&gt;</code>, records as <code>&lt;table&gt;</code> rows.</li>
+<li>New records start from a copy of the matching <code>.agent/templates/*.html</code> template.</li>
+</ul>
+<h2 id="execution-lifecycle">Execution Lifecycle</h2>
+<ol>
+<li>Select an authorized epic or task.</li>
+<li>Retrieve task-driven context and validate dependencies, governance constraints, and ownership.</li>
+<li>Set the task to <code>in-progress</code> and synchronize current context.</li>
+<li>Execute only the authorized scope.</li>
+<li>Produce implementation evidence and required reports.</li>
+<li>Complete independent review and QA when required.</li>
+<li>Update governance records, intelligence mappings, and execution state.</li>
+<li>Set the task to a terminal status only after its completion criteria are satisfied.</li>
+</ol>
+<h2 id="task-lifecycle">Task Lifecycle</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+<li><code>pending -&gt; in-progress</code> requires an <code>EPIC_IN_PROGRESS</code> parent, an owner, and sufficient context.</li>
+<li><code>in-progress -&gt; blocked</code> requires a linked blocker record.</li>
+<li><code>in-progress -&gt; review</code> requires implementation evidence.</li>
+<li><code>review -&gt; done</code> requires acceptance criteria and required review or QA evidence to pass.</li>
+<li><code>blocked -&gt; in-progress</code> requires verified blocker resolution.</li>
+<li><code>cancelled</code> requires an owner-recorded rationale; <code>done</code> and <code>cancelled</code> are terminal.</li>
+</ul>
+<h2 id="epic-expansion-rule">Epic Expansion Rule</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED</code></li>
+<li>Tasks may be created only when the parent epic is <code>EPIC_READY</code>.</li>
+<li>Tasks may enter <code>in-progress</code> only when the parent epic is <code>EPIC_IN_PROGRESS</code>.</li>
+<li><code>EPIC_READY</code> requires an owner, bounded scope, acceptance criteria, dependencies, and governance links.</li>
+<li><code>EPIC_DONE</code> requires all child tasks to be <code>done</code> or formally <code>cancelled</code> and all epic completion criteria to pass.</li>
+</ul>
+<h2 id="governance-rules">Governance Rules</h2>
+<ul>
+<li>Runtime issues, blockers, change requests, decisions, and risks belong only in their matching <code>.agent/governance/</code> directories.</li>
+<li>Reusable governance templates belong only in <code>.agent/templates/</code>.</li>
+<li>Governance records must identify owner, status, related work, evidence, and resolution or disposition.</li>
+<li>Approval records are append-only evidence after acceptance; corrections require a superseding record or governed amendment.</li>
+<li>Governance agents resolve conflicting records using approved decisions and change requests, not file timestamps alone.</li>
+</ul>
+<h2 id="report-rules">Report Rules</h2>
+<ul>
+<li>Runtime implementation, review, QA, and release reports belong only in their matching <code>.agent/reports/</code> directories.</li>
+<li>Reusable report templates belong only in <code>.agent/templates/</code>.</li>
+<li>Reports must identify owner, author or reviewer, scope, status, evidence, findings, and completion outcome.</li>
+<li>Final reports are immutable evidence; corrections require a superseding report that links the prior report.</li>
+<li>A report must not claim evidence outside its declared scope.</li>
+</ul>
+<h2 id="intelligence-rules">Intelligence Rules</h2>
+<ul>
+<li>Code Graph files describe modules, dependencies, API routes, database usage, and functions using repository evidence.</li>
+<li>Git Nexus files map commits to tasks and decisions and record regressions.</li>
+<li>Intelligence artifacts are derived and must link authoritative sources, tasks, governance records, reports, or commits.</li>
+<li>When intelligence conflicts with source or approved governance evidence, the authoritative evidence wins and intelligence must be regenerated or corrected.</li>
+</ul>
+<h2 id="change-request-rule">Change Request Rule</h2>
+<ul>
+<li>An approved change request is required before changing baselined requirements, contracts, architecture, roadmap commitments, operating policy, or approved scope.</li>
+<li>Only <code>approved</code> change requests authorize implementation; <code>draft</code>, <code>proposed</code>, <code>under-review</code>, and <code>rejected</code> records do not.</li>
+<li>Implementation must remain within the approved change and must link the change request from affected tasks, reports, and decisions.</li>
+<li>A material deviation requires a new or superseding change request before work continues.</li>
+</ul>
+<h2 id="per-user-agent-files">Per-User Agent Files</h2>
+<p>Authorized by <code>.agent/governance/change-requests/CR-100.html</code>. Purpose: prevent merge conflicts when several developers open pull requests at the same time that touch shared state under <code>.agent/</code>.</p>
+<ul>
+<li><strong>Integrators</strong>: the project PO Trịnh Quang Trung (<code>@toilatrung</code>) and users the PO assigns the QC duty, listed one GitHub username per line in <code>.github/agent-integrators.txt</code>. Only the PO changes that list.</li>
+<li><strong>Canonical file</strong>: any file under <code>.agent/</code> whose name does not end in <code>-@&lt;username&gt;</code> (for example <code>.agent/execution/current-context.html</code>). Only integrators create, modify, rename, or delete canonical files.</li>
+<li><strong>Per-user file</strong>: <code>&lt;canonical-name&gt;-@&lt;username&gt;.&lt;ext&gt;</code> in the same directory as the canonical file, where <code>&lt;username&gt;</code> is the author's GitHub username in lower case (example: <code>.agent/execution/current-context-@dev1.html</code>). A developer or coding agent on a developer machine writes only its own per-user files and never edits another user's per-user file.</li>
+<li><strong>Content rules</strong>:</li>
+<li>Shared execution, planning, and intelligence files (<code>current-context</code>, <code>task-board</code>, <code>sessions-history</code>, <code>roadmap</code>, <code>epics</code>, <code>milestones</code>, <code>dependency-graph</code>, code-graph and git-nexus maps): the per-user file holds only the author's additions or changes, keeps the canonical headings and table columns, and states the base commit it was written against.</li>
+<li>Governance and report records: a new record is created as <code>&lt;RECORD-ID&gt;-@&lt;username&gt;.md</code> using the matching template; a proposed change to an existing record is a full copy <code>&lt;RECORD-ID&gt;-@&lt;username&gt;.md</code> with the changes applied. Both must pass <code>make validate-kit</code>.</li>
+<li>Metadata <code>id</code> of a per-user file is <code>&lt;canonical-id&gt;-&lt;username&gt;</code> so ids stay unique.</li>
+<li>Per-user files are HTML like every other document (CR-103).</li>
+<li><strong>Integration</strong>: an integrator merges per-user files into the canonical files in a dedicated pull request, deletes the merged per-user files in the same pull request, resolves conflicts using the Conflict Handling order below, and records the integration in <code>.agent/execution/sessions-history.html</code>.</li>
+<li><strong>Context retrieval</strong>: agents read the canonical file first, then the per-user files of the same name when the current task depends on in-flight work by other users.</li>
+<li><strong>Enforcement</strong>: the <code>framework</code> CI job runs <code>scripts/ci/check-agent-ownership.cjs</code> on every pull request and fails when a non-integrator adds, modifies, renames, or deletes any <code>.agent/</code> path that is not their own per-user file, or modifies <code>AGENT.html</code> or <code>.github/agent-integrators.txt</code>. <code>.github/CODEOWNERS</code> requires integrator review for canonical <code>.agent/</code> files.</li>
+</ul>
+<h2 id="pull-request-approval">Pull Request Approval</h2>
+<p>Authorized by <code>.agent/governance/change-requests/CR-102.html</code>. This section is the explicit governance record that permits the Product Owner self-approval exception referenced in Agent Roles.</p>
+<ul>
+<li><strong>Approvers</strong>: GitHub usernames in <code>.github/pr-approvers.txt</code>: the PO Trịnh Quang Trung (<code>@toilatrung</code>) and the QA/QC approver Nguyễn Đức Hà. Only the PO changes that list.</li>
+<li><strong>PO self-approval</strong>: a user flagged <code>self-approve</code> in that list (only the PO) may review and approve their own pull requests.</li>
+<li><strong>Everyone else</strong>: every pull request by any other author, human or bot, requires review, and QA/QC confirmation signed by an approver other than the author before it is approved or merged. An approver never approves their own pull request unless flagged <code>self-approve</code>.</li>
+<li><strong>Approval signature</strong>: the approver comments exactly <code>Đã xem và duyệt</code> on the pull request when it passes. Commits pushed after that comment void it; the approver reviews again and comments again. Change requests are given as review comments without that phrase.</li>
+<li><strong>Enforcement</strong>: <code>.github/workflows/pr-approval.yml</code> runs <code>scripts/ci/check-pr-approval.cjs</code> on pull request and comment events and sets the commit status <code>pr-approval</code> on the head commit; <code>pr-approval</code> is a required status check for <code>main</code>.</li>
+</ul>
+<h2 id="update-triggers">Update Triggers</h2>
+<p>Update this file only when an approved policy change modifies roles, lifecycle rules, metadata, governance, reporting, intelligence, context retrieval, or forbidden actions.</p>
+<h2 id="relationships">Relationships</h2>
+<ul>
+<li>Planning state: <code>.agent/planning/</code></li>
+<li>Execution state: <code>.agent/execution/</code></li>
+<li>Runtime governance: <code>.agent/governance/</code></li>
+<li>Runtime reports: <code>.agent/reports/</code></li>
+<li>Reusable templates: <code>.agent/templates/</code></li>
+<li>Derived intelligence: <code>.agent/intelligence/</code></li>
+<li>Domain documentation: <code>docs/</code></li>
+</ul>
+<h2 id="conflict-handling">Conflict Handling</h2>
+<ol>
+<li>Stop the affected state transition or write.</li>
+<li>Preserve both conflicting sources and record the conflict in an issue or blocker.</li>
+<li>Apply precedence: approved governance record, authoritative contract or policy, current authorized task, derived report, derived intelligence.</li>
+<li>Assign a governance owner and resolve through a decision or change request when precedence is insufficient.</li>
+<li>Update dependent files only after the resolution is recorded.</li>
+</ol>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not execute work without an authorized task, owner, and sufficient task-driven context.</li>
+<li>Do not use or introduce a fixed required reading order.</li>
+<li>Do not expand an epic or transition a task contrary to the defined lifecycle.</li>
+<li>Do not bypass approvals, self-approve restricted actions, or silently alter governance history.</li>
+<li>Do not store reusable templates in runtime governance or report directories.</li>
+<li>Do not fabricate status, test results, review evidence, report evidence, or commit links.</li>
+<li>Do not expose secrets, credentials, personal data, or restricted information.</li>
+<li>Do not perform destructive or irreversible actions without explicit authorization.</li>
+<li>Do not modify protected source directories during framework-only maintenance.</li>
+<li>Do not modify canonical <code>.agent/</code> files or another user's per-user file unless you are an integrator listed in <code>.github/agent-integrators.txt</code>.</li>
+<li>Do not approve or merge a pull request without the approval comment required by Pull Request Approval, and do not post that comment on behalf of an approver.</li>
+</ul>
+</article></main></body></html>

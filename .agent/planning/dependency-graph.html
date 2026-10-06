@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dependency Graph — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/planning/dependency-graph.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="dep-graph-v1">
+<meta name="labelx:title" content="Dependency Graph">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[dependencies, epics, milestones]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / dependency-graph</span><span class="sp"></span>
-<a href="dependency-graph.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / dependency-graph</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>dep-graph-v1</span><b>title</b><span>Dependency Graph</span><b>type</b><span>planning</span><b>domain</b><span>architecture</span><b>module</b><span>planning</span><b>tags</b><span>[dependencies, epics, milestones]</span><b>priority</b><span>2</span></div>
 <h1 id="dependency-graph">Dependency Graph</h1>
@@ -516,7 +520,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="notes">Notes</h2>
 <ul>
-<li>Lịch theo <code>CR-101</code> (duyệt 2026-10-06): E-01 07/10 → M-01 09/10 → M-02 14/10 → M-03 + reference + score khoá 16/10 → code freeze + preregistration 19/10 → thí nghiệm 20–23/10 → KPI/báo cáo/gate 26/10 → nghiệm thu E-24 27/10. Ngày mục tiêu từng epic ở <code>.agent/planning/epics.md</code>.</li>
+<li>Lịch theo <code>CR-101</code> (duyệt 2026-10-06): E-01 07/10 → M-01 09/10 → M-02 14/10 → M-03 + reference + score khoá 16/10 → code freeze + preregistration 19/10 → thí nghiệm 20–23/10 → KPI/báo cáo/gate 26/10 → nghiệm thu E-24 27/10. Ngày mục tiêu từng epic ở <code>.agent/planning/epics.html</code>.</li>
 <li>
 <p>Với GT là nhãn gốc BDD100K (CR-101), nhánh reference <code>E-06 → E-07 → E-17 → E-18</code> không còn phụ thuộc nhân lực gán GT; nhánh Detector phụ thuộc E-10 (Faster R-CNN công khai, BLOCKER-005 đã giải quyết).</p>
 </li>

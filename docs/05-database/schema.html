@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Schema PostgreSQL LabelX QC — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/05-database/schema.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="database-schema">
+<meta name="labelx:title" content="Schema PostgreSQL LabelX QC">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="database">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[database, postgresql, schema, idempotency, audit]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,15 +42,14 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / schema</span><span class="sp"></span>
-<a href="schema.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / schema</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>database-schema</span><b>title</b><span>Schema PostgreSQL LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>quality-control</span><b>tags</b><span>[database, postgresql, schema, idempotency, audit]</span><b>priority</b><span>1</span></div>
 <h1 id="schema-postgresql">Schema PostgreSQL</h1>
 <h2 id="1-nguon-va-quy-uoc">1. Nguồn và quy ước</h2>
 <ul>
 <li>Schema dựa trên ERD khái niệm của SRS (<code>fig:erd</code> trong <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>) và A §22 (Domain Data Model). Chỉ lấy phần của A khớp SRS; xem mục 7.</li>
-<li>Bảng được tạo bằng Django model. Tên bảng ở đây là <strong>tên logic</strong> (đề xuất <code>db_table</code>). Mỗi bảng thuộc một app trong <a href="../02-architecture/system-design.html">system-design.md</a> mục 3.</li>
+<li>Bảng được tạo bằng Django model. Tên bảng ở đây là <strong>tên logic</strong> (đề xuất <code>db_table</code>). Mỗi bảng thuộc một app trong <a href="../02-architecture/system-design.html">system-design.html</a> mục 3.</li>
 <li>Khoá chính dùng <code>BigAutoField</code> (<code>DEFAULT_AUTO_FIELD</code>). Thời gian là <code>timestamptz</code>. <code>jsonb</code> chỉ dùng cho dữ liệu có cấu trúc thay đổi theo version (features, contributions, payload cấu hình).</li>
 <li>Toạ độ box là <code>double precision</code> theo pixel ảnh gốc (<code>x1, y1, x2, y2</code>) (SRS §9.4).</li>
 <li>Bản ghi bất biến (candidate, evidence, decision, audit) không có API sửa. Audit còn bị chặn ở mức DB (mục 5).</li>
@@ -364,7 +368,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>idempotency_record</code></td>
 <td><code>user_id</code>, <code>key</code>, <code>method</code>, <code>path</code>, <code>request_hash</code>, <code>status_code</code>, <code>response_body</code>, <code>created_at</code></td>
 <td>UNIQUE <code>(user_id, key)</code></td>
-<td><a href="../04-api/rest-api.html">rest-api.md</a> mục 3</td>
+<td><a href="../04-api/rest-api.html">rest-api.html</a> mục 3</td>
 </tr>
 <tr>
 <td><code>audit_log</code></td>
@@ -380,7 +384,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Mức DB:</li>
 <li><code>REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM labelx_app</code>.</li>
 <li>Thêm trigger <code>BEFORE UPDATE OR DELETE … RAISE EXCEPTION</code>.</li>
-<li>Hai lệnh trên được tạo bằng migration <code>RunSQL</code> (xem <a href="migrations.html">migrations.md</a>).</li>
+<li>Hai lệnh trên được tạo bằng migration <code>RunSQL</code> (xem <a href="migrations.html">migrations.html</a>).</li>
 <li>Audit được ghi trong cùng transaction với thao tác. Settings đặt <code>ATOMIC_REQUESTS=True</code>; service gọi <code>audit.record()</code> trước khi kết thúc view.</li>
 <li>Nối hash chain (A ADR-06 gợi ý) <strong>chưa chốt</strong>.</li>
 <li>Thời hạn lưu: <strong>TBD-15</strong>. Không có job xoá audit.</li>
@@ -396,7 +400,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td><code>review_item (run_id, queue, state, rank)</code></td>
-<td>Cấp lease theo thứ tự rank (<a href="queries.html">queries.md</a> Q1)</td>
+<td>Cấp lease theo thứ tự rank (<a href="queries.html">queries.html</a> Q1)</td>
 </tr>
 <tr>
 <td><code>review_lease (status, expires_at)</code></td>
@@ -451,7 +455,7 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>Issue.version</code> (If-Match)</td>
 <td>Không có</td>
-<td>Không áp dụng If-Match (<a href="../04-api/rest-api.html">rest-api.md</a> mục 3)</td>
+<td>Không áp dụng If-Match (<a href="../04-api/rest-api.html">rest-api.html</a> mục 3)</td>
 </tr>
 <tr>
 <td><code>Release</code>, <code>ReleaseManifest</code>, <code>QualityReport</code>–<code>GateEvaluation</code></td>

@@ -4,7 +4,7 @@ Quality Control cho annotation trên CVAT: snapshot → engine kiểm tra → re
 
 ## Cài đặt cho dev mới
 
-Máy chưa có công cụ: xem [env-setup.md](env-setup.md). Không cần Make để khởi tạo. Script cài công cụ thiếu khi chọn `InstallGlobal`, rồi tạo cấu hình, cài dependency theo lockfile, bật dịch vụ, migrate và build frontend.
+Máy chưa có công cụ: xem [env-setup.html](env-setup.html). Không cần Make để khởi tạo. Script cài công cụ thiếu khi chọn `InstallGlobal`, rồi tạo cấu hình, cài dependency theo lockfile, bật dịch vụ, migrate và build frontend.
 
 Windows (PowerShell, từ root project):
 
@@ -38,7 +38,7 @@ make help           # mọi lệnh
 | `infrastructure/` | Docker Compose dev: PostgreSQL 17, Redis 7, SeaweedFS (S3) |
 | `scripts/` | `init-develop-environment.ps1`/`.sh` bootstrap, `.mk` target Make, `validate-framework.py` của kit |
 | `docs/` | Tài liệu theo agentic-sdlc-kit; SRS LaTeX ở `docs/label-x_system-requirement-specification/` |
-| `.agent/` | Planning, execution, governance, reports theo [agentic-sdlc-kit](https://github.com/toilatrung/agentic-sdlc-kit) — xem `AGENT.md` |
+| `.agent/` | Planning, execution, governance, reports theo [agentic-sdlc-kit](https://github.com/toilatrung/agentic-sdlc-kit) — xem `AGENT.html` |
 | `docs/design/` | Design System và 25 màn hình (nguồn chuẩn H) |
 
-Quyết định stack: `.agent/governance/decisions/DEC-001.md`.
+Quyết định stack: `.agent/governance/decisions/DEC-001.html`.

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aggregate của module Quality Control — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/03-domain/aggregates.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="domain-aggregates">
+<meta name="labelx:title" content="Aggregate của module Quality Control">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="domain">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[domain, aggregates, invariants, state-machine]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 03-domain / aggregates</span><span class="sp"></span>
-<a href="aggregates.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 03-domain / aggregates</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>domain-aggregates</span><b>title</b><span>Aggregate của module Quality Control</span><b>type</b><span>reference</span><b>domain</b><span>domain</span><b>module</b><span>quality-control</span><b>tags</b><span>[domain, aggregates, invariants, state-machine]</span><b>priority</b><span>1</span></div>
 <h1 id="aggregate-cua-module-quality-control">Aggregate của module Quality Control</h1>
@@ -50,7 +54,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>H</strong>: màn hình chuẩn hành vi trong <a href="../design/screens/">docs/design/screens/</a>.</li>
 <li><strong>A/T</strong>: <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html">Quality_Control_Review_UX_Architecture.html</a>, <a href="../00-project/sources/QC_Engine_Review_Report.html">QC_Engine_Review_Report.html</a> — chỉ dùng khi không mâu thuẫn R/SRS/H.</li>
 </ul>
-<p>Thứ tự ưu tiên khi mâu thuẫn: R và SRS &gt; H &gt; A/T &gt; B. Value object dùng trong các aggregate ở <a href="value-objects.html">value-objects.md</a>; quy tắc tính toán liên aggregate ở <a href="services.html">services.md</a>.</p>
+<p>Thứ tự ưu tiên khi mâu thuẫn: R và SRS &gt; H &gt; A/T &gt; B. Value object dùng trong các aggregate ở <a href="value-objects.html">value-objects.html</a>; quy tắc tính toán liên aggregate ở <a href="services.html">services.html</a>.</p>
 <h2 id="1-nguyen-tac-chung">1. Nguyên tắc chung</h2>
 <table>
 <thead>
@@ -444,7 +448,7 @@ AuditLog (append-only) ─▶ mọi aggregate trên</code></pre>
 <li>Chỉ chạy trên reference đã khoá; <code>|E| &lt; E_min</code> ⇒ "không đủ mẫu", không kết luận (FR-EVL-10; TBD-K4).</li>
 <li>Từ chối dùng held-out để học tham số điểm; Detector có ảnh huấn luyện giao với held-out ⇒ chặn đánh giá (FR-EVL-05; AS-03).</li>
 <li>Kết quả bất biến; đổi tham số tạo evaluation run mới, kết quả cũ vẫn được báo cáo (SRS 07 §Đăng ký trước).</li>
-<li>Chi tiết phép đo: <a href="../12-ai/evaluation.html">../12-ai/evaluation.md</a>.</li>
+<li>Chi tiết phép đo: <a href="../12-ai/evaluation.html">../12-ai/evaluation.html</a>.</li>
 </ul>
 <h2 id="14-experiment-va-effortlog">14. Experiment và EffortLog</h2>
 <ul>

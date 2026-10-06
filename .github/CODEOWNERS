@@ -3,9 +3,9 @@
 /.github/                           @toilatrung
 /docs/label-x_system-requirement-specification/  @toilatrung
 
-# .agent/: file chính chỉ integrator (PO + QC trong .github/agent-integrators.txt) sửa — AGENT.md, CR-100.
+# .agent/: file chính chỉ integrator (PO + QC trong .github/agent-integrators.txt) sửa — AGENT.html, CR-100.
 # Khi PO giao QC, thêm username QC vào cuối hai dòng dưới.
-/AGENT.md                           @toilatrung
+/AGENT.html                           @toilatrung
 /.agent/                            @toilatrung
 # File riêng theo người dùng (<tên>-@<username>.*): không bắt buộc code owner review;
 # quyền tác giả do bước CI check-agent-ownership kiểm.

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monitoring LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/08-devops/monitoring.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="devops-monitoring">
+<meta name="labelx:title" content="Monitoring LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="devops">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[devops, monitoring, alerting, observability]">
+<meta name="labelx:priority" content="4">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,17 +42,16 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / monitoring</span><span class="sp"></span>
-<a href="monitoring.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / monitoring</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>devops-monitoring</span><b>title</b><span>Monitoring LabelX</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[devops, monitoring, alerting, observability]</span><b>priority</b><span>4</span></div>
 <h1 id="monitoring-labelx">Monitoring LabelX</h1>
 <p>Nội dung giám sát và cảnh báo nằm ở mục <strong>13-observability</strong>. Tài liệu này chỉ là điểm vào cho người vận hành.</p>
 <ul>
-<li><a href="../13-observability/index.html">../13-observability/index.md</a> — tổng quan, hiện trạng.</li>
-<li><a href="../13-observability/logging.html">../13-observability/logging.md</a> — log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code> (NFR-12).</li>
-<li><a href="../13-observability/metrics.html">../13-observability/metrics.md</a> — metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi, lease, effort.</li>
-<li><a href="../13-observability/alerts-and-slo.html">../13-observability/alerts-and-slo.md</a> — SLO đề xuất theo NFR (TBD-13) và cảnh báo.</li>
+<li><a href="../13-observability/index.html">../13-observability/index.html</a> — tổng quan, hiện trạng.</li>
+<li><a href="../13-observability/logging.html">../13-observability/logging.html</a> — log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code> (NFR-12).</li>
+<li><a href="../13-observability/metrics.html">../13-observability/metrics.html</a> — metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi, lease, effort.</li>
+<li><a href="../13-observability/alerts-and-slo.html">../13-observability/alerts-and-slo.html</a> — SLO đề xuất theo NFR (TBD-13) và cảnh báo.</li>
 </ul>
 <p>Hiện trạng: repo <strong>chưa có</strong> công cụ giám sát (Prometheus, Grafana, Sentry…) hay cấu hình <code>LOGGING</code> riêng trong Django. Hạ tầng dev có healthcheck cho PostgreSQL, Redis, SeaweedFS trong <code>infrastructure/docker-compose.dev.yml</code>, và <code>make infra-logs</code> để xem log hạ tầng.</p>
 </article></main></body></html>

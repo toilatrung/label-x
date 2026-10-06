@@ -1,5 +1,5 @@
 name: PR approval
-# Quy tắc duyệt PR (AGENT.md mục Pull Request Approval, CR-102). Ghi commit status "pr-approval"
+# Quy tắc duyệt PR (AGENT.html mục Pull Request Approval, CR-102). Ghi commit status "pr-approval"
 # lên head commit của PR; đặt "pr-approval" làm required status check của nhánh main.
 on:
   pull_request_target:
