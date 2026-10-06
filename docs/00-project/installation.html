@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Installing Agentic SDLC Kit — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/00-project/installation.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="agentic-sdlc-kit-installation">
+<meta name="labelx:title" content="Installing Agentic SDLC Kit">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="project">
+<meta name="labelx:module" content="installation">
+<meta name="labelx:tags" content="[installation, overlay, upgrade]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 00-project / installation</span><span class="sp"></span>
-<a href="installation.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 00-project / installation</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>agentic-sdlc-kit-installation</span><b>title</b><span>Installing Agentic SDLC Kit</span><b>type</b><span>reference</span><b>domain</b><span>project</span><b>module</b><span>installation</span><b>tags</b><span>[installation, overlay, upgrade]</span><b>priority</b><span>1</span></div>
 <h1 id="installing-agentic-sdlc-kit">Installing Agentic SDLC Kit</h1>
@@ -67,20 +71,20 @@ ul.dir{columns:2;font-size:14px}
 <ol>
 <li>Validate the source and target paths.</li>
 <li>Back up every existing overlay destination before copying.</li>
-<li>Copy reusable framework assets only: <code>AGENT.md</code>, <code>docs/</code>, <code>.agent/templates/</code>, <code>scripts/validate-framework.py</code>, the renamed distribution guide, and the kit license.</li>
+<li>Copy reusable framework assets only: <code>AGENT.html</code>, <code>docs/</code>, <code>.agent/templates/</code>, <code>scripts/validate-framework.py</code>, the renamed distribution guide, and the kit license.</li>
 <li>Initialize clean runtime state for the target project under <code>.agent/execution/</code>, <code>.agent/planning/</code>, and <code>.agent/intelligence/</code>.</li>
 <li>Create <code>.keep</code> files for runtime report and governance directories without copying any runtime records from the kit repository.</li>
 <li>Leave project-owned files and directories outside the overlay untouched.</li>
 <li>Run <code>python scripts/validate-framework.py</code> when a Python command is available.</li>
 <li>Print copied, backed-up, skipped, and validation results.</li>
 </ol>
-<p>The validator automatically detects overlay mode through <code>AGENTIC-SDLC-KIT.md</code>. In overlay mode, it validates kit-owned Markdown only; unrelated project Markdown is not required to adopt kit frontmatter.</p>
+<p>The validator automatically detects overlay mode through <code>AGENTIC-SDLC-KIT.html</code>. In overlay mode, it validates kit-owned HTML documents only (CR-103); metadata is read from <code>&lt;meta name="labelx:*"&gt;</code> tags.</p>
 <p>The installer does not copy runtime reports, runtime governance records, task-board state, current-context state, planning state, or intelligence state from the cloned kit repository. Those files are initialized fresh for the target project. If matching runtime files already exist in the target, the installer preserves them by default and records them as skipped. Use <code>--reset-runtime</code> for Bash or <code>-ResetRuntime</code> for PowerShell only when replacing target runtime state is intentional.</p>
 <h2 id="backup-behavior">Backup Behavior</h2>
 <p>Before replacing an existing destination, the installer creates a sibling backup using:</p>
 <pre class="highlight"><code class="language-text">&lt;original-path&gt;.backup-agentic-sdlc-kit</code></pre>
 <p>If that backup already exists, the installer appends <code>.1</code>, <code>.2</code>, and so on. Backups are copied snapshots; the target remains available while the overlay is applied.</p>
-<p>Directory backups cover copied reusable directories such as <code>.agent/templates/</code> and <code>docs/</code>. File backups cover <code>AGENT.md</code>, <code>scripts/validate-framework.py</code>, <code>AGENTIC-SDLC-KIT.md</code>, <code>LICENSE.agentic-sdlc-kit</code>, and runtime files only when <code>--reset-runtime</code> or <code>-ResetRuntime</code> is used.</p>
+<p>Directory backups cover copied reusable directories such as <code>.agent/templates/</code> and <code>docs/</code>. File backups cover <code>AGENT.html</code>, <code>scripts/validate-framework.py</code>, <code>AGENTIC-SDLC-KIT.html</code>, <code>LICENSE.agentic-sdlc-kit</code>, and runtime files only when <code>--reset-runtime</code> or <code>-ResetRuntime</code> is used.</p>
 <h2 id="files-copied">Files Copied</h2>
 <table>
 <thead>
@@ -91,8 +95,8 @@ ul.dir{columns:2;font-size:14px}
 </thead>
 <tbody>
 <tr>
-<td><code>AGENT.md</code></td>
-<td><code>AGENT.md</code></td>
+<td><code>AGENT.html</code></td>
+<td><code>AGENT.html</code></td>
 </tr>
 <tr>
 <td><code>.agent/templates/</code></td>
@@ -112,29 +116,29 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td><code>README.md</code></td>
-<td><code>AGENTIC-SDLC-KIT.md</code></td>
+<td><code>AGENTIC-SDLC-KIT.html</code></td>
 </tr>
 </tbody>
 </table>
 <h2 id="runtime-initialized">Runtime Initialized</h2>
 <p>The installer creates clean target-project runtime files when they do not already exist:</p>
 <ul>
-<li><code>.agent/execution/current-context.md</code></li>
-<li><code>.agent/execution/sessions-history.md</code></li>
-<li><code>.agent/execution/task-board.md</code></li>
-<li><code>.agent/planning/roadmap.md</code></li>
-<li><code>.agent/planning/milestones.md</code></li>
-<li><code>.agent/planning/epics.md</code></li>
-<li><code>.agent/planning/dependency-graph.md</code></li>
-<li><code>.agent/intelligence/code-graph/modules.md</code></li>
-<li><code>.agent/intelligence/code-graph/dependencies.md</code></li>
-<li><code>.agent/intelligence/code-graph/api-routes.md</code></li>
-<li><code>.agent/intelligence/code-graph/database-usage.md</code></li>
-<li><code>.agent/intelligence/code-graph/function-map.md</code></li>
-<li><code>.agent/intelligence/git-nexus/commit-map.md</code></li>
-<li><code>.agent/intelligence/git-nexus/task-commit-map.md</code></li>
-<li><code>.agent/intelligence/git-nexus/decision-commit-map.md</code></li>
-<li><code>.agent/intelligence/git-nexus/regression-log.md</code></li>
+<li><code>.agent/execution/current-context.html</code></li>
+<li><code>.agent/execution/sessions-history.html</code></li>
+<li><code>.agent/execution/task-board.html</code></li>
+<li><code>.agent/planning/roadmap.html</code></li>
+<li><code>.agent/planning/milestones.html</code></li>
+<li><code>.agent/planning/epics.html</code></li>
+<li><code>.agent/planning/dependency-graph.html</code></li>
+<li><code>.agent/intelligence/code-graph/modules.html</code></li>
+<li><code>.agent/intelligence/code-graph/dependencies.html</code></li>
+<li><code>.agent/intelligence/code-graph/api-routes.html</code></li>
+<li><code>.agent/intelligence/code-graph/database-usage.html</code></li>
+<li><code>.agent/intelligence/code-graph/function-map.html</code></li>
+<li><code>.agent/intelligence/git-nexus/commit-map.html</code></li>
+<li><code>.agent/intelligence/git-nexus/task-commit-map.html</code></li>
+<li><code>.agent/intelligence/git-nexus/decision-commit-map.html</code></li>
+<li><code>.agent/intelligence/git-nexus/regression-log.html</code></li>
 </ul>
 <p>The installer creates only <code>.keep</code> files in these runtime directories:</p>
 <ul>
@@ -153,15 +157,15 @@ ul.dir{columns:2;font-size:14px}
 <li><code>src/</code></li>
 <li><code>tests/</code></li>
 <li><code>infrastructure/</code></li>
-<li><code>CHANGELOG.md</code></li>
-<li><code>CONTRIBUTING.md</code></li>
+<li><code>CHANGELOG.html</code></li>
+<li><code>CONTRIBUTING.html</code></li>
 <li>Root <code>README.md</code> as <code>README.md</code></li>
 <li>Root <code>LICENSE</code> as <code>LICENSE</code></li>
 <li>Package manifests, lock files, build configuration, and application-specific scripts</li>
 <li><code>.agent/reports/**/*.md</code></li>
 <li><code>.agent/governance/**/*.md</code></li>
-<li><code>.agent/execution/current-context.md</code> from the kit repository</li>
-<li><code>.agent/execution/task-board.md</code> from the kit repository</li>
+<li><code>.agent/execution/current-context.html</code> from the kit repository</li>
+<li><code>.agent/execution/task-board.html</code> from the kit repository</li>
 <li><code>.agent/planning/*.md</code> from the kit repository</li>
 </ul>
 <h2 id="validation">Validation</h2>
@@ -177,7 +181,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Compare active overlay files with the installer's copied-file output.</li>
 <li>For destinations that had backups, move the active destination aside and restore the corresponding <code>.backup-agentic-sdlc-kit</code> snapshot.</li>
 <li>For destinations without backups, remove only files listed as copied by the installer.</li>
-<li>Remove <code>AGENTIC-SDLC-KIT.md</code> and <code>LICENSE.agentic-sdlc-kit</code> only if the target project did not adopt them.</li>
+<li>Remove <code>AGENTIC-SDLC-KIT.html</code> and <code>LICENSE.agentic-sdlc-kit</code> only if the target project did not adopt them.</li>
 <li>Re-run project-native checks after restoration.</li>
 </ol>
 <p>Do not recursively delete <code>.agent/</code>, <code>docs/</code>, or <code>scripts/</code> without reviewing project-owned and post-install content.</p>
@@ -185,7 +189,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Run the newer kit's installer against the same target project. The installer creates a new backup before applying the upgraded overlay; existing backup names are never overwritten.</p>
 <p>Before accepting an upgrade:</p>
 <ul>
-<li>review changes to <code>AGENT.md</code>, templates, prompts, and validator behavior;</li>
+<li>review changes to <code>AGENT.html</code>, templates, prompts, and validator behavior;</li>
 <li>preserve runtime governance and report records created by the target project;</li>
 <li>use a governed change request for operating-policy or lifecycle changes;</li>
 <li>run framework validation after installation;</li>

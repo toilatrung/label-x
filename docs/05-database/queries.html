@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vấn quan trọng — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/05-database/queries.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="database-queries">
+<meta name="labelx:title" content="Truy vấn quan trọng">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="database">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[database, queries, lease, ranking, coverage]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,12 +42,11 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / queries</span><span class="sp"></span>
-<a href="queries.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 05-database / queries</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>database-queries</span><b>title</b><span>Truy vấn quan trọng</span><b>type</b><span>reference</span><b>domain</b><span>database</span><b>module</b><span>quality-control</span><b>tags</b><span>[database, queries, lease, ranking, coverage]</span><b>priority</b><span>2</span></div>
 <h1 id="truy-van-quan-trong">Truy vấn quan trọng</h1>
-<p>Tên bảng và cột theo <a href="schema.html">schema.md</a>. Tham số được đánh dấu <code>:ten</code>. Trong mã, các truy vấn này viết bằng Django ORM (<code>select_for_update(skip_locked=True)</code>, <code>bulk_create(ignore_conflicts=True)</code>…) hoặc <code>RawSQL</code> khi ORM không diễn đạt được.</p>
+<p>Tên bảng và cột theo <a href="schema.html">schema.html</a>. Tham số được đánh dấu <code>:ten</code>. Trong mã, các truy vấn này viết bằng Django ORM (<code>select_for_update(skip_locked=True)</code>, <code>bulk_create(ignore_conflicts=True)</code>…) hoặc <code>RawSQL</code> khi ORM không diễn đạt được.</p>
 <h2 id="q1-cap-lease-frame-ke-tiep-post-apiqueuesnamenext">Q1 — Cấp lease frame kế tiếp (<code>POST /api/queues/{name}/next</code>)</h2>
 <p>Yêu cầu:</p>
 <ul>
@@ -161,7 +165,7 @@ INSERT INTO ledger_entry (...) VALUES (...)
   ON CONFLICT (run_id, engine, unit_type, unit_ref) DO UPDATE SET status = EXCLUDED.status, reason = EXCLUDED.reason;
 UPDATE work_unit SET status = 'completed', finished_at = now() WHERE id = :wu;
 COMMIT;</code></pre>
-<p>Blob evidence được upload <strong>trước</strong> BEGIN (NFR-06; <a href="../11-integrations/object-storage.html">object-storage.md</a>).</p>
+<p>Blob evidence được upload <strong>trước</strong> BEGIN (NFR-06; <a href="../11-integrations/object-storage.html">object-storage.html</a>).</p>
 <h2 id="q6-gop-issue-fr-agg-03">Q6 — Gộp issue (FR-AGG-03)</h2>
 <pre class="highlight"><code class="language-sql">INSERT INTO issue (run_id, snapshot_id, frame_id, family, anchor, n_i, dedup_key, policy_version, origin, state)
 SELECT ... FROM candidate c WHERE c.run_id = :run_id

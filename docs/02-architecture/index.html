@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Architecture — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/02-architecture/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="architecture-overview">
+<meta name="labelx:title" content="Architecture">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[architecture, design, decisions]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>architecture-overview</span><b>title</b><span>Architecture</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>repository</span><b>tags</b><span>[architecture, design, decisions]</span><b>priority</b><span>2</span></div>
 <h1 id="architecture">Architecture</h1>
@@ -46,13 +50,13 @@ ul.dir{columns:2;font-size:14px}
 <p>Mục lục tài liệu kiến trúc có thẩm quyền của LabelX Quality Control: quyết định, thiết kế hệ thống, sơ đồ, ràng buộc và ranh giới kỹ thuật.</p>
 <h2 id="contents">Contents</h2>
 <ul>
-<li><a href="architecture.html">architecture.md</a> — intake: trạng thái tiếp nhận, nguồn, kết quả kiểm tra</li>
-<li><a href="system-design.html">system-design.md</a> — bối cảnh, thành phần, module backend, worker/queue, luồng F-01…F-08, idempotency, snapshot/revision, coverage ledger, triển khai</li>
-<li><a href="decisions.html">decisions.md</a> — bảng quyết định B-01…B-21, DEC-001, cấu hình MVP, R-01…R-07, các nội dung đã loại hoặc hoãn</li>
+<li><a href="architecture.html">architecture.html</a> — intake: trạng thái tiếp nhận, nguồn, kết quả kiểm tra</li>
+<li><a href="system-design.html">system-design.html</a> — bối cảnh, thành phần, module backend, worker/queue, luồng F-01…F-08, idempotency, snapshot/revision, coverage ledger, triển khai</li>
+<li><a href="decisions.html">decisions.html</a> — bảng quyết định B-01…B-21, DEC-001, cấu hình MVP, R-01…R-07, các nội dung đã loại hoặc hoãn</li>
 <li><code>diagrams/</code></li>
-<li><a href="diagrams/component.html">component.md</a> — sơ đồ thành phần</li>
-<li><a href="diagrams/deployment.html">deployment.md</a> — sơ đồ triển khai (môi trường thật và dev local)</li>
-<li><a href="diagrams/data-flow.html">data-flow.md</a> — luồng F-01…F-08 và sequence SD-1…SD-4</li>
+<li><a href="diagrams/component.html">component.html</a> — sơ đồ thành phần</li>
+<li><a href="diagrams/deployment.html">deployment.html</a> — sơ đồ triển khai (môi trường thật và dev local)</li>
+<li><a href="diagrams/data-flow.html">data-flow.html</a> — luồng F-01…F-08 và sequence SD-1…SD-4</li>
 </ul>
 <p>Tài liệu liên quan: <a href="../04-api/index.html">API</a>, <a href="../05-database/index.html">Database</a>, <a href="../11-integrations/index.html">Integrations</a>.</p>
 </article></main></body></html>

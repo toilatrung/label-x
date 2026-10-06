@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hướng dẫn khởi tạo môi trường phát triển LabelX — LabelX</title>
+<meta name="labelx:id" content="labelx-environment-setup">
+<meta name="labelx:title" content="Hướng dẫn khởi tạo môi trường phát triển LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[onboarding, environment, windows, ubuntu, wsl]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>env-setup</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>labelx-environment-setup</span><b>title</b><span>Hướng dẫn khởi tạo môi trường phát triển LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[onboarding, environment, windows, ubuntu, wsl]</span><b>priority</b><span>1</span></div>
+<h1 id="khoi-tao-moi-truong-phat-trien-labelx">Khởi tạo môi trường phát triển LabelX</h1>
+<p>Hướng dẫn dành cho dev chưa có môi trường. Chọn <strong>Windows</strong> hoặc <strong>Ubuntu/WSL</strong> dưới đây. Cần mạng để tải công cụ, dependency và Docker image. Máy Windows phải đáp ứng yêu cầu Docker Desktop; Ubuntu được hỗ trợ: 22.04, 24.04, 26.04.</p>
+<h2 id="1-make-makefile-va-bash-khac-nhau-the-nao">1. Make, Makefile và Bash khác nhau thế nào?</h2>
+<table>
+<thead>
+<tr>
+<th>Tên</th>
+<th>Ý nghĩa</th>
+<th>Có cần trước khi khởi tạo?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Make</td>
+<td>Chương trình chạy các target như <code>make dev-backend</code></td>
+<td>Không. Windows chạy PowerShell; Ubuntu/WSL chạy Bash trực tiếp</td>
+</tr>
+<tr>
+<td>Makefile</td>
+<td>File chứa danh sách lệnh cho Make; không phải phần mềm để cài</td>
+<td>Đã nằm ở root project, include <code>scripts/init-develop-environment.mk</code></td>
+</tr>
+<tr>
+<td>Bash</td>
+<td>Shell chạy file <code>.sh</code>, thường có sẵn trên Ubuntu/WSL</td>
+<td>Có nếu chọn hướng Ubuntu/WSL; không phụ thuộc Make</td>
+</tr>
+<tr>
+<td>PowerShell</td>
+<td>Shell chạy file <code>.ps1</code>, có sẵn trên Windows</td>
+<td>Có nếu chọn hướng Windows</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thiếu Make không làm Bash mất khả năng chạy script.</strong> Không chạy file <code>.mk</code> bằng Bash hoặc PowerShell. Windows chưa có Bash dùng <code>.ps1</code>; không cần cài Git Bash chỉ để setup.</p>
+<h2 id="2-lay-source-khi-chua-co-git">2. Lấy source khi chưa có Git</h2>
+<p>Nhờ nhóm cung cấp ZIP source, giải nén vào thư mục của bạn; ví dụ <code>D:\label-x</code> trên Windows hoặc <code>~/label-x</code> trên Ubuntu. Thư mục đó phải có <code>src/</code>, <code>scripts/</code>, <code>infrastructure/</code> và các lockfile. Khi script cài Git xong, dùng repository URL thật do nhóm cung cấp để clone cho công việc commit/PR. ZIP không có lịch sử Git.</p>
+<p>Nếu Git đã có, clone bằng URL nhóm cung cấp rồi chuyển terminal vào root project. Các lệnh bên dưới chạy ở <strong>root project</strong>, không phải trong <code>scripts/</code>.</p>
+<h2 id="3-windows-khoi-tao-bang-powershell-khong-can-makebash">3. Windows: khởi tạo bằng PowerShell, không cần Make/Bash</h2>
+<p>Mở PowerShell bằng tài khoản dev bình thường. Chỉ chấp thuận yêu cầu Administrator của installer khi cần; không cần chạy cả project với quyền Administrator.</p>
+<pre class="highlight"><code class="language-powershell">cd D:\label-x
+# Xem kế hoạch, không cài hay sửa gì:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-develop-environment.ps1 -Mode Plan
+# Cài công cụ thiếu và khởi tạo project:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-develop-environment.ps1 -InstallGlobal</code></pre>
+<p><code>-InstallGlobal</code> cho phép cài Git, Node.js LTS nếu thiếu hoặc Node &lt;22, uv, Docker Desktop qua WinGet. Nếu chưa có WinGet, script thử khôi phục bằng module Microsoft.WinGet.Client ở phạm vi người dùng. Installer có thể yêu cầu quyền quản trị hoặc khởi động lại. Nếu chính sách công ty chặn WinGet/PowerShell, nhờ quản trị viên cấp công cụ; script không vượt chính sách đó.</p>
+<p><code>-ExecutionPolicy Bypass</code> chỉ áp dụng cho tiến trình PowerShell này, không đổi chính sách toàn máy. Chỉ dùng với source đã kiểm tra của nhóm. Chính sách Group Policy vẫn có thể chặn; khi đó nhờ quản trị viên hỗ trợ.</p>
+<p>Script thử mở Docker Desktop và chờ tối đa 120 giây. Nếu là lần chạy đầu, hoàn thành bước khởi tạo của Docker Desktop, chọn <strong>Linux containers</strong>, bật backend WSL2 nếu máy dùng WSL2. Nếu Docker yêu cầu bật virtualization/WSL hoặc reboot, thực hiện rồi chạy lại cùng lệnh. Script không tự bật tính năng Windows hay tự reboot.</p>
+<p>Khi công cụ đã có, lần sau không cần <code>-InstallGlobal</code>:</p>
+<pre class="highlight"><code class="language-powershell">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-develop-environment.ps1
+# Kiểm tra môi trường đã cài, không cài/migrate/build lại:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-develop-environment.ps1 -Mode Check</code></pre>
+<p>Đợi dòng <code>SETUP PASSED</code> mới coi quá trình setup đã thành công. <code>CHECK PASSED</code> kiểm tra công cụ, dependency cần thiết, kết nối dịch vụ, Django check và migrations; không thay thế frontend build hoặc toàn bộ kiểm thử dự án.</p>
+<h2 id="4-ubuntu-hoac-wsl-khoi-tao-bang-bash-khong-can-make">4. Ubuntu hoặc WSL: khởi tạo bằng Bash, không cần Make</h2>
+<p>Nếu đã có Ubuntu, mở Terminal. Nếu Windows chưa có WSL mà muốn phát triển worker theo Linux, mở PowerShell <strong>Administrator</strong> và cài Ubuntu:</p>
+<pre class="highlight"><code class="language-powershell">wsl --install -d Ubuntu</code></pre>
+<p>Khởi động lại nếu Windows yêu cầu, mở ứng dụng Ubuntu, tạo tài khoản Linux. Cài/mở Docker Desktop trên Windows theo mục 3 hoặc hướng dẫn chính thức; vào <strong>Settings → Resources → WSL Integration</strong>, bật cho Ubuntu. Chỉ cài WSL chưa cung cấp Docker Desktop. Script Ubuntu không cài Docker Engine thứ hai trong WSL.</p>
+<p>Trong Ubuntu/WSL, dùng checkout riêng ở thư mục Linux, ví dụ <code>~/label-x</code>; tránh dùng chung <code>.venv</code> và <code>node_modules</code> với checkout Windows.</p>
+<pre class="highlight"><code class="language-bash">cd ~/label-x
+bash scripts/init-develop-environment.sh --plan
+bash scripts/init-develop-environment.sh --install-global</code></pre>
+<p>Ubuntu đã có Bash. Nếu đang gõ <code>bash</code> ở PowerShell và bị báo không tìm thấy, chọn script Windows hoặc cài/mở WSL trước. Không cần Make hay <code>chmod +x</code> cho lệnh <code>bash scripts/...sh</code>.</p>
+<p>Script dùng <code>sudo</code> để cài Git, curl, Make và công cụ build qua apt; cài Node 22 bằng nvm nếu thiếu/phiên bản quá thấp; cài uv trong tài khoản dev. Trên Ubuntu chạy trực tiếp, script cài Docker Engine + Compose từ repository chính thức nếu Docker chưa có. Script dừng khi thấy package Docker cũ xung đột, không tự gỡ chúng. MacOS và distro khác chưa có bootstrap tự động.</p>
+<p>Trên Ubuntu trực tiếp, Docker mới cài có thể yêu cầu cấp quyền socket. Nếu Docker báo permission denied, quản trị viên có thể cấu hình theo <a href="https://docs.docker.com/engine/install/linux-postinstall/">hướng dẫn Docker</a>. Cách phổ biến, chỉ dùng khi bạn chấp thuận quyền quản trị máy thông qua nhóm Docker:</p>
+<pre class="highlight"><code class="language-bash">sudo usermod -aG docker "$USER"
+# Đăng xuất/đăng nhập lại để nhận quyền, rồi:
+docker info
+bash scripts/init-develop-environment.sh --install-global</code></pre>
+<p>Script không tự thêm tài khoản vào nhóm Docker. Không chạy toàn bộ script bằng <code>sudo</code>, vì sẽ cài dependency và tạo file của project cho root.</p>
+<p>Khi đã có công cụ:</p>
+<pre class="highlight"><code class="language-bash">bash scripts/init-develop-environment.sh
+bash scripts/init-develop-environment.sh --check</code></pre>
+<p>Make là tiện ích <strong>tùy chọn</strong>. Nếu chỉ thiếu Make và muốn dùng các target hằng ngày:</p>
+<pre class="highlight"><code class="language-bash">sudo apt-get update
+sudo apt-get install -y make
+make help</code></pre>
+<h2 id="5-script-cai-gi-theo-thu-tu-nao">5. Script cài gì, theo thứ tự nào?</h2>
+<table>
+<thead>
+<tr>
+<th>Phạm vi</th>
+<th>Việc làm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Công cụ máy/tài khoản dev</td>
+<td>Git, Node ≥22/npm, uv, Docker/Compose; Ubuntu thêm Make/build tools. Cài khi chọn InstallGlobal/--install-global, giữ công cụ hiện có đạt yêu cầu</td>
+</tr>
+<tr>
+<td>Python người dùng</td>
+<td>uv tải/quản lý Python 3.12; không thay Python hệ thống</td>
+</tr>
+<tr>
+<td>Kiểm tra project</td>
+<td>Đủ lockfile; không dùng <code>.venv</code> của OS khác; không có override trỏ sang dịch vụ khác hoặc Docker remote</td>
+</tr>
+<tr>
+<td>Cấu hình project</td>
+<td>Tạo backend <code>.env</code>, frontend <code>.env.local</code> từ <code>.env.example</code> nếu thiếu; secret mới ngẫu nhiên; file đã có được giữ nguyên</td>
+</tr>
+<tr>
+<td>Dependency project</td>
+<td><code>uv sync --frozen --python 3.12</code> trong backend; <code>npm ci</code> trong frontend. npm ci dựng lại node_modules theo lockfile; lockfile không cập nhật</td>
+</tr>
+<tr>
+<td>Dịch vụ local</td>
+<td>Compose bật PostgreSQL 17, Redis 7, SeaweedFS; đợi healthy, chạy job tạo ba S3 bucket</td>
+</tr>
+<tr>
+<td>Kiểm chứng</td>
+<td>Kết nối PostgreSQL/Redis và ba bucket qua settings của Django, chạy migrations và Django check, build frontend</td>
+</tr>
+</tbody>
+</table>
+<p>Setup hỗ trợ cấu hình Compose local có trong repo. Nếu <code>.env</code> đang trỏ database/storage khác hoặc frontend API khác, script dừng để bạn kiểm tra, không tự ghi đè hay migrate sang môi trường đó. Cổng local: 5432 (PostgreSQL), 6379 (Redis), 9000 (S3), 8000 (API khi chạy), 3000 (frontend khi chạy).</p>
+<p>Compose không có CVAT. Setup không tạo tài khoản admin, reference, model artifact hoặc quyền CVAT. Nhóm phải cấp thông tin CVAT/model riêng. Credential Compose là credential dev local, không dùng cho production. Docker volume và <code>.env</code> được giữ khi chạy lại; migrations có thể thay schema <strong>database local</strong>.</p>
+<h2 id="6-chay-ung-dung-sau-khi-setup">6. Chạy ứng dụng sau khi setup</h2>
+<p>Trên Windows, mở hai terminal ở root project:</p>
+<pre class="highlight"><code class="language-powershell"># Terminal 1
+cd src\backend
+uv run --frozen python manage.py runserver 127.0.0.1:8000</code></pre>
+<pre class="highlight"><code class="language-powershell"># Terminal 2
+cd src\frontend
+npm.cmd run dev</code></pre>
+<p>Windows chỉ phù hợp phát triển API/frontend trực tiếp. Celery không hỗ trợ Windows; để phát triển worker dùng Ubuntu/WSL. Không coi worker <code>--pool=solo</code> trên Windows là môi trường được bảo đảm.</p>
+<p>Trên Ubuntu/WSL, mở ba terminal:</p>
+<pre class="highlight"><code class="language-bash">make dev-backend
+make dev-worker
+make dev-frontend</code></pre>
+<p>Nếu chưa cài Make, dùng lệnh tương đương trong từng thư mục:</p>
+<pre class="highlight"><code class="language-bash"># Terminal 1, từ root
+cd src/backend &amp;&amp; uv run --frozen python manage.py runserver 127.0.0.1:8000
+# Terminal 2, từ root
+cd src/backend &amp;&amp; uv run --frozen celery -A config worker -l info
+# Terminal 3, từ root
+cd src/frontend &amp;&amp; npm run dev</code></pre>
+<p>API docs: <code>http://localhost:8000/api/docs/</code>. Frontend: <code>http://localhost:3000</code>. Khi cần tài khoản Django admin, chạy thủ công <code>uv run --frozen python manage.py createsuperuser</code> trong backend. Kiểm thử đầy đủ trên Ubuntu/WSL: <code>make check</code>; bộ kiểm thử setup riêng: <code>node --test scripts/development/tests/*.test.cjs</code> từ root.</p>
+<h2 id="7-loi-thuong-gap">7. Lỗi thường gặp</h2>
+<table>
+<thead>
+<tr>
+<th>Hiện tượng</th>
+<th>Cách xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make: command not found</code></td>
+<td>Chạy <code>.ps1</code>/<code>bash ...sh</code> trực tiếp; Ubuntu muốn Make thì cài bằng apt ở mục 4</td>
+</tr>
+<tr>
+<td>WinGet không chạy/installer yêu cầu reboot</td>
+<td>Khởi động lại hoặc mở terminal mới, chạy lại; nếu WinGet recovery thất bại, nhờ IT cài App Installer/các package chính thức</td>
+</tr>
+<tr>
+<td>Có Docker nhưng <code>docker info</code> lỗi</td>
+<td>Mở Docker Desktop, hoàn thành first-start, bật Linux containers/WSL Integration; Ubuntu kiểm tra service/quyền socket</td>
+</tr>
+<tr>
+<td>Cổng 5432/6379/9000 đã dùng</td>
+<td>Xác định dịch vụ đang dùng cổng trước; không tự tắt database của project khác. Nếu cần đổi cổng, cập nhật Compose và cấu hình tương ứng, setup hiện chỉ hỗ trợ bundle mặc định</td>
+</tr>
+<tr>
+<td><code>.venv</code> thuộc OS khác</td>
+<td>Dùng checkout riêng; hoặc tự đổi tên <code>.venv</code> thành <code>.venv.backup</code> trong backend rồi chạy lại. Không xóa nếu chưa biết dữ liệu trong đó</td>
+</tr>
+<tr>
+<td><code>.env</code> còn <code>DJANGO_SECRET_KEY=change-me</code></td>
+<td>Giữ bản backup riêng tư, tự cập nhật secret ngẫu nhiên hoặc đổi tên <code>.env</code> rồi chạy setup để tạo file mới; chuyển các cấu hình cần giữ vào file mới</td>
+</tr>
+<tr>
+<td>Dependency/download/build thất bại</td>
+<td>Kiểm tra mạng/proxy/quyền ghi; chạy lại cùng lệnh. Không coi Plan hoặc chỉ cài package thành công là setup xong</td>
+</tr>
+<tr>
+<td>Thiếu Ground Truth/CVAT/model</td>
+<td>Nhóm dự án phải cấp; script môi trường không tự tạo dữ liệu chuẩn hay quyền truy cập</td>
+</tr>
+</tbody>
+</table>
+<p>Không commit <code>.env</code>, <code>.env.local</code>, token hoặc các bản backup chứa secret. Không chạy <code>make infra-reset</code> trừ khi chủ ý xóa dữ liệu dev: lệnh đó xóa Docker volumes. <code>make infra-down</code> chỉ dừng hạ tầng và giữ dữ liệu.</p>
+<h2 id="8-file-va-nguon-huong-dan">8. File và nguồn hướng dẫn</h2>
+<ul>
+<li><a href="scripts/init-develop-environment.ps1">Script Windows</a>, <a href="scripts/init-develop-environment.sh">script Ubuntu/WSL</a>, <a href="scripts/init-develop-environment.mk">target Make</a>.</li>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/">WinGet installation/recovery</a>, <a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/install">WinGet install</a>.</li>
+<li><a href="https://docs.docker.com/desktop/setup/install/windows-install/">Docker Desktop Windows</a>, <a href="https://docs.docker.com/desktop/features/wsl/">Docker WSL Integration</a>, <a href="https://docs.docker.com/engine/install/ubuntu/">Docker Ubuntu</a>.</li>
+<li><a href="https://learn.microsoft.com/en-us/windows/wsl/install">Cài WSL</a>, <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>, <a href="https://github.com/nvm-sh/nvm">nvm</a>, <a href="https://docs.celeryq.dev/en/stable/faq.html#does-celery-support-windows">Celery platform support</a>.</li>
+</ul>
+<p><code>scripts/Makefile</code> được đổi tên thành <code>scripts/init-develop-environment.mk</code>; <code>Makefile</code> gốc vẫn có tên chuẩn để GNU Make nhận diện. Tham chiếu tên cũ trong quyết định đã phê duyệt như DEC-001 là dấu vết lịch sử, không phải đường dẫn hiện tại.</p>
+</article></main></body></html>

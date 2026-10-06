@@ -4,7 +4,7 @@
   "status": "test-design; not business acceptance",
   "provider_assumption": "GitHub Actions; replace if user chooses another platform",
   "sources": [
-    ".agent/governance/decisions/DEC-001.md",
+    ".agent/governance/decisions/DEC-001.html",
     "architecture_review.html",
     "QC_Engine_Review_Report.html#roadmap",
     "Quality_Control_Review_UX_Architecture.html#roadmap",

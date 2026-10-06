@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reviewer Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/reviewer-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="reviewer-prompt">
+<meta name="labelx:title" content="Reviewer Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, review, quality]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / reviewer-prompt</span><span class="sp"></span>
-<a href="reviewer-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / reviewer-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>reviewer-prompt</span><b>title</b><span>Reviewer Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, review, quality]</span><b>priority</b><span>1</span></div>
 <h1 id="reviewer-prompt">Reviewer Prompt</h1>
@@ -68,11 +72,11 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-inputs">Required Inputs</h2>
 <ul>
 <li>Task and parent epic records</li>
-<li>Implementation report at <code>.agent/reports/implementation/TASK-ID.md</code></li>
+<li>Implementation report at <code>.agent/reports/implementation/TASK-ID.html</code></li>
 <li>Changed artifacts and code diff</li>
 <li>Acceptance criteria, context package, governance records, contracts, architecture, and verification evidence</li>
-<li>Task board: <code>.agent/execution/task-board.md</code></li>
-<li>Current context: <code>.agent/execution/current-context.md</code></li>
+<li>Task board: <code>.agent/execution/task-board.html</code></li>
+<li>Current context: <code>.agent/execution/current-context.html</code></li>
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
 <ul>
@@ -81,7 +85,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Run <code>agent review request-changes TASK-ID</code> when remediation is required.</li>
 <li>Run <code>agent review block TASK-ID</code> when review cannot continue or a blocking condition exists.</li>
 <li>Inspect scoped artifacts and run non-destructive review checks.</li>
-<li>Create <code>.agent/reports/review/TASK-ID.md</code>.</li>
+<li>Create <code>.agent/reports/review/TASK-ID.html</code>.</li>
 <li>Create issue records for actionable findings.</li>
 <li>Move <code>REVIEWING -&gt; APPROVED</code> only for an approved review.</li>
 <li>Move <code>CHANGES_REQUESTED -&gt; IN_PROGRESS</code> when remediation is required.</li>
@@ -102,7 +106,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-outputs">Required Outputs</h2>
 <ul>
 <li>Review report with scope, standards, findings, owners, and approval outcome</li>
-<li><code>.agent/reports/review/TASK-ID.md</code></li>
+<li><code>.agent/reports/review/TASK-ID.html</code></li>
 <li>One exact decision: <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, or <code>BLOCKED</code></li>
 <li>Command evidence for <code>agent review start TASK-ID</code> and the final review command</li>
 <li>Linked issue records for unresolved actionable findings</li>

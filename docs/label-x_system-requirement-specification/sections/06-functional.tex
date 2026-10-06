@@ -287,7 +287,7 @@ riêng (FR-RNK-06), không bị coi là điểm thấp an toàn.
 \endhead
 \bottomrule
 \endfoot
-\req{FR-EVL-01} & Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục~\ref{sec:counting}. & \must & UC-08; BR-11\\
+\req{FR-EVL-01} & Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục~\ref{sec:counting}. Pilot (v1.1, CR-101): nhập một GT là nhãn gốc BDD100K từ tệp, khoá theo checksum; nhập hai GT để giai đoạn sau. & \must & UC-08; BR-11\\
 \req{FR-EVL-02} & Người được giao lập GT/xác minh của tập đánh giá không có quyền xem ranking, risk score, candidate của tập đó. & \must & BR-10\\
 \req{FR-EVL-03} & Hệ thống suy ra \(\mathcal{E}\) theo BR-01…BR-07 và hiển thị để duyệt; sửa mapping thì suy lại, không xoá lỗi trực tiếp. & \must & UC-08; BR-14\\
 \req{FR-EVL-04} & Khoá reference cùng: GT version, snapshot đầu vào, mapping, \(\tau_m\), \(a_{min}\), version thuật toán. & \must & BR-13; B-20\\

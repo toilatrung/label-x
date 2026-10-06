@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project Contract Intake — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/04-api/contract.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="project-contract">
+<meta name="labelx:title" content="Project Contract Intake">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[contract, interface, intake]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / contract</span><span class="sp"></span>
-<a href="contract.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / contract</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>project-contract</span><b>title</b><span>Project Contract Intake</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>repository</span><b>tags</b><span>[contract, interface, intake]</span><b>priority</b><span>1</span></div>
 <h1 id="project-contract-intake">Project Contract Intake</h1>
@@ -68,15 +72,15 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td>Phạm vi, các bên, nghĩa vụ, loại trừ</td>
-<td><a href="rest-api.html">rest-api.md</a> mục 1, 4.2 (endpoint không triển khai)</td>
+<td><a href="rest-api.html">rest-api.html</a> mục 1, 4.2 (endpoint không triển khai)</td>
 </tr>
 <tr>
 <td>Hợp đồng interface có mã ổn định</td>
-<td><a href="rest-api.html">rest-api.md</a>; <a href="event-contracts.html">event-contracts.md</a></td>
+<td><a href="rest-api.html">rest-api.html</a>; <a href="event-contracts.html">event-contracts.html</a></td>
 </tr>
 <tr>
 <td>Dữ liệu, bảo mật, tuân thủ</td>
-<td><a href="rest-api.html">rest-api.md</a> mục 6; <a href="../11-integrations/cvat.html">CVAT</a></td>
+<td><a href="rest-api.html">rest-api.html</a> mục 6; <a href="../11-integrations/cvat.html">CVAT</a></td>
 </tr>
 <tr>
 <td>Mức dịch vụ, điều kiện nghiệm thu</td>
@@ -90,7 +94,7 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="validation-result">Validation Result</h2>
 <ul>
-<li>Toàn bộ 28 endpoint trong <code>tab:api</code> của SRS đã được đưa vào <a href="rest-api.html">rest-api.md</a>, kèm quyền, idempotency và mã lỗi 400/403/404/409/422.</li>
+<li>Toàn bộ 28 endpoint trong <code>tab:api</code> của SRS đã được đưa vào <a href="rest-api.html">rest-api.html</a>, kèm quyền, idempotency và mã lỗi 400/403/404/409/422.</li>
 <li>Endpoint của A chỉ được nhận khi khớp một FR của SRS. Các endpoint release, assistant, calibration session và SSE bị loại (B-13, FR-GTE-04).</li>
 <li>Mâu thuẫn đã xử lý:</li>
 <li>Tiền tố <code>/api/qc/v1</code> (A) đổi thành <code>/api/</code> (SRS).</li>

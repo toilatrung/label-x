@@ -44,7 +44,7 @@ function policyReady(policy,root=ROOT){
  const numeric=['minimum_reference_errors','minimum_errors_per_group','minimum_recall_at_20','minimum_effort_reduction','residual_non_inferiority_margin','false_positive_non_inferiority_margin'];
  if(policy?.status!=='approved'||!policy.reference_version||!policy.score_version||!numeric.every(k=>Number.isFinite(policy[k])&&policy[k]>=0)||!['reference_sha256','model_sha256'].every(k=>/^[a-f0-9]{64}$/.test(policy[k]||'')))throw new Blocked('Approved numeric evaluation policy/reference/model not supplied');
  if(!Number.isInteger(policy.minimum_reference_errors)||policy.minimum_reference_errors<1||!Number.isInteger(policy.minimum_errors_per_group)||policy.minimum_errors_per_group<1||numeric.slice(2).some(k=>policy[k]>1))throw new Blocked('Invalid evaluation thresholds');
- if(typeof policy.approved_decision!=='string'||!/^\.agent\/governance\/decisions\/[^/]+\.md$/.test(policy.approved_decision))throw new Blocked('Approval record missing');
+ if(typeof policy.approved_decision!=='string'||!/^\.agent\/governance\/decisions\/[^/]+\.html$/.test(policy.approved_decision))throw new Blocked('Approval record missing');
  const recordPath=inside(root,policy.approved_decision);if(!fs.existsSync(recordPath))throw new Blocked('Approved evaluation decision file missing');
  const record=fs.readFileSync(recordPath,'utf8');
  if(!/\*\*Status\*\*:\s*`accepted`/.test(record)||!/\*\*Decision Type\*\*:\s*`(?:evaluation|acceptance|testing)`/.test(record))throw new Blocked('Evaluation policy lacks accepted governance evidence');

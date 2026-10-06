@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>REST API LabelX QC — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/04-api/rest-api.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="api-rest">
+<meta name="labelx:title" content="REST API LabelX QC">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[api, rest, drf, contract, idempotency]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / rest-api</span><span class="sp"></span>
-<a href="rest-api.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / rest-api</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>api-rest</span><b>title</b><span>REST API LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, rest, drf, contract, idempotency]</span><b>priority</b><span>1</span></div>
 <h1 id="rest-api-labelx-qc">REST API LabelX QC</h1>
@@ -147,7 +151,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Gửi lại cùng key với cùng body: trả lại đúng phản hồi cũ, không xử lý lần nữa.</li>
 <li>Gửi lại cùng key với body khác: trả <code>409 IDEMPOTENCY_KEY_REUSED</code>.</li>
 <li>Đề xuất: header này là bắt buộc với <code>POST /api/issues/{id}/decisions</code>, <code>…/adjudications</code>, <code>/api/rework/*</code> và <code>/api/waivers/*</code>, vì client có thể thử lại sau lỗi mạng (A §27.1, "Lưu decision thất bại"). <code>/api/effort-events</code> dùng <code>client_event_id</code> thay cho header. Mức "bắt buộc" <strong>chưa có hiệu lực</strong> cho tới khi Tech Lead xác nhận.</li>
-<li>Các thao tác chạy nền (retry shard, huỷ) dựa vào khoá idempotent của <code>work_unit</code> (FR-AGG-02), nên không phụ thuộc header này. Xem <a href="event-contracts.html">event-contracts.md</a>.</li>
+<li>Các thao tác chạy nền (retry shard, huỷ) dựa vào khoá idempotent của <code>work_unit</code> (FR-AGG-02), nên không phụ thuộc header này. Xem <a href="event-contracts.html">event-contracts.html</a>.</li>
 <li>A §25 còn đề xuất <code>If-Match: version</code> (optimistic concurrency). Đề xuất này <strong>chưa được áp dụng</strong>: SRS dùng lease cùng các guard trong bảng transition. Nếu sau này cần thì phải có quyết định mới.</li>
 </ul>
 <p>Ghi chú nguồn: SRS chỉ yêu cầu retry idempotent ở tầng xử lý. Header <code>Idempotency-Key</code> là đề xuất thiết kế lấy từ A §25, cần Tech Lead xác nhận.</p>
@@ -391,7 +395,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
-<p>Ghi chú về Product Owner và Data/Model Owner (SRS ch.6, đoạn dưới <code>tab:rbac</code>): hai vai trò này không thao tác review. Quyền của họ: xem báo cáo hiệu quả (UC-11); Product Owner tạo và khoá thiết kế thí nghiệm effort (UC-10, FR-EVL-11); Data/Model Owner khoá artifact Detector. Họ không được làm reviewer trong thí nghiệm do chính mình thiết kế. Hai vai trò này cần được thêm vào <code>role_assignment</code> (<a href="../05-database/schema.html">schema.md</a>).</p>
+<p>Ghi chú về Product Owner và Data/Model Owner (SRS ch.6, đoạn dưới <code>tab:rbac</code>): hai vai trò này không thao tác review. Quyền của họ: xem báo cáo hiệu quả (UC-11); Product Owner tạo và khoá thiết kế thí nghiệm effort (UC-10, FR-EVL-11); Data/Model Owner khoá artifact Detector. Họ không được làm reviewer trong thí nghiệm do chính mình thiết kế. Hai vai trò này cần được thêm vào <code>role_assignment</code> (<a href="../05-database/schema.html">schema.html</a>).</p>
 <h3 id="42-endpoint-bo-sung-lay-tu-a-khop-yeu-cau-srs">4.2 Endpoint bổ sung (lấy từ A, khớp yêu cầu SRS)</h3>
 <p>Đây là các endpoint đọc hoặc cấu hình mà SRS yêu cầu chức năng nhưng không liệt kê đường dẫn. Đường dẫn là đề xuất.</p>
 <table>
@@ -463,7 +467,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
-<p><strong>Không</strong> triển khai: <code>/releases*</code>, <code>/assistant/query</code>, <code>/sample-manifests</code>, <code>/calibration-sessions</code>, <code>/review-context</code>, SSE events (A §25). Lý do: ngoài phạm vi M13, hoặc đã bị B-13/FR-GTE-04 loại. Xem <a href="../02-architecture/decisions.html">decisions.md</a>.</p>
+<p><strong>Không</strong> triển khai: <code>/releases*</code>, <code>/assistant/query</code>, <code>/sample-manifests</code>, <code>/calibration-sessions</code>, <code>/review-context</code>, SSE events (A §25). Lý do: ngoài phạm vi M13, hoặc đã bị B-13/FR-GTE-04 loại. Xem <a href="../02-architecture/decisions.html">decisions.html</a>.</p>
 <h2 id="5-requestresponse-chinh">5. Request/response chính</h2>
 <h3 id="51-post-apisnapshots">5.1 <code>POST /api/snapshots</code></h3>
 <pre class="highlight"><code class="language-json">// request

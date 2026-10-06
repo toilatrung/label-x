@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đánh giá engine, ranking và hiệu quả review — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/12-ai/evaluation.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="ai-evaluation">
+<meta name="labelx:title" content="Đánh giá engine, ranking và hiệu quả review">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="ai">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[ai, evaluation, kpi, reference]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / evaluation</span><span class="sp"></span>
-<a href="evaluation.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / evaluation</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>ai-evaluation</span><b>title</b><span>Đánh giá engine, ranking và hiệu quả review</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, evaluation, kpi, reference]</span><b>priority</b><span>1</span></div>
 <h1 id="anh-gia-engine-ranking-va-hieu-qua-review">Đánh giá engine, ranking và hiệu quả review</h1>
@@ -58,7 +62,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="2-phan-chia-du-lieu-va-chong-ro-ri">2. Phân chia dữ liệu và chống rò rỉ</h2>
 <ul>
 <li>Ảnh BDD100K nhóm theo video nguồn, chia <strong>tập hiệu chỉnh</strong> (chọn trọng số, ngưỡng, <code>k*</code>) và <strong>tập held-out</strong> (chỉ đo nghiệm thu), không giao nhau theo video (SRS 03 Hình phân chia).</li>
-<li>Kiểm bắt buộc, lưu cùng evaluation run (FR-EVL-05): (a) không giao video; từ chối dùng held-out học tham số; (b) đối chiếu danh sách ảnh huấn luyện Detector — giao ⇒ chặn (AS-03, xem <a href="detector.html#7-chống-leakage-as-03">detector.md §7</a>); (c) loại case guideline/hiệu chỉnh khỏi GT held-out (BR-16).</li>
+<li>Kiểm bắt buộc, lưu cùng evaluation run (FR-EVL-05): (a) không giao video; từ chối dùng held-out học tham số; (b) đối chiếu danh sách ảnh huấn luyện Detector — giao ⇒ chặn (AS-03, xem <a href="detector.html#7-chống-leakage-as-03">detector.html §7</a>); (c) loại case guideline/hiệu chỉnh khỏi GT held-out (BR-16).</li>
 </ul>
 <h2 id="3-kpi-1-recall20">3. KPI-1 — Recall@20%</h2>
 <pre class="highlight"><code>n_20 = ⌈0,2 · N⌉
@@ -83,7 +87,7 @@ Recall@20% = |{e ∈ E : rank_π(φ(e)) ≤ n_20}| / |E|</code></pre>
 <p><strong>Effort</strong> = thời gian thao tác hoạt động ghi tự động, loại khoảng không thao tác &gt; <code>t_idle</code> (<strong>TBD-11</strong>):</p>
 <pre class="highlight"><code>T = Σ (t_view + t_tp + t_fa + t_adj + t_rc)        KPI-2 = 1 − T_A / T_B</code></pre>
 <p><code>t_fix</code> (annotator sửa trên CVAT) báo cáo riêng và trong phân tích độ nhạy, không cộng vào <code>T</code>. Chỉ số phụ: lỗi xác nhận/giờ review, <code>t_fa/T</code>, KPI-2b (recall phát hiện thực tế, không có ngưỡng).</p>
-<p><strong>Thiết kế</strong>: crossover AB/BA, D1/D2 chia theo video và phân tầng; quy tắc EX-01…EX-10 (xem <a href="../09-testing/acceptance-pilot.html">../09-testing/acceptance-pilot.md</a>).</p>
+<p><strong>Thiết kế</strong>: crossover AB/BA, D1/D2 chia theo video và phân tầng; quy tắc EX-01…EX-10 (xem <a href="../09-testing/acceptance-pilot.html">../09-testing/acceptance-pilot.html</a>).</p>
 <p><strong>Phân tích effort</strong> (SRS 07 §Phân tích effort):</p>
 <ul>
 <li><strong>Estimand chính</strong>: tỉ số <code>T_A/T_B</code> của tổng effort trên cùng khối lượng dữ liệu; KPI-2 = <code>1 − T_A/T_B</code>.</li>

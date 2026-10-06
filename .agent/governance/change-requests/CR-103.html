@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTML là định dạng tài liệu duy nhất; xoá file Markdown — LabelX</title>
+<meta name="labelx:id" content="CR-103">
+<meta name="labelx:title" content="HTML là định dạng tài liệu duy nhất; xoá file Markdown">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[change-request, process, documentation, html]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / change-requests / CR-103</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>CR-103</span><b>title</b><span>HTML là định dạng tài liệu duy nhất; xoá file Markdown</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>repository</span><b>tags</b><span>[change-request, process, documentation, html]</span><b>priority</b><span>1</span></div>
+<h1 id="cr-103-html-la-inh-dang-tai-lieu-duy-nhat-xoa-file-markdown">CR-103: HTML là định dạng tài liệu duy nhất; xoá file Markdown</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Change Request ID</strong>: <code>CR-103</code></li>
+<li><strong>Title</strong>: <code>HTML là định dạng tài liệu duy nhất; xoá file Markdown</code></li>
+<li><strong>Owner</strong>: <code>toilatrung</code></li>
+<li><strong>Proposer</strong>: <code>toilatrung</code></li>
+<li><strong>Status</strong>: <code>implementing</code></li>
+<li><strong>Change Type</strong>: <code>process</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<p>Trước: Markdown (<code>.md</code> có YAML frontmatter) là nguồn của mọi tài liệu trong <code>docs/</code>, <code>.agent/</code> và <code>AGENT.md</code>; HTML được sinh từ Markdown bằng <code>scripts/md2html.py</code>; bản ghi governance/report chỉ có <code>.md</code>.</p>
+<p>Sau:</p>
+<ol>
+<li>HTML là định dạng tài liệu duy nhất và là nguồn, sửa trực tiếp. Metadata của kit đặt trong <code>&lt;head&gt;</code> dạng <code>&lt;meta name="labelx:id|title|type|domain|module|tags|priority"&gt;</code>.</li>
+<li>Mọi file <code>.md</code> trong <code>docs/</code>, <code>.agent/</code> và ở gốc repo được chuyển sang HTML rồi xoá (157 file), kể cả <code>AGENT.md</code> → <code>AGENT.html</code>, template, bản ghi governance/report, file riêng theo người dùng (CR-100).</li>
+<li>Ngoại lệ do công cụ bắt buộc Markdown: <code>CLAUDE.md</code>, <code>src/frontend/CLAUDE.md</code>, <code>src/frontend/AGENTS.md</code> (Claude Code, Next.js), <code>.agent/skills/labelx-design/SKILL.md</code> (skill loader), <code>README.md</code> (trang repo GitHub), <code>.github/pull_request_template.md</code> (GitHub chỉ nhận Markdown/TXT).</li>
+<li><code>scripts/validate-framework.py</code> đọc HTML qua <code>scripts/kit_html.py</code>; <code>scripts/md2html.py</code> bị xoá; <code>scripts/srs_tex2md.py</code> đổi thành <code>scripts/srs_tex2docs.py</code>, ghi thẳng HTML; CI bỏ bước kiểm HTML sinh từ Markdown.</li>
+</ol>
+<h2 id="justification">Justification</h2>
+<p>Product Owner yêu cầu trong phiên làm việc ngày 2026-10-06: "Không thao tác bằng định dạng md nữa, chuyển hết sang html đi" và "Rồi xóa luôn các file md đi".</p>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul>
+<li><strong>Affected Baselines</strong>: <code>AGENT.html</code> (Metadata Standard, Per-User Agent Files)</li>
+<li><strong>Affected Epics or Tasks</strong>: <code>T-001, T-002, T-003, T-004, T-005 (file riêng chuyển sang HTML trước khi giao)</code></li>
+<li><strong>Schedule Impact</strong>: <code>none</code></li>
+<li><strong>Cost or Resource Impact</strong>: <code>Bản ghi mới tạo bằng cách sao chép template HTML; không còn bước sinh HTML.</code></li>
+<li><strong>Security or Compliance Impact</strong>: <code>none</code></li>
+<li><strong>Compatibility or Migration Impact</strong>: <code>Link .md trong tài liệu đổi sang .html; công cụ đọc .md phải đổi sang .html. Lịch sử Git vẫn giữ bản Markdown cũ.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>AGENT.html</code>, <code>CLAUDE.md</code>, <code>scripts/kit_html.py</code>, <code>scripts/validate-framework.py</code>, <code>scripts/srs_tex2docs.py</code>, <code>.github/workflows/ci.yml</code>, <code>.github/pull_request_template.md</code>, <code>scripts/ci/check-agent-ownership.cjs</code>, <code>scripts/ci/quality-gate.cjs</code>, <code>docs/07-development/coding-standards.html</code>, <code>docs/08-devops/ci-cd.html</code></li>
+<li><strong>Decisions</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Issues or Blockers</strong>: <code>none</code></li>
+</ul>
+<h2 id="approval">Approval</h2>
+<ul>
+<li><strong>Decision</strong>: <code>approved</code></li>
+<li><strong>Approver</strong>: <code>toilatrung</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Conditions</strong>: <code>Giữ các file Markdown mà công cụ bắt buộc (mục Proposed Change, điểm 3).</code></li>
+<li><strong>Rationale</strong>: <code>PO yêu cầu trực tiếp trong phiên làm việc ngày 2026-10-06.</code></li>
+</ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul>
+<li><strong>Responsible Owner</strong>: <code>claude-code (cho toilatrung)</code></li>
+<li><strong>Tasks</strong>: <code>none (process change, không thuộc epic sản phẩm)</code></li>
+<li><strong>Validation Method</strong>: <code>make validate-kit; node --test scripts/ci/tests/*.test.cjs; sinh lại SRS (srs_tex2html.py, srs_tex2docs.py) không đổi; thử cài trạng thái sai vào epics.html thì validator báo LIFECYCLE_STATUS_INVALID</code></li>
+<li><strong>Rollback Method</strong>: <code>Revert commit chuyển đổi; bản Markdown và md2html.py còn trong lịch sử Git.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Approval is recorded before baseline modification.</li>
+<li>[ ] Approved changes are implemented and verified.</li>
+<li>[x] All affected baselines and traceability links are updated.</li>
+<li>[ ] Status is <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code>, or <code>superseded</code>.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is <code>pending</code> or <code>rejected</code>.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+</article></main></body></html>

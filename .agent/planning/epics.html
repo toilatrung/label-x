@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Epics — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/planning/epics.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="epics-v1">
+<meta name="labelx:title" content="Epics">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[epics, planning]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / epics</span><span class="sp"></span>
-<a href="epics.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / epics</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>epics-v1</span><b>title</b><span>Epics</span><b>type</b><span>planning</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[epics, planning]</span><b>priority</b><span>2</span></div>
 <h1 id="epics">Epics</h1>
@@ -67,257 +71,264 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-01</code></td>
 <td><code>M-01</code></td>
 <td><strong>Hợp đồng triển khai M13, lineage và phép đo</strong> — Có một contract duy nhất (entity, API, state machine, lỗi, engine interface, lineage, nối quyết định với reference) truy được tới FR/BR trước khi build.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Trịnh Quang Trung</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>T-001</code></td>
 <td>Xem <a href="#e-01">chi tiết</a></td>
-<td><code>BLOCKER-001, BLOCKER-003, BLOCKER-007, BLOCKER-009, BLOCKER-010, BLOCKER-012</code></td>
+<td><code>BLOCKER-001, BLOCKER-003, BLOCKER-007, BLOCKER-009, BLOCKER-010, BLOCKER-012, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-02</code></td>
 <td><code>M-01</code></td>
 <td><strong>Nền backend/frontend, auth, RBAC, audit, storage và CI</strong> — Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>T-002</code></td>
 <td>Xem <a href="#e-02">chi tiết</a></td>
-<td><code>BLOCKER-003, BLOCKER-013, BLOCKER-014</code></td>
+<td><code>BLOCKER-003, BLOCKER-013, BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-03</code></td>
 <td><code>M-01</code></td>
 <td><strong>Guideline version và mapping rule</strong> — Workspace tra được rule theo rule ID + version + section của snapshot, không dùng RAG.</td>
-<td><code>unassigned (vai trò: Quality Control Admin)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Nguyễn Đức Hà</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>T-003</code></td>
 <td>Xem <a href="#e-03">chi tiết</a></td>
-<td><code>none</code></td>
+<td><code>DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-04</code></td>
 <td><code>M-02</code></td>
 <td><strong>CVAT adapter chỉ đọc và snapshot bất biến</strong> — Tạo snapshot bất biến, có hash, phát hiện drift, từ CVAT thật mà không có đường ghi annotation.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>T-004</code></td>
 <td>Xem <a href="#e-04">chi tiết</a></td>
-<td><code>BLOCKER-004, BLOCKER-020</code></td>
+<td><code>BLOCKER-004, BLOCKER-020, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-05</code></td>
 <td><code>M-02</code></td>
 <td><strong>Matching dùng chung, tất định</strong> — Một thư viện matching một-một không phụ thuộc lớp dùng chung cho Detector–annotation, GT–annotation và GT–GT.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Lê Duy Nam</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-05">chi tiết</a></td>
-<td><code>BLOCKER-015</code></td>
+<td><code>BLOCKER-015, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-06</code></td>
 <td><code>M-04</code></td>
 <td><strong>Công cụ reference: hai GT, phân xử, suy lỗi, khoá, leakage</strong> — LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-06">chi tiết</a></td>
-<td><code>BLOCKER-005, BLOCKER-013, BLOCKER-018</code></td>
+<td><code>BLOCKER-005, BLOCKER-013, BLOCKER-018, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-07</code></td>
 <td><code>M-04</code></td>
 <td><strong>Bộ reference tập hiệu chỉnh đã khoá</strong> — Có reference (GT + 𝓔) đã khoá cho tập hiệu chỉnh để chọn ngưỡng Detector, học score và chọn k*.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Lê Duy Nam</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-07">chi tiết</a></td>
-<td><code>BLOCKER-015, BLOCKER-016, BLOCKER-018, BLOCKER-020</code></td>
+<td><code>BLOCKER-015, BLOCKER-016, BLOCKER-018, BLOCKER-020, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-08</code></td>
 <td><code>M-02</code></td>
 <td><strong>QC Orchestrator, shard, aggregation và coverage ledger</strong> — QC Run chạy theo shard, chịu được retry/worker chết, gộp candidate thành issue và ghi coverage đúng mẫu số.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-08">chi tiết</a></td>
-<td><code>BLOCKER-003, BLOCKER-007, BLOCKER-014</code></td>
+<td><code>BLOCKER-003, BLOCKER-007, BLOCKER-014, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-09</code></td>
 <td><code>M-02</code></td>
 <td><strong>Engine Schema/Taxonomy, Geometry, Duplicate/Overlap</strong> — Ba engine xác định sinh cảnh báo cấu trúc và candidate E3 có evidence.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Nguyễn Xuân Việt Anh</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-09">chi tiết</a></td>
-<td><code>none</code></td>
+<td><code>DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-10</code></td>
 <td><code>M-04</code></td>
 <td><strong>Detector baseline, candidate E1/E2 và evidence</strong> — Một Detector baseline đã freeze chạy trên GPU worker sinh candidate E1/E2 kèm evidence; thiếu model thì Not checked.</td>
-<td><code>unassigned (vai trò: Data/Model Owner)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>T-005</code></td>
 <td>Xem <a href="#e-10">chi tiết</a></td>
-<td><code>BLOCKER-005, BLOCKER-014</code></td>
+<td><code>BLOCKER-005, BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-11</code></td>
 <td><code>M-02</code></td>
 <td><strong>Ranking, score_v0, giải thích, random slice và đối chứng</strong> — Mọi frame có điểm và hạng tái lập, giải thích được, kèm lát ngẫu nhiên và ranking đối chứng.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-11">chi tiết</a></td>
-<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010</code></td>
+<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-12</code></td>
 <td><code>M-04</code></td>
-<td><strong>VLM có điều kiện theo TBD-08</strong> — Thực hiện đúng nhánh đã duyệt cho FR-ENG-10: tắt có ghi nhận, hoặc bật theo pipeline B-08.</td>
-<td><code>unassigned (vai trò: Product Owner)</code></td>
+<td><strong>VLM tắt trong pilot (TBD-08)</strong> — Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</td>
+<td><code>Nguyễn Xuân Việt Anh</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-12">chi tiết</a></td>
-<td><code>BLOCKER-002</code></td>
+<td><code>BLOCKER-002, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-13</code></td>
 <td><code>M-03</code></td>
 <td><strong>Review Queues và lease nguyên tử</strong> — Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-13">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-013</code></td>
+<td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-14</code></td>
 <td><code>M-03</code></td>
 <td><strong>Review Workspace, quyết định và effort log</strong> — Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-14">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013</code></td>
+<td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-15</code></td>
 <td><code>M-03</code></td>
 <td><strong>Escalation, phân xử, Decision Case và Guideline Gap</strong> — Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-15">chi tiết</a></td>
-<td><code>none</code></td>
+<td><code>DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-16</code></td>
 <td><code>M-03</code></td>
 <td><strong>Rework, re-check, verify và QC run cuối</strong> — Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-16">chi tiết</a></td>
-<td><code>BLOCKER-007, BLOCKER-011</code></td>
+<td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-17</code></td>
 <td><code>M-04</code></td>
-<td><strong>Hiệu chỉnh score, Metric engine và pilot nhỏ</strong> — Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá; pilot nhỏ cho số liệu để tính cỡ mẫu.</td>
-<td><code>unassigned (vai trò: Data/Model Owner)</code></td>
+<td><strong>Hiệu chỉnh score</strong> — Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá (Metric engine và pilot nhỏ hoãn theo CR-101).</td>
+<td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-17">chi tiết</a></td>
-<td><code>BLOCKER-010, BLOCKER-015, BLOCKER-016, BLOCKER-021</code></td>
+<td><code>BLOCKER-010, BLOCKER-015, BLOCKER-016, BLOCKER-021, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-18</code></td>
 <td><code>M-05</code></td>
 <td><strong>Reference held-out và D1/D2 đã khoá</strong> — Reference độc lập, đã khoá cho tập held-out và dữ liệu thí nghiệm theo thiết kế được duyệt.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Lê Duy Nam</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-18">chi tiết</a></td>
-<td><code>BLOCKER-005, BLOCKER-015, BLOCKER-016, BLOCKER-017, BLOCKER-018, BLOCKER-019, BLOCKER-020</code></td>
+<td><code>BLOCKER-005, BLOCKER-015, BLOCKER-016, BLOCKER-017, BLOCKER-018, BLOCKER-019, BLOCKER-020, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-19</code></td>
 <td><code>M-05</code></td>
 <td><strong>Preregistration và thí nghiệm crossover</strong> — Thí nghiệm baseline/assisted chạy đúng thiết kế đã khoá trước.</td>
-<td><code>unassigned (vai trò: Product Owner)</code></td>
+<td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-19">chi tiết</a></td>
-<td><code>BLOCKER-002, BLOCKER-015, BLOCKER-017, BLOCKER-018, BLOCKER-019</code></td>
+<td><code>BLOCKER-002, BLOCKER-015, BLOCKER-017, BLOCKER-018, BLOCKER-019, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-20</code></td>
 <td><code>M-05</code></td>
 <td><strong>Đánh giá KPI-1, KPI-2 và guardrail</strong> — KPI-1, KPI-2, KPI-2b, G-1…G-5 tính đúng phương pháp đã preregister, có provenance.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-20">chi tiết</a></td>
-<td><code>BLOCKER-006, BLOCKER-010, BLOCKER-012, BLOCKER-015, BLOCKER-021</code></td>
+<td><code>BLOCKER-006, BLOCKER-010, BLOCKER-012, BLOCKER-015, BLOCKER-021, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-21</code></td>
 <td><code>M-05</code></td>
 <td><strong>Báo cáo hiệu quả và xuất PDF/CSV/JSON</strong> — Báo cáo đủ cỡ mẫu, mẫu số, phương pháp, CI, provenance; random và risk tách riêng; xuất được.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Trần Đức Thọ</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-21">chi tiết</a></td>
-<td><code>BLOCKER-012, BLOCKER-013</code></td>
+<td><code>BLOCKER-012, BLOCKER-013, DEC-002, DEC-003</code></td>
 </tr>
 <tr>
 <td><code>E-22</code></td>
 <td><code>M-05</code></td>
 <td><strong>Quality Gate tối thiểu và waiver</strong> — Gate tính từng điều kiện trên run cuối, thiếu dữ liệu là chưa đạt, waiver có người duyệt khác người đề nghị.</td>
-<td><code>unassigned (vai trò: Quality Assurance Lead)</code></td>
+<td><code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-22">chi tiết</a></td>
-<td><code>BLOCKER-006, BLOCKER-011</code></td>
+<td><code>BLOCKER-006, BLOCKER-011, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
 <tr>
 <td><code>E-23</code></td>
 <td><code>M-06</code></td>
 <td><strong>Vận hành, đo NFR, retention và backup/restore</strong> — Hệ thống chạy trên môi trường mục tiêu, NFR đo trên phần cứng thật, khôi phục được nhất quán.</td>
-<td><code>unassigned (vai trò: Tech Lead Backend)</code></td>
+<td><code>Trịnh Quang Trung</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-23">chi tiết</a></td>
-<td><code>BLOCKER-014</code></td>
+<td><code>BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-24</code></td>
 <td><code>M-06</code></td>
 <td><strong>Nghiệm thu độc lập và bàn giao M13</strong> — Bằng chứng nghiệm thu đầy đủ cho mọi Must + Should, AC-01…AC-11, R-01…R-07.</td>
-<td><code>unassigned (vai trò: Product Owner)</code></td>
+<td><code>Trịnh Quang Trung</code></td>
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-24">chi tiết</a></td>
-<td><code>BLOCKER-001</code></td>
+<td><code>BLOCKER-001, DEC-002, DEC-003</code></td>
 </tr>
 </tbody>
 </table>
 <h2 id="epic-details">Epic Details</h2>
-<p>Mỗi epic giữ cấu trúc của <code>.agent/templates/epic-template.md</code>. Không epic nào được mở rộng task khi còn <code>EPIC_PROPOSED</code>.</p>
+<p>Mỗi epic giữ cấu trúc của <code>.agent/templates/epic-template.html</code>. Không epic nào được mở rộng task khi còn <code>EPIC_PROPOSED</code>.</p>
+<p>Quy tắc bổ sung theo <code>.agent/governance/decisions/DEC-002.html</code> (2026-10-06):</p>
+<ul>
+<li><strong>Ký epic</strong>: một epic chỉ chuyển <code>EPIC_READY</code> khi Product Owner ghi chữ ký vào trường <strong>PO Sign-off</strong> (người, ngày) và mọi task của epic có developer được gán (BLOCKER-001).</li>
+<li><strong>Frontend thuộc phạm vi epic</strong>: epic có màn hình gồm cả backend lẫn frontend (dòng <code>Frontend:</code> trong Included); epic chỉ xong khi màn hình chạy trên API thật.</li>
+<li><strong>Thiết kế tham khảo</strong>: <code>docs/design/</code> (Design System và <code>screens/*.dc.html</code>) là thiết kế mẫu để tham khảo khi code frontend, không phải đặc tả pixel. Delta thiết kế bổ sung just-in-time ngay trước epic dùng tới: đăng nhập/audit trước E-02; hàng đợi frame + đóng góp điểm trước E-13; Workspace delta trước E-14; reference hai GT trước E-06; thí nghiệm và KPI trước E-19/E-20 (BLOCKER-013).</li>
+</ul>
 <h3 id="e-01">E-01</h3>
 <h4 id="record-metadata">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-01</code></li>
 <li><strong>Title</strong>: <code>Hợp đồng triển khai M13, lineage và phép đo</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-01</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-07</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective">Objective</h4>
 <p>Có một contract duy nhất (entity, API, state machine, lỗi, engine interface, lineage, nối quyết định với reference) truy được tới FR/BR trước khi build.</p>
@@ -327,10 +338,12 @@ ul.dir{columns:2;font-size:14px}
 <li>OpenAPI baseline cho bảng endpoint SRS §9.3 và hợp đồng lỗi 400/403/404/409/422 kèm code/message/request_id</li>
 <li>Bảng transition/event/actor/guard của Issue, QC Run, frame (SRS §5.3–5.5, B-17)</li>
 <li>Engine interface chung: input, output, trạng thái công khai, applicability trong ledger (NFR-13, B-19)</li>
-<li>ADR đề xuất: định danh đối tượng qua revision (cvat_shape_id + namespace nguồn, fallback matching) và liên kết verification với run cuối (FR-RWK-05…08)</li>
-<li>ADR đề xuất: neo/dedup cho issue cấu trúc và issue thủ công (FR-AGG-03, FR-RNK-12)</li>
+<li>ADR theo DEC-002 (BLOCKER-007 phương án A): định danh đối tượng qua revision bằng cvat_shape_id + namespace nguồn, fallback matching chỉ để gợi ý; run cuối gặp lại cùng neo thì tạo issue mới liên kết issue gốc (FR-RWK-05…08)</li>
+<li>ADR theo DEC-002: neo issue cấu trúc (annotation, rule ID), issue thủ công (frame, vùng vẽ) (FR-AGG-03, FR-RNK-12)</li>
+<li>Bổ sung contract và SRS theo DEC-002: trạng thái frame "đang dở" (BLOCKER-008), FR-GTE-01 khi không rework (BLOCKER-011), báo cáo hai phần KPI/run cuối (BLOCKER-012)</li>
 <li>Contract nối quyết định Xác nhận lỗi ↔ phần tử 𝓔 cho KPI-2b (FR-EVL-13)</li>
 <li>Ma trận actor/action/scope chuẩn (FR-SEC-01, bảng RBAC)</li>
+<li>Frontend: OpenAPI baseline là nguồn sinh type cho frontend (<code>npm run gen:api</code>); bảng mã lỗi 400/403/404/409/422 ↔ thông báo UI dùng chung; không có màn riêng</li>
 </ul>
 <h5 id="excluded">Excluded</h5>
 <ul>
@@ -340,14 +353,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>none</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-001, BLOCKER-003, BLOCKER-007, BLOCKER-009, BLOCKER-010, BLOCKER-012</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Main, ContextBarStates, WorkflowPermissions, AnalysisConfig, RulesThresholds</li>
@@ -378,12 +391,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>Nền backend/frontend, auth, RBAC, audit, storage và CI</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-01</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_1">Objective</h4>
 <p>Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</p>
@@ -392,29 +406,31 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Auth phiên LabelX + CSRF giữa Next.js và DRF; identity mapping LabelX ↔ CVAT (FR-SEC-02)</li>
 <li>RBAC theo vai trò + scope dataset, kiểm mọi request (FR-SEC-01); tách người yêu cầu/duyệt, chặn cùng người nhiều tài khoản (FR-SEC-04); override Super Admin có lý do (FR-SEC-06)</li>
-<li>Audit log append-only, ghi cùng transaction, màn xem audit có lọc (FR-SEC-05, FR-SEC-07; NFR-08)</li>
+<li>Audit log append-only, ghi cùng transaction (FR-SEC-05; NFR-08)</li>
 <li>Lớp Object Storage: upload blob theo hash nội dung trước, commit metadata sau (nền NFR-06)</li>
 <li>Log có cấu trúc kèm request_id (nền NFR-12); secret không vào log (NFR-07)</li>
 <li>Frontend shell theo Design System: TopBar, FlowNav, ContextBar, component lx-*, API client sinh từ OpenAPI, UI theo quyền (NFR-10)</li>
 <li>Chọn test runner frontend và đưa vào <code>make check</code>; CI chạy lint/typecheck/test</li>
+<li>Frontend: màn đăng nhập/đăng xuất (thiết kế bổ sung just-in-time trước E-02, BLOCKER-013); menu và hành động ẩn/khoá theo vai trò + scope; xử lý 401/403 toàn cục; test runner frontend kèm test component đầu tiên trong CI</li>
 </ul>
 <h5 id="excluded_1">Excluded</h5>
 <ul>
 <li>Màn nghiệp vụ cụ thể (thuộc epic tương ứng)</li>
+<li>Màn xem audit FR-SEC-07 (hoãn theo CR-101)</li>
 </ul>
 <h4 id="dependencies_1">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-01</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-003, BLOCKER-013, BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
 </ul>
 <h4 id="related-files_1">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Main, WorkflowPermissions, TopBar, FlowNav, NavigationMenu, ContextBarStates</li>
 </ul>
 <h4 id="acceptance-criteria_1">Acceptance Criteria</h4>
@@ -423,6 +439,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Không tồn tại API sửa/xoá audit; kiểm DB grant</li>
 <li>[ ] Người duyệt trùng người yêu cầu bị từ chối (FR-SEC-04)</li>
 <li>[ ] CI xanh với test backend + frontend</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -444,22 +461,22 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-03</code></li>
 <li><strong>Title</strong>: <code>Guideline version và mapping rule</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Control Admin)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-01</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_2">Objective</h4>
 <p>Workspace tra được rule theo rule ID + version + section của snapshot, không dùng RAG.</p>
 <h4 id="scope_2">Scope</h4>
 <h5 id="included_2">Included</h5>
 <ul>
-<li>Lưu guideline theo version, rule ID, section, trích đoạn (FR-GDL-01)</li>
-<li>Mapping nhóm lỗi/lớp/cặp lớp → rule ID do QC Admin cấu hình (FR-GDL-02)</li>
-<li>API lookup theo guideline version của snapshot (FR-GDL-03)</li>
+<li>Guideline tĩnh có rule ID, section, trích đoạn nạp từ tệp lúc khởi tạo; mapping nhóm lỗi/lớp → rule ID trong cùng tệp; API tra rule (thay FR-GDL-01…03 theo CR-101)</li>
 <li>Không retrieval ngữ nghĩa (FR-GDL-04)</li>
+<li>Frontend: ModelsGuidelines phần guideline (version, rule ID, section, trích đoạn) và RulesThresholds phần mapping nhóm lỗi/lớp → rule ID (QC Admin sửa, vai trò khác chỉ xem); component tra rule dùng lại ở Workspace (E-14)</li>
 </ul>
 <h5 id="excluded_2">Excluded</h5>
 <ul>
@@ -473,12 +490,12 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_2">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-008</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, RulesThresholds</li>
 </ul>
 <h4 id="acceptance-criteria_2">Acceptance Criteria</h4>
@@ -486,6 +503,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Lookup trả đúng version gắn với snapshot</li>
 <li>[ ] Mapping không hợp lệ bị từ chối</li>
 <li>[ ] Rule tối thiểu cho 10 lớp BDD100K được nạp (AS-06, RK-08)</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -507,12 +525,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
 <li><strong>Title</strong>: <code>CVAT adapter chỉ đọc và snapshot bất biến</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_3">Objective</h4>
 <p>Tạo snapshot bất biến, có hash, phát hiện drift, từ CVAT thật mà không có đường ghi annotation.</p>
@@ -528,6 +547,8 @@ ul.dir{columns:2;font-size:14px}
 <li>Deep link job/frame (FR-SNP-08)</li>
 <li>Ảnh chỉ trong storage nội bộ (NFR-09)</li>
 <li>Màn Snapshot, SnapshotHistory</li>
+<li>CVAT dev cùng phiên bản instance thật trong <code>infrastructure/docker-compose.dev.yml</code> để xây song song (BLOCKER-004 phương án B); kiểm lại trên instance thật trước nghiệm thu</li>
+<li>Frontend: Snapshot (chọn project/task/job, tạo snapshot, trạng thái hash/drift, số shape bị bỏ qua) và SnapshotHistory (danh sách, parent_snapshot, deep link CVAT)</li>
 </ul>
 <h5 id="excluded_3">Excluded</h5>
 <ul>
@@ -537,14 +558,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_3">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-02, E-03</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-004, BLOCKER-020</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_3">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-006</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Snapshot, SnapshotHistory, Main</li>
@@ -555,6 +576,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Hai lần export không đổi cho cùng hash</li>
 <li>[ ] Không có code path gọi API ghi của CVAT (kiểm bằng test + review)</li>
 <li>[ ] Deep link mở đúng job/frame trên CVAT pin version</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -576,12 +598,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-05</code></li>
 <li><strong>Title</strong>: <code>Matching dùng chung, tất định</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-13</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_4">Objective</h4>
 <p>Một thư viện matching một-một không phụ thuộc lớp dùng chung cho Detector–annotation, GT–annotation và GT–GT.</p>
@@ -590,6 +613,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Lọc cạnh IoU &lt; τ_m trước tối ưu; Hungarian tối đa số cặp rồi tổng IoU; phá hoà tất định; ghi ambiguous (SRS §3.4, FR-ENG-06)</li>
 <li>Có version thuật toán (BR-13)</li>
+<li>Frontend: không có màn riêng; kết quả matching hiển thị qua E-06 và E-14</li>
 </ul>
 <h5 id="excluded_4">Excluded</h5>
 <ul>
@@ -602,10 +626,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_4">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: — (dùng trong Benchmark, ReviewWorkspace)</li>
@@ -635,25 +659,29 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-06</code></li>
 <li><strong>Title</strong>: <code>Công cụ reference: hai GT, phân xử, suy lỗi, khoá, leakage</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-15</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_5">Objective</h4>
 <p>LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</p>
 <h4 id="scope_5">Scope</h4>
 <h5 id="included_5">Included</h5>
 <ul>
-<li>Nhập hai GT từ task CVAT riêng (FR-EVL-01)</li>
+<li>Nhập GT là nhãn gốc BDD100K từ tệp, khoá theo checksum (FR-EVL-01 bản v1.1, CR-101)</li>
+<li>Nạp tệp annotation người học gán sẵn vào CVAT làm annotation cần review (TBD-04 phương án a, DEC-003)</li>
 <li>Người lập GT không xem ranking/score/candidate (FR-EVL-02, BR-10)</li>
 <li>Suy 𝓔 theo BR-01…07, sửa mapping thì suy lại (FR-EVL-03, BR-14)</li>
 <li>Khoá reference cùng GT/snapshot/mapping/τ_m/a_min/version (FR-EVL-04)</li>
 <li>Kiểm leakage: split theo video, training manifest Detector, case hiệu chỉnh (FR-EVL-05)</li>
-<li>Báo cáo tỉ lệ khớp hai GT trước phân xử (BR-11)</li>
+<li>Báo cáo ghi rõ nguồn GT là nhãn gốc BDD100K (BR-11 bản v1.1)</li>
 <li>Màn Benchmark, Calibration</li>
+<li>Checklist QC Admin tạo bản sao annotation hai nhánh thí nghiệm trên CVAT, quy ước tên/tag để adapter nhận diện (BLOCKER-018 phương án A)</li>
+<li>Frontend: Benchmark/Calibration phần reference — nhập GT BDD100K, suy 𝓔 để QA Lead duyệt, khoá version, cảnh báo leakage (thiết kế bổ sung just-in-time trước E-06); người lập GT không thấy ranking/score/candidate ở cả UI và API</li>
 </ul>
 <h5 id="excluded_5">Excluded</h5>
 <ul>
@@ -662,16 +690,16 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_5">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-04, E-05</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-005, BLOCKER-013, BLOCKER-018</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_5">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-002</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark, Calibration</li>
 </ul>
 <h4 id="acceptance-criteria_5">Acceptance Criteria</h4>
@@ -679,6 +707,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Khoá reference khi còn bất đồng → 422</li>
 <li>[ ] Không có thao tác xoá lỗi trực tiếp khỏi 𝓔</li>
 <li>[ ] Overlap held-out với training manifest chặn đánh giá</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -700,12 +729,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-07</code></li>
 <li><strong>Title</strong>: <code>Bộ reference tập hiệu chỉnh đã khoá</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_6">Objective</h4>
 <p>Có reference (GT + 𝓔) đã khoá cho tập hiệu chỉnh để chọn ngưỡng Detector, học score và chọn k*.</p>
@@ -713,8 +743,9 @@ ul.dir{columns:2;font-size:14px}
 <h5 id="included_6">Included</h5>
 <ul>
 <li>Chọn ảnh/video tập hiệu chỉnh (TBD-03)</li>
-<li>Hai người xác minh gán GT, QA Lead phân xử, khoá version</li>
+<li>GT là nhãn gốc BDD100K; QA Lead duyệt 𝓔 và khoá version (CR-101)</li>
 <li>Chuẩn bị bắt đầu sớm song song M-02/M-03 (RK-03)</li>
+<li>Frontend: dùng màn reference của E-06</li>
 </ul>
 <h5 id="excluded_6">Excluded</h5>
 <ul>
@@ -723,16 +754,16 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_6">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-06</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-016, BLOCKER-018, BLOCKER-020</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_6">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-003</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark, Calibration</li>
 </ul>
 <h4 id="acceptance-criteria_6">Acceptance Criteria</h4>
@@ -740,6 +771,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Reference hiệu chỉnh khoá version với đủ provenance</li>
 <li>[ ] Tỉ lệ khớp hai GT được báo cáo</li>
 <li>[ ] Không người xác minh nào tự review annotation của mình (BR-12)</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -761,12 +793,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-08</code></li>
 <li><strong>Title</strong>: <code>QC Orchestrator, shard, aggregation và coverage ledger</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_7">Objective</h4>
 <p>QC Run chạy theo shard, chịu được retry/worker chết, gộp candidate thành issue và ghi coverage đúng mẫu số.</p>
@@ -784,6 +817,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Retry có backoff, worker chết không mất kết quả (NFR-05)</li>
 <li>Metric hàng đợi/shard (NFR-12)</li>
 <li>Màn AnalysisConfig, ExecutionHistory</li>
+<li>Frontend: AnalysisConfig (chọn snapshot, engine, tạo run, huỷ, retry-failed) và ExecutionHistory (trạng thái run/shard, ledger theo engine, trạng thái công khai Checked/Partial/Failed/Not checked/Running, tự làm mới khi run đang chạy)</li>
 </ul>
 <h5 id="excluded_7">Excluded</h5>
 <ul>
@@ -792,14 +826,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_7">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-04</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-003, BLOCKER-007, BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
 </ul>
 <h4 id="related-files_7">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ExecutionHistory</li>
@@ -809,6 +843,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] AC-01: hai run cùng input → hash nội dung chuẩn hoá giống hệt</li>
 <li>[ ] AC-02: ép lỗi shard rồi retry → số issue không đổi</li>
 <li>[ ] Ngắt giữa upload và commit không để metadata trỏ blob thiếu</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -830,12 +865,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-09</code></li>
 <li><strong>Title</strong>: <code>Engine Schema/Taxonomy, Geometry, Duplicate/Overlap</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_8">Objective</h4>
 <p>Ba engine xác định sinh cảnh báo cấu trúc và candidate E3 có evidence.</p>
@@ -845,6 +881,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Schema/Taxonomy theo taxonomy version + thuộc tính bắt buộc (FR-ENG-02)</li>
 <li>Geometry: x1&lt;x2, y1&lt;y2, bounds dung sai 2 px, diện tích ≥ 24 px² (FR-ENG-03)</li>
 <li>Duplicate/Overlap IoU ≥ 0,85 sinh candidate E3 (FR-ENG-04)</li>
+<li>Frontend: tham số engine hiển thị trên AnalysisConfig/RulesThresholds; cảnh báo cấu trúc và candidate E3 kèm evidence trong ExecutionHistory</li>
 </ul>
 <h5 id="excluded_8">Excluded</h5>
 <ul>
@@ -857,10 +894,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_8">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, RulesThresholds, ExecutionHistory</li>
@@ -869,6 +906,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>[ ] Bộ test theo từng rule ID</li>
 <li>[ ] Cảnh báo cấu trúc không tự thành lỗi KPI</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -890,24 +928,26 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-10</code></li>
 <li><strong>Title</strong>: <code>Detector baseline, candidate E1/E2 và evidence</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Data/Model Owner)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_9">Objective</h4>
 <p>Một Detector baseline đã freeze chạy trên GPU worker sinh candidate E1/E2 kèm evidence; thiếu model thì Not checked.</p>
 <h4 id="scope_9">Scope</h4>
 <h5 id="included_9">Included</h5>
 <ul>
-<li>Freeze artifact/version/checksum, mapping 10 lớp BDD100K (FR-ENG-05)</li>
+<li>Freeze artifact/version/checksum, mapping 10 lớp BDD100K (FR-ENG-05): Faster R-CNN R-50-FPN 3x của model zoo BDD100K (BLOCKER-005); GPU worker dùng image riêng MMDetection 2.x; training manifest = BDD100K train</li>
 <li>Inference theo lô trên GPU worker, toạ độ pixel gốc (SRS §9.4)</li>
 <li>Candidate E1/E2 theo τ_E1, τ_E2 (FR-ENG-07)</li>
 <li>Evidence: box/lớp dự đoán, confidence, IoU, ambiguous, crop, rule (FR-ENG-08)</li>
 <li>Not checked khi không có Detector (FR-ENG-09)</li>
 <li>Code phụ thuộc E-05/E-08; nghiệm thu ngưỡng phụ thuộc E-07</li>
+<li>Frontend: ModelsGuidelines phần model (artifact, version, checksum, mapping 10 lớp — giá trị thật, không dùng số demo); trạng thái Not checked khi thiếu Detector</li>
 </ul>
 <h5 id="excluded_9">Excluded</h5>
 <ul>
@@ -916,16 +956,16 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_9">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-05, E-08, E-07</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-005, BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
 </ul>
 <h4 id="related-files_9">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, AnalysisConfig, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_9">Acceptance Criteria</h4>
@@ -933,6 +973,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Chạy đủ mọi frame áp dụng, ledger đúng</li>
 <li>[ ] Ngưỡng có version, chọn trên tập hiệu chỉnh</li>
 <li>[ ] Không ranking giả khi thiếu model</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -954,12 +995,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-11</code></li>
 <li><strong>Title</strong>: <code>Ranking, score_v0, giải thích, random slice và đối chứng</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_10">Objective</h4>
 <p>Mọi frame có điểm và hạng tái lập, giải thích được, kèm lát ngẫu nhiên và ranking đối chứng.</p>
@@ -974,6 +1016,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Ranking đối chứng ngẫu nhiên/heuristic (FR-RNK-08)</li>
 <li>Neo + n_i theo bảng neo (FR-RNK-12)</li>
 <li>Chạy lại ranking khi có candidate E1/E2 từ E-10</li>
+<li>Frontend: component giải thích điểm (n_i·q_i, h(f), cờ thiếu bằng chứng) dùng lại ở E-13/E-14; AuditSampling cho lát ngẫu nhiên r%</li>
 </ul>
 <h5 id="excluded_10">Excluded</h5>
 <ul>
@@ -983,14 +1026,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_10">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-09</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-006, BLOCKER-007, BLOCKER-010</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_10">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: ReviewQueues, AuditSampling, AnalysisConfig</li>
@@ -1000,6 +1043,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Hash ranking giống hệt khi chạy lại (AC-01)</li>
 <li>[ ] Báo cáo ghi rõ đang dùng score_v0</li>
 <li>[ ] Random và risk lưu nguồn riêng</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1020,37 +1064,39 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_11">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
-<li><strong>Title</strong>: <code>VLM có điều kiện theo TBD-08</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Product Owner)</code></li>
+<li><strong>Title</strong>: <code>VLM tắt trong pilot (TBD-08)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
-<p>Thực hiện đúng nhánh đã duyệt cho FR-ENG-10: tắt có ghi nhận, hoặc bật theo pipeline B-08.</p>
+<p>Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</p>
 <h4 id="scope_11">Scope</h4>
 <h5 id="included_11">Included</h5>
 <ul>
-<li>Nếu tắt: trạng thái disabled/Not checked đúng, không giả coverage</li>
-<li>Nếu bật: candidate → policy → worker nội bộ; ≤ 400 candidate/run; ≤ 3 lần thử; hết hạn mức ghi phần chưa kiểm (B-08)</li>
+<li>VLM tắt trong pilot (DEC-002, BLOCKER-002 phương án A): trạng thái disabled/Not checked đúng, không giả coverage</li>
+<li>Frontend: AnalysisConfig/ExecutionHistory hiển thị VLM disabled/Not checked; không có điều khiển bật VLM</li>
 </ul>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
 <li>Gửi ảnh ra dịch vụ ngoài khi chưa được phép (NFR-09)</li>
+<li>Pipeline VLM bật theo B-08 (để giai đoạn sau)</li>
 </ul>
 <h4 id="dependencies_11">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-09, E-10</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-002</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_11">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ModelsGuidelines, ExecutionHistory</li>
@@ -1058,6 +1104,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Bằng chứng của đúng nhánh đã được Product Owner duyệt</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1079,12 +1126,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-13</code></li>
 <li><strong>Title</strong>: <code>Review Queues và lease nguyên tử</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-15</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_12">Objective</h4>
 <p>Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</p>
@@ -1093,9 +1141,10 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Hàng đợi Theo rủi ro và Kiểm tra ngẫu nhiên, lọc (FR-REV-01, 02)</li>
 <li>Bắt đầu review cấp lease, bỏ qua self-review (FR-REV-03; FR-SEC-03)</li>
-<li>Lease hết hạn/gia hạn (FR-REV-04)</li>
+<li>Lease hết hạn/gia hạn (FR-REV-04): một lease mỗi reviewer; hết hạn giữ quyết định đã lưu, frame về hàng đợi ở trạng thái "đang dở", ưu tiên reviewer cũ; thời hạn chốt sau đo pilot (BLOCKER-008 phương án A)</li>
 <li>Từ chối lưu khi lease hết/khác người (409) hoặc self-review (403) (FR-REV-14)</li>
 <li>Không hai reviewer cùng lease (NFR-15)</li>
+<li>Frontend: ReviewQueues theo frame — hai hàng đợi Theo rủi ro / Kiểm tra ngẫu nhiên, lọc, rank + đóng góp điểm (thiết kế bổ sung just-in-time trước E-13); nút Bắt đầu review cấp lease; nhãn frame "đang dở"; xử lý 409 (lease hết/khác người) và 403 (self-review)</li>
 </ul>
 <h5 id="excluded_12">Excluded</h5>
 <ul>
@@ -1104,14 +1153,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_12">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-11</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-008, BLOCKER-013</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_12">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-005</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: ReviewQueues</li>
@@ -1120,6 +1169,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>[ ] Kiểm thử đồng thời không cấp trùng frame</li>
 <li>[ ] AC-05: assignee gửi quyết định qua API bị từ chối, có audit</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1141,12 +1191,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-14</code></li>
 <li><strong>Title</strong>: <code>Review Workspace, quyết định và effort log</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_13">Objective</h4>
 <p>Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</p>
@@ -1159,11 +1210,11 @@ ul.dir{columns:2;font-size:14px}
 <li>Quyết định và validate (FR-REV-08)</li>
 <li>Issue thủ công (FR-REV-09)</li>
 <li>Quyết định + audit cùng transaction (FR-REV-10)</li>
-<li>Phím tắt (FR-REV-11)</li>
 <li>Mở trong CVAT (FR-REV-12)</li>
 <li>Đã review xong (FR-REV-13)</li>
 <li>Effort log theo hoạt động, t_idle, event idempotent (FR-EVL-06)</li>
 <li>Đo NFR-01, NFR-02 bằng log</li>
+<li>Frontend: ReviewWorkspace — canvas ảnh (box nét liền/nét đứt, bật/tắt lớp, zoom/pan), panel evidence/trạng thái engine/guideline/case, form quyết định validate lý do, vẽ issue thủ công, phím tắt, Mở trong CVAT, gửi effort event idempotent; quyết định đã lưu không mất khi lease hết (thiết kế delta just-in-time trước E-14)</li>
 </ul>
 <h5 id="excluded_13">Excluded</h5>
 <ul>
@@ -1172,16 +1223,16 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_13">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-13, E-03</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-008, BLOCKER-009, BLOCKER-013</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_13">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-004, RISK-005</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ReviewWorkspace</li>
 </ul>
 <h4 id="acceptance-criteria_13">Acceptance Criteria</h4>
@@ -1189,6 +1240,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] AC-04: mọi candidate có evidence; không issue nào đóng/xác nhận mà thiếu quyết định của người</li>
 <li>[ ] Gửi lại effort event không cộng trùng</li>
 <li>[ ] Trạng thái có nhãn chữ, tương phản WCAG AA (NFR-10)</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1210,12 +1262,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-15</code></li>
 <li><strong>Title</strong>: <code>Escalation, phân xử, Decision Case và Guideline Gap</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_14">Objective</h4>
 <p>Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</p>
@@ -1226,7 +1279,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Kết luận có rule/nhãn/lý do (FR-ESC-02)</li>
 <li>Người phân xử khác người chuyển cấp (FR-ESC-03)</li>
 <li>Decision Case có version (FR-ESC-04)</li>
-<li>Guideline Gap (FR-ESC-05)</li>
+<li>Frontend: Escalations — danh sách kèm quyết định từng reviewer, form kết luận (rule/nhãn/lý do), Decision Case có version, ghi Guideline Gap; chặn người chuyển cấp tự phân xử</li>
 </ul>
 <h5 id="excluded_14">Excluded</h5>
 <ul>
@@ -1239,18 +1292,19 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_14">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-008</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Escalations</li>
 </ul>
 <h4 id="acceptance-criteria_14">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Người chuyển cấp tự phân xử → 403</li>
 <li>[ ] Case tra được ở UC-12 đúng version</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1272,12 +1326,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-16</code></li>
 <li><strong>Title</strong>: <code>Rework, re-check, verify và QC run cuối</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_15">Objective</h4>
 <p>Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</p>
@@ -1286,12 +1341,12 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Yêu cầu sửa + deep link (FR-RWK-01)</li>
 <li>Annotator chỉ thấy việc của mình, báo Đã sửa (FR-RWK-02)</li>
-<li>Snapshot mới job bị ảnh hưởng; revision không đổi → từ chối (FR-RWK-03; FR-SNP-09)</li>
+<li>Snapshot mới sau rework; revision không đổi → từ chối (FR-RWK-03); snapshot gia tăng FR-SNP-09 hoãn theo CR-101</li>
 <li>Re-check engine liên quan (FR-RWK-04)</li>
 <li>Verify bởi người khác annotator (FR-RWK-05)</li>
 <li>Snapshot toàn phạm vi + run cuối is_final (FR-RWK-06)</li>
 <li>Chuyển nguồn báo cáo/gate theo FR-RWK-08</li>
-<li>Rework Tracking (FR-RWK-07)</li>
+<li>Frontend: danh sách rework tối thiểu (yêu cầu sửa + deep link, annotator chỉ thấy việc của mình và báo Đã sửa, verify bởi người khác; bảng theo dõi FR-RWK-07 hoãn); đánh dấu run cuối trên SnapshotHistory/ExecutionHistory</li>
 </ul>
 <h5 id="excluded_15">Excluded</h5>
 <ul>
@@ -1300,16 +1355,16 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_15">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-15, E-08</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-007, BLOCKER-011</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_15">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ReworkTracking, SnapshotHistory, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_15">Acceptance Criteria</h4>
@@ -1317,6 +1372,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] AC-06: issue chỉ Đã đóng sau verify trên revision mới; báo cáo trỏ run cuối</li>
 <li>[ ] Run gốc giữ nguyên</li>
 <li>[ ] Run cuối Partial/Failed → phạm vi chưa hoàn tất</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1337,50 +1393,51 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_16">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-17</code></li>
-<li><strong>Title</strong>: <code>Hiệu chỉnh score, Metric engine và pilot nhỏ</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Data/Model Owner)</code></li>
+<li><strong>Title</strong>: <code>Hiệu chỉnh score</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_16">Objective</h4>
-<p>Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá; pilot nhỏ cho số liệu để tính cỡ mẫu.</p>
+<p>Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá.</p>
 <h4 id="scope_16">Scope</h4>
 <h5 id="included_16">Included</h5>
 <ul>
 <li>q_i logistic theo nhóm, h(f) Poisson (SRS §6.4.1)</li>
 <li>CV theo video: Brier, reliability (FR-RNK-10)</li>
 <li>Ablation, chọn version theo Recall@20% ngoài fold (FR-RNK-11)</li>
-<li>Metric engine Precision/Recall Detector trên GT khoá (FR-EVL-15) + Model Orchestrator (TBD-21)</li>
-<li>Đồng thuận reviewer G-3 (FR-EVL-16)</li>
-<li>Pilot nhỏ trên tập hiệu chỉnh → power analysis (TBD-12)</li>
+<li>Frontend: Calibration (CV theo video, Brier, reliability, ablation, khoá score version) </li>
 </ul>
 <h5 id="excluded_16">Excluded</h5>
 <ul>
 <li>Học từ held-out (FR-EVL-05)</li>
+<li>Metric engine + Model Orchestrator (FR-EVL-15), đồng thuận reviewer G-3 (FR-EVL-16), pilot nhỏ (TBD-12) — hoãn theo CR-101; đặc tả tối thiểu giữ ở BLOCKER-021</li>
 </ul>
 <h4 id="dependencies_16">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-07, E-10, E-11, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-010, BLOCKER-015, BLOCKER-016, BLOCKER-021</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015</code></li>
 </ul>
 <h4 id="related-files_16">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Calibration, PerformanceEvaluation, ModelsGuidelines</li>
 </ul>
 <h4 id="acceptance-criteria_16">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Score version khoá kèm kết quả ngoài fold và ablation</li>
 <li>[ ] Chưa đủ n_min thì giữ score_v0 và ghi rõ</li>
-<li>[ ] Accuracy Detector và agreement reviewer báo cáo tách riêng</li>
+<li>[ ] Báo cáo ghi rõ Metric engine, G-3 và pilot nhỏ hoãn theo CR-101</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1402,21 +1459,23 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-18</code></li>
 <li><strong>Title</strong>: <code>Reference held-out và D1/D2 đã khoá</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-05</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_17">Objective</h4>
 <p>Reference độc lập, đã khoá cho tập held-out và dữ liệu thí nghiệm theo thiết kế được duyệt.</p>
 <h4 id="scope_17">Scope</h4>
 <h5 id="included_17">Included</h5>
 <ul>
-<li>Chọn held-out/D1/D2 theo video, không giao tập hiệu chỉnh (EX-02)</li>
-<li>Hai GT, phân xử, khoá</li>
+<li>Chọn held-out theo video, không giao tập hiệu chỉnh (EX-02); D1/D2 là hai nửa của held-out chia ngẫu nhiên theo video (BLOCKER-017 phương án A)</li>
+<li>GT nhãn gốc BDD100K, QA Lead duyệt và khoá; loại ảnh thuộc BDD100K train (AS-03 bản v1.1)</li>
 <li>Kiểm leakage trước đo (FR-EVL-05)</li>
+<li>Frontend: dùng màn reference của E-06 cho held-out; hiển thị chia D1/D2 theo video và kết quả kiểm leakage</li>
 </ul>
 <h5 id="excluded_17">Excluded</h5>
 <ul>
@@ -1425,22 +1484,23 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_17">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-17</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-005, BLOCKER-015, BLOCKER-016, BLOCKER-017, BLOCKER-018, BLOCKER-019, BLOCKER-020</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_17">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-002, RISK-003</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Benchmark</li>
 </ul>
 <h4 id="acceptance-criteria_17">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Reference held-out/D1/D2 khoá version</li>
 <li>[ ] Kết quả kiểm leakage lưu cùng reference</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1462,12 +1522,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-19</code></li>
 <li><strong>Title</strong>: <code>Preregistration và thí nghiệm crossover</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Product Owner)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-05</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-23</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_18">Objective</h4>
 <p>Thí nghiệm baseline/assisted chạy đúng thiết kế đã khoá trước.</p>
@@ -1475,10 +1536,12 @@ ul.dir{columns:2;font-size:14px}
 <h5 id="included_18">Included</h5>
 <ul>
 <li>Khoá preregistration (SRS §7.3): Detector, score, reference, ngưỡng KPI, thí nghiệm</li>
-<li>Tạo thí nghiệm, gán AB/BA, khoá quy tắc dừng/δ/cỡ mẫu (FR-EVL-11)</li>
+<li>Tạo thí nghiệm, gán AB/BA, khoá quy tắc dừng/δ/cỡ mẫu (FR-EVL-11); cỡ mẫu theo nguồn lực ≥ 4 reviewer ngoài, khoá preregistration 2026-10-19 (TBD-12 bản v1.1); thí nghiệm chạy 2026-10-20…23</li>
 <li>Nhánh baseline ẩn ranking/score/evidence (FR-EVL-12)</li>
 <li>Bản sao annotation riêng mỗi nhánh (EX-03)</li>
 <li>Chống carryover (EX-08); buổi làm quen (NFR-11)</li>
+<li>Người phân xử thí nghiệm khác người phân xử GT (BLOCKER-019 phương án A)</li>
+<li>Frontend: màn thí nghiệm/preregistration (thiết kế bổ sung just-in-time trước E-19) — tạo thí nghiệm, gán AB/BA, khoá preregistration (chỉ đọc sau khoá); ReviewWorkspace chế độ baseline ẩn ranking/score/evidence</li>
 </ul>
 <h5 id="excluded_18">Excluded</h5>
 <ul>
@@ -1487,22 +1550,23 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_18">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-18, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-002, BLOCKER-015, BLOCKER-017, BLOCKER-018, BLOCKER-019</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_18">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-004, RISK-009</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: PerformanceEvaluation, AuditSampling, ReviewWorkspace</li>
 </ul>
 <h4 id="acceptance-criteria_18">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Mọi mục preregistration khoá version trước đợt 1</li>
 <li>[ ] Baseline không lộ evidence (kiểm UI + API)</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1524,12 +1588,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-20</code></li>
 <li><strong>Title</strong>: <code>Đánh giá KPI-1, KPI-2 và guardrail</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-05</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-26</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_19">Objective</h4>
 <p>KPI-1, KPI-2, KPI-2b, G-1…G-5 tính đúng phương pháp đã preregister, có provenance.</p>
@@ -1541,6 +1606,7 @@ ul.dir{columns:2;font-size:14px}
 <li>E_min (FR-EVL-10)</li>
 <li>T_A, T_B, KPI-2, KPI-2b, ρ, non-inferiority, mixed model, độ nhạy (FR-EVL-13)</li>
 <li>Provenance evaluation run (FR-EVL-14; NFR-14)</li>
+<li>Frontend: PerformanceEvaluation phần KPI (Recall@k, slice, KTC, KPI-2, KPI-2b, non-inferiority, G-1…G-5) — hiển thị "không đủ mẫu"/Not checked, không hiển thị 0% (thiết kế bổ sung just-in-time trước E-20)</li>
 </ul>
 <h5 id="excluded_19">Excluded</h5>
 <ul>
@@ -1549,22 +1615,23 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_19">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-19</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-006, BLOCKER-010, BLOCKER-012, BLOCKER-015, BLOCKER-021</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_19">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001, RISK-002, RISK-004, RISK-005, RISK-007, RISK-009, RISK-010</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: PerformanceEvaluation</li>
 </ul>
 <h4 id="acceptance-criteria_19">Acceptance Criteria</h4>
 <ul>
 <li>[ ] AC-08, AC-09 đánh giá được với TBD-K1…K4 đã chốt</li>
 <li>[ ] |𝓔| &lt; E_min ghi "không đủ mẫu"</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1586,12 +1653,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-21</code></li>
 <li><strong>Title</strong>: <code>Báo cáo hiệu quả và xuất PDF/CSV/JSON</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Trần Đức Thọ</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-05</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-26</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_20">Objective</h4>
 <p>Báo cáo đủ cỡ mẫu, mẫu số, phương pháp, CI, provenance; random và risk tách riêng; xuất được.</p>
@@ -1600,6 +1668,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>FR-RPT-01…06</li>
 <li>Phân biệt lineage KPI (snapshot đầu vào) với báo cáo/gate revision cuối</li>
+<li>Frontend: QualityReport hai phần (KPI theo snapshot đầu vào; chất lượng/gate theo run cuối), ghi rõ nguồn từng phần; xuất PDF/CSV/JSON</li>
 </ul>
 <h5 id="excluded_20">Excluded</h5>
 <ul>
@@ -1608,14 +1677,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_20">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-20, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-012, BLOCKER-013</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_20">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: QualityReport, PerformanceEvaluation</li>
@@ -1625,6 +1694,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] AC-10</li>
 <li>[ ] Chỉ số thiếu dữ liệu không hiển thị 0% hay đạt (FR-RPT-03)</li>
 <li>[ ] Tệp xuất ghi version snapshot/run/score/reference</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1646,22 +1716,25 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-22</code></li>
 <li><strong>Title</strong>: <code>Quality Gate tối thiểu và waiver</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Quality Assurance Lead)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-05</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-26</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_21">Objective</h4>
 <p>Gate tính từng điều kiện trên run cuối, thiếu dữ liệu là chưa đạt, waiver có người duyệt khác người đề nghị.</p>
 <h4 id="scope_21">Scope</h4>
 <h5 id="included_21">Included</h5>
 <ul>
-<li>Năm điều kiện pilot (FR-GTE-01)</li>
+<li>Năm điều kiện pilot (FR-GTE-01); G-3 hiển thị Not checked vì FR-EVL-16 hoãn (CR-101), chỉ đạt qua waiver</li>
 <li>Thiếu dữ liệu = chưa đạt (FR-GTE-02)</li>
-<li>Waiver theo policy (FR-GTE-03; TBD-19)</li>
+<li>Waiver chỉ cho coverage và đồng thuận reviewer; không waiver lỗi nghiêm trọng chưa đóng hay rework chưa verify; không rework thì run gốc Completed là run cuối (FR-GTE-03; BLOCKER-011 phương án A)</li>
+<li>G-4: lát ngẫu nhiên trên snapshot run cuối, đạt khi cận trên KTC 95% ≤ 5% (BLOCKER-006 phương án A)</li>
 <li>Không phát hành dataset (FR-GTE-04)</li>
+<li>Frontend: QualityGate — từng điều kiện kèm nguồn dữ liệu và trạng thái; form waiver chỉ cho coverage và đồng thuận reviewer; người duyệt khác người đề nghị</li>
 </ul>
 <h5 id="excluded_21">Excluded</h5>
 <ul>
@@ -1670,22 +1743,23 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_21">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-20, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-006, BLOCKER-011</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_21">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: QualityGate, RulesThresholds</li>
 </ul>
 <h4 id="acceptance-criteria_21">Acceptance Criteria</h4>
 <ul>
 <li>[ ] AC-07: engine Not checked/Failed → gate không đạt</li>
 <li>[ ] Waiver hết hạn → điều kiện trở lại chưa đạt</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1707,12 +1781,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-23</code></li>
 <li><strong>Title</strong>: <code>Vận hành, đo NFR, retention và backup/restore</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Tech Lead Backend)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-06</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-23</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_22">Objective</h4>
 <p>Hệ thống chạy trên môi trường mục tiêu, NFR đo trên phần cứng thật, khôi phục được nhất quán.</p>
@@ -1725,6 +1800,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Retention audit (NFR-08, TBD-15)</li>
 <li>Backup PostgreSQL + Object Storage versioning, diễn tập restore, RPO/RTO (NFR-16, TBD-17)</li>
 <li>Dashboard vận hành (NFR-12)</li>
+<li>Frontend: build production Next.js sau HTTPS, cấu hình qua biến môi trường, không lộ secret; đo NFR-01…03 phía trình duyệt cùng backend</li>
 </ul>
 <h5 id="excluded_22">Excluded</h5>
 <ul>
@@ -1737,18 +1813,19 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="related-files_22">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: —</li>
 </ul>
 <h4 id="acceptance-criteria_22">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Restore khôi phục nhất quán snapshot/ảnh/evidence/quyết định/reference/effort</li>
 <li>[ ] NFR có ngưỡng đã duyệt mới dùng pass/fail</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1770,12 +1847,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-24</code></li>
 <li><strong>Title</strong>: <code>Nghiệm thu độc lập và bàn giao M13</code></li>
-<li><strong>Owner</strong>: <code>unassigned (vai trò đề xuất theo SRS: Product Owner)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung</code></li>
 <li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-06</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>not-set</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-27</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_23">Objective</h4>
 <p>Bằng chứng nghiệm thu đầy đủ cho mọi Must + Should, AC-01…AC-11, R-01…R-07.</p>
@@ -1785,6 +1863,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Tổng hợp evidence, review, QA cho từng yêu cầu</li>
 <li>Báo cáo nghiệm thu, runbook, version cấu hình</li>
 <li>Disposition cho Could (FR-RNK-09 backlog)</li>
+<li>Frontend: kiểm thử e2e luồng chính (snapshot → run → hàng đợi → workspace → rework → báo cáo/gate) làm bằng chứng nghiệm thu</li>
 </ul>
 <h5 id="excluded_23">Excluded</h5>
 <ul>
@@ -1793,14 +1872,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_23">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-12, E-21, E-22, E-23</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-001</code></li>
+<li><strong>Blocked By</strong>: <code>none</code></li>
 </ul>
 <h4 id="related-files_23">Related Files</h4>
 <ul>
-<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.md</code></li>
-<li><strong>Milestones</strong>: <code>.agent/planning/milestones.md</code></li>
-<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.md</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.md</code></li>
+<li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
+<li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
+<li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-009, RISK-010</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Toàn bộ màn trong SRS bảng 9.1</li>
@@ -1809,6 +1888,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>[ ] Mọi AC đạt hoặc có disposition được duyệt</li>
 <li>[ ] Không còn blocker bắt buộc mở</li>
+<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>

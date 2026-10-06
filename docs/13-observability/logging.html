@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Logging LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/13-observability/logging.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="observability-logging">
+<meta name="labelx:title" content="Logging LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="observability">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[observability, logging, structured-logs, correlation-id]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 13-observability / logging</span><span class="sp"></span>
-<a href="logging.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 13-observability / logging</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>observability-logging</span><b>title</b><span>Logging LabelX</span><b>type</b><span>reference</span><b>domain</b><span>observability</span><b>module</b><span>repository</span><b>tags</b><span>[observability, logging, structured-logs, correlation-id]</span><b>priority</b><span>3</span></div>
 <h1 id="logging-labelx">Logging LabelX</h1>
@@ -53,7 +57,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><code>src/backend/config/settings.py</code> <strong>chưa có</strong> cấu hình <code>LOGGING</code>, nên Django dùng log mặc định. Celery worker chạy <code>-l info</code> (<code>make dev-worker</code>).</li>
 <li>Chưa có middleware sinh <code>request_id</code>, chưa có thư viện log JSON, chưa có nơi tập trung log.</li>
-<li>Ba trường <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code> và yêu cầu log có cấu trúc là <strong>đã chốt</strong> (NFR-12); không log secret là <strong>đã chốt</strong> (NFR-07). Các trường khác, danh sách sự kiện và cách hiện thực là <strong>đề xuất</strong>. Không thêm thư viện log mới khi chưa có change request (DEC-001, <code>AGENT.md</code>). Thư viện <code>logging</code> chuẩn của Python với formatter JSON đủ cho yêu cầu này.</li>
+<li>Ba trường <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code> và yêu cầu log có cấu trúc là <strong>đã chốt</strong> (NFR-12); không log secret là <strong>đã chốt</strong> (NFR-07). Các trường khác, danh sách sự kiện và cách hiện thực là <strong>đề xuất</strong>. Không thêm thư viện log mới khi chưa có change request (DEC-001, <code>AGENT.html</code>). Thư viện <code>logging</code> chuẩn của Python với formatter JSON đủ cho yêu cầu này.</li>
 </ul>
 <h2 id="phan-biet-log-va-audit">Phân biệt log và audit</h2>
 <table>
@@ -210,8 +214,8 @@ ul.dir{columns:2;font-size:14px}
 <p><strong>Chưa có.</strong> Phụ thuộc hạ tầng production (TBD-02). Khi chốt, ghi lại tại đây.</p>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="metrics.html">metrics.md</a></li>
-<li><a href="alerts-and-slo.html">alerts-and-slo.md</a></li>
-<li><a href="../06-security/security-policies.html">../06-security/security-policies.md</a></li>
+<li><a href="metrics.html">metrics.html</a></li>
+<li><a href="alerts-and-slo.html">alerts-and-slo.html</a></li>
+<li><a href="../06-security/security-policies.html">../06-security/security-policies.html</a></li>
 </ul>
 </article></main></body></html>

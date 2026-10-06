@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agents — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="agents-overview">
+<meta name="labelx:title" content="Agents">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[agents, coordination, tools]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>agents-overview</span><b>title</b><span>Agents</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>repository</span><b>tags</b><span>[agents, coordination, tools]</span><b>priority</b><span>2</span></div>
 <h1 id="agents">Agents</h1>
@@ -55,11 +59,11 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <p>The required handoff files are:</p>
 <ul>
-<li>Implementation report: <code>.agent/reports/implementation/TASK-ID.md</code></li>
-<li>Review report: <code>.agent/reports/review/TASK-ID.md</code></li>
-<li>QA report: <code>.agent/reports/qa/TASK-ID.md</code></li>
-<li>Task board: <code>.agent/execution/task-board.md</code></li>
-<li>Current context: <code>.agent/execution/current-context.md</code></li>
+<li>Implementation report: <code>.agent/reports/implementation/TASK-ID.html</code></li>
+<li>Review report: <code>.agent/reports/review/TASK-ID.html</code></li>
+<li>QA report: <code>.agent/reports/qa/TASK-ID.html</code></li>
+<li>Task board: <code>.agent/execution/task-board.html</code></li>
+<li>Current context: <code>.agent/execution/current-context.html</code></li>
 </ul>
 <p>The task lifecycle for this workflow is:</p>
 <p><code>BACKLOG -&gt; READY -&gt; IN_PROGRESS -&gt; IMPLEMENTED -&gt; REVIEWING -&gt; APPROVED -&gt; DONE</code></p>
@@ -81,18 +85,18 @@ agent qa pass TASK-ID
 agent qa fail TASK-ID</code></pre>
 <h2 id="prompt-pack">Prompt Pack</h2>
 <ul>
-<li><code>project-bootstrap-prompt.md</code> - Verify or restore the framework structure</li>
-<li><code>project-onboarding-prompt.md</code> - Ingest authoritative inputs and create initial Planning Truth</li>
-<li><code>roadmap-lock-prompt.md</code> - Govern draft-roadmap approval</li>
-<li><code>epic-expansion-prompt.md</code> - Expand one <code>EPIC_READY</code> epic into tasks</li>
-<li><code>executor-prompt.md</code> - Execute one authorized task</li>
-<li><code>reviewer-prompt.md</code> - Perform independent review</li>
-<li><code>qa-prompt.md</code> - Execute QA and issue a release recommendation</li>
-<li><code>release-manager-prompt.md</code> - Validate and record release execution</li>
+<li><code>project-bootstrap-prompt.html</code> - Verify or restore the framework structure</li>
+<li><code>project-onboarding-prompt.html</code> - Ingest authoritative inputs and create initial Planning Truth</li>
+<li><code>roadmap-lock-prompt.html</code> - Govern draft-roadmap approval</li>
+<li><code>epic-expansion-prompt.html</code> - Expand one <code>EPIC_READY</code> epic into tasks</li>
+<li><code>executor-prompt.html</code> - Execute one authorized task</li>
+<li><code>reviewer-prompt.html</code> - Perform independent review</li>
+<li><code>qa-prompt.html</code> - Execute QA and issue a release recommendation</li>
+<li><code>release-manager-prompt.html</code> - Validate and record release execution</li>
 </ul>
 <h2 id="related-documentation">Related Documentation</h2>
 <ul>
-<li><code>AGENT.md</code> - Authoritative agent roles, permissions, and lifecycle rules</li>
+<li><code>AGENT.html</code> - Authoritative agent roles, permissions, and lifecycle rules</li>
 <li><code>.agent/templates/</code> - Reusable governance, execution, and report templates</li>
 </ul>
 </article></main></body></html>

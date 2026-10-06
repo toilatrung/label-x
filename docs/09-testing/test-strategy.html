@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chiến lược kiểm thử toàn bộ giai đoạn LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/09-testing/test-strategy.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="labelx-test-strategy">
+<meta name="labelx:title" content="Chiến lược kiểm thử toàn bộ giai đoạn LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[testing, ci, phases, acceptance]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,13 +42,12 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / test-strategy</span><span class="sp"></span>
-<a href="test-strategy.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / test-strategy</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>labelx-test-strategy</span><b>title</b><span>Chiến lược kiểm thử toàn bộ giai đoạn LabelX</span><b>type</b><span>reference</span><b>domain</b><span>testing</span><b>module</b><span>repository</span><b>tags</b><span>[testing, ci, phases, acceptance]</span><b>priority</b><span>2</span></div>
 <h1 id="chien-luoc-kiem-thu-labelx">Chiến lược kiểm thử LabelX</h1>
 <h2 id="pham-vi-va-nguon-chuan">Phạm vi và nguồn chuẩn</h2>
-<p>Đầu ra theo yêu cầu người dùng: thiết kế CI/CD và kiểm thử mọi giai đoạn. Stack giữ <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>; quyết định nghiệp vụ giữ <a href="../00-project/sources/architecture_review.html">architecture_review.html</a>. <a href="../00-project/sources/QC_Engine_Review_Report.html#roadmap">Roadmap T</a> A–F và <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html#roadmap">roadmap A</a> P0–P6 chỉ được dùng ánh xạ giai đoạn kiểm thử, không tự tạo milestone/epic hoặc deadline.</p>
+<p>Đầu ra theo yêu cầu người dùng: thiết kế CI/CD và kiểm thử mọi giai đoạn. Stack giữ <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>; quyết định nghiệp vụ giữ <a href="../00-project/sources/architecture_review.html">architecture_review.html</a>. <a href="../00-project/sources/QC_Engine_Review_Report.html#roadmap">Roadmap T</a> A–F và <a href="../00-project/sources/Quality_Control_Review_UX_Architecture.html#roadmap">roadmap A</a> P0–P6 chỉ được dùng ánh xạ giai đoạn kiểm thử, không tự tạo milestone/epic hoặc deadline.</p>
 <p>SRS LaTeX M13 v1.0 là <strong>bản đề xuất để duyệt</strong> (00-frontmatter.tex). Test FR/AC/NFR trong ma trận là traceability tới bản đề xuất, không tự chốt TBD hay mở rộng scope. M13 có Ranking/Evaluation và chỉ hiển thị gate, không phát hành Dataset đầy đủ (FR-GTE-04). Hồ sơ intake Markdown của kit vẫn trống; không đổi trạng thái intake hoặc roadmap trong tác vụ này.</p>
 <h2 id="tinh-trang-hien-tai">Tình trạng hiện tại</h2>
 <p>Scaffold có Django/DRF, Celery, Next.js; chưa có adapter/engine/review/ranking nghiệp vụ. Chỉ SCF-01 đang bind test smoke OpenAPI có sẵn. Frontend chưa chọn test runner theo DEC-001; lint/typecheck/build không được báo thành UI test hay end-to-end test đã đạt.</p>

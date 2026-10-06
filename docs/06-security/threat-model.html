@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Threat model LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/06-security/threat-model.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="security-threat-model">
+<meta name="labelx:title" content="Threat model LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="security">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[security, threat-model, stride, cvat, trust-boundary]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / threat-model</span><span class="sp"></span>
-<a href="threat-model.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / threat-model</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>security-threat-model</span><b>title</b><span>Threat model LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[security, threat-model, stride, cvat, trust-boundary]</span><b>priority</b><span>2</span></div>
 <h1 id="threat-model-labelx">Threat model LabelX</h1>
@@ -223,7 +227,7 @@ ul.dir{columns:2;font-size:14px}
 <td>Đánh cắp session cookie / CSRF</td>
 <td>Session auth + CSRF middleware (đã có); HTTPS bắt buộc (NFR-07); cookie <code>Secure</code> ở production</td>
 <td>settings.py; NFR-07</td>
-<td>Một phần: session/CSRF đã bật, cấu hình HTTPS/<code>SECURE_*</code> <strong>chưa có</strong> (đề xuất, xem <a href="security-policies.html">security-policies.md</a>)</td>
+<td>Một phần: session/CSRF đã bật, cấu hình HTTPS/<code>SECURE_*</code> <strong>chưa có</strong> (đề xuất, xem <a href="security-policies.html">security-policies.html</a>)</td>
 </tr>
 <tr>
 <td>S-4</td>
@@ -467,8 +471,8 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="security-policies.html">security-policies.md</a> — chính sách cụ thể (RBAC, tách nhiệm vụ, audit, lưu trữ).</li>
-<li><a href="compliance.html">compliance.md</a> — dữ liệu BDD100K, riêng tư dữ liệu.</li>
-<li><a href="../13-observability/logging.html">../13-observability/logging.md</a> — quy tắc log không chứa secret.</li>
+<li><a href="security-policies.html">security-policies.html</a> — chính sách cụ thể (RBAC, tách nhiệm vụ, audit, lưu trữ).</li>
+<li><a href="compliance.html">compliance.html</a> — dữ liệu BDD100K, riêng tư dữ liệu.</li>
+<li><a href="../13-observability/logging.html">../13-observability/logging.html</a> — quy tắc log không chứa secret.</li>
 </ul>
 </article></main></body></html>

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thiết kế hệ thống LabelX Quality Control — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/02-architecture/system-design.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="architecture-system-design">
+<meta name="labelx:title" content="Thiết kế hệ thống LabelX Quality Control">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[architecture, system-design, celery, snapshot, ledger]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,15 +42,14 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / system-design</span><span class="sp"></span>
-<a href="system-design.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / system-design</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>architecture-system-design</span><b>title</b><span>Thiết kế hệ thống LabelX Quality Control</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>quality-control</span><b>tags</b><span>[architecture, system-design, celery, snapshot, ledger]</span><b>priority</b><span>1</span></div>
 <h1 id="thiet-ke-he-thong-labelx-quality-control">Thiết kế hệ thống LabelX Quality Control</h1>
 <h2 id="1-boi-canh-va-pham-vi">1. Bối cảnh và phạm vi</h2>
 <p>LabelX là module Quality Control (QC) chạy cạnh CVAT. CVAT là hệ thống nguồn của annotation và là <strong>editor duy nhất</strong>. LabelX chỉ đọc cấu trúc Project/Task/Job/Frame, annotation và ảnh. Mọi thao tác tạo, sửa hay xoá annotation đều làm trên CVAT, thông qua deep link (nguồn: H <code>Main.dc.html</code>; R B-18; SRS FR-SNP-01).</p>
 <p>Bản nghiệm thu đầu tiên là lát cắt <strong>M13 — Reviewer Prioritization Assistant</strong>. Luồng của nó như sau: annotation từ CVAT → phân tích nghi vấn → xếp hạng frame → reviewer xem bằng chứng và phân xử → báo cáo hiệu quả. Phạm vi dữ liệu là ảnh BDD100K, Bounding box, 10 lớp, và ba nhóm lỗi E1 (thiếu box), E2 (sai lớp), E3 (trùng box) (nguồn: SRS <a href="../label-x_system-requirement-specification/sections/01-introduction.tex">01-introduction.tex</a>, <a href="../label-x_system-requirement-specification/sections/03-data-errors.tex">03-data-errors.tex</a>).</p>
-<p>Các mục <strong>ngoài phạm vi MVP</strong>: temporal/track (B-09), Diff/pre-label (B-16), Classifier (B-07), Guideline RAG (B-13), annotation writeback (B-18), phát hành dataset đầy đủ (FR-GTE-04). Engine VLM đề xuất không bật trong pilot (TBD-08). Xem bảng loại trừ trong <a href="decisions.html">decisions.md</a>.</p>
+<p>Các mục <strong>ngoài phạm vi MVP</strong>: temporal/track (B-09), Diff/pre-label (B-16), Classifier (B-07), Guideline RAG (B-13), annotation writeback (B-18), phát hành dataset đầy đủ (FR-GTE-04). Engine VLM đề xuất không bật trong pilot (TBD-08). Xem bảng loại trừ trong <a href="decisions.html">decisions.html</a>.</p>
 <h3 id="actor">Actor</h3>
 <table>
 <thead>
@@ -89,7 +93,7 @@ ul.dir{columns:2;font-size:14px}
 </tbody>
 </table>
 <h2 id="2-thanh-phan">2. Thành phần</h2>
-<p>Sơ đồ chi tiết: <a href="diagrams/component.html">diagrams/component.md</a>.</p>
+<p>Sơ đồ chi tiết: <a href="diagrams/component.html">diagrams/component.html</a>.</p>
 <table>
 <thead>
 <tr>
@@ -140,7 +144,7 @@ ul.dir{columns:2;font-size:14px}
 <td>Object Storage</td>
 <td>S3-compatible</td>
 <td>Ảnh, crop evidence, báo cáo xuất</td>
-<td><a href="../11-integrations/object-storage.html">object-storage.md</a></td>
+<td><a href="../11-integrations/object-storage.html">object-storage.html</a></td>
 </tr>
 <tr>
 <td>Model artifact</td>
@@ -152,7 +156,7 @@ ul.dir{columns:2;font-size:14px}
 <td>CVAT</td>
 <td>Hệ thống ngoài</td>
 <td>Nguồn annotation và ảnh; editor</td>
-<td><a href="../11-integrations/cvat.html">cvat.md</a></td>
+<td><a href="../11-integrations/cvat.html">cvat.html</a></td>
 </tr>
 </tbody>
 </table>
@@ -288,9 +292,9 @@ EngineOutput { status: Checked | Partial | Failed | Not checked,
 </tr>
 </tbody>
 </table>
-<p>Cấu hình Celery đã có trong settings: <code>task_acks_late=True</code>, <code>task_reject_on_worker_lost=True</code>, <code>worker_prefetch_multiplier=1</code>. Như vậy một task có thể chạy lại khi worker chết, nên <strong>mọi task phải idempotent</strong>. Lịch định kỳ dùng <code>django_celery_beat</code> (DatabaseScheduler). Danh sách task chi tiết: <a href="../04-api/event-contracts.html">event-contracts.md</a>.</p>
+<p>Cấu hình Celery đã có trong settings: <code>task_acks_late=True</code>, <code>task_reject_on_worker_lost=True</code>, <code>worker_prefetch_multiplier=1</code>. Như vậy một task có thể chạy lại khi worker chết, nên <strong>mọi task phải idempotent</strong>. Lịch định kỳ dùng <code>django_celery_beat</code> (DatabaseScheduler). Danh sách task chi tiết: <a href="../04-api/event-contracts.html">event-contracts.html</a>.</p>
 <h2 id="5-luong-f-01f-08">5. Luồng F-01…F-08</h2>
-<p>Mã F-01…F-08 là luồng tham chiếu trong R mục 5, đã được SRS <code>tab:flowsteps</code> cụ thể hoá. Sơ đồ chi tiết: <a href="diagrams/data-flow.html">diagrams/data-flow.md</a>.</p>
+<p>Mã F-01…F-08 là luồng tham chiếu trong R mục 5, đã được SRS <code>tab:flowsteps</code> cụ thể hoá. Sơ đồ chi tiết: <a href="diagrams/data-flow.html">diagrams/data-flow.html</a>.</p>
 <table>
 <thead>
 <tr>
@@ -437,11 +441,11 @@ EngineOutput { status: Checked | Partial | Failed | Not checked,
 <tr>
 <td>Quyết định review</td>
 <td>Header <code>Idempotency-Key</code> được lưu với UNIQUE trên <code>review_decision</code>. Gửi lại cùng khoá trả lại kết quả cũ</td>
-<td>A §25.1 (đề xuất, xem <a href="../04-api/rest-api.html">rest-api.md</a>)</td>
+<td>A §25.1 (đề xuất, xem <a href="../04-api/rest-api.html">rest-api.html</a>)</td>
 </tr>
 <tr>
 <td>Enqueue</td>
-<td>Commit chuyển trạng thái trước, rồi enqueue qua <code>transaction.on_commit</code>. Task claim bằng cập nhật có điều kiện, nên chạy lại được từ trạng thái trung gian. Chọn sweeper hay outbox <strong>cần decision mới</strong> (<a href="../04-api/event-contracts.html">event-contracts.md</a> mục 1)</td>
+<td>Commit chuyển trạng thái trước, rồi enqueue qua <code>transaction.on_commit</code>. Task claim bằng cập nhật có điều kiện, nên chạy lại được từ trạng thái trung gian. Chọn sweeper hay outbox <strong>cần decision mới</strong> (<a href="../04-api/event-contracts.html">event-contracts.html</a> mục 1)</td>
 <td>Yêu cầu thiết kế</td>
 </tr>
 <tr>
@@ -476,10 +480,10 @@ EngineOutput { status: Checked | Partial | Failed | Not checked,
 <li>Đơn vị áp dụng theo policy MVP: Schema/Geometry theo annotation; Duplicate/Overlap theo frame (cặp so được); Detector và Matching theo frame; Metric theo scope reference; VLM (nếu bật) theo candidate được trigger (R "Required units").</li>
 <li><code>coverage(engine) = completed / eligible</code>. Mẫu số <strong>gồm cả</strong> đơn vị lỗi. Đơn vị <code>not_triggered</code> không nằm trong mẫu số của kiểm chọn lọc (SRS <code>tab:enginestates</code>).</li>
 <li>Frame có engine bắt buộc ở trạng thái Not checked hoặc Failed mang cờ <code>missing_evidence</code> trong hàng đợi (FR-RNK-06).</li>
-<li>Gate coverage là ≥ 95% trên từng engine bắt buộc, tính trên run cuối (FR-GTE-01). Truy vấn xem tại <a href="../05-database/queries.html">queries.md</a>.</li>
+<li>Gate coverage là ≥ 95% trên từng engine bắt buộc, tính trên run cuối (FR-GTE-01). Truy vấn xem tại <a href="../05-database/queries.html">queries.html</a>.</li>
 </ul>
 <h2 id="9-trien-khai">9. Triển khai</h2>
-<p>Sơ đồ: <a href="diagrams/deployment.html">diagrams/deployment.md</a>.</p>
+<p>Sơ đồ: <a href="diagrams/deployment.html">diagrams/deployment.html</a>.</p>
 <ul>
 <li><strong>Dev local</strong>: <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a> chạy <code>postgres:17</code>, <code>redis:7-alpine</code>, <code>seaweedfs</code> (S3 ở cổng 9000) và <code>seaweedfs-init</code>. <code>seaweedfs-init</code> tạo các bucket <code>labelx-snapshots</code>, <code>labelx-evidence</code>, <code>labelx-reports</code>. CVAT không nằm trong compose.</li>
 <li><strong>Môi trường thật</strong> (SRS <code>fig:deployment</code>): một app server Linux chạy Gunicorn + Django/DRF và Celery CPU worker; một GPU server chạy Celery GPU worker; tầng dữ liệu gồm PostgreSQL, Redis và Object Storage hiện có; CVAT hiện có được truy cập qua HTTPS (chỉ đọc). Cấu hình phần cứng: <strong>TBD-02</strong>.</li>

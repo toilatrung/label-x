@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phạm vi MVP và lịch 3 tuần cho LabelX M13 — LabelX</title>
+<meta name="labelx:id" content="CR-101">
+<meta name="labelx:title" content="Phạm vi MVP và lịch 3 tuần cho LabelX M13">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[change-request, scope, roadmap, mvp, m13]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / change-requests / CR-101</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>CR-101</span><b>title</b><span>Phạm vi MVP và lịch 3 tuần cho LabelX M13</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[change-request, scope, roadmap, mvp, m13]</span><b>priority</b><span>1</span></div>
+<h1 id="cr-101-pham-vi-mvp-va-lich-3-tuan-cho-labelx-m13">CR-101: Phạm vi MVP và lịch 3 tuần cho LabelX M13</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Change Request ID</strong>: <code>CR-101</code></li>
+<li><strong>Title</strong>: <code>Phạm vi MVP và lịch 3 tuần cho LabelX M13</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Proposer</strong>: <code>claude-code (planner)</code></li>
+<li><strong>Status</strong>: <code>implementing</code></li>
+<li><strong>Change Type</strong>: <code>scope</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<h3 id="truoc">Trước</h3>
+<p>R-001 hoàn thành mọi FR Must + Should của SRS v1.0 (87 Must, 12 Should), reference lập bởi hai người xác minh độc lập + QA Lead phân xử (FR-EVL-01, BR-11, AS-04), cỡ mẫu thí nghiệm lấy từ pilot nhỏ (TBD-12), không có target window.</p>
+<h3 id="sau">Sau</h3>
+<p><strong>Đầu vào do Product Owner cung cấp (2026-10-06):</strong> 5 developer dùng coding agent; GT là nhãn gốc BDD100K (tải sẵn hoặc tệp có sẵn); reviewer của thí nghiệm là người ngoài đội; sản phẩm hoàn thiện ngày 2026-10-20 để thử nghiệm; R-001 kết thúc 2026-10-27.</p>
+<h4 id="1-lich">1. Lịch</h4>
+<table>
+<thead>
+<tr>
+<th>Giai đoạn</th>
+<th>Thời gian</th>
+<th>Kết quả phải có</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hợp đồng</td>
+<td>06–07/10</td>
+<td>E-01: OpenAPI baseline, state machine, ADR lineage/neo — mọi dev review; FE sinh type và mock từ OpenAPI để làm song song backend</td>
+</tr>
+<tr>
+<td>Nền tảng + dữ liệu</td>
+<td>07–09/10</td>
+<td>M-01 xong (đăng nhập, RBAC, audit, app shell FE, test runner FE trong CI); CVAT dev chạy; snapshot đầu tiên từ CVAT; GT BDD100K nhập được</td>
+</tr>
+<tr>
+<td>Pipeline</td>
+<td>12–14/10</td>
+<td>M-02: QC Run end-to-end — snapshot → engine E1/E2/E3 → issue → ranking score_v0 → hàng đợi; Detector chạy trên GPU worker</td>
+</tr>
+<tr>
+<td>Vòng review</td>
+<td>13–16/10</td>
+<td>M-03: hàng đợi + lease, Workspace, phân xử, rework + run cuối; reference hiệu chỉnh/held-out khoá; score hiệu chỉnh khoá</td>
+</tr>
+<tr>
+<td>Đóng băng + chạy thử</td>
+<td>19/10</td>
+<td>Code freeze; triển khai môi trường pilot; diễn tập backup/restore; chạy thử nội bộ toàn luồng; khoá preregistration (TBD-K1…K4, cỡ mẫu, δ)</td>
+</tr>
+<tr>
+<td>Thử nghiệm</td>
+<td>20–23/10</td>
+<td>Buổi làm quen reviewer ngoài (NFR-11); thí nghiệm crossover hai giai đoạn AB/BA trên D1/D2; đo NFR trên pilot</td>
+</tr>
+<tr>
+<td>Đánh giá + nghiệm thu</td>
+<td>24–27/10</td>
+<td>KPI-1, KPI-2, guardrail; báo cáo hai phần; Quality Gate; nghiệm thu E-24</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-phan-cong-dec-003">2. Phân công (DEC-003)</h4>
+<table>
+<thead>
+<tr>
+<th>Thành viên</th>
+<th>Epic chính</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung — PO, Solution Architect, Team Leader</td>
+<td>E-01 (chủ trì), E-02 backend, E-08, E-16, E-23, E-24</td>
+<td>Giữ contract và migration; PO được tự duyệt PR (CR-102)</td>
+</tr>
+<tr>
+<td>Lê Duy Nam — backend, dữ liệu + CVAT</td>
+<td>E-04 (+ CVAT dev compose), E-05, E-06, E-07, E-18</td>
+<td>Nạp ảnh, GT BDD100K và tệp annotation người học vào CVAT; chia tập hiệu chỉnh/held-out</td>
+</tr>
+<tr>
+<td>Nguyễn Xuân Việt Anh — backend, engine, ML integration</td>
+<td>E-09, E-10, E-11, E-12, E-17, E-20</td>
+<td>GPU worker riêng cho Detector công khai (MMDetection 2.x) từ 09/10</td>
+</tr>
+<tr>
+<td>Trần Đức Thọ — frontend</td>
+<td>E-21; frontend của E-02, E-04, E-06, E-08, E-10, E-11, E-14, E-16, E-17, E-20, E-22</td>
+<td>Thiết kế delta just-in-time; <code>docs/design/</code> là mẫu tham khảo</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà — luồng review, backend + frontend</td>
+<td>E-03, E-13, E-14 backend, E-15, E-19, E-22</td>
+<td>Làm cả backend và frontend cho E-13, E-15, E-19</td>
+</tr>
+</tbody>
+</table>
+<h4 id="3-thay-oi-yeu-cau-must-can-duyet">3. Thay đổi yêu cầu Must (cần duyệt)</h4>
+<table>
+<thead>
+<tr>
+<th>Yêu cầu</th>
+<th>Thay đổi</th>
+<th>Lý do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-EVL-01, BR-11, AS-04</td>
+<td>GT = nhãn gốc BDD100K nhập từ tệp, khoá theo checksum; bỏ hai bản GT độc lập và phân xử GT; không báo cáo tỉ lệ khớp hai GT</td>
+<td>Product Owner chốt GT là BDD100K; không có người xác minh trong 3 tuần</td>
+</tr>
+<tr>
+<td>TBD-04 (nguồn annotation cần review)</td>
+<td>Chốt (a) theo DEC-003: tệp annotation có sẵn do người học gán trên ảnh BDD100K, nạp vào CVAT làm annotation cần review; báo cáo ghi rõ nguồn này. Tập hiệu chỉnh và held-out chọn trong phạm vi ảnh của tệp, tách theo video nguồn</td>
+<td>Lỗi thật; GT là nhãn gốc BDD100K</td>
+</tr>
+<tr>
+<td>FR-ENG-05, AS-02, AS-03 (Detector)</td>
+<td>Dùng Detector công khai huấn luyện trên BDD100K train thay Detector nội bộ (DEC-003). Training manifest = danh sách ảnh BDD100K train; ảnh nào của tệp người học thuộc train thì loại khỏi tập đánh giá (FR-EVL-05b)</td>
+<td>Không dùng Detector nội bộ</td>
+</tr>
+<tr>
+<td>FR-EVL-11, TBD-12</td>
+<td>Cỡ mẫu thí nghiệm theo nguồn lực reviewer ngoài (số người × số giờ), khoá trong preregistration ngày 19/10; không có pilot nhỏ; báo cáo power hậu kiểm, không dùng để đổi thiết kế</td>
+<td>Không còn thời gian chạy pilot nhỏ trước thí nghiệm</td>
+</tr>
+<tr>
+<td>FR-RNK-10, FR-RNK-11</td>
+<td>Giữ; hiệu chỉnh trên tập hiệu chỉnh có GT BDD100K. Không đạt n_min thì dùng score_v0 và ghi rõ</td>
+<td>GT có sẵn nên hiệu chỉnh chỉ còn là tính toán</td>
+</tr>
+<tr>
+<td>NFR-01…03, NFR-16</td>
+<td>Ngưỡng đo trong tuần thử nghiệm; diễn tập restore một lần trước 20/10</td>
+<td>BLOCKER-014 phương án A</td>
+</tr>
+<tr>
+<td>BLOCKER-004</td>
+<td>Pilot chạy trên CVAT do đội tự dựng (cùng phiên bản với CVAT dev), nạp ảnh + annotation BDD100K; không cần CVAT của bên khác</td>
+<td>Dữ liệu pilot do đội tự nạp</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-hoan-sang-sau-r-001-backlog">4. Hoãn sang sau R-001 (backlog)</h4>
+<table>
+<thead>
+<tr>
+<th>Yêu cầu</th>
+<th>Mức</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-EVL-15 Metric engine + Model Orchestrator</td>
+<td>Should</td>
+<td>Không thuộc AC nào; đặc tả tối thiểu giữ trong BLOCKER-021</td>
+</tr>
+<tr>
+<td>FR-EVL-16 đồng thuận reviewer (G-3)</td>
+<td>Should</td>
+<td>Gate hiển thị Not checked; waiver được phép (BLOCKER-011)</td>
+</tr>
+<tr>
+<td>FR-GDL-01…03 guideline có version</td>
+<td>Should</td>
+<td>Thay bằng tệp guideline tĩnh có rule ID nạp lúc khởi tạo; FR-GDL-04 giữ</td>
+</tr>
+<tr>
+<td>FR-SEC-07 màn xem audit</td>
+<td>Should</td>
+<td>Audit vẫn ghi đầy đủ (FR-SEC-05)</td>
+</tr>
+<tr>
+<td>FR-REV-11 phím tắt, FR-ESC-05 Guideline Gap, FR-RWK-07 màn Rework Tracking, FR-SNP-09 snapshot gia tăng</td>
+<td>Should</td>
+<td>Rework vẫn chạy đủ bằng FR-RWK-01…06, 08</td>
+</tr>
+<tr>
+<td>FR-ENG-10 VLM, FR-RNK-09</td>
+<td>Could</td>
+<td>VLM đã tắt (BLOCKER-002)</td>
+</tr>
+</tbody>
+</table>
+<p>Giữ trong MVP: mọi Must còn lại, FR-RPT-05 (xuất báo cáo) và FR-GTE-03 (waiver).</p>
+<h2 id="justification">Justification</h2>
+<ul>
+<li>Product Owner đặt hạn 2026-10-20 cho sản phẩm và 2026-10-27 cho R-001 (<code>.agent/governance/decisions/DEC-002.html</code>; tin nhắn 2026-10-06).</li>
+<li><code>.agent/governance/risks/RISK-011.html</code>: chuỗi chi phối 17 epic và M-04/M-05 cần nhân lực ngoài đội.</li>
+<li>Dùng GT BDD100K bỏ toàn bộ khối lượng gán GT (RISK-003), là điều kiện để reference khoá kịp trước 16/10.</li>
+</ul>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul>
+<li><strong>Affected Baselines</strong>: <code>docs/label-x_system-requirement-specification/sections/</code> (FR-EVL-01, BR-11, AS-04, TBD-04, TBD-12), <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>.agent/planning/epics.html</code></li>
+<li><strong>Affected Epics or Tasks</strong>: <code>E-03, E-06, E-07, E-15, E-16, E-17, E-18, E-19, E-20, E-22, E-23</code></li>
+<li><strong>Schedule Impact</strong>: <code>Mốc: 09/10 M-01; 14/10 M-02; 16/10 M-03 + reference khoá; 19/10 code freeze + preregistration; 20–23/10 thử nghiệm; 27/10 nghiệm thu.</code></li>
+<li><strong>Cost or Resource Impact</strong>: <code>5 thành viên theo DEC-003, toàn thời gian 06–19/10; ≥ 4 reviewer ngoài 20–23/10 (AS-05); một người phân xử thí nghiệm không xem GT (BLOCKER-019); GPU worker cho Detector từ 12/10.</code></li>
+<li><strong>Security or Compliance Impact</strong>: <code>Reviewer ngoài cần tài khoản LabelX có scope giới hạn; ảnh chỉ trong storage nội bộ (NFR-09); giấy phép BDD100K theo BLOCKER-020.</code></li>
+<li><strong>Compatibility or Migration Impact</strong>: <code>none</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>.agent/planning/epics.html</code>, <code>.agent/planning/dependency-graph.html</code>, SRS chương 3, 7, 11</li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code>, <code>.agent/governance/decisions/DEC-003.html</code>, <code>.agent/governance/decisions/DEC-004.html</code></li>
+<li><strong>Risks</strong>: <code>.agent/governance/risks/RISK-003.html</code>, <code>.agent/governance/risks/RISK-011.html</code></li>
+<li><strong>Issues or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-004.html</code>, <code>.agent/governance/blockers/BLOCKER-005.html</code>, <code>.agent/governance/blockers/BLOCKER-014.html</code>, <code>.agent/governance/blockers/BLOCKER-015.html</code>, <code>.agent/governance/blockers/BLOCKER-018.html</code>, <code>.agent/governance/blockers/BLOCKER-019.html</code></li>
+</ul>
+<h2 id="approval">Approval</h2>
+<ul>
+<li><strong>Decision</strong>: <code>approved</code></li>
+<li><strong>Approver</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Conditions</strong>: <code>TBD-04 (a) và nguồn lực reviewer theo DEC-003; Detector Faster R-CNN R-50-FPN 3x (model zoo BDD100K) theo đề xuất, đổi sang Cascade R-CNN R-50-FPN 3x chỉ cần đổi config + checkpoint; QA Lead và QC Admin pilot gán trước 2026-10-16 (BLOCKER-022).</code></li>
+<li><strong>Rationale</strong>: <code>Product Owner trả lời "Duyệt" trong phiên làm việc ngày 2026-10-06; khung 2026-10-20 / 2026-10-27 không chứa được toàn bộ phạm vi SRS v1.0 (RISK-011).</code></li>
+</ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul>
+<li><strong>Responsible Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Tasks</strong>: <code>Sau khi duyệt: cập nhật SRS (FR-EVL-01, BR-11, AS-04, TBD-04, TBD-12) có version; cập nhật target date của milestone/epic và chuyển R-001 sang ROADMAP_APPROVED; Product Owner ký E-01, E-02, E-03, E-04, E-05 và gán task cho owner theo DEC-003 trước 07/10.</code></li>
+<li><strong>Validation Method</strong>: <code>make validate-kit; đối chiếu ma trận truy vết SRS chương 11 với danh sách giữ/hoãn.</code></li>
+<li><strong>Rollback Method</strong>: <code>Khôi phục phạm vi đầy đủ bằng change request mới; các yêu cầu hoãn vẫn nằm trong backlog.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Approval is recorded before baseline modification.</li>
+<li>[ ] Approved changes are implemented and verified.</li>
+<li>[x] All affected baselines and traceability links are updated.</li>
+<li>[ ] Status is <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code>, or <code>superseded</code>.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is <code>pending</code> or <code>rejected</code>.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/change-requests/CR-&lt;number&gt;.md</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

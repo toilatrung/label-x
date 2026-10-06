@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Integration testing LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/09-testing/integration-testing.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="labelx-integration-testing">
+<meta name="labelx:title" content="Integration testing LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[integration, transactions, celery, cvat]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,13 +42,12 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / integration-testing</span><span class="sp"></span>
-<a href="integration-testing.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / integration-testing</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>labelx-integration-testing</span><b>title</b><span>Integration testing LabelX</span><b>type</b><span>reference</span><b>domain</b><span>testing</span><b>module</b><span>repository</span><b>tags</b><span>[integration, transactions, celery, cvat]</span><b>priority</b><span>2</span></div>
 <h1 id="integration-testing">Integration testing</h1>
 <p>PostgreSQL thật cho transaction/lease; Redis + worker thật cho retry/redelivery; Object Storage tạm cho upload-before-commit, checksum và orphan. Mỗi run dùng namespace riêng. Không dùng eager Celery/SQLite để kết luận distributed/concurrency đúng.</p>
 <p>Ép lỗi ở ranh giới commit, replay cùng shard, hai reviewer claim đồng thời, snapshot drift R1/R2, identity/account mapping, stale If-Match/lease, rework unchanged revision và final run Partial. Mock CVAT bằng allowlist semantic read; không cho mutation annotation. Token và dữ liệu thật không vào PR jobs.</p>
 <p>Live contract chỉ sau pin instance và quyền; request recorder giữ endpoint/method đã redacted. API response phải có scope/version/provenance; OpenAPI export và type frontend phải tương thích.</p>
-<p>Nguồn: <a href="test-strategy.html">test strategy</a>, <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>, SRS NFR-05/06/07/15.</p>
+<p>Nguồn: <a href="test-strategy.html">test strategy</a>, <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>, SRS NFR-05/06/07/15.</p>
 </article></main></body></html>

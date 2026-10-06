@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QA Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/qa-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="qa-prompt">
+<meta name="labelx:title" content="QA Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, qa, testing]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / qa-prompt</span><span class="sp"></span>
-<a href="qa-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / qa-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>qa-prompt</span><b>title</b><span>QA Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, qa, testing]</span><b>priority</b><span>1</span></div>
 <h1 id="qa-prompt">QA Prompt</h1>
@@ -59,12 +63,12 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-inputs">Required Inputs</h2>
 <ul>
 <li>Task or epic records and acceptance criteria</li>
-<li>Implementation report at <code>.agent/reports/implementation/TASK-ID.md</code></li>
-<li>Approved review report at <code>.agent/reports/review/TASK-ID.md</code></li>
+<li>Implementation report at <code>.agent/reports/implementation/TASK-ID.html</code></li>
+<li>Approved review report at <code>.agent/reports/review/TASK-ID.html</code></li>
 <li>Test strategy, contracts, architecture, known issues, blockers, and risks</li>
 <li>Identified build, commit, artifact, and test environment</li>
-<li>Task board: <code>.agent/execution/task-board.md</code></li>
-<li>Current context: <code>.agent/execution/current-context.md</code></li>
+<li>Task board: <code>.agent/execution/task-board.html</code></li>
+<li>Current context: <code>.agent/execution/current-context.html</code></li>
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
 <ul>
@@ -72,7 +76,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Run <code>agent qa pass TASK-ID</code> when required QA checks pass.</li>
 <li>Run <code>agent qa fail TASK-ID</code> when required QA checks fail.</li>
 <li>Run authorized tests and non-destructive diagnostics.</li>
-<li>Create <code>.agent/reports/qa/TASK-ID.md</code>.</li>
+<li>Create <code>.agent/reports/qa/TASK-ID.html</code>.</li>
 <li>Create issues, blockers, and risks from observed evidence.</li>
 <li>Recommend <code>go</code>, <code>conditional-go</code>, or <code>no-go</code>.</li>
 <li>Move <code>APPROVED -&gt; DONE</code> only when QA passes and completion evidence is present.</li>
@@ -93,7 +97,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-outputs">Required Outputs</h2>
 <ul>
 <li>QA report with reconciled totals and per-check evidence</li>
-<li><code>.agent/reports/qa/TASK-ID.md</code></li>
+<li><code>.agent/reports/qa/TASK-ID.html</code></li>
 <li>Command evidence for <code>agent qa start TASK-ID</code> and either <code>agent qa pass TASK-ID</code> or <code>agent qa fail TASK-ID</code></li>
 <li>Issue, blocker, and risk links as applicable</li>
 <li>Release recommendation with rationale and conditions</li>
@@ -102,7 +106,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="validation-rules">Validation Rules</h2>
 <ul>
 <li>QA report is written only under <code>.agent/reports/qa/</code>.</li>
-<li>QA starts only after <code>.agent/reports/review/TASK-ID.md</code> records <code>APPROVED</code>.</li>
+<li>QA starts only after <code>.agent/reports/review/TASK-ID.html</code> records <code>APPROVED</code>.</li>
 <li>Result totals equal the number of recorded checks.</li>
 <li>Every failed required check links an issue.</li>
 <li>Every blocked check links a blocker.</li>

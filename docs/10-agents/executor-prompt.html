@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Executor Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/executor-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="executor-prompt">
+<meta name="labelx:title" content="Executor Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, execution, implementation]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / executor-prompt</span><span class="sp"></span>
-<a href="executor-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / executor-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>executor-prompt</span><b>title</b><span>Executor Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, execution, implementation]</span><b>priority</b><span>1</span></div>
 <h1 id="executor-prompt">Executor Prompt</h1>
@@ -57,7 +61,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Validate dependencies, acceptance criteria, and governance constraints before changing code.</li>
 <li>Implement the scoped code or documentation change.</li>
 <li>Run relevant build, lint, and test commands when available.</li>
-<li>Create the implementation report at <code>.agent/reports/implementation/TASK-ID.md</code>.</li>
+<li>Create the implementation report at <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
 <li>Request independent review after implementation evidence is complete.</li>
 <li>Keep task, current-context, report, and Git Nexus state synchronized when the workflow authorizes those updates.</li>
 </ul>
@@ -66,8 +70,8 @@ ul.dir{columns:2;font-size:14px}
 <li>Task record and parent epic</li>
 <li>Task context package or justified context set</li>
 <li>Acceptance criteria, dependencies, decisions, risks, blockers, and approved change requests</li>
-<li>Task board: <code>.agent/execution/task-board.md</code></li>
-<li>Current context: <code>.agent/execution/current-context.md</code></li>
+<li>Task board: <code>.agent/execution/task-board.html</code></li>
+<li>Current context: <code>.agent/execution/current-context.html</code></li>
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
 <ul>
@@ -78,7 +82,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Read the task, context package, task board, and current context.</li>
 <li>Modify only files inside the task's approved scope.</li>
 <li>Run task-relevant build, lint, and test checks.</li>
-<li>Create or update <code>.agent/reports/implementation/TASK-ID.md</code>.</li>
+<li>Create or update <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
 <li>Move the task through <code>BACKLOG</code>, <code>READY</code>, <code>IN_PROGRESS</code>, <code>IMPLEMENTED</code>, and <code>REVIEWING</code> only when the command contract and evidence allow it.</li>
 <li>Move a task to <code>BLOCKED</code> only with blocker evidence when execution cannot continue.</li>
 <li>Update Code Graph and Git Nexus artifacts when evidence exists.</li>
@@ -99,7 +103,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="required-outputs">Required Outputs</h2>
 <ul>
 <li>Scoped implementation artifacts</li>
-<li><code>.agent/reports/implementation/TASK-ID.md</code></li>
+<li><code>.agent/reports/implementation/TASK-ID.html</code></li>
 <li>Verification results with commands or explicit manual evidence</li>
 <li>Command evidence for <code>agent task start TASK-ID</code>, <code>agent task verify TASK-ID</code>, <code>agent task report TASK-ID --executor &lt;executor-id&gt;</code>, and <code>agent review request TASK-ID --reviewer &lt;reviewer-id&gt;</code></li>
 <li>Updated task status, current context, session history, and intelligence links</li>

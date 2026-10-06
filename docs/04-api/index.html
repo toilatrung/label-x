@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>API Documentation — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/04-api/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="api-overview">
+<meta name="labelx:title" content="API Documentation">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[api, contracts, events]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>api-overview</span><b>title</b><span>API Documentation</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>repository</span><b>tags</b><span>[api, contracts, events]</span><b>priority</b><span>3</span></div>
 <h1 id="api-documentation">API Documentation</h1>
@@ -46,10 +50,10 @@ ul.dir{columns:2;font-size:14px}
 <p>Mục lục hợp đồng giao diện có thẩm quyền của LabelX QC: endpoint, schema, mã lỗi và Celery task.</p>
 <h2 id="contents">Contents</h2>
 <ul>
-<li><a href="contract.html">contract.md</a> — intake: nguồn, kết quả kiểm tra, các mục còn mở</li>
-<li><a href="rest-api.html">rest-api.md</a> — REST API (DRF): endpoint, quyền, request/response, mã lỗi, idempotency</li>
-<li><a href="event-contracts.html">event-contracts.md</a> — Celery task: tên, payload, khoá idempotent, retry; ghi chú về domain event</li>
-<li><code>graphql.md</code> — <strong>không dùng</strong>. Hệ thống chỉ có REST (SRS §9.3; DEC-001)</li>
+<li><a href="contract.html">contract.html</a> — intake: nguồn, kết quả kiểm tra, các mục còn mở</li>
+<li><a href="rest-api.html">rest-api.html</a> — REST API (DRF): endpoint, quyền, request/response, mã lỗi, idempotency</li>
+<li><a href="event-contracts.html">event-contracts.html</a> — Celery task: tên, payload, khoá idempotent, retry; ghi chú về domain event</li>
+<li><code>graphql.html</code> — <strong>không dùng</strong>. Hệ thống chỉ có REST (SRS §9.3; DEC-001)</li>
 </ul>
 <p>Schema OpenAPI được sinh tự động tại <code>/api/schema/</code> (drf-spectacular). Frontend sinh type từ schema này (DEC-001).</p>
 </article></main></body></html>

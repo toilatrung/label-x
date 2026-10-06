@@ -41,7 +41,8 @@ phân tầng mẫu và báo cáo theo lát (slice), không dùng làm nhãn cầ
   \item \TBD[-04] Nguồn annotation cần review: (a) annotation do đội gán nhãn tạo
         mới trên CVAT, hoặc (b) nhãn gốc BDD100K được đưa vào làm annotation
         ``đang làm việc''. Hai lựa chọn cho phân bố lỗi khác nhau; phải ghi rõ trong
-        báo cáo.
+        báo cáo. \textbf{Đã chốt (v1.1, DEC-003):} tệp annotation do người học gán sẵn
+        trên ảnh BDD100K, nạp vào CVAT làm annotation cần review; GT là nhãn gốc BDD100K.
 \end{itemize}
 \end{tbdbox}
 
@@ -168,7 +169,7 @@ cụ bỏ sót và KPI-1 bị thổi phồng. Vì vậy GT phải được lập
 \bottomrule
 \endfoot
 BR-10 & Người xác minh \emph{không} được xem ranking, risk score hay candidate của tập đánh giá (mù với công cụ).\\
-BR-11 & Hai người gán GT độc lập trên toàn bộ frame; hai bản được ghép theo matching ở mục~\ref{sec:counting}, phần không khớp do QA Lead phân xử. Tỉ lệ khớp trước phân xử được báo cáo.\\
+BR-11 & Hai người gán GT độc lập trên toàn bộ frame; hai bản được ghép theo matching ở mục~\ref{sec:counting}, phần không khớp do QA Lead phân xử. Tỉ lệ khớp trước phân xử được báo cáo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K, không lập hai bản GT; báo cáo ghi rõ nguồn GT.\\
 BR-12 & Người xác minh không xác minh annotation do chính mình gán (self-review, B-12).\\
 BR-13 & GT, snapshot annotation đầu vào, mapping GT–annotation, các ngưỡng (\(\tau_m\), \(a_{min}\)) và version thuật toán matching được khoá cùng nhau. Mọi chỉnh sửa sau khoá tạo version mới, ghi lý do; kết quả đo trỏ đúng version.\\
 BR-14 & Khi người duyệt bác một lỗi do matching sai, phải sửa mapping (ghi lý do) rồi \emph{suy lại} \(\mathcal{E}\); không được xoá lỗi trực tiếp khỏi danh sách.\\

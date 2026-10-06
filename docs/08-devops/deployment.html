@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Triển khai LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/08-devops/deployment.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="devops-deployment">
+<meta name="labelx:title" content="Triển khai LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="devops">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[devops, deployment, topology, docker-compose]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / deployment</span><span class="sp"></span>
-<a href="deployment.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 08-devops / deployment</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>devops-deployment</span><b>title</b><span>Triển khai LabelX</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[devops, deployment, topology, docker-compose]</span><b>priority</b><span>3</span></div>
 <h1 id="trien-khai-labelx">Triển khai LabelX</h1>
@@ -69,8 +73,8 @@ ul.dir{columns:2;font-size:14px}
 <li>Cách phục vụ frontend Next.js ở production (<code>next start</code> hay host khác) và reverse proxy/TLS: <strong>chưa có căn cứ</strong>, chờ TBD-02.</li>
 </ul>
 <h2 id="3-dev-local">3. Dev local</h2>
-<p>Chi tiết lệnh: <a href="../07-development/tooling.html">../07-development/tooling.md</a>.</p>
-<p>Máy dev chưa có công cụ dùng <code>env-setup.md</code> ở root project: script PowerShell hoặc Bash khởi tạo không yêu cầu Make có sẵn. Các lệnh Make dưới đây dành cho Ubuntu/WSL sau bootstrap; Celery worker dùng Linux/WSL.</p>
+<p>Chi tiết lệnh: <a href="../07-development/tooling.html">../07-development/tooling.html</a>.</p>
+<p>Máy dev chưa có công cụ dùng <code>env-setup.html</code> ở root project: script PowerShell hoặc Bash khởi tạo không yêu cầu Make có sẵn. Các lệnh Make dưới đây dành cho Ubuntu/WSL sau bootstrap; Celery worker dùng Linux/WSL.</p>
 <pre class="highlight"><code class="language-bash">make setup        # bật postgres, redis, seaweedfs bằng infrastructure/docker-compose.dev.yml, cài dependency, migrate
 make dev-backend  # Django runserver :8000 (không phải Gunicorn)
 make dev-worker   # Celery worker
@@ -108,7 +112,7 @@ make dev-frontend # Next.js dev :3000</code></pre>
 </tr>
 <tr>
 <td>HTTPS, cấu hình bảo mật Django production</td>
-<td>Đề xuất trong <a href="../06-security/security-policies.html">../06-security/security-policies.md</a> mục 9</td>
+<td>Đề xuất trong <a href="../06-security/security-policies.html">../06-security/security-policies.html</a> mục 9</td>
 <td>NFR-07</td>
 </tr>
 <tr>
@@ -123,7 +127,7 @@ make dev-frontend # Next.js dev :3000</code></pre>
 </tr>
 <tr>
 <td>Pipeline triển khai</td>
-<td>Chưa triển khai thật; xem <a href="ci-cd.html">ci-cd.md</a></td>
+<td>Chưa triển khai thật; xem <a href="ci-cd.html">ci-cd.html</a></td>
 <td>—</td>
 </tr>
 </tbody>
@@ -205,8 +209,8 @@ make dev-frontend # Next.js dev :3000</code></pre>
 <p>Kết quả xác nhận được lưu làm bằng chứng diễn tập. NFR-16 yêu cầu diễn tập khôi phục; tần suất diễn tập <strong>chưa chốt</strong>.</p>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="ci-cd.html">ci-cd.md</a></li>
-<li><a href="monitoring.html">monitoring.md</a></li>
-<li><a href="../06-security/threat-model.html">../06-security/threat-model.md</a></li>
+<li><a href="ci-cd.html">ci-cd.html</a></li>
+<li><a href="monitoring.html">monitoring.html</a></li>
+<li><a href="../06-security/threat-model.html">../06-security/threat-model.html</a></li>
 </ul>
 </article></main></body></html>

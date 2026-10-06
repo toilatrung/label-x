@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khoá roadmap R-001 theo CR-101 và SRS v1.1 — LabelX</title>
+<meta name="labelx:id" content="DEC-004">
+<meta name="labelx:title" content="Khoá roadmap R-001 theo CR-101 và SRS v1.1">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[decision, roadmap, approval, m13]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-004</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-004</span><b>title</b><span>Khoá roadmap R-001 theo CR-101 và SRS v1.1</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[decision, roadmap, approval, m13]</span><b>priority</b><span>1</span></div>
+<h1 id="decision-khoa-roadmap-r-001-theo-cr-101-va-srs-v11">Decision: Khoá roadmap R-001 theo CR-101 và SRS v1.1</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-004</code></li>
+<li><strong>Title</strong>: <code>Khoá roadmap R-001 theo CR-101 và SRS v1.1</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Product Owner duyệt <code>.agent/governance/change-requests/CR-101.html</code> ngày 2026-10-06 (trả lời "Duyệt") và yêu cầu chuyển roadmap sang <code>ROADMAP_APPROVED</code>. Kiểm theo <code>docs/10-agents/roadmap-lock-prompt.html</code>:</p>
+<ul>
+<li><strong>Tài liệu gốc</strong>: SRS v1.1 (<code>docs/label-x_system-requirement-specification/</code>) có Product Owner ký ngày 2026-10-06; theo DEC-002 (BLOCKER-001) chữ ký của Product Owner thay cho việc chờ các vai trò khác ký.</li>
+<li><strong>Nhất quán kế hoạch</strong>: 6 milestone, 24 epic có owner (DEC-003) và target date; cạnh phụ thuộc giữ nguyên; lịch theo CR-101.</li>
+<li><strong>Blocker còn mở</strong> (đều mức epic, có owner và hạn, không chặn baseline roadmap):</li>
+<li><code>BLOCKER-014</code>: TBD-02 phần cứng và test runner frontend chốt trước 2026-10-09 (E-02, E-08, E-10, E-23).</li>
+<li><code>BLOCKER-015</code>: TBD khoa học chốt theo cổng trước epic dùng tới (E-05, E-07, E-17…E-20).</li>
+<li><code>BLOCKER-022</code>: QA Lead và QC Admin pilot gán trước 2026-10-16.</li>
+<li><strong>Rủi ro</strong>: <code>RISK-011</code> chuyển <code>mitigating</code>.</li>
+</ul>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Product Owner duyệt phạm vi và lịch.</li>
+<li>Không còn blocker chặn baseline roadmap; blocker còn lại có disposition.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Benefits</th>
+<th>Costs and Risks</th>
+<th>Constraint Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ROADMAP_APPROVED</code></td>
+<td>Có baseline để ký epic, mở task từ 2026-10-07</td>
+<td>Blocker mức epic còn mở phải theo dõi theo hạn</td>
+<td><code>meets</code></td>
+</tr>
+<tr>
+<td><code>Giữ ROADMAP_DRAFT tới khi đóng BLOCKER-014/015/022</code></td>
+<td>Không còn điều kiện mở</td>
+<td>Trễ M-01, trái lịch CR-101</td>
+<td><code>does-not-meet</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>ROADMAP_APPROVED cho R-001, target window 2026-10-06 → 2026-10-27, phạm vi theo CR-101 và SRS v1.1.</code></li>
+<li><strong>Rationale</strong>: <code>Product Owner duyệt CR-101 và yêu cầu khoá roadmap ngày 2026-10-06.</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>Product Owner ký và chuyển E-01…E-05 sang EPIC_READY, giao task từ 2026-10-07.</code></li>
+<li><strong>Negative</strong>: <code>Đổi phạm vi hoặc lịch sau ngày này cần change request mới.</code></li>
+<li><strong>Follow-up Work</strong>: <code>Product Owner ký epic (trường PO Sign-off trong .agent/planning/epics.html) và gán task; đóng BLOCKER-014 trước 2026-10-09, BLOCKER-022 trước 2026-10-16.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>.agent/planning/epics.html</code>, <code>.agent/planning/dependency-graph.html</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-01…E-24</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>.agent/governance/risks/RISK-011.html</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-004.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

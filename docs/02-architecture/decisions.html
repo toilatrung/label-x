@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quyết định kiến trúc B-01…B-21 và DEC-001 — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/02-architecture/decisions.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="architecture-decisions">
+<meta name="labelx:title" content="Quyết định kiến trúc B-01…B-21 và DEC-001">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="architecture">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[architecture, decisions, adr, mvp]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,13 +42,12 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / decisions</span><span class="sp"></span>
-<a href="decisions.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 02-architecture / decisions</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>architecture-decisions</span><b>title</b><span>Quyết định kiến trúc B-01…B-21 và DEC-001</span><b>type</b><span>reference</span><b>domain</b><span>architecture</span><b>module</b><span>quality-control</span><b>tags</b><span>[architecture, decisions, adr, mvp]</span><b>priority</b><span>1</span></div>
 <h1 id="quyet-inh-kien-truc">Quyết định kiến trúc</h1>
 <h2 id="muc-ich">Mục đích</h2>
-<p>Tài liệu này ghi lại các quyết định kiến trúc đã chốt cho module Quality Control (QC) của LabelX. Nguồn chính là bản rà soát <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (gọi là <strong>nguồn R</strong>). Người dùng đã chốt 21/21 mục vào ngày 05/10/2026: 20 mục chọn phương án A, riêng B-05 chọn phương án B. Tài liệu cũng ghi stack đã chốt trong <a href="../../.agent/governance/decisions/DEC-001.md">DEC-001</a>.</p>
+<p>Tài liệu này ghi lại các quyết định kiến trúc đã chốt cho module Quality Control (QC) của LabelX. Nguồn chính là bản rà soát <a href="../00-project/sources/architecture_review.html">architecture_review.html</a> (gọi là <strong>nguồn R</strong>). Người dùng đã chốt 21/21 mục vào ngày 05/10/2026: 20 mục chọn phương án A, riêng B-05 chọn phương án B. Tài liệu cũng ghi stack đã chốt trong <a href="../../.agent/governance/decisions/DEC-001.html">DEC-001</a>.</p>
 <p>Quy ước:</p>
 <ul>
 <li>"Đã chốt" nghĩa là đã chọn hướng thiết kế. Nó <strong>không</strong> có nghĩa là tính năng đã được triển khai hay đã đạt nghiệm thu (nguồn: R mục 1, mục 7).</li>

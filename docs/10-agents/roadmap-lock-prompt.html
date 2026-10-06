@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap Lock Prompt — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/10-agents/roadmap-lock-prompt.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="roadmap-lock-prompt">
+<meta name="labelx:title" content="Roadmap Lock Prompt">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="prompts">
+<meta name="labelx:tags" content="[prompt, roadmap, governance]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / roadmap-lock-prompt</span><span class="sp"></span>
-<a href="roadmap-lock-prompt.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 10-agents / roadmap-lock-prompt</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>roadmap-lock-prompt</span><b>title</b><span>Roadmap Lock Prompt</span><b>type</b><span>reference</span><b>domain</b><span>agents</span><b>module</b><span>prompts</span><b>tags</b><span>[prompt, roadmap, governance]</span><b>priority</b><span>1</span></div>
 <h1 id="roadmap-lock-prompt">Roadmap Lock Prompt</h1>
@@ -59,7 +63,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="allowed-actions">Allowed Actions</h2>
 <ul>
-<li>Create a decision record from <code>.agent/templates/decision-template.md</code>.</li>
+<li>Create a decision record from <code>.agent/templates/decision-template.html</code>.</li>
 <li>Transition <code>ROADMAP_DRAFT -&gt; ROADMAP_APPROVED</code> when every approval condition passes.</li>
 <li>Keep the roadmap in <code>ROADMAP_DRAFT</code> or set <code>ROADMAP_BLOCKED</code> when evidence is insufficient.</li>
 <li>Update current context and append a governance session record.</li>

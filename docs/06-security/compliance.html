@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tuân thủ và dữ liệu LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/06-security/compliance.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="security-compliance">
+<meta name="labelx:title" content="Tuân thủ và dữ liệu LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="security">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[compliance, data-privacy, bdd100k, license, retention]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / compliance</span><span class="sp"></span>
-<a href="compliance.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 06-security / compliance</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>security-compliance</span><b>title</b><span>Tuân thủ và dữ liệu LabelX</span><b>type</b><span>reference</span><b>domain</b><span>security</span><b>module</b><span>repository</span><b>tags</b><span>[compliance, data-privacy, bdd100k, license, retention]</span><b>priority</b><span>2</span></div>
 <h1 id="tuan-thu-va-du-lieu-labelx">Tuân thủ và dữ liệu LabelX</h1>
@@ -98,7 +102,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Audit, evidence, snapshot, reference được giữ chừng nào dataset còn cần quản lý hoặc đối chiếu. Kết thúc lưu do <strong>người quản lý dữ liệu xác nhận</strong> và được ghi audit (NFR-08; phiếu chốt R, định hướng lưu).</li>
 <li>Thời hạn lưu audit tối thiểu: <strong>TBD-15</strong>.</li>
 <li>Không tự đặt ngày xoá, không tự xoá dữ liệu nghiệp vụ. Chỉ dọn cache/crop tạm tái tạo được.</li>
-<li>Chi tiết: <a href="security-policies.html">security-policies.md</a> mục 8.</li>
+<li>Chi tiết: <a href="security-policies.html">security-policies.html</a> mục 8.</li>
 </ul>
 <h2 id="4-bang-chung-kiem-toan-va-nghiem-thu">4. Bằng chứng kiểm toán và nghiệm thu</h2>
 <ul>
@@ -110,11 +114,11 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="5-giay-phep-phan-mem">5. Giấy phép phần mềm</h2>
 <ul>
 <li><code>LICENSE.agentic-sdlc-kit</code> ở gốc repo là giấy phép của bộ kit quy trình. Repo <strong>chưa có</strong> file giấy phép cho chính mã nguồn LabelX.</li>
-<li>Giấy phép dependency (Python trong <code>src/backend/uv.lock</code>, Node trong <code>src/frontend/package-lock.json</code>) <strong>chưa được rà soát</strong>. Đề xuất bổ sung bước kiểm giấy phép dependency khi có CI (xem <a href="../08-devops/ci-cd.html">../08-devops/ci-cd.md</a>).</li>
+<li>Giấy phép dependency (Python trong <code>src/backend/uv.lock</code>, Node trong <code>src/frontend/package-lock.json</code>) <strong>chưa được rà soát</strong>. Đề xuất bổ sung bước kiểm giấy phép dependency khi có CI (xem <a href="../08-devops/ci-cd.html">../08-devops/ci-cd.html</a>).</li>
 </ul>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="threat-model.html">threat-model.md</a></li>
-<li><a href="security-policies.html">security-policies.md</a></li>
+<li><a href="threat-model.html">threat-model.html</a></li>
+<li><a href="security-policies.html">security-policies.html</a></li>
 </ul>
 </article></main></body></html>

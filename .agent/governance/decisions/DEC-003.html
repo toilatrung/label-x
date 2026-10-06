@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phân vai đội M13, nguồn annotation và nguồn Detector — LabelX</title>
+<meta name="labelx:id" content="DEC-003">
+<meta name="labelx:title" content="Phân vai đội M13, nguồn annotation và nguồn Detector">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="planning">
+<meta name="labelx:tags" content="[decision, roles, data, detector, m13]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-003</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-003</span><b>title</b><span>Phân vai đội M13, nguồn annotation và nguồn Detector</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>planning</span><b>tags</b><span>[decision, roles, data, detector, m13]</span><b>priority</b><span>1</span></div>
+<h1 id="decision-phan-vai-oi-m13-nguon-annotation-va-nguon-detector">Decision: Phân vai đội M13, nguồn annotation và nguồn Detector</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-003</code></li>
+<li><strong>Title</strong>: <code>Phân vai đội M13, nguồn annotation và nguồn Detector</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-06</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Trả lời của Product Owner ngày 2026-10-06 cho các câu hỏi mở của <code>.agent/governance/change-requests/CR-101.html</code>:</p>
+<ol>
+<li>TBD-04 chọn phương án (a): annotation cần review là tệp có sẵn do người học gán trên ảnh BDD100K. GT là nhãn gốc BDD100K.</li>
+<li>Có đủ ≥ 4 reviewer ngoài cho thí nghiệm 20–23/10 và một người phân xử thí nghiệm riêng.</li>
+<li>Không dùng Detector nội bộ; dùng Detector công khai để demo (thay phương án A của BLOCKER-005 trong DEC-002).</li>
+<li>Chốt vai trò thành viên đội.</li>
+</ol>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Hạn hoàn thiện sản phẩm 2026-10-20, kết thúc R-001 2026-10-27.</li>
+<li>Detector phải có artifact cố định, checksum, mapping 10 lớp và danh sách ảnh huấn luyện để kiểm rò rỉ (FR-ENG-05, FR-EVL-05b, AS-03).</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Benefits</th>
+<th>Costs and Risks</th>
+<th>Constraint Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TBD-04 (a): tệp annotation người học gán sẵn</code></td>
+<td>Lỗi thật, phân bố lỗi tự nhiên</td>
+<td>Phải kiểm ảnh trong tệp thuộc tập không dùng huấn luyện Detector</td>
+<td><code>meets</code></td>
+</tr>
+<tr>
+<td><code>TBD-04 (b): nhãn BDD100K chèn lỗi</code></td>
+<td>Biết chính xác lỗi</td>
+<td>Lỗi nhân tạo, kém đại diện</td>
+<td><code>partially-meets</code></td>
+</tr>
+<tr>
+<td><code>Detector nội bộ (DEC-002, BLOCKER-005 A)</code></td>
+<td>Model đội đang dùng</td>
+<td>Không được chọn</td>
+<td><code>does-not-meet</code></td>
+</tr>
+<tr>
+<td><code>Detector công khai huấn luyện trên BDD100K train</code></td>
+<td>Có sẵn checkpoint; tập huấn luyện công khai nên kiểm rò rỉ rõ ràng</td>
+<td>Model zoo dùng MMDetection 2.x, cần môi trường riêng cho GPU worker</td>
+<td><code>meets</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>TBD-04 (a); ≥ 4 reviewer ngoài + một người phân xử thí nghiệm không xem GT; Detector công khai huấn luyện trên BDD100K train (chọn model cụ thể ở BLOCKER-005); phân vai như bảng dưới.</code></li>
+<li><strong>Rationale</strong>: <code>Product Owner chốt ngày 2026-10-06.</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h3 id="phan-vai">Phân vai</h3>
+<table>
+<thead>
+<tr>
+<th>Thành viên</th>
+<th>Vai trò</th>
+<th>Epic phụ trách (owner)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung (<code>@toilatrung</code>)</td>
+<td>Product Owner, Solution Architect, Team Leader backend + frontend</td>
+<td>E-01, E-02, E-08, E-16, E-23, E-24</td>
+</tr>
+<tr>
+<td>Nguyễn Xuân Việt Anh</td>
+<td>Backend, Engine Developer, ML integration</td>
+<td>E-09, E-10, E-11, E-12, E-17, E-20</td>
+</tr>
+<tr>
+<td>Lê Duy Nam</td>
+<td>Backend, dữ liệu và CVAT</td>
+<td>E-04, E-05, E-06, E-07, E-18</td>
+</tr>
+<tr>
+<td>Trần Đức Thọ</td>
+<td>Frontend</td>
+<td>E-21; phần frontend của E-02, E-04, E-06, E-08, E-10, E-11, E-14, E-16, E-17, E-20, E-22</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà</td>
+<td>Luồng review, backend + frontend</td>
+<td>E-03, E-13, E-14, E-15, E-19, E-22</td>
+</tr>
+</tbody>
+</table>
+<p>Vai SRS: Product Owner M13 và Tech Lead Backend — Trịnh Quang Trung. Data/Model Owner — Lê Duy Nam (dữ liệu) và Nguyễn Xuân Việt Anh (Detector), Product Owner xác nhận 2026-10-06. Quality Assurance Lead và Quality Control Admin — chưa gán, theo dõi ở <code>.agent/governance/blockers/BLOCKER-022.html</code>.</p>
+<p>GitHub username (Product Owner cung cấp 2026-10-06): Trịnh Quang Trung <code>toilatrung</code>; Nguyễn Xuân Việt Anh <code>Vietanhhhhhh2003</code>; Lê Duy Nam <code>duy12345-6789</code>; Trần Đức Thọ <code>tdt2112</code>; Nguyễn Đức Hà <code>DucHa180104</code>.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>Epic có owner; GT và annotation đều có sẵn nên reference khoá được ngay khi E-06 xong.</code></li>
+<li><strong>Negative</strong>: <code>Trịnh Quang Trung vừa ký epic, vừa là integrator, vừa sở hữu 6 epic (sửa đổi 2026-10-06: PO được tự duyệt PR theo CR-102). Ảnh trong tệp người học phải không thuộc BDD100K train, nếu không Detector công khai bị rò rỉ dữ liệu (AS-03).</code></li>
+<li><strong>Follow-up Work</strong>: <code>CR-101 cập nhật theo quyết định này; BLOCKER-005 chuyển sang Detector công khai; epics.html ghi owner.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>.agent/governance/change-requests/CR-101.html</code>, <code>.agent/governance/blockers/BLOCKER-005.html</code>, <code>.agent/planning/epics.html</code>, <code>.agent/planning/milestones.html</code>, <code>.agent/planning/roadmap.html</code>, <code>docs/00-project/stakeholders.html</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-01…E-24</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>.agent/governance/risks/RISK-011.html</code></li>
+<li><strong>Supersedes</strong>: <code>.agent/governance/decisions/DEC-002.html (chỉ mục BLOCKER-005)</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-003.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

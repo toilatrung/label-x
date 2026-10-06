@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Agentic SDLC Kit repository contract."""
+"""Validate the Agentic SDLC Kit repository contract (HTML documents, CR-103)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import unquote
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import kit_html  # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_METADATA = ("id", "title", "type", "domain", "module", "tags", "priority")
@@ -17,29 +20,29 @@ ALLOWED_TYPES = {"governance", "planning", "execution", "report", "intelligence"
 SKIPPED_PARTS = {".git", ".agents", ".venv", "venv", "__pycache__", "node_modules"}
 
 REQUIRED_TEMPLATES = {
-    "epic-template.md",
-    "task-template.md",
-    "context-package-template.md",
-    "issue-template.md",
-    "blocker-template.md",
-    "change-request-template.md",
-    "decision-template.md",
-    "risk-template.md",
-    "implementation-report-template.md",
-    "review-report-template.md",
-    "qa-report-template.md",
-    "release-report-template.md",
+    "epic-template.html",
+    "task-template.html",
+    "context-package-template.html",
+    "issue-template.html",
+    "blocker-template.html",
+    "change-request-template.html",
+    "decision-template.html",
+    "risk-template.html",
+    "implementation-report-template.html",
+    "review-report-template.html",
+    "qa-report-template.html",
+    "release-report-template.html",
 }
 
 REQUIRED_PROMPTS = {
-    "project-bootstrap-prompt.md",
-    "project-onboarding-prompt.md",
-    "roadmap-lock-prompt.md",
-    "epic-expansion-prompt.md",
-    "executor-prompt.md",
-    "reviewer-prompt.md",
-    "qa-prompt.md",
-    "release-manager-prompt.md",
+    "project-bootstrap-prompt.html",
+    "project-onboarding-prompt.html",
+    "roadmap-lock-prompt.html",
+    "epic-expansion-prompt.html",
+    "executor-prompt.html",
+    "reviewer-prompt.html",
+    "qa-prompt.html",
+    "release-manager-prompt.html",
 }
 
 PROMPT_HEADINGS = {
@@ -106,34 +109,34 @@ RUNTIME_STATUSES = {
 }
 
 EXPECTED_ENUM_LINES = {
-    "AGENT.md": [
+    "AGENT.html": [
         "pending | in-progress | blocked | review | done | cancelled",
         "EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED",
     ],
-    ".agent/templates/task-template.md": ["pending | in-progress | blocked | review | done | cancelled"],
-    ".agent/templates/epic-template.md": [
+    ".agent/templates/task-template.html": ["pending | in-progress | blocked | review | done | cancelled"],
+    ".agent/templates/epic-template.html": [
         "EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED"
     ],
-    ".agent/execution/task-board.md": ["pending | in-progress | blocked | review | done | cancelled"],
-    ".agent/planning/epics.md": [
+    ".agent/execution/task-board.html": ["pending | in-progress | blocked | review | done | cancelled"],
+    ".agent/planning/epics.html": [
         "EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED"
     ],
-    ".agent/planning/roadmap.md": [
+    ".agent/planning/roadmap.html": [
         "ROADMAP_DRAFT | ROADMAP_APPROVED | ROADMAP_ACTIVE | ROADMAP_BLOCKED | ROADMAP_DONE | ROADMAP_CANCELLED"
     ],
 }
 
 COMMON_REQUIRED_PATHS = {
-    "AGENT.md",
-    "docs/00-project/release-notes-v1.0.0.md",
-    "docs/00-project/installation.md",
-    ".agent/planning/roadmap.md",
-    ".agent/planning/milestones.md",
-    ".agent/planning/epics.md",
-    ".agent/planning/dependency-graph.md",
-    ".agent/execution/current-context.md",
-    ".agent/execution/task-board.md",
-    ".agent/execution/sessions-history.md",
+    "AGENT.html",
+    "docs/00-project/release-notes-v1.0.0.html",
+    "docs/00-project/installation.html",
+    ".agent/planning/roadmap.html",
+    ".agent/planning/milestones.html",
+    ".agent/planning/epics.html",
+    ".agent/planning/dependency-graph.html",
+    ".agent/execution/current-context.html",
+    ".agent/execution/task-board.html",
+    ".agent/execution/sessions-history.html",
 }
 
 DISTRIBUTION_REQUIRED_PATHS = {
@@ -146,51 +149,51 @@ DISTRIBUTION_REQUIRED_PATHS = {
 }
 
 OVERLAY_REQUIRED_PATHS = {
-    "AGENTIC-SDLC-KIT.md",
+    "AGENTIC-SDLC-KIT.html",
     "LICENSE.agentic-sdlc-kit",
 }
 
 OVERLAY_DOCUMENTS = {
-    "AGENT.md",
-    "AGENTIC-SDLC-KIT.md",
-    "docs/00-project/index.md",
-    "docs/00-project/installation.md",
-    "docs/00-project/release-notes-v1.0.0.md",
-    "docs/01-business/index.md",
-    "docs/01-business/srs.md",
-    "docs/02-architecture/architecture.md",
-    "docs/02-architecture/index.md",
-    "docs/03-domain/index.md",
-    "docs/04-api/contract.md",
-    "docs/04-api/index.md",
-    "docs/05-database/index.md",
-    "docs/06-security/index.md",
-    "docs/07-development/index.md",
-    "docs/08-devops/index.md",
-    "docs/09-testing/index.md",
-    "docs/10-agents/index.md",
-    "docs/11-integrations/index.md",
-    "docs/12-ai/index.md",
-    "docs/13-observability/index.md",
+    "AGENT.html",
+    "AGENTIC-SDLC-KIT.html",
+    "docs/00-project/index.html",
+    "docs/00-project/installation.html",
+    "docs/00-project/release-notes-v1.0.0.html",
+    "docs/01-business/index.html",
+    "docs/01-business/srs.html",
+    "docs/02-architecture/architecture.html",
+    "docs/02-architecture/index.html",
+    "docs/03-domain/index.html",
+    "docs/04-api/contract.html",
+    "docs/04-api/index.html",
+    "docs/05-database/index.html",
+    "docs/06-security/index.html",
+    "docs/07-development/index.html",
+    "docs/08-devops/index.html",
+    "docs/09-testing/index.html",
+    "docs/10-agents/index.html",
+    "docs/11-integrations/index.html",
+    "docs/12-ai/index.html",
+    "docs/13-observability/index.html",
 } | {f"docs/10-agents/{name}" for name in REQUIRED_PROMPTS}
 
 OVERLAY_AGENT_DOCUMENTS = {
-    ".agent/execution/current-context.md",
-    ".agent/execution/sessions-history.md",
-    ".agent/execution/task-board.md",
-    ".agent/planning/dependency-graph.md",
-    ".agent/planning/epics.md",
-    ".agent/planning/milestones.md",
-    ".agent/planning/roadmap.md",
-    ".agent/intelligence/code-graph/api-routes.md",
-    ".agent/intelligence/code-graph/database-usage.md",
-    ".agent/intelligence/code-graph/dependencies.md",
-    ".agent/intelligence/code-graph/function-map.md",
-    ".agent/intelligence/code-graph/modules.md",
-    ".agent/intelligence/git-nexus/commit-map.md",
-    ".agent/intelligence/git-nexus/decision-commit-map.md",
-    ".agent/intelligence/git-nexus/regression-log.md",
-    ".agent/intelligence/git-nexus/task-commit-map.md",
+    ".agent/execution/current-context.html",
+    ".agent/execution/sessions-history.html",
+    ".agent/execution/task-board.html",
+    ".agent/planning/dependency-graph.html",
+    ".agent/planning/epics.html",
+    ".agent/planning/milestones.html",
+    ".agent/planning/roadmap.html",
+    ".agent/intelligence/code-graph/api-routes.html",
+    ".agent/intelligence/code-graph/database-usage.html",
+    ".agent/intelligence/code-graph/dependencies.html",
+    ".agent/intelligence/code-graph/function-map.html",
+    ".agent/intelligence/code-graph/modules.html",
+    ".agent/intelligence/git-nexus/commit-map.html",
+    ".agent/intelligence/git-nexus/decision-commit-map.html",
+    ".agent/intelligence/git-nexus/regression-log.html",
+    ".agent/intelligence/git-nexus/task-commit-map.html",
 } | {f".agent/templates/{name}" for name in REQUIRED_TEMPLATES}
 
 
@@ -204,9 +207,10 @@ class Finding:
 class Validator:
     def __init__(self, root: Path) -> None:
         self.root = root
-        self.overlay_mode = (root / "AGENTIC-SDLC-KIT.md").exists()
+        self.overlay_mode = (root / "AGENTIC-SDLC-KIT.html").exists()
         self.findings: list[Finding] = []
         self.metadata: dict[Path, dict[str, str]] = {}
+        self._cache: dict[Path, tuple[dict[str, str], str, list[str]]] = {}
 
     def error(self, code: str, path: Path | str, message: str) -> None:
         if isinstance(path, Path):
@@ -218,23 +222,30 @@ class Validator:
             display = path
         self.findings.append(Finding(code, display, message))
 
-    def markdown_files(self) -> list[Path]:
+    def document_files(self) -> list[Path]:
         if self.overlay_mode:
             files = {self.root / relative for relative in OVERLAY_DOCUMENTS | OVERLAY_AGENT_DOCUMENTS}
             for runtime_relative in (".agent/governance", ".agent/reports"):
                 runtime_root = self.root / runtime_relative
                 if runtime_root.exists():
-                    files.update(runtime_root.rglob("*.md"))
+                    files.update(runtime_root.rglob("*.html"))
             return sorted(path for path in files if path.exists())
         return sorted(
             path
-            for path in self.root.rglob("*.md")
+            for path in self.root.rglob("*.html")
             if not any(part in SKIPPED_PARTS for part in path.relative_to(self.root).parts)
         )
 
-    @staticmethod
-    def read(path: Path) -> str:
-        return path.read_text(encoding="utf-8-sig")
+    def parsed(self, path: Path) -> tuple[dict[str, str], str, list[str]]:
+        if path not in self._cache:
+            self._cache[path] = kit_html.read_document(path)
+        return self._cache[path]
+
+    def read(self, path: Path) -> str:
+        """Văn bản theo quy ước kit (## heading, - **Field**: `v`, | bảng |) dựng từ HTML."""
+        if path.suffix.lower() != ".html":
+            return path.read_text(encoding="utf-8-sig")
+        return self.parsed(path)[1]
 
     @staticmethod
     def headings(text: str) -> set[str]:
@@ -253,23 +264,11 @@ class Validator:
 
     def validate_frontmatter(self) -> None:
         ids: dict[str, Path] = {}
-        for path in self.markdown_files():
-            text = self.read(path)
-            lines = text.splitlines()
-            if not lines or lines[0] != "---":
-                self.error("FRONTMATTER_MISSING", path, "file must begin with YAML frontmatter")
+        for path in self.document_files():
+            metadata, body, _links = self.parsed(path)
+            if not metadata:
+                self.error("METADATA_MISSING", path, 'file must declare <meta name="labelx:*"> metadata in <head>')
                 continue
-            try:
-                end = lines.index("---", 1)
-            except ValueError:
-                self.error("FRONTMATTER_UNCLOSED", path, "frontmatter closing delimiter is missing")
-                continue
-
-            metadata: dict[str, str] = {}
-            for line in lines[1:end]:
-                match = re.match(r"^([a-z][a-z0-9-]*):\s*(.*?)\s*$", line)
-                if match:
-                    metadata[match.group(1)] = match.group(2)
             self.metadata[path] = metadata
 
             for key in REQUIRED_METADATA:
@@ -296,18 +295,16 @@ class Validator:
             if tags and not re.fullmatch(r"\[[^\[\]]+\]", tags):
                 self.error("METADATA_TAGS_INVALID", path, "tags must use a non-empty inline YAML list")
 
-            if not "".join(lines[end + 1 :]).strip():
-                self.error("MARKDOWN_BODY_EMPTY", path, "Markdown body must not be empty")
+            if not body.strip():
+                self.error("DOCUMENT_BODY_EMPTY", path, "document body must not be empty")
 
     def validate_internal_links(self) -> None:
-        link_pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
-        for path in self.markdown_files():
-            text = self.read(path)
-            for raw_target in link_pattern.findall(text):
-                target = raw_target.strip().split(maxsplit=1)[0].strip("<>")
-                if not target or target.startswith(("http://", "https://", "mailto:", "#")):
+        for path in self.document_files():
+            for raw_target in self.parsed(path)[2]:
+                target = raw_target.strip()
+                if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith(("#", "//")):
                     continue
-                target = unquote(target).split("#", 1)[0]
+                target = unquote(target).split("#", 1)[0].split("?", 1)[0]
                 if not target or "<" in target or ">" in target:
                     continue
                 resolved = (self.root / target.lstrip("/")) if target.startswith("/") else (path.parent / target)
@@ -316,27 +313,27 @@ class Validator:
 
     def validate_templates(self) -> None:
         directory = self.root / ".agent" / "templates"
-        actual = {path.name for path in directory.glob("*.md")} if directory.exists() else set()
+        actual = {path.name for path in directory.glob("*.html")} if directory.exists() else set()
         for name in sorted(REQUIRED_TEMPLATES - actual):
             self.error("TEMPLATE_MISSING", directory / name, "required reusable template is missing")
         for name in sorted(actual - REQUIRED_TEMPLATES):
             self.error("TEMPLATE_UNEXPECTED", directory / name, "unregistered template requires governed framework update")
 
-        for path in directory.glob("*.md") if directory.exists() else []:
+        for path in directory.glob("*.html") if directory.exists() else []:
             missing = COMMON_TEMPLATE_HEADINGS - self.headings(self.read(path))
             for heading in sorted(missing):
                 self.error("TEMPLATE_HEADING_MISSING", path, f"required stable heading is missing: {heading}")
 
-        for path in (path for path in self.markdown_files() if "template" in path.name.lower()):
+        for path in (path for path in self.document_files() if "template" in path.name.lower()):
             if path.parent != directory:
                 self.error("TEMPLATE_PLACEMENT_INVALID", path, "reusable templates must be stored in .agent/templates")
 
     def validate_prompts(self) -> None:
         directory = self.root / "docs" / "10-agents"
-        actual = {path.name for path in directory.glob("*-prompt.md")} if directory.exists() else set()
+        actual = {path.name for path in directory.glob("*-prompt.html")} if directory.exists() else set()
         for name in sorted(REQUIRED_PROMPTS - actual):
             self.error("PROMPT_MISSING", directory / name, "required agent prompt is missing")
-        for path in directory.glob("*-prompt.md") if directory.exists() else []:
+        for path in directory.glob("*-prompt.html") if directory.exists() else []:
             missing = PROMPT_HEADINGS - self.headings(self.read(path))
             for heading in sorted(missing):
                 self.error("PROMPT_HEADING_MISSING", path, f"required prompt heading is missing: {heading}")
@@ -348,8 +345,8 @@ class Validator:
             for path in root.rglob("*") if root.exists() else []:
                 if not path.is_file() or path.name == ".keep":
                     continue
-                if path.suffix.lower() != ".md":
-                    self.error("RUNTIME_FILE_INVALID", path, "runtime governance and report records must be Markdown or .keep")
+                if path.suffix.lower() != ".html":
+                    self.error("RUNTIME_FILE_INVALID", path, "runtime governance and report records must be HTML or .keep")
                     continue
                 if "template" in path.name.lower():
                     self.error("RUNTIME_TEMPLATE_MISUSE", path, "runtime directories must not contain reusable templates")
@@ -377,12 +374,12 @@ class Validator:
 
     def validate_record_statuses(self) -> None:
         specifications = (
-            (".agent/planning/roadmap.md", "R-", 4, ROADMAP_STATUSES),
-            (".agent/planning/milestones.md", "M-", 5, MILESTONE_STATUSES),
-            (".agent/planning/epics.md", "E-", 4, EPIC_STATUSES),
-            (".agent/execution/task-board.md", "T-", 4, TASK_STATUSES),
-            (".agent/planning/dependency-graph.md", "EDGE-", 5, EDGE_STATUSES),
-            (".agent/execution/sessions-history.md", "S", 5, SESSION_OUTCOMES),
+            (".agent/planning/roadmap.html", "R-", 4, ROADMAP_STATUSES),
+            (".agent/planning/milestones.html", "M-", 5, MILESTONE_STATUSES),
+            (".agent/planning/epics.html", "E-", 4, EPIC_STATUSES),
+            (".agent/execution/task-board.html", "T-", 4, TASK_STATUSES),
+            (".agent/planning/dependency-graph.html", "EDGE-", 5, EDGE_STATUSES),
+            (".agent/execution/sessions-history.html", "S", 5, SESSION_OUTCOMES),
         )
         for relative, prefix, status_index, allowed in specifications:
             path = self.root / relative
@@ -394,7 +391,7 @@ class Validator:
                 elif row[status_index] not in allowed:
                     self.error("LIFECYCLE_STATUS_INVALID", path, f"record '{row[0]}' has invalid status '{row[status_index]}'")
 
-        context_path = self.root / ".agent" / "execution" / "current-context.md"
+        context_path = self.root / ".agent" / "execution" / "current-context.html"
         if context_path.exists():
             text = self.read(context_path)
             context_status = self.field(text, "Context Status")
@@ -414,7 +411,7 @@ class Validator:
                 if expected not in text:
                     self.error("LIFECYCLE_ENUM_MISMATCH", path, f"expected enum is missing: {expected}")
 
-        agent_path = self.root / "AGENT.md"
+        agent_path = self.root / "AGENT.html"
         if agent_path.exists():
             text = self.read(agent_path)
             if re.search(r"(?im)^##\s+Required Reading Order\s*$", text) or re.search(r"(?im)^-\s+Always load\s+", text):
@@ -423,7 +420,7 @@ class Validator:
                 self.error("TASK_DRIVEN_RETRIEVAL_MISSING", agent_path, "task-driven retrieval rule is missing")
 
     def validate_dependencies(self) -> None:
-        path = self.root / ".agent" / "planning" / "dependency-graph.md"
+        path = self.root / ".agent" / "planning" / "dependency-graph.html"
         if not path.exists():
             return
         rows = self.table_records(self.read(path), "EDGE-")
@@ -456,7 +453,7 @@ class Validator:
             self.error("DEPENDENCY_CYCLE", path, "active dependency graph contains a directed cycle")
 
     def validate_packaging_contract(self) -> None:
-        readme = self.root / ("AGENTIC-SDLC-KIT.md" if self.overlay_mode else "README.md")
+        readme = self.root / ("AGENTIC-SDLC-KIT.html" if self.overlay_mode else "README.md")
         required_readme_headings = {
             "Core Concepts",
             "Folder Structure",
@@ -482,8 +479,8 @@ class Validator:
             r"Copy-Item\b[^\n\r]+\.agent\b[^\n\r]+-Recurse",
         ]
         runtime_record_patterns = [
-            r"\.agent[/\\]reports[/\\][^\n\r'\"\s]+\.md",
-            r"\.agent[/\\]governance[/\\][^\n\r'\"\s]+\.md",
+            r"\.agent[/\\]reports[/\\][^\n\r'\"\s]+\.(md|html)",
+            r"\.agent[/\\]governance[/\\][^\n\r'\"\s]+\.(md|html)",
             r"Copy-DirectoryAsset\s+-SourceRelative\s+['\"]\.agent[/\\]reports",
             r"Copy-DirectoryAsset\s+-SourceRelative\s+['\"]\.agent[/\\]governance",
             r"copy_directory_asset\s+['\"]\.agent[/\\]reports",
@@ -505,7 +502,7 @@ class Validator:
                     self.error(
                         "INSTALLER_RUNTIME_RECORD_COPY",
                         path,
-                        "installer must not copy runtime .agent/reports or .agent/governance Markdown records",
+                        "installer must not copy runtime .agent/reports or .agent/governance records",
                     )
 
     def run(self) -> list[Finding]:

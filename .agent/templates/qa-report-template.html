@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QA Report Template — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: .agent/templates/qa-report-template.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="qa-report-template">
+<meta name="labelx:title" content="QA Report Template">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[qa, testing, report, template]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / qa-report-template</span><span class="sp"></span>
-<a href="qa-report-template.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / qa-report-template</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>qa-report-template</span><b>title</b><span>QA Report Template</span><b>type</b><span>report</span><b>domain</b><span>testing</span><b>module</b><span>templates</span><b>tags</b><span>[qa, testing, report, template]</span><b>priority</b><span>3</span></div>
 <h1 id="qa-report-template">QA Report Template</h1>
@@ -68,10 +72,10 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Test Plan or Strategy</strong>: <code>&lt;paths&gt;</code></li>
-<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/TASK-ID.md</code></li>
-<li><strong>Review Report</strong>: <code>.agent/reports/review/TASK-ID.md</code></li>
-<li><strong>Task Board</strong>: <code>.agent/execution/task-board.md</code></li>
-<li><strong>Current Context</strong>: <code>.agent/execution/current-context.md</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/TASK-ID.html</code></li>
+<li><strong>Review Report</strong>: <code>.agent/reports/review/TASK-ID.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
 <li><strong>Issues or Risks</strong>: <code>&lt;paths-or-none&gt;</code></li>
 <li><strong>Build or Commit</strong>: <code>&lt;identifier&gt;</code></li>
 </ul>
@@ -171,7 +175,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="output-requirements">Output Requirements</h2>
 <ul>
-<li>Save as <code>.agent/reports/qa/TASK-ID.md</code>.</li>
+<li>Save as <code>.agent/reports/qa/TASK-ID.html</code>.</li>
 <li>Preserve every heading and table column in this template.</li>
 <li>Use exact enum values and non-negative integer totals.</li>
 </ul>

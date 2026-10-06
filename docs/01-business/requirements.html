@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yêu cầu nghiệp vụ và hệ thống — SRS M13 — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/01-business/requirements.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="business-requirements">
+<meta name="labelx:title" content="Yêu cầu nghiệp vụ và hệ thống — SRS M13">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="business">
+<meta name="labelx:module" content="requirements">
+<meta name="labelx:tags" content="[requirements, functional, non-functional, kpi, m13]">
+<meta name="labelx:priority" content="1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,8 +42,7 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / requirements</span><span class="sp"></span>
-<a href="requirements.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 01-business / requirements</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>business-requirements</span><b>title</b><span>Yêu cầu nghiệp vụ và hệ thống — SRS M13</span><b>type</b><span>reference</span><b>domain</b><span>business</span><b>module</b><span>requirements</span><b>tags</b><span>[requirements, functional, non-functional, kpi, m13]</span><b>priority</b><span>1</span></div>
 <h1 id="yeu-cau-nghiep-vu-va-he-thong-srs-m13">Yêu cầu nghiệp vụ và hệ thống — SRS M13</h1>
@@ -667,7 +671,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td><code>FR-EVL-01</code></td>
-<td>Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html.</td>
+<td>Hệ thống phải nhập được hai bản GT độc lập cho một snapshot đánh giá và ghép chúng theo matching mục tương ứng trong labelX.html. Pilot (v1.1, CR-101): nhập một GT là nhãn gốc BDD100K từ tệp, khoá theo checksum; nhập hai GT để giai đoạn sau.</td>
 <td>M</td>
 <td>UC-08; BR-11</td>
 </tr>
@@ -1110,17 +1114,17 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>AS-02</td>
-<td>Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum.</td>
+<td>Có Detector baseline chạy được trên ảnh BDD100K với mapping đủ 10 lớp; artifact cố định được checksum. Pilot (v1.1): Faster R-CNN R-50-FPN 3x của model zoo BDD100K, huấn luyện trên tập <code>train</code>.</td>
 <td>Engine Mô hình độc lập Not checked; không sinh được candidate E1/E2.</td>
 </tr>
 <tr>
 <td>AS-03</td>
-<td>Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện).</td>
+<td>Detector không được huấn luyện trên ảnh của tập held-out (kiểm theo danh sách ảnh huấn luyện). Pilot (v1.1): danh sách ảnh huấn luyện là toàn bộ BDD100K <code>train</code>; ảnh thuộc <code>train</code> bị loại khỏi tập đánh giá.</td>
 <td>Recall bị thổi phồng do rò rỉ dữ liệu; kết quả không hợp lệ.</td>
 </tr>
 <tr>
 <td>AS-04</td>
-<td>QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo.</td>
+<td>QA Lead và ít nhất hai người xác minh độc lập sẵn sàng lập reference trước khi đo. Pilot (v1.1, CR-101): GT là nhãn gốc BDD100K; QA Lead duyệt và khoá reference, không cần người xác minh.</td>
 <td>Không đo được KPI-1/KPI-2 (B-20).</td>
 </tr>
 <tr>
@@ -1166,7 +1170,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>TBD-04</td>
-<td>Nguồn annotation cần review; có dùng lỗi chèn hay không.</td>
+<td>Nguồn annotation cần review; có dùng lỗi chèn hay không. <strong>Đã chốt:</strong> tệp người học gán sẵn, không chèn lỗi (DEC-003).</td>
 <td>Product Owner, QA Lead</td>
 <td>Trước lập reference</td>
 </tr>
@@ -1214,9 +1218,9 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>TBD-12</td>
-<td>Cỡ mẫu thí nghiệm effort (frame, reviewer).</td>
+<td>Cỡ mẫu thí nghiệm effort (frame, reviewer). Pilot (v1.1, CR-101): theo nguồn lực reviewer ngoài, khoá trong preregistration, không chạy pilot nhỏ.</td>
 <td>Product Owner</td>
-<td>Sau pilot nhỏ</td>
+<td>19/10/2026</td>
 </tr>
 <tr>
 <td>TBD-13</td>

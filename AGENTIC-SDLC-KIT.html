@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic SDLC Kit — LabelX</title>
+<meta name="labelx:id" content="agentic-sdlc-kit-readme">
+<meta name="labelx:title" content="Agentic SDLC Kit">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="project">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[readme, framework, release]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>AGENTIC-SDLC-KIT</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>agentic-sdlc-kit-readme</span><b>title</b><span>Agentic SDLC Kit</span><b>type</b><span>reference</span><b>domain</b><span>project</span><b>module</b><span>repository</span><b>tags</b><span>[readme, framework, release]</span><b>priority</b><span>1</span></div>
+<h1 id="agentic-sdlc-kit">Agentic SDLC Kit</h1>
+<p>Agentic SDLC Kit is a repository-native framework for governing agent-assisted software delivery. It provides durable planning truth, explicit lifecycle controls, reusable record templates, task-driven context retrieval, auditable execution, and source-to-decision traceability without prescribing application architecture or business logic.</p>
+<p>Version: <code>v1.0.0</code></p>
+<h2 id="core-concepts">Core Concepts</h2>
+<ul>
+<li><strong>Planning Truth</strong>: roadmap, milestones, epics, and dependencies are maintained as authoritative registries.</li>
+<li><strong>Controlled Execution</strong>: work progresses through explicit epic and task lifecycles defined in <code>AGENT.html</code>.</li>
+<li><strong>Runtime Governance</strong>: issues, blockers, change requests, decisions, and risks are stored as auditable records.</li>
+<li><strong>Evidence-Based Reports</strong>: implementation, review, QA, and release reports capture outcomes and verification evidence.</li>
+<li><strong>Reusable Templates</strong>: stable templates enforce predictable metadata, headings, statuses, and completion criteria.</li>
+<li><strong>Task-Driven Retrieval</strong>: agents retrieve only context justified by the active task, domain, module, dependencies, and governance links.</li>
+<li><strong>Derived Intelligence</strong>: Code Graph and Git Nexus connect implementation structure and commit history to governed work.</li>
+</ul>
+<h2 id="folder-structure">Folder Structure</h2>
+<pre class="highlight"><code class="language-text">.
+├── AGENT.html                 # Authoritative operating policy
+├── .agent/
+│   ├── planning/            # Roadmap, milestones, epics, dependencies
+│   ├── execution/           # Current context, task board, session audit
+│   ├── governance/          # Runtime governance records only
+│   ├── reports/             # Runtime delivery reports only
+│   ├── templates/           # Reusable record templates
+│   └── intelligence/        # Code Graph and Git Nexus
+├── docs/                    # Project and framework documentation
+├── scripts/                 # Framework validation tooling
+├── src/                     # Reserved for onboarded application source
+├── tests/                   # Reserved for onboarded application tests
+└── infrastructure/          # Reserved for onboarded deployment assets</code></pre>
+<h2 id="agent-roles">Agent Roles</h2>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Primary responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>coordinator</code></td>
+<td>Select authorized work, assemble context, and synchronize execution state.</td>
+</tr>
+<tr>
+<td><code>planner</code></td>
+<td>Maintain roadmap, milestones, epics, and dependency integrity.</td>
+</tr>
+<tr>
+<td><code>implementer</code></td>
+<td>Execute authorized tasks and produce implementation evidence.</td>
+</tr>
+<tr>
+<td><code>reviewer</code></td>
+<td>Independently assess artifacts and record actionable findings.</td>
+</tr>
+<tr>
+<td><code>qa</code></td>
+<td>Execute quality checks and issue evidence-based release recommendations.</td>
+</tr>
+<tr>
+<td><code>governance</code></td>
+<td>Triage governance records and record authorized approvals.</td>
+</tr>
+<tr>
+<td><code>release-manager</code></td>
+<td>Validate readiness and record release execution.</td>
+</tr>
+</tbody>
+</table>
+<p>Detailed authority and separation-of-duty rules remain defined in <a href="AGENT.html">AGENT.html</a>.</p>
+<h2 id="workflow-overview">Workflow Overview</h2>
+<ol>
+<li>Bootstrap or validate the framework structure.</li>
+<li>Onboard authoritative SRS, contract, and architecture inputs.</li>
+<li>Create the planning hierarchy: Roadmap -&gt; Milestone -&gt; Epic.</li>
+<li>Keep the roadmap in <code>ROADMAP_DRAFT</code> until explicit governance approval.</li>
+<li>Expand tasks only while the parent epic is <code>EPIC_READY</code>.</li>
+<li>Transition the epic to <code>EPIC_IN_PROGRESS</code> before task execution.</li>
+<li>Execute authorized tasks and produce implementation evidence.</li>
+<li>Complete independent review and QA as required.</li>
+<li>Update governance records, reports, Code Graph, Git Nexus, and execution state.</li>
+<li>Release only after the release manager validates required evidence.</li>
+</ol>
+<h2 id="context-retrieval-model">Context Retrieval Model</h2>
+<p>Context retrieval is task-driven; there is no fixed required reading order. An agent selects context from:</p>
+<ul>
+<li>the active task and parent epic;</li>
+<li>domain and module metadata;</li>
+<li>dependency edges;</li>
+<li>linked decisions, risks, blockers, and change requests;</li>
+<li>required outputs and verification rules.</li>
+</ul>
+<p>Use <code>.agent/templates/context-package-template.html</code> when work needs an explicit bounded context bundle. Repository-wide scans are reserved for authorized audits, migrations, and validations.</p>
+<h2 id="planning-lifecycle">Planning Lifecycle</h2>
+<p>Planning proceeds only through <code>Roadmap -&gt; Milestone -&gt; Epic -&gt; Task</code>.</p>
+<ul>
+<li>Roadmaps begin as <code>ROADMAP_DRAFT</code> and require explicit approval before activation.</li>
+<li>Milestones group measurable epic outcomes.</li>
+<li>Epics use <code>EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED</code>.</li>
+<li>Tasks use <code>pending | in-progress | blocked | review | done | cancelled</code>.</li>
+<li>Tasks are not generated during onboarding and may be expanded only from an <code>EPIC_READY</code> epic.</li>
+</ul>
+<h2 id="governance-model">Governance Model</h2>
+<p>Runtime records are stored under <code>.agent/governance/</code>:</p>
+<ul>
+<li><code>issues/</code> for defects, gaps, and inconsistencies;</li>
+<li><code>blockers/</code> for conditions preventing authorized progress;</li>
+<li><code>change-requests/</code> for governed baseline or scope changes;</li>
+<li><code>decisions/</code> for consequential choices and rationale;</li>
+<li><code>risks/</code> for uncertain events and response plans.</li>
+</ul>
+<p>Reusable templates remain in <code>.agent/templates/</code>. Baselined requirements, contracts, architecture, roadmap commitments, operating policy, and approved scope require an approved change request before modification.</p>
+<h2 id="quick-start">Quick Start</h2>
+<ol>
+<li>Clone the kit or follow <a href="docs/00-project/installation.html">the overlay installation guide</a> for an existing project.</li>
+<li>Run <code>python scripts/validate-framework.py</code>.</li>
+<li>Read <code>AGENT.html</code> as the authoritative operating policy.</li>
+<li>Use <code>docs/10-agents/project-bootstrap-prompt.html</code> to verify the framework installation.</li>
+<li>Supply the authoritative SRS, contract, and architecture documents.</li>
+<li>Use <code>docs/10-agents/project-onboarding-prompt.html</code> to build the initial Planning Truth.</li>
+<li>Resolve all input blockers before requesting roadmap approval.</li>
+<li>Use the remaining prompt pack for roadmap approval, epic expansion, execution, review, QA, and release.</li>
+</ol>
+<p>Successful framework validation prints:</p>
+<pre class="highlight"><code class="language-text">FRAMEWORK_VALIDATION_PASS</code></pre>
+<h2 id="project-onboarding-flow">Project Onboarding Flow</h2>
+<ol>
+<li>Ingest the SRS, contract, and architecture documents without inventing missing content.</li>
+<li>Add complete frontmatter to every Markdown document.</li>
+<li>Validate scope, ownership, version, approval state, and cross-document consistency.</li>
+<li>Create blockers for missing or contradictory inputs.</li>
+<li>Define only Roadmap -&gt; Milestone -&gt; Epic; do not generate tasks.</li>
+<li>Mark the roadmap <code>ROADMAP_DRAFT</code> unless explicit approval evidence exists.</li>
+<li>Build dependency edges and link governance records.</li>
+<li>Synchronize current context and append the onboarding session record.</li>
+<li>Validate the repository before requesting roadmap approval.</li>
+</ol>
+<h2 id="validation">Validation</h2>
+<p>Run:</p>
+<pre class="highlight"><code class="language-bash">python scripts/validate-framework.py</code></pre>
+<p>The validator checks metadata, duplicate IDs, internal links, templates, lifecycle states, folder placement, prompt contracts, and governance/report separation.</p>
+<h2 id="installation">Installation</h2>
+<p>Install into an existing project without replacing its README, license, package files, source, tests, or infrastructure:</p>
+<pre class="highlight"><code class="language-bash">git clone https://github.com/toilatrung/agentic-sdlc-kit.git
+cd agentic-sdlc-kit
+./scripts/install-kit.sh /path/to/project</code></pre>
+<pre class="highlight"><code class="language-powershell">.\scripts\install-kit.ps1 -TargetProjectPath C:\path\to\existing-project</code></pre>
+<p>The overlay guide is copied as <code>AGENTIC-SDLC-KIT.html</code>, and the kit license is copied as <code>LICENSE.agentic-sdlc-kit</code>. Existing overlay destinations are backed up before replacement.</p>
+<h2 id="contributing-and-license">Contributing and License</h2>
+<p>The cloned distribution includes <code>CONTRIBUTING.html</code>, <code>CHANGELOG.html</code>, and the MIT <code>LICENSE</code>. Overlay installation deliberately omits the changelog and contribution guide, renames the kit license, and preserves the target project's own root files.</p>
+</article></main></body></html>

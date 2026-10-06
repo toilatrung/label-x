@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Development — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/07-development/index.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="development-overview">
+<meta name="labelx:title" content="Development">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[development, standards, workflow]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,17 +42,16 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / index</span><span class="sp"></span>
-<a href="index.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / index</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>development-overview</span><b>title</b><span>Development</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, standards, workflow]</span><b>priority</b><span>3</span></div>
 <h1 id="development">Development</h1>
 <p>Hướng dẫn phát triển LabelX: quy ước viết mã, công cụ dev và quy trình làm việc theo agentic-sdlc-kit. Nội dung dựa trên cấu hình thật trong repo (<code>src/backend/pyproject.toml</code>, <code>src/frontend/</code>, <code>scripts/init-develop-environment.mk</code>, <code>.editorconfig</code>) và quyết định đã chốt (DEC-001, <code>CLAUDE.md</code>).</p>
 <h2 id="noi-dung">Nội dung</h2>
 <ul>
-<li><a href="coding-standards.html">coding-standards.md</a> — cấu hình ruff/mypy/ESLint/tsconfig; quy tắc kiến trúc (Celery task idempotent, quyền kiểm ở API, không ghi CVAT, UI theo Design System <code>lx-*</code>).</li>
-<li><a href="tooling.html">tooling.md</a> — uv, Python 3.12, Node ≥ 22, Docker Compose dev, toàn bộ make target.</li>
-<li><a href="workflow.html">workflow.md</a> — epic/task, executor → reviewer (Codex CLI) → QA, report trong <code>.agent/</code>, kiểm tra trước khi báo xong, hiện trạng git/PR.</li>
+<li><a href="coding-standards.html">coding-standards.html</a> — cấu hình ruff/mypy/ESLint/tsconfig; quy tắc kiến trúc (Celery task idempotent, quyền kiểm ở API, không ghi CVAT, UI theo Design System <code>lx-*</code>).</li>
+<li><a href="tooling.html">tooling.html</a> — uv, Python 3.12, Node ≥ 22, Docker Compose dev, toàn bộ make target.</li>
+<li><a href="workflow.html">workflow.html</a> — epic/task, executor → reviewer (Codex CLI) → QA, report trong <code>.agent/</code>, kiểm tra trước khi báo xong, hiện trạng git/PR.</li>
 </ul>
 <h2 id="bat-au">Bắt đầu</h2>
 <pre class="highlight"><code class="language-bash">make setup &amp;&amp; make help</code></pre>

@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quy trình phát triển LabelX — LabelX</title>
-<!-- generated-by: scripts/md2html.py -->
-<!-- Nguồn: docs/07-development/workflow.md. Không sửa tay; sửa Markdown rồi chạy lại scripts/md2html.py. -->
+<meta name="labelx:id" content="development-workflow">
+<meta name="labelx:title" content="Quy trình phát triển LabelX">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[development, workflow, agentic-sdlc-kit, review, git]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -37,22 +42,21 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / workflow</span><span class="sp"></span>
-<a href="workflow.md">Nguồn Markdown</a></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 07-development / workflow</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>development-workflow</span><b>title</b><span>Quy trình phát triển LabelX</span><b>type</b><span>reference</span><b>domain</b><span>development</span><b>module</b><span>repository</span><b>tags</b><span>[development, workflow, agentic-sdlc-kit, review, git]</span><b>priority</b><span>2</span></div>
 <h1 id="quy-trinh-phat-trien-labelx">Quy trình phát triển LabelX</h1>
 <h2 id="muc-ich">Mục đích</h2>
-<p>Mô tả quy trình làm việc trong repo theo <strong>agentic-sdlc-kit</strong>. Quy tắc gốc nằm ở <code>AGENT.md</code> (chính sách có hiệu lực) và <a href="../10-agents/index.html">../10-agents/index.md</a> (luồng agent, prompt pack). Tài liệu này chỉ tóm tắt và chỉ ghi những gì có căn cứ trong repo. Khi có mâu thuẫn, <code>AGENT.md</code> thắng.</p>
+<p>Mô tả quy trình làm việc trong repo theo <strong>agentic-sdlc-kit</strong>. Quy tắc gốc nằm ở <code>AGENT.html</code> (chính sách có hiệu lực) và <a href="../10-agents/index.html">../10-agents/index.html</a> (luồng agent, prompt pack). Tài liệu này chỉ tóm tắt và chỉ ghi những gì có căn cứ trong repo. Khi có mâu thuẫn, <code>AGENT.html</code> thắng.</p>
 <h2 id="1-nguyen-tac">1. Nguyên tắc</h2>
 <ul>
-<li>Chỉ làm việc khi có <strong>task được duyệt</strong>, có owner và đủ ngữ cảnh (<code>AGENT.md</code>, Forbidden Actions; <code>CLAUDE.md</code>).</li>
-<li>Ghi decision, blocker, issue, change request, risk vào <code>.agent/governance/</code> đúng thư mục; ghi report vào <code>.agent/reports/</code> (<code>AGENT.md</code>, Governance Rules, Report Rules).</li>
-<li>Muốn đổi requirement, hợp đồng, kiến trúc, roadmap hay stack đã chốt thì phải có <strong>change request <code>approved</code></strong> trong <code>.agent/governance/change-requests/</code> (<code>AGENT.md</code>, Change Request Rule). Stack hiện chốt ở <code>.agent/governance/decisions/DEC-001.md</code>.</li>
-<li>Không bịa trạng thái, kết quả test, bằng chứng review hay link commit (<code>AGENT.md</code>, Forbidden Actions).</li>
+<li>Chỉ làm việc khi có <strong>task được duyệt</strong>, có owner và đủ ngữ cảnh (<code>AGENT.html</code>, Forbidden Actions; <code>CLAUDE.md</code>).</li>
+<li>Ghi decision, blocker, issue, change request, risk vào <code>.agent/governance/</code> đúng thư mục; ghi report vào <code>.agent/reports/</code> (<code>AGENT.html</code>, Governance Rules, Report Rules).</li>
+<li>Muốn đổi requirement, hợp đồng, kiến trúc, roadmap hay stack đã chốt thì phải có <strong>change request <code>approved</code></strong> trong <code>.agent/governance/change-requests/</code> (<code>AGENT.html</code>, Change Request Rule). Stack hiện chốt ở <code>.agent/governance/decisions/DEC-001.html</code>.</li>
+<li>Không bịa trạng thái, kết quả test, bằng chứng review hay link commit (<code>AGENT.html</code>, Forbidden Actions).</li>
 </ul>
 <h2 id="2-epic-va-task">2. Epic và task</h2>
-<p>Nguồn: <code>AGENT.md</code> (Epic Expansion Rule, Task Lifecycle); <code>.agent/planning/epics.md</code>; <code>.agent/execution/task-board.md</code>.</p>
+<p>Nguồn: <code>AGENT.html</code> (Epic Expansion Rule, Task Lifecycle); <code>.agent/planning/epics.html</code>; <code>.agent/execution/task-board.html</code>.</p>
 <ul>
 <li><strong>Epic</strong>: <code>EPIC_PROPOSED → EPIC_READY → EPIC_IN_PROGRESS → EPIC_DONE</code> (hoặc <code>EPIC_BLOCKED</code>, <code>EPIC_CANCELLED</code>). Chỉ tạo task khi epic ở <code>EPIC_READY</code>. <code>EPIC_READY</code> cần owner, scope có giới hạn, tiêu chí nghiệm thu, phụ thuộc và link governance.</li>
 <li><strong>Task</strong>: <code>pending → in-progress → review → done</code> (thêm <code>blocked</code>, <code>cancelled</code>). Task chỉ vào <code>in-progress</code> khi epic cha ở <code>EPIC_IN_PROGRESS</code>. Vào <code>blocked</code> phải có blocker record. Vào <code>review</code> phải có bằng chứng triển khai.</li>
@@ -60,7 +64,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Mẫu dùng lại nằm ở <code>.agent/templates/</code> (epic, task, context package, issue, blocker, change request, decision, risk và bốn loại report).</li>
 </ul>
 <h2 id="3-luong-executor-reviewer-qa">3. Luồng executor → reviewer → QA</h2>
-<p>Nguồn: <a href="../10-agents/index.html">../10-agents/index.md</a>, <code>docs/10-agents/executor-prompt.md</code>, <code>docs/10-agents/reviewer-prompt.md</code>, <code>docs/10-agents/qa-prompt.md</code>.</p>
+<p>Nguồn: <a href="../10-agents/index.html">../10-agents/index.html</a>, <code>docs/10-agents/executor-prompt.html</code>, <code>docs/10-agents/reviewer-prompt.html</code>, <code>docs/10-agents/qa-prompt.html</code>.</p>
 <pre class="highlight"><code class="language-text">Orchestrator -&gt; Executor Agent -&gt; Implementation Report -&gt; Reviewer Agent -&gt; QA Agent -&gt; DONE</code></pre>
 <table>
 <thead>
@@ -74,31 +78,31 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td>Executor</td>
 <td>Codex Extension, Claude Code</td>
-<td>Mã trong scope task + <code>.agent/reports/implementation/TASK-ID.md</code></td>
+<td>Mã trong scope task + <code>.agent/reports/implementation/TASK-ID.html</code></td>
 </tr>
 <tr>
 <td>Reviewer (độc lập, <strong>khác</strong> executor)</td>
 <td><strong>Codex CLI</strong>, Claude CLI</td>
-<td><code>.agent/reports/review/TASK-ID.md</code>; kết luận đúng một trong <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, <code>BLOCKED</code></td>
+<td><code>.agent/reports/review/TASK-ID.html</code>; kết luận đúng một trong <code>APPROVED</code>, <code>CHANGES_REQUESTED</code>, <code>BLOCKED</code></td>
 </tr>
 <tr>
 <td>QA</td>
 <td>QA agent</td>
-<td><code>.agent/reports/qa/TASK-ID.md</code></td>
+<td><code>.agent/reports/qa/TASK-ID.html</code></td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li>Executor không tự review và không tự duyệt (<code>AGENT.md</code>, Agent Roles; <a href="../10-agents/index.html">../10-agents/index.md</a>: <code>Executor Agent != Reviewer Agent</code>).</li>
-<li>Reviewer kiểm: truy vết tới task/epic/decision, diff, tiêu chí nghiệm thu, tuân thủ kiến trúc, ảnh hưởng bảo mật/hiệu năng, rủi ro regression, bằng chứng build/lint/test (<code>reviewer-prompt.md</code>).</li>
-<li>Với LabelX, reviewer kiểm thêm các ranh giới cứng trong <a href="coding-standards.html">coding-standards.md</a> mục 4 (adapter chỉ đọc, task idempotent, quyền ở API, UI theo Design System).</li>
-<li>Đồng bộ trạng thái ở <code>.agent/execution/task-board.md</code> và <code>.agent/execution/current-context.md</code>.</li>
-<li>Report cuối là bằng chứng bất biến; muốn sửa thì tạo report mới thay thế, có link tới report cũ (<code>AGENT.md</code>, Report Rules).</li>
+<li>Executor không tự review và không tự duyệt (<code>AGENT.html</code>, Agent Roles; <a href="../10-agents/index.html">../10-agents/index.html</a>: <code>Executor Agent != Reviewer Agent</code>).</li>
+<li>Reviewer kiểm: truy vết tới task/epic/decision, diff, tiêu chí nghiệm thu, tuân thủ kiến trúc, ảnh hưởng bảo mật/hiệu năng, rủi ro regression, bằng chứng build/lint/test (<code>reviewer-prompt.html</code>).</li>
+<li>Với LabelX, reviewer kiểm thêm các ranh giới cứng trong <a href="coding-standards.html">coding-standards.html</a> mục 4 (adapter chỉ đọc, task idempotent, quyền ở API, UI theo Design System).</li>
+<li>Đồng bộ trạng thái ở <code>.agent/execution/task-board.html</code> và <code>.agent/execution/current-context.html</code>.</li>
+<li>Report cuối là bằng chứng bất biến; muốn sửa thì tạo report mới thay thế, có link tới report cũ (<code>AGENT.html</code>, Report Rules).</li>
 </ul>
 <h3 id="khac-biet-can-biet">Khác biệt cần biết</h3>
 <ul>
-<li><code>docs/10-agents/index.md</code> dùng bộ trạng thái <code>BACKLOG → READY → IN_PROGRESS → IMPLEMENTED → REVIEWING → APPROVED → DONE</code> (thêm <code>CHANGES_REQUESTED</code>, <code>BLOCKED</code>). <code>AGENT.md</code> và <code>task-board.md</code> dùng <code>pending | in-progress | blocked | review | done | cancelled</code>. Task board chỉ nhận bộ của <code>AGENT.md</code>; coi bộ của <code>docs/10-agents</code> là các bước luồng làm việc, không phải giá trị trạng thái. Việc thống nhất hai bộ <strong>chưa có</strong> decision.</li>
-<li>"Command Contract" trong <code>docs/10-agents/index.md</code> (<code>agent task start</code>, <code>agent review request</code>…) mô tả hợp đồng lệnh. Repo <strong>chưa có</strong> CLI <code>agent</code> hiện thực các lệnh này. Hiện chỉ cập nhật file trong <code>.agent/</code> thủ công.</li>
+<li><code>docs/10-agents/index.html</code> dùng bộ trạng thái <code>BACKLOG → READY → IN_PROGRESS → IMPLEMENTED → REVIEWING → APPROVED → DONE</code> (thêm <code>CHANGES_REQUESTED</code>, <code>BLOCKED</code>). <code>AGENT.html</code> và <code>task-board.html</code> dùng <code>pending | in-progress | blocked | review | done | cancelled</code>. Task board chỉ nhận bộ của <code>AGENT.html</code>; coi bộ của <code>docs/10-agents</code> là các bước luồng làm việc, không phải giá trị trạng thái. Việc thống nhất hai bộ <strong>chưa có</strong> decision.</li>
+<li>"Command Contract" trong <code>docs/10-agents/index.html</code> (<code>agent task start</code>, <code>agent review request</code>…) mô tả hợp đồng lệnh. Repo <strong>chưa có</strong> CLI <code>agent</code> hiện thực các lệnh này. Hiện chỉ cập nhật file trong <code>.agent/</code> thủ công.</li>
 </ul>
 <h2 id="4-kiem-tra-truoc-khi-bao-xong">4. Kiểm tra trước khi báo xong</h2>
 <ul>
@@ -112,18 +116,19 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><code>scripts/init-develop-environment.mk</code> mô tả <code>make check</code> là "toàn bộ kiểm tra trước khi tạo PR", tức là đã dự kiến quy trình PR.</li>
 <li><code>.gitignore</code> loại <code>.env</code>, <code>.env.*</code> (trừ <code>.env.example</code>), <code>.venv/</code>, <code>node_modules/</code>, <code>.next/</code>, file build LaTeX và backup của installer kit.</li>
-<li><code>.agent/intelligence/git-nexus/</code> có các file ánh xạ commit ↔ task/decision (<code>task-commit-map.md</code>, <code>decision-commit-map.md</code>, <code>commit-map.md</code>, <code>regression-log.md</code>). DEC-001 còn tiêu chí chưa xong: "Accepted decisions are mapped in <code>decision-commit-map.md</code> when implemented".</li>
+<li><code>.agent/intelligence/git-nexus/</code> có các file ánh xạ commit ↔ task/decision (<code>task-commit-map.html</code>, <code>decision-commit-map.html</code>, <code>commit-map.html</code>, <code>regression-log.html</code>). DEC-001 còn tiêu chí chưa xong: "Accepted decisions are mapped in <code>decision-commit-map.html</code> when implemented".</li>
 <li><code>src/frontend/AGENTS.md</code>: khối quy tắc Next.js do <code>next dev</code> tự sinh; commit nó cùng thay đổi để giữ working tree sạch.</li>
 </ul>
 <p><strong>Chưa có căn cứ</strong> (chưa được quyết định trong repo; cần decision trước khi áp dụng):</p>
 <ul>
-<li>Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase), branch được bảo vệ.</li>
-<li>Mẫu PR, số người duyệt PR bắt buộc, quy ước commit message.</li>
-<li>Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục <code>.git</code>.</li>
+<li>Quy ước đặt tên branch, chiến lược merge (merge/squash/rebase).</li>
+<li>Quy ước commit message.</li>
 </ul>
+<p>Người duyệt PR và cách ghi nhận duyệt: xem mục "Duyệt pull request" bên dưới (CR-102).
+- Repo remote và nền tảng host (GitHub/GitLab…). Bản làm việc hiện tại không có thư mục <code>.git</code>.</p>
 <p>Đề xuất (cần decision): mỗi branch/PR gắn một <code>TASK-ID</code>, mô tả PR link tới implementation report và review report trong <code>.agent/reports/</code>, và chỉ merge khi review report là <code>APPROVED</code> và <code>make check</code> pass.</p>
 <h2 id="file-rieng-trong-agent-khi-nhieu-dev-cung-lam">File riêng trong .agent/ khi nhiều dev cùng làm</h2>
-<p>Áp dụng từ <code>CR-100</code> (mục "Per-User Agent Files" trong <code>AGENT.md</code>), để nhiều PR mở cùng lúc không conflict ở các file trạng thái dùng chung.</p>
+<p>Áp dụng từ <code>CR-100</code> (mục "Per-User Agent Files" trong <code>AGENT.html</code>), để nhiều PR mở cùng lúc không conflict ở các file trạng thái dùng chung.</p>
 <table>
 <thead>
 <tr>
@@ -142,20 +147,83 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
-<p>Ví dụ: muốn cập nhật <code>.agent/execution/current-context.md</code>, dev <code>dev1</code> tạo hoặc sửa <code>.agent/execution/current-context-@dev1.md</code> (chỉ ghi phần thay đổi của mình, giữ heading/cột của file chính, ghi base commit), rồi chạy <code>scripts/md2html.py</code> để sinh <code>current-context-@dev1.html</code>. Record governance mới: <code>.agent/governance/blockers/BLOCKER-031-@dev1.md</code> theo template; integrator đổi thành <code>BLOCKER-031.md</code> khi gộp.</p>
+<p>Ví dụ: muốn cập nhật <code>.agent/execution/current-context.html</code>, dev <code>dev1</code> tạo hoặc sửa <code>.agent/execution/current-context-@dev1.html</code> (chỉ ghi phần thay đổi của mình, giữ heading/cột của file chính, ghi base commit). Record governance mới: <code>.agent/governance/blockers/BLOCKER-031-@dev1.html</code> theo template; integrator đổi thành <code>BLOCKER-031.html</code> khi gộp.</p>
 <p>Quy trình:</p>
 <ol>
 <li>Dev mở PR như bình thường; chỉ đụng file riêng của mình trong <code>.agent/</code>.</li>
-<li>CI job <code>framework</code> chạy <code>scripts/ci/check-agent-ownership.cjs</code> trên mọi PR: fail nếu người mở PR không phải integrator mà sửa file chính, file riêng của người khác, <code>AGENT.md</code> hoặc danh sách integrator.</li>
-<li>Integrator định kỳ mở PR gộp: đưa nội dung file riêng vào file chính, xoá file riêng đã gộp trong cùng PR, ghi vào <code>.agent/execution/sessions-history.md</code>.</li>
+<li>CI job <code>framework</code> chạy <code>scripts/ci/check-agent-ownership.cjs</code> trên mọi PR: fail nếu người mở PR không phải integrator mà sửa file chính, file riêng của người khác, <code>AGENT.html</code> hoặc danh sách integrator.</li>
+<li>Integrator định kỳ mở PR gộp: đưa nội dung file riêng vào file chính, xoá file riêng đã gộp trong cùng PR, ghi vào <code>.agent/execution/sessions-history.html</code>.</li>
 <li>PO thêm QC vào <code>.github/agent-integrators.txt</code> (và <code>.github/CODEOWNERS</code>) khi giao nhiệm vụ.</li>
 </ol>
 <p>Kiểm cục bộ trước khi đẩy PR:</p>
 <pre class="highlight"><code class="language-bash">PR_AUTHOR=&lt;github-username&gt; BASE_SHA=$(git merge-base origin/main HEAD) HEAD_SHA=HEAD node scripts/ci/check-agent-ownership.cjs</code></pre>
+<h2 id="oi-phat-trien">Đội phát triển</h2>
+<p>Theo <code>.agent/governance/decisions/DEC-003.html</code> (2026-10-06); owner từng epic ở <code>.agent/planning/epics.html</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Thành viên</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung (<code>@toilatrung</code>)</td>
+<td>Product Owner, Solution Architect, Team Leader backend + frontend</td>
+</tr>
+<tr>
+<td>Nguyễn Xuân Việt Anh (<code>@Vietanhhhhhh2003</code>)</td>
+<td>Backend, Engine Developer, ML integration; Data/Model Owner (Detector)</td>
+</tr>
+<tr>
+<td>Lê Duy Nam (<code>@duy12345-6789</code>)</td>
+<td>Backend, dữ liệu và CVAT; Data/Model Owner (dữ liệu)</td>
+</tr>
+<tr>
+<td>Trần Đức Thọ (<code>@tdt2112</code>)</td>
+<td>Frontend</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà (<code>@DucHa180104</code>)</td>
+<td>Luồng review (backend + frontend); người duyệt QA/QC</td>
+</tr>
+</tbody>
+</table>
+<h2 id="duyet-pull-request">Duyệt pull request</h2>
+<p>Áp dụng từ <code>CR-102</code> (mục "Pull Request Approval" trong <code>AGENT.html</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Tác giả PR</th>
+<th>Ai duyệt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trịnh Quang Trung (PO)</td>
+<td>Được tự review và tự duyệt</td>
+</tr>
+<tr>
+<td>Nguyễn Đức Hà</td>
+<td>Trịnh Quang Trung</td>
+</tr>
+<tr>
+<td>Thành viên khác, Dependabot</td>
+<td>Trịnh Quang Trung hoặc Nguyễn Đức Hà</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Mọi PR không phải của PO đều phải được review; QA/QC xác nhận bởi Trịnh Quang Trung hoặc Nguyễn Đức Hà.</li>
+<li>Thông qua thì người duyệt comment vào PR đúng câu: <code>Đã xem và duyệt</code>. Yêu cầu sửa thì comment nội dung cần sửa, không dùng câu này.</li>
+<li>Đẩy thêm commit sau khi đã duyệt thì lần duyệt cũ mất hiệu lực; người duyệt xem lại và comment lại.</li>
+<li>Workflow <code>PR approval</code> (<code>.github/workflows/pr-approval.yml</code>) chạy khi mở/cập nhật PR và khi có comment, ghi status <code>pr-approval</code> lên commit cuối của PR. Nhánh <code>main</code> yêu cầu status này xanh trước khi merge.</li>
+<li>Danh sách người duyệt ở <code>.github/pr-approvers.txt</code>; chỉ PO sửa.</li>
+</ol>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
-<li><a href="tooling.html">tooling.md</a></li>
-<li><a href="coding-standards.html">coding-standards.md</a></li>
-<li><a href="../08-devops/ci-cd.html">../08-devops/ci-cd.md</a></li>
+<li><a href="tooling.html">tooling.html</a></li>
+<li><a href="coding-standards.html">coding-standards.html</a></li>
+<li><a href="../08-devops/ci-cd.html">../08-devops/ci-cd.html</a></li>
 </ul>
 </article></main></body></html>
