@@ -65,13 +65,13 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td>Phiên bản CVAT</td>
-<td><strong>TBD-01</strong>: giữ phiên bản đang triển khai, pin sau khi kiểm API thật</td>
-<td>R; SRS §9.2; DEC-001 "Negative"</td>
+<td><code>v2.77.0</code>, self-hosted dev; complete upstream Docker Compose</td>
+<td><code>infrastructure/cvat/version.conf</code>; T-004</td>
 </tr>
 <tr>
 <td>Edition (self-host hay cloud)</td>
-<td><strong>TBD-01</strong></td>
-<td>T §6</td>
+<td>Self-hosted Community</td>
+<td>T-004</td>
 </tr>
 <tr>
 <td><code>cvat-sdk</code> / client</td>
@@ -85,13 +85,23 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>Token</td>
-<td>Biến <code>CVAT_SERVICE_TOKEN</code>: service account <strong>chỉ đọc</strong>; quyền token thuộc <strong>TBD-01</strong></td>
+<td>Biến <code>CVAT_SERVICE_TOKEN</code>: PAT/service account <strong>chỉ đọc</strong>, gửi bằng header <code>Authorization: Bearer</code></td>
 <td>FR-SNP-02; R B-12</td>
 </tr>
 </tbody>
 </table>
+<h3 id="2-1-cvat-dev-va-du-lieu-mau">2.1. CVAT dev và dữ liệu mẫu</h3>
+<ul>
+<li>Khởi động/tắt bằng <code>make -f scripts/init-develop-environment.mk cvat-up</code> và <code>cvat-down</code>. Wrapper clone đúng tag vào <code>.cache/cvat/v2.77.0</code>, kiểm tag trước khi chạy và không tự xoá volume.</li>
+<li>Quy ước project: <code>labelx-dev</code>. Quy ước task: <code>labelx-dev__&lt;role&gt;__&lt;dataset&gt;__&lt;split&gt;__v&lt;schema&gt;</code>; mẫu hiện tại là <code>labelx-dev__review__custom__unknown__v1</code>.</li>
+<li>Metadata tương ứng trong import receipt: <code>labelx.role=review</code>, <code>labelx.dataset=custom</code>, <code>labelx.split=unknown</code>, <code>labelx.schema=v1</code>. CVAT không có tag metadata tuỳ ý cho task nên các giá trị bắt buộc nằm trong tên task và receipt, không trộn với taxonomy annotation.</li>
+<li>Script <code>scripts/development/cvat_sample.py</code> là công cụ provisioning dev có quyền ghi và nằm ngoài adapter sản phẩm. Chạy <code>--dry-run</code> để xác thực ảnh/bbox và thống kê <code>train/val/test/unknown</code> trước khi ghi.</li>
+<li>BDD100K chính thức phải đặt ngoài repo tại <code>&lt;BDD100K_ROOT&gt;/bdd100k</code>. Script <code>scripts/development/bdd100k_sample.py</code> chuyển Detection 2020/Scalabel thành manifest mẫu xác định; mẫu validation đã kiểm dùng 5 ảnh, 106 rectangle và 10 lớp chuẩn.</li>
+<li>Quy ước BDD100K: project <code>labelx-dev-bdd100k</code>, task <code>labelx-dev__review__bdd100k__val__v1</code>, receipt mang <code>labelx.dataset=bdd100k</code> và <code>labelx.split=val</code>. Tách project để taxonomy 10 lớp không trộn với project mẫu custom.</li>
+<li>Thư mục mẫu Xanh SM hiện có 183 ảnh Wikimedia, không có cấu trúc split BDD100K hay annotation learner; vì vậy báo cáo trung thực là <code>train=0</code>, <code>val=0</code>, <code>unknown=183</code>. Manifest mẫu chỉ chọn 3 ảnh và 3 bbox ước lượng thủ công cho kiểm thử dev, không được gọi là BDD100K ground truth.</li>
+</ul>
 <h2 id="3-thao-tac-chi-oc">3. Thao tác (chỉ đọc)</h2>
-<p>Theo SRS <code>tab:cvatapi</code>. Đường dẫn endpoint cụ thể phụ thuộc phiên bản pin (TBD-01), nên <strong>chưa</strong> được ghi ở đây.</p>
+<p>Theo SRS <code>tab:cvatapi</code>. Adapter T-004 chỉ gọi <code>GET /api/jobs</code>, <code>GET /api/jobs/{id}</code>, <code>GET /api/jobs/{id}/annotations</code> và <code>GET /api/jobs/{id}/data/meta</code>. Không có hàm request tổng quát hoặc đường ghi trong package <code>cvat_adapter</code>.</p>
 <table>
 <thead>
 <tr>
@@ -136,7 +146,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Shape không phải rectangle bị bỏ qua và được đếm vào <code>snapshot.out_of_scope_shapes</code> (FR-SNP-07).</p>
 <h2 id="4-chuan-hoa-va-hash">4. Chuẩn hoá và hash</h2>
 <ul>
-<li>JSON chuẩn hoá theo job: sắp xếp khoá, sắp xếp shape theo <code>(frame, cvat_shape_id)</code>, toạ độ làm tròn với số chữ số cố định. Số chữ số cụ thể: <strong>TBD-20</strong>. Khi đã chốt thì <strong>không đổi</strong> nữa, vì nó là một phần của version thuật toán hash.</li>
+<li>JSON chuẩn hoá theo job: thuật toán <code>cvat-rectangle-v1</code>, sắp xếp khoá, sắp xếp shape theo <code>(frame, cvat_shape_id)</code>, toạ độ làm tròn <strong>6 chữ số thập phân</strong>. Mọi thay đổi quy tắc phải tạo version thuật toán mới.</li>
 <li>Mỗi job có <code>job_hash = SHA-256(JSON chuẩn hoá)</code>. Hash tổng là SHA-256 của danh sách <code>(cvat_job_id, job_hash)</code> đã sắp xếp (FR-SNP-03).</li>
 <li>CVAT không có "annotation revision" chính thức. Revision trong LabelX là hash do LabelX tính (A §21).</li>
 </ul>

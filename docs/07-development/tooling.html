@@ -280,7 +280,7 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 </tbody>
 </table>
 <ul>
-<li>CVAT <strong>không</strong> nằm trong compose. Adapter đọc instance CVAT đang triển khai (B-18); <code>CVAT_BASE_URL</code> và <code>CVAT_SERVICE_TOKEN</code> để trống trong <code>.env.example</code> (TBD-01).</li>
+<li>CVAT dev dùng complete upstream Compose tại tag <code>v2.77.0</code>, được cache dưới <code>.cache/cvat/</code> và điều khiển bằng <code>make cvat-up</code>/<code>cvat-down</code>. Adapter sản phẩm vẫn chỉ đọc (B-18); <code>CVAT_BASE_URL</code> mặc định <code>http://localhost:8080</code>, còn <code>CVAT_SERVICE_TOKEN</code> luôn để trống trong <code>.env.example</code>.</li>
 <li>Credential trong compose/<code>s3.json</code>/<code>.env.example</code> là giá trị dev, không dùng cho môi trường thật.</li>
 <li><code>settings.py</code> có ba storage theo bucket: <code>snapshots</code> (<code>OBJECT_STORAGE_BUCKET_SNAPSHOTS</code>, mặc định <code>labelx-snapshots</code>), <code>evidence</code> (<code>OBJECT_STORAGE_BUCKET_EVIDENCE</code>, <code>labelx-evidence</code>), <code>reports</code> (<code>OBJECT_STORAGE_BUCKET_REPORTS</code>, <code>labelx-reports</code>); <code>default</code> vẫn là <code>OBJECT_STORAGE_BUCKET</code>. Dùng <code>django.core.files.storage.storages["snapshots"]</code>.</li>
 </ul>
@@ -311,7 +311,7 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 <ul>
 <li>Backend: Django 5.2 (<code>&gt;=5.2,&lt;5.3</code>), djangorestframework, drf-spectacular, django-filter, django-cors-headers, django-environ, django-storages[s3] + boto3, Celery 5 (<code>celery[redis]</code>) + django-celery-beat, psycopg 3, httpx, pillow, gunicorn.</li>
 <li>Frontend: next 16.3.8, react/react-dom 19.2.8, @tanstack/react-query, openapi-fetch, openapi-typescript.</li>
-<li>Chưa pin phiên bản CVAT/cvat-sdk; phải pin sau khi kiểm API instance thật (DEC-001, TBD-01).</li>
+<li>CVAT dev pin <code>v2.77.0</code>. Không thêm <code>cvat-sdk</code>; adapter gọi REST bằng <code>httpx</code> để giữ dependency và bề mặt API nhỏ.</li>
 </ul>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>

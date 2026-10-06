@@ -1,0 +1,35 @@
+{
+  "schema_version": "labelx-cvat-sample-v1",
+  "provenance": {
+    "dataset": "custom",
+    "split": "unknown",
+    "source": "Wikimedia Commons Xanh SM",
+    "note": "Three manually estimated development boxes; not BDD100K ground truth."
+  },
+  "labels": [
+    {"name": "car", "type": "rectangle", "color": "#24c96b"}
+  ],
+  "images": [
+    {
+      "file_name": "Taxi Xanh SM.jpg",
+      "split": "unknown",
+      "annotations": [
+        {"label": "car", "bbox": [295, 344, 982, 735]}
+      ]
+    },
+    {
+      "file_name": "Green SM Electric Taxi.jpg",
+      "split": "unknown",
+      "annotations": [
+        {"label": "car", "bbox": [415, 225, 777, 443]}
+      ]
+    },
+    {
+      "file_name": "2024 VinFast Limo Green Xanh SM Taxi in Cilangkap, Jakarta.jpg",
+      "split": "unknown",
+      "annotations": [
+        {"label": "car", "bbox": [458, 398, 1000, 668]}
+      ]
+    }
+  ]
+}

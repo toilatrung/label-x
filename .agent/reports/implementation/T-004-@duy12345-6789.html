@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-004 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-004-@duy12345-6789">
+<meta name="labelx:title" content="T-004 Implementation Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="cvat-adapter">
+<meta name="labelx:tags" content="[implementation, cvat, read-only, hash, sample-data]">
+<meta name="labelx:priority" content="1">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--border:#e3e6ea;--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;--font:Inter,"Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}.top{height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}main{max-width:1100px;margin:24px auto;padding:0 24px 64px}article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}.meta b{color:var(--muted)}h1{font-size:24px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle)}th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>T-004 / @duy12345-6789</span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-004-@duy12345-6789</span><b>title</b><span>T-004 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>cvat-adapter</span><b>tags</b><span>[implementation, cvat, read-only, hash, sample-data]</span><b>priority</b><span>1</span></div>
+<h1 id="implementation-report-template">T-004 — CVAT dev, dữ liệu mẫu, adapter chỉ đọc và hash</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng có thể kiểm toán cho phần triển khai T-004 trên nhánh <code>feat/T-004-e04-cvat-adapter</code>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-004-@duy12345-6789</code></li>
+<li><strong>Title</strong>: CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</li>
+<li><strong>Owner</strong>: Lê Duy Nam (<code>@duy12345-6789</code>)</li>
+<li><strong>Executor</strong>: <code>@duy12345-6789</code> với Codex</li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-004</code></li>
+<li><strong>Epic ID</strong>: <code>E-04</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: CVAT self-hosted dev pin <code>v2.77.0</code>; Make targets; importer dev; naming/tag convention; kiểm kê split; adapter REST chỉ đọc; canonical JSON và SHA-256/job; aggregate hash; fixture/test; tài liệu.</li>
+<li><strong>Not Implemented</strong>: snapshot persistence/UI, drift polling/webhook, model integration và review workflow ngoài phạm vi T-004.</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>infrastructure/cvat/version.conf</code>, <code>scripts/development/cvat-dev.sh</code>, <code>scripts/init-develop-environment.mk</code></td><td>Pin CVAT v2.77.0, chạy complete upstream Compose và cung cấp up/down/logs/ps/superuser/import/hash targets.</td><td>T-004</td></tr>
+<tr><td><code>scripts/development/cvat_sample.py</code>, <code>infrastructure/cvat/sample-annotations.json</code></td><td>Validate provenance/split/bbox, upload theo CVAT protocol, tạo receipt; manifest dev có 3 ảnh và 3 bbox thủ công.</td><td>T-004</td></tr>
+<tr><td><code>src/backend/cvat_adapter/</code></td><td>Client chỉ GET với Bearer PAT; canonical rectangle JSON, SHA-256/job và aggregate hash; management command và recorded fixtures.</td><td>T-004</td></tr>
+<tr><td><code>docs/11-integrations/cvat.html</code>, <code>docs/07-development/tooling.html</code></td><td>Ghi version, endpoint, auth, convention tên/tag, quy tắc hash 6 chữ số và nguồn dữ liệu mẫu.</td><td>T-004</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#T-004</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>; REST/httpx giữ nguyên stack đã duyệt</li>
+<li><strong>Change Requests</strong>: <code>CR-100</code>, <code>CR-103</code>, <code>CR-104</code></li>
+<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code> và <code>BLOCKER-018</code> đã được phản ánh trong cấu hình/convention</li>
+<li><strong>Review Request</strong>: pending <code>@toilatrung</code> hoặc <code>@DucHa180104</code></li>
+<li><strong>Commits</strong>: none; working tree chờ người dùng review/commit</li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make cvat-up</code></td><td>passed</td><td>Complete upstream stack chạy; <code>GET /api/server/about</code> trả <code>version=2.77.0</code>.</td></tr>
+<tr><td><code>cvat_sample.py --images ... --dry-run</code></td><td>passed</td><td>183 ảnh: train 0, val 0, unknown 183; 3 ảnh/3 bbox được chọn; manifest SHA-256 <code>b01afc42540fd9f0e107b853051d981c98e7c43e7aa1b050913d1b3ecc2062da</code>.</td></tr>
+<tr><td><code>cvat_sample.py --images ... --token-file ...</code></td><td>passed</td><td>Project <code>labelx-dev</code>; task ID 20; job ID 17; 3 frame và 3 rectangle.</td></tr>
+<tr><td><code>python manage.py hash_cvat_job 17</code> (hai lần)</td><td>passed</td><td>Cả hai lần: <code>b4d30571ea32902d9b160e5c9d06da06366ae1de2e8f28ce8bf3ec73cf3c1bb7</code>.</td></tr>
+<tr><td><code>bdd100k_sample.py --splits val --per-split 5</code></td><td>passed</td><td>Dữ liệu BDD100K tại <code>C:\Users\admin\Downloads\BDD100K</code>; 5 ảnh validation, 106 rectangle, 10 lớp; manifest SHA-256 <code>4cc6394fe651cf3daf95deebaed0ffc327fa507aca666573757bb958542cd1fb</code>.</td></tr>
+<tr><td>BDD100K archive integrity + extraction</td><td>passed</td><td><code>bdd100k_images_100k.zip</code>: 5,669,071,832 byte, 100,004 ZIP entry, CRC không lỗi, SHA-256 <code>afd149eadb49657ef5ad7bb6e9d77cc8b7927a576ee2b475b720028274e02784</code>. Đã giải nén 70,000 train, 10,000 val, 20,000 test.</td></tr>
+<tr><td><code>cvat_sample.py --task-name labelx-dev__review__bdd100k__val__v1</code></td><td>passed</td><td>Project <code>labelx-dev-bdd100k</code>; task ID 21; job ID 18; taxonomy BDD100K tách khỏi project custom.</td></tr>
+<tr><td><code>python manage.py hash_cvat_job 18</code> (hai lần)</td><td>passed</td><td>Cả hai lần: <code>b0e77d68ccba71b5b21583f6e28fcc7de200aec6e965a318b6eb304400a70ca5</code>; 106 rectangle, 0 shape bị bỏ qua.</td></tr>
+<tr><td><code>agent task verify/report/review request</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; lifecycle được cập nhật trực tiếp trong file cá nhân theo CR-100/103.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make -f scripts/init-develop-environment.mk check</code></td><td>passed</td><td>Ruff/format passed; ESLint passed; mypy: 16 source files; Next typegen + tsc passed; pytest: 9 passed; framework validation passed.</td></tr>
+<tr><td>Read-only PAT enforcement</td><td>passed</td><td><code>GET /api/jobs?task_id=20</code> succeeded; <code>POST /api/tasks</code> returned HTTP 403.</td></tr>
+<tr><td>No adapter write API</td><td>passed</td><td>Automated test asserts no public post/put/patch/delete/create/update; MockTransport observed GET + Bearer only.</td></tr>
+<tr><td>Recorded fixture determinism</td><td>passed</td><td>Reordered shapes/server version produce identical canonical JSON/hash; changed coordinate changes hash; aggregate is order-independent.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: Thư mục người dùng cung cấp là Wikimedia Commons Xanh SM, không phải BDD100K và không có learner annotation. Dữ liệu được ghi đúng provenance <code>custom/unknown</code>; không gắn nhãn sai là BDD100K train/val.</li>
+<li><strong>Approved By</strong>: người dùng yêu cầu dùng trực tiếp thư mục đã cung cấp; convention được Executor chốt theo BLOCKER-018.</li>
+<li><strong>Known Limitations</strong>: mẫu custom cũ có 3 bbox ước lượng thủ công; task BDD100K mới dùng 106 bbox từ metadata validation. Nhãn Detection 2020 train chính thức chưa có từ endpoint Berkeley hiện tại; test ground truth không được công bố. Lần chạy <code>infra-up</code> báo bucket SeaweedFS đã tồn tại dù service healthy; không thuộc phạm vi CVAT T-004.</li>
+<li><strong>BDD100K Source Note</strong>: archive 100K Images được tải từ bản phát hành BDD100K; endpoint Berkeley mang tên <code>bdd100k_det_20_labels.zip</code> hiện chứa JPG trực quan hóa thay vì JSON. Mẫu CVAT dùng metadata validation mirror công khai, chuyển về cấu trúc Scalabel <code>det_val.json</code>; không tuyên bố có nhãn test vì BDD100K không công bố ground truth test.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to T-004.</li>
+<li>[x] Acceptance criteria results and evidence are recorded.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, typecheck, test and framework validation pass.</li>
+<li>[x] Reviewer handoff identifies independent reviewers.</li>
+<li>[x] No Git Nexus mapping is required before a commit exists.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không tự nhận review approval hoặc chuyển task sang <code>done</code>.</li><li>Không ghi token/secret vào report, source hoặc log.</li><li>Không gọi dữ liệu Wikimedia là BDD100K ground truth.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Report lưu đúng file cá nhân <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code>.</li><li>Task board cá nhân chuyển sang <code>review</code>; canonical board không bị sửa.</li><li>PR (nếu người dùng yêu cầu mở) phải base vào <code>develop</code> theo CR-104.</li></ul>
+</article></main></body></html>
