@@ -2,10 +2,12 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop  # CR-104
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
   - package-ecosystem: uv
     directory: /src/backend
+    target-branch: develop  # CR-104
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
     ignore:
@@ -19,6 +21,7 @@ updates:
         versions: [">=6.5"]
   - package-ecosystem: npm
     directory: /src/frontend
+    target-branch: develop  # CR-104
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
     groups:
