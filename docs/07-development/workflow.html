@@ -207,7 +207,7 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>develop</code></td>
 <td>Nhánh tích hợp; mọi PR của developer vào đây</td>
-<td>Người mở PR hoặc người duyệt, sau khi <code>pr-approval</code> và CI xanh</td>
+<td>Người mở PR hoặc người duyệt, sau khi được duyệt và CI xanh</td>
 </tr>
 <tr>
 <td><code>feat/T-xxx-…</code>, <code>fix/…</code>, <code>chore/…</code></td>
@@ -218,7 +218,7 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <ol>
 <li>Tạo nhánh từ <code>develop</code> (<code>git switch -c feat/T-xxx-… origin/develop</code>); nhánh đợt 1 đã tạo sẵn và trùng gốc với <code>develop</code>.</li>
-<li>Mở PR với <strong>base = <code>develop</code></strong>. PR của thành viên nhắm <code>main</code> thì status <code>pr-approval</code> báo lỗi dù đã được duyệt.</li>
+<li>Mở PR với <strong>base = <code>develop</code></strong>; PR của thành viên nhắm <code>main</code> sẽ không được merge.</li>
 <li>Sau khi được duyệt (mục dưới) và CI xanh, merge PR vào <code>develop</code>.</li>
 <li>PO review toàn luồng trên <code>develop</code>, rồi mở PR <code>develop</code> → <code>main</code> và merge bằng <strong>Create a merge commit</strong> (không squash/rebase) để lịch sử hai nhánh không lệch.</li>
 </ol>
@@ -250,7 +250,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Mọi PR không phải của PO đều phải nhắm <code>develop</code> và được review; QA/QC xác nhận bởi Trịnh Quang Trung hoặc Nguyễn Đức Hà.</li>
 <li>Thông qua thì người duyệt comment vào PR đúng câu: <code>Đã xem và duyệt</code>. Yêu cầu sửa thì comment nội dung cần sửa, không dùng câu này.</li>
 <li>Đẩy thêm commit sau khi đã duyệt thì lần duyệt cũ mất hiệu lực; người duyệt xem lại và comment lại.</li>
-<li>Workflow <code>PR approval</code> (<code>.github/workflows/pr-approval.yml</code>) chạy khi mở/cập nhật PR và khi có comment, ghi status <code>pr-approval</code> lên commit cuối của PR. Nhánh <code>main</code> yêu cầu status này xanh trước khi merge.</li>
+<li>Không còn workflow tự kiểm duyệt (CR-105); người duyệt và PO tự kiểm các điều kiện trên trước khi merge.</li>
 <li>Danh sách người duyệt ở <code>.github/pr-approvers.txt</code>; chỉ PO sửa.</li>
 </ol>
 <h2 id="lien-quan">Liên quan</h2>
