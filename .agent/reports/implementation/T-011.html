@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-011: backend auth phiên, CSRF, vai trò theo dataset, identity mapping CVAT — LabelX</title>
+<meta name="labelx:id" content="implementation-t-011">
+<meta name="labelx:title" content="Implementation Report T-011: backend auth phiên, CSRF, vai trò theo dataset, identity mapping CVAT">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="execution">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[implementation, t-011, e-02, auth]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-011</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-011</span><b>title</b><span>Implementation Report T-011: backend auth phiên, CSRF, vai trò theo dataset, identity mapping CVAT</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, t-011, e-02, auth]</span><b>priority</b><span>1</span></div>
+<h1 id="t-011">Implementation Report T-011: backend auth phiên, CSRF, vai trò theo dataset, identity mapping CVAT</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi kết quả triển khai T-011 (E-02): đăng nhập phiên LabelX theo contract <code>/api/auth/*</code> của T-001, CSRF giữa Next.js và DRF, vai trò theo scope dataset, identity mapping LabelX ↔ CVAT (FR-SEC-02).</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-011</code></li>
+<li><strong>Title</strong>: <code>Implementation Report T-011: backend auth phiên, CSRF, vai trò theo dataset, identity mapping CVAT</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Executor</strong>: <code>claude-code (session label-x-30) cho @toilatrung</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-011</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>App accounts (RoleAssignment, CvatIdentity, lệnh assign_role và set_cvat_identity, Django admin); endpoint csrf/login/logout/session; cấu hình cookie phiên và CSRF; ApiError và ErrorSerializer dùng chung; contract auth_logout khai báo 403</code></li>
+<li><strong>Not Implemented</strong>: <code>Khoá đăng nhập sai nhiều lần (contract không yêu cầu); ghi audit login/logout (T-013); kiểm quyền theo scope ở các API khác (T-012); frontend chuyển sang API thật (T-016); màn quản trị user và SSO (ngoài phạm vi)</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/accounts/models.py</code>, <code>migrations/0001_initial.py</code></td><td>RoleAssignment: vai trò theo enum Role của contract, dataset_id null chỉ cho super_admin/qc_admin (CheckConstraint), unique (user, role, dataset_id) kể cả null; CvatIdentity: OneToOne user, cvat_user_id unique</td><td>T-011</td></tr>
+<tr><td><code>src/backend/accounts/views.py</code>, <code>urls.py</code>, <code>serializers.py</code></td><td>4 operation auth_csrf, auth_login, auth_logout, auth_session; CSRF kiểm cả khi chưa đăng nhập; Session theo schema contract</td><td>T-011</td></tr>
+<tr><td><code>src/backend/accounts/management/commands/</code>, <code>admin.py</code></td><td>assign_role, set_cvat_identity (một user CVAT chỉ gắn một tài khoản LabelX); đăng ký admin</td><td>T-011</td></tr>
+<tr><td><code>src/backend/config/exceptions.py</code>, <code>config/serializers.py</code></td><td>ApiError mang mã ErrorCode; ErrorSerializer có enum ErrorCode, test giữ trùng contract</td><td>T-011</td></tr>
+<tr><td><code>src/backend/config/settings.py</code>, <code>config/urls.py</code></td><td>INSTALLED_APPS accounts; SESSION_COOKIE_AGE 8 giờ, HttpOnly, SameSite Lax, Secure theo env; csrftoken đọc được bởi JS; route /api/auth/</td><td>T-011</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td>auth_logout khai báo 403 Forbidden (thiếu/sai CSRF khi đang đăng nhập); type sinh lại</td><td>T-011</td></tr>
+<tr><td><code>src/backend/tests/accounts/</code></td><td>28 test: thành công, từ chối, schema khớp contract, model và lệnh</td><td>T-011</td></tr>
+<tr><td><code>scripts/init-develop-environment.mk</code></td><td>mypy thêm accounts</td><td>T-011</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-011</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/risks/RISK-012.html</code></li>
+<li><strong>Review Request</strong>: <code>label-x-88 (theo .agent/skills/labelx-pr-review/SKILL.md); PO comment "Đã xem và duyệt"</code></li>
+<li><strong>Commits</strong>: <code>a782f6f (code); commit report/task board kế tiếp trên feat/T-011-e02-backend-auth</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>sg docker -c "make check"</code></td><td><code>passed</code></td><td>exit 0: ruff, mypy 44 file, pytest backend 84 passed trên Postgres, eslint, tsc, vitest 58 passed, detector 10 passed, FRAMEWORK_VALIDATION_PASS</td></tr>
+<tr><td><code>uv run pytest tests/accounts</code></td><td><code>passed</code></td><td>28 passed (Postgres)</td></tr>
+<tr><td><code>npm run gen:api:contract</code></td><td><code>passed</code></td><td>contract.d.ts thêm response 403 cho auth_logout</td></tr>
+<tr><td>curl trên <code>runserver 127.0.0.1:8011</code></td><td><code>passed</code></td><td><pre><code>1 csrf: 204
+2 login thiếu CSRF: {"code":"FORBIDDEN","message":"Yêu cầu thiếu hoặc sai mã bảo vệ. Vui lòng tải lại trang và thử lại.",...}
+3 login sai mật khẩu: {"code":"INVALID_CREDENTIALS","message":"Tên đăng nhập hoặc mật khẩu không chính xác.",...}
+4 login đúng: {"user":{"id":1,"username":"t011demo","display_name":"Demo"},"roles":[{"role":"reviewer","dataset_id":1}],"identity_mapping":{"status":"mapped","cvat_user_id":901}}
+5 session: (giống 4)
+6 logout: 204
+7 session sau logout: {"code":"NOT_AUTHENTICATED","message":"Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.",...}</code></pre>Dữ liệu demo đã xoá sau khi kiểm.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Endpoint /api/auth/* khớp openapi.yaml (test so schema)</td><td><code>passed</code></td><td>test_auth_schema_matches_contract ×4: operationId, tập response, schema response/request so với contract</td></tr>
+<tr><td>Từ chối: thiếu/sai CSRF → 403</td><td><code>passed</code></td><td>test_login_without_csrf_is_forbidden, test_login_with_wrong_csrf_is_forbidden, test_login_with_untrusted_origin_is_forbidden, test_logout_without_csrf_when_logged_in_is_forbidden</td></tr>
+<tr><td>Từ chối: sai mật khẩu → 400 theo contract</td><td><code>passed</code></td><td>test_login_wrong_password, test_login_unknown_user_and_inactive_user_same_error, test_login_missing_fields</td></tr>
+<tr><td>Từ chối: phiên hết hạn</td><td><code>passed</code></td><td>test_expired_session_is_not_authenticated, test_session_without_login: 403 NOT_AUTHENTICATED theo contract (xem Deviations)</td></tr>
+<tr><td>User không có vai trò → phiên không có grant</td><td><code>passed</code></td><td>test_user_without_role_or_mapping_has_no_grant: roles [], identity_mapping missing</td></tr>
+<tr><td>Identity mapping lưu và tra được</td><td><code>passed</code></td><td>test_login_returns_session_and_session_endpoint_matches, test_set_cvat_identity_command_stores_and_updates, test_cvat_user_maps_to_single_labelx_account</td></tr>
+<tr><td>Mã lỗi trả về đều khai báo trong contract</td><td><code>passed</code></td><td>assert_error kiểm code thuộc ErrorCode ở mọi ca từ chối; test_error_codes_match_contract; logout 403 đã khai báo</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>AC ghi "phiên hết hạn → 401" nhưng contract T-001 không có 401: chưa đăng nhập hoặc phiên hết hạn trả 403 NOT_AUTHENTICATED (Forbidden response, frontend client.ts xử lý theo code). Làm theo contract. Contract được sửa trước code: auth_logout thêm 403 cho CSRF.</code></li>
+<li><strong>Approved By</strong>: <code>chờ review label-x-88 và PO trên PR</code></li>
+<li><strong>Known Limitations</strong>: <code>UniqueConstraint nulls_distinct=False cần PostgreSQL 15+ (SQLite bỏ qua); chưa khoá đăng nhập sai nhiều lần; login/logout chưa ghi audit (T-013); dataset_id chưa là FK vì chưa có model Dataset (E-04/E-05); guideline vẫn kiểm quyền bằng Django groups tới T-012</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[x] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/T-011.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>
