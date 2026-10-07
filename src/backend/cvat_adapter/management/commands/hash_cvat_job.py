@@ -24,8 +24,11 @@ class Command(BaseCommand):
                 {
                     "job_id": digest.job_id,
                     "sha256": digest.sha256,
+                    "hash": f"sha256:{digest.sha256}",
                     "rectangles": digest.rectangle_count,
+                    "track_rectangles": digest.track_rectangle_count,
                     "ignored_shapes": digest.ignored_shape_count,
+                    "ignored_tracks": digest.ignored_track_count,
                 },
                 sort_keys=True,
             )

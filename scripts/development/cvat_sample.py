@@ -41,17 +41,18 @@ def convention_tags(manifest: dict[str, Any]) -> dict[str, str]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--images", type=Path, required=True)
+    parser.add_argument("--annotations", type=Path, required=True)
     parser.add_argument(
-        "--annotations",
+        "--bdd100k-images-root",
         type=Path,
-        default=Path("infrastructure/cvat/sample-annotations.json"),
+        help="Official images/100k directory used to classify selected filenames",
     )
     parser.add_argument("--base-url", default=os.getenv("CVAT_BASE_URL", "http://localhost:8080"))
-    parser.add_argument("--token", default=os.getenv("CVAT_SERVICE_TOKEN", ""))
+    parser.add_argument("--token", default=os.getenv("CVAT_PROVISIONER_TOKEN", ""))
     parser.add_argument(
         "--token-file",
         type=Path,
-        help="Ignored JSON file containing a 'provisioner' token; the value is never logged",
+        help="Ignored JSON file containing a 'provisioner' token; never logged",
     )
     parser.add_argument("--project-name", default=DEFAULT_PROJECT)
     parser.add_argument("--task-name", default=DEFAULT_TASK)
@@ -61,6 +62,9 @@ def parse_args() -> argparse.Namespace:
     if args.token_file:
         token_payload = json.loads(args.token_file.read_text(encoding="utf-8"))
         args.token = str(token_payload["provisioner"])
+    service_token = os.getenv("CVAT_SERVICE_TOKEN", "")
+    if args.token and service_token and args.token == service_token:
+        parser.error("provisioner token must differ from CVAT_SERVICE_TOKEN")
     return args
 
 
@@ -69,7 +73,7 @@ def load_manifest(path: Path) -> dict[str, Any]:
     if payload.get("schema_version") != "labelx-cvat-sample-v1":
         raise ValueError("unsupported annotation manifest schema")
     if not isinstance(payload.get("labels"), list) or not isinstance(payload.get("images"), list):
-        raise ValueError("manifest must contain labels and images arrays")
+        raise TypeError("manifest must contain labels and images arrays")
     return payload
 
 
@@ -111,7 +115,60 @@ def validate_sample(images_dir: Path, manifest: dict[str, Any]) -> list[Path]:
             if not (0 <= left < right <= width and 0 <= top < bottom <= height):
                 raise ValueError(f"bbox outside {width}x{height} image: {path.name}")
         selected.append(path)
+    duplicate_names = [
+        name for name, count in Counter(path.name for path in selected).items() if count > 1
+    ]
+    if duplicate_names:
+        raise ValueError(
+            "duplicate upload filenames are not supported: " + ", ".join(sorted(duplicate_names))
+        )
     return selected
+
+
+def bdd100k_membership(paths: list[Path], images_root: Path) -> dict[str, int]:
+    """Classify by official BDD100K filename listings, never by learner folders."""
+    official = {
+        split: {path.name for path in (images_root / split).glob("*") if path.is_file()}
+        for split in ("train", "val")
+    }
+    overlap = official["train"] & official["val"]
+    if overlap:
+        raise ValueError("official BDD100K train/val filename listings overlap")
+    counts: Counter[str] = Counter()
+    for path in paths:
+        if path.name in official["train"]:
+            counts["train"] += 1
+        elif path.name in official["val"]:
+            counts["val"] += 1
+        else:
+            counts["not_bdd100k"] += 1
+    return {name: counts[name] for name in ("train", "val", "not_bdd100k")}
+
+
+def canonical_taxonomy(labels: list[dict[str, Any]]) -> list[tuple[object, ...]]:
+    def attributes(label: dict[str, Any]) -> tuple[tuple[object, ...], ...]:
+        return tuple(
+            sorted(
+                (
+                    str(attribute.get("name", "")),
+                    str(attribute.get("input_type", "")),
+                    str(attribute.get("default_value", "")),
+                    tuple(str(value) for value in attribute.get("values", [])),
+                    bool(attribute.get("mutable", False)),
+                )
+                for attribute in label.get("attributes", [])
+            )
+        )
+
+    return sorted(
+        (
+            str(label["name"]),
+            str(label.get("type", "any")),
+            str(label.get("color", "")),
+            attributes(label),
+        )
+        for label in labels
+    )
 
 
 class ProvisioningClient:
@@ -119,10 +176,16 @@ class ProvisioningClient:
 
     def __init__(self, base_url: str, token: str) -> None:
         if not token:
-            raise ValueError("--token or CVAT_SERVICE_TOKEN is required unless --dry-run is used")
+            raise ValueError(
+                "--token, --token-file, or CVAT_PROVISIONER_TOKEN is required "
+                "unless --dry-run is used"
+            )
         self._base_url = base_url.rstrip("/")
         self._client = httpx.Client(
-            headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.cvat+json"},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.cvat+json",
+            },
             timeout=120,
         )
 
@@ -146,7 +209,13 @@ class ProvisioningClient:
         payload = self._json("GET", "api/projects", params={"search": name, "page_size": 100})
         for project in payload.get("results", []):
             if project.get("name") == name:
-                return int(project["id"])
+                project_id = int(project["id"])
+                existing = self._json("GET", f"api/projects/{project_id}")
+                expected_taxonomy = canonical_taxonomy(labels)
+                actual_taxonomy = canonical_taxonomy(existing.get("labels", []))
+                if actual_taxonomy != expected_taxonomy:
+                    raise ValueError(f"existing CVAT project taxonomy differs: {name}")
+                return project_id
         created = self._json("POST", "api/projects", json={"name": name, "labels": labels})
         return int(created["id"])
 
@@ -272,6 +341,11 @@ def receipt(
             "annotation_manifest": str(args.annotations.resolve()),
             "annotation_manifest_sha256": hashlib.sha256(annotation_bytes).hexdigest(),
             "inventory_by_split": inventory_counts(args.images),
+            "bdd100k_membership": (
+                bdd100k_membership(selected, args.bdd100k_images_root)
+                if args.bdd100k_images_root
+                else None
+            ),
             "selected_images": len(selected),
             "selected_annotations": sum(
                 len(item.get("annotations", [])) for item in manifest["images"]
@@ -284,6 +358,8 @@ def main() -> int:
     args = parse_args()
     manifest = load_manifest(args.annotations)
     selected = validate_sample(args.images, manifest)
+    if manifest.get("provenance", {}).get("dataset") == "bdd100k" and not args.bdd100k_images_root:
+        raise ValueError("--bdd100k-images-root is required for BDD100K manifests")
     task_id: int | None = None
 
     if not args.dry_run:

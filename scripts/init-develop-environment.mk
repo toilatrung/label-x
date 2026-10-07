@@ -17,7 +17,7 @@ NODE_MAJOR_MIN := 22
 
 .DEFAULT_GOAL := help
 .PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
-        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-hash \
+        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
         check lint format test typecheck gen-api validate-kit clean
@@ -72,10 +72,21 @@ cvat-ps: ## Xem trạng thái container CVAT dev
 cvat-superuser: ## Tạo tài khoản quản trị CVAT dev
 	bash "$(ROOT)/scripts/development/cvat-dev.sh" create-superuser
 
-cvat-import-sample: ## Nạp mẫu; cần SAMPLE_IMAGES và CVAT_SERVICE_TOKEN
+cvat-import-sample: ## Nạp manifest tường minh; cần SAMPLE_IMAGES, SAMPLE_ANNOTATIONS, TOKEN_FILE
 	@test -n "$(SAMPLE_IMAGES)" || (echo "Thiếu SAMPLE_IMAGES=/đường/dẫn/images" >&2; exit 2)
+	@test -n "$(SAMPLE_ANNOTATIONS)" || (echo "Thiếu SAMPLE_ANNOTATIONS=/đường/dẫn/manifest.json" >&2; exit 2)
+	@test -n "$(TOKEN_FILE)" || (echo "Thiếu TOKEN_FILE=/đường/dẫn/dev-tokens.json" >&2; exit 2)
 	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
-		scripts/development/cvat_sample.py --images "$(SAMPLE_IMAGES)"
+		scripts/development/cvat_sample.py --images "$(SAMPLE_IMAGES)" \
+		--annotations "$(SAMPLE_ANNOTATIONS)" --token-file "$(TOKEN_FILE)" \
+		$(if $(BDD100K_IMAGES_ROOT),--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)",)
+
+cvat-bdd100k-sample: ## Tạo manifest BDD100K cache; cần BDD100K_ROOT, FIFTYONE_SAMPLES
+	@test -n "$(BDD100K_ROOT)" || (echo "Thiếu BDD100K_ROOT=/đường/dẫn/BDD100K" >&2; exit 2)
+	@test -n "$(FIFTYONE_SAMPLES)" || (echo "Thiếu FIFTYONE_SAMPLES=/đường/dẫn/samples.json" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/bdd100k_sample.py --dataset-root "$(BDD100K_ROOT)" \
+		--fiftyone-samples "$(FIFTYONE_SAMPLES)" --splits val --per-split 5
 
 cvat-hash: ## Đọc/hash một job; cần JOB_ID và token trong backend .env
 	@test -n "$(JOB_ID)" || (echo "Thiếu JOB_ID=<id>" >&2; exit 2)

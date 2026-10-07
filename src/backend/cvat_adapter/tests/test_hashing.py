@@ -36,6 +36,54 @@ def test_changed_rectangle_changes_hash() -> None:
     assert original.sha256 != changed.sha256
 
 
+def test_track_keyframe_and_outside_are_hashed() -> None:
+    payload: dict[str, Any] = {
+        "shapes": [],
+        "tracks": [
+            {
+                "id": 7,
+                "frame": 0,
+                "label_id": 4,
+                "attributes": [],
+                "shapes": [
+                    {
+                        "type": "rectangle",
+                        "frame": 0,
+                        "points": [1, 2, 11, 12],
+                        "outside": False,
+                    },
+                    {
+                        "type": "rectangle",
+                        "frame": 3,
+                        "points": [2, 3, 12, 13],
+                        "outside": True,
+                    },
+                ],
+            }
+        ],
+    }
+    original = canonicalize_job_annotations(17, payload)
+    payload["tracks"][0]["shapes"][1]["outside"] = False
+    changed = canonicalize_job_annotations(17, payload)
+
+    assert original.sha256 != changed.sha256
+    assert original.track_rectangle_count == 2
+    assert original.ignored_track_count == 0
+
+
+def test_negative_zero_is_normalized() -> None:
+    positive = _annotations()
+    negative = _annotations()
+    positive["shapes"][0]["points"][0] = 0.0
+    negative["shapes"][0]["points"][0] = -0.0
+
+    assert (
+        canonicalize_job_annotations(17, positive).sha256
+        == canonicalize_job_annotations(17, negative).sha256
+    )
+    assert "-0.0" not in canonicalize_job_annotations(17, negative).canonical_json
+
+
 def test_aggregate_hash_is_independent_of_job_order() -> None:
     first = canonicalize_job_annotations(17, _annotations())
     second = canonicalize_job_annotations(5, {"shapes": []})

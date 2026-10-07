@@ -26,6 +26,24 @@ ensure_checkout() {
     echo "Move $CHECKOUT aside and retry; the script will not delete it." >&2
     exit 1
   fi
+  actual="$(git -C "$CHECKOUT" rev-parse HEAD)"
+  if [[ "$actual" != "$CVAT_COMMIT" ]]; then
+    echo "CVAT cache commit mismatch: expected $CVAT_COMMIT, got $actual." >&2
+    exit 1
+  fi
+}
+
+wait_for_about() {
+  local attempt
+  for attempt in {1..60}; do
+    if curl --fail --silent "http://$CVAT_HOST:$CVAT_PORT/api/server/about" \
+      | grep -Eq "\"version\"[[:space:]]*:[[:space:]]*\"${CVAT_VERSION#v}\""; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "CVAT /api/server/about did not report ${CVAT_VERSION#v} within 120 seconds." >&2
+  return 1
 }
 
 compose() {
@@ -37,8 +55,9 @@ command="${1:-}"
 case "$command" in
   up)
     ensure_checkout
-    compose up -d
-    echo "CVAT $CVAT_VERSION is starting at http://$CVAT_HOST:$CVAT_PORT"
+    compose up -d --wait
+    wait_for_about
+    echo "CVAT $CVAT_VERSION ($CVAT_COMMIT) is healthy at http://$CVAT_HOST:$CVAT_PORT"
     ;;
   down)
     ensure_checkout

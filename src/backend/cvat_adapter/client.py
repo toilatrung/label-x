@@ -13,6 +13,15 @@ class CvatConfigurationError(ValueError):
     """Raised when the adapter is initialized without safe configuration."""
 
 
+class CvatWriteBlocked(RuntimeError):
+    """Raised before a non-read HTTP request can leave the adapter."""
+
+
+def _enforce_read_only(request: httpx.Request) -> None:
+    if request.method.upper() not in {"GET", "HEAD"}:
+        raise CvatWriteBlocked(f"CVAT adapter blocked HTTP {request.method.upper()}")
+
+
 class CvatReadClient:
     """Read jobs and annotations from CVAT using a read-only PAT.
 
@@ -42,6 +51,7 @@ class CvatReadClient:
             },
             timeout=timeout_seconds,
             transport=transport,
+            event_hooks={"request": [_enforce_read_only]},
         )
 
     def close(self) -> None:
@@ -59,13 +69,13 @@ class CvatReadClient:
         return cast(object, response.json())
 
     def list_jobs(
-        self, *, task_id: int | None = None, page_size: int = 100
+        self, *, task_id: int | None = None, page_size: int = 100, max_pages: int = 1000
     ) -> list[dict[str, object]]:
         """Return every job, following CVAT's page-based pagination."""
 
         jobs: list[dict[str, object]] = []
         page = 1
-        while True:
+        while page <= max_pages:
             params: dict[str, QueryValue] = {"page": page, "page_size": page_size}
             if task_id is not None:
                 params["task_id"] = task_id
@@ -76,9 +86,10 @@ class CvatReadClient:
             if not isinstance(raw_results, list):
                 raise TypeError("CVAT jobs results must be a list")
             jobs.extend(item for item in raw_results if isinstance(item, dict))
-            if not payload.get("next"):
+            if not raw_results or not payload.get("next"):
                 return jobs
             page += 1
+        raise RuntimeError(f"CVAT jobs pagination exceeded {max_pages} pages")
 
     def get_job(self, job_id: int) -> dict[str, object]:
         return self._get_object(f"api/jobs/{job_id}")
