@@ -129,6 +129,149 @@ ul.dir{columns:2;font-size:14px}
 <td><a href="../reports/implementation/T-005.html">implementation</a>; <a href="../reports/review/T-005.html">review</a>; <a href="../reports/qa/T-005.html">QA</a>; <a href="https://github.com/toilatrung/label-x/pull/22">PR #22</a></td>
 <td>2026-10-08</td>
 </tr>
+<tr>
+<td>T-006</td>
+<td>E-01</td>
+<td>Engine interface chung: input/output, trạng thái công khai, applicability trong ledger</td>
+<td>chờ PO gán (đề xuất @toilatrung)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-007</td>
+<td>E-01</td>
+<td>ADR và contract: quyết định “Xác nhận lỗi” ↔ phần tử 𝓔 cho KPI-2b</td>
+<td>chờ PO gán (đề xuất @toilatrung)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>BLOCKER-012</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-008</td>
+<td>E-01</td>
+<td>OpenAPI bổ sung quyết định review, phân xử, rework, gate, báo cáo</td>
+<td>chờ PO gán (đề xuất @toilatrung)</td>
+<td>pending</td>
+<td>T-001, T-006</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-009</td>
+<td>E-01</td>
+<td>Cập nhật SRS có version: frame “đang dở”, FR-GTE-01 khi không rework, báo cáo hai phần</td>
+<td>chờ PO gán (đề xuất @toilatrung)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>BLOCKER-008, BLOCKER-011, BLOCKER-012</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-010</td>
+<td>E-01</td>
+<td>Bảng mã lỗi 400/403/404/409/422 ↔ thông báo UI dùng chung</td>
+<td>chờ PO gán (đề xuất @tdt2112)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-011</td>
+<td>E-02</td>
+<td>Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</td>
+<td>chờ PO gán (đề xuất @toilatrung)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-012</td>
+<td>E-02</td>
+<td>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</td>
+<td>chờ PO gán (đề xuất @ducha180104)</td>
+<td>pending</td>
+<td>T-011, T-013</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-013</td>
+<td>E-02</td>
+<td>Audit log append-only ghi cùng transaction, kiểm DB grant</td>
+<td>chờ PO gán (đề xuất @duy12345-6789)</td>
+<td>pending</td>
+<td>T-011</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-014</td>
+<td>E-02</td>
+<td>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</td>
+<td>chờ PO gán (đề xuất @vietanhhhhhh2003)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>BLOCKER-014</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-015</td>
+<td>E-02</td>
+<td>Log có cấu trúc kèm request_id, secret không vào log</td>
+<td>chờ PO gán (đề xuất @duy12345-6789)</td>
+<td>pending</td>
+<td>T-001</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-016</td>
+<td>E-02</td>
+<td>Frontend chạy trên API auth thật, màn WorkflowPermissions</td>
+<td>chờ PO gán (đề xuất @tdt2112)</td>
+<td>pending</td>
+<td>T-011, T-012</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-017</td>
+<td>E-03</td>
+<td>Mapping nhóm lỗi/lớp → rule ID: API sửa có kiểm hợp lệ, màn RulesThresholds</td>
+<td>chờ PO gán (đề xuất @ducha180104)</td>
+<td>pending</td>
+<td>T-012, T-013</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>T-018</td>
+<td>E-03</td>
+<td>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</td>
+<td>chờ PO gán (đề xuất @ducha180104)</td>
+<td>pending</td>
+<td>T-016</td>
+<td>none</td>
+<td>none</td>
+<td>2026-10-08</td>
+</tr>
 </tbody>
 </table>
 <h2 id="task-details">Task Details</h2>
@@ -439,5 +582,799 @@ ul.dir{columns:2;font-size:14px}
 <li>[x] Required reports are stored in <code>.agent/reports/</code>.</li>
 <li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[x] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="m-01-task-plan">Kế hoạch task M-01 (đăng ký 2026-10-08, chờ PO duyệt)</h3>
+<p>Theo yêu cầu PO: toàn bộ task còn lại của M-01 (E-01, E-02, E-03) được đăng ký lên board trước, ở trạng thái <code>pending</code>, owner <code>chờ PO gán</code> (cột owner ghi người đề xuất). Không task nào bắt đầu trước khi PO duyệt và gán (DEC-002).</p>
+<table>
+<thead><tr><th>Epic</th><th>Đã xong</th><th>Task còn lại</th><th>Thứ tự / phụ thuộc</th></tr></thead>
+<tbody>
+<tr><td>E-01</td><td>T-001</td><td>T-006, T-007, T-008, T-009, T-010</td><td>T-006, T-007, T-009, T-010 song song; T-008 sau T-006</td></tr>
+<tr><td>E-02</td><td>T-002</td><td>T-011, T-012, T-013, T-014, T-015, T-016</td><td>T-011 trước; T-013, T-014, T-015 song song với T-011; T-012 sau T-011 + T-013; T-016 sau T-011 + T-012</td></tr>
+<tr><td>E-03</td><td>T-003</td><td>T-017, T-018</td><td>T-017 sau T-012 + T-013; T-018 sau T-016</td></tr>
+</tbody>
+</table>
+<p><strong>Đánh giá hạn 2026-10-09</strong>: chuỗi phụ thuộc dài nhất là T-011 → T-012 → T-016 → T-018 (bốn task nối tiếp, ba trong đó là backend auth/RBAC). Với 5 thành viên, khó đạt trong một ngày. PO cần chọn: (a) dời hạn M-01 sang 2026-10-12 bằng change request; hoặc (b) thu hẹp phạm vi M-01 bằng change request, ví dụ chuyển T-014 (Object Storage) và identity mapping CVAT sang M-02 nơi E-05 dùng tới, T-009 sang M-02.</p>
+<p><strong>Cần PO quyết</strong>: AC E-03 “Lookup trả đúng version gắn với snapshot” mâu thuẫn với CR-101 (bỏ guideline có version, thay bằng tệp tĩnh). Hiện API đã trả <code>guideline_version</code> theo tệp nạp; gắn version vào snapshot thuộc E-05. Đề xuất sửa AC E-03 thành “lookup trả đúng version tệp đã nạp; snapshot ghi version guideline (E-05)” qua change request. Tương tự, “QC Admin sửa mapping” (T-017) cần xác nhận vì CR-101 đặt mapping trong tệp tĩnh.</p>
+<h3 id="t-006">T-006</h3>
+<h4 id="record-metadata_5">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-006</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>Engine interface chung: input/output, trạng thái công khai, applicability trong ledger</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_5">Objective</h4>
+<p>Chốt interface đăng ký engine dùng chung cho mọi engine (Detector, rule engine, sau này VLM/Classifier) để thêm engine không phải sửa luồng review (NFR-13, B-19).</p>
+<h4 id="scope_5">Scope</h4>
+<h5 id="included_5">Included</h5>
+<ul>
+<li>Schema input (snapshot, đơn vị áp dụng, cấu hình engine có version) và output (candidate, evidence, ledger) trong <code>docs/04-api/</code>, trích FR/BR</li>
+<li>Trạng thái công khai chỉ gồm Checked, Partial, Failed, Not checked, Running (FR-AGG-05); quy tắc map trạng thái nội bộ → công khai</li>
+<li>Coverage ledger theo engine: eligible, completed, failed, not checked kèm lý do, không loại đơn vị lỗi khỏi mẫu số (FR-AGG-04)</li>
+<li>Decision record (ADR) interface engine, trạng thái accepted; test contract kiểm schema</li>
+</ul>
+<h5 id="excluded_5">Excluded</h5>
+<ul>
+<li>Cài đặt engine cụ thể (E-08, E-10)</li>
+</ul>
+<h4 id="preconditions_5">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_5">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_5">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Schema engine interface hợp lệ, có test contract; mọi trường trích FR/BR/NFR</li>
+<li>[ ] ADR interface engine ở trạng thái accepted</li>
+<li>[ ] Map trạng thái công khai không có trạng thái nào hiển thị như “đạt” khi engine chưa hoàn tất</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_5">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check; make validate-kit</code></li>
+<li><strong>Manual Checks</strong>: <code>Tech Lead Backend đọc contract trong PR</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-006.html</code></li>
+</ul>
+<h4 id="completion-criteria_5">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-007">T-007</h3>
+<h4 id="record-metadata_6">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-007</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>ADR và contract: quyết định “Xác nhận lỗi” ↔ phần tử 𝓔 cho KPI-2b</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_6">Objective</h4>
+<p>Có quyết định được duyệt về cách một quyết định “Xác nhận lỗi” của reviewer được nối với phần tử 𝓔 của reference để tính KPI-2b (FR-EVL-13).</p>
+<h4 id="scope_6">Scope</h4>
+<h5 id="included_6">Included</h5>
+<ul>
+<li>Decision record mới (DEC-009) theo template: định nghĩa phần tử 𝓔, khoá nối (neo issue DEC-006, lineage DEC-005), trường hợp một-nhiều/không khớp</li>
+<li>Bổ sung entity/trường cần lưu vào contract <code>docs/04-api/</code>; trích FR-EVL-13, mục KPI-2 của SRS</li>
+<li>Ví dụ tính trên dữ liệu giả lập nhỏ để kiểm định nghĩa</li>
+</ul>
+<h5 id="excluded_6">Excluded</h5>
+<ul>
+<li>Cài đặt tính KPI (E-19, E-20)</li>
+<li>Tự chốt TBD-K1…K4</li>
+</ul>
+<h4 id="preconditions_6">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_6">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-005.html, .agent/governance/decisions/DEC-006.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-012.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_6">Acceptance Criteria</h4>
+<ul>
+<li>[ ] DEC-009 ở trạng thái accepted, có decision maker</li>
+<li>[ ] Contract có trường nối và trích FR/BR/UC</li>
+<li>[ ] Ví dụ tính khớp định nghĩa SRS</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_6">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make validate-kit; make check</code></li>
+<li><strong>Manual Checks</strong>: <code>QA Lead đọc ADR trong PR</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-007.html</code></li>
+</ul>
+<h4 id="completion-criteria_6">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-008">T-008</h3>
+<h4 id="record-metadata_7">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-008</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>OpenAPI bổ sung quyết định review, phân xử, rework, gate, báo cáo</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_7">Objective</h4>
+<p>OpenAPI phủ toàn bộ bảng endpoint SRS (tab:api, mục 9.3) để AC E-01 “mọi endpoint/state/guard có trích FR/BR/UC” đạt.</p>
+<h4 id="scope_7">Scope</h4>
+<h5 id="included_7">Included</h5>
+<ul>
+<li>Operation cho quyết định review, phân xử (escalation), rework/verify, gate, báo cáo hai phần KPI/run cuối (BLOCKER-012) trong <code>docs/04-api/openapi.yaml</code></li>
+<li>Guard và lỗi 403/409/422 theo state machine; <code>x-labelx-trace</code> cho mọi operation; mở rộng <code>tests/test_contract.py</code></li>
+<li>Sinh lại <code>src/frontend/src/lib/api/contract.d.ts</code></li>
+</ul>
+<h5 id="excluded_7">Excluded</h5>
+<ul>
+<li>Cài đặt endpoint (epic tương ứng)</li>
+</ul>
+<h4 id="preconditions_7">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001, T-006)</li>
+</ul>
+<h4 id="related-files_7">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-005.html, .agent/governance/decisions/DEC-006.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_7">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Mọi endpoint trong tab:api có operation và trace FR/BR/UC (test kiểm)</li>
+<li>[ ] OpenAPI hợp lệ, frontend sinh type được</li>
+<li>[ ] Mọi guard của state machine có mã lỗi tương ứng</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_7">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Thành viên khác đọc contract trong PR</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-008.html</code></li>
+</ul>
+<h4 id="completion-criteria_7">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-009">T-009</h3>
+<h4 id="record-metadata_8">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-009</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>Cập nhật SRS có version: frame “đang dở”, FR-GTE-01 khi không rework, báo cáo hai phần</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_8">Objective</h4>
+<p>Đưa các disposition đã duyệt của BLOCKER-008, 011, 012 vào SRS LaTeX có version để contract và SRS không mâu thuẫn.</p>
+<h4 id="scope_8">Scope</h4>
+<h5 id="included_8">Included</h5>
+<ul>
+<li>Sửa <code>docs/label-x_system-requirement-specification/sections/*.tex</code>: trạng thái frame incomplete (BLOCKER-008), FR-GTE-01 khi không có rework (BLOCKER-011), báo cáo hai phần KPI/run cuối (BLOCKER-012); tăng version SRS</li>
+<li>Chạy <code>scripts/srs_tex2html.py</code> và <code>scripts/srs_tex2docs.py</code></li>
+</ul>
+<h5 id="excluded_8">Excluded</h5>
+<ul>
+<li>Đổi yêu cầu ngoài các blocker trên</li>
+</ul>
+<h4 id="preconditions_8">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_8">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-008.html, .agent/governance/blockers/BLOCKER-011.html, .agent/governance/blockers/BLOCKER-012.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_8">Acceptance Criteria</h4>
+<ul>
+<li>[ ] SRS có version mới, ghi lịch sử thay đổi</li>
+<li>[ ] Không còn mâu thuẫn giữa SRS và docs/04-api cho ba điểm trên</li>
+<li>[ ] HTML/DOCX SRS sinh lại</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_8">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make validate-kit</code></li>
+<li><strong>Manual Checks</strong>: <code>PO đọc diff SRS</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-009.html</code></li>
+</ul>
+<h4 id="completion-criteria_8">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-010">T-010</h3>
+<h4 id="record-metadata_9">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-010</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Title</strong>: <code>Bảng mã lỗi 400/403/404/409/422 ↔ thông báo UI dùng chung</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_9">Objective</h4>
+<p>Frontend có một nguồn duy nhất map mã lỗi API (ErrorCode trong contract) sang thông báo tiếng Việt, dùng cho mọi màn.</p>
+<h4 id="scope_9">Scope</h4>
+<h5 id="included_9">Included</h5>
+<ul>
+<li>Module dùng chung trong <code>src/frontend/src/lib/api/</code> map mọi giá trị <code>ErrorCode</code> → thông báo, có fallback; hiển thị <code>request_id</code> khi lỗi 5xx</li>
+<li>Thay các chuỗi lỗi rải rác (login, guideline) bằng module này; test vitest phủ mọi mã</li>
+</ul>
+<h5 id="excluded_9">Excluded</h5>
+<ul>
+<li>Màn riêng cho lỗi</li>
+</ul>
+<h4 id="preconditions_9">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_9">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-01</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_9">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Mọi giá trị ErrorCode trong contract có thông báo (test tự sinh từ contract.d.ts)</li>
+<li>[ ] Các màn hiện có dùng module chung</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_9">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm test &amp;&amp; npm run build</code></li>
+<li><strong>Manual Checks</strong>: <code>Mở màn login/guideline, gây lỗi 403/404</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-010.html</code></li>
+</ul>
+<h4 id="completion-criteria_9">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-011">T-011</h3>
+<h4 id="record-metadata_10">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-011</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_10">Objective</h4>
+<p>Backend có đăng nhập phiên theo contract <code>/api/auth/*</code> của T-001, CSRF giữa Next.js và DRF, và lưu identity mapping LabelX ↔ CVAT dùng cho kiểm self-review (FR-SEC-02).</p>
+<h4 id="scope_10">Scope</h4>
+<h5 id="included_10">Included</h5>
+<ul>
+<li>Django app <code>accounts</code>: user, vai trò, role assignment theo dataset (theo <code>docs/04-api/rbac-matrix.html</code>); endpoint csrf/login/logout/session đúng schema contract</li>
+<li>Cookie phiên + CSRF cấu hình cho frontend Next.js (CORS, SameSite); khoá đăng nhập sai nhiều lần nếu contract yêu cầu</li>
+<li>Model identity mapping LabelX user ↔ CVAT user id/username; lệnh quản trị hoặc API admin để gán</li>
+<li>Test API auth (đăng nhập đúng/sai, CSRF thiếu, phiên hết hạn)</li>
+</ul>
+<h5 id="excluded_10">Excluded</h5>
+<ul>
+<li>Màn quản trị user</li>
+<li>SSO</li>
+</ul>
+<h4 id="preconditions_10">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_10">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_10">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Endpoint /api/auth/* khớp openapi.yaml (test so schema)</li>
+<li>[ ] Thiếu CSRF bị từ chối 403 theo hợp đồng lỗi</li>
+<li>[ ] Identity mapping lưu và tra được cho một user</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_10">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Đăng nhập từ frontend (sau T-016) hoặc curl</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-011.html</code></li>
+</ul>
+<h4 id="completion-criteria_10">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-012">T-012</h3>
+<h4 id="record-metadata_11">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-012</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_11">Objective</h4>
+<p>Mọi request được kiểm quyền theo vai trò và scope dataset ở backend (FR-SEC-01); người duyệt khác người yêu cầu kể cả qua tài khoản khác cùng người (FR-SEC-04); Super Admin ghi đè phải có lý do và gắn nhãn audit (FR-SEC-06).</p>
+<h4 id="scope_11">Scope</h4>
+<h5 id="included_11">Included</h5>
+<ul>
+<li>Permission class DRF dùng chung đọc role assignment của T-011; thay quyền dựa Django groups của <code>guideline/permissions.py</code></li>
+<li>Request ngoài scope trả 403 theo hợp đồng lỗi và ghi audit (AC E-02)</li>
+<li>Kiểm tách nhiệm vụ dựa identity mapping (cùng người nhiều tài khoản)</li>
+<li>Override Super Admin: tham số lý do bắt buộc, nhãn override trong audit, vẫn chịu self-review</li>
+<li>API đọc role assignment cho màn WorkflowPermissions</li>
+</ul>
+<h5 id="excluded_11">Excluded</h5>
+<ul>
+<li>Quy trình duyệt nghiệp vụ cụ thể (waiver, khoá reference — epic tương ứng)</li>
+</ul>
+<h4 id="preconditions_11">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-011, T-013)</li>
+</ul>
+<h4 id="related-files_11">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
+<ul>
+<li>[ ] API ngoài scope trả 403 và có bản ghi audit</li>
+<li>[ ] Người duyệt trùng người yêu cầu bị từ chối</li>
+<li>[ ] Override không có lý do bị từ chối 422; có lý do thì audit gắn nhãn</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_11">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Gọi API bằng hai vai trò khác scope</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-012.html</code></li>
+</ul>
+<h4 id="completion-criteria_11">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-013">T-013</h3>
+<h4 id="record-metadata_12">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-013</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>Audit log append-only ghi cùng transaction, kiểm DB grant</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_12">Objective</h4>
+<p>Audit log append-only ghi trong cùng transaction với thao tác: actor, hành động, đối tượng, trước/sau, revision, lý do (FR-SEC-05, NFR-08).</p>
+<h4 id="scope_12">Scope</h4>
+<h5 id="included_12">Included</h5>
+<ul>
+<li>Django app <code>audit</code>: model + service ghi trong <code>transaction.atomic</code> của thao tác; rollback thao tác thì không còn audit</li>
+<li>Không có API/admin sửa, xoá audit; role DB của ứng dụng chỉ có INSERT/SELECT trên bảng audit (migration hoặc script grant, kiểm trong test)</li>
+<li>Không ghi secret/mật khẩu vào trường trước/sau</li>
+</ul>
+<h5 id="excluded_12">Excluded</h5>
+<ul>
+<li>Màn xem audit FR-SEC-07 (hoãn theo CR-101)</li>
+</ul>
+<h4 id="preconditions_12">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-011)</li>
+</ul>
+<h4 id="related-files_12">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_12">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Thao tác rollback thì audit cũng không được ghi (test)</li>
+<li>[ ] UPDATE/DELETE trên bảng audit bằng role ứng dụng bị DB từ chối (test trên Postgres)</li>
+<li>[ ] Không tồn tại endpoint sửa/xoá audit</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_12">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check (Postgres)</code></li>
+<li><strong>Manual Checks</strong>: <code>Kiểm grant bằng psql</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-013.html</code></li>
+</ul>
+<h4 id="completion-criteria_12">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-014">T-014</h3>
+<h4 id="record-metadata_13">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-014</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @vietanhhhhhh2003)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_13">Objective</h4>
+<p>Backend có lớp truy cập Object Storage (SeaweedFS S3-compatible) dùng chung: upload blob với khoá theo hash nội dung (idempotent) trước, commit metadata sau (nền NFR-06).</p>
+<h4 id="scope_13">Scope</h4>
+<h5 id="included_13">Included</h5>
+<ul>
+<li>Module <code>storage</code> backend: put theo SHA-256, head/get, presigned URL có kiểm quyền; credentials từ env, không vào log</li>
+<li>Hàm tiện ích “upload rồi commit metadata trong transaction”; ghi lại cùng blob là no-op</li>
+<li>Test với stack dev (bucket labelx-*) và test unit với backend giả</li>
+</ul>
+<h5 id="excluded_13">Excluded</h5>
+<ul>
+<li>GC/retention (BLOCKER-014)</li>
+</ul>
+<h4 id="preconditions_13">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_13">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_13">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Upload cùng nội dung hai lần cho cùng khoá, không tạo bản trùng</li>
+<li>[ ] Lỗi upload thì không commit metadata (test)</li>
+<li>[ ] Secret không xuất hiện trong log (test)</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_13">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Upload/tải một blob trên stack dev</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-014.html</code></li>
+</ul>
+<h4 id="completion-criteria_13">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-015">T-015</h3>
+<h4 id="record-metadata_14">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-015</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>Log có cấu trúc kèm request_id, secret không vào log</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_14">Objective</h4>
+<p>Log backend dạng JSON có request_id (và run_id/snapshot_id khi có) (NFR-12); mật khẩu, token, secret không xuất hiện trong log (NFR-07).</p>
+<h4 id="scope_14">Scope</h4>
+<h5 id="included_14">Included</h5>
+<ul>
+<li>Cấu hình logging JSON dùng <code>X-Request-ID</code> của middleware hiện có; context var cho run_id/snapshot_id</li>
+<li>Filter che secret (token CVAT, mật khẩu, header Authorization/Cookie)</li>
+<li>Test log của một request lỗi chứa request_id và không chứa secret</li>
+</ul>
+<h5 id="excluded_14">Excluded</h5>
+<ul>
+<li>Dashboard/metric vận hành (E-23)</li>
+</ul>
+<h4 id="preconditions_14">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-001)</li>
+</ul>
+<h4 id="related-files_14">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_14">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Mỗi dòng log request có request_id</li>
+<li>[ ] Test chèn token giả không thấy trong log</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_14">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Xem log khi chạy dev-backend</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-015.html</code></li>
+</ul>
+<h4 id="completion-criteria_14">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-016">T-016</h3>
+<h4 id="record-metadata_15">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-016</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Title</strong>: <code>Frontend chạy trên API auth thật, màn WorkflowPermissions</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+</ul>
+<h4 id="objective_15">Objective</h4>
+<p>Frontend bỏ mock, dùng API auth thật; menu/hành động theo vai trò + scope từ API; màn WorkflowPermissions đọc role assignment thật (AC E-02: chạy trên API thật, không dữ liệu giả).</p>
+<h4 id="scope_15">Scope</h4>
+<h5 id="included_15">Included</h5>
+<ul>
+<li>Cấu hình mặc định dùng backend thật; mock chỉ còn cho test</li>
+<li>ContextBar lấy dataset scope từ phiên; ẩn/khoá hành động theo grant</li>
+<li>Màn WorkflowPermissions (docs/design) chỉ đọc từ API của T-012</li>
+<li>Test vitest với mock route theo contract; ảnh chụp màn trên API thật trong report</li>
+</ul>
+<h5 id="excluded_15">Excluded</h5>
+<ul>
+<li>Sửa role assignment từ UI</li>
+</ul>
+<h4 id="preconditions_15">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-011, T-012)</li>
+</ul>
+<h4 id="related-files_15">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_15">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Đăng nhập thật → shell, đúng menu theo vai trò</li>
+<li>[ ] WorkflowPermissions hiển thị dữ liệu từ API, không dữ liệu giả</li>
+<li>[ ] npm run lint/typecheck/test/build đạt</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_15">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm test &amp;&amp; npm run build; make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Đăng nhập thật với 2 vai trò, chụp màn hình</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-016.html</code></li>
+</ul>
+<h4 id="completion-criteria_15">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-017">T-017</h3>
+<h4 id="record-metadata_16">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-017</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Title</strong>: <code>Mapping nhóm lỗi/lớp → rule ID: API sửa có kiểm hợp lệ, màn RulesThresholds</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_16">Objective</h4>
+<p>QC Admin sửa được mapping nhóm lỗi/lớp → rule ID (vai trò khác chỉ xem); mapping không hợp lệ bị từ chối (AC E-03).</p>
+<h4 id="scope_16">Scope</h4>
+<h5 id="included_16">Included</h5>
+<ul>
+<li>API đọc/sửa mapping theo version guideline: rule ID phải tồn tại, family/lớp thuộc tập hợp lệ, trả 422 khi sai; ghi audit (T-013)</li>
+<li>Màn RulesThresholds phần mapping (docs/design), QC Admin sửa, vai trò khác chỉ xem</li>
+<li>Test backend + frontend</li>
+</ul>
+<h5 id="excluded_16">Excluded</h5>
+<ul>
+<li>Sửa nội dung rule (soạn ở nơi soạn guideline)</li>
+</ul>
+<h4 id="preconditions_16">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-012, T-013)</li>
+</ul>
+<h4 id="related-files_16">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-03</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_16">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Mapping trỏ rule ID không tồn tại bị từ chối 422</li>
+<li>[ ] Vai trò khác QC Admin không sửa được (403)</li>
+<li>[ ] Sửa mapping có bản ghi audit</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_16">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Sửa mapping trên màn với QC Admin và reviewer</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-017.html</code></li>
+</ul>
+<h4 id="completion-criteria_16">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-018">T-018</h3>
+<h4 id="record-metadata_17">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-018</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Title</strong>: <code>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</code></li>
+<li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_17">Objective</h4>
+<p>Màn ModelsGuidelines phần guideline (version, rule ID, section, trích đoạn) chạy trên API thật, và có component tra rule dùng lại ở Workspace (E-14).</p>
+<h4 id="scope_17">Scope</h4>
+<h5 id="included_17">Included</h5>
+<ul>
+<li>Màn ModelsGuidelines theo docs/design, dùng API guideline hiện có qua auth thật</li>
+<li>Component tra rule theo rule ID / family / lớp tách khỏi trang, có test</li>
+<li>Mở màn trên trình duyệt với reviewer (thay mục QA skipped của T-003)</li>
+</ul>
+<h5 id="excluded_17">Excluded</h5>
+<ul>
+<li>Versioning guideline theo snapshot (xem quyết định PO ở mục kế hoạch M-01)</li>
+</ul>
+<h4 id="preconditions_17">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[ ] Dependencies, approvals, and access are available. (chờ PO duyệt và gán owner; phụ thuộc T-016)</li>
+</ul>
+<h4 id="related-files_17">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-03</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_17">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Màn hiển thị rule từ API thật, đúng quyền</li>
+<li>[ ] Component tra rule có test và được export dùng lại</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_17">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm test; make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Mở màn và tra rule với reviewer</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-018.html</code></li>
+</ul>
+<h4 id="completion-criteria_17">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 </article></main></body></html>
