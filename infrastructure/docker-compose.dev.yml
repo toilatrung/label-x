@@ -1,7 +1,7 @@
 # Dịch vụ hạ tầng cho môi trường dev local (DEC-001).
 # Chạy: docker compose -f infrastructure/docker-compose.dev.yml up -d
 # SeaweedFS chỉ thay Object Storage ở local; môi trường thật dùng Object Storage hiện có (S3-compatible).
-# CVAT không nằm ở đây: adapter đọc instance CVAT đang triển khai (B-18, chỉ đọc).
+# CVAT chạy bằng complete upstream Compose đã pin: make -f scripts/init-develop-environment.mk cvat-up.
 name: labelx-dev
 
 services:

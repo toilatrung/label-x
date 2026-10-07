@@ -17,6 +17,7 @@ NODE_MAJOR_MIN := 22
 
 .DEFAULT_GOAL := help
 .PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
+        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
         check lint format test typecheck gen-api validate-kit clean
@@ -54,6 +55,50 @@ infra-reset: ## XOÁ dữ liệu Postgres/SeaweedFS local rồi bật lại
 	$(COMPOSE) down -v
 	$(MAKE) -f "$(ROOT)/scripts/init-develop-environment.mk" infra-up
 	$(MAKE) -f "$(ROOT)/scripts/init-develop-environment.mk" migrate
+
+# CVAT uses the complete upstream Compose bundle pinned by infrastructure/cvat/version.conf.
+cvat-up: ## Bật CVAT dev đã pin tại :8080
+	bash "$(ROOT)/scripts/development/cvat-dev.sh" up
+
+cvat-down: ## Tắt CVAT dev (giữ volume dữ liệu)
+	bash "$(ROOT)/scripts/development/cvat-dev.sh" down
+
+cvat-logs: ## Theo dõi log CVAT dev
+	bash "$(ROOT)/scripts/development/cvat-dev.sh" logs
+
+cvat-ps: ## Xem trạng thái container CVAT dev
+	bash "$(ROOT)/scripts/development/cvat-dev.sh" ps
+
+cvat-superuser: ## Tạo tài khoản quản trị CVAT dev
+	bash "$(ROOT)/scripts/development/cvat-dev.sh" create-superuser
+
+cvat-import-sample: ## Nạp manifest tường minh; cần SAMPLE_IMAGES, SAMPLE_ANNOTATIONS, TOKEN_FILE
+	@test -n "$(SAMPLE_IMAGES)" || (echo "Thiếu SAMPLE_IMAGES=/đường/dẫn/images" >&2; exit 2)
+	@test -n "$(SAMPLE_ANNOTATIONS)" || (echo "Thiếu SAMPLE_ANNOTATIONS=/đường/dẫn/manifest.json" >&2; exit 2)
+	@test -n "$(TOKEN_FILE)" || (echo "Thiếu TOKEN_FILE=/đường/dẫn/dev-tokens.json" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/cvat_sample.py --images "$(SAMPLE_IMAGES)" \
+		--annotations "$(SAMPLE_ANNOTATIONS)" --token-file "$(TOKEN_FILE)" \
+		$(if $(BDD100K_IMAGES_ROOT),--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)",)
+
+cvat-bdd100k-sample: ## Tạo manifest BDD100K cache; cần BDD100K_ROOT, FIFTYONE_SAMPLES
+	@test -n "$(BDD100K_ROOT)" || (echo "Thiếu BDD100K_ROOT=/đường/dẫn/BDD100K" >&2; exit 2)
+	@test -n "$(FIFTYONE_SAMPLES)" || (echo "Thiếu FIFTYONE_SAMPLES=/đường/dẫn/samples.json" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/bdd100k_sample.py --dataset-root "$(BDD100K_ROOT)" \
+		--fiftyone-samples "$(FIFTYONE_SAMPLES)" --splits val --per-split 5
+
+cvat-audit-learner: ## Audit YOLO learner ZIP; cần LEARNER_EXPORTS và BDD100K_IMAGES_ROOT
+	@test -n "$(LEARNER_EXPORTS)" || (echo "Thiếu LEARNER_EXPORTS='/path/a.zip /path/b.zip'" >&2; exit 2)
+	@test -n "$(BDD100K_IMAGES_ROOT)" || (echo "Thiếu BDD100K_IMAGES_ROOT=/path/images/100k" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/learner_annotation_audit.py \
+		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
+		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)"
+
+cvat-hash: ## Đọc/hash một job; cần JOB_ID và token trong backend .env
+	@test -n "$(JOB_ID)" || (echo "Thiếu JOB_ID=<id>" >&2; exit 2)
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py hash_cvat_job "$(JOB_ID)"
 
 # ---------------------------------------------------------------- dependencies
 
@@ -95,7 +140,7 @@ format: ## Tự format backend
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check --fix . && "$(UV)" run --frozen ruff format .
 
 typecheck: ## mypy + tsc
-	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config
+	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config cvat_adapter
 	cd "$(FRONTEND)" && npm run typecheck
 
 test: ## pytest (cần infra-up)

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Current Context — @duy12345-6789 — LabelX</title>
+<meta name="labelx:id" content="current-context-duy12345-6789">
+<meta name="labelx:title" content="Current Context — @duy12345-6789">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-004]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / current-context-@duy12345-6789</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>current-context-duy12345-6789</span><b>title</b><span>Current Context — @duy12345-6789</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-004]</span><b>priority</b><span>2</span></div>
+<h1 id="current-context-duy12345-6789">Current Context — @duy12345-6789</h1>
+<h2 id="purpose">Purpose</h2>
+<p>File riêng của Lê Duy Nam (@duy12345-6789) theo CR-100: chỉ ghi trạng thái của task mình đang làm. Integrator gộp vào <code>.agent/execution/current-context.html</code>.</p>
+<ul>
+<li><strong>Base Commit</strong>: <code>28be098</code></li>
+<li><strong>Branch</strong>: <code>feat/T-004-e04-cvat-adapter</code></li>
+</ul>
+<h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li>
+<li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+</ul>
+<h2 id="current-state">Current State</h2>
+<ul>
+<li><strong>Context Status</strong>: <code>current</code></li>
+<li><strong>Last Updated</strong>: <code>2026-10-07</code></li>
+<li><strong>Updated By</strong>: <code>duy12345-6789</code></li>
+<li><strong>Active Epic IDs</strong>: <code>E-04</code></li>
+<li><strong>Active Task IDs</strong>: <code>T-004</code></li>
+<li><strong>Active Blocker IDs</strong>: <code>none</code></li>
+<li><strong>Deadline</strong>: <code>2026-10-07 01:30</code></li>
+</ul>
+<h2 id="required-context">Required Context</h2>
+<p>Chi tiết task: <code>.agent/execution/task-board.html</code> mục T-004. Epic: <code>.agent/planning/epics.html</code> mục E-04.</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+<th>Authority</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/11-integrations/cvat.html</code></td>
+<td>Tích hợp CVAT chỉ đọc</td>
+<td><code>reference</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>docs/label-x_system-requirement-specification/sections/03-data-errors.tex</code></td>
+<td>Dữ liệu BDD100K, TBD-03/04</td>
+<td><code>contract</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>docs/label-x_system-requirement-specification/sections/06-functional.tex</code></td>
+<td>FR-SNP-01…08</td>
+<td><code>contract</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>infrastructure/docker-compose.dev.yml</code></td>
+<td>Hạ tầng dev hiện có</td>
+<td><code>source</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>.agent/governance/blockers/BLOCKER-004.html</code></td>
+<td>CVAT pilot do đội tự dựng</td>
+<td><code>governance</code></td>
+<td><code>yes</code></td>
+</tr>
+<tr>
+<td><code>.agent/governance/blockers/BLOCKER-018.html</code></td>
+<td>Quy ước tên/tag task CVAT</td>
+<td><code>governance</code></td>
+<td><code>yes</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="expected-outputs">Expected Outputs</h2>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Required Path</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code và test trong phạm vi T-004</td>
+<td>nhánh <code>feat/T-004-e04-cvat-adapter</code></td>
+<td><code>make check</code></td>
+</tr>
+<tr>
+<td>Implementation report</td>
+<td><code>.agent/reports/implementation/T-004-@duy12345-6789.html</code> (sao chép <code>.agent/templates/implementation-report-template.html</code>)</td>
+<td><code>make validate-kit</code></td>
+</tr>
+<tr>
+<td>Trạng thái task</td>
+<td><code>.agent/execution/task-board-@duy12345-6789.html</code></td>
+<td><code>make validate-kit</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>T-004 đã audit bốn CVAT YOLO export learner, manual import tập hợp lệ vào task 22/job 19 và hash hai lần ổn định; task ở trạng thái <code>review</code>, <code>BLOCKER-023-@duy12345-6789</code> resolved. PR vẫn mở vào <code>develop</code> theo CR-104.</li>
+<li>PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102; PR của Hà do Trịnh Quang Trung duyệt; PO tự duyệt PR của mình).</li>
+<li>Chỉ sửa file <code>.agent/</code> có hậu tố <code>-@duy12345-6789</code>. Tài liệu chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103).</li>
+</ul>
+</article></main></body></html>

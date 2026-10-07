@@ -65,13 +65,13 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr>
 <td>Phiên bản CVAT</td>
-<td><strong>TBD-01</strong>: giữ phiên bản đang triển khai, pin sau khi kiểm API thật</td>
-<td>R; SRS §9.2; DEC-001 "Negative"</td>
+<td><code>v2.77.0</code> tại commit <code>7dac20c766d7d4297fdf67589436387ab26f7411</code>, self-hosted dev; complete upstream Docker Compose. Đây là pin tạm để dev có môi trường tái lập trong lúc chờ instance thật.</td>
+<td><code>infrastructure/cvat/version.conf</code>; T-004; TBD-01; BLOCKER-004</td>
 </tr>
 <tr>
 <td>Edition (self-host hay cloud)</td>
-<td><strong>TBD-01</strong></td>
-<td>T §6</td>
+<td>Self-hosted Community</td>
+<td>T-004</td>
 </tr>
 <tr>
 <td><code>cvat-sdk</code> / client</td>
@@ -85,13 +85,25 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>Token</td>
-<td>Biến <code>CVAT_SERVICE_TOKEN</code>: service account <strong>chỉ đọc</strong>; quyền token thuộc <strong>TBD-01</strong></td>
+<td>Biến <code>CVAT_SERVICE_TOKEN</code>: PAT/service account <strong>chỉ đọc</strong>, gửi bằng header <code>Authorization: Bearer</code></td>
 <td>FR-SNP-02; R B-12</td>
 </tr>
 </tbody>
 </table>
+<h3 id="2-1-cvat-dev-va-du-lieu-mau">2.1. CVAT dev và dữ liệu mẫu</h3>
+<ul>
+<li>Khởi động/tắt bằng <code>make -f scripts/init-develop-environment.mk cvat-up</code> và <code>cvat-down</code>. Wrapper kiểm cả tag lẫn commit, đợi Compose healthy và xác minh <code>/api/server/about</code> trả đúng phiên bản; không tự xoá volume.</li>
+<li>Quy ước project/task hiện chỉ là đề xuất dev tạm thời, chờ E-06/QA Lead/QC Admin phê duyệt: project <code>labelx-dev</code>; task <code>labelx-dev__&lt;role&gt;__&lt;dataset&gt;__&lt;split&gt;__v&lt;schema&gt;</code>.</li>
+<li>Metadata <code>labelx.role</code>, <code>labelx.dataset</code>, <code>labelx.split</code>, <code>labelx.schema</code> chỉ nằm trong import receipt; đây không phải tag đã được ghi vào CVAT. Naming/tag convention vẫn đang chờ phê duyệt.</li>
+<li><code>cvat_sample.py</code> là công cụ provisioning dev có quyền ghi và nằm ngoài adapter sản phẩm. Nó chỉ nhận <code>CVAT_PROVISIONER_TOKEN</code> hoặc <code>--token-file</code>, từ chối token trùng <code>CVAT_SERVICE_TOKEN</code>, và bắt buộc manifest tường minh. Chạy <code>--dry-run</code> trước khi ghi.</li>
+<li>BDD100K chính thức phải đặt ngoài repo tại <code>&lt;BDD100K_ROOT&gt;/bdd100k</code>. Script <code>scripts/development/bdd100k_sample.py</code> chuyển Detection 2020/Scalabel thành manifest mẫu xác định; mẫu validation đã kiểm dùng 5 ảnh, 106 rectangle và 10 lớp chuẩn.</li>
+<li>Đề xuất BDD100K tạm thời: project <code>labelx-dev-bdd100k</code>, task <code>labelx-dev__review__bdd100k__val__v1</code>. Importer đối chiếu basename với listing chính thức trong <code>images/100k/train</code> và <code>val</code>, không suy luận split từ thư mục learner.</li>
+<li>Bốn CVAT export Ultralytics YOLO là nguồn annotation learner: 252 ảnh duy nhất, 237 label file và 311 dòng bbox lớp <code>GreenSM</code>. Script <code>learner_annotation_audit.py</code> đối chiếu basename với official BDD100K listing và kết quả <code>train=0</code>, <code>val=0</code>, <code>not_bdd100k=252</code>; <code>BLOCKER-023-@duy12345-6789</code> đã được giải quyết.</li>
+<li>Audit sâu phát hiện 3 bbox vượt biên tại <code>greensm_149</code>, <code>greensm_182</code>, <code>greensm_013</code>. Không clamp hay sửa learner annotation; 3 ảnh này bị loại khỏi tập manual import. Tập import còn 249 ảnh/305 bbox. Ngoài ra có 15 ảnh không có label file và được ghi rõ là <code>empty_or_unlabeled</code>.</li>
+<li>Nhãn validation đang dùng từ mirror FiftyOne công khai, không phải official labels. Bản chuyển đổi chỉ được ghi dưới <code>.cache/cvat/</code>; manifest ghi URL nguồn và SHA-256 của <code>samples.json</code>.</li>
+</ul>
 <h2 id="3-thao-tac-chi-oc">3. Thao tác (chỉ đọc)</h2>
-<p>Theo SRS <code>tab:cvatapi</code>. Đường dẫn endpoint cụ thể phụ thuộc phiên bản pin (TBD-01), nên <strong>chưa</strong> được ghi ở đây.</p>
+<p>Theo SRS <code>tab:cvatapi</code>. Adapter T-004 chỉ gọi <code>GET</code>/<code>HEAD</code>. Ngoài API công khai không có hàm ghi, request hook của <code>httpx.Client</code> còn chặn <code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code> trước transport.</p>
 <table>
 <thead>
 <tr>
@@ -136,8 +148,8 @@ ul.dir{columns:2;font-size:14px}
 <p>Shape không phải rectangle bị bỏ qua và được đếm vào <code>snapshot.out_of_scope_shapes</code> (FR-SNP-07).</p>
 <h2 id="4-chuan-hoa-va-hash">4. Chuẩn hoá và hash</h2>
 <ul>
-<li>JSON chuẩn hoá theo job: sắp xếp khoá, sắp xếp shape theo <code>(frame, cvat_shape_id)</code>, toạ độ làm tròn với số chữ số cố định. Số chữ số cụ thể: <strong>TBD-20</strong>. Khi đã chốt thì <strong>không đổi</strong> nữa, vì nó là một phần của version thuật toán hash.</li>
-<li>Mỗi job có <code>job_hash = SHA-256(JSON chuẩn hoá)</code>. Hash tổng là SHA-256 của danh sách <code>(cvat_job_id, job_hash)</code> đã sắp xếp (FR-SNP-03).</li>
+<li>Đề xuất đang chờ TBD-20: thuật toán <code>cvat-rectangle-v1</code>, sắp xếp khoá, shape theo <code>(frame, cvat_shape_id)</code>, track theo ID và keyframe; gồm <code>outside</code>, thuộc tính và rectangle track; chuẩn hoá <code>-0.0</code> thành <code>0.0</code>; toạ độ làm tròn 6 chữ số. Xem <code>DEC-007-@duy12345-6789</code>; chưa phải quyết định được duyệt.</li>
+<li>Mỗi job có <code>job_hash = SHA-256(JSON chuẩn hoá)</code>. Khi đi qua API/contract, hash dùng dạng có algorithm prefix <code>sha256:&lt;hex&gt;</code> theo contract T-001/#21. Hash tổng là SHA-256 của danh sách <code>(cvat_job_id, job_hash)</code> đã sắp xếp (FR-SNP-03).</li>
 <li>CVAT không có "annotation revision" chính thức. Revision trong LabelX là hash do LabelX tính (A §21).</li>
 </ul>
 <h2 id="5-phat-hien-drift">5. Phát hiện drift</h2>
