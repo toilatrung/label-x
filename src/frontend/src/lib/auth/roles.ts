@@ -50,3 +50,8 @@ export function canAccessReports(role: UserRole): boolean {
 export function canAccessConfiguration(role: UserRole): boolean {
   return ['qc_admin', 'super_admin', 'qa_lead'].includes(role);
 }
+
+// Tra cứu guideline: reviewer, qa_lead, qc_admin, super_admin (openapi.yaml guidelines_rules_list, rbac-matrix.html).
+export function canAccessGuidelines(role: UserRole): boolean {
+  return ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
+}

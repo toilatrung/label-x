@@ -195,7 +195,7 @@ export function TopBar({ activeKey }: TopBarProps) {
             <div className="lx-nav__group" style={{ position: 'relative' }}>
               <button
                 type="button"
-                className={`lx-navbtn ${pathname === '/configuration' || activeKey === 'configuration' ? 'is-active' : ''}`}
+                className={`lx-navbtn ${pathname.startsWith('/configuration') || activeKey === 'configuration' ? 'is-active' : ''}`}
                 aria-haspopup="menu"
                 aria-expanded={openMenu === 'configuration'}
                 onClick={() => toggleMenu('configuration')}
@@ -215,6 +215,10 @@ export function TopBar({ activeKey }: TopBarProps) {
                   <Link className="lx-menu__item" role="menuitem" href="/configuration" onClick={closeAll}>
                     <span className="lx-menu__t">Quy tắc & Ngưỡng</span>
                     <span className="lx-menu__d">Quy tắc kiểm tra và chính sách lấy mẫu</span>
+                  </Link>
+                  <Link className="lx-menu__item" role="menuitem" href="/configuration/guidelines" onClick={closeAll}>
+                    <span className="lx-menu__t">Models & Guidelines</span>
+                    <span className="lx-menu__d">Tra cứu rule guideline theo nhóm lỗi và lớp</span>
                   </Link>
                 </div>
               )}

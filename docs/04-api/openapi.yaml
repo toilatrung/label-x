@@ -368,6 +368,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedGuidelineRuleList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/guidelines/rules/{rule_id}/:

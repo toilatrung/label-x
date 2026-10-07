@@ -1,293 +1,277 @@
 "use client";
 
 /**
- * Màn xem guideline — /configuration/guidelines
+ * Màn tra cứu guideline — /configuration/guidelines (T-003, CR-101).
  *
- * Chức năng: Tra cứu phiên bản guideline và rule áp dụng cho annotation.
- * Chỉ đọc, không có thao tác tạo/sửa/xóa (scope T-003, CR-101 pilot).
- *
- * Design System: lx-* classes, bảng là chính (labelx-design SKILL.md).
- * Contract: OpenAPI contract types (contract.d.ts).
+ * Chỉ đọc: GET /api/guidelines/rules/ (docs/04-api/openapi.yaml, guidelines_rules_list).
+ * Lọc theo version, family (nhóm lỗi) và class_name; phân trang bằng cursor next/previous.
+ * Hợp đồng không trả tổng số rule (PaginatedGuidelineRuleList chỉ có next/previous/results),
+ * nên màn hình chỉ hiển thị số rule của trang hiện tại, không tự suy ra tổng.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AppShell } from "@/components/layout/AppShell";
 import { apiClient } from "@/lib/api/client";
-import type { components } from "@/lib/api/contract";
+import type { components, operations } from "@/lib/api/contract";
+import { canAccessGuidelines } from "@/lib/auth/roles";
 
 type GuidelineRule = components["schemas"]["GuidelineRule"];
 type PaginatedGuidelineRuleList = components["schemas"]["PaginatedGuidelineRuleList"];
-type ApiError = components["schemas"]["Error"];
+type IssueFamily = components["schemas"]["IssueFamily"];
+type ApiErrorBody = components["schemas"]["Error"];
+type RulesQuery = NonNullable<operations["guidelines_rules_list"]["parameters"]["query"]>;
 
-interface CustomError extends Error {
-  status?: number;
-  code?: components["schemas"]["ErrorCode"];
+const FAMILY_OPTIONS: { value: IssueFamily; label: string }[] = [
+  { value: "E1", label: "E1 · Thiếu box" },
+  { value: "E2", label: "E2 · Sai lớp" },
+  { value: "E3", label: "E3 · Trùng box" },
+  { value: "structural", label: "Cảnh báo cấu trúc" },
+];
+
+interface Filters {
+  version: string;
+  family: IssueFamily | "";
+  className: string;
 }
 
-async function fetchRules(versionTag?: string): Promise<PaginatedGuidelineRuleList> {
-  const { data, error, response } = await apiClient.GET("/api/guidelines/rules/", {
-    params: {
-      query: versionTag ? { version: versionTag } : undefined,
-    },
-  });
+const EMPTY_FILTERS: Filters = { version: "", family: "", className: "" };
 
-  if (error || !data) {
-    const errPayload = error as ApiError | undefined;
-    const status = response?.status ?? 500;
-    const code = errPayload?.code;
-    const message =
-      errPayload?.message ?? (response ? `HTTP ${response.status}` : "Không thể kết nối đến máy chủ.");
-
-    const customErr: CustomError = new Error(message);
-    customErr.status = status;
-    customErr.code = code;
-    throw customErr;
+class GuidelineRequestError extends Error {
+  constructor(public status: number, public code?: ApiErrorBody["code"], message?: string) {
+    super(message || `HTTP ${status}`);
   }
+}
 
+/** Lấy giá trị cursor từ URL next/previous do API trả về. */
+function cursorFrom(link: string | null | undefined): string | null {
+  if (!link) return null;
+  try {
+    return new URL(link, "http://localhost").searchParams.get("cursor");
+  } catch {
+    return null;
+  }
+}
+
+async function fetchRules(filters: Filters, cursor: string | null): Promise<PaginatedGuidelineRuleList> {
+  const query: RulesQuery = {};
+  if (filters.version) query.version = filters.version;
+  if (filters.family) query.family = filters.family;
+  if (filters.className) query.class_name = filters.className;
+  if (cursor) query.cursor = cursor;
+
+  const { data, error, response } = await apiClient.GET("/api/guidelines/rules/", {
+    params: { query },
+  });
+  if (error || !data) {
+    const body = error as ApiErrorBody | undefined;
+    throw new GuidelineRequestError(response.status, body?.code, body?.message);
+  }
   return data;
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function EmptyState({ message, colSpan }: { message: string; colSpan: number }) {
-  return (
-    <tr>
-      <td colSpan={colSpan} className="c lx-subtle lx-guideline-empty">
-        {message}
-      </td>
-    </tr>
-  );
+function errorText(error: GuidelineRequestError): { title: string; body: string } {
+  if (error.status === 404 || error.code === "NOT_FOUND") {
+    return { title: "Không tìm thấy guideline", body: error.message };
+  }
+  if (error.code === "FORBIDDEN" || error.status === 403) {
+    return {
+      title: "Không có quyền truy cập",
+      body: "Tài khoản hiện tại không có quyền xem guideline trong phạm vi này.",
+    };
+  }
+  if (error.code === "VALIDATION_ERROR" || error.status === 400) {
+    return { title: "Bộ lọc không hợp lệ", body: error.message };
+  }
+  return { title: "Không tải được dữ liệu", body: "Đã xảy ra lỗi khi tải danh sách rule từ máy chủ." };
 }
 
-function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <span className={`lx-badge ${active ? "lx-badge--success" : ""}`}>
-      {active ? "Mới nhất" : "Đã thay thế"}
-    </span>
-  );
-}
-
-function VersionTable({
-  versionTag,
-  ruleCount,
-  isSelected,
-  onSelect,
-  errorMessage,
-}: {
-  versionTag: string | null;
-  ruleCount: number;
-  isSelected: boolean;
-  onSelect: (tag: string) => void;
-  errorMessage?: string;
-}) {
-  return (
-    <div className="lx-scroll">
-      <table className="lx-table lx-guideline-table-version">
-        <thead>
-          <tr>
-            <th>Phiên bản</th>
-            <th>Trạng thái</th>
-            <th>Số rule</th>
-            <th className="r"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {errorMessage ? (
-            <EmptyState message={errorMessage} colSpan={4} />
-          ) : !versionTag ? (
-            <EmptyState message="Chưa có guideline nào được nạp." colSpan={4} />
-          ) : (
-            <tr aria-selected={isSelected ? "true" : undefined}>
-              <td>
-                <span className="lx-mono">{versionTag}</span>
-              </td>
-              <td>
-                <StatusBadge active={true} />
-              </td>
-              <td className="lx-muted">{ruleCount} rule</td>
-              <td className="r">
-                <button
-                  className="lx-btn lx-btn--sm"
-                  onClick={() => onSelect(versionTag)}
-                  aria-label={`Xem rules của ${versionTag}`}
-                >
-                  {isSelected ? "Đang xem" : "Xem rules"}
-                </button>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function RuleTable({ rules }: { rules: GuidelineRule[] }) {
-  return (
-    <div className="lx-scroll">
-      <table className="lx-table lx-guideline-table-rules">
-        <thead>
-          <tr>
-            <th className="lx-guideline-col-id">Rule ID</th>
-            <th className="lx-guideline-col-section">Mục</th>
-            <th>Nội dung</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rules.length === 0 ? (
-            <EmptyState message="Phiên bản này không có rule nào." colSpan={3} />
-          ) : (
-            rules.map((r) => (
-              <tr key={r.rule_id}>
-                <td>
-                  <span className="lx-mono">{r.rule_id}</span>
-                </td>
-                <td className="lx-muted">{r.section}</td>
-                <td className="lx-guideline-rule-content">
-                  {r.content}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main page
-// ---------------------------------------------------------------------------
-
-export default function GuidelinesPage() {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+function GuidelineRules() {
+  const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  // Cursor của từng trang đã mở; phần tử đầu (null) là trang đầu tiên.
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const pageIndex = cursors.length - 1;
+  const cursor = cursors[pageIndex];
 
   const rulesQuery = useQuery({
-    queryKey: ["guideline-rules", selectedTag],
-    queryFn: () => fetchRules(selectedTag ?? undefined),
+    queryKey: ["guideline-rules", filters, cursor],
+    queryFn: () => fetchRules(filters, cursor),
+    placeholderData: keepPreviousData,
+    retry: false,
   });
 
-  const rules: GuidelineRule[] = rulesQuery.data?.results ?? [];
-  const latestVersion = rules[0]?.guideline_version ?? null;
-  const currentVersion = selectedTag ?? latestVersion;
+  const applyFilters = (next: Filters) => {
+    setFilters(next);
+    setCursors([null]);
+  };
 
-  const queryError = rulesQuery.error as CustomError | null;
-  // Ưu tiên error code NOT_AUTHENTICATED (kể cả khi HTTP trả 403)
-  const isNotAuthenticated =
-    queryError?.code === "NOT_AUTHENTICATED" || queryError?.status === 401;
-  // FORBIDDEN ưu tiên error code, loại trừ trường hợp NOT_AUTHENTICATED trả kèm 403
-  const isForbidden =
-    !isNotAuthenticated &&
-    (queryError?.code === "FORBIDDEN" || queryError?.status === 403);
+  const onSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    applyFilters({ ...draft, version: draft.version.trim(), className: draft.className.trim() });
+  };
+
+  const onReset = () => {
+    setDraft(EMPTY_FILTERS);
+    applyFilters(EMPTY_FILTERS);
+  };
+
+  const rules: GuidelineRule[] = rulesQuery.data?.results ?? [];
+  const versions = [...new Set(rules.map((rule) => rule.guideline_version))];
+  const nextCursor = cursorFrom(rulesQuery.data?.next);
+  const error = rulesQuery.error instanceof GuidelineRequestError ? rulesQuery.error : null;
+  const failure = rulesQuery.isError
+    ? errorText(error ?? new GuidelineRequestError(0))
+    : null;
+  const hasFilter = Boolean(filters.version || filters.family || filters.className);
 
   return (
-    <div className="lx lx-guideline-wrapper">
-      <main className="lx-page">
-        {/* Page header */}
-        <div className="lx-head">
-          <div className="lx-head__text">
-            <h1 className="lx-h1">Models và Guidelines</h1>
-            <p className="lx-lead">
-              Tra cứu phiên bản guideline và rule áp dụng cho annotation. Quality Control chỉ đọc
-              guideline đã nạp; nội dung soạn ở nơi khác.
-            </p>
+    <div className="lx-page lx-guideline-page">
+      <div className="lx-head">
+        <div className="lx-head__text">
+          <h1 className="lx-h1">Models và Guidelines</h1>
+          <p className="lx-lead">
+            Tra cứu rule guideline áp dụng cho annotation theo nhóm lỗi và lớp. Quality Control chỉ đọc
+            guideline đã nạp; nội dung soạn ở nơi khác.
+          </p>
+        </div>
+      </div>
+
+      {failure && (
+        <div className="lx-callout" role="alert">
+          <div className="lx-callout__text">
+            <strong>{failure.title}</strong>
+            <div>{failure.body}</div>
           </div>
         </div>
+      )}
 
-        {/* Thông báo lỗi quyền/xác thực */}
-        {isNotAuthenticated && (
-          <div className="lx-callout" role="alert">
-            <div className="lx-callout__text">
-              <strong>Chưa đăng nhập</strong>
-              <div>
-                {queryError?.message ||
-                  "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để xem thông tin guideline."}
-              </div>
-            </div>
+      <section className="lx-card" aria-label="Danh sách rule guideline">
+        <header className="lx-card__head">
+          <span className="lx-cell__main">Rule guideline</span>
+          <span className="lx-subtle">
+            Guideline version:{" "}
+            <span className="lx-mono" data-testid="guideline-version">
+              {versions.length ? versions.join(", ") : "—"}
+            </span>
+          </span>
+        </header>
+
+        <form className="lx-toolbar lx-guideline-filters" onSubmit={onSubmit} role="search">
+          <div className="lx-field">
+            <label className="lx-label" htmlFor="guideline-family">Nhóm lỗi</label>
+            <select
+              id="guideline-family"
+              className="lx-select lx-select--inline"
+              value={draft.family}
+              onChange={(event) => setDraft({ ...draft, family: event.target.value as Filters["family"] })}
+            >
+              <option value="">Tất cả nhóm lỗi</option>
+              {FAMILY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
-        )}
-
-        {isForbidden && (
-          <div className="lx-callout" role="alert">
-            <div className="lx-callout__text">
-              <strong>Không có quyền truy cập</strong>
-              <div>
-                {queryError?.message ||
-                  "Bạn không có quyền xem thông tin guideline. Yêu cầu vai trò Reviewer, QA Lead, QC Admin hoặc Super Admin."}
-              </div>
-            </div>
+          <div className="lx-field">
+            <label className="lx-label" htmlFor="guideline-class">Tên lớp</label>
+            <input
+              id="guideline-class"
+              className="lx-input"
+              value={draft.className}
+              onChange={(event) => setDraft({ ...draft, className: event.target.value })}
+              placeholder="Ví dụ: car"
+            />
           </div>
-        )}
-
-        {rulesQuery.isError && !isNotAuthenticated && !isForbidden && (
-          <div className="lx-callout" role="alert">
-            <div className="lx-callout__text">
-              <strong>Không tải được dữ liệu</strong>
-              <div>{queryError?.message || "Đã xảy ra lỗi khi tải danh sách rules từ máy chủ."}</div>
-            </div>
+          <div className="lx-field">
+            <label className="lx-label" htmlFor="guideline-version">Guideline version</label>
+            <input
+              id="guideline-version"
+              className="lx-input"
+              value={draft.version}
+              onChange={(event) => setDraft({ ...draft, version: event.target.value })}
+              placeholder="Bỏ trống là bản mới nhất"
+            />
           </div>
-        )}
-
-        {/* Guideline versions */}
-        <section className="lx-card">
-          <header className="lx-card__head">
-            <span className="lx-cell__main">Phiên bản guideline</span>
-            {rulesQuery.isLoading && <span className="lx-subtle">Đang tải…</span>}
-            {isNotAuthenticated && (
-              <span className="lx-badge lx-badge--danger">Chưa đăng nhập</span>
+          <div className="lx-guideline-filters__actions">
+            <button type="submit" className="lx-btn lx-btn--primary">Lọc</button>
+            {hasFilter && (
+              <button type="button" className="lx-btn" onClick={onReset}>Xoá bộ lọc</button>
             )}
-            {isForbidden && (
-              <span className="lx-badge lx-badge--danger">Không có quyền</span>
-            )}
-            {rulesQuery.isError && !isNotAuthenticated && !isForbidden && (
-              <span className="lx-badge lx-badge--danger">Lỗi kết nối</span>
-            )}
-          </header>
+          </div>
+        </form>
 
-          <VersionTable
-            versionTag={currentVersion}
-            ruleCount={rules.length}
-            isSelected={true}
-            onSelect={setSelectedTag}
-            errorMessage={
-              isNotAuthenticated
-                ? "Chưa đăng nhập — vui lòng đăng nhập để xem guideline."
-                : isForbidden
-                ? "Không có quyền truy cập — tài khoản hiện tại không có quyền xem guideline."
-                : rulesQuery.isError
-                ? "Không tải được dữ liệu guideline từ máy chủ."
-                : undefined
-            }
-          />
-        </section>
-
-        {/* Rules của version được chọn */}
-        {currentVersion && !rulesQuery.isError && (
-          <section className="lx-card">
-            <header className="lx-card__head">
-              <div className="lx-guideline-head-title">
-                <span className="lx-cell__main">Rules —</span>
-                <span className="lx-mono">{currentVersion}</span>
-              </div>
-              {rulesQuery.isLoading && <span className="lx-subtle">Đang tải…</span>}
-              {!rulesQuery.isLoading && (
-                <span className="lx-subtle">{rules.length} rule</span>
+        <div className="lx-scroll">
+          <table className="lx-table lx-guideline-table-rules">
+            <thead>
+              <tr>
+                <th className="lx-guideline-col-id">Rule ID</th>
+                <th className="lx-guideline-col-section">Mục</th>
+                <th>Nội dung</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rulesQuery.isLoading ? (
+                <tr><td colSpan={3} className="c lx-subtle lx-guideline-empty">Đang tải…</td></tr>
+              ) : failure ? (
+                <tr><td colSpan={3} className="c lx-subtle lx-guideline-empty">{failure.title}.</td></tr>
+              ) : rules.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="c lx-subtle lx-guideline-empty">
+                    {hasFilter ? "Không có rule nào khớp bộ lọc." : "Chưa có guideline nào được nạp."}
+                  </td>
+                </tr>
+              ) : (
+                rules.map((rule) => (
+                  <tr key={`${rule.guideline_version}:${rule.rule_id}`}>
+                    <td><span className="lx-mono">{rule.rule_id}</span></td>
+                    <td className="lx-muted">{rule.section || "—"}</td>
+                    <td className="lx-guideline-rule-content">{rule.content}</td>
+                  </tr>
+                ))
               )}
-            </header>
+            </tbody>
+          </table>
+        </div>
 
-            <RuleTable rules={rules} />
-
-            <footer className="lx-card__foot">
-              <span>
-                Guideline chỉ đọc. Nội dung soạn ở nơi khác và nạp bằng lệnh{" "}
-                <code>manage.py load_guideline</code>.
-              </span>
-            </footer>
-          </section>
-        )}
-      </main>
+        <footer className="lx-card__foot">
+          <span>
+            Trang {(pageIndex + 1).toLocaleString("en-US")} · {rules.length.toLocaleString("en-US")} rule trên trang
+            này. Guideline chỉ đọc, nạp bằng lệnh <code>manage.py load_guideline</code>.
+          </span>
+          <nav className="lx-pager" aria-label="Phân trang rule">
+            <button
+              type="button"
+              className="lx-btn lx-btn--sm"
+              disabled={pageIndex === 0 || rulesQuery.isFetching}
+              onClick={() => setCursors(cursors.slice(0, -1))}
+            >
+              Trang trước
+            </button>
+            <button
+              type="button"
+              className="lx-btn lx-btn--sm"
+              disabled={!nextCursor || rulesQuery.isFetching || rulesQuery.isError}
+              onClick={() => nextCursor && setCursors([...cursors, nextCursor])}
+            >
+              Trang sau
+            </button>
+          </nav>
+        </footer>
+      </section>
     </div>
+  );
+}
+
+export default function GuidelinesPage() {
+  return (
+    <AuthGuard
+      permissionCheck={canAccessGuidelines}
+      requiredPermissionName="Reviewer / Quality Assurance Lead / Quality Control Admin / Super Admin"
+    >
+      <AppShell activeKey="configuration">
+        <GuidelineRules />
+      </AppShell>
+    </AuthGuard>
   );
 }

@@ -30,7 +30,9 @@ from guideline.serializers import (
     PaginatedGuidelineRuleListSerializer,
 )
 
-VALID_FAMILIES = {"E1", "E2", "E3", "structural"}
+# IssueFamily trong docs/04-api/openapi.yaml; giữ thứ tự enum của contract.
+ISSUE_FAMILIES = ["E1", "E2", "E3", "structural"]
+VALID_FAMILIES = set(ISSUE_FAMILIES)
 
 
 class GuidelineCursorPagination(CursorPagination):
@@ -66,7 +68,8 @@ class GuidelineRuleListView(GuidelineAPIView):
             OpenApiParameter(
                 "family",
                 str,
-                description="Nhóm lỗi: E1, E2, E3, structural",
+                enum=ISSUE_FAMILIES,
+                description="Nhóm lỗi (IssueFamily): E1, E2, E3, structural",
             ),
             OpenApiParameter("class_name", str, description="Tên lớp"),
             OpenApiParameter("paired_class", str, description="Lớp cặp"),
