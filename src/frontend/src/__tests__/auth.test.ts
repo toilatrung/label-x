@@ -1,62 +1,58 @@
 import { describe, it, expect } from 'vitest';
-import {
-  canAccessAnalysis,
-  canAccessReview,
-  canAccessEscalations,
-  canAccessConfiguration,
-  ROLE_LABELS,
-  ROLE_CODES,
-} from '@/lib/auth/roles';
-import { findMockUser } from '@/lib/auth/mock-users';
+import { canAccessAnalysis, canAccessReview, canAccessEscalations, canAccessConfiguration,
+  ROLE_LABELS, ROLE_CODES, rolesForDataset, hasDatasetPermission } from '@/lib/auth/roles';
+import { findMockUser, MOCK_USERS, toMockSession } from '@/lib/auth/mock-users';
+import type { AuthSession } from '@/types/auth';
 
-describe('Auth & Roles Domain Logic', () => {
-  it('defines labels and codes for all 5 roles', () => {
-    expect(ROLE_LABELS.super_admin).toBe('Super Admin');
-    expect(ROLE_LABELS.annotator).toBe('Annotator');
-    expect(ROLE_CODES.super_admin).toBe('SA');
-    expect(ROLE_CODES.annotator).toBe('AN');
+describe('Contract roles and dataset grants', () => {
+  it('covers all seven T-001 roles', () => {
+    expect(Object.keys(ROLE_LABELS)).toHaveLength(7);
+    expect(Object.keys(ROLE_CODES)).toHaveLength(7);
+    expect(MOCK_USERS.map((user) => user.role).sort()).toEqual(Object.keys(ROLE_LABELS).sort());
   });
 
-  it('restricts Quality Analysis strictly to QA Lead, QC Admin, Super Admin', () => {
-    expect(canAccessAnalysis('super_admin')).toBe(true);
-    expect(canAccessAnalysis('qa_lead')).toBe(true);
-    expect(canAccessAnalysis('qc_admin')).toBe(true);
-    expect(canAccessAnalysis('reviewer')).toBe(false);
-    expect(canAccessAnalysis('annotator')).toBe(false);
-  });
-
-  it('restricts Review Center from Annotators', () => {
-    expect(canAccessReview('super_admin')).toBe(true);
+  it('does not treat read-only QC Admin as a reviewer', () => {
+    expect(canAccessReview('qc_admin')).toBe(false);
     expect(canAccessReview('reviewer')).toBe(true);
-    expect(canAccessReview('qa_lead')).toBe(true);
-    expect(canAccessReview('annotator')).toBe(false);
-  });
-
-  it('restricts Escalations to QA Lead and Super Admin', () => {
-    expect(canAccessEscalations('super_admin')).toBe(true);
-    expect(canAccessEscalations('qa_lead')).toBe(true);
-    expect(canAccessEscalations('qc_admin')).toBe(false);
-    expect(canAccessEscalations('reviewer')).toBe(false);
-    expect(canAccessEscalations('annotator')).toBe(false);
-  });
-
-  it('restricts Configuration access correctly', () => {
-    expect(canAccessConfiguration('super_admin')).toBe(true);
-    expect(canAccessConfiguration('qc_admin')).toBe(true);
-    expect(canAccessConfiguration('qa_lead')).toBe(true);
-    expect(canAccessConfiguration('reviewer')).toBe(false);
+    expect(canAccessAnalysis('qc_admin')).toBe(true);
     expect(canAccessConfiguration('annotator')).toBe(false);
+    expect(canAccessEscalations('qa_lead')).toBe(true);
+    expect(canAccessReview('product_owner')).toBe(false);
+    expect(canAccessReview('data_model_owner')).toBe(false);
   });
 
-  it('finds mock users with valid credentials and rejects invalid passwords', () => {
-    const valid = findMockUser('admin', 'password123');
-    expect(valid).toBeDefined();
-    expect(valid?.role).toBe('super_admin');
+  it('rejects invalid credentials', () => {
+    expect(findMockUser('admin', 'password123')).toBeDefined();
+    expect(findMockUser('admin', 'wrong')).toBeUndefined();
+    expect(findMockUser('unknown')).toBeUndefined();
+  });
 
-    const invalid = findMockUser('admin', 'wrong_pass');
-    expect(invalid).toBeUndefined();
+  it('combines grants only inside the selected dataset', () => {
+    const session: AuthSession = { ...toMockSession(MOCK_USERS[3]), roles: [
+      { role: 'reviewer', dataset_id: 1 }, { role: 'qa_lead', dataset_id: 2 },
+    ] };
+    expect(rolesForDataset(session, 1)).toEqual(['reviewer']);
+    expect(hasDatasetPermission(session, 1, canAccessAnalysis)).toBe(false);
+    expect(hasDatasetPermission(session, 2, canAccessAnalysis)).toBe(true);
+    expect(hasDatasetPermission(session, 3, canAccessReview)).toBe(false);
+  });
 
-    const notFound = findMockUser('unknown_user');
-    expect(notFound).toBeUndefined();
+  it('combines multiple roles in one dataset without trusting the display role', () => {
+    const session: AuthSession = { ...toMockSession(MOCK_USERS[4]), roles: [
+      { role: 'annotator', dataset_id: 1 }, { role: 'reviewer', dataset_id: 1 },
+    ] };
+    expect(hasDatasetPermission(session, 1, canAccessReview, true)).toBe(true);
+  });
+
+  it('accepts global grants only for Super Admin and QC Admin', () => {
+    expect(hasDatasetPermission(toMockSession(MOCK_USERS[0]), 42, canAccessReview)).toBe(true);
+    const invalid: AuthSession = { ...toMockSession(MOCK_USERS[3]), roles: [{ role: 'reviewer', dataset_id: null }] };
+    expect(hasDatasetPermission(invalid, 1, canAccessReview)).toBe(false);
+  });
+
+  it('fails closed for missing CVAT identity, including Super Admin', () => {
+    const unmapped: AuthSession = { ...toMockSession(MOCK_USERS[0]), identity_mapping: { status: 'missing' } };
+    expect(hasDatasetPermission(unmapped, 1, canAccessReview, true)).toBe(false);
+    expect(hasDatasetPermission(unmapped, 1, canAccessConfiguration)).toBe(true);
   });
 });

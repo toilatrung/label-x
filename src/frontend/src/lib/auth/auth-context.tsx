@@ -1,123 +1,132 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
-import { AuthUser, LoginCredentials, UserRole } from '@/types/auth';
-import { MOCK_USERS, findMockUser } from '@/lib/auth/mock-users';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import type { ApiError, AuthSession, AuthUser, LoginCredentials, UserRole } from '@/types/auth';
+import { apiClient, ApiRequestError, AUTH_EXPIRED_EVENT, ACCESS_DENIED_EVENT } from '@/lib/api/client';
+import { hasDatasetPermission, rolesForDataset } from './roles';
 
+type LoginResult = { success: boolean; error?: string };
 interface AuthContextType {
+  session: AuthSession | null;
   user: AuthUser | null;
+  datasetId: number;
+  setDatasetId: (id: number) => void;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
+  authError: string | null;
+  accessError: ApiError | null;
+  clearAccessError: () => void;
+  hasPermission: (check: (role: UserRole) => boolean, requiresIdentity?: boolean) => boolean;
+  login: (credentials: LoginCredentials) => Promise<LoginResult>;
   logout: () => Promise<void>;
-  switchRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const STORAGE_KEY = 'lx_auth_user';
-
-function toSafeUser(user: { id: string; username: string; fullName: string; role: UserRole; email: string; datasetScope?: string | null }): AuthUser {
-  return {
-    id: user.id,
-    username: user.username,
-    fullName: user.fullName,
-    role: user.role,
-    email: user.email,
-    datasetScope: user.datasetScope,
-  };
-}
+const errorMessage = (error: unknown) => error instanceof ApiRequestError ? error.message :
+  'Không kết nối được máy chủ. Vui lòng thử lại.';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-      return null;
-    } catch {
-      return toSafeUser(MOCK_USERS[0]);
-    }
-  });
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [datasetId, setDatasetId] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState<ApiError | null>(null);
+  const revision = useRef(0);
+  const initialRequest = useRef<AbortController | null>(null);
+  const clearAccessError = useCallback(() => setAccessError(null), []);
+  const acceptSession = useCallback((value: AuthSession) => {
+    setSession(value);
+    setDatasetId(value.roles.find((assignment) => assignment.dataset_id !== null)?.dataset_id ?? 1);
+    setAuthError(null);
+    setAccessError(null);
+  }, []);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  useEffect(() => {
+    let mounted = true;
+    const version = ++revision.current;
+    const controller = new AbortController();
+    initialRequest.current = controller;
+    const expired = () => {
+      ++revision.current;
+      setSession(null);
+      setAccessError(null);
+      setIsLoading(false);
+    };
+    const denied = (event: Event) => setAccessError((event as CustomEvent<ApiError>).detail ?? null);
+    window.addEventListener(AUTH_EXPIRED_EVENT, expired);
+    window.addEventListener(ACCESS_DENIED_EVENT, denied);
+    apiClient.GET('/api/auth/session/', { cache: 'no-store', signal: controller.signal }).then(({ data, error, response }) => {
+      if (!mounted || version !== revision.current) return;
+      if (error || !data) throw new ApiRequestError(response.status, error);
+      acceptSession(data);
+    }).catch((error: unknown) => {
+      if (!mounted || version !== revision.current) return;
+      setSession(null);
+      if (!(error instanceof ApiRequestError && error.detail?.code === 'NOT_AUTHENTICATED')) setAuthError(errorMessage(error));
+    }).finally(() => {
+      if (mounted && version === revision.current) setIsLoading(false);
+    });
+    return () => {
+      mounted = false;
+      controller.abort();
+      window.removeEventListener(AUTH_EXPIRED_EVENT, expired);
+      window.removeEventListener(ACCESS_DENIED_EVENT, denied);
+    };
+  }, [acceptSession]);
 
-  const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+  const login = async (credentials: LoginCredentials): Promise<LoginResult> => {
+    initialRequest.current?.abort();
+    ++revision.current; // A late initial session read must not overwrite a login.
     setIsLoading(true);
+    setAuthError(null);
+    setAccessError(null);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const loggedUser: AuthUser = data.user;
-        setUser(loggedUser);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedUser));
-        return { success: true };
-      } else {
-        const err = await res.json().catch(() => ({}));
-        return { success: false, error: err.message || 'Tên đăng nhập hoặc mật khẩu không chính xác' };
-      }
-    } catch {
-      const mock = findMockUser(credentials.username, credentials.password);
-      if (mock) {
-        const safe = toSafeUser(mock);
-        setUser(safe);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(safe)); } catch {}
-        return { success: true };
-      }
-      return { success: false, error: 'Tên đăng nhập hoặc mật khẩu không chính xác' };
+      const csrf = await apiClient.GET('/api/auth/csrf/');
+      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status);
+      const { data, error, response } = await apiClient.POST('/api/auth/login/', { body: credentials });
+      if (error || !data) throw new ApiRequestError(response.status, error);
+      acceptSession(data);
+      return { success: true };
+    } catch (error) {
+      const message = errorMessage(error);
+      setAuthError(message);
+      return { success: false, error: message };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
+    initialRequest.current?.abort();
+    ++revision.current;
+    setAuthError(null);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // Bỏ qua lỗi mạng
+      const csrf = await apiClient.GET('/api/auth/csrf/');
+      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status);
+      const result = await apiClient.POST('/api/auth/logout/');
+      if (!result.response.ok) throw new ApiRequestError(result.response.status);
+      setSession(null);
+      setAccessError(null);
+    } catch (error) {
+      // Keep the session visible on a network failure: the server has not confirmed logout.
+      setAuthError(errorMessage(error));
     }
-    setUser(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
   };
 
-  const switchRole = (role: UserRole) => {
-    const target = MOCK_USERS.find((u) => u.role === role) || MOCK_USERS[0];
-    const safe = toSafeUser(target);
-    setUser(safe);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
-    } catch {}
-  };
+  const roles = rolesForDataset(session, datasetId);
+  const user: AuthUser | null = session ? {
+    ...session.user, fullName: session.user.display_name, role: roles[0] ?? null,
+  } : null;
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        logout,
-        switchRole,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{
+    session, user, datasetId, setDatasetId, isLoading, isAuthenticated: !!session,
+    authError, accessError, clearAccessError, login, logout,
+    hasPermission: (check, requiresIdentity = false) => hasDatasetPermission(session, datasetId, check, requiresIdentity),
+  }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return ctx;
+  const value = useContext(AuthContext);
+  if (!value) throw new Error('useAuth must be used within an AuthProvider');
+  return value;
 }

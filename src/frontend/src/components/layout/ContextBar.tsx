@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ROLE_LABELS } from '@/lib/auth/roles';
+import { isMockAuth } from '@/lib/auth/config';
 
 interface ContextBarProps {
   datasetName?: string;
@@ -13,14 +14,14 @@ interface ContextBarProps {
 }
 
 export function ContextBar({
-  datasetName = 'Road Vision Urban · v1.4',
+  datasetName,
   isReadOnly = false,
-  guidelineVersion = 'v1.2',
-  taxonomyVersion = 'v3',
-  activeRun = '#QC-091 · PARTIAL',
+  guidelineVersion = '—',
+  taxonomyVersion = '—',
+  activeRun = 'Chưa chọn',
 }: ContextBarProps) {
-  const { user } = useAuth();
-  const roleLabel = user ? ROLE_LABELS[user.role] : 'Khách';
+  const { user, datasetId } = useAuth();
+  const roleLabel = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
 
   return (
     <div className="lx-ctxbar">
@@ -28,8 +29,18 @@ export function ContextBar({
         {/* Chip Dataset */}
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Dataset:</span>
-          <span className="lx-chip__v">{datasetName}</span>
+          <span className="lx-chip__v">{datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetId}`}</span>
           {isReadOnly && <span className="lx-tag lx-tag--ro">read-only</span>}
+        </div>
+
+        <div className="lx-chip lx-chip--static">
+          <span className="lx-chip__k">Snapshot:</span>
+          <span className="lx-chip__v">Chưa chọn</span>
+        </div>
+
+        <div className="lx-chip lx-chip--static">
+          <span className="lx-chip__k">Phạm vi:</span>
+          <span className="lx-chip__v">Dataset #{datasetId}</span>
         </div>
 
         {/* Chip Guideline */}

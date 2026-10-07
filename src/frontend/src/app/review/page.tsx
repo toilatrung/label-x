@@ -9,9 +9,10 @@ export default function ReviewPage() {
   return (
     <AuthGuard
       permissionCheck={canAccessReview}
-      requiredPermissionName="Quyền Review Queues & Workspace (Reviewer / QA Lead / QC Admin / Super Admin)"
+      requiresIdentity
+      requiredPermissionName="Reviewer / QA Lead / Super Admin, có liên kết CVAT"
     >
-      <AppShell activeKey="review" flowStep={2}>
+      <AppShell activeKey="review" flowStep={1}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div className="lx-card" style={{ padding: 'var(--space-6)' }}>
             <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 var(--space-2)' }}>
@@ -23,7 +24,7 @@ export default function ReviewPage() {
             <div style={{ padding: 'var(--space-4)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)' }}>
               <span className="lx-badge lx-badge--success">Quyền truy cập hợp lệ</span>
               <p style={{ fontSize: '13px', marginTop: '8px', color: 'var(--ink-muted)' }}>
-                Bạn đã được xác thực qua Route Guard thành công.
+                Hàng đợi và chức năng kiểm tra ảnh sẽ được bổ sung trong đợt tiếp theo.
               </p>
             </div>
           </div>

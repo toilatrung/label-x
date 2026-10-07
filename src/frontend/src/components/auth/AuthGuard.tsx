@@ -1,63 +1,45 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import { UserRole } from '@/types/auth';
-import { ForbiddenView } from '@/components/auth/ForbiddenView';
+import type { UserRole } from '@/types/auth';
+import { ForbiddenView } from './ForbiddenView';
 
 interface AuthGuardProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
   permissionCheck?: (role: UserRole) => boolean;
   requiredPermissionName?: string;
+  requiresIdentity?: boolean;
 }
 
-export function AuthGuard({
-  children,
-  allowedRoles,
-  permissionCheck,
-  requiredPermissionName,
-}: AuthGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+export function AuthGuard({ children, allowedRoles, permissionCheck, requiredPermissionName,
+  requiresIdentity = false }: AuthGuardProps) {
+  const { session, isAuthenticated, isLoading, hasPermission, authError, accessError, clearAccessError } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
+  React.useEffect(() => { clearAccessError(); }, [pathname, clearAccessError]);
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
-    }
+    if (!isLoading && !isAuthenticated) router.replace('/login');
   }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
-    return (
-      <div style={{ minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: 'var(--ink-subtle)', fontSize: '14px' }}>Đang tải thông tin phiên làm việc...</span>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="lx-card" style={{ padding: 'var(--space-6)' }}>
+    Đang tải thông tin phiên làm việc...
+  </div>;
+  if (!session) return null;
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
+  if (accessError) return <ForbiddenView reason={accessError.message} errorCode={accessError.code} />;
+  if (requiresIdentity && session.identity_mapping.status !== 'mapped') return <ForbiddenView
+    reason="Tài khoản chưa được liên kết với CVAT. Vui lòng liên hệ người quản trị."
+    errorCode="IDENTITY_MAPPING_MISSING" />;
+  if (!hasPermission((role) => (!allowedRoles || allowedRoles.includes(role)) &&
+    (!permissionCheck || permissionCheck(role)), requiresIdentity)) return <ForbiddenView
+    requiredPermission={requiredPermissionName}
+    reason="Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn." />;
 
-  // Kiểm tra quyền theo vai trò (Role-based access control)
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return (
-      <ForbiddenView
-        requiredPermission={requiredPermissionName || allowedRoles.join(', ')}
-        reason="Vai trò hiện tại của bạn không nằm trong danh sách được phép truy cập chức năng này."
-      />
-    );
-  }
-
-  if (permissionCheck && !permissionCheck(user.role)) {
-    return (
-      <ForbiddenView
-        requiredPermission={requiredPermissionName}
-        reason="Chức năng này bị giới hạn theo ma trận phân quyền của hệ thống."
-      />
-    );
-  }
-
-  return <>{children}</>;
+  return <>{authError && <div role="alert" className="lx-card" style={{ color: 'var(--danger)', padding: 'var(--space-3)' }}>
+    {authError}
+  </div>}{children}</>;
 }

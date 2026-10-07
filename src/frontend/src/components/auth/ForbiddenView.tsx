@@ -4,15 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ROLE_LABELS } from '@/lib/auth/roles';
+import type { ApiError } from '@/types/auth';
 
 interface ForbiddenViewProps {
   requiredPermission?: string;
   reason?: string;
+  errorCode?: ApiError['code'];
 }
 
-export function ForbiddenView({ requiredPermission, reason }: ForbiddenViewProps) {
+export function ForbiddenView({ requiredPermission, reason, errorCode = 'FORBIDDEN' }: ForbiddenViewProps) {
   const { user } = useAuth();
-  const roleName = user ? ROLE_LABELS[user.role] : 'Chưa xác định';
+  const roleName = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
 
   return (
     <div style={{ maxWidth: '640px', margin: '48px auto', padding: '0 var(--space-4)' }}>
@@ -46,7 +48,7 @@ export function ForbiddenView({ requiredPermission, reason }: ForbiddenViewProps
           )}
           <div style={{ marginTop: '4px' }}>
             <span style={{ color: 'var(--ink-subtle)' }}>Mã lỗi: </span>
-            <span className="lx-mono">FORBIDDEN</span>
+            <span className="lx-mono">{errorCode}</span>
           </div>
         </div>
 

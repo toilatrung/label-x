@@ -3,7 +3,7 @@
 import React from 'react';
 import { TopBar } from '@/components/layout/TopBar';
 import { ContextBar } from '@/components/layout/ContextBar';
-import { FlowNav } from '@/components/layout/FlowNav';
+import { FlowNav, type FlowModule } from '@/components/layout/FlowNav';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -22,7 +22,8 @@ export function AppShell({
     <div className="lx" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--canvas)' }}>
       <TopBar activeKey={activeKey} />
       <ContextBar />
-      {showFlowNav && <FlowNav currentStep={flowStep} />}
+      {showFlowNav && activeKey && ['analysis', 'review', 'reports'].includes(activeKey) &&
+        <FlowNav flow={activeKey as FlowModule} currentStep={flowStep} />}
       <main style={{ flex: 1, padding: 'var(--space-6)' }}>
         {children}
       </main>

@@ -1,27 +1,10 @@
-export type UserRole = 'super_admin' | 'qc_admin' | 'qa_lead' | 'reviewer' | 'annotator';
+import type { components } from '@/lib/api/contract';
 
-export interface AuthUser {
-  id: string;
-  username: string;
-  fullName: string;
-  role: UserRole;
-  email: string;
-  datasetScope?: string | null;
-}
+export type UserRole = components['schemas']['Role'];
+export type RoleAssignment = components['schemas']['RoleAssignment'];
+export type AuthSession = components['schemas']['Session'];
+export type LoginCredentials = components['schemas']['LoginRequest'];
+export type ApiError = components['schemas']['Error'];
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  user: AuthUser;
-  token?: string;
-}
-
-export interface ApiError {
-  code: string;
-  message: string;
-  requestId?: string;
-  details?: Record<string, unknown>;
-}
+// Presentation fields come from the server session, never browser storage.
+export type AuthUser = AuthSession['user'] & { fullName: string; role: UserRole | null };

@@ -23,7 +23,7 @@ export default function AnalysisPage() {
             <div style={{ padding: 'var(--space-4)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)' }}>
               <span className="lx-badge lx-badge--success">Quyền truy cập hợp lệ</span>
               <p style={{ fontSize: '13px', marginTop: '8px', color: 'var(--ink-muted)' }}>
-                Bạn đã được xác thực qua Route Guard thành công.
+                Chức năng tạo Snapshot và chạy phân tích sẽ được bổ sung trong đợt tiếp theo.
               </p>
             </div>
           </div>

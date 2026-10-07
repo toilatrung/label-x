@@ -8,6 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     pool: 'threads',
+    setupFiles: ['./src/__tests__/setup.ts'],
+    environmentOptions: { jsdom: { url: 'http://localhost:3000' } },
   },
   resolve: {
     alias: {

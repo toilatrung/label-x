@@ -13,21 +13,20 @@ import {
   canAccessReports,
   canAccessConfiguration,
 } from '@/lib/auth/roles';
-import { UserRole } from '@/types/auth';
 
 interface TopBarProps {
   activeKey?: string;
 }
 
 export function TopBar({ activeKey }: TopBarProps) {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const role = user?.role || 'super_admin';
-  const roleName = user ? ROLE_LABELS[role] : 'Chưa đăng nhập';
-  const roleCode = user ? ROLE_CODES[role] : '--';
+  const role = user?.role;
+  const roleName = role ? ROLE_LABELS[role] : 'Chưa có quyền trong phạm vi này';
+  const roleCode = role ? ROLE_CODES[role] : '--';
   const initials = user
     ? user.fullName
         .split(' ')
@@ -53,11 +52,11 @@ export function TopBar({ activeKey }: TopBarProps) {
   };
 
   // Lọc menu theo quyền vai trò (Role-based access control)
-  const showAnalysis = canAccessAnalysis(role);
-  const showReview = canAccessReview(role);
-  const showEscalations = canAccessEscalations(role);
-  const showReports = canAccessReports(role);
-  const showConfig = canAccessConfiguration(role);
+  const showAnalysis = hasPermission(canAccessAnalysis);
+  const showReview = hasPermission(canAccessReview, true);
+  const showEscalations = hasPermission(canAccessEscalations, true);
+  const showReports = hasPermission(canAccessReports);
+  const showConfig = hasPermission(canAccessConfiguration);
 
   return (
     <>
@@ -135,13 +134,11 @@ export function TopBar({ activeKey }: TopBarProps) {
           {/* 4. Phân xử (Escalations) - Chỉ QA Lead, Super Admin */}
           {showEscalations && (
             <div className="lx-nav__group">
-              <Link
+              <button type="button" disabled title="Chưa khả dụng"
                 className={`lx-navbtn ${pathname === '/escalations' || activeKey === 'escalations' ? 'is-active' : ''}`}
-                href="/escalations"
-                onClick={closeAll}
               >
                 Phân xử
-              </Link>
+              </button>
             </div>
           )}
 
@@ -185,13 +182,11 @@ export function TopBar({ activeKey }: TopBarProps) {
           {/* 6. Báo cáo & Phát hành - Chỉ QA Lead, Super Admin */}
           {showReports && (
             <div className="lx-nav__group">
-              <Link
+              <button type="button" disabled title="Chưa khả dụng"
                 className={`lx-navbtn ${pathname === '/reports' || activeKey === 'reports' ? 'is-active' : ''}`}
-                href="/reports"
-                onClick={closeAll}
               >
                 Báo cáo & Phát hành
-              </Link>
+              </button>
             </div>
           )}
 
@@ -251,29 +246,7 @@ export function TopBar({ activeKey }: TopBarProps) {
 
           {userMenuOpen && (
             <div className="lx-menu lx-menu--user" role="menu" style={{ right: 0, left: 'auto', minWidth: '220px' }}>
-              <div className="lx-menu__head">Tài khoản & Chuyển vai trò thử nghiệm</div>
-
-              <div style={{ padding: '6px 12px', fontSize: '11px', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>
-                Thử nghiệm vai trò
-              </div>
-
-              {(['super_admin', 'qa_lead', 'qc_admin', 'reviewer', 'annotator'] as UserRole[]).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  className={`lx-menu__item ${role === r ? 'is-active' : ''}`}
-                  style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
-                  onClick={() => {
-                    switchRole(r);
-                    closeAll();
-                  }}
-                >
-                  <span className="lx-menu__t">
-                    {role === r ? '✓ ' : '  '}
-                    {ROLE_LABELS[r]} ({ROLE_CODES[r]})
-                  </span>
-                </button>
-              ))}
+              <div className="lx-menu__head">Tài khoản</div>
 
               <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
 
@@ -282,7 +255,7 @@ export function TopBar({ activeKey }: TopBarProps) {
                 className="lx-menu__item"
                 style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--danger)' }}
                 onClick={() => {
-                  logout();
+                  void logout();
                   closeAll();
                 }}
               >

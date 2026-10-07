@@ -49,7 +49,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="purpose">Purpose</h2>
 <p>File riêng của Trần Đức Thọ (@tdt2112) theo CR-100: chỉ ghi trạng thái của task mình đang làm. Integrator gộp vào <code>.agent/execution/current-context.html</code>.</p>
 <ul>
-<li><strong>Base Commit</strong>: <code>28be098</code></li>
+<li><strong>Base Commit</strong>: <code>4a68cce</code> (mốc sau khi ghép <code>origin/develop</code>)</li>
 <li><strong>Branch</strong>: <code>feat/T-002-e02-frontend-shell</code></li>
 </ul>
 <h2 id="status-model">Status Model</h2>
@@ -146,8 +146,8 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="notes">Notes</h2>
 <ul>
-<li>T-001 đã merge vào <code>develop</code> qua PR #21. T-002 còn cần cập nhật nhánh, tích hợp client sinh từ OpenAPI và căn chỉnh mock/session/RBAC theo hợp đồng mới; trạng thái task là <code>in-progress</code>.</li>
-<li>Bắt đầu làm: đổi trạng thái T-002 sang <code>in-progress</code> trong <code>task-board-@tdt2112.html</code>; xong và có bằng chứng: <code>review</code>, rồi mở PR vào <code>develop</code> theo cập nhật CR-104 trên Issue #14.</li>
+<li>T-001 đã merge vào <code>develop</code> qua PR #21. Nhánh T-002 đã ghép <code>origin/develop</code> tại commit <code>4a68cce</code>; client OpenAPI, mock session và RBAC đã căn chỉnh. Kiểm thử cục bộ đạt 39/39 frontend và 12/12 backend. Còn chờ commit hoàn thiện do người thực hiện tự tạo, push, PR, CI và review độc lập.</li>
+<li>Trạng thái T-002 là <code>review</code> vì đã có mã và bằng chứng cục bộ. PR phải mở vào <code>develop</code> theo CR-104 trên Issue #14; chưa được đánh dấu <code>done</code> trước khi CI và duyệt PR đạt.</li>
 <li>PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102; PR của Hà do Trịnh Quang Trung duyệt; PO tự duyệt PR của mình).</li>
 <li>Chỉ sửa file <code>.agent/</code> có hậu tố <code>-@tdt2112</code>. Tài liệu chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103).</li>
 </ul>

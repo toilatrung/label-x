@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
 import { MOCK_USERS } from '@/lib/auth/mock-users';
 import { ROLE_LABELS } from '@/lib/auth/roles';
+import { isMockAuth } from '@/lib/auth/config';
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const [username, setUsername] = useState('');
@@ -43,7 +44,7 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--canvas)', padding: 'var(--space-4)' }}>
-      <div className="lx-card" style={{ width: '100%', maxWidth: '440px', padding: 'var(--space-6)', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+      <div className="lx-card" style={{ width: '100%', maxWidth: '440px', padding: 'var(--space-6)' }}>
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
           <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--ink)' }}>
             Label<span style={{ color: 'var(--brand)' }}>X</span>
@@ -55,6 +56,7 @@ export default function LoginPage() {
 
         {error && (
           <div
+            role="alert"
             style={{
               padding: '10px 14px',
               borderRadius: 'var(--radius-md)',
@@ -104,13 +106,13 @@ export default function LoginPage() {
             type="submit"
             className="lx-btn lx-btn--primary"
             style={{ width: '100%', justifyContent: 'center', height: '36px' }}
-            disabled={loading}
+            disabled={loading || isLoading}
           >
             {loading ? 'Đang xác thực...' : 'Đăng nhập vào LabelX'}
           </button>
         </form>
 
-        <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
+        {isMockAuth && <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink-subtle)', marginBottom: '8px' }}>
             Tài khoản mẫu thử nghiệm (chọn nhanh):
           </div>
@@ -120,7 +122,7 @@ export default function LoginPage() {
                 key={u.id}
                 type="button"
                 className="lx-btn lx-btn--ghost lx-btn--sm"
-                style={{ justifyContent: 'space-between', width: '100%', textAlign: 'left', border: '1px solid var(--border)' }}
+                style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)', height: 'auto', padding: 'var(--space-2)', width: '100%', textAlign: 'left', border: '1px solid var(--border)' }}
                 onClick={() => handleQuickPick(u)}
               >
                 <span>
@@ -132,7 +134,7 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );
