@@ -143,6 +143,7 @@ ul.dir{columns:2;font-size:14px}
 <li>07/10/2026: code/test và image Docker đã build; NVIDIA Container Toolkit 1.20.1 hoạt động trong WSL. Checkpoint được phục hồi từ Wayback theo comment PO, khớp MD5 gốc và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>.</li>
 <li>07/10/2026: inference GPU pass trên 10 ảnh BDD100K validation, sinh 342 detection; 12,8189 giây tổng, 1,2819 giây/ảnh, batch 1 trên NVIDIA MX330 2 GB.</li>
 <li>07/10/2026: đã bổ sung publish/fetch S3-compatible fail-closed; checkpoint 165.899.860 byte đã upload và tải ngược từ object key content-addressed trong bucket <code>labelx-models</code>, SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code> sau round-trip khớp manifest. T-005 chuyển <code>review</code>.</li>
+<li>07/10/2026: commit triển khai <code>1169a60</code>; chuẩn bị PR từ <code>feat/T-005-e10-detector-worker</code> vào <code>develop</code>.</li>
 <li>Bắt đầu làm: đổi trạng thái T-005 sang <code>in-progress</code> trong <code>task-board-@vietanhhhhhh2003.html</code>; xong và có bằng chứng: <code>review</code>, rồi mở PR vào <code>develop</code> (CR-104).</li>
 <li>PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102; PR của Hà do Trịnh Quang Trung duyệt; PO tự duyệt PR của mình).</li>
 <li>Chỉ sửa file <code>.agent/</code> có hậu tố <code>-@vietanhhhhhh2003</code>. Tài liệu chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103).</li>

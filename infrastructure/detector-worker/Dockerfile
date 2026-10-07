@@ -40,4 +40,3 @@ RUN python -m pip install . \
 USER detector
 ENTRYPOINT ["labelx-detector"]
 CMD ["--help"]
-
