@@ -19,6 +19,7 @@ SRS_SECTIONS = ROOT / "docs/label-x_system-requirement-specification/sections"
 
 METHODS = {"get", "post", "put", "patch", "delete"}
 TRACE_ID = re.compile(r"^(FR-[A-Z]{3}-\d{2}|BR-\d{2}|UC-\d{2}|NFR-\d{2})$")
+REQUIREMENT_ID = re.compile(r"\b(?:FR-[A-Z]{3}-\d{2}|BR-\d{2}|UC-\d{2})\b")
 PSEUDO_ROLES = {"anonymous", "authenticated", "lease_holder"}
 
 # Endpoint SRS tab:api thuộc phạm vi T-001 (auth/phiên, snapshot, QC Run, guideline, hàng đợi).
@@ -124,6 +125,24 @@ def test_transitions_exist_in_state_machine_doc(spec):
         event = op.get("x-labelx-transition")
         if event:
             assert f"<code>{event}</code>" in doc, f"{path}: {event} không có trong state-machines"
+
+
+def test_every_state_transition_cites_srs_requirement():
+    # Cột "Nguồn" của mỗi transition phải trích ít nhất một mã FR/BR/UC có trong SRS;
+    # hình/bảng SRS hay BLOCKER/DEC chỉ là nguồn bổ sung.
+    doc = STATE_MACHINES.read_text(encoding="utf-8")
+    srs = "\n".join(p.read_text(encoding="utf-8") for p in SRS_SECTIONS.glob("*.tex"))
+    rows = [
+        (m.group(1), re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)[-1])
+        for row in re.findall(r"<tr>(.*?)</tr>", doc, re.S)
+        if (m := re.match(r"<td><code>([a-z_]+\.[a-z_]+)</code></td>", row))
+    ]
+    assert rows, "không đọc được bảng transition"
+    for event, source in rows:
+        refs = REQUIREMENT_ID.findall(source)
+        assert refs, f"{event}: cột Nguồn thiếu mã FR/BR/UC ({source})"
+        for ref in refs:
+            assert ref in srs, f"{event}: {ref} không có trong SRS"
 
 
 def test_frame_states_include_incomplete(spec):
