@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>API Documentation — LabelX</title>
-<meta name="labelx:id" content="api-overview">
-<meta name="labelx:title" content="API Documentation">
-<meta name="labelx:type" content="reference">
-<meta name="labelx:domain" content="api">
-<meta name="labelx:module" content="repository">
-<meta name="labelx:tags" content="[api, contracts, events]">
+<title>Git Nexus Task Commit Map — @toilatrung — LabelX</title>
+<meta name="labelx:id" content="git-nexus-task-commit-map-toilatrung">
+<meta name="labelx:title" content="Git Nexus Task Commit Map — @toilatrung">
+<meta name="labelx:type" content="intelligence">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="git-nexus">
+<meta name="labelx:tags" content="[git-nexus, tasks, commits, per-user]">
 <meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -42,21 +42,12 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / index</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / intelligence / git-nexus / task-commit-map-@toilatrung</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>api-overview</span><b>title</b><span>API Documentation</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>repository</span><b>tags</b><span>[api, contracts, events]</span><b>priority</b><span>3</span></div>
-<h1 id="api-documentation">API Documentation</h1>
-<h2 id="purpose">Purpose</h2>
-<p>Mục lục hợp đồng giao diện có thẩm quyền của LabelX QC: endpoint, schema, mã lỗi và Celery task.</p>
-<h2 id="contents">Contents</h2>
-<ul>
-<li><a href="contract.html">contract.html</a> — intake: nguồn, kết quả kiểm tra, các mục còn mở</li>
-<li><a href="openapi.yaml">openapi.yaml</a> — contract M13 v1 (T-001): OpenAPI 3.0.3 cho auth, dataset, snapshot, QC Run, guideline, hàng đợi/lease/frame; nguồn sinh type frontend</li>
-<li><a href="state-machines.html">state-machines.html</a> — bảng transition Snapshot, QC Run, Issue, frame (có trạng thái "đang dở")</li>
-<li><a href="rbac-matrix.html">rbac-matrix.html</a> — ma trận actor/action/scope</li>
-<li><a href="rest-api.html">rest-api.html</a> — REST API (DRF): endpoint, quyền, request/response, mã lỗi, idempotency</li>
-<li><a href="event-contracts.html">event-contracts.html</a> — Celery task: tên, payload, khoá idempotent, retry; ghi chú về domain event</li>
-<li><code>graphql.html</code> — <strong>không dùng</strong>. Hệ thống chỉ có REST (SRS §9.3; DEC-001)</li>
-</ul>
-<p>Contract có thẩm quyền là <code>openapi.yaml</code>: đổi tệp này trước rồi mới đổi code. Khi backend có view, schema drf-spectacular tại <code>/api/schema/</code> phải khớp tệp này. Frontend sinh type từ tệp bằng <code>npm run gen:api:contract</code>, hoặc từ backend đang chạy bằng <code>npm run gen:api</code> (DEC-001). Test <code>src/backend/tests/test_contract.py</code> kiểm tệp hợp lệ OpenAPI 3.0 và mỗi operation có trích FR/BR/UC và vai trò.</p>
+<div class="meta"><b>id</b><span>git-nexus-task-commit-map-toilatrung</span><b>title</b><span>Git Nexus Task Commit Map — @toilatrung</span><b>type</b><span>intelligence</span><b>domain</b><span>governance</span><b>module</b><span>git-nexus</span><b>tags</b><span>[git-nexus, tasks, commits, per-user]</span><b>priority</b><span>3</span></div>
+<h1 id="task-commit-map">Task Commit Map</h1>
+<p>Per-user additions by <code>@toilatrung</code>, written against canonical base commit <code>82bc3890c1515f699b928d454e636f0c10b0ff04</code>.</p>
+<table><thead><tr><th>Task ID</th><th>Implementation Commit</th><th>Date</th><th>Author</th><th>Summary</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>T-001</td><td><code>545eae1</code></td><td>2026-10-07</td><td><code>@toilatrung</code></td><td>Contract M13 v1: OpenAPI baseline, state machine (frame "đang dở"), ma trận RBAC, ADR DEC-005/DEC-006, test contract.</td><td><a href="../../reports/implementation/T-001-@toilatrung.html">implementation report</a></td></tr>
+</tbody></table>
 </article></main></body></html>
