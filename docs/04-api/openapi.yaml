@@ -81,6 +81,7 @@ paths:
       responses:
         "204":
           description: Đã đăng xuất (gọi lại khi đã đăng xuất cũng trả 204)
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/auth/session/:
     get:
       operationId: auth_session

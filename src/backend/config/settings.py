@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
+    "accounts.apps.AccountsConfig",
     "guideline",
 ]
 
@@ -150,6 +151,17 @@ CORS_ALLOW_CREDENTIALS = True
 # Frontend khác origin (dev: :3000 gọi API :8000) gửi POST kèm session cookie phải qua kiểm Origin
 # của CSRF; mặc định tin cùng danh sách với CORS.
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
+
+# Phiên LabelX (T-011, contract auth): cookie `sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
+# `csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
+# (:8000) cùng site localhost nên SameSite=Lax đủ; production bật Secure qua env.
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 
 # Celery — task phải idempotent dù có retry; timeout đặt riêng theo loại task sau đo pilot.
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
