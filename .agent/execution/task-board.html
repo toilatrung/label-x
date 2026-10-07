@@ -123,11 +123,11 @@ ul.dir{columns:2;font-size:14px}
 <td>E-10</td>
 <td>GPU worker Detector Faster R-CNN BDD100K: freeze checksum, inference ra JSON</td>
 <td>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</td>
-<td>review</td>
+<td>done</td>
 <td>none</td>
 <td>none</td>
 <td><a href="../reports/implementation/T-005.html">implementation</a>; <a href="../reports/review/T-005.html">review</a>; <a href="../reports/qa/T-005.html">QA</a>; <a href="https://github.com/toilatrung/label-x/pull/22">PR #22</a></td>
-<td>2026-10-07</td>
+<td>2026-10-08</td>
 </tr>
 </tbody>
 </table>
@@ -386,7 +386,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-10</code></li>
 <li><strong>Title</strong>: <code>GPU worker Detector Faster R-CNN BDD100K: freeze checksum, inference ra JSON</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</code></li>
-<li><strong>Status</strong>: <code>review</code></li>
+<li><strong>Status</strong>: <code>done</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-06</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-07</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -423,7 +423,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="acceptance-criteria_4">Acceptance Criteria</h4>
 <ul>
 <li>[x] SHA-256 của checkpoint được ghi và kiểm lại khi nạp model (sai checksum thì từ chối chạy)</li>
-<li>[ ] Inference ≥ 10 ảnh BDD100K mẫu ra JSON đúng 10 lớp — chờ chạy CPU inference và commit JSON bằng chứng</li>
+<li>[x] Inference ≥ 10 ảnh BDD100K mẫu ra JSON đúng 10 lớp — CPU 2026-10-08: 10 ảnh val, 342 detection, mọi lớp thuộc mapping 10 lớp (9/10 xuất hiện); <code>src/detector_worker/evidence/t005-cpu-2026-10-08/</code></li>
 <li>[x] Report có thời gian/ảnh và cấu hình phần cứng đã dùng</li>
 <li>[x] Verification method is specified for each condition.</li>
 </ul>
@@ -435,9 +435,9 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="completion-criteria_4">Completion Criteria</h4>
 <ul>
-<li>[ ] Every acceptance criterion passes.</li>
+<li>[x] Every acceptance criterion passes.</li>
 <li>[x] Required reports are stored in <code>.agent/reports/</code>.</li>
 <li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
-<li>[ ] Current context and task board reflect the final status.</li>
+<li>[x] Current context and task board reflect the final status.</li>
 </ul>
 </article></main></body></html>

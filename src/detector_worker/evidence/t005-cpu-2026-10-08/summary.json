@@ -1,0 +1,203 @@
+{
+  "task": "T-005",
+  "kind": "CPU inference evidence (no docker; uv venv mirroring Dockerfile pins)",
+  "predictions_json": "$WORK/out/predictions.json",
+  "predictions_sha256": "d31c3584a07e9150279a24b9a2272b47730960c14f815f03ac36f2332a0b29af",
+  "schema_version": "labelx.detector.predictions.v1",
+  "model": {
+    "checkpoint_filename": "faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "class_mapping_version": "bdd100k-det-10-v1",
+    "classes": [
+      "pedestrian",
+      "rider",
+      "car",
+      "truck",
+      "bus",
+      "train",
+      "motorcycle",
+      "bicycle",
+      "traffic light",
+      "traffic sign"
+    ],
+    "name": "Faster R-CNN R-50-FPN 3x BDD100K",
+    "sha256": "ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540",
+    "version": "syscv-bdd100k-models@0935a8a3"
+  },
+  "checkpoint": {
+    "path": "$WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "source_url": "https://web.archive.org/web/20250219032106id_/https://dl.cv.ethz.ch/bdd100k/det/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "size_bytes": 165899860,
+    "md5": "d2a866749432b7bd8436f0001c1625d7",
+    "sha256": "ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540",
+    "matches_manifest": true
+  },
+  "corrupted_checkpoint_test": {
+    "how": "copy of checkpoint + 1 appended byte 0x00",
+    "exit_code": 1,
+    "error": "labelx_detector.artifact.ChecksumMismatchError: Checkpoint SHA-256 mismatch for $WORK/corrupt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth: expected ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540, got 2edeedb3fc23ec199509ffb2f9931f873038cc866f2ea0aa176d84591db96f58. Model loading was refused.",
+    "predictions_written": false
+  },
+  "verify_command": {
+    "command": "labelx-detector verify --checkpoint $WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth --manifest <repo>/src/detector_worker/model-manifest.json",
+    "exit_code": 0,
+    "stdout": "{\"status\": \"verified\", \"sha256\": \"ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540\"}"
+  },
+  "images_source": {
+    "hf_dataset": "dgural/bdd100k",
+    "dataset_card": "bdd100k-validation (10000 samples = BDD100K val)",
+    "revision": "c2e7f266756bcd07b87f1a45a35937c8eac20241",
+    "selection": "first 10 files of data/ in lexical order",
+    "sha256_checked_against": "HF tree API lfs.oid — 10/10 OK"
+  },
+  "image_count": 10,
+  "total_detections": 342,
+  "detections_per_class": {
+    "pedestrian": 48,
+    "rider": 2,
+    "car": 188,
+    "truck": 9,
+    "bus": 4,
+    "train": 0,
+    "motorcycle": 2,
+    "bicycle": 1,
+    "traffic light": 20,
+    "traffic sign": 68
+  },
+  "all_class_names_in_manifest": true,
+  "manifest_classes_present": 9,
+  "manifest_classes_total": 10,
+  "score_threshold": 0.05,
+  "device": "cpu",
+  "batch_size": 1,
+  "per_image_seconds_mean": 2.0177,
+  "per_image_seconds_min": 1.89,
+  "per_image_seconds_max": 2.1029,
+  "per_image_seconds_mean_excl_first": 2.0082,
+  "elapsed_seconds_total": 20.1974,
+  "seconds_per_image_reported": 2.0197,
+  "images": [
+    {
+      "file": "b1c66a42-6f7d68ca.jpg",
+      "sha256": "76bf84536edbaf192a8a699efc62ba2b06056bac12c426ecfcc2e003d91fbd32",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.1029,
+      "detections": 48
+    },
+    {
+      "file": "b1c81faa-3df17267.jpg",
+      "sha256": "8d91faeebbd3c7ba26a2e8877a9557fb62ad9fe0e51a83a13d8a2be5c32f9912",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 1.9464,
+      "detections": 27
+    },
+    {
+      "file": "b1c81faa-c80764c5.jpg",
+      "sha256": "d60d83e09a23f819183cb7725ba4011665b26ebc137d35384198d376ac91cf2f",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 1.89,
+      "detections": 23
+    },
+    {
+      "file": "b1c9c847-3bda4659.jpg",
+      "sha256": "b7263e1490640e59ac547e3d4783484af84ba139429e235a9c5095d9f0340978",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.0693,
+      "detections": 32
+    },
+    {
+      "file": "b1ca2e5d-84cf9134.jpg",
+      "sha256": "1ead19ec62c69d94b3329f8cc6142e74a02a5b07d2b3f2bd4c9c77b74aefa8a6",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.0703,
+      "detections": 59
+    },
+    {
+      "file": "b1ca8418-84a133a0.jpg",
+      "sha256": "93d09740f72ec8842742715c5e6aad3c22e3522ce125ade465b446d9201a7fa9",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.0019,
+      "detections": 19
+    },
+    {
+      "file": "b1cac6a7-04e33135.jpg",
+      "sha256": "54ada0f98638a4c968d8d29e47578ae1aed605a16a773e0dfea7d16071975744",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.0603,
+      "detections": 45
+    },
+    {
+      "file": "b1cd1e94-26dd524f.jpg",
+      "sha256": "cd8812f3459762ccc483edb74c9f923ddd05adec32783dfbe8132921d477a346",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.052,
+      "detections": 47
+    },
+    {
+      "file": "b1cd1e94-549d0bfe.jpg",
+      "sha256": "f5da4f49797b718e4af25f381b3c7f49018b202dc8cd7f12328c640e67ff1b44",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 2.0187,
+      "detections": 25
+    },
+    {
+      "file": "b1ceb32e-3f481b43.jpg",
+      "sha256": "f844b7240c220b576777a2837fe3b4fbf63117690172b0beba32f8861049e2d1",
+      "width": 1280,
+      "height": 720,
+      "inference_seconds": 1.9648,
+      "detections": 17
+    }
+  ],
+  "hardware": {
+    "cpu_model": "AMD Ryzen 7 4800H with Radeon Graphics",
+    "logical_cpus": 16,
+    "ram_total_gib": 15.04,
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-138-generic",
+    "worker_reported": {
+      "cuda_available": false,
+      "device": "cpu",
+      "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+      "processor": "x86_64",
+      "python": "3.10.12",
+      "torch": "1.12.1+cpu"
+    }
+  },
+  "python": "3.10.12",
+  "packages": {
+    "torch": "1.12.1+cpu",
+    "torchvision": "0.13.1+cpu",
+    "mmcv-full": "1.7.1",
+    "mmdet": "2.28.2",
+    "numpy": "1.23.5",
+    "Pillow": "10.4.0",
+    "opencv-python-headless": "4.8.1.78",
+    "labelx-detector-worker": "0.1.0",
+    "setuptools": "69.5.1"
+  },
+  "deviations_from_pinned_stack": [
+    "No docker: uv venv instead of pytorch/pytorch:1.12.1-cuda11.3 image",
+    "Python 3.10.12 (image uses CPython 3.7.13); pyproject allows >=3.7,<3.11",
+    "torch 1.12.1+cpu / torchvision 0.13.1+cpu wheels from download.pytorch.org (image: CUDA 11.3 build)",
+    "mmcv-full 1.7.1 CPU wheel cp310 from download.openmmlab.com/mmcv/dist/cpu/torch1.12.0 (image: cu113 cp37 wheel); no compilation",
+    "setuptools 69.5.1 added (uv venv has none; mmcv imports torch.utils.cpp_extension which needs it)",
+    "Pillow 10.4.0, numpy 1.23.5, opencv-python-headless 4.8.1.78 resolved within Dockerfile ranges"
+  ],
+  "commands": [
+    "uv venv --python 3.10 $WORK/venv",
+    "uv pip install torch-1.12.1+cpu-cp310 torchvision-0.13.1+cpu-cp310 (local wheels) 'numpy>=1.21,<1.24' 'Pillow>=9,<11' 'opencv-python-headless>=4.5,<4.9' addict packaging 'yapf<0.40.2' pyyaml 'setuptools<70'",
+    "uv pip install --no-deps mmcv_full-1.7.1-cp310-cp310-manylinux1_x86_64.whl",
+    "uv pip install mmdet==2.28.2",
+    "uv pip install --no-deps <repo>/src/detector_worker",
+    "labelx-detector infer --input-dir $WORK/dl_imgs --output $WORK/out/predictions.json --checkpoint $WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth --manifest <repo>/src/detector_worker/model-manifest.json --config <repo>/src/detector_worker/configs/faster_rcnn_r50_fpn_3x_det_bdd100k.py --device cpu --batch-size 1"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "checkpoint": {
+    "path": "$WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "source_url": "https://web.archive.org/web/20250219032106id_/https://dl.cv.ethz.ch/bdd100k/det/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "size_bytes": 165899860,
+    "md5": "d2a866749432b7bd8436f0001c1625d7",
+    "sha256": "ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540",
+    "matches_manifest": true
+  },
+  "verify": {
+    "command": "labelx-detector verify --checkpoint $WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth --manifest <repo>/src/detector_worker/model-manifest.json",
+    "exit_code": 0,
+    "stdout": "{\"status\": \"verified\", \"sha256\": \"ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540\"}"
+  },
+  "corrupted": {
+    "how": "copy of checkpoint + 1 appended byte 0x00",
+    "exit_code": 1,
+    "error": "labelx_detector.artifact.ChecksumMismatchError: Checkpoint SHA-256 mismatch for $WORK/corrupt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth: expected ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540, got 2edeedb3fc23ec199509ffb2f9931f873038cc866f2ea0aa176d84591db96f58. Model loading was refused.",
+    "predictions_written": false
+  },
+  "images_source": {
+    "hf_dataset": "dgural/bdd100k",
+    "dataset_card": "bdd100k-validation (10000 samples = BDD100K val)",
+    "revision": "c2e7f266756bcd07b87f1a45a35937c8eac20241",
+    "selection": "first 10 files of data/ in lexical order",
+    "sha256_checked_against": "HF tree API lfs.oid \u2014 10/10 OK"
+  },
+  "deviations": [
+    "No docker: uv venv instead of pytorch/pytorch:1.12.1-cuda11.3 image",
+    "Python 3.10.12 (image uses CPython 3.7.13); pyproject allows >=3.7,<3.11",
+    "torch 1.12.1+cpu / torchvision 0.13.1+cpu wheels from download.pytorch.org (image: CUDA 11.3 build)",
+    "mmcv-full 1.7.1 CPU wheel cp310 from download.openmmlab.com/mmcv/dist/cpu/torch1.12.0 (image: cu113 cp37 wheel); no compilation",
+    "setuptools 69.5.1 added (uv venv has none; mmcv imports torch.utils.cpp_extension which needs it)",
+    "Pillow 10.4.0, numpy 1.23.5, opencv-python-headless 4.8.1.78 resolved within Dockerfile ranges"
+  ],
+  "commands": [
+    "uv venv --python 3.10 $WORK/venv",
+    "uv pip install torch-1.12.1+cpu-cp310 torchvision-0.13.1+cpu-cp310 (local wheels) 'numpy>=1.21,<1.24' 'Pillow>=9,<11' 'opencv-python-headless>=4.5,<4.9' addict packaging 'yapf<0.40.2' pyyaml 'setuptools<70'",
+    "uv pip install --no-deps mmcv_full-1.7.1-cp310-cp310-manylinux1_x86_64.whl",
+    "uv pip install mmdet==2.28.2",
+    "uv pip install --no-deps <repo>/src/detector_worker",
+    "labelx-detector infer --input-dir $WORK/dl_imgs --output $WORK/out/predictions.json --checkpoint $WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth --manifest <repo>/src/detector_worker/model-manifest.json --config <repo>/src/detector_worker/configs/faster_rcnn_r50_fpn_3x_det_bdd100k.py --device cpu --batch-size 1"
+  ]
+}

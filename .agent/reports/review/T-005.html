@@ -106,7 +106,7 @@ ul.dir{columns:2;font-size:14px}
 <table>
 <thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead>
 <tbody>
-<tr><td><code>F-1</code></td><td><code>major</code></td><td><code>.agent/reports/implementation/T-005.html</code></td><td>Bằng chứng inference 10 ảnh thật chỉ là một dòng tự khai; không có JSON đầu ra, danh sách ảnh hay số detection theo lớp; chưa có bằng chứng chạy --device cpu.</td><td>PO quyết định chạy lại CPU inference trên 10 ảnh BDD100K val và lưu bằng chứng; ghi trong QA report T-005.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-1</code></td><td><code>major</code></td><td><code>.agent/reports/implementation/T-005.html</code></td><td>Bằng chứng inference 10 ảnh thật chỉ là một dòng tự khai; không có JSON đầu ra, danh sách ảnh hay số detection theo lớp; chưa có bằng chứng chạy --device cpu.</td><td>Resolved 2026-10-08: CPU inference 10 ảnh BDD100K val trên checkpoint thật, 342 detection, bằng chứng src/detector_worker/evidence/t005-cpu-2026-10-08/ (predictions.json, summary.json, verify/corrupt/infer.txt); xem QA report T-005.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>.github/workflows/ci.yml</code></td><td>CI không chạy detector-lint/test.</td><td>Resolved trong 41b6b5d.</td><td><code>@vietanhhhhhh2003</code></td></tr>
 <tr><td><code>F-3</code></td><td><code>major</code></td><td><code>.agent/governance/decisions/DEC-008.html (trước đây DEC-005-@vietanhhhhhh2003.html, đã gộp)</code></td><td>Trùng mã DEC-005 với ADR lineage.</td><td>Resolved trong commit integrator: DEC-008.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-4</code></td><td><code>minor</code></td><td><code>.agent/intelligence/git-nexus</code></td><td>Không có commit map T-005; commit 1169a60/1dc7c86 chỉ có trên nhánh, squash 852bfca chưa ghi.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
@@ -117,7 +117,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>[x] Review scope and standard are explicit.</li>
 <li>[x] Each finding identifies evidence, severity, action, and owner.</li>
-<li>[ ] Critical and major findings are resolved or formally accepted.</li>
+<li>[x] Critical and major findings are resolved or formally accepted.</li>
 <li>[x] Approval outcome matches unresolved findings.</li>
 <li>[x] Code diff, acceptance criteria, architecture, security, performance, regression risk, and test/lint/build evidence are checked.</li>
 <li>[x] Reviewer identity is independent from Executor identity.</li>
@@ -132,7 +132,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] All required actions are linked to tasks or verified as resolved.</li>
+<li>[x] All required actions are linked to tasks or verified as resolved.</li>
 <li>[x] Approval outcome and rationale are recorded.</li>
 <li>[x] Related issue, risk, and report records are updated.</li>
 </ul>

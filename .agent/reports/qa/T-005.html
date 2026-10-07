@@ -54,7 +54,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>QA Report — T-005: GPU worker Detector Faster R-CNN BDD100K: freeze checksum, inference ra JSON</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</code></li>
 <li><strong>Tester</strong>: <code>claude-code (session label-x-30) cho integrator @toilatrung</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>passed</code></li>
 <li><strong>Task ID</strong>: <code>T-005</code></li>
 <li><strong>Review Decision</strong>: <code>APPROVED</code></li>
 <li><strong>Test Date</strong>: <code>2026-10-08</code></li>
@@ -85,7 +85,7 @@ ul.dir{columns:2;font-size:14px}
 <thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
 <tbody>
 <tr><td><code>agent qa start T-005</code></td><td><code>not-run</code></td><td><code>không có CLI; QA bắt đầu 2026-10-08</code></td></tr>
-<tr><td><code>agent qa pass T-005</code></td><td><code>not-run</code></td><td><code>chưa áp dụng</code></td></tr>
+<tr><td><code>agent qa pass T-005</code></td><td><code>not-run</code></td><td><code>Status passed ghi trong báo cáo này</code></td></tr>
 <tr><td><code>agent qa fail T-005</code></td><td><code>not-run</code></td><td><code>không áp dụng</code></td></tr>
 </tbody>
 </table>
@@ -94,18 +94,20 @@ ul.dir{columns:2;font-size:14px}
 <thead><tr><th>Check ID</th><th>Test Level</th><th>Result</th><th>Evidence</th><th>Defect ID</th></tr></thead>
 <tbody>
 <tr><td><code>CHECK-1</code></td><td><code>unit</code></td><td><code>passed</code></td><td>src/detector_worker: ruff check/format sạch; pytest 10 passed (gồm test_artifact checksum mismatch)</td><td><code>none</code></td></tr>
-<tr><td><code>CHECK-2</code></td><td><code>manual</code></td><td><code>blocked</code></td><td>CPU inference 10 ảnh BDD100K val trên checkpoint thật: đang chạy, chưa có kết quả</td><td><code>none</code></td></tr>
-<tr><td><code>CHECK-3</code></td><td><code>performance</code></td><td><code>passed</code></td><td>implementation report: 1,2819 s/ảnh, batch 1, MX330 2 GB, Torch 1.12.1/CUDA 11.3 (gồm warm-up)</td><td><code>none</code></td></tr>
-<tr><td><code>CHECK-4</code></td><td><code>contract</code></td><td><code>passed</code></td><td>validate-kit: uv run --no-project --python 3.12 python scripts/validate-framework.py: FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
-<tr><td><code>CHECK-5</code></td><td><code>integration</code></td><td><code>passed</code></td><td>make check (backend pytest Postgres + lint/typecheck/test toàn repo): sg docker -c "make check" tại 73507fa (code = 524aed3), exit 0: ruff, mypy (30 file), pytest backend 56 passed trên Postgres, eslint, tsc, vitest 58 passed, detector ruff + 10 passed, FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-2</code></td><td><code>integration</code></td><td><code>passed</code></td><td>labelx-detector verify trên checkpoint thật tải từ Wayback: size 165899860, MD5 d2a86674…25d7, SHA-256 ba1be4c4…3540 khớp manifest, exit 0 (src/detector_worker/evidence/t005-cpu-2026-10-08/verify.txt)</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-3</code></td><td><code>integration</code></td><td><code>passed</code></td><td>checkpoint bị thêm 1 byte: infer ném ChecksumMismatchError "Model loading was refused", exit 1, không ghi JSON (src/detector_worker/evidence/t005-cpu-2026-10-08/corrupt.txt)</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-4</code></td><td><code>manual</code></td><td><code>passed</code></td><td>labelx-detector infer --device cpu --batch-size 1 trên 10 ảnh BDD100K val (HF dgural/bdd100k rev c2e7f266, SHA-256 khớp lfs.oid): 342 detection, mọi lớp thuộc mapping 10 lớp bdd100k-det-10-v1 (9/10 lớp xuất hiện, train 0); box pixel gốc 1280x720; src/detector_worker/evidence/t005-cpu-2026-10-08/predictions.json SHA-256 d31c3584…29af, tóm tắt src/detector_worker/evidence/t005-cpu-2026-10-08/summary.json</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-5</code></td><td><code>performance</code></td><td><code>passed</code></td><td>CPU AMD Ryzen 7 4800H 16 luồng, RAM 15 GiB, Ubuntu 22.04.5: 2,018 s/ảnh trung bình (1,89–2,10 s), ngưỡng score 0,05; GPU MX330 2 GB trong implementation report: 1,2819 s/ảnh. Lệch stack: không Docker, Python 3.10.12 thay 3.7.13, torch/mmcv bản CPU</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-6</code></td><td><code>contract</code></td><td><code>passed</code></td><td>validate-kit: uv run --no-project --python 3.12 python scripts/validate-framework.py: FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-7</code></td><td><code>integration</code></td><td><code>passed</code></td><td>make check (backend pytest Postgres + lint/typecheck/test toàn repo): sg docker -c "make check" tại 73507fa (code = 524aed3), exit 0: ruff, mypy (30 file), pytest backend 56 passed trên Postgres, eslint, tsc, vitest 58 passed, detector ruff + 10 passed, FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
 </tbody>
 </table>
 <h2 id="result-summary">Result Summary</h2>
 <ul>
-<li><strong>Total</strong>: <code>5</code></li>
-<li><strong>Passed</strong>: <code>4</code></li>
+<li><strong>Total</strong>: <code>7</code></li>
+<li><strong>Passed</strong>: <code>7</code></li>
 <li><strong>Failed</strong>: <code>0</code></li>
-<li><strong>Blocked</strong>: <code>1</code></li>
+<li><strong>Blocked</strong>: <code>0</code></li>
 <li><strong>Skipped</strong>: <code>0</code></li>
 </ul>
 <h2 id="defects-and-risks">Defects and Risks</h2>
@@ -117,7 +119,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="acceptance-criteria">Acceptance Criteria</h2>
 <ul>
 <li>[x] Review report records <code>APPROVED</code> before QA starts.</li>
-<li>[ ] Every required check has a result and evidence.</li>
+<li>[x] Every required check has a result and evidence.</li>
 <li>[x] Result totals reconcile with the results table.</li>
 <li>[x] Failed checks map to issue records.</li>
 <li>[x] Skipped checks include an explicit approved reason.</li>
@@ -125,14 +127,14 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="release-recommendation">Release Recommendation</h2>
 <ul>
-<li><strong>Recommendation</strong>: <code>conditional-go</code></li>
-<li><strong>Conditions</strong>: <code>các check blocked phải chạy và đạt: CHECK-2</code></li>
+<li><strong>Recommendation</strong>: <code>go</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
 <li><strong>Rationale</strong>: <code>Kết quả theo bảng Test Results; không tính check chưa chạy là passed.</code></li>
 <li><strong>Authorized By</strong>: <code>@toilatrung (PO, integrator); review chéo label-x-88</code></li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] Required tests are executed or formally waived.</li>
+<li>[x] Required tests are executed or formally waived.</li>
 <li>[x] Defects, blockers, and residual risks are linked.</li>
 <li>[x] Release recommendation matches recorded results.</li>
 </ul>
