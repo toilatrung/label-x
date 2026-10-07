@@ -109,6 +109,36 @@ def test_snapshots_and_reason_are_redacted_before_storage():
     assert event.reason == "token=[REDACTED]"
 
 
+def test_key_material_and_connection_url_password_are_redacted_before_storage():
+    actor = _actor()
+    fake_private_key = "fake-private-key-t013"
+    fake_session_key = "fake-session-key-t013"
+    fake_database_password = "fake-database-password-t013"
+
+    with transaction.atomic():
+        event = _append(
+            actor,
+            after={
+                "private_key": fake_private_key,
+                "session-key": fake_session_key,
+                "connection": (
+                    f"postgres://labelx:{fake_database_password}@postgres.internal:5432/labelx"
+                ),
+            },
+        )
+
+    event.refresh_from_db()
+    stored = repr(event.after)
+    assert fake_private_key not in stored
+    assert fake_session_key not in stored
+    assert fake_database_password not in stored
+    assert event.after == {
+        "private_key": "[REDACTED]",
+        "session-key": "[REDACTED]",
+        "connection": "postgres://labelx:[REDACTED]@postgres.internal:5432/labelx",
+    }
+
+
 def test_model_and_database_reject_update_and_delete():
     actor = _actor()
     with transaction.atomic():
