@@ -189,10 +189,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</td>
 <td>Trịnh Quang Trung (@toilatrung)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-001</td>
 <td>none</td>
-<td>none</td>
+<td><a href="../reports/implementation/T-011.html">implementation</a>; <a href="../reports/review/T-011.html">review</a>; PR #31</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -913,7 +913,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</code></li>
 <li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -950,10 +950,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_10">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Endpoint /api/auth/* khớp openapi.yaml (test so schema)</li>
-<li>[ ] Test từ chối: thiếu/sai CSRF → 403, sai mật khẩu → 400/401 theo contract, phiên hết hạn → 401, user không có vai trò → phiên không có grant</li>
-<li>[ ] Identity mapping lưu và tra được; mã lỗi trả về đều khai báo trong contract</li>
-<li>[ ] Verification method is specified for each condition.</li>
+<li>[x] Endpoint /api/auth/* khớp openapi.yaml (test so schema)</li>
+<li>[x] Test từ chối: thiếu/sai CSRF → 403, sai mật khẩu → 400/401 theo contract, phiên hết hạn → 401, user không có vai trò → phiên không có grant — phiên hết hạn trả 403 NOT_AUTHENTICATED theo contract (contract không có 401), xem implementation report</li>
+<li>[x] Identity mapping lưu và tra được; mã lỗi trả về đều khai báo trong contract</li>
+<li>[x] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_10">Verification Requirements</h4>
 <ul>
@@ -964,8 +964,8 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="completion-criteria_10">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
-<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[x] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-012">T-012</h3>
@@ -991,6 +991,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Override Super Admin: tham số lý do bắt buộc, nhãn override trong audit, vẫn chịu self-review</li>
 <li>API đọc role assignment cho màn WorkflowPermissions</li>
 </ul>
+<p><strong>Ghi chú từ review T-011 (O-2)</strong>: <code>CvatIdentity.cvat_user_id</code> là unique, nên một user CVAT chỉ gắn một tài khoản LabelX; tài khoản thứ hai của cùng người có <code>identity_mapping.status = missing</code> và bị chặn bởi <code>IDENTITY_MAPPING_MISSING</code> (fail closed), không được nhận diện là cùng người. Khi làm FR-SEC-04, xác nhận hành vi này và ghi DEC nếu giữ.</p>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
 <li>Quy trình duyệt nghiệp vụ cụ thể (waiver, khoá reference — epic tương ứng)</li>
@@ -1232,6 +1233,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Màn WorkflowPermissions (docs/design) chỉ đọc từ API của T-012</li>
 <li>Test vitest với mock route theo contract; ảnh chụp màn trên API thật trong report</li>
 </ul>
+<p><strong>Ghi chú từ review T-011</strong>: (O-3) Django <code>login()</code> xoay <code>csrftoken</code>; sau đăng nhập phải đọc lại cookie <code>csrftoken</code> trước request ghi kế tiếp. (O-4) Contract đã thêm 403 cho <code>auth_logout</code>; route mock logout trả 403 khi thiếu CSRF cho khớp.</p>
 <h5 id="excluded_15">Excluded</h5>
 <ul>
 <li>Sửa role assignment từ UI</li>

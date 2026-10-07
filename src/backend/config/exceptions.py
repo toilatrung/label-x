@@ -8,6 +8,7 @@ from typing import Any
 from django.http import Http404
 from rest_framework import status
 from rest_framework.exceptions import (
+    APIException,
     AuthenticationFailed,
     MethodNotAllowed,
     NotAuthenticated,
@@ -17,6 +18,15 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+
+class ApiError(APIException):
+    """Lỗi mang sẵn mã `ErrorCode` của contract (docs/04-api/openapi.yaml)."""
+
+    def __init__(self, status_code: int, code: str, message: str) -> None:
+        super().__init__(detail=message, code=code)
+        self.status_code = status_code
+        self.error_code = code
 
 
 def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
@@ -36,7 +46,10 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
     message = "Dữ liệu không hợp lệ."
     details: dict[str, Any] = {}
 
-    if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
+    if isinstance(exc, ApiError):
+        code = exc.error_code
+        message = str(exc.detail)
+    elif isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
         code = "NOT_AUTHENTICATED"
         message = "Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục."
         response.status_code = status.HTTP_403_FORBIDDEN
