@@ -24,25 +24,25 @@
 <tr><td><code>src/backend/audit/migrations/0001_initial.py</code></td><td>Creates table, constraints, indexes and DB trigger rejecting UPDATE/DELETE.</td><td>T-013</td></tr>
 <tr><td><code>src/backend/audit/management/commands/configure_audit_db_role.py</code></td><td>Grants runtime role only SELECT/INSERT on table and sequence usage; rejects table-owner role.</td><td>T-013</td></tr>
 <tr><td><code>src/backend/tests/audit/test_audit_log.py</code></td><td>Seven Postgres tests for atomic commit/rollback, secret filtering, immutability, grants and absent mutation surfaces.</td><td>T-013</td></tr>
-<tr><td><code>src/backend/config/logging.py</code></td><td>Makes repeated redaction output canonical instead of leaving an extra closing bracket.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/config/logging.py</code></td><td>Makes repeated redaction canonical; covers private/session keys and passwords embedded in connection URLs.</td><td>T-013</td></tr>
 </tbody></table>
 <h2 id="related-files">Related Files</h2>
-<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-013</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-101, CR-103, CR-104, CR-107</code></li><li><strong>Risks or Blockers</strong>: <code>RISK-012; no active blocker</code></li><li><strong>Review Request</strong>: <code>PR #53 — @toilatrung or @DucHa180104</code></li><li><strong>Commits</strong>: <code>9ed81b5</code></li></ul>
+<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-013</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-101, CR-103, CR-104, CR-107</code></li><li><strong>Risks or Blockers</strong>: <code>RISK-012; no active blocker</code></li><li><strong>Review Request</strong>: <code>PR #53 — @toilatrung or @DucHa180104</code></li><li><strong>Commits</strong>: <code>9ed81b5, a2003e6</code></li></ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>python manage.py migrate --noinput</code></td><td><code>passed</code></td><td><code>audit.0001_initial OK on PostgreSQL 17</code></td></tr>
-<tr><td><code>pytest -q --strict-markers</code></td><td><code>passed</code></td><td><code>131 passed</code></td></tr>
+<tr><td><code>pytest -q --strict-markers</code></td><td><code>passed</code></td><td><code>132 passed after review fix</code></td></tr>
 <tr><td><code>ruff check .; ruff format --check .</code></td><td><code>passed</code></td><td><code>All checks passed; 72 files formatted</code></td></tr>
 <tr><td><code>mypy config accounts audit engines guideline cvat_adapter</code></td><td><code>passed</code></td><td><code>56 source files, no issues</code></td></tr>
 <tr><td><code>make check</code></td><td><code>not-run</code></td><td><code>Windows WSL bash inaccessible; constituent checks executed directly.</code></td></tr>
-<tr><td><code>GitHub CI — PR #53</code></td><td><code>passed</code></td><td><code>5/5: backend, frontend, framework, detector, bootstrap-windows</code></td></tr>
+<tr><td><code>GitHub CI — PR #53</code></td><td><code>pending</code></td><td><code>Previous SHA passed 5/5; rerun required after review fix a2003e6.</code></td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td>Rollback removes operation and audit</td><td><code>passed</code></td><td><code>test_operation_rollback_removes_the_audit_event</code></td></tr>
 <tr><td>Runtime DB role cannot UPDATE/DELETE/TRUNCATE</td><td><code>passed</code></td><td><code>has_table_privilege = true,true,false,false,false and SQL permission-denied assertions</code></td></tr>
 <tr><td>ORM and DB reject mutation</td><td><code>passed</code></td><td><code>model guard plus PostgreSQL trigger test</code></td></tr>
-<tr><td>Secrets absent from before/after</td><td><code>passed</code></td><td><code>password, token, API key and Authorization values replaced by [REDACTED]</code></td></tr>
+<tr><td>Secrets absent from before/after</td><td><code>passed</code></td><td><code>Password, token, API/private/session key, Authorization and connection URL password replaced by [REDACTED].</code></td></tr>
 <tr><td>No audit admin/API mutation endpoint</td><td><code>passed</code></td><td><code>admin registry and root URL resolver assertions</code></td></tr>
 <tr><td>Detector and framework regression checks</td><td><code>passed</code></td><td><code>10 detector tests; FRAMEWORK_VALIDATION_PASS</code></td></tr>
 </tbody></table>
