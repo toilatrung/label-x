@@ -19,11 +19,12 @@ describe('Mock auth deployment boundary', () => {
     const { POST: login } = await import('@/app/api/auth/login/route');
     const { GET: session } = await import('@/app/api/auth/session/route');
     const { POST: logout } = await import('@/app/api/auth/logout/route');
+    const { GET: mockUsers } = await import('@/app/api/auth/mock-users/route');
     const request = new Request('http://localhost:3000/api/auth/login/', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'admin', password: 'password123' }),
     });
-    const responses = [await csrf(), await login(request), await session(request), await logout(request)];
+    const responses = [await csrf(), await login(request), await session(request), await logout(request), await mockUsers()];
     for (const response of responses) {
       expect(response.status).toBe(404);
       expect(response.headers.get('set-cookie')).toBeNull();

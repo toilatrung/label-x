@@ -21,11 +21,32 @@ describe('Login page', () => {
     installMockAuthApi();
     await mountLogin();
     expect(screen.getByLabelText('Tên đăng nhập')).toBeDefined();
-    expect(screen.getByRole('button', { name: /productowner/ })).toBeDefined();
+    expect(await screen.findByRole('button', { name: /productowner/ })).toBeDefined();
     expect(screen.getByRole('button', { name: /modelowner/ })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /reviewer/ }));
     expect((screen.getByLabelText('Tên đăng nhập') as HTMLInputElement).value).toBe('reviewer');
     expect((screen.getByLabelText('Mật khẩu') as HTMLInputElement).value).toBe('password123');
+  });
+
+  it('loads demo accounts from the dev-only route, not from the client bundle', async () => {
+    const api = installMockAuthApi();
+    await mountLogin();
+    await screen.findByRole('button', { name: /productowner/ });
+    const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname);
+    expect(paths).toContain('/api/auth/mock-users/');
+  });
+
+  it('hides demo accounts when the mock route is unavailable', async () => {
+    const api = installMockAuthApi();
+    const passthrough = api.fetchSpy.getMockImplementation()!;
+    api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/mock-users/'
+      ? new Response(JSON.stringify({ code: 'NOT_FOUND', message: 'API mẫu chưa được bật.' }), { status: 404 })
+      : passthrough(request));
+    await mountLogin();
+    await waitFor(() => expect(api.fetchSpy.mock.calls.some(([request]) =>
+      new URL(request.url).pathname === '/api/auth/mock-users/')).toBe(true));
+    expect(screen.queryByText(/Tài khoản mẫu thử nghiệm/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /productowner/ })).toBeNull();
   });
 
   it('shows the contract INVALID_CREDENTIALS message', async () => {
@@ -42,11 +63,12 @@ describe('Login page', () => {
   it('logs in through csrf then login and navigates to the shell', async () => {
     const api = installMockAuthApi();
     await mountLogin();
-    fireEvent.click(screen.getByRole('button', { name: /reviewer/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /reviewer/ }));
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
     await waitFor(() => expect(push).toHaveBeenCalledWith('/'));
     expect(push).toHaveBeenCalledOnce();
-    const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname);
+    const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname)
+      .filter((path) => path !== '/api/auth/mock-users/');
     expect(paths).toEqual(['/api/auth/session/', '/api/auth/csrf/', '/api/auth/login/']);
     expect(api.jar.has('sessionid')).toBe(true);
   });
@@ -55,7 +77,7 @@ describe('Login page', () => {
     const api = installMockAuthApi();
     await mountLogin();
     api.fetchSpy.mockRejectedValue(new TypeError('Network unavailable'));
-    fireEvent.click(screen.getByRole('button', { name: /^admin \(/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /^admin \(/ }));
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
     expect(await screen.findByText('Không kết nối được máy chủ. Vui lòng thử lại.')).toBeDefined();
     expect(push).not.toHaveBeenCalled();

@@ -171,6 +171,12 @@ jobs:
           npm run typecheck
           npm test
           npm run build
+      - name: No mock credentials in client bundle (T-002)
+        run: |
+          if grep -rl 'password123' .next/static; then
+            echo "Mật khẩu tài khoản mẫu lọt vào bundle client" >&2
+            exit 1
+          fi
       - name: Package build without env/cache/node_modules
         working-directory: .
         run: |
