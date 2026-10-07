@@ -1,21 +1,44 @@
-/**
- * API client cho guideline module — dùng openapi-fetch.
- *
- * Theo coding-standards.html: gọi API bằng openapi-fetch,
- * quản lý server state bằng TanStack Query.
- *
- * BASE_URL đọc từ env NEXT_PUBLIC_API_URL (mặc định :8000).
- */
+import createClient from 'openapi-fetch';
+import type { paths } from './contract';
+import type { ApiError } from '@/types/auth';
+import { apiBaseUrl } from '@/lib/auth/config';
 
-import createClient from "openapi-fetch";
-import type { paths } from "@/lib/api/contract";
+export const AUTH_EXPIRED_EVENT = 'labelx:auth-expired';
 
-// Base URL của backend — đặt trong .env.local:
-//   NEXT_PUBLIC_API_URL=http://localhost:8000
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export class ApiRequestError extends Error {
+  constructor(public status: number, public detail?: ApiError) {
+    super(detail?.message || (status === 401 ? 'Phiên đăng nhập đã hết hạn.' :
+      status === 403 ? 'Bạn không có quyền thực hiện yêu cầu này.' : 'Không thể xử lý yêu cầu.'));
+  }
+}
 
-// Client chung cho toàn bộ API — credentials: "include" để gửi session cookie.
-export const apiClient = createClient<paths>({
-  baseUrl: BASE_URL,
-  credentials: "include",
-});
+function csrfCookie(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.cookie.split('; ').find((part) => part.startsWith('csrftoken='))?.slice(10);
+}
+
+export function createApiClient(options: { baseUrl?: string; fetch?: (request: Request) => Promise<Response> } = {}) {
+  const client = createClient<paths>({ baseUrl: options.baseUrl ?? apiBaseUrl(), credentials: 'include',
+    fetch: options.fetch ?? ((request) => globalThis.fetch(request)) });
+  client.use({
+    onRequest({ request }) {
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+        const token = csrfCookie();
+        if (token) request.headers.set('X-CSRFToken', token);
+      }
+    },
+    async onResponse({ request, response }) {
+      if (response.status !== 401 && response.status !== 403) return;
+      const detail: ApiError | undefined = await response.clone().json().catch(() => undefined);
+      if (request.signal.aborted) return;
+      const expired = response.status === 401 || detail?.code === 'NOT_AUTHENTICATED';
+      // Operation-level 403 errors stay with the caller; they must not replace the page.
+      if (!expired) return;
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, { detail }));
+      throw new ApiRequestError(response.status, detail);
+    },
+  });
+  return client;
+}
+
+export const apiClient = createApiClient();

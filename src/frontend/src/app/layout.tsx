@@ -4,6 +4,7 @@ import { QueryProvider } from "@/lib/query-provider";
 import "@/styles/tokens.css";
 import "@/styles/labelx.css";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth/auth-context";
 
 // Design System LabelX: Inter cho mọi chữ, JetBrains Mono chỉ cho ID.
 const inter = Inter({ variable: "--font-inter", subsets: ["latin", "vietnamese"] });
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="lx">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
