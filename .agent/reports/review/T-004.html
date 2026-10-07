@@ -70,7 +70,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-004.html</code></li>
 <li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-004, .agent/planning/epics.html</code></li>
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
@@ -106,7 +106,7 @@ ul.dir{columns:2;font-size:14px}
 <table>
 <thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead>
 <tbody>
-<tr><td><code>F-1</code></td><td><code>critical</code></td><td><code>.agent/reports/implementation/T-004-@duy12345-6789.html</code></td><td>Tệp người học GreenSM có 0 ảnh BDD100K (252 not_bdd100k); không có task mẫu chứa ảnh BDD100K kèm annotation người học; giả định ground truth BDD100K (CR-101) không áp dụng.</td><td>PO quyết định 2026-10-07: T-004 blocked theo BLOCKER-024; PO cung cấp annotation người học trên ảnh BDD100K (chỉ một số frame) sau.</td><td><code>@toilatrung (PO)</code></td></tr>
+<tr><td><code>F-1</code></td><td><code>critical</code></td><td><code>.agent/reports/implementation/T-004.html</code></td><td>Tệp người học GreenSM có 0 ảnh BDD100K (252 not_bdd100k); không có task mẫu chứa ảnh BDD100K kèm annotation người học; giả định ground truth BDD100K (CR-101) không áp dụng.</td><td>PO quyết định 2026-10-07: T-004 blocked theo BLOCKER-024; PO cung cấp annotation người học trên ảnh BDD100K (chỉ một số frame) sau.</td><td><code>@toilatrung (PO)</code></td></tr>
 <tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>scripts/development/cvat_sample.py</code></td><td>Quy ước tên/tag chỉ là đề xuất; quy ước chính thức BLOCKER-018 (E-06) chưa có; lần import thật dùng tên labelx-dev-greensm.</td><td>Áp dụng quy ước khi BLOCKER-018 đóng.</td><td><code>@duy12345-6789</code></td></tr>
 <tr><td><code>F-3</code></td><td><code>minor</code></td><td><code>src/backend/cvat_adapter/hashing.py</code></td><td>Hash gồm job_id, cvat_shape_id, label_id nên cùng annotation ở job khác cho hash khác; DEC-007 vẫn proposed chờ TBD-20.</td><td>Chốt DEC-007 khi có TBD-20.</td><td><code>@duy12345-6789</code></td></tr>
 <tr><td><code>F-4</code></td><td><code>minor</code></td><td><code>.agent/intelligence/git-nexus/task-commit-map.html (task-commit-map-@duy12345-6789.html đã gộp)</code></td><td>Commit map ghi 4 commit nhánh không có trên develop, thiếu squash b49f5d0; report còn draft.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>

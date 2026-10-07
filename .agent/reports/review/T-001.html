@@ -70,7 +70,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-001-@toilatrung.html</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-001.html</code></li>
 <li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-001, .agent/planning/epics.html</code></li>
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
@@ -108,7 +108,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr><td><code>F-1</code></td><td><code>minor</code></td><td><code>docs/04-api/state-machines.html</code></td><td>6 transition (run.start, run.fail, run.cancel, issue.reopen_fix, frame.lease_expired, frame.followup) chỉ trích hình/bảng SRS, không có mã FR/BR/UC (AC "Mỗi endpoint/transition có trích FR/BR/UC").</td><td>Resolved trong a2aca6e và 2536210: thêm UC-02, UC-07, FR-RWK-01, FR-REV-04, UC-04, FR-REV-13, UC-06 (và UC-06/FR-ESC-05 cho issue.guideline_gap); run.fail chỉ trích UC-02 vì FR-RWK-08 không quy định running→failed. Test test_every_state_transition_cites_srs_requirement chỉ kiểm mã tồn tại trong SRS, không kiểm đúng nghĩa; ngữ nghĩa được label-x-88 đối chiếu thủ công.</td><td><code>@toilatrung</code></td></tr>
 <tr><td><code>F-2</code></td><td><code>major</code></td><td><code>.agent/governance/decisions/DEC-008.html (trước đây DEC-005-@vietanhhhhhh2003.html, đã gộp)</code></td><td>Bản ghi quyết định của T-005 (DEC-005-@vietanhhhhhh2003.html) cũng xưng DEC-005, trùng mã ADR lineage; gộp theo CR-100 sẽ đè DEC-005.</td><td>Resolved trong commit integrator: đổi thành DEC-008.</td><td><code>@toilatrung (integrator)</code></td></tr>
-<tr><td><code>F-3</code></td><td><code>minor</code></td><td><code>.agent/reports/implementation/T-001-@toilatrung.html</code></td><td>Report còn draft; commit map ghi 545eae1 (commit nhánh) thay vì squash 54a5162; decision-commit-map chưa map DEC-005/006.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-3</code></td><td><code>minor</code></td><td><code>.agent/reports/implementation/T-001.html</code></td><td>Report còn draft; commit map ghi 545eae1 (commit nhánh) thay vì squash 54a5162; decision-commit-map chưa map DEC-005/006.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-4</code></td><td><code>observation</code></td><td><code>docs/04-api/openapi.yaml</code></td><td>Contract chưa phủ quyết định, phân xử, rework, gate, report; chưa có test so YAML với schema drf-spectacular khi có view thật.</td><td>Theo dõi ở task E-01/M-03 sau; không chặn T-001.</td><td><code>@toilatrung</code></td></tr>
 </tbody>
 </table>

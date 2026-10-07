@@ -62,7 +62,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Bộ annotation người học dùng cho T-004 (bốn CVAT YOLO export, lớp <code>GreenSM</code>; 252 ảnh duy nhất, 311 dòng bbox) được kiểm thành viên BDD100K bằng <code>scripts/development/learner_annotation_audit.py</code>: <strong>val 0 / train 0 / ngoài BDD100K 252</strong>. Task CVAT mẫu đã nạp (task 22/job 19, 249 ảnh, 305 box sau khi loại 3 box vượt biên) vì vậy không chứa ảnh BDD100K.</p>
 <p>Hệ quả: mục tiêu T-004 "task mẫu chứa ảnh BDD100K và annotation người học" chưa đạt, và giả định ground truth là nhãn BDD100K (CR-101) không áp dụng được cho dữ liệu này. Phần kỹ thuật của T-004 (CVAT dev pin phiên bản, adapter chỉ đọc, SHA-256 ổn định) đã đạt và không bị ảnh hưởng.</p>
 <p><strong>Quyết định PO ngày 2026-10-07</strong>: T-004 chuyển <code>blocked</code>. PO sẽ cung cấp sau bộ annotation người học trên ảnh BDD100K; bộ này <strong>chỉ phủ một số frame</strong>, không phủ 100% tệp.</p>
-<p>Bằng chứng: <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code> (mục audit learner); <code>.agent/reports/review/T-004.html</code>; <code>.agent/governance/blockers/BLOCKER-023.html</code>.</p>
+<p>Bằng chứng: <code>.agent/reports/implementation/T-004.html</code> (mục audit learner); <code>.agent/reports/review/T-004.html</code>; <code>.agent/governance/blockers/BLOCKER-023.html</code>.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>T-004 (E-04); hạ nguồn: E-05 snapshot dữ liệu thật, E-08/E-09 QC Run trên dữ liệu thật</code></li>

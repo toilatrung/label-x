@@ -1,19 +1,19 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>T-005 Detector Worker — Implementation Report — LabelX</title>
-<meta name="labelx:id" content="t-005-vietanhhhhhh2003-implementation">
+<meta name="labelx:id" content="implementation-t-005">
 <meta name="labelx:title" content="T-005 Detector Worker Implementation Report">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
 <meta name="labelx:module" content="detector-worker"><meta name="labelx:tags" content="[implementation, t-005, detector, complete]">
 <meta name="labelx:priority" content="1">
 <style>:root{--bg:#f6f7f9;--card:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--warn:#fff3d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,sans-serif}.top{background:#1f2933;color:#fff;padding:12px 24px}.top b{color:#e1323e}main{max-width:1100px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 28px}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}code{background:#f0f1f3;padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#f0f1f3}.meta{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;background:#f3f4f6;padding:10px;margin-top:12px}blockquote{background:var(--warn);border-left:4px solid #a66a00;padding:8px 14px}</style>
 </head><body><header class="top">Label<b>X</b> · T-005 implementation</header><main><article>
-<div class="meta"><b>id</b><span>t-005-vietanhhhhhh2003-implementation</span><b>type</b><span>report</span><b>status</b><span>complete</span></div>
+<div class="meta"><b>id</b><span>implementation-t-005</span><b>type</b><span>report</span><b>status</b><span>complete</span></div>
 <h1>T-005 — GPU worker Detector Faster R-CNN BDD100K</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Bằng chứng triển khai T-005, phục hồi và freeze checkpoint theo hướng PO, chạy inference GPU trên 10 ảnh BDD100K validation, và publish/fetch artifact qua object storage S3-compatible.</p>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-005-@vietanhhhhhh2003</code></li><li><strong>Title</strong>: <code>GPU worker Detector Faster R-CNN BDD100K</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-005</code></li><li><strong>Epic ID</strong>: <code>E-10</code></li><li><strong>Report Date</strong>: <code>2026-10-07</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-005</code></li><li><strong>Title</strong>: <code>GPU worker Detector Faster R-CNN BDD100K</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-005</code></li><li><strong>Epic ID</strong>: <code>E-10</code></li><li><strong>Report Date</strong>: <code>2026-10-07</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: worker riêng, Dockerfile MMDetection 2.x, config model chính chủ, manifest/version/mapping 10 lớp, freeze/verify SHA-256 fail-closed, batch inference JSON pixel gốc, provenance/phần cứng/thời gian; checkpoint thật đã khớp MD5, freeze SHA-256, inference GPU trên 10 ảnh BDD100K validation, và publish/fetch object storage có kiểm toàn vẹn.</li><li><strong>Not Implemented</strong>: none trong phạm vi acceptance T-005; endpoint/credentials production là cấu hình Operations theo môi trường.</li></ul>
 <h2 id="changes-made">Changes Made</h2>

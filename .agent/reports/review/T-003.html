@@ -70,7 +70,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-003-@ducha180104.html</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-003.html</code></li>
 <li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-003, .agent/planning/epics.html</code></li>
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
@@ -108,7 +108,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr><td><code>F-1</code></td><td><code>major</code></td><td><code>src/frontend/src/app/configuration/guidelines/page.tsx</code></td><td>Màn xem không bọc AuthGuard/AppShell, không có lối vào, chỉ tải 50 rule đầu, bảng phiên bản giả luôn "Mới nhất".</td><td>Resolved trong 3225b15: AuthGuard/AppShell, quyền canAccessGuidelines, lọc family/class/version, phân trang cursor, bỏ dữ liệu giả, liên kết từ menu Cấu hình, test.</td><td><code>@ducha180104</code></td></tr>
 <tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>src/backend/guideline/views.py</code></td><td>Query param family là string, contract khai báo enum IssueFamily; response 400 có nhưng contract không khai báo.</td><td>Resolved trong 3225b15.</td><td><code>@ducha180104</code></td></tr>
-<tr><td><code>F-3</code></td><td><code>major</code></td><td><code>.agent/reports/implementation/T-003-@ducha180104.html</code></td><td>Report bị lỗi mã hoá UTF-8 hai lần (mojibake), không đọc được.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-3</code></td><td><code>major</code></td><td><code>.agent/reports/implementation/T-003.html</code></td><td>Report bị lỗi mã hoá UTF-8 hai lần (mojibake), không đọc được.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-4</code></td><td><code>minor</code></td><td><code>.agent/intelligence/git-nexus</code></td><td>Không có commit map cho T-003; current-context-@ducha180104 ghi PR vào main (trái CR-104).</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-5</code></td><td><code>observation</code></td><td><code>src/backend/guideline/permissions.py</code></td><td>Vai trò lấy từ Django groups, chưa theo role assignment có dataset_id của T-001 (backend chưa có app auth).</td><td>Theo dõi khi làm backend auth E-02.</td><td><code>E-02 owner</code></td></tr>
 <tr><td><code>F-7</code></td><td><code>major</code></td><td><code>src/frontend/src/components/layout/TopBar.tsx</code></td><td>Sau 3225b15 reviewer có quyền canAccessGuidelines nhưng link chỉ nằm trong menu Cấu hình (reviewer không thấy); hai mục menu Cấu hình cùng trỏ /configuration (label-x-88 review).</td><td>Resolved trong 524aed3: mục nav Guideline theo canAccessGuidelines, "Quy tắc &amp; Ngưỡng" disabled, nút Cấu hình không active trên /configuration/guidelines; TopBar.test.tsx kiểm link theo 7 vai trò.</td><td><code>@ducha180104</code></td></tr>
