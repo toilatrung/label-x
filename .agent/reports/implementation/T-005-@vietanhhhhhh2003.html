@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-005 Detector Worker — Implementation Report — LabelX</title>
+<meta name="labelx:id" content="t-005-vietanhhhhhh2003-implementation">
+<meta name="labelx:title" content="T-005 Detector Worker Implementation Report">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="detector-worker"><meta name="labelx:tags" content="[implementation, t-005, detector, complete]">
+<meta name="labelx:priority" content="1">
+<style>:root{--bg:#f6f7f9;--card:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--warn:#fff3d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,sans-serif}.top{background:#1f2933;color:#fff;padding:12px 24px}.top b{color:#e1323e}main{max-width:1100px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 28px}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}code{background:#f0f1f3;padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#f0f1f3}.meta{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;background:#f3f4f6;padding:10px;margin-top:12px}blockquote{background:var(--warn);border-left:4px solid #a66a00;padding:8px 14px}</style>
+</head><body><header class="top">Label<b>X</b> · T-005 implementation</header><main><article>
+<div class="meta"><b>id</b><span>t-005-vietanhhhhhh2003-implementation</span><b>type</b><span>report</span><b>status</b><span>complete</span></div>
+<h1>T-005 — GPU worker Detector Faster R-CNN BDD100K</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng triển khai T-005, phục hồi và freeze checkpoint theo hướng PO, chạy inference GPU trên 10 ảnh BDD100K validation, và publish/fetch artifact qua object storage S3-compatible.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-005-@vietanhhhhhh2003</code></li><li><strong>Title</strong>: <code>GPU worker Detector Faster R-CNN BDD100K</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-005</code></li><li><strong>Epic ID</strong>: <code>E-10</code></li><li><strong>Report Date</strong>: <code>2026-10-07</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: worker riêng, Dockerfile MMDetection 2.x, config model chính chủ, manifest/version/mapping 10 lớp, freeze/verify SHA-256 fail-closed, batch inference JSON pixel gốc, provenance/phần cứng/thời gian; checkpoint thật đã khớp MD5, freeze SHA-256, inference GPU trên 10 ảnh BDD100K validation, và publish/fetch object storage có kiểm toàn vẹn.</li><li><strong>Not Implemented</strong>: none trong phạm vi acceptance T-005; endpoint/credentials production là cấu hình Operations theo môi trường.</li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/detector_worker/labelx_detector/</code></td><td>CLI, integrity gate, MMDetection adapter, deterministic JSON writer.</td><td>T-005</td></tr>
+<tr><td><code>src/detector_worker/labelx_detector/storage.py</code></td><td>SigV4 publish/HEAD/fetch S3-compatible; credentials từ environment; download tạm + verify + atomic replace.</td><td>T-005</td></tr>
+<tr><td><code>src/detector_worker/configs/</code>, <code>model-manifest.json</code></td><td>Config inference từ SysCV commit 0935a8a3; mapping BDD100K 10 lớp; URL snapshot/decision/MD5; SHA-256 và kích thước artifact đã freeze.</td><td>T-005</td></tr>
+<tr><td><code>infrastructure/detector-worker/Dockerfile</code></td><td>Image tách backend, pin PyTorch/CUDA/mmcv-full/MMDetection, OpenCV headless; tải wheel có resume/retry và hỗ trợ <code>--device cpu</code>.</td><td>T-005</td></tr>
+<tr><td><code>.dockerignore</code></td><td>Loại checkpoint, cache tải theo chunk, virtualenv và output khỏi Docker build context.</td><td>T-005</td></tr>
+<tr><td><code>src/detector_worker/tests/</code></td><td>10 test, gồm checksum fail-closed, dọn file tạm tương thích Python 3.7, kiểm thứ tự class checkpoint/manifest và batch 10 ảnh xuất JSON.</td><td>T-005</td></tr>
+<tr><td><code>scripts/init-develop-environment.mk</code></td><td>Tích hợp <code>detector-lint</code>, <code>detector-test</code>, <code>detector-image</code> vào workflow.</td><td>T-005</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-005</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@vietanhhhhhh2003.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.html</code>, <code>DEC-005-@vietanhhhhhh2003.html</code>; PO comment <code>issue #17#issuecomment-6032604847</code></li><li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li><li><strong>Risks or Blockers</strong>: <code>none active for T-005</code></li><li><strong>Review Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/22">PR #22</a>, base <code>develop</code></li><li><strong>Commits</strong>: <code>1169a60 — implementation; 1dc7c86 — evidence</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>agent task start T-005</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; trạng thái per-user đã cập nhật trực tiếp.</td></tr>
+<tr><td><code>agent task verify T-005</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; acceptance được kiểm thủ công và ghi ở bảng dưới.</td></tr>
+<tr><td><code>agent task report T-005 --executor Codex</code></td><td>not-run</td><td>Báo cáo này được tạo từ template HTML.</td></tr>
+<tr><td><code>agent review request T-005 --reviewer ...</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; task per-user đã chuyển <code>review</code> để integrator/reviewer tiếp nhận.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>uv run --python 3.8 --frozen --extra dev ruff check .</code></td><td>passed</td><td>All checks passed trên CPython 3.8.20.</td></tr>
+<tr><td><code>docker run ... -e PYTHONPATH=/workspace:/pytest37 labelx-detector-worker:dev -m pytest -q -p no:cacheprovider</code></td><td>passed</td><td>10 passed trên CPython 3.7.13 của image, source hiện tại bind-mount và pytest 7.4.4 cài offline; gồm batch contract 10 ảnh, integrity gate, hai nhánh checkpoint class metadata và publish/fetch storage.</td></tr>
+<tr><td><code>labelx-detector --help</code></td><td>passed</td><td>Có năm lệnh <code>freeze</code>, <code>verify</code>, <code>publish</code>, <code>fetch</code>, <code>infer</code>.</td></tr>
+<tr><td>Backend Ruff + format + mypy</td><td>passed</td><td>Ruff sạch, 10 file formatted, mypy không có lỗi trong 6 source file.</td></tr>
+<tr><td>Frontend ESLint + TypeScript</td><td>passed</td><td>ESLint sạch; Next route types sinh thành công; <code>tsc --noEmit</code> pass.</td></tr>
+<tr><td><code>scripts/validate-framework.py</code></td><td>passed</td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
+<tr><td>Backend pytest</td><td>not-run</td><td>Yêu cầu toàn bộ dịch vụ dev; không khởi động stack ngoài phạm vi detector worker.</td></tr>
+<tr><td>GPU inventory</td><td>passed</td><td>NVIDIA GeForce MX330, driver 581.95, 2048 MiB.</td></tr>
+<tr><td>Docker Engine trong WSL</td><td>passed</td><td>Ubuntu 24.04; Docker client/server 29.8.2, Linux amd64.</td></tr>
+<tr><td><code>docker build -f infrastructure/detector-worker/Dockerfile -t labelx-detector-worker:dev .</code></td><td>passed</td><td>Image rebuild thành công với manifest đã freeze và lệnh artifact mới; image ID <code>sha256:89e27262d0d3fb7240d296f3a5d6886c6c05ab6c174eb7520ba99ffe374baef3</code>.</td></tr>
+<tr><td>Container CLI + framework imports</td><td>passed</td><td>CLI có <code>freeze/verify/infer</code>; Python 3.7 compile pass; Torch 1.12.1/CUDA 11.3, MMCV 1.7.1, MMDetection 2.28.2, OpenCV 4.8.1. Checkpoint thật không có <code>meta.CLASSES</code>; backend khởi tạo thành công và gán đúng 10 class từ manifest, đồng thời fail nếu checkpoint có metadata khác thứ tự.</td></tr>
+<tr><td><code>docker run --gpus all ...</code></td><td>passed</td><td>Đã cài NVIDIA Container Toolkit 1.20.1 trong WSL; Docker nhận runtime <code>nvidia</code> và CDI device <code>nvidia.com/gpu=all</code>. Torch trả <code>True 1 NVIDIA GeForce MX330</code>.</td></tr>
+<tr><td>Checkpoint download/MD5/SHA-256</td><td>passed</td><td>Wayback snapshot PO duyệt; 165.899.860 byte; MD5 <code>d2a866749432b7bd8436f0001c1625d7</code>; SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Lệnh <code>freeze</code> và <code>verify</code> đều pass.</td></tr>
+<tr><td>Inference 10 ảnh BDD100K validation + timing</td><td>passed</td><td>10/10 ảnh validation từ mirror <code>dgural/bdd100k</code>, SHA-256 từng file đối chiếu LFS metadata; 342 detection; 12,8189 giây tổng; 1,2819 giây/ảnh; batch 1; MX330; output JSON SHA-256 <code>9cf3b082a66df827efecb869a5ca610213e7d11a63ce8949a88322f6c2ed77e6</code>. Phép đo bao gồm lần warm-up CUDA đầu tiên, nên TBD-02 cần coi đây là số đo cold-start.</td></tr>
+<tr><td>Publish/fetch kho artifact S3-compatible</td><td>passed</td><td>Bucket dev <code>labelx-models</code>; object key content-addressed; upload 165.899.860 byte, HEAD metadata, tải ngược và SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code> khớp. 2 test storage gồm corrupt-download fail-closed và không để lại file <code>.part</code>; toàn bộ 10 test pass.</td></tr>
+<tr><td><code>docker compose ... config -q</code></td><td>passed</td><td>Compose hợp lệ; SeaweedFS pin image 3.80 bằng digest và init bucket <code>labelx-models</code>.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: host chính thức mất DNS nên phục hồi đúng checkpoint từ Wayback snapshot, theo comment của PO; không đổi model, config, framework hoặc training manifest.</li><li><strong>Approved By</strong>: <code>@toilatrung, issue #17 comment 6032604847</code></li><li><strong>Known Limitations</strong>: số đo 1,2819 giây/ảnh dùng batch 1 trên MX330 2 GB; chưa phải quyết định capacity production. Runtime phải lấy checkpoint từ kho nội bộ, không từ Wayback.</li></ul>
+<blockquote>Implementation T-005 đã đủ acceptance và sẵn sàng review. URI content-addressed đã ghi trong manifest; deployment production truyền endpoint/credentials qua environment.</blockquote>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to T-005.</li><li>[x] Checkpoint thật đã xác minh và freeze checksum.</li><li>[x] Inference GPU trên 10 ảnh BDD100K validation và timing đã ghi.</li><li>[x] Deviations, limitations, lint/test/build được ghi rõ.</li><li>[x] Artifact đã publish/fetch round-trip qua kho S3-compatible.</li><li>[x] Reviewer handoff — task đã chuyển <code>review</code>.</li><li>[ ] Git Nexus mapping — integrator cập nhật file dùng chung theo CR-100.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2><p>Không tự duyệt, không coi test giả là inference BDD100K thật, không ghi SHA-256 không được tính từ artifact, không chuyển task sang <code>done</code> trước review.</p>
+<h2 id="output-requirements">Output Requirements</h2><p>Báo cáo lưu đúng đường dẫn per-user; task ở <code>review</code> để reviewer nghiệm thu.</p>
+</article></main></body></html>
