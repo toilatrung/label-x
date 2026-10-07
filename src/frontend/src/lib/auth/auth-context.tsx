@@ -1,21 +1,19 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { ApiError, AuthSession, AuthUser, LoginCredentials, UserRole } from '@/types/auth';
-import { apiClient, ApiRequestError, AUTH_EXPIRED_EVENT, ACCESS_DENIED_EVENT } from '@/lib/api/client';
+import type { AuthSession, AuthUser, LoginCredentials, UserRole } from '@/types/auth';
+import { apiClient, ApiRequestError, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
 import { hasDatasetPermission, rolesForDataset } from './roles';
 
 type LoginResult = { success: boolean; error?: string };
 interface AuthContextType {
   session: AuthSession | null;
   user: AuthUser | null;
-  datasetId: number;
-  setDatasetId: (id: number) => void;
+  datasetId: number | null;
+  setDatasetId: (id: number | null) => void;
   isLoading: boolean;
   isAuthenticated: boolean;
   authError: string | null;
-  accessError: ApiError | null;
-  clearAccessError: () => void;
   hasPermission: (check: (role: UserRole) => boolean, requiresIdentity?: boolean) => boolean;
   login: (credentials: LoginCredentials) => Promise<LoginResult>;
   logout: () => Promise<void>;
@@ -27,18 +25,16 @@ const errorMessage = (error: unknown) => error instanceof ApiRequestError ? erro
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [datasetId, setDatasetId] = useState(1);
+  const [datasetId, setDatasetId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [accessError, setAccessError] = useState<ApiError | null>(null);
   const revision = useRef(0);
   const initialRequest = useRef<AbortController | null>(null);
-  const clearAccessError = useCallback(() => setAccessError(null), []);
   const acceptSession = useCallback((value: AuthSession) => {
     setSession(value);
-    setDatasetId(value.roles.find((assignment) => assignment.dataset_id !== null)?.dataset_id ?? 1);
+    // A global grant does not prove that any particular dataset exists.
+    setDatasetId(value.roles.find((assignment) => assignment.dataset_id !== null)?.dataset_id ?? null);
     setAuthError(null);
-    setAccessError(null);
   }, []);
 
   useEffect(() => {
@@ -49,12 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const expired = () => {
       ++revision.current;
       setSession(null);
-      setAccessError(null);
+      setDatasetId(null);
+      setAuthError(null);
       setIsLoading(false);
     };
-    const denied = (event: Event) => setAccessError((event as CustomEvent<ApiError>).detail ?? null);
     window.addEventListener(AUTH_EXPIRED_EVENT, expired);
-    window.addEventListener(ACCESS_DENIED_EVENT, denied);
     apiClient.GET('/api/auth/session/', { cache: 'no-store', signal: controller.signal }).then(({ data, error, response }) => {
       if (!mounted || version !== revision.current) return;
       if (error || !data) throw new ApiRequestError(response.status, error);
@@ -70,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       controller.abort();
       window.removeEventListener(AUTH_EXPIRED_EVENT, expired);
-      window.removeEventListener(ACCESS_DENIED_EVENT, denied);
     };
   }, [acceptSession]);
 
@@ -79,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ++revision.current; // A late initial session read must not overwrite a login.
     setIsLoading(true);
     setAuthError(null);
-    setAccessError(null);
     try {
       const csrf = await apiClient.GET('/api/auth/csrf/');
       if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status);
@@ -106,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await apiClient.POST('/api/auth/logout/');
       if (!result.response.ok) throw new ApiRequestError(result.response.status);
       setSession(null);
-      setAccessError(null);
+      setDatasetId(null);
     } catch (error) {
       // Keep the session visible on a network failure: the server has not confirmed logout.
       setAuthError(errorMessage(error));
@@ -120,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return <AuthContext.Provider value={{
     session, user, datasetId, setDatasetId, isLoading, isAuthenticated: !!session,
-    authError, accessError, clearAccessError, login, logout,
+    authError, login, logout,
     hasPermission: (check, requiresIdentity = false) => hasDatasetPermission(session, datasetId, check, requiresIdentity),
   }}>{children}</AuthContext.Provider>;
 }

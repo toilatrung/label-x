@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/auth/roles';
 import { isMockAuth } from '@/lib/auth/config';
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, authError } = useAuth();
   const router = useRouter();
 
   const [username, setUsername] = useState('');
@@ -28,9 +28,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const result = await login({ username, password });
-    if (result.success) {
-      router.push('/');
-    } else {
+    if (!result.success) {
       setError(result.error || 'Đăng nhập không thành công');
       setLoading(false);
     }
@@ -54,26 +52,18 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {error && (
+        {(error || authError) && (
           <div
             role="alert"
-            style={{
-              padding: '10px 14px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--danger-soft)',
-              color: 'var(--danger)',
-              fontSize: '13px',
-              marginBottom: 'var(--space-4)',
-              border: '1px solid rgba(180, 35, 24, 0.2)',
-            }}
+            className="lx-callout"
           >
-            {error}
+            {error || authError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 'var(--space-4)' }}>
-            <label htmlFor="username" style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+        <form onSubmit={handleSubmit} className="lx-stack">
+          <div className="lx-field">
+            <label htmlFor="username" className="lx-label">
               Tên đăng nhập
             </label>
             <input
@@ -82,13 +72,13 @@ export default function LoginPage() {
               className="lx-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin, reviewer, annotator..."
+              placeholder={isMockAuth ? 'admin, reviewer, annotator...' : 'Tên đăng nhập của bạn'}
               required
             />
           </div>
 
-          <div style={{ marginBottom: 'var(--space-6)' }}>
-            <label htmlFor="password" style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+          <div className="lx-field">
+            <label htmlFor="password" className="lx-label">
               Mật khẩu
             </label>
             <input
@@ -97,7 +87,7 @@ export default function LoginPage() {
               className="lx-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="password123"
+              placeholder="Nhập mật khẩu"
               required
             />
           </div>

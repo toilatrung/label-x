@@ -20,19 +20,15 @@ export const ROLE_CODES: Record<UserRole, string> = {
   data_model_owner: 'DMO',
 };
 
-export function rolesForDataset(session: AuthSession | null, datasetId: number): UserRole[] {
-  return session?.roles.filter(({ role, dataset_id }) => dataset_id === datasetId ||
+export function rolesForDataset(session: AuthSession | null, datasetId: number | null): UserRole[] {
+  return session?.roles.filter(({ role, dataset_id }) => (datasetId !== null && dataset_id === datasetId) ||
     (dataset_id === null && (role === 'super_admin' || role === 'qc_admin'))).map(({ role }) => role) ?? [];
 }
 
-export function hasDatasetPermission(session: AuthSession | null, datasetId: number,
+export function hasDatasetPermission(session: AuthSession | null, datasetId: number | null,
   check: (role: UserRole) => boolean, requiresIdentity = false): boolean {
   if (requiresIdentity && session?.identity_mapping.status !== 'mapped') return false;
   return rolesForDataset(session, datasetId).some(check);
-}
-
-export function canAccessSummary(_role: UserRole): boolean {
-  return Boolean(_role); // Mọi vai trò hợp lệ đều có thể xem Summary
 }
 
 export function canAccessAnalysis(role: UserRole): boolean {
@@ -45,10 +41,6 @@ export function canAccessReview(role: UserRole): boolean {
 
 export function canAccessEscalations(role: UserRole): boolean {
   return ['qa_lead', 'super_admin'].includes(role);
-}
-
-export function canAccessCalibration(_role: UserRole): boolean {
-  return Boolean(_role); // Mọi vai trò hợp lệ đều tham gia
 }
 
 export function canAccessReports(role: UserRole): boolean {

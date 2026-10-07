@@ -7,7 +7,7 @@ import { AuthProvider } from '@/lib/auth/auth-context';
 import { installMockAuthApi } from './helpers/mock-api';
 import { canAccessReview } from '@/lib/auth/roles';
 import { MOCK_USERS, toMockSession } from '@/lib/auth/mock-users';
-import { AUTH_EXPIRED_EVENT } from '@/lib/api/client';
+import { apiClient, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
 import { fireEvent } from '@testing-library/react';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -67,5 +67,40 @@ describe('AuthGuard and ForbiddenView', () => {
     fireEvent(window, new CustomEvent(AUTH_EXPIRED_EVENT));
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));
     expect(screen.queryByText('Nội dung bảo vệ')).toBeNull();
+  });
+
+  it.each(['SELF_REVIEW_FORBIDDEN', 'SAME_REQUESTER_APPROVER'] as const)
+    ('keeps the review page and draft when an operation returns %s', async (code) => {
+    const api = installMockAuthApi();
+    await api.signIn('reviewer');
+    const originalFetch = api.fetchSpy.getMockImplementation()!;
+    api.fetchSpy.mockImplementation(async (request: Request) => {
+      if (new URL(request.url).pathname === '/api/runs/') return Response.json({
+        code, message: 'Thao tác bị từ chối.', request_id: 'review-request',
+      }, { status: 403 });
+      return originalFetch(request);
+    });
+    function ReviewAction() {
+      const [error, setError] = React.useState<string | null>(null);
+      return <>
+        <div>Nội dung review</div>
+        <input aria-label="Ghi chú review" defaultValue="Bản nháp đang viết" />
+        <button onClick={async () => {
+          const { error } = await apiClient.GET('/api/runs/', {});
+          if (error) setError(error.code);
+        }}>Thử thao tác</button>
+        {error && <div role="alert">{error}</div>}
+      </>;
+    }
+    render(<AuthProvider><AuthGuard permissionCheck={canAccessReview} requiresIdentity>
+      <ReviewAction />
+    </AuthGuard></AuthProvider>);
+    await screen.findByText('Nội dung review');
+    fireEvent.click(screen.getByRole('button', { name: 'Thử thao tác' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(code);
+    expect((screen.getByLabelText('Ghi chú review') as HTMLInputElement).value).toBe('Bản nháp đang viết');
+    expect(screen.getByText('Nội dung review')).toBeDefined();
+    expect(screen.queryByText('403 - Quyền truy cập bị từ chối')).toBeNull();
+    expect(replace).not.toHaveBeenCalled();
   });
 });

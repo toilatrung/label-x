@@ -29,18 +29,14 @@ export function ContextBar({
         {/* Chip Dataset */}
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Dataset:</span>
-          <span className="lx-chip__v">{datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetId}`}</span>
+          <span className="lx-chip__v">{datasetId === null ? 'Chưa chọn' :
+            (datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetId}`)}</span>
           {isReadOnly && <span className="lx-tag lx-tag--ro">read-only</span>}
         </div>
 
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Snapshot:</span>
           <span className="lx-chip__v">Chưa chọn</span>
-        </div>
-
-        <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Phạm vi:</span>
-          <span className="lx-chip__v">Dataset #{datasetId}</span>
         </div>
 
         {/* Chip Guideline */}

@@ -4,7 +4,6 @@ import type { ApiError } from '@/types/auth';
 import { apiBaseUrl } from '@/lib/auth/config';
 
 export const AUTH_EXPIRED_EVENT = 'labelx:auth-expired';
-export const ACCESS_DENIED_EVENT = 'labelx:access-denied';
 
 export class ApiRequestError extends Error {
   constructor(public status: number, public detail?: ApiError) {
@@ -33,8 +32,9 @@ export function createApiClient(options: { baseUrl?: string; fetch?: (request: R
       const detail: ApiError | undefined = await response.clone().json().catch(() => undefined);
       if (request.signal.aborted) return;
       const expired = response.status === 401 || detail?.code === 'NOT_AUTHENTICATED';
-      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(
-        expired ? AUTH_EXPIRED_EVENT : ACCESS_DENIED_EVENT, { detail }));
+      // Operation-level 403 errors stay with the caller; they must not replace the page.
+      if (!expired) return;
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, { detail }));
       throw new ApiRequestError(response.status, detail);
     },
   });

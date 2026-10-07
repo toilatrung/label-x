@@ -146,9 +146,10 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="notes">Notes</h2>
 <ul>
-<li>T-001 đã merge vào <code>develop</code> qua PR #21. Nhánh T-002 đã ghép <code>origin/develop</code> tại commit <code>4a68cce</code>; client OpenAPI, mock session và RBAC đã căn chỉnh trong commit <code>300d16b</code> do người thực hiện xác nhận. Kiểm thử cục bộ đạt 39/39 frontend và 12/12 backend. Còn chờ lưu cập nhật tài liệu, push, PR, CI và review độc lập.</li>
+<li>PR #23 đã mở vào <code>develop</code> từ nhánh T-002, head đã push do người thực hiện xác nhận là <code>e7f2058</code>. CI #52 của bản cũ đạt 39/39 frontend và 12/12 backend. Đã nhận requested changes của @toilatrung và sửa cục bộ: tách 403 cấp thao tác khỏi guard toàn trang, chặn mock trong production, bỏ Dataset #1 mặc định, hiện lỗi session trên login và dọn các điểm nhỏ. Bản sửa đạt 51/51 kiểm thử frontend, lint/typecheck/build; còn chờ người thực hiện commit/push, CI mới và review lại.</li>
 <li>Trạng thái T-002 là <code>review</code> vì đã có mã và bằng chứng cục bộ. PR phải mở vào <code>develop</code> theo CR-104 trên Issue #14; chưa được đánh dấu <code>done</code> trước khi CI và duyệt PR đạt.</li>
-<li>PR cần comment <code>Đã xem và duyệt</code> của Trịnh Quang Trung hoặc Nguyễn Đức Hà (CR-102; PR của Hà do Trịnh Quang Trung duyệt; PO tự duyệt PR của mình).</li>
+<li>Review độc lập vẫn cần Trịnh Quang Trung hoặc Nguyễn Đức Hà xác nhận sau sửa. Mail review do người thực hiện cung cấp cho biết CR-105 đã bỏ cổng pr-approval và check approval đỏ có thể bỏ qua; checkout hiện chưa có CR-105, nên không tự sửa governance/CI chung. Vitest/jsdom/testing-library chưa có trong DEC-001; PO sẽ xác nhận theo review.</li>
+<li>Chọn Dataset nằm ngoài T-002. Phiên có grant Dataset cụ thể dùng ID từ grant; phiên chỉ có quyền toàn hệ thống giữ Dataset null/Chưa chọn. Các task nghiệp vụ sau phải chọn và xác minh Dataset trước khi thao tác.</li>
 <li>Chỉ sửa file <code>.agent/</code> có hậu tố <code>-@tdt2112</code>. Tài liệu chỉ viết bằng HTML, không tạo <code>.md</code> (CR-103).</li>
 </ul>
 </article></main></body></html>

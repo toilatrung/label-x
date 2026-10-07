@@ -46,8 +46,11 @@ describe('Contract roles and dataset grants', () => {
 
   it('accepts global grants only for Super Admin and QC Admin', () => {
     expect(hasDatasetPermission(toMockSession(MOCK_USERS[0]), 42, canAccessReview)).toBe(true);
+    expect(rolesForDataset(toMockSession(MOCK_USERS[0]), null)).toEqual(['super_admin']);
+    expect(rolesForDataset(toMockSession(MOCK_USERS[3]), null)).toEqual([]);
     const invalid: AuthSession = { ...toMockSession(MOCK_USERS[3]), roles: [{ role: 'reviewer', dataset_id: null }] };
     expect(hasDatasetPermission(invalid, 1, canAccessReview)).toBe(false);
+    expect(hasDatasetPermission(invalid, null, canAccessReview)).toBe(false);
   });
 
   it('fails closed for missing CVAT identity, including Super Admin', () => {

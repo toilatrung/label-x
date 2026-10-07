@@ -1,6 +1,6 @@
-// Production uses real auth unless mock mode is explicitly enabled at build time.
-export const isMockAuth = process.env.NEXT_PUBLIC_AUTH_MODE === 'mock' ||
-  (!process.env.NEXT_PUBLIC_AUTH_MODE && process.env.NODE_ENV !== 'production');
+// Demo accounts and mock endpoints are always disabled in production builds.
+export const isMockAuth = process.env.NODE_ENV !== 'production' &&
+  (process.env.NEXT_PUBLIC_AUTH_MODE === 'mock' || !process.env.NEXT_PUBLIC_AUTH_MODE);
 
 export function apiBaseUrl(): string {
   if (isMockAuth) return typeof window === 'undefined' ? 'http://localhost:3000' : window.location.origin;

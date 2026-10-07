@@ -179,7 +179,7 @@ export function TopBar({ activeKey }: TopBarProps) {
             )}
           </div>
 
-          {/* 6. Báo cáo & Phát hành - Chỉ QA Lead, Super Admin */}
+          {/* 6. Báo cáo & Phát hành - Các vai trò có quyền đọc báo cáo theo canAccessReports */}
           {showReports && (
             <div className="lx-nav__group">
               <button type="button" disabled title="Chưa khả dụng"

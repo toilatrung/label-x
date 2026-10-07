@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createApiClient, ApiRequestError, AUTH_EXPIRED_EVENT, ACCESS_DENIED_EVENT } from '@/lib/api/client';
+import { createApiClient, ApiRequestError, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
 import { GET as csrf } from '@/app/api/auth/csrf/route';
 import { POST as login } from '@/app/api/auth/login/route';
 import { GET as session } from '@/app/api/auth/session/route';
@@ -137,19 +137,18 @@ describe('Shared typed API client', () => {
     } finally { window.removeEventListener(AUTH_EXPIRED_EVENT, expired); }
   });
 
-  it('signals permission denial without discarding a valid login', async () => {
-    const denied = vi.fn();
+  it.each(['OUT_OF_SCOPE', 'SELF_REVIEW_FORBIDDEN', 'SAME_REQUESTER_APPROVER'] as const)
+    ('returns operation-level 403 %s to the caller without an auth event', async (code) => {
     const expired = vi.fn();
-    window.addEventListener(ACCESS_DENIED_EVENT, denied);
     window.addEventListener(AUTH_EXPIRED_EVENT, expired);
     try {
       const client = createApiClient({ baseUrl: 'http://localhost:3000', fetch: async () =>
-        Response.json({ code: 'OUT_OF_SCOPE', message: 'Ngoài phạm vi.', request_id: 'test-request' }, { status: 403 }) });
-      await expect(client.GET('/api/runs/', {})).rejects.toMatchObject({ status: 403, detail: { code: 'OUT_OF_SCOPE' } });
-      expect(denied).toHaveBeenCalledOnce();
+        Response.json({ code, message: 'Thao tác bị từ chối.', request_id: 'test-request' }, { status: 403 }) });
+      const { response, error } = await client.GET('/api/runs/', {});
+      expect(response.status).toBe(403);
+      expect(error).toMatchObject({ code, request_id: 'test-request' });
       expect(expired).not.toHaveBeenCalled();
     } finally {
-      window.removeEventListener(ACCESS_DENIED_EVENT, denied);
       window.removeEventListener(AUTH_EXPIRED_EVENT, expired);
     }
   });
