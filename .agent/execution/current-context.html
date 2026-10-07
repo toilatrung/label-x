@@ -57,20 +57,20 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="current-state">Current State</h2>
 <ul>
-<li><strong>Context Revision</strong>: <code>5</code></li>
+<li><strong>Context Revision</strong>: <code>6</code></li>
 <li><strong>Context Status</strong>: <code>current</code></li>
-<li><strong>Last Updated</strong>: <code>2026-10-07</code></li>
+<li><strong>Last Updated</strong>: <code>2026-10-08</code></li>
 <li><strong>Updated By</strong>: <code>claude-code (integrator) cho Trịnh Quang Trung</code></li>
 <li><strong>Update Trigger</strong>: <code>wave-1-closeout</code></li>
 <li><strong>Planning Roadmap ID</strong>: <code>R-001</code></li>
-<li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_APPROVED</code></li>
+<li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_ACTIVE</code> (từ 2026-10-08)</li>
 <li><strong>Onboarding State</strong>: <code>execution-started</code></li>
-<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-04, E-10 (EPIC_IN_PROGRESS); còn lại EPIC_PROPOSED</code></li>
-<li><strong>Active Task IDs</strong>: <code>T-001, T-002, T-003, T-005 (review — chờ QA/đóng trên nhánh chore/wave1-closeout); T-004 (blocked, BLOCKER-024)</code></li>
+<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-10 (EPIC_IN_PROGRESS); E-04 (EPIC_BLOCKED, BLOCKER-024); còn lại EPIC_PROPOSED</code></li>
+<li><strong>Active Task IDs</strong>: <code>T-005 (review — chờ bằng chứng CPU inference); T-004 (blocked, BLOCKER-024). T-001, T-002, T-003 done 2026-10-08 (QA passed, make check trên Postgres đạt)</code></li>
 <li><strong>Active Blocker IDs</strong>: <code>BLOCKER-014, BLOCKER-015, BLOCKER-022, BLOCKER-024</code></li>
 <li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007 (proposed), DEC-008</code></li>
 <li><strong>Active Risk IDs</strong>: <code>RISK-001…RISK-011</code></li>
-<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing)</code></li>
+<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing), CR-105 (implementing)</code></li>
 <li><strong>Current Session ID</strong>: <code>SES-006</code></li>
 </ul>
 <h2 id="wave-1-integration">Wave 1 Integration</h2>
@@ -78,9 +78,9 @@ ul.dir{columns:2;font-size:14px}
 <table>
 <thead><tr><th>Task</th><th>Epic</th><th>Owner</th><th>Branch</th><th>Base Commit</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td><code>T-001</code></td><td><code>E-01</code></td><td>@toilatrung</td><td><code>feat/T-001-e01-contract</code></td><td><code>28be098</code></td><td><code>review</code></td></tr>
-<tr><td><code>T-002</code></td><td><code>E-02</code></td><td>@tdt2112</td><td><code>feat/T-002-e02-frontend-shell</code></td><td><code>4a68cce</code> (mốc sau khi ghép <code>origin/develop</code>)</td><td><code>review</code></td></tr>
-<tr><td><code>T-003</code></td><td><code>E-03</code></td><td>@ducha180104</td><td><code>feat/T-003-e03-guideline</code></td><td><code>28be098</code></td><td><code>review</code></td></tr>
+<tr><td><code>T-001</code></td><td><code>E-01</code></td><td>@toilatrung</td><td><code>feat/T-001-e01-contract</code></td><td><code>28be098</code></td><td><code>done</code></td></tr>
+<tr><td><code>T-002</code></td><td><code>E-02</code></td><td>@tdt2112</td><td><code>feat/T-002-e02-frontend-shell</code></td><td><code>4a68cce</code> (mốc sau khi ghép <code>origin/develop</code>)</td><td><code>done</code></td></tr>
+<tr><td><code>T-003</code></td><td><code>E-03</code></td><td>@ducha180104</td><td><code>feat/T-003-e03-guideline</code></td><td><code>28be098</code></td><td><code>done</code></td></tr>
 <tr><td><code>T-004</code></td><td><code>E-04</code></td><td>@duy12345-6789</td><td><code>feat/T-004-e04-cvat-adapter</code></td><td><code>28be098</code></td><td><code>blocked (BLOCKER-024)</code></td></tr>
 <tr><td><code>T-005</code></td><td><code>E-10</code></td><td>@vietanhhhhhh2003</td><td><code>feat/T-005-e10-detector-worker</code></td><td><code>28be098</code></td><td><code>review</code></td></tr>
 </tbody>
