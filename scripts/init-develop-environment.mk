@@ -98,8 +98,9 @@ typecheck: ## mypy + tsc
 	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config
 	cd "$(FRONTEND)" && npm run typecheck
 
-test: ## pytest (cần infra-up)
+test: ## pytest (cần infra-up) + npm test
 	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q
+	cd "$(FRONTEND)" && npm test
 
 gen-api: ## Sinh type TypeScript từ OpenAPI (cần dev-backend đang chạy)
 	cd "$(FRONTEND)" && npm run gen:api
