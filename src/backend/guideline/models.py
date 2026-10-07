@@ -6,7 +6,25 @@ Theo CR-101 (pilot), FR-GDL-01…03 hoãn sang tệp tĩnh có rule ID:
 - RuleMapping: ánh xạ (nhóm lỗi, lớp, cặp lớp) → rule (FR-GDL-02).
 """
 
+from __future__ import annotations
+
+import re
+from typing import Any
+
 from django.db import models
+
+
+def get_latest_guideline_version() -> GuidelineVersion | None:
+    """Lấy phiên bản guideline mới nhất theo version_tag số học, không phụ thuộc thứ tự nạp."""
+    versions = list(GuidelineVersion.objects.all())
+    if not versions:
+        return None
+
+    def version_sort_key(v: GuidelineVersion) -> tuple[list[int], Any]:
+        nums = [int(n) for n in re.findall(r"\d+", v.version_tag)]
+        return (nums if nums else [0], v.loaded_at)
+
+    return max(versions, key=version_sort_key)
 
 
 class GuidelineVersion(models.Model):
@@ -42,7 +60,7 @@ class GuidelineRule(models.Model):
                 fields=["version", "rule_id"], name="uq_guideline_rule_version_id"
             ),
         ]
-        ordering = ["rule_id"]
+        ordering = ["id"]
 
     def __str__(self) -> str:
         return f"{self.rule_id} ({self.version.version_tag})"

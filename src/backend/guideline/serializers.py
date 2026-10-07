@@ -1,29 +1,27 @@
 """Serializers cho module GDL."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from rest_framework import serializers
 
 from guideline.models import GuidelineRule, GuidelineVersion
 
 
-class ErrorResponseSerializer(serializers.Serializer[dict[str, object]]):
+class ErrorResponseSerializer(serializers.Serializer[dict[str, Any]]):
     """Hợp đồng lỗi dùng chung của API LabelX."""
 
     code = serializers.CharField()
     message = serializers.CharField()
-    request_id = serializers.UUIDField()
+    request_id = serializers.CharField()
+    details = serializers.DictField(required=False, default=dict)
 
 
 class GuidelineVersionSerializer(serializers.ModelSerializer[GuidelineVersion]):
     class Meta:
         model = GuidelineVersion
         fields = ["version_tag", "name", "loaded_at"]
-
-
-class GuidelineVersionListResponseSerializer(serializers.Serializer[dict[str, object]]):
-    """Envelope thực tế của API danh sách guideline version."""
-
-    count = serializers.IntegerField(min_value=0)
-    results = GuidelineVersionSerializer(many=True)
 
 
 class GuidelineRuleSerializer(serializers.ModelSerializer[GuidelineRule]):
@@ -34,8 +32,9 @@ class GuidelineRuleSerializer(serializers.ModelSerializer[GuidelineRule]):
         fields = ["rule_id", "section", "content", "guideline_version"]
 
 
-class GuidelineRuleListResponseSerializer(serializers.Serializer[dict[str, object]]):
-    """Envelope thực tế của API danh sách rule."""
+class PaginatedGuidelineRuleListSerializer(serializers.Serializer[dict[str, Any]]):
+    """Envelope phân trang cursor theo hợp đồng OpenAPI."""
 
-    count = serializers.IntegerField(min_value=0)
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
     results = GuidelineRuleSerializer(many=True)

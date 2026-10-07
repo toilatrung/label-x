@@ -8,7 +8,7 @@
  */
 
 import createClient from "openapi-fetch";
-import type { paths } from "@/lib/api/schema";
+import type { paths } from "@/lib/api/contract";
 
 // Base URL của backend — đặt trong .env.local:
 //   NEXT_PUBLIC_API_URL=http://localhost:8000

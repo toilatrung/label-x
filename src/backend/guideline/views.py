@@ -1,172 +1,148 @@
 """Views cho module GDL — Tra cứu guideline.
 
-Hợp đồng lỗi (09-interfaces.tex §apierrors):
-  - 404: rule_id không tồn tại → {code, message, request_id}
-  - 403: chưa đăng nhập (IsAuthenticated từ DEFAULT_PERMISSION_CLASSES)
-
-Không dùng RAG hay embedding (FR-GDL-04, Must).
+Theo CR-101 và OpenAPI contract (docs/04-api/openapi.yaml):
+- Tra rule tĩnh theo rule_id và theo context mapping (family, class_name, paired_class).
+- Không dùng RAG hay embedding (FR-GDL-04, Must).
+- Quyền theo vai trò: reviewer, qa_lead, qc_admin, super_admin.
+- Cursor pagination page size 50.
 """
 
 from __future__ import annotations
 
-import uuid
-
+from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import status
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.pagination import CursorPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from guideline.models import GuidelineRule, GuidelineVersion, RuleMapping
+from guideline.models import (
+    GuidelineRule,
+    GuidelineVersion,
+    RuleMapping,
+    get_latest_guideline_version,
+)
+from guideline.permissions import HasGuidelineRole
 from guideline.serializers import (
     ErrorResponseSerializer,
-    GuidelineRuleListResponseSerializer,
     GuidelineRuleSerializer,
-    GuidelineVersionListResponseSerializer,
-    GuidelineVersionSerializer,
+    PaginatedGuidelineRuleListSerializer,
 )
 
+VALID_FAMILIES = {"E1", "E2", "E3", "structural"}
 
-def _error_response(
-    request: Request,
-    code: str,
-    message: str,
-    http_status: int,
-) -> Response:
-    """Trả phản hồi lỗi theo hợp đồng dự án: {code, message, request_id}."""
-    return Response(
-        {
-            "code": code,
-            "message": message,
-            "request_id": str(uuid.uuid4()),
-        },
-        status=http_status,
-    )
+
+class GuidelineCursorPagination(CursorPagination):
+    page_size = 50
+    ordering = "id"
 
 
 class GuidelineAPIView(APIView):
     """Base view cho API guideline chỉ đọc.
 
-    T-003 chỉ có tài nguyên guideline toàn cục, chưa gắn dataset. Vì vậy view
-    yêu cầu người dùng LabelX đã đăng nhập; RBAC/scope chi tiết được tích hợp
-    bởi E-02 khi mô hình quyền của hệ thống tồn tại.
+    Yêu cầu quyền theo vai trò (HasGuidelineRole): reviewer, qa_lead, qc_admin, super_admin.
+    Lỗi được xử lý thống nhất qua exception handler dùng chung của LabelX.
     """
 
-    permission_classes = [IsAuthenticated]
-
-    def handle_exception(self, exc: Exception) -> Response:
-        if isinstance(exc, (NotAuthenticated, PermissionDenied)):
-            return _error_response(
-                self.request,
-                "forbidden",
-                "Bạn không có quyền truy cập tài nguyên này.",
-                status.HTTP_403_FORBIDDEN,
-            )
-        return super().handle_exception(exc)
-
-
-class GuidelineVersionListView(GuidelineAPIView):
-    """GET /api/guidelines/ — Danh sách phiên bản guideline đã nạp."""
-
-    @extend_schema(
-        operation_id="guideline_version_list",
-        summary="Danh sách guideline version",
-        description=(
-            "Trả danh sách các phiên bản guideline đã nạp vào hệ thống. "
-            "Yêu cầu đăng nhập (FR-GDL-04, FR-SEC-01)."
-        ),
-        responses={
-            200: GuidelineVersionListResponseSerializer,
-            403: ErrorResponseSerializer,
-        },
-        tags=["guidelines"],
-    )
-    def get(self, request: Request) -> Response:
-        versions = GuidelineVersion.objects.all()
-        serializer = GuidelineVersionSerializer(versions, many=True)
-        return Response({"count": len(serializer.data), "results": serializer.data})
+    permission_classes = [HasGuidelineRole]
 
 
 class GuidelineRuleListView(GuidelineAPIView):
     """GET /api/guidelines/rules/ — Danh sách rule, lọc theo mapping."""
 
     @extend_schema(
-        operation_id="guideline_rule_list",
-        summary="Tra rule theo nhóm lỗi/lớp",
+        operation_id="guidelines_rules_list",
+        summary="Tra rule theo nhóm lỗi, lớp, cặp lớp",
         description=(
-            "Trả danh sách rule theo ánh xạ (error_group, class_name, paired_class). "
-            "Có thể kết hợp nhiều filter. Không truyền filter → trả tất cả rule. "
-            "Không dùng RAG (FR-GDL-04)."
+            "Không dùng retrieval ngữ nghĩa (FR-GDL-04). Mặc định guideline version mới nhất."
         ),
         parameters=[
-            OpenApiParameter("error_group", str, description="Nhóm lỗi: E1, E2, E3"),
-            OpenApiParameter("class_name", str, description="Tên lớp: car, truck, …"),
-            OpenApiParameter("paired_class", str, description="Lớp cặp: truck"),
-            OpenApiParameter("version", str, description="version_tag, mặc định latest"),
+            OpenApiParameter(
+                "version",
+                str,
+                description="Guideline version tag; bỏ trống là bản mới nhất.",
+            ),
+            OpenApiParameter(
+                "family",
+                str,
+                description="Nhóm lỗi: E1, E2, E3, structural",
+            ),
+            OpenApiParameter("class_name", str, description="Tên lớp"),
+            OpenApiParameter("paired_class", str, description="Lớp cặp"),
+            OpenApiParameter("cursor", str, description="Con trỏ phân trang"),
         ],
         responses={
-            200: GuidelineRuleListResponseSerializer,
+            200: PaginatedGuidelineRuleListSerializer,
+            400: ErrorResponseSerializer,
             403: ErrorResponseSerializer,
             404: ErrorResponseSerializer,
         },
         tags=["guidelines"],
     )
     def get(self, request: Request) -> Response:
-        version_tag: str | None = request.query_params.get("version")
+        version: GuidelineVersion | None = None
+        version_tag = request.query_params.get("version", "").strip()
         if version_tag:
-            version_qs = GuidelineVersion.objects.filter(version_tag=version_tag)
-            if not version_qs.exists():
-                return _error_response(
-                    request,
-                    "not_found",
-                    f"Guideline version '{version_tag}' không tồn tại.",
-                    status.HTTP_404_NOT_FOUND,
-                )
-            version = version_qs.first()
+            try:
+                version = GuidelineVersion.objects.get(version_tag=version_tag)
+            except GuidelineVersion.DoesNotExist as exc:
+                raise NotFound(f"Guideline version '{version_tag}' không tồn tại.") from exc
         else:
-            version = GuidelineVersion.objects.first()  # latest (ordered by -loaded_at)
+            version = get_latest_guideline_version()
 
         if version is None:
-            return Response({"count": 0, "results": []})
+            return Response({"next": None, "previous": None, "results": []})
 
-        error_group: str | None = request.query_params.get("error_group")
-        class_name: str | None = request.query_params.get("class_name")
-        paired_class: str | None = request.query_params.get("paired_class")
+        family = request.query_params.get("family", "").strip()
+        if family and family not in VALID_FAMILIES:
+            allowed = ", ".join(sorted(VALID_FAMILIES))
+            raise ValidationError(
+                {"family": [f"Giá trị '{family}' không hợp lệ. Phải là một trong: {allowed}."]}
+            )
 
-        has_filter = any([error_group, class_name, paired_class])
+        class_name = request.query_params.get("class_name", "").strip()
+        paired_class = request.query_params.get("paired_class", "").strip()
 
+        has_filter = any((family, class_name, paired_class))
         if has_filter:
             mapping_qs = RuleMapping.objects.filter(version=version)
-            if error_group is not None:
-                mapping_qs = mapping_qs.filter(error_group=error_group)
-            if class_name is not None:
-                mapping_qs = mapping_qs.filter(class_name=class_name)
-            if paired_class is not None:
-                mapping_qs = mapping_qs.filter(paired_class=paired_class)
+            if family:
+                mapping_qs = mapping_qs.filter(Q(error_group=family) | Q(error_group=""))
+            if class_name:
+                mapping_qs = mapping_qs.filter(Q(class_name=class_name) | Q(class_name=""))
+            if paired_class:
+                mapping_qs = mapping_qs.filter(Q(paired_class=paired_class) | Q(paired_class=""))
+
             rule_ids = mapping_qs.values_list("rule_id", flat=True).distinct()
             rules = GuidelineRule.objects.filter(version=version, id__in=rule_ids)
         else:
             rules = GuidelineRule.objects.filter(version=version)
 
-        serializer = GuidelineRuleSerializer(rules, many=True)
-        return Response({"count": len(serializer.data), "results": serializer.data})
+        rules = rules.order_by("id")
+        paginator = GuidelineCursorPagination()
+        page = paginator.paginate_queryset(rules, request, view=self)
+        serializer = GuidelineRuleSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class GuidelineRuleDetailView(GuidelineAPIView):
     """GET /api/guidelines/rules/{rule_id}/ — Rule theo rule_id."""
 
     @extend_schema(
-        operation_id="guideline_rule_retrieve",
-        summary="Tra rule theo rule ID",
+        operation_id="guidelines_rules_retrieve",
+        summary="Rule theo guideline version của snapshot",
         description=(
             "Trả thông tin một rule theo rule_id. "
             "Dùng query param version để chọn phiên bản; mặc định là phiên bản mới nhất. "
-            "Trả 404 nếu rule_id không tồn tại (09-interfaces.tex §apierrors)."
+            "Trả 404 nếu rule_id không tồn tại."
         ),
         parameters=[
-            OpenApiParameter("version", str, description="version_tag, mặc định latest"),
+            OpenApiParameter(
+                "version",
+                str,
+                description="Guideline version tag; bỏ trống là bản mới nhất.",
+            ),
         ],
         responses={
             200: GuidelineRuleSerializer,
@@ -176,37 +152,23 @@ class GuidelineRuleDetailView(GuidelineAPIView):
         tags=["guidelines"],
     )
     def get(self, request: Request, rule_id: str) -> Response:
-        version_tag: str | None = request.query_params.get("version")
+        version: GuidelineVersion | None = None
+        version_tag = request.query_params.get("version", "").strip()
         if version_tag:
-            version_qs = GuidelineVersion.objects.filter(version_tag=version_tag)
-            if not version_qs.exists():
-                return _error_response(
-                    request,
-                    "not_found",
-                    f"Guideline version '{version_tag}' không tồn tại.",
-                    status.HTTP_404_NOT_FOUND,
-                )
-            version = version_qs.first()
+            try:
+                version = GuidelineVersion.objects.get(version_tag=version_tag)
+            except GuidelineVersion.DoesNotExist as exc:
+                raise NotFound(f"Guideline version '{version_tag}' không tồn tại.") from exc
         else:
-            version = GuidelineVersion.objects.first()
+            version = get_latest_guideline_version()
 
         if version is None:
-            return _error_response(
-                request,
-                "not_found",
-                f"Rule '{rule_id}' không tồn tại.",
-                status.HTTP_404_NOT_FOUND,
-            )
+            raise NotFound(f"Rule '{rule_id}' không tồn tại.")
 
         try:
             rule = GuidelineRule.objects.get(version=version, rule_id=rule_id)
-        except GuidelineRule.DoesNotExist:
-            return _error_response(
-                request,
-                "not_found",
-                f"Rule '{rule_id}' không tồn tại.",
-                status.HTTP_404_NOT_FOUND,
-            )
+        except GuidelineRule.DoesNotExist as exc:
+            raise NotFound(f"Rule '{rule_id}' không tồn tại.") from exc
 
         serializer = GuidelineRuleSerializer(rule)
         return Response(serializer.data)
