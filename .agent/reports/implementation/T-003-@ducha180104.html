@@ -107,7 +107,7 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);back
 <tr><td><code>src/backend/config/exceptions.py</code></td><td>Táº¡o má»›i</td><td>custom_exception_handler chuáº©n hĂ³a error contract toĂ n há»‡ thá»‘ng</td></tr>
 <tr><td><code>src/backend/guideline/permissions.py</code></td><td>Táº¡o má»›i</td><td>HasGuidelineRole RBAC (reviewer, qa_lead, qc_admin, super_admin)</td></tr>
 <tr><td><code>src/backend/config/settings.py</code></td><td>Sá»­a</td><td>ÄÄƒng kĂ½ middleware, exception handler vĂ  app guideline</td></tr>
-<tr><td><code>src/backend/guideline/models.py</code></td><td>Sá»­a</td><td>3 models, ordering theo ID, get_latest_guideline_version theo loaded_at</td></tr>
+<tr><td><code>src/backend/guideline/models.py</code></td><td>Sá»­a</td><td>3 models, giữ nguyên ordering rule_id ban đầu (không tạo migration mới), get_latest_guideline_version theo loaded_at</td></tr>
 <tr><td><code>src/backend/guideline/serializers.py</code></td><td>Sá»­a</td><td>Cursor pagination serializer vĂ  ErrorResponseSerializer kĂ¨m details</td></tr>
 <tr><td><code>src/backend/guideline/urls.py</code></td><td>Sá»­a</td><td>Bá» endpoint /api/guidelines/, chá»‰ giá»¯ /rules/ vĂ  /rules/{rule_id}/</td></tr>
 <tr><td><code>src/backend/guideline/views.py</code></td><td>Sá»­a</td><td>TuĂ¢n thá»§ contract: query family, wildcard mapping, CursorPagination</td></tr>

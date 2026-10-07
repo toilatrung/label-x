@@ -27,6 +27,7 @@ def get_latest_guideline_version() -> GuidelineVersion | None:
     return max(versions, key=version_sort_key)
 
 
+
 class GuidelineVersion(models.Model):
     """Phiên bản guideline đã nạp từ tệp."""
 
@@ -60,7 +61,7 @@ class GuidelineRule(models.Model):
                 fields=["version", "rule_id"], name="uq_guideline_rule_version_id"
             ),
         ]
-        ordering = ["id"]
+        ordering = ["rule_id"]
 
     def __str__(self) -> str:
         return f"{self.rule_id} ({self.version.version_tag})"
