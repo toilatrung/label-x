@@ -28,7 +28,7 @@ services:
 
   # S3-compatible cho dev local (image minio/minio đã ngừng phát hành trên Docker Hub).
   seaweedfs:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a
     command: server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=1024
     ports: ["9000:9000"]
     volumes:
@@ -40,11 +40,11 @@ services:
       retries: 20
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a
     depends_on:
       seaweedfs: {condition: service_healthy}
     entrypoint: >
-      /bin/sh -ec "for b in labelx-snapshots labelx-evidence labelx-reports; do
+      /bin/sh -ec "for b in labelx-snapshots labelx-evidence labelx-reports labelx-models; do
       echo \"s3.bucket.create -name $$b\" | weed shell -master=seaweedfs:9333; done"
 
 volumes:

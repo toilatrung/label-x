@@ -10,6 +10,7 @@ SHELL := /bin/bash
 ROOT     := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
 BACKEND  := $(ROOT)/src/backend
 FRONTEND := $(ROOT)/src/frontend
+DETECTOR := $(ROOT)/src/detector_worker
 COMPOSE  := docker compose -f "$(ROOT)/infrastructure/docker-compose.dev.yml"
 UV       := $(shell command -v uv 2>/dev/null || echo $(HOME)/.local/bin/uv)
 PYTHON_VERSION := 3.12
@@ -19,7 +20,7 @@ NODE_MAJOR_MIN := 22
 .PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
-        check lint format test typecheck gen-api validate-kit clean
+        check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
 
 help: ## Liệt kê lệnh
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -85,7 +86,7 @@ dev-frontend: ## Chạy Next.js ở :3000
 
 # ---------------------------------------------------------------- quality
 
-check: lint typecheck test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
+check: lint typecheck test detector-lint detector-test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
 
 lint: ## Ruff + ESLint
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check . && "$(UV)" run --frozen ruff format --check .
@@ -100,6 +101,15 @@ typecheck: ## mypy + tsc
 
 test: ## pytest (cần infra-up)
 	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q
+
+detector-test: ## Test worker Detector độc lập (không cần GPU/MMDetection)
+	cd "$(DETECTOR)" && "$(UV)" run --frozen --extra dev pytest -q
+
+detector-lint: ## Ruff worker Detector trên runtime Python 3.8 của MMDetection 2.x
+	cd "$(DETECTOR)" && "$(UV)" run --frozen --extra dev ruff check . && "$(UV)" run --frozen --extra dev ruff format --check .
+
+detector-image: ## Build image GPU worker Detector (vẫn chạy được với --device cpu)
+	docker build -f "$(ROOT)/infrastructure/detector-worker/Dockerfile" -t labelx-detector-worker:dev "$(ROOT)"
 
 gen-api: ## Sinh type TypeScript từ OpenAPI (cần dev-backend đang chạy)
 	cd "$(FRONTEND)" && npm run gen:api

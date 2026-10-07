@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LabelX Detector Worker</title>
+<style>body{max-width:980px;margin:2rem auto;padding:0 1rem;font:15px/1.6 system-ui;color:#1a1d23}code,pre{background:#f3f4f6}code{padding:.1rem .3rem}pre{padding:1rem;overflow:auto;border:1px solid #e3e6ea}h2{margin-top:2rem;border-bottom:1px solid #ddd}blockquote{border-left:4px solid #b26a00;background:#fff7df;padding:.5rem 1rem}</style>
+</head><body>
+<h1>LabelX Detector Worker</h1>
+<p>Worker độc lập chạy Faster R-CNN R-50-FPN 3x của SysCV BDD100K model zoo bằng MMDetection 2.x. Worker xác minh SHA-256 <em>trước</em> khi MMDetection đọc checkpoint và xuất box <code>x1,y1,x2,y2</code> theo pixel ảnh gốc.</p>
+<blockquote><strong>Trạng thái artifact ngày 07/10/2026:</strong> checkpoint được phục hồi từ Wayback theo quyết định của PO tại issue #17, khớp MD5 gốc <code>d2a866749432b7bd8436f0001c1625d7</code> và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Wayback chỉ là nguồn phục hồi; runtime phải dùng bản đã xác minh trong kho artifact nội bộ.</blockquote>
+<h2>Build image</h2>
+<pre><code>make detector-image
+
+# Máy dùng Docker Engine CLI trong WSL
+wsl -d Ubuntu-24.04 -- bash -lc \
+  'cd /mnt/d/Code/label-x &amp;&amp; make detector-image'</code></pre>
+<p>Image pin PyTorch 1.12.1, CUDA 11.3, mmcv-full 1.7.1 và MMDetection 2.28.2. Có thể chạy không gắn GPU bằng <code>--device cpu</code>. Trước khi dùng <code>--gpus all</code>, kiểm tra <code>docker info</code> có runtime NVIDIA/CDI và chạy thử <code>docker run --rm --gpus all nvidia/cuda:11.3.1-base-ubuntu20.04 nvidia-smi</code>.</p>
+<h2>Freeze artifact đã phục hồi</h2>
+<pre><code>docker run --rm -v /secure/models:/models -v "$PWD/src/detector_worker:/work" \
+  labelx-detector-worker:dev freeze \
+  --checkpoint /models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth \
+  --manifest /work/model-manifest.json</code></pre>
+<p>Lệnh ghi SHA-256, kích thước, tên file và thời điểm freeze bằng thao tác thay file nguyên tử. Manifest hiện tại đã freeze file 165.899.860 byte; lệnh <code>verify</code> luôn chạy trước khi MMDetection deserialize checkpoint.</p>
+<h2>Publish/fetch kho artifact S3-compatible</h2>
+<pre><code>export AWS_ACCESS_KEY_ID='&lt;access-key&gt;'
+export AWS_SECRET_ACCESS_KEY='&lt;secret-key&gt;'
+
+labelx-detector publish \
+  --checkpoint /secure/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth \
+  --manifest model-manifest.json \
+  --endpoint "$MODEL_ARTIFACT_ENDPOINT" --bucket labelx-models \
+  --key detector/syscv-bdd100k-models-0935a8a3/ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540/faster_rcnn_r50_fpn_3x_det_bdd100k.pth
+
+labelx-detector fetch \
+  --checkpoint /models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth \
+  --manifest model-manifest.json \
+  --endpoint "$MODEL_ARTIFACT_ENDPOINT" --bucket labelx-models \
+  --key detector/syscv-bdd100k-models-0935a8a3/ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540/faster_rcnn_r50_fpn_3x_det_bdd100k.pth</code></pre>
+<p><code>publish</code> xác minh file local trước khi PUT, ghi metadata <code>x-amz-meta-sha256</code> và HEAD kiểm lại kích thước/checksum. <code>fetch</code> tải về file tạm, kiểm SHA-256 rồi mới thay file đích nguyên tử. Credentials chỉ lấy từ environment; không ghi trong manifest hay log. Stack dev tạo bucket <code>labelx-models</code> trên SeaweedFS S3-compatible; production dùng endpoint/credentials do Operations cấp.</p>
+<h2>Verify và inference</h2>
+<pre><code>docker run --rm --gpus all \
+  -v /secure/models:/models:ro -v /bdd-samples:/input:ro -v /tmp/labelx-out:/output \
+  labelx-detector-worker:dev verify \
+  --checkpoint /models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth \
+  --manifest model-manifest.json
+
+docker run --rm --gpus all \
+  -v /secure/models:/models:ro -v /bdd-samples:/input:ro -v /tmp/labelx-out:/output \
+  labelx-detector-worker:dev infer \
+  --input-dir /input --output /output/predictions.json \
+  --checkpoint /models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth \
+  --manifest model-manifest.json \
+  --config configs/faster_rcnn_r50_fpn_3x_det_bdd100k.py \
+  --device cuda:0 --batch-size 1</code></pre>
+<p>Để thử CPU, bỏ <code>--gpus all</code> và dùng <code>--device cpu</code>. JSON chứa schema version, model/checksum/mapping, cấu hình run, phần cứng, thời gian tổng và mỗi ảnh, kích thước ảnh, detection và confidence.</p>
+<p>MX330 2 GB đã được xác minh với <code>--batch-size 1</code>. Không tải checkpoint trực tiếp từ Wayback trong runtime; dùng <code>fetch</code> từ kho artifact, sau đó mount file đã xác minh vào <code>/models</code> dưới dạng chỉ đọc.</p>
+<h2>Kiểm thử</h2>
+<pre><code>make detector-lint
+make detector-test</code></pre>
+<p>Test batch dùng backend giả và 10 ảnh sinh tại runtime; không thay thế phép đo bắt buộc trên checkpoint và ảnh BDD100K thật.</p>
+</body></html>
+

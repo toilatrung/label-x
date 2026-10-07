@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labelx-detector-worker"
+version = "0.1.0"
+description = "Isolated MMDetection 2.x batch inference worker for LabelX"
+requires-python = ">=3.7,<3.11"
+dependencies = [
+    "numpy>=1.21,<1.24",
+    "Pillow>=9,<11",
+    "typing-extensions>=4.1,<5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7,<9", "ruff>=0.12,<0.15"]
+
+[project.scripts]
+labelx-detector = "labelx_detector.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["labelx_detector*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py37"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]
+
