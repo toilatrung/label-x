@@ -15,7 +15,7 @@ from typing import Any
 from PIL import Image
 from typing_extensions import Protocol
 
-from .artifact import ArtifactManifest, verify_checkpoint
+from .artifact import ArtifactManifest, unlink_if_exists, verify_checkpoint
 
 SUPPORTED_IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"})
 SCHEMA_VERSION = "labelx.detector.predictions.v1"
@@ -46,8 +46,18 @@ class MMDetectionBackend:
         self._torch = torch
         self._inference_detector = inference_detector
         self._device = device
+        manifest_classes = tuple(classes)
+        checkpoint_payload = torch.load(str(checkpoint), map_location="cpu")
+        checkpoint_meta = checkpoint_payload.get("meta") or {}
+        checkpoint_classes = checkpoint_meta.get("CLASSES")
+        del checkpoint_payload
+        if checkpoint_classes is not None and tuple(checkpoint_classes) != manifest_classes:
+            raise ValueError(
+                "Checkpoint class order does not match the frozen manifest: "
+                f"checkpoint={tuple(checkpoint_classes)!r}, manifest={manifest_classes!r}"
+            )
         self._model = init_detector(str(config), str(checkpoint), device=device)
-        self._model.CLASSES = tuple(classes)
+        self._model.CLASSES = manifest_classes
 
     def infer(self, image_paths: Sequence[Path]) -> Sequence[Any]:
         result = self._inference_detector(self._model, [str(path) for path in image_paths])
@@ -156,7 +166,7 @@ def _atomic_json_dump(payload: dict[str, Any], output: Path) -> None:
             os.fsync(stream.fileno())
         temporary.replace(output)
     except BaseException:
-        temporary.unlink(missing_ok=True)
+        unlink_if_exists(temporary)
         raise
 
 

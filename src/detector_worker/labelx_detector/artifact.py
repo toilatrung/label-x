@@ -23,6 +23,15 @@ class ChecksumMismatchError(RuntimeError):
     """Raised before model loading when a checkpoint is not the frozen artifact."""
 
 
+def unlink_if_exists(path: Path) -> None:
+    """Remove a file without relying on Path.unlink(missing_ok), added in Python 3.8."""
+
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 @dataclass(frozen=True)
 class ArtifactManifest:
     """Validated subset of the model manifest required at inference time."""
@@ -129,6 +138,6 @@ def freeze_checkpoint(checkpoint: Path, manifest_path: Path) -> str:
             os.fsync(stream.fileno())
         temporary.replace(target)
     except BaseException:
-        temporary.unlink(missing_ok=True)
+        unlink_if_exists(temporary)
         raise
     return digest

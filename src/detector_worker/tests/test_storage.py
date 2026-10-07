@@ -132,3 +132,4 @@ def test_fetch_does_not_publish_corrupt_download(tmp_path, artifact_server):
         )
 
     assert not destination.exists()
+    assert list(tmp_path.glob("*.part")) == []

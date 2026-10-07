@@ -13,7 +13,12 @@ from pathlib import Path
 from typing import BinaryIO, Mapping
 from urllib.parse import quote, urlsplit
 
-from .artifact import ArtifactManifest, ChecksumMismatchError, verify_checkpoint
+from .artifact import (
+    ArtifactManifest,
+    ChecksumMismatchError,
+    unlink_if_exists,
+    verify_checkpoint,
+)
 
 
 class ArtifactStoreError(RuntimeError):
@@ -238,5 +243,5 @@ def fetch_checkpoint(
         temporary.replace(destination)
         return digest
     except BaseException:
-        temporary.unlink(missing_ok=True)
+        unlink_if_exists(temporary)
         raise

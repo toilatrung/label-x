@@ -105,7 +105,7 @@ test: ## pytest (cần infra-up)
 detector-test: ## Test worker Detector độc lập (không cần GPU/MMDetection)
 	cd "$(DETECTOR)" && "$(UV)" run --frozen --extra dev pytest -q
 
-detector-lint: ## Ruff worker Detector trên runtime Python 3.8 của MMDetection 2.x
+detector-lint: ## Ruff worker Detector (target Python 3.7 của image MMDetection 2.x)
 	cd "$(DETECTOR)" && "$(UV)" run --frozen --extra dev ruff check . && "$(UV)" run --frozen --extra dev ruff format --check .
 
 detector-image: ## Build image GPU worker Detector (vẫn chạy được với --device cpu)

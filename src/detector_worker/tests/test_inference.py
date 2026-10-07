@@ -1,11 +1,19 @@
 import hashlib
 import json
+import sys
 from pathlib import Path
+from types import ModuleType, SimpleNamespace
 
+import pytest
 from PIL import Image
 
 from labelx_detector.artifact import ArtifactManifest
-from labelx_detector.inference import SCHEMA_VERSION, run_batch, serialize_detections
+from labelx_detector.inference import (
+    SCHEMA_VERSION,
+    MMDetectionBackend,
+    run_batch,
+    serialize_detections,
+)
 
 CLASSES = (
     "pedestrian",
@@ -73,6 +81,47 @@ def test_serialize_detections_uses_original_pixel_bounds():
             "confidence": 0.8,
         }
     ]
+
+
+def test_backend_refuses_checkpoint_class_order_mismatch(monkeypatch, tmp_path):
+    torch = ModuleType("torch")
+    mmdet = ModuleType("mmdet")
+    apis = ModuleType("mmdet.apis")
+    torch.load = lambda checkpoint, map_location: {"meta": {"CLASSES": tuple(reversed(CLASSES))}}
+    apis.inference_detector = lambda model, paths: []
+    apis.init_detector = lambda config, checkpoint, device: SimpleNamespace()
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setitem(sys.modules, "mmdet", mmdet)
+    monkeypatch.setitem(sys.modules, "mmdet.apis", apis)
+
+    with pytest.raises(ValueError, match="class order does not match"):
+        MMDetectionBackend(
+            tmp_path / "config.py",
+            tmp_path / "model.pth",
+            "cpu",
+            CLASSES,
+        )
+
+
+def test_backend_uses_manifest_classes_when_checkpoint_metadata_is_missing(monkeypatch, tmp_path):
+    torch = ModuleType("torch")
+    mmdet = ModuleType("mmdet")
+    apis = ModuleType("mmdet.apis")
+    torch.load = lambda checkpoint, map_location: {"meta": {}}
+    apis.inference_detector = lambda model, paths: []
+    apis.init_detector = lambda config, checkpoint, device: SimpleNamespace()
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setitem(sys.modules, "mmdet", mmdet)
+    monkeypatch.setitem(sys.modules, "mmdet.apis", apis)
+
+    backend = MMDetectionBackend(
+        tmp_path / "config.py",
+        tmp_path / "model.pth",
+        "cpu",
+        CLASSES,
+    )
+
+    assert backend._model.CLASSES == CLASSES
 
 
 def test_batch_of_ten_images_writes_stable_json(tmp_path):
