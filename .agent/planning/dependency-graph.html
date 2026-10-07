@@ -153,9 +153,9 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-04</code></td>
 <td><code>finish-to-finish</code></td>
 <td><code>unassigned</code></td>
-<td><code>active</code></td>
+<td><code>blocked</code></td>
 <td>Thảo luận Claude–Codex 2026-10-05</td>
-<td><code>none</code></td>
+<td><code>BLOCKER-024</code></td>
 </tr>
 <tr>
 <td><code>EDGE-010</code></td>
@@ -520,6 +520,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="notes">Notes</h2>
 <ul>
+<li>2026-10-08: <code>EDGE-009</code> (E-08 ← E-04) chuyển <code>blocked</code> theo <code>BLOCKER-024</code> — E-04 chưa có annotation người học trên ảnh BDD100K nên chuỗi chi phối E-04 → E-08 → E-09 → E-11 chỉ chạy trên dữ liệu ghi sẵn. Nhánh reference E-06 → E-07 phụ thuộc thêm <code>BLOCKER-022</code> (QA Lead/QC Admin chưa gán, hạn 2026-10-15).</li>
 <li>Lịch theo <code>CR-101</code> (duyệt 2026-10-06): E-01 07/10 → M-01 09/10 → M-02 14/10 → M-03 + reference + score khoá 16/10 → code freeze + preregistration 19/10 → thí nghiệm 20–23/10 → KPI/báo cáo/gate 26/10 → nghiệm thu E-24 27/10. Ngày mục tiêu từng epic ở <code>.agent/planning/epics.html</code>.</li>
 <li>
 <p>Với GT là nhãn gốc BDD100K (CR-101), nhánh reference <code>E-06 → E-07 → E-17 → E-18</code> không còn phụ thuộc nhân lực gán GT; nhánh Detector phụ thuộc E-10 (Faster R-CNN công khai, BLOCKER-005 đã giải quyết).</p>
