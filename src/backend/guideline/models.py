@@ -27,7 +27,6 @@ def get_latest_guideline_version() -> GuidelineVersion | None:
     return max(versions, key=version_sort_key)
 
 
-
 class GuidelineVersion(models.Model):
     """Phiên bản guideline đã nạp từ tệp."""
 
