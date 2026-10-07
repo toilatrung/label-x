@@ -280,7 +280,9 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 </tbody>
 </table>
 <ul>
-<li>CVAT <strong>không</strong> nằm trong compose. Adapter đọc instance CVAT đang triển khai (B-18); <code>CVAT_BASE_URL</code> và <code>CVAT_SERVICE_TOKEN</code> để trống trong <code>.env.example</code> (TBD-01).</li>
+<li>CVAT dev dùng complete upstream Compose tại tag <code>v2.77.0</code> và commit <code>7dac20c766d7d4297fdf67589436387ab26f7411</code>, được cache dưới <code>.cache/cvat/</code> và điều khiển bằng <code>make cvat-up</code>/<code>cvat-down</code>. Pin này là tạm thời trong lúc chờ instance thật theo TBD-01/BLOCKER-004. Wrapper đợi healthy và kiểm <code>/api/server/about</code>.</li>
+<li>Adapter sản phẩm dùng <code>CVAT_SERVICE_TOKEN</code> chỉ đọc; provisioning dev dùng credential riêng <code>CVAT_PROVISIONER_TOKEN</code> hoặc <code>TOKEN_FILE</code>. <code>make cvat-import-sample</code> bắt buộc <code>SAMPLE_IMAGES</code>, <code>SAMPLE_ANNOTATIONS</code> và <code>TOKEN_FILE</code>.</li>
+<li><code>make cvat-audit-learner LEARNER_EXPORTS='a.zip b.zip' BDD100K_IMAGES_ROOT=/path/images/100k</code> kiểm cấu trúc YOLO, checksum, duplicate, orphan label, bbox chuẩn hoá và phân loại filename learner theo official BDD100K train/val listing. Receipt chỉ ghi dưới <code>.cache/cvat/</code>.</li>
 <li>Credential trong compose/<code>s3.json</code>/<code>.env.example</code> là giá trị dev, không dùng cho môi trường thật.</li>
 <li><code>settings.py</code> có ba storage theo bucket: <code>snapshots</code> (<code>OBJECT_STORAGE_BUCKET_SNAPSHOTS</code>, mặc định <code>labelx-snapshots</code>), <code>evidence</code> (<code>OBJECT_STORAGE_BUCKET_EVIDENCE</code>, <code>labelx-evidence</code>), <code>reports</code> (<code>OBJECT_STORAGE_BUCKET_REPORTS</code>, <code>labelx-reports</code>); <code>default</code> vẫn là <code>OBJECT_STORAGE_BUCKET</code>. Dùng <code>django.core.files.storage.storages["snapshots"]</code>.</li>
 </ul>
@@ -311,7 +313,7 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 <ul>
 <li>Backend: Django 5.2 (<code>&gt;=5.2,&lt;5.3</code>), djangorestframework, drf-spectacular, django-filter, django-cors-headers, django-environ, django-storages[s3] + boto3, Celery 5 (<code>celery[redis]</code>) + django-celery-beat, psycopg 3, httpx, pillow, gunicorn.</li>
 <li>Frontend: next 16.3.8, react/react-dom 19.2.8, @tanstack/react-query, openapi-fetch, openapi-typescript.</li>
-<li>Chưa pin phiên bản CVAT/cvat-sdk; phải pin sau khi kiểm API instance thật (DEC-001, TBD-01).</li>
+<li>CVAT dev pin tạm <code>v2.77.0</code> + commit SHA trong lúc chờ TBD-01. Không thêm <code>cvat-sdk</code>; adapter gọi REST bằng <code>httpx</code> với request hook chặn mọi HTTP method ngoài GET/HEAD.</li>
 </ul>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>

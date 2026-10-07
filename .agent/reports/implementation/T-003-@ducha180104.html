@@ -82,7 +82,7 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);back
       <li>Xá»­ lĂ½ wildcard mapping: mapping cĂ³ trÆ°á»ng rá»—ng hoáº¡t Ä‘á»™ng nhÆ° wildcard khá»›p má»i class_name / paired_class; bá» qua query parameter rá»—ng.</li>
       <li>Ăp dá»¥ng <code>CursorPagination</code> (PAGE_SIZE=50) vá»›i response envelope <code>{"next", "previous", "results"}</code>, khĂ´ng cĂ³ trÆ°á»ng <code>count</code>.</li>
       <li>Loáº¡i bá» endpoint <code>/api/guidelines/</code> khĂ´ng thuá»™c OpenAPI contract chung. Frontend láº¥y <code>guideline_version</code> tá»« káº¿t quáº£ rules.</li>
-      <li>Sá»­a hĂ m <code>get_latest_guideline_version()</code> láº¥y version cĂ³ <code>loaded_at</code> má»›i nháº¥t (khĂ´ng dá»±a vĂ o <code>pk</code> hay ID).</li>
+      <li>Sửa hàm <code>get_latest_guideline_version()</code> chọn theo số trong <code>version_tag</code>, không phải <code>loaded_at</code>.</li>
     </ul>
   </li>
   <li><strong>Frontend Alignment &amp; Clean Design</strong>:
@@ -107,7 +107,7 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);back
 <tr><td><code>src/backend/config/exceptions.py</code></td><td>Táº¡o má»›i</td><td>custom_exception_handler chuáº©n hĂ³a error contract toĂ n há»‡ thá»‘ng</td></tr>
 <tr><td><code>src/backend/guideline/permissions.py</code></td><td>Táº¡o má»›i</td><td>HasGuidelineRole RBAC (reviewer, qa_lead, qc_admin, super_admin)</td></tr>
 <tr><td><code>src/backend/config/settings.py</code></td><td>Sá»­a</td><td>ÄÄƒng kĂ½ middleware, exception handler vĂ  app guideline</td></tr>
-<tr><td><code>src/backend/guideline/models.py</code></td><td>Sá»­a</td><td>3 models, giữ nguyên ordering rule_id ban đầu (không tạo migration mới), get_latest_guideline_version theo loaded_at</td></tr>
+<tr><td><code>src/backend/guideline/models.py</code></td><td>Sửa</td><td>3 models, giữ nguyên ordering rule_id ban đầu (không tạo migration mới), get_latest_guideline_version theo số trong version_tag</td></tr>
 <tr><td><code>src/backend/guideline/serializers.py</code></td><td>Sá»­a</td><td>Cursor pagination serializer vĂ  ErrorResponseSerializer kĂ¨m details</td></tr>
 <tr><td><code>src/backend/guideline/urls.py</code></td><td>Sá»­a</td><td>Bá» endpoint /api/guidelines/, chá»‰ giá»¯ /rules/ vĂ  /rules/{rule_id}/</td></tr>
 <tr><td><code>src/backend/guideline/views.py</code></td><td>Sá»­a</td><td>TuĂ¢n thá»§ contract: query family, wildcard mapping, CursorPagination</td></tr>

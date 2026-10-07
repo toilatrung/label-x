@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "django_celery_beat",
+    "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
     "guideline",
 ]
