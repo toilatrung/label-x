@@ -755,7 +755,10 @@ components:
       enum: [schema, geometry, duplicate, detector, metric, vlm]
     EngineStatus:
       type: string
-      description: Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt"
+      description: |
+        Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt".
+        Suy ra từ LedgerEntry theo quy tắc trong docs/04-api/engine-interface.html §3 (T-006,
+        DEC-010); `checked` chỉ khi mọi đơn vị eligible đã completed.
       enum: [running, checked, partial, failed, not_checked]
     NotCheckedReason:
       type: string
@@ -813,24 +816,268 @@ components:
         finished_at: { type: string, format: date-time, nullable: true }
     LedgerEntry:
       type: object
-      required: [engine, status, unit, eligible, completed, failed, not_checked]
+      description: |
+        Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
+        total = completed + failed + pending + not_checked;
+        eligible = total − not_checked_reasons.not_applicable − not_checked_reasons.not_triggered;
+        đơn vị failed và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
+        (không loại đơn vị lỗi khỏi mẫu số); coverage = completed / eligible, null khi eligible = 0.
+      required: [engine, status, unit, total, eligible, completed, failed, pending, not_checked, not_checked_reasons, coverage]
+      x-labelx-trace:
+        engine: [FR-AGG-04]
+        status: [FR-AGG-05]
+        required: [FR-GTE-01]
+        unit: [FR-AGG-04]
+        total: [FR-AGG-04]
+        eligible: [FR-AGG-04, FR-RPT-04]
+        completed: [FR-AGG-04]
+        failed: [FR-AGG-04]
+        pending: [FR-AGG-04, FR-AGG-05]
+        not_checked: [FR-AGG-04]
+        not_checked_reasons: [FR-AGG-04, FR-ENG-09]
+        coverage: [FR-AGG-04, FR-RPT-04, FR-GTE-01]
       properties:
         engine: { $ref: "#/components/schemas/EngineName" }
         status: { $ref: "#/components/schemas/EngineStatus" }
         required:
           type: boolean
           description: Engine bắt buộc cho coverage gate
-        unit:
-          type: string
-          enum: [frame, shape]
-        eligible: { type: integer }
-        completed: { type: integer }
-        failed: { type: integer }
-        not_checked: { type: integer }
+        unit: { $ref: "#/components/schemas/EngineUnitKind" }
+        total:
+          type: integer
+          minimum: 0
+          description: Số đơn vị trong phạm vi snapshot của engine
+        eligible:
+          type: integer
+          minimum: 0
+          description: Mẫu số coverage; gồm cả đơn vị failed, pending và not_checked chặn (disabled, no_model, no_reference)
+        completed: { type: integer, minimum: 0 }
+        failed:
+          type: integer
+          minimum: 0
+          description: Đơn vị lỗi thực thi sau retry; vẫn trong mẫu số
+        pending:
+          type: integer
+          minimum: 0
+          description: Đơn vị chưa có kết quả (pending, running, retrying)
+        not_checked: { type: integer, minimum: 0 }
         not_checked_reasons:
           type: object
-          additionalProperties: { type: integer }
-          description: Số đơn vị theo NotCheckedReason
+          additionalProperties: { type: integer, minimum: 0 }
+          description: Số đơn vị theo NotCheckedReason; tổng bằng not_checked
+        coverage:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: completed / eligible; null khi eligible = 0
+    # ------------------------------------------------ engine interface (T-006, DEC-010)
+    # Hợp đồng giữa QC Orchestrator và mọi engine (NFR-13): engine nhận EngineInput theo shard,
+    # trả EngineOutput; orchestrator ghi candidate, evidence, ledger trong một transaction
+    # (FR-AGG-06). Giải thích: docs/04-api/engine-interface.html.
+    EngineUnitKind:
+      type: string
+      description: Đơn vị áp dụng của engine (FR-AGG-04)
+      enum: [frame, shape]
+    EngineUnitOutcome:
+      type: string
+      description: |
+        Trạng thái nội bộ của một đơn vị (không hiển thị). Map sang EngineStatus của đơn vị theo
+        x-labelx-public-status; trạng thái engine tổng hợp theo engine-interface.html §3.
+      enum: [pending, running, retrying, completed, failed, not_checked]
+      x-labelx-trace: [FR-AGG-04, FR-AGG-05]
+      x-labelx-public-status:
+        pending: running
+        running: running
+        retrying: running
+        completed: checked
+        failed: failed
+        not_checked: not_checked
+    EngineInternalState:
+      type: string
+      description: |
+        Trạng thái nội bộ của một engine trong run (orchestrator, không hiển thị). Map sang
+        EngineStatus theo x-labelx-public-status; chỉ `succeeded` (mọi đơn vị eligible completed)
+        thành `checked` (FR-AGG-05, B-19).
+      enum: [queued, running, retrying, succeeded, partially_succeeded, failed, cancelled, disabled, model_unavailable, reference_unavailable, not_applicable]
+      x-labelx-trace: [FR-AGG-05, FR-ENG-09]
+      x-labelx-public-status:
+        queued: running
+        running: running
+        retrying: running
+        succeeded: checked
+        partially_succeeded: partial
+        failed: failed
+        cancelled: partial
+        disabled: not_checked
+        model_unavailable: not_checked
+        reference_unavailable: not_checked
+        not_applicable: not_checked
+    EngineDescriptor:
+      type: object
+      description: Đăng ký engine với orchestrator; thêm engine mới chỉ cần descriptor + worker (NFR-13)
+      required: [name, version, unit, required, needs_model, needs_reference, applicability_version]
+      x-labelx-trace:
+        name: [NFR-13]
+        version: [FR-ENG-01]
+        unit: [FR-AGG-04]
+        required: [FR-GTE-01]
+        needs_model: [FR-ENG-05, FR-ENG-09]
+        needs_reference: [FR-AGG-04]
+        applicability_version: [FR-AGG-04]
+      properties:
+        name: { $ref: "#/components/schemas/EngineName" }
+        version:
+          type: string
+          description: Version code engine, ghi vào run (FR-ENG-01)
+        unit: { $ref: "#/components/schemas/EngineUnitKind" }
+        required:
+          type: boolean
+          description: Engine bắt buộc cho coverage gate
+        needs_model:
+          type: boolean
+          description: Thiếu model artifact thì engine Not checked (no_model)
+        needs_reference:
+          type: boolean
+          description: Thiếu GT/reference thì engine Not checked (no_reference)
+        applicability_version:
+          type: string
+          description: Version quy tắc chọn đơn vị áp dụng; đơn vị ngoài phạm vi ghi not_applicable
+    EngineConfig:
+      type: object
+      description: Cấu hình engine có version, nằm trong config version của run
+      required: [engine, version, enabled, params]
+      x-labelx-trace:
+        engine: [FR-ENG-01]
+        version: [FR-ENG-01]
+        enabled: [FR-AGG-04]
+        params: [FR-ENG-07]
+      properties:
+        engine: { $ref: "#/components/schemas/EngineName" }
+        version:
+          type: string
+          description: Version cấu hình (ngưỡng có version, FR-ENG-07)
+        enabled:
+          type: boolean
+          description: false → mọi đơn vị not_checked với lý do disabled
+        params:
+          type: object
+          additionalProperties: true
+          description: Tham số riêng engine (ngưỡng IoU, τ_E1, τ_E2…)
+    EngineUnitRef:
+      type: object
+      description: Một đơn vị áp dụng; shape định danh qua namespace cvat_shape (DEC-005)
+      required: [kind, frame]
+      x-labelx-trace:
+        kind: [FR-AGG-04]
+        frame: [FR-AGG-03]
+        object: [FR-AGG-03]
+      properties:
+        kind: { $ref: "#/components/schemas/EngineUnitKind" }
+        frame: { $ref: "#/components/schemas/FrameKey" }
+        object:
+          allOf: [{ $ref: "#/components/schemas/ObjectRef" }]
+          nullable: true
+          description: Bắt buộc khi kind = shape
+    EngineInput:
+      type: object
+      description: Một shard công việc gửi cho engine
+      required: [idempotency_key, run_id, snapshot_id, engine, engine_version, config, seed, shard_index, units]
+      x-labelx-trace:
+        idempotency_key: [FR-AGG-02]
+        run_id: [FR-ENG-01]
+        snapshot_id: [FR-ENG-01]
+        engine: [FR-ENG-01]
+        engine_version: [FR-ENG-01]
+        config: [FR-ENG-01]
+        model_artifact: [FR-ENG-01, FR-ENG-05]
+        seed: [FR-ENG-01]
+        shard_index: [FR-AGG-02]
+        units: [FR-AGG-04]
+      properties:
+        idempotency_key:
+          type: string
+          description: Băm của (snapshot, engine, config, model, shard); retry không tạo candidate trùng (FR-AGG-02)
+        run_id: { type: integer }
+        snapshot_id: { type: integer }
+        engine: { $ref: "#/components/schemas/EngineName" }
+        engine_version: { type: string }
+        config: { $ref: "#/components/schemas/EngineConfig" }
+        model_artifact:
+          allOf: [{ $ref: "#/components/schemas/ModelArtifact" }]
+          nullable: true
+        seed: { type: integer }
+        shard_index: { type: integer, minimum: 0 }
+        units:
+          type: array
+          items: { $ref: "#/components/schemas/EngineUnitRef" }
+    Candidate:
+      type: object
+      description: Nghi vấn do engine sinh; bất biến sau khi ghi, khác Issue (FR-AGG-01)
+      required: [engine, engine_version, family, frame, anchor, evidence]
+      x-labelx-trace:
+        engine: [FR-AGG-01]
+        engine_version: [FR-ENG-01]
+        family: [FR-AGG-03, FR-ENG-04, FR-ENG-07]
+        severity: [FR-ENG-02]
+        frame: [FR-AGG-03]
+        anchor: [FR-AGG-03, FR-RNK-12]
+        evidence: [FR-ENG-08]
+      properties:
+        engine: { $ref: "#/components/schemas/EngineName" }
+        engine_version: { type: string }
+        family: { $ref: "#/components/schemas/IssueFamily" }
+        severity:
+          allOf: [{ $ref: "#/components/schemas/Severity" }]
+          nullable: true
+        frame: { $ref: "#/components/schemas/FrameKey" }
+        anchor: { $ref: "#/components/schemas/Anchor" }
+        evidence: { $ref: "#/components/schemas/Evidence" }
+    EngineUnitResult:
+      type: object
+      description: Kết quả cuối của một đơn vị trong shard
+      required: [unit, outcome, attempts]
+      x-labelx-trace:
+        unit: [FR-AGG-04]
+        outcome: [FR-AGG-04, FR-AGG-05]
+        not_checked_reason: [FR-AGG-04, FR-ENG-09]
+        error: [FR-AGG-04]
+        attempts: [FR-AGG-02]
+      properties:
+        unit: { $ref: "#/components/schemas/EngineUnitRef" }
+        outcome:
+          type: string
+          enum: [completed, failed, not_checked]
+          description: Giá trị kết thúc của EngineUnitOutcome
+        not_checked_reason:
+          allOf: [{ $ref: "#/components/schemas/NotCheckedReason" }]
+          nullable: true
+          description: Bắt buộc khi outcome = not_checked
+        error:
+          type: string
+          nullable: true
+          description: Lỗi thực thi khi outcome = failed (timeout, ảnh hỏng, worker lỗi); không chứa secret
+        attempts: { type: integer, minimum: 1 }
+    EngineOutput:
+      type: object
+      description: Kết quả một shard; orchestrator ghi candidates và cập nhật ledger trong cùng transaction (FR-AGG-06)
+      required: [idempotency_key, engine, engine_version, candidates, unit_results]
+      x-labelx-trace:
+        idempotency_key: [FR-AGG-02]
+        engine: [FR-ENG-01]
+        engine_version: [FR-ENG-01]
+        candidates: [FR-AGG-01, FR-ENG-08]
+        unit_results: [FR-AGG-04, FR-AGG-06]
+      properties:
+        idempotency_key: { type: string }
+        engine: { $ref: "#/components/schemas/EngineName" }
+        engine_version: { type: string }
+        candidates:
+          type: array
+          items: { $ref: "#/components/schemas/Candidate" }
+        unit_results:
+          type: array
+          items: { $ref: "#/components/schemas/EngineUnitResult" }
     RankedFrame:
       type: object
       required: [frame_id, rank, score, review_state, missing_evidence, issue_counts]
