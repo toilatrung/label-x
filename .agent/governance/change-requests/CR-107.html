@@ -64,14 +64,14 @@ ul.dir{columns:2;font-size:14px}
 <p>Trước: E-03 scope “RulesThresholds phần mapping nhóm lỗi/lớp → rule ID (QC Admin sửa, vai trò khác chỉ xem)”; T-017 “API sửa có kiểm hợp lệ”.</p>
 <p>Sau: mapping nạp từ tệp, kiểm hợp lệ khi nạp (rule ID tồn tại, lớp thuộc taxonomy, family thuộc IssueFamily, không trùng; tệp lỗi bị từ chối toàn bộ và báo dòng lỗi); màn RulesThresholds phần mapping chỉ xem cho mọi vai trò được đọc; không có API sửa mapping.</p>
 <h2 id="justification">Justification</h2>
-<p><a href="CR-101.html">CR-101</a> đặt mapping nhóm lỗi/lớp → rule ID trong tệp guideline tĩnh nạp lúc khởi tạo, nên “QC Admin sửa” trên màn mâu thuẫn với nguồn sự thật là tệp. Bỏ quyền sửa cũng bỏ phụ thuộc T-017 vào audit T-013.</p>
+<p><a href="CR-101.html">CR-101</a> đặt mapping nhóm lỗi/lớp → rule ID trong tệp guideline tĩnh nạp lúc khởi tạo, nên “QC Admin sửa” trên màn mâu thuẫn với nguồn sự thật là tệp. FR-GDL-02 (should, “QC Admin cấu hình mapping (nhóm lỗi, lớp, cặp lớp) → rule ID”) được đáp ứng ở pilot bằng cách nạp tệp mapping có kiểm hợp lệ (gồm cặp lớp <code>paired_class</code>), không có UI hay API sửa. Thao tác nạp vẫn là thay đổi cấu hình nên phải có dấu vết theo FR-SEC-05: lệnh nạp bắt buộc <code>--actor</code> và lưu bản ghi load bất biến; T-017 không phụ thuộc T-013, ghi vào audit chung là follow-up của T-013.</p>
 <h2 id="impact-assessment">Impact Assessment</h2>
 <ul>
-<li><strong>Affected Baselines</strong>: <code>.agent/planning/epics.html#e-03, .agent/execution/task-board.html#t-017</code></li>
-<li><strong>Affected Epics or Tasks</strong>: <code>E-03; T-017</code></li>
+<li><strong>Affected Baselines</strong>: <code>.agent/planning/epics.html#e-03, .agent/execution/task-board.html#t-017, .agent/execution/task-board.html#t-013; SRS FR-GDL-02 (đáp ứng bằng nạp tệp), FR-SEC-05</code></li>
+<li><strong>Affected Epics or Tasks</strong>: <code>E-03; T-017, T-013</code></li>
 <li><strong>Schedule Impact</strong>: <code>none</code></li>
 <li><strong>Cost or Resource Impact</strong>: <code>none</code></li>
-<li><strong>Security or Compliance Impact</strong>: <code>none</code></li>
+<li><strong>Security or Compliance Impact</strong>: <code>FR-SEC-05: nạp mapping bắt buộc actor và bản ghi load bất biến</code></li>
 <li><strong>Compatibility or Migration Impact</strong>: <code>none (T-017 chưa bắt đầu)</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>

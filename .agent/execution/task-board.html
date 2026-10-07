@@ -1050,6 +1050,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Django app <code>audit</code>: model + service ghi trong <code>transaction.atomic</code> của thao tác; rollback thao tác thì không còn audit</li>
 <li>Không có API/admin sửa, xoá audit; role DB của ứng dụng chỉ có INSERT/SELECT trên bảng audit (migration hoặc script grant, kiểm trong test)</li>
 <li>Không ghi secret/mật khẩu vào trường trước/sau</li>
+<li>Follow-up CR-107: nếu T-017 đã merge, ghi các lần nạp mapping/guideline (bản ghi load của T-017) vào audit chung</li>
 </ul>
 <h5 id="excluded_12">Excluded</h5>
 <ul>
@@ -1290,7 +1291,8 @@ ul.dir{columns:2;font-size:14px}
 <h5 id="included_16">Included</h5>
 <ul>
 <li>Nạp mapping nhóm lỗi/lớp → rule ID từ tệp (cùng tệp guideline của T-003 hoặc tệp riêng), idempotent theo SHA-256 như <code>load_guideline</code></li>
-<li>Kiểm hợp lệ khi nạp: rule ID tồn tại trong guideline đã nạp; lớp thuộc taxonomy 10 lớp BDD100K; <code>family</code> thuộc enum <code>IssueFamily</code>; không trùng cặp (family, lớp, lớp cặp); tệp có lỗi thì từ chối cả tệp, không ghi phần nào, báo từng dòng lỗi</li>
+<li>Kiểm hợp lệ khi nạp: rule ID tồn tại trong guideline đã nạp; <code>class_name</code> và <code>paired_class</code> (cặp lớp, FR-GDL-02) thuộc taxonomy 10 lớp BDD100K; <code>family</code> thuộc enum <code>IssueFamily</code>; không trùng bộ (family, lớp, lớp cặp, rule); tệp có lỗi thì từ chối cả tệp, không ghi phần nào, báo từng dòng lỗi</li>
+<li>Lệnh nạp bắt buộc <code>--actor &lt;username&gt;</code>; mỗi lần nạp lưu bản ghi load bất biến (actor, thời điểm, SHA-256 tệp, số dòng, kết quả nhận/từ chối, dòng lỗi), không có API sửa/xoá bản ghi này (FR-SEC-05); khi T-013 merge thì ghi thêm vào audit chung (follow-up trong T-013)</li>
 <li>API đọc mapping (chỉ GET) theo contract, quyền đọc theo RBAC của T-012</li>
 <li>Màn RulesThresholds phần mapping chỉ đọc, dữ liệu lấy từ API (docs/design)</li>
 <li>Test backend + frontend</li>
@@ -1317,8 +1319,9 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_16">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Tệp hợp lệ nạp thành công; nạp lại cùng tệp không tạo bản ghi trùng (test)</li>
-<li>[ ] Test cho từng loại lỗi: rule ID không tồn tại, lớp ngoài taxonomy, family ngoài IssueFamily, cặp trùng — mỗi trường hợp từ chối cả tệp, không ghi phần nào và báo đúng dòng lỗi</li>
+<li>[ ] Tệp hợp lệ nạp thành công, kể cả mapping có <code>paired_class</code>; nạp lại cùng tệp không tạo mapping trùng (test)</li>
+<li>[ ] Lệnh nạp thiếu <code>--actor</code> hoặc actor không tồn tại bị từ chối; mỗi lần nạp (nhận hoặc từ chối) có bản ghi load với actor, thời điểm, SHA-256, số dòng, kết quả (test)</li>
+<li>[ ] Test cho từng loại lỗi: rule ID không tồn tại, lớp hoặc lớp cặp ngoài taxonomy, family ngoài IssueFamily, dòng trùng — mỗi trường hợp từ chối cả tệp, không ghi phần nào và báo đúng dòng lỗi</li>
 <li>[ ] Không có endpoint sửa mapping; API đọc trả 403 cho vai trò không được đọc (test theo rbac-matrix)</li>
 <li>[ ] Màn RulesThresholds hiển thị mapping từ API, không có điều khiển sửa; test frontend</li>
 <li>[ ] Verification method is specified for each condition.</li>
