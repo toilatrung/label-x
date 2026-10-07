@@ -66,7 +66,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Affected Scope</strong>: <code>M-01, E-01, E-02, E-03; M-02 (E-05 dùng auth/RBAC/audit/storage)</code></li>
 <li><strong>Impact Description</strong>: Màn nghiệp vụ vẫn chạy trên mock; RBAC/audit chưa có khi E-05 bắt đầu snapshot.</li>
-<li><strong>Detection Signals</strong>: Tầng 1 (T-006, T-007, T-009, T-010, T-011, T-014, T-015) chưa merge trước trưa 2026-10-09; T-011 chưa merge thì tầng 2 chưa thể bắt đầu.</li>
+<li><strong>Detection Signals</strong>: Tầng 1 (T-006, T-007, T-009, T-010, T-011, T-014, T-015) chưa merge trước trưa 2026-10-09; T-011 chưa merge thì tầng 2 chưa thể bắt đầu; @toilatrung giữ 4 task tầng 1 (T-006, T-007, T-009, T-011) và T-011 là đầu chuỗi dài nhất, nên T-011 phải làm trước.</li>
 <li><strong>Assumptions</strong>: <code>5 thành viên làm song song; PR được duyệt trong ngày (CR-102).</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>
@@ -80,7 +80,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="response-plan">Response Plan</h2>
 <ul>
 <li><strong>Strategy</strong>: <code>mitigate</code></li>
-<li><strong>Mitigation Actions</strong>: Giao theo tầng; ưu tiên T-011 cho người có kinh nghiệm backend nhất; review PR ngay khi mở; T-016 làm sẵn phần UI trên mock route theo contract trong lúc chờ T-012.</li>
+<li><strong>Mitigation Actions</strong>: Giao theo tầng; T-011 (@toilatrung) làm trước các task tầng 1 khác của cùng người; review PR ngay khi mở; T-016 làm sẵn phần UI trên mock route theo contract trong lúc chờ T-012.</li>
 <li><strong>Contingency Actions</strong>: PO theo dõi Detection Signals và quyết định khi tín hiệu xảy ra.</li>
 <li><strong>Trigger Threshold</strong>: Bất kỳ tín hiệu trong Detection Signals xảy ra.</li>
 <li><strong>Responsible Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
