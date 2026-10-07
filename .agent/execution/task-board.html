@@ -589,11 +589,11 @@ ul.dir{columns:2;font-size:14px}
 <thead><tr><th>Epic</th><th>Đã xong</th><th>Task còn lại</th><th>Thứ tự / phụ thuộc</th></tr></thead>
 <tbody>
 <tr><td>E-01</td><td>T-001</td><td>T-006, T-007, T-008, T-009, T-010</td><td>T-006, T-007, T-009, T-010 song song; T-008 sau T-006</td></tr>
-<tr><td>E-02</td><td>T-002</td><td>T-011, T-012, T-013, T-014, T-015, T-016</td><td>T-011 trước; T-013, T-014, T-015 song song với T-011; T-012 sau T-011 + T-013; T-016 sau T-011 + T-012</td></tr>
+<tr><td>E-02</td><td>T-002</td><td>T-011, T-012, T-013, T-014, T-015, T-016</td><td>T-011 trước; T-014, T-015 song song với T-011; T-013 sau T-011 (audit cần actor/user của T-011); T-012 sau T-011 + T-013; T-016 sau T-011 + T-012</td></tr>
 <tr><td>E-03</td><td>T-003</td><td>T-017, T-018</td><td>T-017 sau T-012 + T-013; T-018 sau T-016</td></tr>
 </tbody>
 </table>
-<p><strong>Đánh giá hạn 2026-10-09</strong>: chuỗi phụ thuộc dài nhất là T-011 → T-012 → T-016 → T-018 (bốn task nối tiếp, ba trong đó là backend auth/RBAC). Với 5 thành viên, khó đạt trong một ngày. PO cần chọn: (a) dời hạn M-01 sang 2026-10-12 bằng change request; hoặc (b) thu hẹp phạm vi M-01 bằng change request, ví dụ chuyển T-014 (Object Storage) và identity mapping CVAT sang M-02 nơi E-05 dùng tới, T-009 sang M-02.</p>
+<p><strong>Đánh giá hạn 2026-10-09</strong>: chuỗi phụ thuộc dài nhất là T-011 → T-013 → T-012 → T-016 → T-018 (năm task nối tiếp). Với 5 thành viên, khó đạt trong một ngày. PO cần chọn: (a) dời hạn M-01 sang 2026-10-12 bằng change request; hoặc (b) thu hẹp phạm vi M-01 bằng change request, ví dụ chuyển T-014 (Object Storage) và identity mapping CVAT sang M-02 nơi E-05 dùng tới, T-009 sang M-02.</p>
 <p><strong>Cần PO quyết</strong>: AC E-03 “Lookup trả đúng version gắn với snapshot” mâu thuẫn với CR-101 (bỏ guideline có version, thay bằng tệp tĩnh). Hiện API đã trả <code>guideline_version</code> theo tệp nạp; gắn version vào snapshot thuộc E-05. Đề xuất sửa AC E-03 thành “lookup trả đúng version tệp đã nạp; snapshot ghi version guideline (E-05)” qua change request. Tương tự, “QC Admin sửa mapping” (T-017) cần xác nhận vì CR-101 đặt mapping trong tệp tĩnh.</p>
 <h3 id="t-006">T-006</h3>
 <h4 id="record-metadata_5">Record Metadata</h4>
@@ -604,7 +604,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_5">Objective</h4>
@@ -665,7 +665,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_6">Objective</h4>
@@ -726,7 +726,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_7">Objective</h4>
@@ -760,8 +760,8 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="acceptance-criteria_7">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Mọi endpoint trong tab:api có operation và trace FR/BR/UC (test kiểm)</li>
-<li>[ ] OpenAPI hợp lệ, frontend sinh type được</li>
-<li>[ ] Mọi guard của state machine có mã lỗi tương ứng</li>
+<li>[ ] OpenAPI hợp lệ; contract.d.ts sinh lại và commit cùng PR</li>
+<li>[ ] Mọi guard của state machine có mã lỗi tương ứng; mọi mã lỗi view trả về đều khai báo trong contract</li>
 <li>[ ] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_7">Verification Requirements</h4>
@@ -786,7 +786,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_8">Objective</h4>
@@ -845,7 +845,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_9">Objective</h4>
@@ -877,7 +877,8 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_9">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Mọi giá trị ErrorCode trong contract có thông báo (test tự sinh từ contract.d.ts)</li>
+<li>[ ] Mọi giá trị ErrorCode trong contract có thông báo (test tự sinh từ contract.d.ts sinh lại từ openapi.yaml)</li>
+<li>[ ] Mọi mã lỗi view backend trả về đều khai báo trong contract (đối chiếu config/exceptions.py)</li>
 <li>[ ] Các màn hiện có dùng module chung</li>
 <li>[ ] Verification method is specified for each condition.</li>
 </ul>
@@ -903,7 +904,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_10">Objective</h4>
@@ -939,8 +940,8 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="acceptance-criteria_10">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Endpoint /api/auth/* khớp openapi.yaml (test so schema)</li>
-<li>[ ] Thiếu CSRF bị từ chối 403 theo hợp đồng lỗi</li>
-<li>[ ] Identity mapping lưu và tra được cho một user</li>
+<li>[ ] Test từ chối: thiếu/sai CSRF → 403, sai mật khẩu → 400/401 theo contract, phiên hết hạn → 401, user không có vai trò → phiên không có grant</li>
+<li>[ ] Identity mapping lưu và tra được; mã lỗi trả về đều khai báo trong contract</li>
 <li>[ ] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_10">Verification Requirements</h4>
@@ -965,7 +966,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
@@ -1000,8 +1001,8 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
 <ul>
-<li>[ ] API ngoài scope trả 403 và có bản ghi audit</li>
-<li>[ ] Người duyệt trùng người yêu cầu bị từ chối</li>
+<li>[ ] Test cho từng vai trò trong rbac-matrix: vai trò bị cấm và dataset ngoài scope trả 403 kèm bản ghi audit; vai trò được phép trả 2xx</li>
+<li>[ ] Người duyệt trùng người yêu cầu (kể cả tài khoản khác cùng người) bị từ chối</li>
 <li>[ ] Override không có lý do bị từ chối 422; có lý do thì audit gắn nhãn</li>
 <li>[ ] Verification method is specified for each condition.</li>
 </ul>
@@ -1027,7 +1028,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_12">Objective</h4>
@@ -1087,7 +1088,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @vietanhhhhhh2003)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_13">Objective</h4>
@@ -1127,8 +1128,8 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="verification-requirements_13">Verification Requirements</h4>
 <ul>
-<li><strong>Automated Checks</strong>: <code>make check</code></li>
-<li><strong>Manual Checks</strong>: <code>Upload/tải một blob trên stack dev</code></li>
+<li><strong>Automated Checks</strong>: <code>make check; Expected Evidence gồm test tích hợp trên stack dev đã commit (không chỉ report tự khai)</code></li>
+<li><strong>Manual Checks</strong>: <code>Upload/tải một blob trên stack dev, đầu ra lệnh ghi trong report</code></li>
 <li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-014.html</code></li>
 </ul>
 <h4 id="completion-criteria_13">Completion Criteria</h4>
@@ -1147,7 +1148,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_14">Objective</h4>
@@ -1206,7 +1207,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_15">Objective</h4>
@@ -1240,7 +1241,9 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_15">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Đăng nhập thật → shell, đúng menu theo vai trò</li>
+<li>[ ] Đăng nhập thật → shell; test TopBar/FlowNav phủ đủ 7 vai trò</li>
+<li>[ ] Vai trò bị cấm gõ URL trực tiếp bị chặn ở frontend và API trả 403</li>
+<li>[ ] Build production không còn route mock và bundle không chứa tài khoản mẫu (bước CI grep .next/static)</li>
 <li>[ ] WorkflowPermissions hiển thị dữ liệu từ API, không dữ liệu giả</li>
 <li>[ ] npm run lint/typecheck/test/build đạt</li>
 <li>[ ] Verification method is specified for each condition.</li>
@@ -1248,7 +1251,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="verification-requirements_15">Verification Requirements</h4>
 <ul>
 <li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm test &amp;&amp; npm run build; make check</code></li>
-<li><strong>Manual Checks</strong>: <code>Đăng nhập thật với 2 vai trò, chụp màn hình</code></li>
+<li><strong>Manual Checks</strong>: <code>Mọi vai trò được phép thấy lối vào; vai trò bị cấm gõ URL bị chặn và API trả 403; chụp màn hình trong report</code></li>
 <li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-016.html</code></li>
 </ul>
 <h4 id="completion-criteria_15">Completion Criteria</h4>
@@ -1267,7 +1270,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_16">Objective</h4>
@@ -1327,7 +1330,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_17">Objective</h4>
