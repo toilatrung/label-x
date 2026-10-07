@@ -47,3 +47,11 @@ test('approval written before the last commit is stale', () => {
   assert.equal(r.ok, false);
   assert.match(r.reason, /commit mới/);
 });
+
+test('member pull request into main is rejected even with approval; PO may target main', () => {
+  const r = evaluate({author: 'dev1', base: 'main', approvers, selfApprovers, comments: [ok('toilatrung')], lastCommitDate: T0});
+  assert.equal(r.ok, false);
+  assert.match(r.reason, /develop/);
+  assert.equal(evaluate({author: 'toilatrung', base: 'main', approvers, selfApprovers, comments: [], lastCommitDate: T0}).ok, true);
+  assert.equal(evaluate({author: 'dev1', base: 'develop', approvers, selfApprovers, comments: [ok('haqc')], lastCommitDate: T0}).ok, true);
+});

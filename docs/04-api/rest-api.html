@@ -46,6 +46,7 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>api-rest</span><b>title</b><span>REST API LabelX QC</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, rest, drf, contract, idempotency]</span><b>priority</b><span>1</span></div>
 <h1 id="rest-api-labelx-qc">REST API LabelX QC</h1>
+<blockquote>Contract máy đọc được: <a href="openapi.yaml">openapi.yaml</a> (T-001). Đường dẫn trong OpenAPI có dấu <code>/</code> cuối theo quy ước DRF (<code>/api/snapshots/</code> = <code>/api/snapshots</code> của SRS). Auth/phiên: <code>GET /api/auth/csrf/</code>, <code>POST /api/auth/login/</code>, <code>POST /api/auth/logout/</code>, <code>GET /api/auth/session/</code>. Bảng transition: <a href="state-machines.html">state-machines.html</a>; quyền: <a href="rbac-matrix.html">rbac-matrix.html</a>; neo và lineage: DEC-005, DEC-006. Mã lỗi bổ sung: <code>NOT_AUTHENTICATED</code> (403, chưa đăng nhập), <code>INVALID_CREDENTIALS</code> (400), <code>SCOPE_BUSY</code> (409, trùng phạm vi snapshot đang xuất), <code>ISSUE_EXISTS</code> (409, DEC-006).</blockquote>
 <h2 id="1-quy-uoc-chung">1. Quy ước chung</h2>
 <table>
 <thead>

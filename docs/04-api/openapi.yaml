@@ -1,0 +1,1091 @@
+# LabelX API — contract M13 v1 (T-001, epic E-01).
+# Nguồn sự thật cho frontend sinh type và mock tới khi backend có view thật; khi view có, schema
+# drf-spectacular tại /api/schema/ phải khớp tệp này (đổi tệp này trước, rồi mới đổi code).
+# Văn bản giải thích: docs/04-api/rest-api.html, state-machines.html, rbac-matrix.html.
+# Quy ước mở rộng:
+#   x-labelx-trace: mã FR/BR/UC/NFR trong SRS mà operation thực hiện (bắt buộc, có test kiểm).
+#   x-labelx-roles: vai trò được gọi, theo docs/04-api/rbac-matrix.html (bắt buộc, có test kiểm).
+#   x-labelx-transition: event trong docs/04-api/state-machines.html mà operation kích hoạt.
+openapi: 3.0.3
+info:
+  title: LabelX API
+  version: 0.1.0
+  description: |
+    Quality Control cho annotation CVAT — contract M13 v1.
+
+    Xác thực bằng session LabelX (cookie `sessionid`); request ghi gửi header `X-CSRFToken`
+    lấy từ cookie `csrftoken` (gọi `GET /api/auth/csrf/` trước khi đăng nhập).
+    Mọi lỗi trả `Error` với `code`, `message`, `request_id` (SRS §9.3.1).
+    Đường dẫn có dấu `/` cuối theo quy ước Django REST framework; `/api/snapshots/` trong
+    contract này là `/api/snapshots` của SRS tab:api.
+servers:
+  - url: http://localhost:8000
+    description: Backend dev
+tags:
+  - name: auth
+    description: Phiên đăng nhập LabelX (E-02)
+  - name: datasets
+    description: Dataset và cây task/job để chọn phạm vi snapshot
+  - name: snapshots
+    description: Snapshot bất biến từ CVAT (UC-01, module SNP)
+  - name: runs
+    description: QC Run, ledger, ranking (UC-02, UC-03, module ENG/AGG/RNK)
+  - name: guidelines
+    description: Tra rule guideline tĩnh (module GDL, CR-101)
+  - name: review
+    description: Hàng đợi, lease, frame (UC-04, UC-05, module REV)
+
+paths:
+  # ------------------------------------------------------------------ auth
+  /api/auth/csrf/:
+    get:
+      operationId: auth_csrf
+      tags: [auth]
+      summary: Đặt cookie csrftoken
+      description: Không cần đăng nhập. Frontend gọi một lần trước POST /api/auth/login/.
+      security: []
+      x-labelx-trace: [FR-SEC-01]
+      x-labelx-roles: [anonymous]
+      responses:
+        "204":
+          description: Đã đặt cookie csrftoken
+  /api/auth/login/:
+    post:
+      operationId: auth_login
+      tags: [auth]
+      summary: Đăng nhập, tạo session
+      security: []
+      x-labelx-trace: [FR-SEC-01, FR-SEC-05, UC-13]
+      x-labelx-roles: [anonymous]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Đăng nhập thành công; trả session hiện tại
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout
+      tags: [auth]
+      summary: Đăng xuất, huỷ session
+      description: Lease đang giữ không bị trả; nó hết hạn theo FR-REV-04.
+      x-labelx-trace: [FR-SEC-01, FR-SEC-05]
+      x-labelx-roles: [authenticated]
+      responses:
+        "204":
+          description: Đã đăng xuất (gọi lại khi đã đăng xuất cũng trả 204)
+  /api/auth/session/:
+    get:
+      operationId: auth_session
+      tags: [auth]
+      summary: Người dùng, vai trò theo scope, identity mapping
+      description: |
+        Frontend dùng để guard route và ẩn menu theo vai trò. Ẩn menu chỉ là tiện ích;
+        backend vẫn kiểm quyền ở mọi endpoint (FR-SEC-01).
+      x-labelx-trace: [FR-SEC-01, FR-SEC-02]
+      x-labelx-roles: [authenticated]
+      responses:
+        "200":
+          description: Session hiện tại
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # -------------------------------------------------------------- datasets
+  /api/datasets/:
+    get:
+      operationId: datasets_list
+      tags: [datasets]
+      summary: Dataset trong scope người gọi
+      description: Đường dẫn đề xuất (rest-api.html §4.2); danh sách luôn lọc theo scope.
+      x-labelx-trace: [UC-01, FR-SEC-01]
+      x-labelx-roles: [annotator, reviewer, qa_lead, qc_admin, super_admin, product_owner, data_model_owner]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang dataset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedDatasetList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/datasets/{id}/tasks/:
+    get:
+      operationId: datasets_tasks
+      tags: [datasets]
+      summary: Cây task/job CVAT của dataset để chọn phạm vi snapshot
+      description: Đọc qua adapter CVAT chỉ đọc (FR-SNP-01). Đường dẫn đề xuất (rest-api.html §4.2).
+      x-labelx-trace: [UC-01, FR-SNP-01, FR-SNP-05]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Task và job
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CvatTask" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------------- snapshots
+  /api/snapshots/:
+    post:
+      operationId: snapshots_create
+      tags: [snapshots]
+      summary: Tạo snapshot cho một phạm vi (chạy nền)
+      x-labelx-trace: [UC-01, FR-SNP-03, FR-SNP-04, FR-SNP-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      x-labelx-transition: snapshot.create
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SnapshotCreate" }
+      responses:
+        "202":
+          description: Đã nhận; theo dõi bằng GET /api/snapshots/{id}/
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SnapshotAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/snapshots/{id}/:
+    get:
+      operationId: snapshots_retrieve
+      tags: [snapshots]
+      summary: Trạng thái, hash từng job, hash tổng, drift
+      x-labelx-trace: [FR-SNP-03, FR-SNP-04, FR-SNP-05, FR-SNP-07]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Snapshot
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Snapshot" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------------------ runs
+  /api/runs/:
+    get:
+      operationId: runs_list
+      tags: [runs]
+      summary: Lịch sử QC Run
+      description: Đường dẫn đề xuất (rest-api.html §4.2).
+      x-labelx-trace: [FR-ENG-01, FR-AGG-05]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - name: dataset
+          in: query
+          schema: { type: integer }
+        - name: snapshot
+          in: query
+          schema: { type: integer }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang run, mới nhất trước
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedRunList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: runs_create
+      tags: [runs]
+      summary: Tạo QC Run trên snapshot locked và config version đã publish
+      x-labelx-trace: [UC-02, FR-ENG-01, FR-AGG-02]
+      x-labelx-roles: [qa_lead, super_admin]
+      x-labelx-transition: run.create
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RunCreate" }
+      responses:
+        "201":
+          description: Run ở trạng thái queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/runs/{id}/:
+    get:
+      operationId: runs_retrieve
+      tags: [runs]
+      summary: Trạng thái run, trạng thái từng engine, is_final
+      x-labelx-trace: [FR-ENG-01, FR-AGG-05, FR-RWK-06]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/cancel/:
+    post:
+      operationId: runs_cancel
+      tags: [runs]
+      summary: Huỷ run queued/running
+      description: Gọi lại khi run đã cancelled trả 200 (idempotent tự nhiên).
+      x-labelx-trace: [UC-02, FR-AGG-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      x-labelx-transition: run.cancel
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Run sau khi huỷ
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/runs/{id}/retry-failed/:
+    post:
+      operationId: runs_retry_failed
+      tags: [runs]
+      summary: Chạy lại các đơn vị failed của run partial
+      description: Idempotent theo work_unit.idempotency_key; không tạo candidate/issue trùng.
+      x-labelx-trace: [FR-AGG-02, FR-AGG-04, NFR-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      x-labelx-transition: run.retry_failed
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "202":
+          description: Run quay lại running
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/runs/{id}/ledger/:
+    get:
+      operationId: runs_ledger
+      tags: [runs]
+      summary: Coverage ledger theo engine
+      x-labelx-trace: [FR-AGG-04, FR-AGG-05, FR-RPT-04]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Một dòng mỗi engine
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/LedgerEntry" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/ranking/:
+    get:
+      operationId: runs_ranking
+      tags: [runs]
+      summary: Ranking frame theo s(f), có lọc
+      description: |
+        Người lập GT của tập đánh giá nhận 403 FORBIDDEN (FR-EVL-02, BR-10).
+        Frame thiếu bằng chứng vẫn có trong danh sách, mang cờ missing_evidence (FR-RNK-06).
+      x-labelx-trace: [UC-03, FR-RNK-01, FR-RNK-05, FR-RNK-06, FR-REV-01, FR-REV-02, FR-EVL-02]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: queue
+          in: query
+          schema: { $ref: "#/components/schemas/QueueName" }
+        - name: family
+          in: query
+          schema: { $ref: "#/components/schemas/IssueFamily" }
+        - name: origin
+          in: query
+          schema: { $ref: "#/components/schemas/IssueOrigin" }
+        - name: review_state
+          in: query
+          schema: { $ref: "#/components/schemas/FrameReviewState" }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang frame theo rank tăng dần
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedRankedFrameList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------------ guidelines
+  /api/guidelines/rules/:
+    get:
+      operationId: guidelines_rules_list
+      tags: [guidelines]
+      summary: Tra rule theo nhóm lỗi, lớp, cặp lớp
+      description: Không dùng retrieval ngữ nghĩa (FR-GDL-04). Mặc định guideline version mới nhất.
+      x-labelx-trace: [FR-GDL-04, UC-12]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/GuidelineVersion"
+        - name: family
+          in: query
+          schema: { $ref: "#/components/schemas/IssueFamily" }
+        - name: class_name
+          in: query
+          schema: { type: string }
+        - name: paired_class
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedGuidelineRuleList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/guidelines/rules/{rule_id}/:
+    get:
+      operationId: guidelines_rules_retrieve
+      tags: [guidelines]
+      summary: Rule theo guideline version của snapshot
+      x-labelx-trace: [FR-GDL-03, FR-GDL-04, FR-REV-07, UC-12]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          schema: { type: string, example: VEH-03 }
+        - $ref: "#/components/parameters/GuidelineVersion"
+      responses:
+        "200":
+          description: Rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuidelineRule" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------- review
+  /api/queues/{name}/next/:
+    post:
+      operationId: queues_next
+      tags: [review]
+      summary: Cấp lease frame kế tiếp
+      description: |
+        Mỗi reviewer giữ tối đa một lease (DEC-002/BLOCKER-008). Nếu đang giữ một lease còn hạn
+        thì trả lại chính lease đó (tab thứ hai nhận cùng frame). Frame "đang dở" (incomplete)
+        được ưu tiên trả về reviewer cũ trong cửa sổ giữ chỗ (TBD-09). Bỏ qua frame mà người gọi
+        là assignee tại snapshot (FR-REV-03). Thiếu identity mapping → 403 IDENTITY_MAPPING_MISSING.
+      x-labelx-trace: [UC-04, FR-REV-03, FR-REV-04, FR-SEC-02, FR-SEC-03]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      x-labelx-transition: frame.claim
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/QueueName" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QueueNextRequest" }
+      responses:
+        "200":
+          description: Lease và frame
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeaseGrant" }
+        "204":
+          description: Hàng đợi hết frame phù hợp
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/leases/{id}/renew/:
+    post:
+      operationId: leases_renew
+      tags: [review]
+      summary: Gia hạn lease
+      description: Chỉ người giữ lease; lease đã hết hạn hoặc của người khác → 409 LEASE_CONFLICT.
+      x-labelx-trace: [FR-REV-04, UC-05]
+      x-labelx-roles: [lease_holder]
+      x-labelx-transition: frame.renew
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Lease với expires_at mới
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Lease" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/frames/{id}/issues/:
+    get:
+      operationId: frames_issues
+      tags: [review]
+      summary: Issue, evidence, trạng thái engine và rule của frame
+      x-labelx-trace: [UC-05, FR-REV-07, FR-ENG-08, FR-AGG-05, FR-SNP-08, FR-RNK-12]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Frame và issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FrameIssues" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/frames/{id}/complete/:
+    post:
+      operationId: frames_complete
+      tags: [review]
+      summary: Đã review xong frame — trả lease, dừng effort
+      description: |
+        Cho phép khi mọi issue của frame đã có quyết định hoặc đang chờ phân xử (FR-REV-13),
+        nếu không → 422 BUSINESS_RULE_UNMET kèm details.undecided_issue_ids.
+        Gọi lại khi frame đã reviewed trả 200.
+      x-labelx-trace: [UC-05, FR-REV-13, FR-EVL-06]
+      x-labelx-roles: [lease_holder]
+      x-labelx-transition: frame.complete
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FrameCompleteRequest" }
+      responses:
+        "200":
+          description: Frame sau khi hoàn tất review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FrameSummary" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Cursor:
+      name: cursor
+      in: query
+      description: Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50)
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+        409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+      schema: { type: string, format: uuid }
+    GuidelineVersion:
+      name: version
+      in: query
+      description: Guideline version tag; bỏ trống là bản mới nhất. Workspace truyền version của snapshot.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Dữ liệu không hợp lệ (VALIDATION_ERROR, INVALID_CREDENTIALS)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: |
+        Chưa đăng nhập (NOT_AUTHENTICATED), không có quyền (FORBIDDEN), ngoài scope (OUT_OF_SCOPE),
+        self-review (SELF_REVIEW_FORBIDDEN), tách nhiệm vụ (SAME_REQUESTER_APPROVER),
+        thiếu identity mapping (IDENTITY_MAPPING_MISSING). Được ghi audit.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Không tìm thấy (NOT_FOUND)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: |
+        Xung đột trạng thái (LEASE_CONFLICT, INVALID_TRANSITION, REVISION_UNCHANGED,
+        IDEMPOTENCY_KEY_REUSED, SCOPE_BUSY, ISSUE_EXISTS). Được ghi audit.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unprocessable:
+      description: Không đủ điều kiện nghiệp vụ (BUSINESS_RULE_UNMET, INSUFFICIENT_SAMPLE)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    # ------------------------------------------------------------ lỗi chung
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_ERROR
+        - INVALID_CREDENTIALS
+        - NOT_AUTHENTICATED
+        - FORBIDDEN
+        - OUT_OF_SCOPE
+        - SELF_REVIEW_FORBIDDEN
+        - SAME_REQUESTER_APPROVER
+        - IDENTITY_MAPPING_MISSING
+        - NOT_FOUND
+        - LEASE_CONFLICT
+        - INVALID_TRANSITION
+        - REVISION_UNCHANGED
+        - IDEMPOTENCY_KEY_REUSED
+        - SCOPE_BUSY
+        - ISSUE_EXISTS
+        - BUSINESS_RULE_UNMET
+        - INSUFFICIENT_SAMPLE
+    Error:
+      type: object
+      required: [code, message, request_id]
+      properties:
+        code: { $ref: "#/components/schemas/ErrorCode" }
+        message:
+          type: string
+          description: Thông báo tiếng Việt cho người dùng
+        request_id:
+          type: string
+          description: Trùng header X-Request-ID của phản hồi; dùng để tra log và audit
+        details:
+          type: object
+          additionalProperties: true
+          description: |
+            VALIDATION_ERROR: {"fields": {"<tên trường>": ["<lỗi>"]}}.
+            INVALID_TRANSITION: {"from": "...", "event": "..."} và có thể drift_jobs.
+            BUSINESS_RULE_UNMET ở frames_complete: {"undecided_issue_ids": [..]}.
+      example:
+        code: LEASE_CONFLICT
+        message: Lease đã hết hạn hoặc thuộc người khác
+        request_id: 0b6f7c1e-3c55-4d43-9a43-3f0e1f6d2a10
+        details: {}
+
+    # ------------------------------------------------------------------ auth
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string, format: password, writeOnly: true }
+    Role:
+      type: string
+      description: Vai trò theo SRS tab:rbac và đoạn dưới bảng (Product Owner, Data/Model Owner)
+      enum: [annotator, reviewer, qa_lead, qc_admin, super_admin, product_owner, data_model_owner]
+    RoleAssignment:
+      type: object
+      required: [role, dataset_id]
+      properties:
+        role: { $ref: "#/components/schemas/Role" }
+        dataset_id:
+          type: integer
+          nullable: true
+          description: null nghĩa là toàn hệ thống (chỉ super_admin, qc_admin)
+    Session:
+      type: object
+      required: [user, roles, identity_mapping]
+      properties:
+        user:
+          type: object
+          required: [id, username, display_name]
+          properties:
+            id: { type: integer }
+            username: { type: string }
+            display_name: { type: string }
+        roles:
+          type: array
+          items: { $ref: "#/components/schemas/RoleAssignment" }
+        identity_mapping:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [mapped, missing]
+              description: missing → mọi thao tác review/phân xử/verify bị từ chối (fail closed)
+            cvat_user_id: { type: integer, nullable: true }
+
+    # -------------------------------------------------------------- datasets
+    Dataset:
+      type: object
+      required: [id, name, cvat_project_id]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        cvat_project_id: { type: integer }
+        taxonomy_version: { type: string, nullable: true }
+        guideline_version: { type: string, nullable: true }
+    CvatTask:
+      type: object
+      required: [cvat_task_id, name, jobs]
+      properties:
+        cvat_task_id: { type: integer }
+        name: { type: string }
+        jobs:
+          type: array
+          items:
+            type: object
+            required: [cvat_job_id, assignee_cvat_user_id, updated_date]
+            properties:
+              cvat_job_id: { type: integer }
+              assignee_cvat_user_id: { type: integer, nullable: true }
+              frame_count: { type: integer }
+              updated_date: { type: string, format: date-time }
+
+    # ------------------------------------------------------------- snapshots
+    SnapshotStatus:
+      type: string
+      description: docs/04-api/state-machines.html §1
+      enum: [pending, exporting, locked, failed]
+    SnapshotCreate:
+      type: object
+      required: [dataset_id, scope]
+      properties:
+        dataset_id: { type: integer }
+        scope:
+          type: object
+          description: Rỗng cả hai danh sách nghĩa là toàn dataset
+          properties:
+            cvat_task_ids:
+              type: array
+              items: { type: integer }
+            cvat_job_ids:
+              type: array
+              items: { type: integer }
+        note: { type: string }
+    SnapshotAccepted:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: integer }
+        status: { $ref: "#/components/schemas/SnapshotStatus" }
+    Snapshot:
+      type: object
+      required: [id, dataset_id, status, parent_snapshot_id, jobs, drift_jobs, created_by, created_at]
+      properties:
+        id: { type: integer }
+        dataset_id: { type: integer }
+        status: { $ref: "#/components/schemas/SnapshotStatus" }
+        failure_reason:
+          type: string
+          nullable: true
+          enum: [drift_detected, export_error, null]
+        revision_hash:
+          type: string
+          nullable: true
+          description: SHA-256 tổng, có khi locked (FR-SNP-03)
+          example: "sha256:5f1d…"
+        parent_snapshot_id: { type: integer, nullable: true }
+        jobs:
+          type: array
+          items:
+            type: object
+            required: [cvat_job_id, job_hash, assignee_user_id]
+            properties:
+              cvat_job_id: { type: integer }
+              job_hash: { type: string, nullable: true }
+              assignee_user_id:
+                type: integer
+                nullable: true
+                description: User LabelX của assignee tại snapshot qua identity mapping (FR-SNP-05)
+        taxonomy_version: { type: string, nullable: true }
+        guideline_version: { type: string, nullable: true }
+        out_of_scope_shapes:
+          type: integer
+          description: Shape không phải bounding box bị bỏ qua (FR-SNP-07)
+        drift_jobs:
+          type: array
+          items: { type: integer }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+        locked_at: { type: string, format: date-time, nullable: true }
+
+    # ------------------------------------------------------------------ runs
+    RunStatus:
+      type: string
+      description: docs/04-api/state-machines.html §2
+      enum: [queued, running, completed, partial, failed, cancelled]
+    EngineName:
+      type: string
+      enum: [schema, geometry, duplicate, detector, metric, vlm]
+    EngineStatus:
+      type: string
+      description: Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt"
+      enum: [running, checked, partial, failed, not_checked]
+    NotCheckedReason:
+      type: string
+      description: SRS tab:enginestates
+      enum: [disabled, no_model, no_reference, not_applicable, not_triggered]
+    RunCreate:
+      type: object
+      required: [snapshot_id, config_version_id, seed]
+      properties:
+        snapshot_id: { type: integer }
+        config_version_id: { type: integer }
+        seed: { type: integer }
+    ModelArtifact:
+      type: object
+      required: [name, version, checksum]
+      properties:
+        name: { type: string }
+        version: { type: string }
+        checksum: { type: string }
+    EngineRunStatus:
+      type: object
+      required: [engine, status]
+      properties:
+        engine: { $ref: "#/components/schemas/EngineName" }
+        status: { $ref: "#/components/schemas/EngineStatus" }
+        reason:
+          allOf: [{ $ref: "#/components/schemas/NotCheckedReason" }]
+          nullable: true
+        failed_units: { type: integer }
+    Run:
+      type: object
+      required: [id, snapshot_id, config_version_id, seed, status, is_final, engines, created_by, created_at]
+      properties:
+        id: { type: integer }
+        snapshot_id: { type: integer }
+        config_version_id: { type: integer }
+        seed: { type: integer }
+        status: { $ref: "#/components/schemas/RunStatus" }
+        is_final:
+          type: boolean
+          description: QC run cuối sau rework (FR-RWK-06) hoặc run gốc khi không có rework (BLOCKER-011)
+        origin_run_id:
+          type: integer
+          nullable: true
+          description: Run gốc mà run cuối này nối verification về (DEC-005)
+        score_version: { type: string, nullable: true }
+        model_artifact:
+          allOf: [{ $ref: "#/components/schemas/ModelArtifact" }]
+          nullable: true
+        engines:
+          type: array
+          items: { $ref: "#/components/schemas/EngineRunStatus" }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time, nullable: true }
+    LedgerEntry:
+      type: object
+      required: [engine, status, unit, eligible, completed, failed, not_checked]
+      properties:
+        engine: { $ref: "#/components/schemas/EngineName" }
+        status: { $ref: "#/components/schemas/EngineStatus" }
+        required:
+          type: boolean
+          description: Engine bắt buộc cho coverage gate
+        unit:
+          type: string
+          enum: [frame, shape]
+        eligible: { type: integer }
+        completed: { type: integer }
+        failed: { type: integer }
+        not_checked: { type: integer }
+        not_checked_reasons:
+          type: object
+          additionalProperties: { type: integer }
+          description: Số đơn vị theo NotCheckedReason
+    RankedFrame:
+      type: object
+      required: [frame_id, rank, score, review_state, missing_evidence, issue_counts]
+      properties:
+        frame_id: { type: integer }
+        frame_key: { $ref: "#/components/schemas/FrameKey" }
+        rank: { type: integer }
+        score:
+          type: number
+          description: s(f) theo score_version của run
+        queue: { $ref: "#/components/schemas/QueueName" }
+        review_state: { $ref: "#/components/schemas/FrameReviewState" }
+        missing_evidence: { type: boolean }
+        issue_counts:
+          type: object
+          additionalProperties: { type: integer }
+          description: Số issue theo IssueFamily
+        lease_holder_user_id: { type: integer, nullable: true }
+
+    # ------------------------------------------------------------ guidelines
+    GuidelineRule:
+      type: object
+      required: [rule_id, section, content, guideline_version]
+      properties:
+        rule_id: { type: string, example: VEH-03 }
+        section: { type: string }
+        content: { type: string }
+        guideline_version: { type: string }
+
+    # ---------------------------------------------------------------- review
+    QueueName:
+      type: string
+      enum: [risk, random]
+    FrameReviewState:
+      type: string
+      description: docs/04-api/state-machines.html §4; incomplete là "đang dở" (BLOCKER-008)
+      enum: [unreviewed, in_review, incomplete, reviewed, awaiting_followup, completed]
+    IssueState:
+      type: string
+      description: docs/04-api/state-machines.html §3
+      enum:
+        - pending_review
+        - in_review
+        - confirmed
+        - rejected
+        - escalated
+        - fix_pending
+        - recheck_pending
+        - resolved
+        - reopened
+    IssueFamily:
+      type: string
+      description: E1 thiếu box, E2 sai lớp, E3 trùng box; structural là cảnh báo cấu trúc có rule ID
+      enum: [E1, E2, E3, structural]
+    IssueOrigin:
+      type: string
+      enum: [engine, reviewer]
+    Severity:
+      type: string
+      enum: [critical, medium, minor]
+    QueueNextRequest:
+      type: object
+      required: [run_id]
+      properties:
+        run_id: { type: integer }
+    Lease:
+      type: object
+      required: [id, frame_id, holder_user_id, expires_at]
+      properties:
+        id: { type: integer }
+        frame_id: { type: integer }
+        holder_user_id: { type: integer }
+        expires_at:
+          type: string
+          format: date-time
+          description: Thời hạn lease là TBD-09, đo trong pilot rồi chốt
+    FrameKey:
+      type: object
+      description: Định danh frame ổn định qua snapshot (DEC-005)
+      required: [cvat_task_id, frame_number]
+      properties:
+        cvat_task_id: { type: integer }
+        frame_number: { type: integer }
+    FrameSummary:
+      type: object
+      required: [id, run_id, frame_key, review_state, missing_evidence]
+      properties:
+        id: { type: integer }
+        run_id: { type: integer }
+        frame_key: { $ref: "#/components/schemas/FrameKey" }
+        cvat_job_id: { type: integer }
+        rank: { type: integer, nullable: true }
+        review_state: { $ref: "#/components/schemas/FrameReviewState" }
+        missing_evidence: { type: boolean }
+        image_url: { type: string, format: uri }
+        width: { type: integer }
+        height: { type: integer }
+        cvat_deep_link:
+          type: string
+          format: uri
+          description: Mở đúng job và frame trên CVAT (FR-SNP-08, FR-REV-12)
+    LeaseGrant:
+      type: object
+      required: [lease, frame]
+      properties:
+        lease: { $ref: "#/components/schemas/Lease" }
+        frame: { $ref: "#/components/schemas/FrameSummary" }
+        resumed:
+          type: boolean
+          description: true khi trả lại lease đang giữ hoặc frame incomplete của chính reviewer
+    BBox:
+      type: object
+      description: Toạ độ pixel gốc của ảnh
+      required: [x1, y1, x2, y2]
+      properties:
+        x1: { type: number }
+        y1: { type: number }
+        x2: { type: number }
+        y2: { type: number }
+    ObjectRef:
+      type: object
+      description: |
+        Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
+        cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
+        detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
+        reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
+      required: [namespace, id]
+      properties:
+        namespace:
+          type: string
+          enum: [cvat_shape, detector, reviewer_region]
+        id: { type: string }
+    Anchor:
+      type: object
+      description: Neo issue theo DEC-006 và SRS tab:anchors; kind quyết định trường nào bắt buộc
+      required: [kind, objects, policy_version]
+      properties:
+        kind:
+          type: string
+          enum: [prediction_region, annotation, annotation_cluster, annotation_rule, manual_object, manual_region]
+        objects:
+          type: array
+          items: { $ref: "#/components/schemas/ObjectRef" }
+        rule_id: { type: string, nullable: true }
+        bbox:
+          allOf: [{ $ref: "#/components/schemas/BBox" }]
+          nullable: true
+        policy_version:
+          type: string
+          description: Version quy tắc tạo neo, đi cùng policy gộp (FR-RNK-12)
+    IssueLink:
+      type: object
+      description: Liên kết lineage (DEC-005)
+      required: [kind, issue_id]
+      properties:
+        kind:
+          type: string
+          enum: [recurrence_of, suggested_recurrence_of]
+          description: |
+            recurrence_of — run cuối gặp lại cùng neo (khớp ObjectRef cvat_shape).
+            suggested_recurrence_of — chỉ khớp bằng fallback hình học; chỉ để gợi ý.
+        issue_id: { type: integer }
+        run_id: { type: integer }
+    Evidence:
+      type: object
+      required: [engine]
+      properties:
+        engine: { $ref: "#/components/schemas/EngineName" }
+        rule_id: { type: string, nullable: true }
+        expected: { type: string, nullable: true }
+        actual: { type: string, nullable: true }
+        prediction_bbox:
+          allOf: [{ $ref: "#/components/schemas/BBox" }]
+          nullable: true
+        prediction_class: { type: string, nullable: true }
+        confidence: { type: number, nullable: true }
+        iou: { type: number, nullable: true }
+    Issue:
+      type: object
+      required: [id, family, origin, state, anchor, n_i, evidence, links]
+      properties:
+        id: { type: integer }
+        family: { $ref: "#/components/schemas/IssueFamily" }
+        origin: { $ref: "#/components/schemas/IssueOrigin" }
+        state: { $ref: "#/components/schemas/IssueState" }
+        anchor: { $ref: "#/components/schemas/Anchor" }
+        n_i:
+          type: integer
+          description: Số lỗi đếm cho issue theo tab:anchors (E3 cụm m box → m−1)
+        q_i: { type: number, nullable: true }
+        severity:
+          allOf: [{ $ref: "#/components/schemas/Severity" }]
+          nullable: true
+        rule_ids:
+          type: array
+          items: { type: string }
+        evidence:
+          type: array
+          items: { $ref: "#/components/schemas/Evidence" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/IssueLink" }
+    FrameIssues:
+      type: object
+      required: [frame, engines, issues]
+      properties:
+        frame: { $ref: "#/components/schemas/FrameSummary" }
+        guideline_version: { type: string, nullable: true }
+        engines:
+          type: array
+          items: { $ref: "#/components/schemas/EngineRunStatus" }
+        issues:
+          type: array
+          items: { $ref: "#/components/schemas/Issue" }
+    FrameCompleteRequest:
+      type: object
+      required: [lease_id]
+      properties:
+        lease_id: { type: integer }
+
+    # ------------------------------------------------------------ phân trang
+    PaginatedDatasetList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Dataset" }
+    PaginatedRunList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Run" }
+    PaginatedRankedFrameList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/RankedFrame" }
+    PaginatedGuidelineRuleList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/GuidelineRule" }
+
+security:
+  - sessionAuth: []
