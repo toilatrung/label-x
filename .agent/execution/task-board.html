@@ -253,10 +253,10 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td>T-017</td>
 <td>E-03</td>
-<td>Mapping nhóm lỗi/lớp → rule ID: API sửa có kiểm hợp lệ, màn RulesThresholds</td>
+<td>Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</td>
 <td>Nguyễn Đức Hà (@ducha180104)</td>
 <td>pending</td>
-<td>T-012, T-013</td>
+<td>T-012</td>
 <td>none</td>
 <td>none</td>
 <td>2026-10-08</td>
@@ -590,7 +590,7 @@ ul.dir{columns:2;font-size:14px}
 <tbody>
 <tr><td>E-01</td><td>T-001</td><td>T-006, T-007, T-008, T-009, T-010</td><td>T-006, T-007, T-009, T-010 song song; T-008 sau T-006</td></tr>
 <tr><td>E-02</td><td>T-002</td><td>T-011, T-012, T-013, T-014, T-015, T-016</td><td>T-011 trước; T-014, T-015 song song với T-011; T-013 sau T-011 (audit cần actor/user của T-011); T-012 sau T-011 + T-013; T-016 sau T-011 + T-012</td></tr>
-<tr><td>E-03</td><td>T-003</td><td>T-017, T-018</td><td>T-017 sau T-012 + T-013; T-018 sau T-016</td></tr>
+<tr><td>E-03</td><td>T-003</td><td>T-017, T-018</td><td>T-017 sau T-012; T-018 sau T-016</td></tr>
 </tbody>
 </table>
 <p><strong>PO quyết 2026-10-08</strong>: giữ phạm vi và hạn 2026-10-09 (không dời lịch, không thu hẹp).</p>
@@ -601,11 +601,11 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>1</td><td>T-006, T-007, T-009, T-010, T-011, T-014, T-015</td></tr>
 <tr><td>2</td><td>T-008 (sau T-006), T-013 (sau T-011)</td></tr>
 <tr><td>3</td><td>T-012 (sau T-011, T-013)</td></tr>
-<tr><td>4</td><td>T-016 (sau T-011, T-012), T-017 (sau T-012, T-013)</td></tr>
+<tr><td>4</td><td>T-016 (sau T-011, T-012), T-017 (sau T-012)</td></tr>
 <tr><td>5</td><td>T-018 (sau T-016)</td></tr>
 </tbody>
 </table>
-<p><strong>Cần PO quyết</strong>: “QC Admin sửa mapping” (T-017) cần xác nhận vì CR-101 đặt mapping trong tệp tĩnh. (AC E-03 về version đã sửa theo <a href="../governance/change-requests/CR-106.html">CR-106</a>.)</p>
+<p><strong>Quyết định phạm vi E-03</strong>: AC version guideline sửa theo <a href="../governance/change-requests/CR-106.html">CR-106</a>; mapping nạp từ tệp, màn chỉ xem theo <a href="../governance/change-requests/CR-107.html">CR-107</a>. Không còn câu hỏi mở cho PO.</p>
 <h3 id="t-006">T-006</h3>
 <h4 id="record-metadata_5">Record Metadata</h4>
 <ul>
@@ -1277,7 +1277,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Task ID</strong>: <code>T-017</code></li>
 <li><strong>Epic ID</strong>: <code>E-03</code></li>
-<li><strong>Title</strong>: <code>Mapping nhóm lỗi/lớp → rule ID: API sửa có kiểm hợp lệ, màn RulesThresholds</code></li>
+<li><strong>Title</strong>: <code>Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
@@ -1285,23 +1285,26 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_16">Objective</h4>
-<p>QC Admin sửa được mapping nhóm lỗi/lớp → rule ID (vai trò khác chỉ xem); mapping không hợp lệ bị từ chối (AC E-03).</p>
+<p>Mapping nhóm lỗi/lớp → rule ID được nạp từ tệp và kiểm hợp lệ khi nạp; mapping không hợp lệ bị từ chối (AC E-03). Màn RulesThresholds phần mapping chỉ xem, cho mọi vai trò được phép đọc guideline (CR-101, <a href="../governance/change-requests/CR-107.html">CR-107</a>).</p>
 <h4 id="scope_16">Scope</h4>
 <h5 id="included_16">Included</h5>
 <ul>
-<li>API đọc/sửa mapping theo version guideline: rule ID phải tồn tại, family/lớp thuộc tập hợp lệ, trả 422 khi sai; ghi audit (T-013)</li>
-<li>Màn RulesThresholds phần mapping (docs/design), QC Admin sửa, vai trò khác chỉ xem</li>
+<li>Nạp mapping nhóm lỗi/lớp → rule ID từ tệp (cùng tệp guideline của T-003 hoặc tệp riêng), idempotent theo SHA-256 như <code>load_guideline</code></li>
+<li>Kiểm hợp lệ khi nạp: rule ID tồn tại trong guideline đã nạp; lớp thuộc taxonomy 10 lớp BDD100K; <code>family</code> thuộc enum <code>IssueFamily</code>; không trùng cặp (family, lớp, lớp cặp); tệp có lỗi thì từ chối cả tệp, không ghi phần nào, báo từng dòng lỗi</li>
+<li>API đọc mapping (chỉ GET) theo contract, quyền đọc theo RBAC của T-012</li>
+<li>Màn RulesThresholds phần mapping chỉ đọc, dữ liệu lấy từ API (docs/design)</li>
 <li>Test backend + frontend</li>
 </ul>
 <h5 id="excluded_16">Excluded</h5>
 <ul>
 <li>Sửa nội dung rule (soạn ở nơi soạn guideline)</li>
+<li>API hoặc màn sửa mapping (CR-101, CR-107)</li>
 </ul>
 <h4 id="preconditions_16">Preconditions</h4>
 <ul>
 <li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
 <li>[x] Required context package is available.</li>
-<li>[x] Dependencies, approvals, and access are available. (PO duyệt và gán owner 2026-10-08, chuyển qua label-x-88; phụ thuộc phải merge trước khi bắt đầu: T-012, T-013)</li>
+<li>[x] Dependencies, approvals, and access are available. (PO duyệt và gán owner 2026-10-08, chuyển qua label-x-88; phụ thuộc phải merge trước khi bắt đầu: T-012)</li>
 </ul>
 <h4 id="related-files_16">Related Files</h4>
 <ul>
@@ -1310,19 +1313,20 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Blockers</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html, .agent/governance/change-requests/CR-107.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_16">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Mapping trỏ rule ID không tồn tại bị từ chối 422</li>
-<li>[ ] Vai trò khác QC Admin không sửa được (403)</li>
-<li>[ ] Sửa mapping có bản ghi audit</li>
+<li>[ ] Tệp hợp lệ nạp thành công; nạp lại cùng tệp không tạo bản ghi trùng (test)</li>
+<li>[ ] Test cho từng loại lỗi: rule ID không tồn tại, lớp ngoài taxonomy, family ngoài IssueFamily, cặp trùng — mỗi trường hợp từ chối cả tệp, không ghi phần nào và báo đúng dòng lỗi</li>
+<li>[ ] Không có endpoint sửa mapping; API đọc trả 403 cho vai trò không được đọc (test theo rbac-matrix)</li>
+<li>[ ] Màn RulesThresholds hiển thị mapping từ API, không có điều khiển sửa; test frontend</li>
 <li>[ ] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_16">Verification Requirements</h4>
 <ul>
 <li><strong>Automated Checks</strong>: <code>make check</code></li>
-<li><strong>Manual Checks</strong>: <code>Sửa mapping trên màn với QC Admin và reviewer</code></li>
+<li><strong>Manual Checks</strong>: <code>Nạp tệp hợp lệ và tệp lỗi bằng lệnh quản trị; mở màn RulesThresholds với QC Admin và reviewer</code></li>
 <li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-017.html</code></li>
 </ul>
 <h4 id="completion-criteria_16">Completion Criteria</h4>
