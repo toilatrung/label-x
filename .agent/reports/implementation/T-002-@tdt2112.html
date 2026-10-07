@@ -53,7 +53,7 @@ ul.dir{columns:2;font-size:14px}
 
 
 <h2 id="usage-purpose">Usage Purpose</h2>
-<p>Báo cáo bằng chứng triển khai T-002 (Epic E-02) của Trần Đức Thọ (@tdt2112). PR #23 đã mở vào develop. Bản trước sửa review đạt CI #52; bản sửa theo góp ý của @toilatrung đã kiểm thử cục bộ và còn chờ người thực hiện commit/push, CI mới và duyệt lại.</p>
+<p>Báo cáo bằng chứng triển khai T-002 (Epic E-02) của Trần Đức Thọ (@tdt2112). PR #23 đã mở vào develop. Bản trước sửa review đạt CI #52; bản sửa theo góp ý của @toilatrung đã kiểm thử cục bộ và được người thực hiện lưu trong commit 10bfad7. Còn chờ lưu cập nhật tài liệu, push, CI mới và duyệt lại.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>T-002</code></li>
@@ -61,11 +61,11 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
 <li><strong>Executor</strong>: <code>tdt2112</code></li>
 <li><strong>Status</strong>: <code>draft</code></li>
-<li><strong>Review state</strong>: Đã nhận yêu cầu sửa PR #23. Sửa review đã hoàn tất cục bộ; chưa có commit và CI cho bản sửa này, chưa được duyệt.</li>
+<li><strong>Review state</strong>: Đã nhận yêu cầu sửa PR #23. Sửa review đã hoàn tất và được người thực hiện lưu trong commit <code>10bfad7</code>; chưa push, chưa có CI cho bản sửa này và chưa được duyệt lại.</li>
 <li><strong>Task ID</strong>: <code>T-002</code></li>
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-07</code></li>
-<li><strong>Implementation Commits</strong>: <code>69694f7</code> (mốc ban đầu), <code>300d16b</code> (căn chỉnh T-001); mốc ghép develop: <code>4a68cce</code>. Mã commit do người thực hiện cung cấp.</li>
+<li><strong>Implementation Commits</strong>: <code>69694f7</code> (mốc ban đầu), <code>300d16b</code> (căn chỉnh T-001), <code>10bfad7</code> (sửa góp ý review về auth và app shell); mốc ghép develop: <code>4a68cce</code>. Mã commit do người thực hiện cung cấp.</li>
 </ul>
 <h2 id="scope">Scope</h2>
 <ul>
@@ -108,7 +108,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>ruff check</code>, <code>ruff format --check</code>, <code>mypy</code></td><td>Đạt.</td><td>Bằng chứng trước sửa review: backend; 11 tệp Ruff, 6 tệp nguồn mypy.</td></tr>
 <tr><td><code>src/backend/.venv/Scripts/python.exe scripts/validate-framework.py</code></td><td>Đạt sau cập nhật báo cáo sửa review.</td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
 <tr><td><code>make check</code></td><td>Chưa chạy nguyên lệnh do Windows thiếu Make.</td><td>Các bước tương đương nêu ở trên đã chạy riêng.</td></tr>
-<tr><td><code>CI trên PR #23</code></td><td>Bản sửa review: chờ commit/push và CI mới.</td><td>Bản cũ e7f2058 đã đạt <a href="https://github.com/toilatrung/label-x/actions/runs/37613155831">CI #52</a> (39 frontend, 12 backend). Không dùng kết quả cũ để tuyên bố bản sửa đạt CI.</td></tr>
+<tr><td><code>CI trên PR #23</code></td><td>Bản sửa review <code>10bfad7</code>: đã commit, chờ push và CI mới.</td><td>Bản cũ e7f2058 đã đạt <a href="https://github.com/toilatrung/label-x/actions/runs/37613155831">CI #52</a> (39 frontend, 12 backend). Không dùng kết quả cũ để tuyên bố bản sửa đạt CI.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -140,8 +140,8 @@ ul.dir{columns:2;font-size:14px}
 <li>[x] Mọi thay đổi được gắn với task T-002 và không sửa tài liệu chung ngoài phạm vi.</li>
 <li>[x] Có kết quả kiểm tra cục bộ và ảnh chứng minh giao diện.</li>
 <li>[x] Sai khác, giới hạn và việc chưa chạy được ghi rõ.</li>
-<li>[x] Bản đồ commit riêng ghi nhận hai commit triển khai <code>69694f7</code> và <code>300d16b</code>, liên kết tới báo cáo này.</li>
-<li>[ ] Người thực hiện commit/push bản sửa review, CI mới đạt và reviewer xác nhận lại trên PR #23. Không coi check approval đỏ là lỗi code; theo mail của leader, cổng đó đã được bỏ bằng CR-105.</li>
+<li>[x] Bản đồ commit riêng ghi nhận ba commit triển khai <code>69694f7</code>, <code>300d16b</code> và <code>10bfad7</code>, liên kết tới báo cáo này.</li>
+<li>[ ] Người thực hiện lưu cập nhật tài liệu và push bản sửa review, CI mới đạt và reviewer xác nhận lại trên PR #23. Không coi check approval đỏ là lỗi code; theo mail của leader, cổng đó đã được bỏ bằng CR-105.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
