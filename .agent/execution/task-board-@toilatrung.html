@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Current Context — LabelX</title>
-<meta name="labelx:id" content="current-context">
-<meta name="labelx:title" content="Current Context">
+<title>Task Board — @toilatrung — LabelX</title>
+<meta name="labelx:id" content="task-board-toilatrung">
+<meta name="labelx:title" content="Task Board — @toilatrung">
 <meta name="labelx:type" content="execution">
 <meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[context, execution, state]">
-<meta name="labelx:priority" content="1">
+<meta name="labelx:tags" content="[execution, per-user, t-001]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -42,35 +42,46 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / current-context</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board-@toilatrung</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>current-context</span><b>title</b><span>Current Context</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[context, execution, state]</span><b>priority</b><span>1</span></div>
-<h1 id="current-context">Current Context</h1>
+<div class="meta"><b>id</b><span>task-board-toilatrung</span><b>title</b><span>Task Board — @toilatrung</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-001]</span><b>priority</b><span>2</span></div>
+<h1 id="task-board-toilatrung">Task Board — @toilatrung</h1>
 <h2 id="purpose">Purpose</h2>
-<p>Expose the minimal synchronized state for currently authorized execution without becoming a fixed or mandatory reading list.</p>
+<p>File riêng của Trịnh Quang Trung (@toilatrung) theo CR-100: cập nhật trạng thái task của mình. Integrator gộp vào <code>.agent/execution/task-board.html</code>.</p>
+<ul>
+<li><strong>Base Commit</strong>: <code>28be098</code></li>
+</ul>
 <h2 id="status-model">Status Model</h2>
 <ul>
-<li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li>
-<li><strong>Valid Roadmap Statuses</strong>: <code>ROADMAP_DRAFT | ROADMAP_APPROVED | ROADMAP_ACTIVE | ROADMAP_BLOCKED | ROADMAP_DONE | ROADMAP_CANCELLED</code></li>
-<li><strong>Valid Epic Statuses</strong>: <code>EPIC_PROPOSED | EPIC_READY | EPIC_IN_PROGRESS | EPIC_BLOCKED | EPIC_DONE | EPIC_CANCELLED</code></li>
-<li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+<li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
 </ul>
-<h2 id="current-state">Current State</h2>
-<ul>
-<li><strong>Context Revision</strong>: <code>4</code></li>
-<li><strong>Context Status</strong>: <code>current</code></li>
-<li><strong>Last Updated</strong>: <code>2026-10-06</code></li>
-<li><strong>Updated By</strong>: <code>claude-code (coordinator) cho Trịnh Quang Trung</code></li>
-<li><strong>Update Trigger</strong>: <code>task-registration-wave-1</code></li>
-<li><strong>Planning Roadmap ID</strong>: <code>R-001</code></li>
-<li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_APPROVED</code></li>
-<li><strong>Onboarding State</strong>: <code>execution-started</code></li>
-<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-04, E-10 (EPIC_IN_PROGRESS); còn lại EPIC_PROPOSED</code></li>
-<li><strong>Active Task IDs</strong>: <code>T-001, T-002, T-003, T-004, T-005 (đợt 1, hạn 01:30 2026-10-07)</code></li>
-<li><strong>Active Blocker IDs</strong>: <code>BLOCKER-014, BLOCKER-015, BLOCKER-022</code></li>
-<li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004</code></li>
-<li><strong>Active Risk IDs</strong>: <code>RISK-001…RISK-011</code></li>
-<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing)</code></li>
-<li><strong>Current Session ID</strong>: <code>SES-003</code></li>
-</ul>
+<h2 id="task-records">Task Records</h2>
+<table>
+<thead>
+<tr>
+<th>Task ID</th>
+<th>Epic ID</th>
+<th>Title</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Dependencies</th>
+<th>Blocker IDs</th>
+<th>Evidence Links</th>
+<th>Updated Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-001</td>
+<td>E-01</td>
+<td>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>review</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-001-@toilatrung.html">.agent/reports/implementation/T-001-@toilatrung.html</a></td>
+<td>2026-10-07</td>
+</tr>
+</tbody>
+</table>
 </article></main></body></html>

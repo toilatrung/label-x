@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-001 — @toilatrung — LabelX</title>
+<meta name="labelx:id" content="T-001-toilatrung">
+<meta name="labelx:title" content="Implementation Report T-001 — @toilatrung">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[report, implementation, t-001, per-user]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-001-@toilatrung</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-001-toilatrung</span><b>title</b><span>Implementation Report T-001 — @toilatrung</span><b>type</b><span>report</span><b>domain</b><span>governance</span><b>module</b><span>implementation</span><b>tags</b><span>[report, implementation, t-001, per-user]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-report-t-001">Implementation Report: T-001 — Contract M13 v1</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo triển khai T-001 (epic E-01, issue toilatrung/label-x#13): OpenAPI baseline, state machine, ADR lineage/neo, ma trận RBAC.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-001</code></li>
+<li><strong>Title</strong>: <code>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Executor</strong>: <code>claude-code (Claude Opus 5.5) cho @toilatrung</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>T-001</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: OpenAPI 3.0.3 (<code>docs/04-api/openapi.yaml</code>) cho auth/phiên, dataset, snapshot, QC Run (tạo, xem, danh sách, huỷ, retry, ledger, ranking), guideline rule, hàng đợi/lease/frame; hợp đồng lỗi chung <code>Error{code, message, request_id, details}</code> cho 400/403/404/409/422; bảng transition Snapshot, QC Run, Issue, frame có trạng thái "đang dở" (<code>incomplete</code>); ma trận actor/action/scope; ADR DEC-005, DEC-006 (accepted); test contract; script frontend sinh type từ tệp.</li>
+<li><strong>Not Implemented</strong>: Operation quyết định, phân xử, rework, reference, evaluation, gate, waiver, report (đã có quyền và transition, chưa có trong OpenAPI — task M-03 sau); engine interface, ADR KPI-2b, cập nhật SRS (<code>incomplete</code>, FR-GTE-01, báo cáo hai phần) thuộc phần còn lại của E-01; view backend thật (thuộc epic tương ứng).</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead>
+<tbody>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>Contract OpenAPI 3.0.3: 21 operation, mỗi operation có <code>x-labelx-trace</code>, <code>x-labelx-roles</code>, có <code>x-labelx-transition</code> khi đổi trạng thái</td><td><code>T-001</code></td></tr>
+<tr><td><code>docs/04-api/state-machines.html</code></td><td>Bảng event/từ/đến/actor/guard/API/mã lỗi/nguồn cho Snapshot, QC Run, Issue, frame</td><td><code>T-001</code></td></tr>
+<tr><td><code>docs/04-api/rbac-matrix.html</code></td><td>Vai trò, scope, ma trận theo operation, action đợt sau, bất biến</td><td><code>T-001</code></td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-005.html</code></td><td>ADR lineage qua revision (BLOCKER-007 phương án A)</td><td><code>T-001</code></td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-006.html</code></td><td>ADR neo issue E1–E3, cấu trúc, thủ công</td><td><code>T-001</code></td></tr>
+<tr><td><code>docs/04-api/index.html</code>, <code>rest-api.html</code>, <code>contract.html</code></td><td>Liên kết contract mới, quy ước dấu <code>/</code> cuối, endpoint auth, mã lỗi bổ sung</td><td><code>T-001</code></td></tr>
+<tr><td><code>src/backend/tests/test_contract.py</code></td><td>9 test: OpenAPI 3.0 hợp lệ, phủ endpoint T-001, <code>$ref</code> phân giải được, mã truy vết có trong SRS, vai trò hợp lệ, operationId duy nhất, lỗi 4xx dùng schema chung, transition có trong state-machines, có <code>incomplete</code></td><td><code>T-001</code></td></tr>
+<tr><td><code>src/frontend/package.json</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td>Script <code>gen:api:contract</code> và type sinh từ tệp contract</td><td><code>T-001</code></td></tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-001</code>, <code>.agent/execution/task-board-@toilatrung.html</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@toilatrung.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, DEC-005.html, DEC-006.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-007.html, BLOCKER-008.html</code></li>
+<li><strong>Review Request</strong>: <code>pending — PR vào develop, comment "Đã xem và duyệt" (CR-102)</code></li>
+<li><strong>Commits</strong>: <code>545eae1</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>agent task start T-001</code></td><td><code>not-run</code></td><td>Không có CLI <code>agent</code>; trạng thái ghi tay trong task-board-@toilatrung.html</td></tr>
+<tr><td><code>agent task verify T-001</code></td><td><code>not-run</code></td><td>Thay bằng các kiểm tra ở mục dưới</td></tr>
+<tr><td><code>agent task report T-001 --executor claude-code</code></td><td><code>not-run</code></td><td>Báo cáo này</td></tr>
+<tr><td><code>agent review request T-001 --reviewer &lt;reviewer-id&gt;</code></td><td><code>not-run</code></td><td>Review qua PR</td></tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>uv run pytest -q tests/test_contract.py tests/test_settings.py</code></td><td><code>passed</code></td><td>11 passed. Kiểm đột biến: đổi một mã truy vết thành FR-SEC-99 và một kiểu thành <code>integr</code> → 2 test fail như mong đợi; khôi phục → pass</td></tr>
+<tr><td>OpenAPI hợp lệ (<code>drf_spectacular.validation.validate_schema</code>, JSON Schema OpenAPI 3.0)</td><td><code>passed</code></td><td><code>test_contract_is_valid_openapi_3</code></td></tr>
+<tr><td><code>npm run gen:api:contract</code></td><td><code>passed</code></td><td>openapi-typescript 7.13.0 sinh <code>src/lib/api/contract.d.ts</code> (1388 dòng)</td></tr>
+<tr><td><code>npm run typecheck</code>, <code>npm run lint</code></td><td><code>passed</code></td><td>exit 0</td></tr>
+<tr><td><code>uv run ruff check .</code>, <code>ruff format --check .</code>, <code>mypy config</code></td><td><code>passed</code></td><td>All checks passed; mypy: no issues in 6 source files</td></tr>
+<tr><td><code>make validate-kit</code> (<code>python3 scripts/validate-framework.py</code>)</td><td><code>passed</code></td><td>FRAMEWORK_VALIDATION_PASS</td></tr>
+<tr><td><code>make check</code> đầy đủ (<code>tests/test_smoke.py</code> cần PostgreSQL)</td><td><code>not-run</code></td><td>Máy chạy agent không có docker/make để <code>make infra-up</code>; các bước của <code>make check</code> chạy riêng như trên, trừ test cần DB. CI của PR chạy đủ</td></tr>
+<tr><td>Thành viên khác đọc contract trong PR</td><td><code>not-run</code></td><td>Chờ PR</td></tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: Đường dẫn trong OpenAPI có dấu <code>/</code> cuối (quy ước DRF, khớp T-003) thay vì đúng chữ SRS tab:api; thêm 4 endpoint auth và 2 endpoint dataset không có trong tab:api; thêm mã lỗi <code>NOT_AUTHENTICATED</code>, <code>INVALID_CREDENTIALS</code>, <code>SCOPE_BUSY</code>, <code>ISSUE_EXISTS</code>.</li>
+<li><strong>Approved By</strong>: <code>pending — PO duyệt qua PR</code></li>
+<li><strong>Known Limitations</strong>: Contract là tệp viết tay; chưa có test so khớp với schema drf-spectacular vì chưa có view. T-003 (PR #20) đang trả mã lỗi chữ thường (<code>forbidden</code>, <code>not_found</code>) và envelope <code>{count, results}</code>, lệch contract (<code>FORBIDDEN</code>/<code>NOT_AUTHENTICATED</code>, <code>NOT_FOUND</code>, cursor <code>{next, previous, results}</code>) — cần chỉnh khi review #20. Thời hạn lease và cửa sổ giữ chỗ frame <code>incomplete</code> vẫn là TBD-09.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[x] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/T-001-@toilatrung.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

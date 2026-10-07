@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luồng nhánh develop: developer merge vào develop, PO đưa develop sang main — LabelX</title>
+<meta name="labelx:id" content="CR-104">
+<meta name="labelx:title" content="Luồng nhánh develop: developer merge vào develop, PO đưa develop sang main">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="repository">
+<meta name="labelx:tags" content="[change-request, process, git, pull-request]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / change-requests / CR-104</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>CR-104</span><b>title</b><span>Luồng nhánh develop: developer merge vào develop, PO đưa develop sang main</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>repository</span><b>tags</b><span>[change-request, process, git, pull-request]</span><b>priority</b><span>1</span></div>
+<h1 id="cr-104-luong-nhanh-develop-developer-merge-vao-develop-po-ua-develop-sang-main">CR-104: Luồng nhánh develop: developer merge vào develop, PO đưa develop sang main</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Change Request ID</strong>: <code>CR-104</code></li>
+<li><strong>Title</strong>: <code>Luồng nhánh develop: developer merge vào develop, PO đưa develop sang main</code></li>
+<li><strong>Owner</strong>: <code>toilatrung</code></li>
+<li><strong>Proposer</strong>: <code>toilatrung</code></li>
+<li><strong>Status</strong>: <code>implementing</code></li>
+<li><strong>Change Type</strong>: <code>process</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<p>Trước: PR của mọi người nhắm thẳng <code>main</code> (CR-102 chỉ quy định ai duyệt).</p>
+<p>Sau:</p>
+<ol>
+<li>Có nhánh tích hợp <code>develop</code>, tạo từ <code>main</code> tại commit <code>f59cabf</code>.</li>
+<li>Mọi PR của tác giả không phải PO (kể cả Dependabot) phải có base <code>develop</code>; được duyệt theo CR-102 và CI xanh thì merge vào <code>develop</code>.</li>
+<li>Chỉ PO (Trịnh Quang Trung) đưa <code>develop</code> vào <code>main</code>, sau khi review toàn luồng trên <code>develop</code>, bằng merge commit.</li>
+<li><code>scripts/ci/check-pr-approval.cjs</code> cho status <code>pr-approval</code> thất bại khi PR của thành viên nhắm <code>main</code>, kể cả đã có comment duyệt; workflow chạy lại khi PR đổi base (sự kiện <code>edited</code>). CI chạy khi push vào <code>main</code> hoặc <code>develop</code>.</li>
+</ol>
+<h2 id="justification">Justification</h2>
+<p>Product Owner yêu cầu ngày 2026-10-07: "các developer khi tạo pr thì phải merge vào develop trước, tôi sẽ merge qua main sau khi review full luồng". Repo private gói Free không có branch protection nên cần kiểm bằng status <code>pr-approval</code>.</p>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul>
+<li><strong>Affected Baselines</strong>: <code>AGENT.html</code> (Pull Request Approval, Forbidden Actions)</li>
+<li><strong>Affected Epics or Tasks</strong>: <code>T-001, T-002, T-003, T-004, T-005 (PR đợt 1 nhắm develop)</code></li>
+<li><strong>Schedule Impact</strong>: <code>Thêm một bước PO merge develop → main.</code></li>
+<li><strong>Cost or Resource Impact</strong>: <code>none</code></li>
+<li><strong>Security or Compliance Impact</strong>: <code>Không có branch protection (gói Free); status pr-approval báo lỗi nhưng GitHub không chặn nút merge.</code></li>
+<li><strong>Compatibility or Migration Impact</strong>: <code>Nhánh đợt 1 có gốc trùng develop, không cần rebase. Dependabot vẫn mở PR vào nhánh mặc định trừ khi cấu hình target-branch.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>AGENT.html</code>, <code>CLAUDE.md</code>, <code>docs/07-development/workflow.html</code>, <code>.agent/execution/task-board.html</code>, <code>.github/pull_request_template.md</code>, <code>.github/workflows/pr-approval.yml</code>, <code>.github/workflows/ci.yml</code>, <code>scripts/ci/check-pr-approval.cjs</code></li>
+<li><strong>Decisions</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Issues or Blockers</strong>: <code>none</code></li>
+</ul>
+<h2 id="approval">Approval</h2>
+<ul>
+<li><strong>Decision</strong>: <code>approved</code></li>
+<li><strong>Approver</strong>: <code>toilatrung</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>PO yêu cầu trực tiếp trong phiên làm việc ngày 2026-10-07.</code></li>
+</ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul>
+<li><strong>Responsible Owner</strong>: <code>claude-code (cho toilatrung)</code></li>
+<li><strong>Tasks</strong>: <code>none (process change, không thuộc epic sản phẩm)</code></li>
+<li><strong>Validation Method</strong>: <code>node --test scripts/ci/tests/*.test.cjs; make validate-kit; mở PR thử vào main từ tài khoản thành viên thấy pr-approval báo lỗi</code></li>
+<li><strong>Rollback Method</strong>: <code>Revert commit; xoá nhánh develop sau khi đã đưa hết thay đổi vào main.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Approval is recorded before baseline modification.</li>
+<li>[ ] Approved changes are implemented and verified.</li>
+<li>[x] All affected baselines and traceability links are updated.</li>
+<li>[ ] Status is <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code>, or <code>superseded</code>.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is <code>pending</code> or <code>rejected</code>.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+</article></main></body></html>

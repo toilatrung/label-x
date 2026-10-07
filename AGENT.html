@@ -211,6 +211,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>PO self-approval</strong>: a user flagged <code>self-approve</code> in that list (only the PO) may review and approve their own pull requests.</li>
 <li><strong>Everyone else</strong>: every pull request by any other author, human or bot, requires review, and QA/QC confirmation signed by an approver other than the author before it is approved or merged. An approver never approves their own pull request unless flagged <code>self-approve</code>.</li>
 <li><strong>Approval signature</strong>: the approver comments exactly <code>Đã xem và duyệt</code> on the pull request when it passes. Commits pushed after that comment void it; the approver reviews again and comments again. Change requests are given as review comments without that phrase.</li>
+<li><strong>Branch flow</strong> (<code>.agent/governance/change-requests/CR-104.html</code>): feature branches start from <code>develop</code>; every pull request by an author other than the PO targets <code>develop</code>. Only the PO merges <code>develop</code> into <code>main</code>, after reviewing the full flow on <code>develop</code>, using a merge commit. A non-PO pull request into <code>main</code> fails <code>pr-approval</code> even when approved.</li>
 <li><strong>Enforcement</strong>: <code>.github/workflows/pr-approval.yml</code> runs <code>scripts/ci/check-pr-approval.cjs</code> on pull request and comment events and sets the commit status <code>pr-approval</code> on the head commit; <code>pr-approval</code> is a required status check for <code>main</code>.</li>
 </ul>
 <h2 id="update-triggers">Update Triggers</h2>
@@ -246,5 +247,6 @@ ul.dir{columns:2;font-size:14px}
 <li>Do not modify protected source directories during framework-only maintenance.</li>
 <li>Do not modify canonical <code>.agent/</code> files or another user's per-user file unless you are an integrator listed in <code>.github/agent-integrators.txt</code>.</li>
 <li>Do not approve or merge a pull request without the approval comment required by Pull Request Approval, and do not post that comment on behalf of an approver.</li>
+<li>Do not open or merge a pull request into <code>main</code> unless you are the PO; target <code>develop</code>.</li>
 </ul>
 </article></main></body></html>
