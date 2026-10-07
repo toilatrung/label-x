@@ -24,7 +24,8 @@
 <li><strong>Title</strong>: CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</li>
 <li><strong>Owner</strong>: Lê Duy Nam (<code>@duy12345-6789</code>)</li>
 <li><strong>Executor</strong>: <code>@duy12345-6789</code> với Codex</li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>blocked</code></li>
+<li><strong>Status Note</strong>: BLOCKER-024 — tệp người học không thuộc BDD100K; phần kỹ thuật (CVAT dev, adapter chỉ đọc, hash) đạt.</li>
 <li><strong>Status Reason</strong>: implementation và learner audit đã đủ evidence; chờ reviewer và các decision owner phê duyệt.</li>
 <li><strong>Task ID</strong>: <code>T-004</code></li>
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
@@ -45,13 +46,13 @@
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#T-004</code></li>
-<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
-<li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li>
-<li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
-<li><strong>Decisions</strong>: <code>DEC-001</code>; <code>DEC-007-@duy12345-6789</code> status <code>proposed</code> cho hash precision/TBD-20</li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>; <code>DEC-007</code> status <code>proposed</code> cho hash precision/TBD-20</li>
 <li><strong>Change Requests</strong>: <code>CR-100</code>, <code>CR-103</code>, <code>CR-104</code></li>
-<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023-@duy12345-6789</code> resolved bằng learner audit</li>
-<li><strong>Review Request</strong>: PR <code>#19</code>; chờ <code>@toilatrung</code> hoặc <code>@DucHa180104</code> comment <code>Đã xem và duyệt</code></li>
+<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023</code> resolved bằng learner audit</li>
+<li><strong>Review Request</strong>: PR <code>#19</code> (squash <code>b49f5d0</code> trên develop); review độc lập: <code>.agent/reports/review/T-004.html</code></li>
 <li><strong>Issue</strong>: <code>#16</code> — T-004</li>
 <li><strong>Commits</strong>: <code>8a58ad7</code> — triển khai ban đầu; <code>e7d84ca</code> — sửa review; <code>ab2f3f3</code> — audit learner; <code>7aa9178</code> — manual import/hash end-to-end</li>
 <li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/19">#19 — feat(cvat): hoàn thành T-004 dev stack và read-only adapter</a>, base <code>develop</code></li>
@@ -84,7 +85,7 @@
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Every reported change maps to T-004.</li>
-<li>[x] Annotation learner thật đã được audit; count leakage và checksum nguồn được ghi; <code>BLOCKER-023-@duy12345-6789</code> resolved.</li>
+<li>[x] Annotation learner thật đã được audit; count leakage và checksum nguồn được ghi; <code>BLOCKER-023</code> resolved.</li>
 <li>[x] Deviations and limitations are explicit.</li>
 <li>[x] Build, lint, typecheck, test and framework validation pass.</li>
 <li>[x] Reviewer handoff identifies independent reviewers.</li>

@@ -83,7 +83,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>src/frontend/src/components/auth/*</code>, <code>src/frontend/src/components/layout/*</code></td><td>Chặn trang theo phiên và quyền; thanh điều hướng, ngữ cảnh và quy trình; không có thao tác tự đổi vai trò phía trình duyệt.</td><td>T-002</td></tr>
 <tr><td><code>src/frontend/src/app/*</code></td><td>Đăng nhập, trang chính và các khung Analysis, Review, Configuration; nội dung không bịa số liệu nghiệp vụ.</td><td>T-002</td></tr>
 <tr><td><code>src/frontend/src/__tests__/*</code></td><td>51 ca kiểm thử gồm hợp đồng đăng nhập, CSRF, phiên, 7 vai trò, quyền, lỗi mạng, menu, chặn trang; thêm hồi quy lỗi quyền cấp thao tác, production và Dataset chưa chọn.</td><td>T-002</td></tr>
-<tr><td><code>.agent/execution/*-@tdt2112.html</code>, <code>.agent/reports/implementation/T-002-@tdt2112.html</code>, <code>.agent/intelligence/git-nexus/task-commit-map-@tdt2112.html</code></td><td>Trạng thái và bằng chứng thuộc phần tài liệu riêng của người thực hiện.</td><td>T-002</td></tr>
+<tr><td><code>.agent/execution/*-@tdt2112.html</code>, <code>.agent/reports/implementation/T-002-@tdt2112.html</code>, <code>.agent/intelligence/git-nexus/task-commit-map.html</code></td><td>Trạng thái và bằng chứng thuộc phần tài liệu riêng của người thực hiện.</td><td>T-002</td></tr>
 
 <tr><td><code>src/frontend/src/lib/api/client.ts</code>, <code>lib/auth/auth-context.tsx</code>, <code>components/auth/AuthGuard.tsx</code></td><td>Sửa review bắt buộc: bỏ ACCESS_DENIED_EVENT và trạng thái lỗi quyền toàn trang; giữ trang và bản nháp khi một thao tác bị từ chối.</td><td>T-002</td></tr>
 <tr><td><code>src/frontend/src/lib/auth/config.ts</code>, <code>src/frontend/.env.example</code></td><td>Để chế độ auth trống trong tệp mẫu; production luôn vô hiệu hoá mock.</td><td>T-002</td></tr>
@@ -92,7 +92,7 @@ ul.dir{columns:2;font-size:14px}
 </tbody></table>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><code>.agent/execution/task-board.html#t-002</code> — yêu cầu gốc; <code>.agent/execution/current-context-@tdt2112.html</code> — ngữ cảnh người thực hiện.</li>
+<li><code>.agent/execution/task-board.html#t-002</code> — yêu cầu gốc; <code>.agent/execution/current-context.html</code> — ngữ cảnh người thực hiện.</li>
 <li><code>docs/04-api/openapi.yaml</code>, <code>docs/04-api/rbac-matrix.html</code>, <code>src/frontend/src/lib/api/contract.d.ts</code> — hợp đồng T-001 trên develop.</li>
 <li><code>docs/design/design-system.html</code>, <code>docs/design/screens/TopBar.dc.html</code> — thiết kế giao diện.</li>
 <li><a href="https://github.com/toilatrung/label-x/issues/14">Issue #14</a> — task và các blocker được báo cho leader.</li>

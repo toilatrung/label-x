@@ -54,7 +54,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</code></li>
 <li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
 <li><strong>Executor</strong>: <code>claude-code (Claude Opus 5.5) cho @toilatrung</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
 <li><strong>Task ID</strong>: <code>T-001</code></li>
 <li><strong>Epic ID</strong>: <code>E-01</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-07</code></li>
@@ -80,21 +80,21 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-001</code>, <code>.agent/execution/task-board-@toilatrung.html</code></li>
-<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@toilatrung.html</code></li>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-001</code>, <code>.agent/execution/task-board.html</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, DEC-005.html, DEC-006.html</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-007.html, BLOCKER-008.html</code></li>
-<li><strong>Review Request</strong>: <code>pending — PR vào develop, comment "Đã xem và duyệt" (CR-102)</code></li>
+<li><strong>Review Request</strong>: <code>PR #21 (squash 54a5162 trên develop); review độc lập: .agent/reports/review/T-001.html</code></li>
 <li><strong>Commits</strong>: <code>545eae1</code></li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table>
 <thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
 <tbody>
-<tr><td><code>agent task start T-001</code></td><td><code>not-run</code></td><td>Không có CLI <code>agent</code>; trạng thái ghi tay trong task-board-@toilatrung.html</td></tr>
+<tr><td><code>agent task start T-001</code></td><td><code>not-run</code></td><td>Không có CLI <code>agent</code>; trạng thái ghi tay trong task-board.html</td></tr>
 <tr><td><code>agent task verify T-001</code></td><td><code>not-run</code></td><td>Thay bằng các kiểm tra ở mục dưới</td></tr>
 <tr><td><code>agent task report T-001 --executor claude-code</code></td><td><code>not-run</code></td><td>Báo cáo này</td></tr>
 <tr><td><code>agent review request T-001 --reviewer &lt;reviewer-id&gt;</code></td><td><code>not-run</code></td><td>Review qua PR</td></tr>
@@ -117,7 +117,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="deviations">Deviations</h2>
 <ul>
 <li><strong>Plan Deviations</strong>: Đường dẫn trong OpenAPI có dấu <code>/</code> cuối (quy ước DRF, khớp T-003) thay vì đúng chữ SRS tab:api; thêm 4 endpoint auth và 2 endpoint dataset không có trong tab:api; thêm mã lỗi <code>NOT_AUTHENTICATED</code>, <code>INVALID_CREDENTIALS</code>, <code>SCOPE_BUSY</code>, <code>ISSUE_EXISTS</code>.</li>
-<li><strong>Approved By</strong>: <code>pending — PO duyệt qua PR</code></li>
+<li><strong>Approved By</strong>: <code>PR #21 đã merge vào develop (54a5162); kết luận review tại .agent/reports/review/T-001.html</code></li>
 <li><strong>Known Limitations</strong>: Contract là tệp viết tay; chưa có test so khớp với schema drf-spectacular vì chưa có view. T-003 (PR #20) đang trả mã lỗi chữ thường (<code>forbidden</code>, <code>not_found</code>) và envelope <code>{count, results}</code>, lệch contract (<code>FORBIDDEN</code>/<code>NOT_AUTHENTICATED</code>, <code>NOT_FOUND</code>, cursor <code>{next, previous, results}</code>) — cần chỉnh khi review #20. Thời hạn lease và cửa sổ giữ chỗ frame <code>incomplete</code> vẫn là TBD-09.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
