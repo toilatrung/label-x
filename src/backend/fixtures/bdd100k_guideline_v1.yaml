@@ -1,0 +1,224 @@
+# Guideline mẫu cho 10 lớp BDD100K (pilot M13).
+#
+# Nạp bằng: python manage.py load_guideline <đường-dẫn-tệp-này>
+# Chạy lại an toàn (idempotent): tệp cùng nội dung sẽ bị bỏ qua.
+#
+# Tệp này là dữ liệu mẫu phục vụ phát triển và pilot.
+# QA Lead sẽ soạn tệp chính thức trước khi chạy thí nghiệm (RK-08).
+
+version: "v1"
+name: "BDD100K Annotation Guideline v1"
+
+rules:
+  - id: "VEH-01"
+    section: "§2.1"
+    content: >
+      Xe ô tô con (car): gồm sedan, hatchback, coupe, SUV dưới 7 chỗ.
+      Gán nhãn car khi toàn bộ thân xe hoặc phần lớn thân xe nằm trong ảnh.
+      Nếu chỉ thấy một phần nhỏ (dưới 20% diện tích), đánh dấu occluded.
+
+  - id: "VEH-02"
+    section: "§2.2"
+    content: >
+      Xe tải (truck): xe vận tải có thùng hàng hoặc cabin tách biệt,
+      xe đầu kéo, xe ben, xe chở hàng lớn. Phân biệt với bus bằng cấu trúc
+      thùng hàng thay vì khoang hành khách.
+
+  - id: "VEH-03"
+    section: "§2.3"
+    content: >
+      Phân biệt car và truck: khi đối tượng có kích thước lớn nhưng không rõ
+      thùng hàng (ví dụ SUV lớn, pickup), ưu tiên gán car nếu có khoang hành
+      khách liền khối. Pickup có thùng hở phía sau gán truck.
+
+  - id: "BUS-01"
+    section: "§2.4"
+    content: >
+      Xe buýt (bus): phương tiện chở khách công cộng hoặc du lịch có khoang
+      hành khách dài, nhiều cửa sổ dọc thân. Minibus (dưới 16 chỗ) vẫn gán bus.
+
+  - id: "PED-01"
+    section: "§3.1"
+    content: >
+      Người đi bộ (pedestrian): bất kỳ người nào đang đi bộ, đứng, hoặc ngồi
+      trên vỉa hè, đường. Bao gồm người đẩy xe nôi, người dùng nạng.
+      Không gán cho người đang ngồi trong xe.
+
+  - id: "RDR-01"
+    section: "§3.2"
+    content: >
+      Người đi xe (rider): người đang điều khiển hoặc ngồi trên xe đạp,
+      xe máy, xe scooter. Gán rider cho người, gán bike/motor cho phương tiện.
+
+  - id: "BIK-01"
+    section: "§4.1"
+    content: >
+      Xe đạp (bicycle): phương tiện hai bánh chạy bằng sức người.
+      Xe đạp không có người gán bicycle; xe đạp có người thì gán cả bicycle
+      và rider. Xe đạp điện vẫn gán bicycle.
+
+  - id: "MOT-01"
+    section: "§4.2"
+    content: >
+      Xe máy (motorcycle): phương tiện hai bánh có động cơ. Scooter, moped
+      gán motorcycle. Xe ba bánh chở hàng gán truck, không gán motorcycle.
+
+  - id: "TRF-01"
+    section: "§5.1"
+    content: >
+      Đèn giao thông (traffic light): gán bounding box bao toàn bộ cụm đèn,
+      bao gồm khung và visor. Đèn tín hiệu dành cho người đi bộ cũng gán
+      traffic light. Biển báo phát sáng không phải traffic light.
+
+  - id: "TRS-01"
+    section: "§5.2"
+    content: >
+      Biển báo giao thông (traffic sign): biển báo cố định trên cột hoặc treo,
+      có nội dung chỉ dẫn hoặc cảnh báo. Biển quảng cáo không phải traffic sign.
+      Biển tạm (thi công) vẫn gán traffic sign.
+
+  - id: "TRN-01"
+    section: "§6.1"
+    content: >
+      Tàu hoả (train): phương tiện chạy trên đường ray. Gán bounding box cho
+      mỗi toa nhìn thấy. Xe điện mặt đất (tram) gán train.
+
+  - id: "GEO-01"
+    section: "§7.1"
+    content: >
+      Quy tắc hình học chung: bounding box phải bao sát đối tượng, không
+      để thừa quá 5% diện tích. Toạ độ phải trong ảnh (dung sai 2px mỗi
+      cạnh). Box có diện tích dưới 24px² được bỏ qua.
+
+  - id: "DUP-01"
+    section: "§7.2"
+    content: >
+      Trùng lặp (duplicate/overlap): hai bounding box cùng lớp có IoU >= 0.85
+      là nghi vấn trùng. Chỉ giữ box khớp đối tượng hơn; box còn lại xoá.
+
+mappings:
+  # --- Nhóm E2: sai lớp ---
+  - error_group: "E2"
+    class_name: "car"
+    paired_class: "truck"
+    rule_ids: ["VEH-01", "VEH-02", "VEH-03"]
+
+  - error_group: "E2"
+    class_name: "truck"
+    paired_class: "car"
+    rule_ids: ["VEH-01", "VEH-02", "VEH-03"]
+
+  - error_group: "E2"
+    class_name: "car"
+    paired_class: "bus"
+    rule_ids: ["VEH-01", "BUS-01"]
+
+  - error_group: "E2"
+    class_name: "bus"
+    paired_class: "truck"
+    rule_ids: ["BUS-01", "VEH-02"]
+
+  - error_group: "E2"
+    class_name: "pedestrian"
+    paired_class: "rider"
+    rule_ids: ["PED-01", "RDR-01"]
+
+  - error_group: "E2"
+    class_name: "bicycle"
+    paired_class: "motorcycle"
+    rule_ids: ["BIK-01", "MOT-01"]
+
+  - error_group: "E2"
+    class_name: "motorcycle"
+    paired_class: "bicycle"
+    rule_ids: ["BIK-01", "MOT-01"]
+
+  - error_group: "E2"
+    class_name: "traffic light"
+    paired_class: "traffic sign"
+    rule_ids: ["TRF-01", "TRS-01"]
+
+  # --- Nhóm E1: thiếu annotation ---
+  - error_group: "E1"
+    class_name: "car"
+    rule_ids: ["VEH-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "truck"
+    rule_ids: ["VEH-02", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "bus"
+    rule_ids: ["BUS-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "pedestrian"
+    rule_ids: ["PED-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "rider"
+    rule_ids: ["RDR-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "bicycle"
+    rule_ids: ["BIK-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "motorcycle"
+    rule_ids: ["MOT-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "traffic light"
+    rule_ids: ["TRF-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "traffic sign"
+    rule_ids: ["TRS-01", "GEO-01"]
+
+  - error_group: "E1"
+    class_name: "train"
+    rule_ids: ["TRN-01", "GEO-01"]
+
+  # --- Nhóm E3: trùng lặp ---
+  - error_group: "E3"
+    class_name: "car"
+    rule_ids: ["DUP-01"]
+
+  - error_group: "E3"
+    class_name: "truck"
+    rule_ids: ["DUP-01"]
+
+  - error_group: "E3"
+    class_name: "pedestrian"
+    rule_ids: ["DUP-01"]
+
+  # --- Chung (không theo nhóm lỗi) ---
+  - class_name: "car"
+    rule_ids: ["VEH-01", "GEO-01"]
+
+  - class_name: "truck"
+    rule_ids: ["VEH-02", "GEO-01"]
+
+  - class_name: "bus"
+    rule_ids: ["BUS-01", "GEO-01"]
+
+  - class_name: "pedestrian"
+    rule_ids: ["PED-01", "GEO-01"]
+
+  - class_name: "rider"
+    rule_ids: ["RDR-01", "GEO-01"]
+
+  - class_name: "bicycle"
+    rule_ids: ["BIK-01", "GEO-01"]
+
+  - class_name: "motorcycle"
+    rule_ids: ["MOT-01", "GEO-01"]
+
+  - class_name: "traffic light"
+    rule_ids: ["TRF-01", "GEO-01"]
+
+  - class_name: "traffic sign"
+    rule_ids: ["TRS-01", "GEO-01"]
+
+  - class_name: "train"
+    rule_ids: ["TRN-01", "GEO-01"]

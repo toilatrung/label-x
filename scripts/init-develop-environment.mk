@@ -95,7 +95,7 @@ format: ## Tự format backend
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check --fix . && "$(UV)" run --frozen ruff format .
 
 typecheck: ## mypy + tsc
-	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config
+	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config guideline
 	cd "$(FRONTEND)" && npm run typecheck
 
 test: ## pytest (cần infra-up)

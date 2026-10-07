@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-003 — LabelX</title>
+<meta name="labelx:id" content="T-003-@ducha180104">
+<meta name="labelx:title" content="Implementation Report T-003: Guideline tĩnh có rule ID">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="guideline">
+<meta name="labelx:tags" content="[implementation, report, T-003, guideline, GDL]">
+<meta name="labelx:priority" content="2">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:140px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+.pass{color:#166534;font-weight:600}.fail{color:#991b1b;font-weight:600}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-003-@ducha180104</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-003-@ducha180104</span><b>title</b><span>Implementation Report T-003: Guideline tĩnh có rule ID</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>guideline</span><b>tags</b><span>[implementation, report, T-003, guideline, GDL]</span><b>priority</b><span>2</span></div>
+
+<h1 id="implementation-report-t-003">Implementation Report — T-003: Guideline tĩnh có rule ID</h1>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+  <li><strong>Report ID</strong>: <code>T-003-@ducha180104</code></li>
+  <li><strong>Title</strong>: <code>Guideline tĩnh có rule ID: nạp tệp, API tra rule, màn xem</code></li>
+  <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@DucHa180104)</code></li>
+  <li><strong>Executor</strong>: <code>Antigravity IDE (coding agent)</code></li>
+  <li><strong>Status</strong>: <code>complete</code></li>
+  <li><strong>Task ID</strong>: <code>T-003</code></li>
+  <li><strong>Epic ID</strong>: <code>E-03</code></li>
+  <li><strong>Report Date</strong>: <code>2026-10-07</code></li>
+  <li><strong>Branch</strong>: <code>feat/T-003-e03-guideline</code></li>
+</ul>
+
+<h2 id="objective">Objective</h2>
+<p>Workspace tra được rule theo rule ID từ guideline tĩnh nạp từ tệp (thay FR-GDL-01…03 theo CR-101), không dùng retrieval ngữ nghĩa (FR-GDL-04 Must).</p>
+
+<h2 id="scope-implemented">Scope triển khai</h2>
+<table>
+<thead><tr><th>Hạng mục</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead>
+<tbody>
+<tr><td>Django app <code>guideline</code> với 3 model</td><td class="pass">✓ Hoàn thành</td><td>GuidelineVersion, GuidelineRule, RuleMapping; migration <code>0001_initial.py</code> đã chạy thành công</td></tr>
+<tr><td>Management command <code>load_guideline</code></td><td class="pass">✓ Hoàn thành</td><td>Idempotent theo SHA-256 checksum (lần nạp lại được bỏ qua đúng theo checksum), atomic transaction</td></tr>
+<tr><td>Tệp fixture YAML mẫu (13 rule, 10 lớp BDD100K)</td><td class="pass">✓ Hoàn thành</td><td><code>src/backend/fixtures/bdd100k_guideline_v1.yaml</code> có đúng 13 rule</td></tr>
+<tr><td>Khai báo trực tiếp PyYAML và types-PyYAML</td><td class="pass">✓ Hoàn thành</td><td>Đã khai báo tường minh trong <code>src/backend/pyproject.toml</code> và cập nhật <code>uv.lock</code></td></tr>
+<tr><td>API GET <code>/api/guidelines/</code></td><td class="pass">✓ Hoàn thành</td><td>Danh sách guideline version (đăng nhập trả 200, không đăng nhập trả 403)</td></tr>
+<tr><td>API GET <code>/api/guidelines/rules/</code></td><td class="pass">✓ Hoàn thành</td><td>Lọc theo error_group, class_name, paired_class</td></tr>
+<tr><td>API GET <code>/api/guidelines/rules/{rule_id}/</code></td><td class="pass">✓ Hoàn thành</td><td>Tra rule theo ID, 404 theo đúng hợp đồng lỗi {code, message, request_id}</td></tr>
+<tr><td>Frontend <code>/configuration/guidelines</code></td><td class="pass">✓ Hoàn thành</td><td>Chỉ đọc, TanStack Query, dùng type sinh từ <code>schema.d.ts</code> (file stub thủ công đã bị xóa)</td></tr>
+<tr><td>Bằng chứng kiểm tra thủ công trình duyệt</td><td class="pass">✓ Hoàn thành</td><td>Bàn giao từ Codex (v1, 13 rules, console sạch)</td></tr>
+<tr><td>Kiểm tra tự động cuối</td><td class="pass">✓ Hoàn thành</td><td>Toàn bộ kiểm tra đạt; pytest 17/17 passed</td></tr>
+</tbody>
+</table>
+
+<h2 id="files-created-modified">Files tạo mới / sửa</h2>
+<table>
+<thead><tr><th>File</th><th>Thao tác</th><th>Mô tả</th></tr></thead>
+<tbody>
+<tr><td><code>src/backend/guideline/__init__.py</code></td><td>Tạo mới</td><td>Package init</td></tr>
+<tr><td><code>src/backend/guideline/apps.py</code></td><td>Tạo mới</td><td>AppConfig guideline</td></tr>
+<tr><td><code>src/backend/guideline/models.py</code></td><td>Tạo mới</td><td>3 models + constraints</td></tr>
+<tr><td><code>src/backend/guideline/serializers.py</code></td><td>Tạo mới</td><td>DRF serializers cho version, rule, mapping</td></tr>
+<tr><td><code>src/backend/guideline/views.py</code></td><td>Tạo mới</td><td>3 APIViews chỉ đọc (IsAuthenticated)</td></tr>
+<tr><td><code>src/backend/guideline/urls.py</code></td><td>Tạo mới</td><td>URL patterns cho guideline module</td></tr>
+<tr><td><code>src/backend/guideline/migrations/0001_initial.py</code></td><td>Tạo mới</td><td>DB schema migration cho guideline</td></tr>
+<tr><td><code>src/backend/guideline/management/commands/load_guideline.py</code></td><td>Tạo mới</td><td>Ingestion command idempotent theo SHA-256</td></tr>
+<tr><td><code>src/backend/fixtures/bdd100k_guideline_v1.yaml</code></td><td>Tạo mới</td><td>Fixture mẫu pilot gồm 13 rule</td></tr>
+<tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Tạo mới/Sửa</td><td>Test suite backend (14 test cases guideline + 3 tests hệ thống)</td></tr>
+<tr><td><code>src/backend/pyproject.toml</code></td><td>Sửa</td><td>Thêm pyyaml và types-pyyaml trực tiếp</td></tr>
+<tr><td><code>src/backend/uv.lock</code></td><td>Sửa</td><td>Lockfile cập nhật pyyaml và types-pyyaml</td></tr>
+<tr><td><code>src/backend/config/settings.py</code></td><td>Sửa</td><td>Thêm "guideline" vào INSTALLED_APPS</td></tr>
+<tr><td><code>src/backend/config/urls.py</code></td><td>Sửa</td><td>Thêm route api/guidelines/</td></tr>
+<tr><td><code>scripts/init-develop-environment.mk</code></td><td>Sửa</td><td>Thêm guideline vào lệnh mypy typecheck</td></tr>
+<tr><td><code>src/frontend/src/lib/api/client.ts</code></td><td>Tạo mới</td><td>openapi-fetch client</td></tr>
+<tr><td><code>src/frontend/src/lib/api/schema.d.ts</code></td><td>Tạo mới</td><td>Type sinh từ OpenAPI qua gen:api (guideline-types.ts thủ công đã xóa)</td></tr>
+<tr><td><code>src/frontend/src/lib/query-provider.tsx</code></td><td>Tạo mới</td><td>TanStack Query provider</td></tr>
+<tr><td><code>src/frontend/src/app/configuration/guidelines/page.tsx</code></td><td>Tạo mới</td><td>Màn xem guideline chỉ đọc</td></tr>
+<tr><td><code>src/frontend/src/app/layout.tsx</code></td><td>Sửa</td><td>Bọc QueryProvider trong layout</td></tr>
+</tbody>
+</table>
+
+<h2 id="acceptance-criteria-results">Kết quả Acceptance Criteria</h2>
+<table>
+<thead><tr><th>AC</th><th>Điều kiện</th><th>Phương pháp xác minh</th><th>Kết quả</th></tr></thead>
+<tbody>
+<tr>
+  <td>AC-1</td>
+  <td>Nạp tệp hai lần không tạo bản ghi trùng (idempotency)</td>
+  <td>pytest: <code>test_load_guideline_idempotent</code>, <code>test_load_guideline_output_on_skip</code>, <code>test_load_guideline_checksum_stored</code>, <code>test_load_guideline_creates_rules_and_mappings</code>, <code>test_load_guideline_rejects_invalid_yaml</code>, <code>test_load_guideline_rejects_duplicate_rule_ids</code></td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+<tr>
+  <td>AC-2a</td>
+  <td>API trả rule theo rule_id (200 + payload đúng)</td>
+  <td>pytest: <code>test_rule_detail_success</code>, <code>test_rule_detail_with_version_param</code></td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+<tr>
+  <td>AC-2b</td>
+  <td>API trả rule theo nhóm lỗi/lớp</td>
+  <td>pytest: <code>test_rule_list_by_error_group_and_class</code>, <code>test_rule_list_no_filter_returns_all</code></td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+<tr>
+  <td>AC-2c</td>
+  <td>ID không tồn tại → 404 theo hợp đồng lỗi {code, message, request_id}</td>
+  <td>pytest: <code>test_rule_not_found</code>, <code>test_rule_bad_version</code></td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+<tr>
+  <td>AC-3</td>
+  <td>Unauthenticated → 403; Authenticated → 200; màn xem hiển thị rule</td>
+  <td>pytest: <code>test_unauthenticated_cannot_read</code>, <code>test_authenticated_can_read_versions</code>; API &amp; browser test</td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+<tr>
+  <td>AC-4</td>
+  <td>Toàn bộ kiểm tra chất lượng pass</td>
+  <td>Tự động: ruff check &amp; format, mypy, pytest (17/17 passed), ESLint, tsc, Next build, validate-framework</td>
+  <td class="pass">✓ PASSED</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="automated-check-evidence">Bằng chứng kiểm tra tự động (môi trường Windows)</h2>
+<p>Do máy Windows không có Make, các lệnh dev tương đương được chạy trực tiếp từ PowerShell/cmd thay cho <code>make check</code>:</p>
+
+<h3 id="ruff-check">1. Ruff check (backend)</h3>
+<pre><code>$ uv run --frozen ruff check .
+All checks passed!</code></pre>
+
+<h3 id="ruff-format">2. Ruff format check (backend)</h3>
+<pre><code>$ uv run --frozen ruff format --check .
+23 files already formatted</code></pre>
+
+<h3 id="mypy">3. Mypy typecheck (backend)</h3>
+<pre><code>$ uv run --frozen mypy config guideline
+Success: no issues found in 17 source files</code></pre>
+
+<h3 id="pytest">4. Pytest (backend)</h3>
+<pre><code>$ uv run --frozen pytest -q
+.................                                                        [100%]
+17 passed in 3.28s</code></pre>
+
+<h3 id="eslint">5. ESLint (frontend)</h3>
+<pre><code>$ cmd /c "npm run lint"
+> labelx-frontend@0.1.0 lint
+> eslint
+(no errors)</code></pre>
+
+<h3 id="typecheck">6. TypeScript typecheck (frontend)</h3>
+<pre><code>$ cmd /c "npm run typecheck"
+> labelx-frontend@0.1.0 typecheck
+> next typegen && tsc --noEmit
+Generating route types...
+✓ Types generated successfully</code></pre>
+
+<h3 id="build">7. Next.js build (frontend)</h3>
+<pre><code>$ cmd /c "npm run build"
+> labelx-frontend@0.1.0 build
+> next build
+▲ Next.js 16.3.8 (Turbopack)
+✓ Compiled successfully in 527ms
+✓ Generating static pages using 6 workers (5/5) in 555ms
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+└ ○ /configuration/guidelines</code></pre>
+
+<h3 id="validate-framework">8. Validate Framework (.agent &amp; docs structure)</h3>
+<pre><code>$ uv run --no-project --python 3.12 python scripts/validate-framework.py
+FRAMEWORK_VALIDATION_PASS</code></pre>
+
+<h3 id="git-diff-check">9. Git diff check</h3>
+<pre><code>$ git diff --check
+(Exit code 0 - không có lỗi whitespace hay conflict markers)</code></pre>
+
+<h2 id="manual-check-evidence">Bằng chứng kiểm tra thủ công (bàn giao từ Codex)</h2>
+<blockquote>
+<p><strong>Lưu ý về nguồn gốc bằng chứng</strong>: Toàn bộ các xác minh dưới đây là bằng chứng bàn giao từ Codex qua kiểm tra môi trường local, không phải do agent Antigravity tự thực hiện.</p>
+</blockquote>
+<ul>
+  <li><strong>Database Migration</strong>: Lệnh <code>python manage.py migrate</code> đã chạy thành công, tạo đầy đủ bảng <code>guideline_guidelineversion</code>, <code>guideline_guidelinerule</code>, <code>guideline_rulemapping</code>.</li>
+  <li><strong>Guideline Ingestion &amp; Idempotency</strong>: Lệnh <code>python manage.py load_guideline src/backend/fixtures/bdd100k_guideline_v1.yaml</code> đã nạp thành công 13 rule và các mapping group. Khi chạy lại lần hai với cùng tệp, command bỏ qua chính xác theo SHA-256 checksum mà không tạo trùng bản ghi.</li>
+  <li><strong>Xác thực API &amp; Quyền</strong>:
+    <ul>
+      <li>GET <code>/api/guidelines/rules/VEH-01/</code> khi đã đăng nhập (authenticated): trả về HTTP <code>200 OK</code> với đúng payload rule và version.</li>
+      <li>GET <code>/api/guidelines/rules/VEH-01/</code> khi chưa đăng nhập (unauthenticated): trả về HTTP <code>403 Forbidden</code> kèm hợp đồng lỗi <code>{"code": "forbidden", "message": "...", "request_id": "..."}</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Trình duyệt Frontend</strong>: Codex đã kiểm tra trực tiếp trên trình duyệt local tại đường dẫn <code>http://localhost:3000/configuration/guidelines</code>. Kết quả: trang hiển thị phiên bản <code>v1</code>, hiển thị đủ 13 rules trong bảng dữ liệu, và không có bất kỳ cảnh báo hoặc lỗi nào trong DevTools Console.</li>
+</ul>
+
+<h2 id="design-decisions">Quyết định thiết kế</h2>
+<ul>
+  <li><strong>Định dạng tệp YAML</strong>: YAML dễ soạn thảo thủ công cho QA Lead, hỗ trợ block scalar cho nội dung văn bản dài.</li>
+  <li><strong>Idempotency bằng SHA-256</strong>: Kiểm tra trùng hash tệp để bỏ qua nạp lại, ngăn chặn ghi đè version_tag đã có với nội dung khác.</li>
+  <li><strong>Thông báo stdout và exception tiếng Anh</strong>: Giữ nguyên tiếng Anh trong <code>load_guideline.py</code> để tránh lỗi <code>UnicodeEncodeError</code> trên Windows console.</li>
+  <li><strong>Chỉ đọc, không có UI chỉnh sửa guideline</strong>: Tuân thủ CR-101 (hoãn scope FR-GDL-01…03); pilot chỉ phục vụ tra cứu.</li>
+  <li><strong>Type an toàn sinh từ OpenAPI</strong>: Frontend dùng <code>schema.d.ts</code> được sinh tự động bởi <code>npm run gen:api</code>; tệp <code>guideline-types.ts</code> stub ban đầu đã được xóa bỏ để bảo đảm một nguồn sự thật duy nhất (DEC-001).</li>
+  <li><strong>Khai báo PyYAML tường minh</strong>: <code>pyyaml</code> và <code>types-pyyaml</code> đã được thêm trực tiếp vào <code>pyproject.toml</code>.</li>
+</ul>
+
+<h2 id="remaining-issues">Lỗi còn lại và hướng xử lý</h2>
+<p>Không còn lỗi. Toàn bộ 17/17 bài test backend, typecheck, lint, build và kiểm tra framework đều đạt PASS. Task T-003 đã hoàn thành đầy đủ tiêu chí nghiệm thu và sẵn sàng cho bước review.</p>
+
+</article></main></body></html>

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "django_celery_beat",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
+    "guideline",
 ]
 
 MIDDLEWARE = [
