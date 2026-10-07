@@ -58,18 +58,19 @@
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td><code>make cvat-up</code></td><td>passed</td><td>Complete upstream stack chạy; <code>GET /api/server/about</code> trả <code>version=2.77.0</code>.</td></tr>
-<tr><td><code>learner_annotation_audit.py</code> trên 4 CVAT YOLO ZIP</td><td>passed</td><td>252 ảnh unique, 237 label file, 311 bbox lớp 0, 15 empty/unlabeled, 0 invalid/orphan/duplicate; official BDD100K membership: train 0, val 0, not_bdd100k 252. SHA-256: <code>13db297cd7afbd0044a13889be599117b8860043b74386f6018cb9fb2f787133</code>, <code>facaf0e6a1dd0c1675b0664bcf5459fcbb912f47c840e07ca3ed4e6892f8a27c</code>, <code>85e2b2db239a514f2372d76f9e8b2e0a62ea4804ddb9f01c76bc497a36227dc5</code>, <code>e306888adfe37ee8a02a019c0e9f418ecb31bf4a8fb9911ee338a4c5d733e5da</code>.</td></tr>
+<tr><td><code>make cvat-up</code></td><td>passed</td><td>Complete upstream stack healthy; <code>/api/server/about</code> xác nhận <code>v2.77.0</code>; checkout đúng commit <code>7dac20c766d7d4297fdf67589436387ab26f7411</code>.</td></tr>
+<tr><td><code>learner_annotation_audit.py</code> trên 4 CVAT YOLO ZIP</td><td>passed with exclusions</td><td>252 ảnh unique, 237 label file, 311 dòng bbox lớp 0, 15 empty/unlabeled, 0 orphan/duplicate; 3 bbox vượt biên ở <code>greensm_149</code>, <code>greensm_182</code>, <code>greensm_013</code> được ghi và không clamp. Official BDD100K membership: train 0, val 0, not_bdd100k 252. SHA-256: <code>13db297cd7afbd0044a13889be599117b8860043b74386f6018cb9fb2f787133</code>, <code>facaf0e6a1dd0c1675b0664bcf5459fcbb912f47c840e07ca3ed4e6892f8a27c</code>, <code>85e2b2db239a514f2372d76f9e8b2e0a62ea4804ddb9f01c76bc497a36227dc5</code>, <code>e306888adfe37ee8a02a019c0e9f418ecb31bf4a8fb9911ee338a4c5d733e5da</code>.</td></tr>
 <tr><td><code>bdd100k_sample.py --splits val --per-split 5</code></td><td>passed (smoke only)</td><td>5 ảnh validation, 106 rectangle từ FiftyOne mirror; <code>samples.json</code> SHA-256 <code>1e8853904e2926c434557bb90a36b1638ac03ebb77adfc21f04d821a6a998a09</code>. Đây không phải official labels hay learner data.</td></tr>
 <tr><td>BDD100K archive integrity + extraction</td><td>passed</td><td><code>bdd100k_images_100k.zip</code>: 5,669,071,832 byte, 100,004 ZIP entry, CRC không lỗi, SHA-256 <code>afd149eadb49657ef5ad7bb6e9d77cc8b7927a576ee2b475b720028274e02784</code>. Đã giải nén 70,000 train, 10,000 val, 20,000 test.</td></tr>
 <tr><td><code>cvat_sample.py --dry-run --bdd100k-images-root ...</code></td><td>passed</td><td>Đối chiếu basename: train 0, val 5, not_bdd100k 0; inventory archive: train 70,000, val 10,000, test 20,000.</td></tr>
-<tr><td><code>python manage.py hash_cvat_job 18</code> (hai lần)</td><td>passed</td><td>Cả hai lần: <code>b0e77d68ccba71b5b21583f6e28fcc7de200aec6e965a318b6eb304400a70ca5</code>; 106 rectangle, 0 shape bị bỏ qua.</td></tr>
+<tr><td><code>cvat_sample.py</code> với learner manifest</td><td>passed</td><td>Project <code>labelx-dev-greensm</code>; task 22; job 19; 249 frame và 305 rectangle hợp lệ. Manifest SHA-256 <code>b4a33b20a3e7d8982dae2e47ca3cdb62ffd60516eb7ba3749689d77b8a024ebd</code>.</td></tr>
+<tr><td><code>python manage.py hash_cvat_job 19</code> (hai lần)</td><td>passed</td><td>Cả hai lần: <code>sha256:ac318f1dfc233af11b568663f8dafa1e3ed8a459da9b7062423be8309f559406</code>; 305 rectangle, 0 shape/track bị bỏ qua.</td></tr>
 <tr><td><code>agent task verify/report/review request</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; lifecycle được cập nhật trực tiếp trong file cá nhân theo CR-100/103.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td>Backend quality + framework validation sau review</td><td>passed</td><td>Ruff/format passed; mypy: 16 source files; pytest: 33 passed; framework validation passed. Frontend không đổi trong review này.</td></tr>
-<tr><td>Read-only PAT enforcement</td><td>passed</td><td><code>GET /api/jobs?task_id=20</code> succeeded; <code>POST /api/tasks</code> returned HTTP 403.</td></tr>
+<tr><td>Backend quality + framework validation sau review</td><td>passed</td><td>Ruff/format passed; mypy: 16 source files; pytest: 34 passed; framework validation passed. Frontend không đổi trong review này.</td></tr>
+<tr><td>Read-only PAT enforcement</td><td>passed</td><td>Reader token: <code>GET /api/jobs?task_id=22</code> trả 200; <code>POST /api/projects</code> trả 403.</td></tr>
 <tr><td>No adapter write API</td><td>passed</td><td>POST/PUT/PATCH/DELETE qua private <code>_client</code> đều bị request hook chặn trước transport; architecture test cấm <code>httpx.Client</code> ngoài adapter trong backend.</td></tr>
 <tr><td>Recorded fixture determinism</td><td>passed</td><td>Shape order/server version ổn định; geometry, track keyframe/<code>outside</code> đổi hash; <code>-0.0</code> được chuẩn hoá; aggregate độc lập thứ tự.</td></tr>
 </tbody></table>
@@ -77,7 +78,7 @@
 <ul>
 <li><strong>Plan Deviations</strong>: Ảnh learner GreenSM không phải BDD100K. Audit đối chiếu theo official filename listing và ghi đúng <code>not_bdd100k=252</code>, không gắn split dựa trên folder.</li>
 <li><strong>Approved By</strong>: naming/tag chưa được duyệt; chờ E-06/QA Lead/QC Admin. Hash precision chưa được duyệt; chờ TBD-20.</li>
-<li><strong>Known Limitations</strong>: 15/252 ảnh learner không có label file và được giữ là empty/unlabeled; naming/hash precision vẫn chờ đúng decision owner. CVAT v2.77.0 là pin dev tạm chờ TBD-01/BLOCKER-004.</li>
+<li><strong>Known Limitations</strong>: 15/252 ảnh learner không có label file và được giữ là empty/unlabeled; 3 ảnh có bbox vượt biên bị loại khỏi manual import, không tự sửa annotation. Naming/hash precision vẫn chờ đúng decision owner. CVAT v2.77.0 là pin dev tạm chờ TBD-01/BLOCKER-004.</li>
 <li><strong>BDD100K Source Note</strong>: archive ảnh là official 100K Images. 106 bbox smoke test đến từ FiftyOne validation mirror, URL <code>https://huggingface.co/datasets/Hanshiya/bdd100k</code>, không phải official labels; file chuyển đổi chỉ ở <code>.cache/cvat/</code>.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>

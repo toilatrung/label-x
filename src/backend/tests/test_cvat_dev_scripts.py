@@ -1,6 +1,7 @@
 import importlib.util
 import sys
 import zipfile
+from io import BytesIO
 from pathlib import Path
 from types import ModuleType
 
@@ -86,11 +87,13 @@ def test_existing_project_taxonomy_must_match(monkeypatch: pytest.MonkeyPatch) -
 
 
 def write_yolo_export(path: Path, images: list[str], labels: dict[str, str]) -> None:
+    image_buffer = BytesIO()
+    Image.new("RGB", (10, 10)).save(image_buffer, format="JPEG")
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("data.yaml", "names:\n  0: GreenSM\npath: .\ntrain: train.txt\n")
         archive.writestr("train.txt", "".join(f"./images/train/{name}\n" for name in images))
         for name in images:
-            archive.writestr(f"images/train/{name}", b"test-image")
+            archive.writestr(f"images/train/{name}", image_buffer.getvalue())
         for stem, content in labels.items():
             archive.writestr(f"labels/train/{stem}.txt", content)
 
@@ -116,9 +119,17 @@ def test_learner_audit_classifies_by_official_bdd100k_names(tmp_path: Path) -> N
         "images": 2,
         "label_files": 1,
         "boxes": 1,
+        "out_of_bounds_boxes": 0,
+        "out_of_bounds_images": 0,
         "empty_or_unlabeled_images": 1,
         "membership": {"train": 0, "val": 1, "not_bdd100k": 1},
     }
+    manifest = module.materialize_labelx_manifest(
+        [export], receipt, tmp_path / "images", tmp_path / "manifest.json"
+    )
+    assert len(manifest["images"]) == 2
+    annotated = next(item for item in manifest["images"] if item["file_name"] == "official-val.jpg")
+    assert annotated["annotations"][0]["bbox"] == pytest.approx([4.0, 3.5, 6.0, 6.5])
 
 
 def test_learner_audit_rejects_invalid_yolo_coordinates(tmp_path: Path) -> None:
@@ -131,6 +142,24 @@ def test_learner_audit_rejects_invalid_yolo_coordinates(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="out of range"):
         module.build_receipt([export], official)
+
+
+def test_learner_audit_reports_and_excludes_out_of_bounds_image(tmp_path: Path) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    export = tmp_path / "learner.zip"
+    write_yolo_export(export, ["greensm.jpg"], {"greensm": "0 0.05 0.5 0.2 0.3\n"})
+
+    receipt = module.build_receipt([export], official)
+    manifest = module.materialize_labelx_manifest(
+        [export], receipt, tmp_path / "images", tmp_path / "manifest.json"
+    )
+
+    assert receipt["totals"]["out_of_bounds_boxes"] == 1
+    assert receipt["totals"]["out_of_bounds_images"] == 1
+    assert manifest["images"] == []
 
 
 def test_learner_audit_rejects_cross_export_duplicates(tmp_path: Path) -> None:
