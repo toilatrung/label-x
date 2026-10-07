@@ -24,8 +24,8 @@
 <li><strong>Title</strong>: CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</li>
 <li><strong>Owner</strong>: Lê Duy Nam (<code>@duy12345-6789</code>)</li>
 <li><strong>Executor</strong>: <code>@duy12345-6789</code> với Codex</li>
-<li><strong>Status</strong>: <code>blocked</code></li>
-<li><strong>Status Reason</strong>: chờ annotation learner thật theo <code>BLOCKER-023-@duy12345-6789</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status Reason</strong>: implementation và learner audit đã đủ evidence; chờ reviewer và các decision owner phê duyệt.</li>
 <li><strong>Task ID</strong>: <code>T-004</code></li>
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-07</code></li>
@@ -33,12 +33,12 @@
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Implemented</strong>: CVAT dev pin tag + commit; Make targets; importer với provisioner token riêng; đối chiếu split theo official filename listing; adapter có request hook chỉ đọc; hash rectangle shape/track; fixture/test; tài liệu.</li>
-<li><strong>Not Implemented</strong>: đối chiếu annotation learner (thiếu input); snapshot persistence/UI, drift polling/webhook, model integration và review workflow ngoài phạm vi T-004.</li>
+<li><strong>Not Implemented</strong>: snapshot persistence/UI, drift polling/webhook, model integration và review workflow ngoài phạm vi T-004.</li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td><code>infrastructure/cvat/version.conf</code>, <code>scripts/development/cvat-dev.sh</code>, <code>scripts/init-develop-environment.mk</code></td><td>Pin CVAT v2.77.0 + commit SHA; đợi healthy/about; Make import bắt buộc manifest và token file riêng.</td><td>T-004</td></tr>
-<tr><td><code>scripts/development/cvat_sample.py</code>, <code>scripts/development/bdd100k_sample.py</code></td><td>Loại manifest bbox đoán; tách provisioner token; kiểm taxonomy/filename trùng; phân loại basename theo official listing; mirror conversion chỉ ghi cache và lưu provenance URL/SHA.</td><td>T-004</td></tr>
+<tr><td><code>scripts/development/cvat_sample.py</code>, <code>scripts/development/bdd100k_sample.py</code>, <code>scripts/development/learner_annotation_audit.py</code></td><td>Loại manifest bbox đoán; tách provisioner token; kiểm taxonomy/filename trùng; audit CVAT YOLO learner export; phân loại basename theo official listing; mirror conversion chỉ ghi cache và lưu provenance URL/SHA.</td><td>T-004</td></tr>
 <tr><td><code>src/backend/cvat_adapter/</code></td><td>Request hook chặn write trước transport; canonical rectangle shape/track, âm zero, SHA-256/job và aggregate hash; giới hạn pagination.</td><td>T-004</td></tr>
 <tr><td><code>docs/11-integrations/cvat.html</code>, <code>docs/07-development/tooling.html</code></td><td>Ghi rõ version/naming/hash đều là tạm hoặc proposed theo TBD/BLOCKER; phân biệt official images, mirror labels và learner annotations.</td><td>T-004</td></tr>
 </tbody></table>
@@ -50,7 +50,7 @@
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
 <li><strong>Decisions</strong>: <code>DEC-001</code>; <code>DEC-007-@duy12345-6789</code> status <code>proposed</code> cho hash precision/TBD-20</li>
 <li><strong>Change Requests</strong>: <code>CR-100</code>, <code>CR-103</code>, <code>CR-104</code></li>
-<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023-@duy12345-6789</code> đang mở do thiếu annotation learner</li>
+<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023-@duy12345-6789</code> resolved bằng learner audit</li>
 <li><strong>Review Request</strong>: PR <code>#19</code>; chờ <code>@toilatrung</code> hoặc <code>@DucHa180104</code> comment <code>Đã xem và duyệt</code></li>
 <li><strong>Issue</strong>: <code>#16</code> — T-004</li>
 <li><strong>Commits</strong>: <code>8a58ad7</code> — triển khai ban đầu; <code>e7d84ca</code> — sửa theo review PR #19</li>
@@ -59,7 +59,7 @@
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>make cvat-up</code></td><td>passed</td><td>Complete upstream stack chạy; <code>GET /api/server/about</code> trả <code>version=2.77.0</code>.</td></tr>
-<tr><td>Kiểm tra input learner</td><td>blocked</td><td>183 ảnh Xanh SM chỉ có Wikimedia metadata/license; không có bbox learner. Xem <code>BLOCKER-023-@duy12345-6789</code>. Bbox thủ công cũ không còn trong repo.</td></tr>
+<tr><td><code>learner_annotation_audit.py</code> trên 4 CVAT YOLO ZIP</td><td>passed</td><td>252 ảnh unique, 237 label file, 311 bbox lớp 0, 15 empty/unlabeled, 0 invalid/orphan/duplicate; official BDD100K membership: train 0, val 0, not_bdd100k 252. SHA-256: <code>13db297cd7afbd0044a13889be599117b8860043b74386f6018cb9fb2f787133</code>, <code>facaf0e6a1dd0c1675b0664bcf5459fcbb912f47c840e07ca3ed4e6892f8a27c</code>, <code>85e2b2db239a514f2372d76f9e8b2e0a62ea4804ddb9f01c76bc497a36227dc5</code>, <code>e306888adfe37ee8a02a019c0e9f418ecb31bf4a8fb9911ee338a4c5d733e5da</code>.</td></tr>
 <tr><td><code>bdd100k_sample.py --splits val --per-split 5</code></td><td>passed (smoke only)</td><td>5 ảnh validation, 106 rectangle từ FiftyOne mirror; <code>samples.json</code> SHA-256 <code>1e8853904e2926c434557bb90a36b1638ac03ebb77adfc21f04d821a6a998a09</code>. Đây không phải official labels hay learner data.</td></tr>
 <tr><td>BDD100K archive integrity + extraction</td><td>passed</td><td><code>bdd100k_images_100k.zip</code>: 5,669,071,832 byte, 100,004 ZIP entry, CRC không lỗi, SHA-256 <code>afd149eadb49657ef5ad7bb6e9d77cc8b7927a576ee2b475b720028274e02784</code>. Đã giải nén 70,000 train, 10,000 val, 20,000 test.</td></tr>
 <tr><td><code>cvat_sample.py --dry-run --bdd100k-images-root ...</code></td><td>passed</td><td>Đối chiếu basename: train 0, val 5, not_bdd100k 0; inventory archive: train 70,000, val 10,000, test 20,000.</td></tr>
@@ -68,22 +68,22 @@
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td>Backend quality + framework validation sau review</td><td>passed</td><td>Ruff/format passed; mypy: 16 source files; pytest: 30 passed; framework validation passed. Frontend không đổi trong review này.</td></tr>
+<tr><td>Backend quality + framework validation sau review</td><td>passed</td><td>Ruff/format passed; mypy: 16 source files; pytest: 33 passed; framework validation passed. Frontend không đổi trong review này.</td></tr>
 <tr><td>Read-only PAT enforcement</td><td>passed</td><td><code>GET /api/jobs?task_id=20</code> succeeded; <code>POST /api/tasks</code> returned HTTP 403.</td></tr>
 <tr><td>No adapter write API</td><td>passed</td><td>POST/PUT/PATCH/DELETE qua private <code>_client</code> đều bị request hook chặn trước transport; architecture test cấm <code>httpx.Client</code> ngoài adapter trong backend.</td></tr>
 <tr><td>Recorded fixture determinism</td><td>passed</td><td>Shape order/server version ổn định; geometry, track keyframe/<code>outside</code> đổi hash; <code>-0.0</code> được chuẩn hoá; aggregate độc lập thứ tự.</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: Thư mục người dùng cung cấp là Wikimedia Commons Xanh SM, không phải BDD100K và không có learner annotation. Dữ liệu được ghi đúng provenance <code>custom/unknown</code>; không gắn nhãn sai là BDD100K train/val.</li>
+<li><strong>Plan Deviations</strong>: Ảnh learner GreenSM không phải BDD100K. Audit đối chiếu theo official filename listing và ghi đúng <code>not_bdd100k=252</code>, không gắn split dựa trên folder.</li>
 <li><strong>Approved By</strong>: naming/tag chưa được duyệt; chờ E-06/QA Lead/QC Admin. Hash precision chưa được duyệt; chờ TBD-20.</li>
-<li><strong>Known Limitations</strong>: thiếu annotation learner thật nên acceptance criterion 3 chưa đạt. CVAT v2.77.0 là pin dev tạm chờ TBD-01/BLOCKER-004.</li>
+<li><strong>Known Limitations</strong>: 15/252 ảnh learner không có label file và được giữ là empty/unlabeled; naming/hash precision vẫn chờ đúng decision owner. CVAT v2.77.0 là pin dev tạm chờ TBD-01/BLOCKER-004.</li>
 <li><strong>BDD100K Source Note</strong>: archive ảnh là official 100K Images. 106 bbox smoke test đến từ FiftyOne validation mirror, URL <code>https://huggingface.co/datasets/Hanshiya/bdd100k</code>, không phải official labels; file chuyển đổi chỉ ở <code>.cache/cvat/</code>.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Every reported change maps to T-004.</li>
-<li>[ ] Acceptance criterion dùng annotation learner thật — blocked bởi <code>BLOCKER-023-@duy12345-6789</code>.</li>
+<li>[x] Annotation learner thật đã được audit; count leakage và checksum nguồn được ghi; <code>BLOCKER-023-@duy12345-6789</code> resolved.</li>
 <li>[x] Deviations and limitations are explicit.</li>
 <li>[x] Build, lint, typecheck, test and framework validation pass.</li>
 <li>[x] Reviewer handoff identifies independent reviewers.</li>
@@ -92,5 +92,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Không tự nhận review approval hoặc chuyển task sang <code>done</code>.</li><li>Không ghi token/secret vào report, source hoặc log.</li><li>Không gọi dữ liệu Wikimedia là BDD100K ground truth.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Report lưu đúng file cá nhân <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code>.</li><li>Task board cá nhân ở trạng thái <code>blocked</code>; canonical board không bị sửa.</li><li>PR <code>#19</code> đã mở vào <code>develop</code> theo CR-104; không tự approve hoặc merge.</li></ul>
+<ul><li>Report lưu đúng file cá nhân <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code>.</li><li>Task board cá nhân ở trạng thái <code>review</code>; canonical board không bị sửa.</li><li>PR <code>#19</code> đã mở vào <code>develop</code> theo CR-104; không tự approve hoặc merge.</li></ul>
 </article></main></body></html>

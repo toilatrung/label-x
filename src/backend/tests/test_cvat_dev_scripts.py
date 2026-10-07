@@ -1,5 +1,6 @@
 import importlib.util
 import sys
+import zipfile
 from pathlib import Path
 from types import ModuleType
 
@@ -82,3 +83,65 @@ def test_existing_project_taxonomy_must_match(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(client, "_json", fake_json)
     with pytest.raises(ValueError, match="taxonomy differs"):
         client.find_or_create_project("labelx-dev", [{"name": "car", "type": "rectangle"}])
+
+
+def write_yolo_export(path: Path, images: list[str], labels: dict[str, str]) -> None:
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("data.yaml", "names:\n  0: GreenSM\npath: .\ntrain: train.txt\n")
+        archive.writestr("train.txt", "".join(f"./images/train/{name}\n" for name in images))
+        for name in images:
+            archive.writestr(f"images/train/{name}", b"test-image")
+        for stem, content in labels.items():
+            archive.writestr(f"labels/train/{stem}.txt", content)
+
+
+def test_learner_audit_classifies_by_official_bdd100k_names(tmp_path: Path) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    (official / "train" / "official-train.jpg").touch()
+    (official / "val" / "official-val.jpg").touch()
+    export = tmp_path / "learner.zip"
+    write_yolo_export(
+        export,
+        ["official-val.jpg", "greensm-1.jpg"],
+        {"official-val": "0 0.5 0.5 0.2 0.3\n"},
+    )
+
+    receipt = module.build_receipt([export], official)
+
+    assert receipt["totals"] == {
+        "exports": 1,
+        "images": 2,
+        "label_files": 1,
+        "boxes": 1,
+        "empty_or_unlabeled_images": 1,
+        "membership": {"train": 0, "val": 1, "not_bdd100k": 1},
+    }
+
+
+def test_learner_audit_rejects_invalid_yolo_coordinates(tmp_path: Path) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    export = tmp_path / "learner.zip"
+    write_yolo_export(export, ["greensm.jpg"], {"greensm": "0 1.2 0.5 0.2 0.3\n"})
+
+    with pytest.raises(ValueError, match="out of range"):
+        module.build_receipt([export], official)
+
+
+def test_learner_audit_rejects_cross_export_duplicates(tmp_path: Path) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    first = tmp_path / "first.zip"
+    second = tmp_path / "second.zip"
+    write_yolo_export(first, ["same.jpg"], {})
+    write_yolo_export(second, ["same.jpg"], {})
+
+    with pytest.raises(ValueError, match="duplicate image names"):
+        module.build_receipt([first, second], official)

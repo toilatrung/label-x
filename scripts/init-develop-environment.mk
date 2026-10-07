@@ -17,7 +17,7 @@ NODE_MAJOR_MIN := 22
 
 .DEFAULT_GOAL := help
 .PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
-        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-hash \
+        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
         check lint format test typecheck gen-api validate-kit clean
@@ -87,6 +87,14 @@ cvat-bdd100k-sample: ## Tạo manifest BDD100K cache; cần BDD100K_ROOT, FIFTYO
 	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
 		scripts/development/bdd100k_sample.py --dataset-root "$(BDD100K_ROOT)" \
 		--fiftyone-samples "$(FIFTYONE_SAMPLES)" --splits val --per-split 5
+
+cvat-audit-learner: ## Audit YOLO learner ZIP; cần LEARNER_EXPORTS và BDD100K_IMAGES_ROOT
+	@test -n "$(LEARNER_EXPORTS)" || (echo "Thiếu LEARNER_EXPORTS='/path/a.zip /path/b.zip'" >&2; exit 2)
+	@test -n "$(BDD100K_IMAGES_ROOT)" || (echo "Thiếu BDD100K_IMAGES_ROOT=/path/images/100k" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/learner_annotation_audit.py \
+		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
+		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)"
 
 cvat-hash: ## Đọc/hash một job; cần JOB_ID và token trong backend .env
 	@test -n "$(JOB_ID)" || (echo "Thiếu JOB_ID=<id>" >&2; exit 2)
