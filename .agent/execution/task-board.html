@@ -192,7 +192,7 @@ ul.dir{columns:2;font-size:14px}
 <td>review</td>
 <td>T-001</td>
 <td>none</td>
-<td><a href="../reports/implementation/T-011.html">implementation</a>; commit <code>a782f6f</code></td>
+<td><a href="../reports/implementation/T-011.html">implementation</a>; <a href="../reports/review/T-011.html">review</a>; PR #31</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -991,6 +991,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Override Super Admin: tham số lý do bắt buộc, nhãn override trong audit, vẫn chịu self-review</li>
 <li>API đọc role assignment cho màn WorkflowPermissions</li>
 </ul>
+<p><strong>Ghi chú từ review T-011 (O-2)</strong>: <code>CvatIdentity.cvat_user_id</code> là unique, nên một user CVAT chỉ gắn một tài khoản LabelX; tài khoản thứ hai của cùng người có <code>identity_mapping.status = missing</code> và bị chặn bởi <code>IDENTITY_MAPPING_MISSING</code> (fail closed), không được nhận diện là cùng người. Khi làm FR-SEC-04, xác nhận hành vi này và ghi DEC nếu giữ.</p>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
 <li>Quy trình duyệt nghiệp vụ cụ thể (waiver, khoá reference — epic tương ứng)</li>
@@ -1232,6 +1233,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Màn WorkflowPermissions (docs/design) chỉ đọc từ API của T-012</li>
 <li>Test vitest với mock route theo contract; ảnh chụp màn trên API thật trong report</li>
 </ul>
+<p><strong>Ghi chú từ review T-011</strong>: (O-3) Django <code>login()</code> xoay <code>csrftoken</code>; sau đăng nhập phải đọc lại cookie <code>csrftoken</code> trước request ghi kế tiếp. (O-4) Contract đã thêm 403 cho <code>auth_logout</code>; route mock logout trả 403 khi thiếu CSRF cho khớp.</p>
 <h5 id="excluded_15">Excluded</h5>
 <ul>
 <li>Sửa role assignment từ UI</li>
