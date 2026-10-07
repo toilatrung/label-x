@@ -34,7 +34,8 @@
 <tr><td><code>pytest -q --strict-markers</code></td><td><code>passed</code></td><td><code>131 passed</code></td></tr>
 <tr><td><code>ruff check .; ruff format --check .</code></td><td><code>passed</code></td><td><code>All checks passed; 72 files formatted</code></td></tr>
 <tr><td><code>mypy config accounts audit engines guideline cvat_adapter</code></td><td><code>passed</code></td><td><code>56 source files, no issues</code></td></tr>
-<tr><td><code>make check</code></td><td><code>not-run</code></td><td><code>Windows WSL bash inaccessible; constituent checks executed directly and GitHub CI pending.</code></td></tr>
+<tr><td><code>make check</code></td><td><code>not-run</code></td><td><code>Windows WSL bash inaccessible; constituent checks executed directly.</code></td></tr>
+<tr><td><code>GitHub CI — PR #53</code></td><td><code>passed</code></td><td><code>5/5: backend, frontend, framework, detector, bootstrap-windows</code></td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -46,7 +47,7 @@
 <tr><td>Detector and framework regression checks</td><td><code>passed</code></td><td><code>10 detector tests; FRAMEWORK_VALIDATION_PASS</code></td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
-<ul><li><strong>Plan Deviations</strong>: <code>make check wrapper unavailable because WSL bash cannot be accessed; equivalent local components run directly, frontend delegated to unchanged-scope GitHub CI.</code></li><li><strong>Approved By</strong>: <code>not applicable; no scope change</code></li><li><strong>Known Limitations</strong>: <code>Deployment must use a runtime DB role distinct from migration/table owner and run configure_audit_db_role ROLE. Table owners retain implicit PostgreSQL privileges, but the DB trigger still rejects UPDATE/DELETE.</code></li></ul>
+<ul><li><strong>Plan Deviations</strong>: <code>make check wrapper unavailable because WSL bash cannot be accessed; equivalent local components ran directly and GitHub CI validated all five repository jobs.</code></li><li><strong>Approved By</strong>: <code>not applicable; no scope change</code></li><li><strong>Known Limitations</strong>: <code>Deployment must use a runtime DB role distinct from migration/table owner and run configure_audit_db_role ROLE. Table owners retain implicit PostgreSQL privileges, but the DB trigger still rejects UPDATE/DELETE.</code></li></ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li><li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[x] Git Nexus mappings are updated when commits exist.</li></ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
