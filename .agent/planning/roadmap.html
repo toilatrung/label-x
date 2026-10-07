@@ -71,7 +71,7 @@ ul.dir{columns:2;font-size:14px}
 <td>Hoàn thành và nghiệm thu LabelX M13 (phạm vi pilot theo CR-101, SRS v1.1) — Reviewer Prioritization Assistant: CVAT → snapshot → phân tích nghi vấn → xếp hạng frame → review/phân xử/rework → đo KPI-1, KPI-2 và báo cáo hiệu quả</td>
 <td><code>project-owner (Trịnh Quang Trung, @toilatrung)</code></td>
 <td><code>2026-10-06 → 2026-10-27</code></td>
-<td><code>ROADMAP_APPROVED</code></td>
+<td><code>ROADMAP_ACTIVE</code></td>
 <td><code>M-01, M-02, M-03, M-04, M-05, M-06</code></td>
 <td><code>CR-101</code></td>
 </tr>
@@ -87,5 +87,19 @@ ul.dir{columns:2;font-size:14px}
 <li>Phiếu chốt blocker 2026-10-06 (<code>.agent/governance/decisions/DEC-002.html</code>): Product Owner ký từng epic và gán task cho từng developer thay cho việc chờ ký SRS theo vai trò (<code>BLOCKER-001</code>); target window 3 tuần do Product Owner thông báo.</li>
 <li>Kế hoạch gồm cả triển khai frontend: mỗi epic có màn hình phải xong cả backend và frontend chạy trên API thật. <code>docs/design/</code> là thiết kế mẫu để tham khảo khi code frontend; delta thiết kế bổ sung just-in-time trước epic dùng tới (<code>BLOCKER-013</code>).</li>
 <li>Khung 3 tuần so với phạm vi: SRS có 87 FR Must, 12 Should, 2 Could; chuỗi chi phối gồm 17 epic nối tiếp và M-04/M-05 cần nhân lực ngoài đội phát triển (reference hai GT, ≥ 4 reviewer, người phân xử thí nghiệm riêng). Phạm vi MVP chốt bằng <code>CR-101</code> (<code>RISK-011</code>).</li>
+<li>Chuyển <code>ROADMAP_ACTIVE</code> ngày 2026-10-08: đợt 1 (T-001…T-005, giao 2026-10-06) đã squash-merge vào <code>develop</code> qua PR #19–#23; E-01, E-02, E-03, E-10 <code>EPIC_IN_PROGRESS</code>, E-04 <code>EPIC_BLOCKED</code> (<code>BLOCKER-024</code>).</li>
 </ul>
+<h2 id="progress">Progress</h2>
+<table>
+<thead>
+<tr><th>Ngày</th><th>Milestone</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+</thead>
+<tbody>
+<tr><td><code>2026-10-08</code></td><td><code>M-01</code></td><td><code>in-progress</code></td><td>T-001, T-002, T-003 <code>done</code> 2026-10-08 (QA passed); chưa epic nào <code>EPIC_DONE</code>. Hạn milestone 2026-10-09. Phần còn lại của E-01 ngoài T-001: engine interface, ADR KPI-2b, cập nhật SRS, operation quyết định/phân xử/rework trong OpenAPI.</td></tr>
+<tr><td><code>2026-10-08</code></td><td><code>M-02</code></td><td><code>in-progress</code></td><td>T-004 <code>blocked</code> (<code>BLOCKER-024</code>: annotation người học trên ảnh BDD100K chưa có); E-05, E-08, E-09, E-11 chưa ký. Pipeline chỉ chạy được trên dữ liệu ghi sẵn cho tới khi có bộ mới. <code>DEC-007</code> (hash CVAT) còn <code>proposed</code> chờ TBD-20.</td></tr>
+<tr><td><code>2026-10-08</code></td><td><code>M-03</code></td><td><code>proposed</code></td><td>Bắt đầu 2026-10-09; E-13…E-16 chưa ký.</td></tr>
+<tr><td><code>2026-10-08</code></td><td><code>M-04</code></td><td><code>in-progress</code></td><td>E-10 làm sớm (T-005 <code>review</code>; checkpoint Detector theo <code>DEC-008</code>). E-06, E-07 chờ <code>BLOCKER-022</code> (chưa gán QA Lead/QC Admin, hạn 2026-10-15).</td></tr>
+<tr><td><code>2026-10-08</code></td><td><code>M-05</code>, <code>M-06</code></td><td><code>proposed</code></td><td>Chưa tới cửa sổ.</td></tr>
+</tbody>
+</table>
 </article></main></body></html>

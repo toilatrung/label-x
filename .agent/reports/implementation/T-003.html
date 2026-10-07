@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report — T-003: Guideline tĩnh có rule ID</title>
+<meta name="labelx:id" content="implementation-t-003">
+<meta name="labelx:title" content="Implementation Report — T-003: Guideline tĩnh có rule ID">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="guideline">
+<meta name="labelx:tags" content="[implementation, report, T-003, guideline, GDL]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+.pass{color:#166534;font-weight:600}.fail{color:#991b1b;font-weight:600}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-003</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-003</span><b>title</b><span>Implementation Report T-003: Guideline tĩnh có rule ID</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>guideline</span><b>tags</b><span>[implementation, report, T-003, guideline, GDL]</span><b>priority</b><span>2</span></div>
+
+<h1 id="implementation-report-t-003">Implementation Report — T-003: Guideline tĩnh có rule ID</h1>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+  <li><strong>Report ID</strong>: <code>T-003</code></li>
+  <li><strong>Title</strong>: <code>Guideline tĩnh có rule ID: nạp tệp, API tra rule, màn xem</code></li>
+  <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+  <li><strong>Executor</strong>: <code>Antigravity IDE (coding agent)</code></li>
+  <li><strong>Status</strong>: <code>complete</code></li>
+  <li><strong>Task ID</strong>: <code>T-003</code></li>
+  <li><strong>Epic ID</strong>: <code>E-03</code></li>
+  <li><strong>Report Date</strong>: <code>2026-10-07</code></li>
+  <li><strong>Branch</strong>: <code>feat/T-003-e03-guideline</code></li>
+</ul>
+
+<h2 id="objective">Objective</h2>
+<p>Workspace tra được rule theo rule ID từ guideline tĩnh nạp từ tệp (thay FR-GDL-01…03 theo CR-101), không dùng retrieval ngữ nghĩa (FR-GDL-04 Must).</p>
+
+<h2 id="review-revisions">Các điểm sửa đổi theo Review T-003 (Revision 2)</h2>
+<p>Bản sửa đổi đã cập nhật toàn diện cả backend và frontend theo review chi tiết:</p>
+<ol>
+  <li><strong>Backend Error Contract &amp; Request ID</strong>:
+    <ul>
+      <li>Thêm <code>RequestIDMiddleware</code> (<code>src/backend/config/middleware.py</code>) để quản lý header <code>X-Request-ID</code> và gán <code>request_id</code> thống nhất cho toàn bộ phản hồi lỗi.</li>
+      <li>Thêm <code>custom_exception_handler</code> dùng chung (<code>src/backend/config/exceptions.py</code>) chuẩn hóa mã lỗi: <code>NOT_FOUND</code>, <code>FORBIDDEN</code>, <code>NOT_AUTHENTICATED</code>, <code>VALIDATION_ERROR</code> theo format <code>{"code", "message", "details", "request_id"}</code>. Bỏ exception handling cục bộ trong view.</li>
+    </ul>
+  </li>
+  <li><strong>Backend RBAC &amp; Permissions</strong>:
+    <ul>
+      <li>Thêm permission <code>HasGuidelineRole</code> (<code>src/backend/guideline/permissions.py</code>) cho phép 4 vai trò: <code>reviewer</code>, <code>qa_lead</code>, <code>qc_admin</code>, <code>super_admin</code>; từ chối người dùng annotator hoặc user thường với HTTP 403 <code>FORBIDDEN</code>.</li>
+      <li><em>Ghi chú kiến trúc</em>: Hệ thống RBAC hiện tại sử dụng <strong>Django group tạm thời</strong> trong giai đoạn pilot theo ma trận quyền.</li>
+    </ul>
+  </li>
+  <li><strong>Backend Query &amp; Pagination</strong>:
+    <ul>
+      <li>Đổi query parameter <code>error_group</code> thành <code>family</code>, kiểm tra enum nghiêm ngặt (<code>E1</code>, <code>E2</code>, <code>E3</code>, <code>structural</code>), trả 400 <code>VALIDATION_ERROR</code> nếu sai enum.</li>
+      <li>Xử lý wildcard mapping: mapping có trường rỗng hoạt động như wildcard khớp mọi class_name / paired_class; bỏ qua query parameter rỗng.</li>
+      <li>Áp dụng <code>CursorPagination</code> (PAGE_SIZE=50) với response envelope <code>{"next", "previous", "results"}</code>, không có trường <code>count</code>.</li>
+      <li>Loại bỏ endpoint <code>/api/guidelines/</code> không thuộc OpenAPI contract chung. Frontend lấy <code>guideline_version</code> từ kết quả rules.</li>
+      <li>Sửa hàm <code>get_latest_guideline_version()</code> chọn theo số trong <code>version_tag</code>, không phải <code>loaded_at</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Frontend Alignment &amp; Clean Design</strong>:
+    <ul>
+      <li>Sử dụng contract type chính thức <code>contract.d.ts</code> từ T-001; xóa hoàn toàn file <code>schema.d.ts</code> tự viết.</li>
+      <li>Bỏ toàn bộ lời gọi <code>GET /api/guidelines/</code>; frontend gọi <code>GET /api/guidelines/rules/</code> và hiển thị version lấy từ bản ghi rule.</li>
+      <li>Bỏ gọi <code>setSelectedTag</code> trong render body.</li>
+      <li>Dùng thuộc tính chuẩn <code>aria-selected="true"</code> cho dòng đang chọn thay vì inline background style.</li>
+      <li>Đổi nhãn trạng thái từ “Đang dùng” thành “Mới nhất”.</li>
+      <li>Bỏ <code>colSpan={99}</code>, dùng đúng số cột (4 cột cho bảng version, 3 cột cho bảng rules).</li>
+      <li>Loại bỏ 100% <code>style={{...}}</code> trong <code>page.tsx</code>, ưu tiên class <code>lx-*</code> có sẵn và bổ sung tối thiểu các class <code>lx-guideline-*</code> trong <code>globals.css</code>.</li>
+      <li>Ưu tiên nhận diện error code <code>NOT_AUTHENTICATED</code> (kể cả khi backend trả 403) và <code>FORBIDDEN</code> để hiển thị thông báo đăng nhập / quyền rõ ràng.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="files-created-modified">Files tạo mới / sửa</h2>
+<table>
+<thead><tr><th>File</th><th>Thao tác</th><th>Mô tả</th></tr></thead>
+<tbody>
+<tr><td><code>src/backend/config/middleware.py</code></td><td>Tạo mới</td><td>RequestIDMiddleware quản lý X-Request-ID và request_id lỗi</td></tr>
+<tr><td><code>src/backend/config/exceptions.py</code></td><td>Tạo mới</td><td>custom_exception_handler chuẩn hóa error contract toàn hệ thống</td></tr>
+<tr><td><code>src/backend/guideline/permissions.py</code></td><td>Tạo mới</td><td>HasGuidelineRole RBAC (reviewer, qa_lead, qc_admin, super_admin)</td></tr>
+<tr><td><code>src/backend/config/settings.py</code></td><td>Sửa</td><td>Đăng ký middleware, exception handler và app guideline</td></tr>
+<tr><td><code>src/backend/guideline/models.py</code></td><td>Sửa</td><td>3 models, giữ nguyên ordering rule_id ban đầu (không tạo migration mới), get_latest_guideline_version theo số trong version_tag</td></tr>
+<tr><td><code>src/backend/guideline/serializers.py</code></td><td>Sửa</td><td>Cursor pagination serializer và ErrorResponseSerializer kèm details</td></tr>
+<tr><td><code>src/backend/guideline/urls.py</code></td><td>Sửa</td><td>Bỏ endpoint /api/guidelines/, chỉ giữ /rules/ và /rules/{rule_id}/</td></tr>
+<tr><td><code>src/backend/guideline/views.py</code></td><td>Sửa</td><td>Tuân thủ contract: query family, wildcard mapping, CursorPagination</td></tr>
+<tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa</td><td>32 automated test cases bao phủ toàn bộ review (RBAC, errors, pagination)</td></tr>
+<tr><td><code>src/frontend/src/lib/api/client.ts</code></td><td>Sửa</td><td>openapi-fetch client import paths từ contract.d.ts chính thức</td></tr>
+<tr><td><code>src/frontend/src/app/configuration/guidelines/page.tsx</code></td><td>Sửa</td><td>Màn xem guideline chuẩn hóa: 0 inline style, aria-selected, lấy version từ rules</td></tr>
+<tr><td><code>src/frontend/src/app/globals.css</code></td><td>Sửa</td><td>Bổ sung class lx-guideline-* tối thiểu cho guideline viewer</td></tr>
+<tr><td><code>src/frontend/src/lib/api/schema.d.ts</code></td><td>Xóa</td><td>Xóa bỏ type tự sinh/thủ công, dùng contract.d.ts chính thức</td></tr>
+</tbody>
+</table>
+
+<h2 id="automated-check-evidence">Bằng chứng kiểm tra tự động (môi trường Windows)</h2>
+
+<h3 id="ruff-check">1. Ruff check (backend)</h3>
+<pre><code>$ uv run --frozen ruff check .
+All checks passed!</code></pre>
+
+<h3 id="ruff-format">2. Ruff format check (backend)</h3>
+<pre><code>$ uv run --frozen ruff format --check .
+25 files already formatted</code></pre>
+
+<h3 id="mypy">3. Mypy typecheck (backend)</h3>
+<pre><code>$ uv run --frozen mypy config guideline
+Success: no issues found in 20 source files</code></pre>
+
+<h3 id="pytest">4. Pytest (backend: 32/32 passed)</h3>
+<pre><code>$ uv run --frozen pytest -q
+................................                                         [100%]
+32 passed in 12.80s</code></pre>
+
+<h3 id="eslint">5. ESLint (frontend)</h3>
+<pre><code>$ cmd /c "npm run lint"
+> labelx-frontend@0.1.0 lint
+> eslint
+(no errors)</code></pre>
+
+<h3 id="typecheck">6. TypeScript typecheck (frontend)</h3>
+<pre><code>$ cmd /c "npm run typecheck"
+> labelx-frontend@0.1.0 typecheck
+> next typegen && tsc --noEmit
+Generating route types...
+✓ Types generated successfully</code></pre>
+
+<h3 id="build">7. Next.js build (frontend)</h3>
+<pre><code>$ cmd /c "npm run build"
+> labelx-frontend@0.1.0 build
+> next build
+▲ Next.js 16.3.8 (Turbopack)
+✓ Compiled successfully in 559ms
+✓ Generating static pages using 6 workers (5/5) in 561ms
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+└ ○ /configuration/guidelines</code></pre>
+
+<h3 id="validate-framework">8. Validate Framework (.agent &amp; docs structure)</h3>
+<pre><code>$ uv run --no-project --python 3.12 python scripts/validate-framework.py
+FRAMEWORK_VALIDATION_PASS</code></pre>
+
+<h3 id="git-diff-check">9. Git diff check</h3>
+<pre><code>$ git diff --check
+(Exit code 0 - không có lỗi whitespace hay conflict markers)</code></pre>
+
+<h2 id="design-decisions">Quyết định thiết kế</h2>
+<ul>
+  <li><strong>RBAC qua Django Group tạm thời</strong>: Trong giai đoạn pilot, quyền truy cập guideline được kiểm tra qua group người dùng (<code>reviewer</code>, <code>qa_lead</code>, <code>qc_admin</code>, <code>super_admin</code>) gắn liền với hệ thống auth hiện tại.</li>
+  <li><strong>Tập trung Exception Handling</strong>: Không bắt lỗi riêng rẽ trong view; toàn bộ lỗi API được chuẩn hóa qua <code>custom_exception_handler</code> và <code>RequestIDMiddleware</code> để đồng nhất với OpenAPI contract.</li>
+  <li><strong>Frontend một nguồn sự thật (SSOT)</strong>: Dùng trực tiếp <code>contract.d.ts</code> từ T-001, không duy trì file schema riêng.</li>
+  <li><strong>Không inline style trong UI</strong>: Toàn bộ style được chuyển sang class LabelX và các class <code>lx-guideline-*</code> tối thiểu trong <code>globals.css</code>.</li>
+</ul>
+
+<h2 id="remaining-issues">Lỗi còn lại và trạng thái</h2>
+<p>Toàn bộ các mục trong review T-003 đã được khắc phục hoàn chỉnh. 32/32 tests backend, Ruff, mypy, ESLint, TypeScript, Next.js build và validate framework đều pass. Task T-003 sẵn sàng để reviewer kiểm tra lần hai.</p>
+
+</article></main></body></html>

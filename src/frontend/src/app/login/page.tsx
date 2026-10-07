@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import { MOCK_USERS } from '@/lib/auth/mock-users';
+import type { MockUserRecord } from '@/lib/auth/mock-users';
 import { ROLE_LABELS } from '@/lib/auth/roles';
-import { isMockAuth } from '@/lib/auth/config';
+import { apiBaseUrl, isMockAuth } from '@/lib/auth/config';
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading, authError } = useAuth();
@@ -15,6 +15,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mockUsers, setMockUsers] = useState<MockUserRecord[]>([]);
+
+  // Demo accounts come from a dev-only route handler; production builds never fetch or bundle them.
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !isMockAuth) return;
+    const controller = new AbortController();
+    fetch(new Request(apiBaseUrl() + '/api/auth/mock-users/', { cache: 'no-store', signal: controller.signal }))
+      .then((response) => (response.ok ? response.json() : []))
+      .then((users: MockUserRecord[]) => setMockUsers(users))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -34,7 +46,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickPick = (u: typeof MOCK_USERS[0]) => {
+  const handleQuickPick = (u: MockUserRecord) => {
     setUsername(u.username);
     setPassword(u.password);
     setError(null);
@@ -102,12 +114,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {isMockAuth && <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
+        {isMockAuth && mockUsers.length > 0 && <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink-subtle)', marginBottom: '8px' }}>
             Tài khoản mẫu thử nghiệm (chọn nhanh):
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {MOCK_USERS.map((u) => (
+            {mockUsers.map((u) => (
               <button
                 key={u.id}
                 type="button"

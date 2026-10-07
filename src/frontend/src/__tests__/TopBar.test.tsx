@@ -11,11 +11,11 @@ vi.mock('next/navigation', () => ({
 
 describe('TopBar permissions', () => {
   it.each([
-    ['admin', true, true, true], ['qalead', true, true, true],
-    ['qcadmin', true, false, true], ['reviewer', false, true, false],
-    ['annotator', false, false, false], ['productowner', false, false, false],
-    ['modelowner', false, false, false],
-  ] as const)('uses server grants for %s', async (username, analysis, review, configuration) => {
+    ['admin', true, true, true, true], ['qalead', true, true, true, true],
+    ['qcadmin', true, false, true, true], ['reviewer', false, true, false, true],
+    ['annotator', false, false, false, false], ['productowner', false, false, false, false],
+    ['modelowner', false, false, false, false],
+  ] as const)('uses server grants for %s', async (username, analysis, review, configuration, guidelines) => {
     const api = installMockAuthApi();
     await api.signIn(username);
     render(<AuthProvider><TopBar /></AuthProvider>);
@@ -23,6 +23,9 @@ describe('TopBar permissions', () => {
     expect(!!screen.queryByText('Phân tích chất lượng')).toBe(analysis);
     expect(!!screen.queryByText('Trung tâm kiểm tra')).toBe(review);
     expect(!!screen.queryByText('Cấu hình')).toBe(configuration);
+    const guidelineLink = screen.queryByRole('link', { name: 'Guideline' });
+    expect(!!guidelineLink).toBe(guidelines);
+    if (guidelineLink) expect(guidelineLink.getAttribute('href')).toBe('/configuration/guidelines');
   });
 
   it('opens the overview menu and logs out through the API', async () => {

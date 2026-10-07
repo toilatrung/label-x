@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "$WORK/venv/bin/labelx-detector", line 10, in <module>
+    sys.exit(main())
+  File "$WORK/venv/lib/python3.10/site-packages/labelx_detector/cli.py", line 91, in main
+    payload = run_batch(
+  File "$WORK/venv/lib/python3.10/site-packages/labelx_detector/inference.py", line 192, in run_batch
+    checksum = verify_checkpoint(checkpoint, manifest)
+  File "$WORK/venv/lib/python3.10/site-packages/labelx_detector/artifact.py", line 103, in verify_checkpoint
+    raise ChecksumMismatchError(
+labelx_detector.artifact.ChecksumMismatchError: Checkpoint SHA-256 mismatch for $WORK/corrupt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth: expected ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540, got 2edeedb3fc23ec199509ffb2f9931f873038cc866f2ea0aa176d84591db96f58. Model loading was refused.
+corrupt rc=1

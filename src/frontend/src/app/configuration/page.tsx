@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -21,6 +22,7 @@ export default function ConfigurationPage() {
           </tr>)}</tbody>
         </table>
         <p style={{ color: 'var(--ink-muted)' }}>Chức năng thay đổi cấu hình sẽ được bổ sung trong đợt tiếp theo.</p>
+        <Link className="lx-btn" href="/configuration/guidelines">Tra cứu Models & Guidelines</Link>
       </div>
     </AppShell>
   </AuthGuard>;

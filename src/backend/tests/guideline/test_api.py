@@ -512,3 +512,17 @@ def test_cursor_pagination_fifty_one_rules(reviewer_client: APIClient, tmp_path:
     assert "count" not in d2
     assert len(d2["results"]) == 1
     assert d2["previous"] is not None
+
+
+def test_schema_family_param_matches_contract_issue_family() -> None:
+    """Schema drf-spectacular khai báo `family` theo enum IssueFamily của contract."""
+    from drf_spectacular.generators import SchemaGenerator
+
+    contract_path = Path(__file__).resolve().parents[4] / "docs/04-api/openapi.yaml"
+    contract = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
+    expected = contract["components"]["schemas"]["IssueFamily"]["enum"]
+
+    schema = SchemaGenerator().get_schema(request=None, public=True)
+    params = schema["paths"]["/api/guidelines/rules/"]["get"]["parameters"]
+    family = next(p for p in params if p["name"] == "family")
+    assert family["schema"]["enum"] == expected

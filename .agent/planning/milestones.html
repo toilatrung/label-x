@@ -73,7 +73,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Nền tảng và hợp đồng triển khai</strong> — Contract dữ liệu/API/state/lineage được review; nền backend+frontend có auth, RBAC theo scope, audit append-only, CI; guideline có version.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>2026-10-06 → 2026-10-09</code></td>
-<td><code>proposed</code></td>
+<td><code>in-progress</code></td>
 <td><code>E-01, E-02, E-03</code></td>
 <td>Contract E-01 được Tech Lead Backend + QA Lead review; kiểm thử quyền/audit (FR-SEC-01…07) xanh trên CI; <code>make check</code> chạy cả backend lẫn frontend.</td>
 </tr>
@@ -83,7 +83,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Pipeline kiểm xác định tái lập</strong> — Snapshot bất biến từ CVAT thật; QC Run với engine xác định, ledger, dedup và ranking score_v0 tái lập.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>2026-10-07 → 2026-10-14</code></td>
-<td><code>proposed</code></td>
+<td><code>in-progress</code></td>
 <td><code>E-04, E-05, E-08, E-09, E-11</code></td>
 <td>AC-01, AC-02, AC-03 đạt; engine thiếu/hỏng hiển thị Not checked/Failed (phần engine của AC-07).</td>
 </tr>
@@ -103,7 +103,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Reference và discovery</strong> — Công cụ reference, reference tập hiệu chỉnh đã khoá; Detector sinh E1/E2; score được hiệu chỉnh và khoá version.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>2026-10-09 → 2026-10-16</code></td>
-<td><code>proposed</code></td>
+<td><code>in-progress</code></td>
 <td><code>E-06, E-07, E-10, E-12, E-17</code></td>
 <td>Reference hiệu chỉnh khoá version (FR-EVL-04); ngưỡng Detector chọn trên tập hiệu chỉnh; score version khoá kèm kết quả ngoài fold/ablation (FR-RNK-10, 11); TBD-08 có quyết định.</td>
 </tr>
@@ -129,4 +129,10 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
+<h2 id="progress-notes">Progress Notes</h2>
+<ul>
+<li>2026-10-08: <code>M-01</code> chuyển <code>in-progress</code> — E-01, E-02, E-03 <code>EPIC_IN_PROGRESS</code>; T-001, T-002, T-003 <code>done</code> 2026-10-08 (QA passed; PR #21, #23, #20 đã merge vào <code>develop</code>). Chưa epic nào <code>EPIC_DONE</code> vì E-01…E-03 còn việc ngoài task đợt 1; hạn 2026-10-09.</li>
+<li>2026-10-08: <code>M-02</code> chuyển <code>in-progress</code> — E-04 đã bắt đầu nhưng <code>EPIC_BLOCKED</code> theo <code>BLOCKER-024</code>; AC-01…AC-03 chưa đo được trên dữ liệu BDD100K thật cho tới khi PO cung cấp bộ annotation người học.</li>
+<li>2026-10-08: <code>M-04</code> chuyển <code>in-progress</code> — E-10 làm sớm theo phiếu giao đợt 1 (T-005, PR #22, <code>DEC-008</code>); E-06, E-07 phụ thuộc <code>BLOCKER-022</code>.</li>
+</ul>
 </article></main></body></html>

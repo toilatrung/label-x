@@ -3,6 +3,7 @@ import { GET as csrf } from '@/app/api/auth/csrf/route';
 import { POST as login } from '@/app/api/auth/login/route';
 import { GET as session } from '@/app/api/auth/session/route';
 import { POST as logout } from '@/app/api/auth/logout/route';
+import { GET as mockUsers } from '@/app/api/auth/mock-users/route';
 
 // A browser-like cookie jar connects components to the actual mock route handlers.
 export function installMockAuthApi() {
@@ -17,6 +18,7 @@ export function installMockAuthApi() {
     else if (path === '/api/auth/login/' && request.method === 'POST') response = await login(request);
     else if (path === '/api/auth/session/' && request.method === 'GET') response = await session(request);
     else if (path === '/api/auth/logout/' && request.method === 'POST') response = await logout(request);
+    else if (path === '/api/auth/mock-users/' && request.method === 'GET') response = await mockUsers();
     else throw new Error('Unexpected API path: ' + path);
     for (const cookie of response.headers.getSetCookie()) {
       const [pair] = cookie.split(';');

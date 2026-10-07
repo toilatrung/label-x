@@ -1,19 +1,19 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DEC-005 — Phục hồi checkpoint Detector từ Wayback — LabelX</title>
-<meta name="labelx:id" content="dec-005-vietanhhhhhh2003">
+<title>DEC-008 — Phục hồi checkpoint Detector từ Wayback — LabelX</title>
+<meta name="labelx:id" content="DEC-008">
 <meta name="labelx:title" content="Phục hồi checkpoint Detector từ Wayback">
 <meta name="labelx:type" content="governance"><meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="detector"><meta name="labelx:tags" content="[decision, detector, checkpoint, wayback, t-005]"><meta name="labelx:priority" content="1">
 <style>:root{--bg:#f6f7f9;--card:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--warn:#fff3d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,sans-serif}.top{background:#1f2933;color:#fff;padding:12px 24px}.top b{color:#e1323e}main{max-width:1100px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 28px}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}code{background:#f0f1f3;padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#f0f1f3}.meta{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;background:#f3f4f6;padding:10px;margin-top:12px}blockquote{background:var(--warn);border-left:4px solid #a66a00;padding:8px 14px}</style>
-</head><body><header class="top">Label<b>X</b> · DEC-005 per-user record</header><main><article>
-<div class="meta"><b>id</b><span>dec-005-vietanhhhhhh2003</span><b>type</b><span>governance</span><b>status</b><span>accepted — pending integrator merge</span></div>
+</head><body><header class="top">Label<b>X</b> · .agent / governance / decisions / DEC-008</header><main><article>
+<div class="meta"><b>id</b><span>DEC-008</span><b>type</b><span>governance</span><b>status</b><span>accepted</span></div>
 <h1 id="decision-phuc-hoi-checkpoint-detector-tu-wayback">Decision: Phục hồi checkpoint Detector từ Wayback</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Ghi bằng chứng quyết định của Product Owner về nguồn phục hồi checkpoint cho T-005 khi host model zoo chính thức không còn DNS.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Decision ID</strong>: <code>DEC-005</code></li>
+<li><strong>Decision ID</strong>: <code>DEC-008</code></li>
 <li><strong>Title</strong>: <code>Phục hồi checkpoint Detector Faster R-CNN từ Wayback</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li>
 <li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
@@ -52,7 +52,7 @@
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Affected Documents</strong>: <code>src/detector_worker/model-manifest.json, src/detector_worker/README.html, .agent/reports/implementation/T-005-@vietanhhhhhh2003.html</code></li>
+<li><strong>Affected Documents</strong>: <code>src/detector_worker/model-manifest.json, src/detector_worker/README.html, .agent/reports/implementation/T-005.html</code></li>
 <li><strong>Epics or Tasks</strong>: <code>E-10, T-005</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Risks</strong>: <code>.agent/governance/blockers/BLOCKER-005.html; SysCV/bdd100k-models#28</code></li>
@@ -66,8 +66,8 @@
 <li>[x] Follow-up work and affected documents are linked.</li>
 <li>[x] Checkpoint 165.899.860 byte khớp MD5 <code>d2a866749432b7bd8436f0001c1625d7</code>.</li>
 <li>[x] Manifest freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>.</li>
-<li>[ ] PO/QC integrator merge nội dung per-user vào decision chính.</li>
-<li>[ ] Accepted decision được map với commit triển khai trong Git Nexus.</li>
+<li>[x] PO/QC integrator merge nội dung per-user vào decision chính (2026-10-07; trước đây là <code>DEC-005-@vietanhhhhhh2003</code>, đã gộp vào <code>DEC-008</code> vì mã trùng với quyết định lineage của T-001).</li>
+<li>[x] Accepted decision được map với commit triển khai trong Git Nexus (<code>852bfca</code>, <code>.agent/intelligence/git-nexus/decision-commit-map.html</code>).</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
@@ -76,5 +76,5 @@
 <li>Không sửa decision chính từ nhánh thành viên; PO/QC integrator thực hiện merge theo CR-100.</li>
 </ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Lưu bản ghi per-user tại đường dẫn hiện tại; giữ URL, expected MD5, SHA-256 thực tế và bằng chứng comment PO có thể truy vết.</li></ul>
+<ul><li>Lưu tại <code>.agent/governance/decisions/DEC-008.html</code>; giữ URL, expected MD5, SHA-256 thực tế và bằng chứng comment PO có thể truy vết.</li></ul>
 </article></main></body></html>

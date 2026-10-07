@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage — LabelX</title>
+<meta name="labelx:id" content="qa-t-001">
+<meta name="labelx:title" content="QA Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="qa">
+<meta name="labelx:tags" content="[qa, testing, report, t-001, wave-1]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / qa / T-001</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>qa-t-001</span><b>title</b><span>QA Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</span><b>type</b><span>report</span><b>domain</b><span>testing</span><b>module</b><span>qa</span><b>tags</b><span>[qa, testing, report, t-001, wave-1]</span><b>priority</b><span>1</span></div>
+<h1 id="qa-report">QA Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi kết quả QA cho T-001 sau review (<a href="../review/T-001.html">review report</a>), trên nhánh <code>chore/wave1-closeout</code>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-001</code></li>
+<li><strong>Title</strong>: <code>QA Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Tester</strong>: <code>claude-code (session label-x-30) cho integrator @toilatrung</code></li>
+<li><strong>Status</strong>: <code>passed</code></li>
+<li><strong>Task ID</strong>: <code>T-001</code></li>
+<li><strong>Review Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Test Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Environment ID</strong>: <code>local Ubuntu 22.04; make 4.3, Docker 29.1.3, compose 2.40.3; make infra-up (Postgres/Redis/SeaweedFS healthy); Node 22.23.3; uv/Python 3.12 (backend), Python 3.10 (detector)</code></li>
+</ul>
+<h2 id="test-scope">Test Scope</h2>
+<ul>
+<li><strong>Features or Requirements</strong>: <code>FR/BR/UC trích trong docs/04-api/openapi.yaml (x-labelx-trace), docs/04-api/state-machines.html; BLOCKER-007, BLOCKER-008</code></li>
+<li><strong>Included Test Levels</strong>: <code>contract | unit</code></li>
+<li><strong>Behavior Checks</strong>: <code>OpenAPI hợp lệ; Error có code/message/request_id; mọi transition trích FR/BR/UC có trong SRS; contract.d.ts sinh lại khớp</code></li>
+<li><strong>Edge Cases</strong>: <code>trạng thái frame incomplete (lease hết hạn, claim lại)</code></li>
+<li><strong>Regression Checklist</strong>: <code>make check (lint, typecheck, test backend/frontend, detector-lint, detector-test, validate-kit); CI .github/workflows/ci.yml</code></li>
+<li><strong>Excluded Checks</strong>: <code>none</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Test Plan or Strategy</strong>: <code>ci_cd_testing.html; .agent/execution/task-board.html#t-001 (Verification Requirements)</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-001.html</code></li>
+<li><strong>Review Report</strong>: <code>.agent/reports/review/T-001.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Issues or Risks</strong>: <code>none</code></li>
+<li><strong>Build or Commit</strong>: <code>54a5162, a2aca6e, 2536210 (nhánh chore/wave1-closeout)</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<p>Repo không có CLI <code>agent</code>; kết quả QA ghi trực tiếp vào báo cáo này.</p>
+<table>
+<thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>agent qa start T-001</code></td><td><code>not-run</code></td><td><code>không có CLI; QA bắt đầu 2026-10-08</code></td></tr>
+<tr><td><code>agent qa pass T-001</code></td><td><code>not-run</code></td><td><code>Status passed ghi trong báo cáo này</code></td></tr>
+<tr><td><code>agent qa fail T-001</code></td><td><code>not-run</code></td><td><code>không áp dụng</code></td></tr>
+</tbody>
+</table>
+<h2 id="test-results">Test Results</h2>
+<table>
+<thead><tr><th>Check ID</th><th>Test Level</th><th>Result</th><th>Evidence</th><th>Defect ID</th></tr></thead>
+<tbody>
+<tr><td><code>CHECK-1</code></td><td><code>contract</code></td><td><code>passed</code></td><td>uv run pytest tests/test_contract.py: 10 passed (gồm test_every_state_transition_cites_srs_requirement); SQLite</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-2</code></td><td><code>contract</code></td><td><code>passed</code></td><td>manage.py spectacular --validate không lỗi (schema runtime)</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-3</code></td><td><code>contract</code></td><td><code>passed</code></td><td>openapi-typescript (gen:api:contract) sinh lại contract.d.ts khớp file đã commit</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-4</code></td><td><code>manual</code></td><td><code>passed</code></td><td>label-x-88 đối chiếu thủ công nghĩa của mã FR/BR/UC cho transition</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-5</code></td><td><code>contract</code></td><td><code>passed</code></td><td>validate-kit: uv run --no-project --python 3.12 python scripts/validate-framework.py: FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
+<tr><td><code>CHECK-6</code></td><td><code>integration</code></td><td><code>passed</code></td><td>make check (backend pytest Postgres + lint/typecheck/test toàn repo): sg docker -c "make check" tại 73507fa (code = 524aed3), exit 0: ruff, mypy (30 file), pytest backend 56 passed trên Postgres, eslint, tsc, vitest 58 passed, detector ruff + 10 passed, FRAMEWORK_VALIDATION_PASS</td><td><code>none</code></td></tr>
+</tbody>
+</table>
+<h2 id="result-summary">Result Summary</h2>
+<ul>
+<li><strong>Total</strong>: <code>6</code></li>
+<li><strong>Passed</strong>: <code>6</code></li>
+<li><strong>Failed</strong>: <code>0</code></li>
+<li><strong>Blocked</strong>: <code>0</code></li>
+<li><strong>Skipped</strong>: <code>0</code></li>
+</ul>
+<h2 id="defects-and-risks">Defects and Risks</h2>
+<ul>
+<li><strong>Open Defects</strong>: <code>none</code></li>
+<li><strong>Residual Risks</strong>: <code>none</code></li>
+<li><strong>Blocking Conditions</strong>: <code>none</code></li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[x] Review report records <code>APPROVED</code> before QA starts.</li>
+<li>[x] Every required check has a result and evidence.</li>
+<li>[x] Result totals reconcile with the results table.</li>
+<li>[x] Failed checks map to issue records.</li>
+<li>[x] Skipped checks include an explicit approved reason.</li>
+<li>[x] Behavior, edge cases, regression checklist, and manual verification are recorded when applicable.</li>
+</ul>
+<h2 id="release-recommendation">Release Recommendation</h2>
+<ul>
+<li><strong>Recommendation</strong>: <code>go</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>Kết quả theo bảng Test Results; không tính check chưa chạy là passed.</code></li>
+<li><strong>Authorized By</strong>: <code>@toilatrung (PO, integrator); review chéo label-x-88</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Required tests are executed or formally waived.</li>
+<li>[x] Defects, blockers, and residual risks are linked.</li>
+<li>[x] Release recommendation matches recorded results.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not start QA before independent review is <code>APPROVED</code>.</li>
+<li>Do not mark status <code>passed</code> with unresolved required failures.</li>
+<li>Do not omit, relabel, or discard failed results.</li>
+<li>Do not count unexecuted checks as passed.</li>
+<li>Do not replace independent review with QA.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not expose secrets or production personal data in evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/qa/T-001.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use exact enum values and non-negative integer totals.</li>
+</ul>
+</article></main></body></html>

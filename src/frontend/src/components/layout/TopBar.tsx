@@ -12,6 +12,7 @@ import {
   canAccessEscalations,
   canAccessReports,
   canAccessConfiguration,
+  canAccessGuidelines,
 } from '@/lib/auth/roles';
 
 interface TopBarProps {
@@ -57,6 +58,7 @@ export function TopBar({ activeKey }: TopBarProps) {
   const showEscalations = hasPermission(canAccessEscalations, true);
   const showReports = hasPermission(canAccessReports);
   const showConfig = hasPermission(canAccessConfiguration);
+  const showGuidelines = hasPermission(canAccessGuidelines);
 
   return (
     <>
@@ -131,6 +133,19 @@ export function TopBar({ activeKey }: TopBarProps) {
             </div>
           )}
 
+          {/* Guideline (UC-05) - Reviewer, QA Lead, QC Admin, Super Admin */}
+          {showGuidelines && (
+            <div className="lx-nav__group">
+              <Link
+                className={`lx-navbtn ${pathname.startsWith('/configuration/guidelines') || activeKey === 'guidelines' ? 'is-active' : ''}`}
+                href="/configuration/guidelines"
+                onClick={closeAll}
+              >
+                Guideline
+              </Link>
+            </div>
+          )}
+
           {/* 4. Phân xử (Escalations) - Chỉ QA Lead, Super Admin */}
           {showEscalations && (
             <div className="lx-nav__group">
@@ -195,7 +210,7 @@ export function TopBar({ activeKey }: TopBarProps) {
             <div className="lx-nav__group" style={{ position: 'relative' }}>
               <button
                 type="button"
-                className={`lx-navbtn ${pathname === '/configuration' || activeKey === 'configuration' ? 'is-active' : ''}`}
+                className={`lx-navbtn ${(pathname.startsWith('/configuration') && !pathname.startsWith('/configuration/guidelines')) || activeKey === 'configuration' ? 'is-active' : ''}`}
                 aria-haspopup="menu"
                 aria-expanded={openMenu === 'configuration'}
                 onClick={() => toggleMenu('configuration')}
@@ -212,10 +227,10 @@ export function TopBar({ activeKey }: TopBarProps) {
                     <span className="lx-menu__t">Quy trình & Phân quyền</span>
                     <span className="lx-menu__d">Phân quyền theo vai trò và quy tắc kiểm soát</span>
                   </Link>
-                  <Link className="lx-menu__item" role="menuitem" href="/configuration" onClick={closeAll}>
+                  <span className="lx-menu__item" role="menuitem" aria-disabled="true" title="Chưa khả dụng">
                     <span className="lx-menu__t">Quy tắc & Ngưỡng</span>
-                    <span className="lx-menu__d">Quy tắc kiểm tra và chính sách lấy mẫu</span>
-                  </Link>
+                    <span className="lx-menu__d">Quy tắc kiểm tra và chính sách lấy mẫu (chưa khả dụng)</span>
+                  </span>
                 </div>
               )}
             </div>

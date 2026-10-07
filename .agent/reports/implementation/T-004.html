@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-004 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-004-@duy12345-6789">
+<meta name="labelx:id" content="implementation-t-004">
 <meta name="labelx:title" content="T-004 Implementation Report">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -14,17 +14,18 @@
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>T-004 / @duy12345-6789</span></header>
 <main><article>
-<div class="meta"><b>id</b><span>T-004-@duy12345-6789</span><b>title</b><span>T-004 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>cvat-adapter</span><b>tags</b><span>[implementation, cvat, read-only, hash, sample-data]</span><b>priority</b><span>1</span></div>
+<div class="meta"><b>id</b><span>implementation-t-004</span><b>title</b><span>T-004 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>cvat-adapter</span><b>tags</b><span>[implementation, cvat, read-only, hash, sample-data]</span><b>priority</b><span>1</span></div>
 <h1 id="implementation-report-template">T-004 — CVAT dev, dữ liệu mẫu, adapter chỉ đọc và hash</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Bằng chứng có thể kiểm toán cho phần triển khai T-004 trên nhánh <code>feat/T-004-e04-cvat-adapter</code>.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>T-004-@duy12345-6789</code></li>
+<li><strong>Report ID</strong>: <code>T-004</code></li>
 <li><strong>Title</strong>: CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</li>
 <li><strong>Owner</strong>: Lê Duy Nam (<code>@duy12345-6789</code>)</li>
 <li><strong>Executor</strong>: <code>@duy12345-6789</code> với Codex</li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>blocked</code></li>
+<li><strong>Status Note</strong>: BLOCKER-024 — tệp người học không thuộc BDD100K; phần kỹ thuật (CVAT dev, adapter chỉ đọc, hash) đạt.</li>
 <li><strong>Status Reason</strong>: implementation và learner audit đã đủ evidence; chờ reviewer và các decision owner phê duyệt.</li>
 <li><strong>Task ID</strong>: <code>T-004</code></li>
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
@@ -45,13 +46,13 @@
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#T-004</code></li>
-<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
-<li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li>
-<li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
-<li><strong>Decisions</strong>: <code>DEC-001</code>; <code>DEC-007-@duy12345-6789</code> status <code>proposed</code> cho hash precision/TBD-20</li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>; <code>DEC-007</code> status <code>proposed</code> cho hash precision/TBD-20</li>
 <li><strong>Change Requests</strong>: <code>CR-100</code>, <code>CR-103</code>, <code>CR-104</code></li>
-<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023-@duy12345-6789</code> resolved bằng learner audit</li>
-<li><strong>Review Request</strong>: PR <code>#19</code>; chờ <code>@toilatrung</code> hoặc <code>@DucHa180104</code> comment <code>Đã xem và duyệt</code></li>
+<li><strong>Risks or Blockers</strong>: <code>BLOCKER-004</code>; <code>BLOCKER-023</code> resolved bằng learner audit</li>
+<li><strong>Review Request</strong>: PR <code>#19</code> (squash <code>b49f5d0</code> trên develop); review độc lập: <code>.agent/reports/review/T-004.html</code></li>
 <li><strong>Issue</strong>: <code>#16</code> — T-004</li>
 <li><strong>Commits</strong>: <code>8a58ad7</code> — triển khai ban đầu; <code>e7d84ca</code> — sửa review; <code>ab2f3f3</code> — audit learner; <code>7aa9178</code> — manual import/hash end-to-end</li>
 <li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/19">#19 — feat(cvat): hoàn thành T-004 dev stack và read-only adapter</a>, base <code>develop</code></li>
@@ -84,7 +85,7 @@
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Every reported change maps to T-004.</li>
-<li>[x] Annotation learner thật đã được audit; count leakage và checksum nguồn được ghi; <code>BLOCKER-023-@duy12345-6789</code> resolved.</li>
+<li>[x] Annotation learner thật đã được audit; count leakage và checksum nguồn được ghi; <code>BLOCKER-023</code> resolved.</li>
 <li>[x] Deviations and limitations are explicit.</li>
 <li>[x] Build, lint, typecheck, test and framework validation pass.</li>
 <li>[x] Reviewer handoff identifies independent reviewers.</li>
@@ -93,5 +94,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Không tự nhận review approval hoặc chuyển task sang <code>done</code>.</li><li>Không ghi token/secret vào report, source hoặc log.</li><li>Không gọi dữ liệu Wikimedia là BDD100K ground truth.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Report lưu đúng file cá nhân <code>.agent/reports/implementation/T-004-@duy12345-6789.html</code>.</li><li>Task board cá nhân ở trạng thái <code>review</code>; canonical board không bị sửa.</li><li>PR <code>#19</code> đã mở vào <code>develop</code> theo CR-104; không tự approve hoặc merge.</li></ul>
+<ul><li>Report lưu đúng file cá nhân <code>.agent/reports/implementation/T-004.html</code>.</li><li>Task board cá nhân ở trạng thái <code>review</code>; canonical board không bị sửa.</li><li>PR <code>#19</code> đã mở vào <code>develop</code> theo CR-104; không tự approve hoặc merge.</li></ul>
 </article></main></body></html>
