@@ -593,7 +593,18 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>E-03</td><td>T-003</td><td>T-017, T-018</td><td>T-017 sau T-012 + T-013; T-018 sau T-016</td></tr>
 </tbody>
 </table>
-<p><strong>Đánh giá hạn 2026-10-09</strong>: chuỗi phụ thuộc dài nhất là T-011 → T-013 → T-012 → T-016 → T-018 (năm task nối tiếp). Với 5 thành viên, khó đạt trong một ngày. PO cần chọn: (a) dời hạn M-01 sang 2026-10-12 bằng change request; hoặc (b) thu hẹp phạm vi M-01 bằng change request, ví dụ chuyển T-014 (Object Storage) và identity mapping CVAT sang M-02 nơi E-05 dùng tới, T-009 sang M-02.</p>
+<p><strong>PO quyết 2026-10-08</strong>: giữ phạm vi và hạn 2026-10-09 (không dời lịch, không thu hẹp).</p>
+<p><strong>Rủi ro</strong> (<a href="../governance/risks/RISK-012.html">RISK-012</a>): chuỗi 5 tầng T-011 → T-013 → T-012 → T-016 → T-018; mỗi tầng phải merge vào <code>develop</code> trước khi tầng sau bắt đầu. Thứ tự giao theo tầng:</p>
+<table>
+<thead><tr><th>Tầng</th><th>Task</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>T-006, T-007, T-009, T-010, T-011, T-014, T-015</td></tr>
+<tr><td>2</td><td>T-008 (sau T-006), T-013 (sau T-011)</td></tr>
+<tr><td>3</td><td>T-012 (sau T-011, T-013)</td></tr>
+<tr><td>4</td><td>T-016 (sau T-011, T-012), T-017 (sau T-012, T-013)</td></tr>
+<tr><td>5</td><td>T-018 (sau T-016)</td></tr>
+</tbody>
+</table>
 <p><strong>Cần PO quyết</strong>: AC E-03 “Lookup trả đúng version gắn với snapshot” mâu thuẫn với CR-101 (bỏ guideline có version, thay bằng tệp tĩnh). Hiện API đã trả <code>guideline_version</code> theo tệp nạp; gắn version vào snapshot thuộc E-05. Đề xuất sửa AC E-03 thành “lookup trả đúng version tệp đã nạp; snapshot ghi version guideline (E-05)” qua change request. Tương tự, “QC Admin sửa mapping” (T-017) cần xác nhận vì CR-101 đặt mapping trong tệp tĩnh.</p>
 <h3 id="t-006">T-006</h3>
 <h4 id="record-metadata_5">Record Metadata</h4>
@@ -604,7 +615,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_5">Objective</h4>
@@ -665,7 +676,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_6">Objective</h4>
@@ -726,7 +737,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_7">Objective</h4>
@@ -786,7 +797,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_8">Objective</h4>
@@ -845,7 +856,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_9">Objective</h4>
@@ -904,7 +915,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @toilatrung)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_10">Objective</h4>
@@ -966,7 +977,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
@@ -1028,7 +1039,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_12">Objective</h4>
@@ -1088,7 +1099,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @vietanhhhhhh2003)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_13">Objective</h4>
@@ -1148,7 +1159,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @duy12345-6789)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_14">Objective</h4>
@@ -1207,7 +1218,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @tdt2112)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 </ul>
 <h4 id="objective_15">Objective</h4>
@@ -1270,7 +1281,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_16">Objective</h4>
@@ -1330,7 +1341,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>chờ PO gán (đề xuất @ducha180104)</code></li>
 <li><strong>Status</strong>: <code>pending</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
-<li><strong>Target Date</strong>: <code>chờ CR M-01: PO chọn (a) dời hạn 2026-10-12 hoặc (b) thu hẹp phạm vi</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 </ul>
 <h4 id="objective_17">Objective</h4>
