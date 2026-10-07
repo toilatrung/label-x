@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lineage issue qua revision bằng cvat_shape_id + namespace nguồn — LabelX</title>
+<meta name="labelx:id" content="DEC-005">
+<meta name="labelx:title" content="Lineage issue qua revision bằng cvat_shape_id + namespace nguồn">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, adr, lineage, m13]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-005</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-005</span><b>title</b><span>Lineage issue qua revision bằng cvat_shape_id + namespace nguồn</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, adr, lineage, m13]</span><b>priority</b><span>1</span></div>
+<h1 id="decision-dec-005">Decision: Lineage issue qua revision bằng cvat_shape_id + namespace nguồn</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-005</code></li>
+<li><strong>Title</strong>: <code>Lineage issue qua revision bằng cvat_shape_id + namespace nguồn</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>architecture</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-06</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Rework tạo snapshot mới trên revision CVAT đã sửa, rồi QC run cuối (FR-RWK-03, FR-RWK-06). Issue thuộc một run, còn <code>dedup_key</code> (FR-AGG-03) chỉ có nghĩa trong một snapshot. Không có quy tắc nào nói một issue ở run cuối có phải là "cùng lỗi" với issue ở run gốc hay không, nên chưa thể nối verification cũ với kết quả run cuối (FR-RWK-06, FR-RWK-08). Đây là BLOCKER-007. Product Owner đã chọn phương án A trong <a href="DEC-002.html">DEC-002</a> ngày 2026-10-06; bản ghi này ghi phương án đó thành ADR với quy tắc đủ chi tiết để triển khai (E-01 scope; T-001).</p>
+<p>Sự thật đã kiểm: CVAT giữ nguyên id của shape khi annotator sửa toạ độ, lớp hay thuộc tính; xoá rồi vẽ lại thì shape có id mới. Dự đoán Detector và vùng reviewer vẽ không có id CVAT. Frame của mỗi snapshot là bản ghi riêng, nhưng (task CVAT, số frame nguồn) không đổi qua snapshot (FR-SNP-05).</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Truy vết được từng lỗi từ run gốc qua rework tới run cuối (FR-RWK-06; R-03).</li>
+<li>Không tự kế thừa quyết định cũ cho kết quả mới: issue ở run cuối phải được review lại (FR-RWK-08).</li>
+<li>Khớp tất định, tái lập được (R-01); không dùng ngưỡng hình học làm căn cứ chính.</li>
+<li>Adapter CVAT chỉ đọc (B-18): không ghi id hay tag nào lên CVAT.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table>
+<thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead>
+<tbody>
+<tr><td>A — Định danh đối tượng bằng <code>cvat_shape_id</code> + namespace nguồn; fallback hình học chỉ để gợi ý (chọn trong DEC-002)</td><td>Khớp chính xác, tất định cho E2, E3, cảnh báo cấu trúc, issue thủ công chọn object; dễ kiểm toán</td><td>Phải xây bảng liên kết issue; E1 và shape vẽ lại chỉ có gợi ý</td><td><code>meets</code></td></tr>
+<tr><td>B — Khớp hình học (IoU + lớp) giữa hai revision</td><td>Áp dụng được cho mọi nhóm, kể cả E1</td><td>Phụ thuộc ngưỡng; sửa box chính là thay đổi hình học nên dễ khớp nhầm; không tái lập khi đổi ngưỡng</td><td><code>partially-meets</code></td></tr>
+<tr><td>C — Hash nội dung shape (lớp + toạ độ)</td><td>Không cần id CVAT</td><td>Hash đổi đúng khi annotator sửa, nên mất liên kết ở chính trường hợp cần</td><td><code>does-not-meet</code></td></tr>
+</tbody>
+</table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>A</code> — quy tắc chi tiết bên dưới.</li>
+<li><strong>Rationale</strong>: Product Owner chọn A trong DEC-002 (BLOCKER-007). C hỏng đúng trường hợp rework; B chỉ đủ tin cậy để gợi ý.</li>
+<li><strong>Effective Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h3 id="rules">Quy tắc</h3>
+<ol>
+<li><strong>Định danh frame qua snapshot</strong>: <code>frame_key = (cvat_task_id, frame_number)</code> (schema <code>FrameKey</code> trong <a href="../../../docs/04-api/openapi.yaml">openapi.yaml</a>).</li>
+<li><strong>Định danh đối tượng</strong>: <code>ObjectRef = (namespace, id)</code> với namespace ∈ <code>cvat_shape</code> (id shape CVAT), <code>detector</code> (<code>"&lt;run_id&gt;:&lt;index&gt;"</code>, chỉ có nghĩa trong một run), <code>reviewer_region</code> (UUID do server cấp). Chỉ namespace <code>cvat_shape</code> ổn định qua revision.</li>
+<li><strong>Khoá lineage</strong> của issue = (<code>frame_key</code>, nhóm lỗi, loại neo, tập <code>ObjectRef</code> namespace <code>cvat_shape</code> đã sắp xếp, <code>rule_id</code> nếu có). Neo theo <a href="DEC-006.html">DEC-006</a>.</li>
+<li><strong>Liên kết chính xác</strong>: khi aggregation của run <code>is_final</code> tạo issue có khoá lineage trùng một issue của run gốc (<code>origin_run_id</code>), hệ thống tạo issue mới ở <code>pending_review</code> và link <code>recurrence_of</code> → issue gốc. Issue mới không kế thừa quyết định, mức độ hay verification.</li>
+<li><strong>Gợi ý fallback</strong>: issue không có khoá lineage chính xác (E1 neo vùng dự đoán; shape xoá rồi vẽ lại; cụm E3 chỉ trùng một phần) được so với issue gốc cùng <code>frame_key</code> và nhóm lỗi bằng IoU ≥ τ<sub>m</sub> giữa bbox neo. Kết quả ghi link <code>suggested_recurrence_of</code>, chỉ hiển thị cho reviewer, không đổi trạng thái, gate hay KPI.</li>
+<li><strong>Verification</strong>: issue gốc giữ trạng thái và verification của nó (vd <code>resolved</code>); run gốc giữ nguyên để kiểm toán (FR-RWK-06). Gate và báo cáo đọc issue của run cuối theo FR-RWK-08; điều kiện "rework bắt buộc verify 100%" tính trên yêu cầu sửa của run gốc.</li>
+<li><strong>Lưu trữ</strong>: bảng <code>issue_link(from_issue, to_issue, kind, method ∈ {exact, fallback}, created_at)</code>, UNIQUE <code>(from_issue, to_issue, kind)</code>. Tạo link trong cùng transaction với upsert issue, nên retry aggregation không tạo link trùng (FR-AGG-02, FR-AGG-06).</li>
+<li>API trả link trong <code>Issue.links</code> (schema <code>IssueLink</code>); run cuối trả <code>Run.origin_run_id</code>.</li>
+</ol>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: Truy vết đầy đủ lỗi qua rework cho E2, E3, cảnh báo cấu trúc và issue thủ công chọn object; gate/báo cáo không lẫn quyết định cũ với kết quả mới.</li>
+<li><strong>Negative</strong>: E1 và shape vẽ lại chỉ có liên kết gợi ý; reviewer phải review lại mọi issue tái xuất hiện ở run cuối; thêm bảng <code>issue_link</code>.</li>
+<li><strong>Follow-up Work</strong>: E-08 (aggregation tạo link), E-16 (rework + run cuối), E-11 (ranking không dùng link); bổ sung FR lineage vào SRS có version.</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml</code>, <code>docs/04-api/state-machines.html</code>, <code>docs/04-api/rest-api.html</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-01, E-08, E-11, E-16; T-001</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-005.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

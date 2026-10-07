@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ma trận actor/action/scope — LabelX</title>
+<meta name="labelx:id" content="api-rbac-matrix">
+<meta name="labelx:title" content="Ma trận actor/action/scope">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="security">
+<meta name="labelx:tags" content="[api, rbac, security, contract, t-001]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / rbac-matrix</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>api-rbac-matrix</span><b>title</b><span>Ma trận actor/action/scope</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>security</span><b>tags</b><span>[api, rbac, security, contract, t-001]</span><b>priority</b><span>1</span></div>
+<h1 id="rbac-matrix">Ma trận actor/action/scope</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Ma trận quyền chuẩn của contract M13 v1 (T-001, E-01): mỗi action (operation trong <a href="openapi.yaml">openapi.yaml</a>) ứng với vai trò được phép, quy tắc scope và guard bổ sung. Backend kiểm ở API cho mọi request (FR-SEC-01); frontend chỉ dùng ma trận để ẩn menu. Trường <code>x-labelx-roles</code> của mỗi operation phải trùng cột "Vai trò" ở đây.</p>
+<p>Nguồn: SRS <code>06-functional.tex</code> tab:rbac và đoạn sau bảng (Product Owner, Data/Model Owner), FR-SEC-01…06; <a href="rest-api.html">rest-api.html</a> §4, §6; <a href="state-machines.html">state-machines.html</a>.</p>
+
+<h2 id="roles">1. Vai trò và scope</h2>
+<table>
+<thead><tr><th>Mã</th><th>Vai trò</th><th>Viết tắt</th><th>Scope</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>annotator</code></td><td>Annotator</td><td>AN</td><td>Dataset được gán</td><td>tab:rbac</td></tr>
+<tr><td><code>reviewer</code></td><td>Reviewer</td><td>RV</td><td>Dataset được gán</td><td>tab:rbac</td></tr>
+<tr><td><code>qa_lead</code></td><td>QA Lead</td><td>QA</td><td>Dataset được gán</td><td>tab:rbac</td></tr>
+<tr><td><code>qc_admin</code></td><td>QC Admin</td><td>AD</td><td>Dataset được gán hoặc toàn hệ thống</td><td>tab:rbac</td></tr>
+<tr><td><code>super_admin</code></td><td>Super Admin</td><td>SA</td><td>Toàn hệ thống</td><td>tab:rbac; FR-SEC-06</td></tr>
+<tr><td><code>product_owner</code></td><td>Product Owner</td><td>PO</td><td>Dataset được gán; không review</td><td>SRS ch.6 sau tab:rbac; UC-10, UC-11</td></tr>
+<tr><td><code>data_model_owner</code></td><td>Data/Model Owner</td><td>DMO</td><td>Dataset được gán; không review</td><td>SRS ch.6 sau tab:rbac</td></tr>
+</tbody>
+</table>
+<p>Một người có thể có nhiều <code>RoleAssignment</code> (vai trò, dataset); <code>dataset_id = null</code> chỉ cho <code>super_admin</code> và <code>qc_admin</code>. Ba giá trị giả dùng trong <code>x-labelx-roles</code>: <code>anonymous</code> (không cần đăng nhập), <code>authenticated</code> (mọi người đã đăng nhập), <code>lease_holder</code> (người đang giữ lease của đối tượng — kiểm theo bản ghi lease, không theo vai trò).</p>
+<p>Scope được suy ra từ đối tượng: snapshot → dataset; run → snapshot → dataset; frame, issue, lease → run → dataset. Đối tượng ngoài scope trả <code>403 OUT_OF_SCOPE</code>; danh sách luôn lọc theo scope nên không lộ đối tượng ngoài scope (rest-api.html §6).</p>
+
+<h2 id="matrix">2. Ma trận theo action</h2>
+<table>
+<thead><tr><th>Action (operationId)</th><th>AN</th><th>RV</th><th>QA</th><th>AD</th><th>SA</th><th>PO</th><th>DMO</th><th>Guard bổ sung</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>auth_csrf</code>, <code>auth_login</code></td><td colspan="7">anonymous</td><td>Sai thông tin → 400 INVALID_CREDENTIALS; ghi audit đăng nhập</td><td>FR-SEC-01, FR-SEC-05</td></tr>
+<tr><td><code>auth_logout</code>, <code>auth_session</code></td><td colspan="7">authenticated</td><td>Chưa đăng nhập → 403 NOT_AUTHENTICATED</td><td>FR-SEC-01, FR-SEC-02</td></tr>
+<tr><td><code>datasets_list</code></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>Chỉ dataset trong scope</td><td>UC-01; FR-SEC-01</td></tr>
+<tr><td><code>datasets_tasks</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>Đọc CVAT qua adapter chỉ đọc</td><td>UC-01; FR-SNP-01</td></tr>
+<tr><td><code>snapshots_create</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Không trùng phạm vi đang xuất (409 SCOPE_BUSY)</td><td>UC-01; tab:rbac "Chạy"</td></tr>
+<tr><td><code>snapshots_retrieve</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-SNP-03, FR-SNP-04</td></tr>
+<tr><td><code>runs_list</code>, <code>runs_ledger</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-AGG-04; FR-RPT-04</td></tr>
+<tr><td><code>runs_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>RV chỉ xem</td><td>FR-AGG-05</td></tr>
+<tr><td><code>runs_create</code>, <code>runs_cancel</code>, <code>runs_retry_failed</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Theo bảng transition QC Run</td><td>UC-02; tab:rbac "Chạy"</td></tr>
+<tr><td><code>runs_ranking</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn (403 FORBIDDEN)</td><td>FR-REV-01; FR-EVL-02; BR-10</td></tr>
+<tr><td><code>guidelines_rules_list</code>, <code>guidelines_rules_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>UC-12; FR-GDL-04</td></tr>
+<tr><td><code>queues_next</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Identity mapping bắt buộc; bỏ qua frame tự gán; một lease/người</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03</td></tr>
+<tr><td><code>leases_renew</code>, <code>frames_complete</code></td><td colspan="7">lease_holder</td><td>Lease còn hạn và thuộc người gọi, nếu không 409 LEASE_CONFLICT</td><td>FR-REV-04, FR-REV-13, FR-REV-14</td></tr>
+<tr><td><code>frames_issues</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn</td><td>FR-REV-07; FR-EVL-02</td></tr>
+</tbody>
+</table>
+
+<h2 id="later">3. Action thuộc đợt sau (đã chốt quyền, chưa có trong OpenAPI)</h2>
+<table>
+<thead><tr><th>Action</th><th>AN</th><th>RV</th><th>QA</th><th>AD</th><th>SA</th><th>PO</th><th>DMO</th><th>Guard bổ sung</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td>Lưu quyết định issue</td><td></td><td>✓</td><td>✓</td><td></td><td>✓ (ghi đè có lý do)</td><td></td><td></td><td>Lease còn hạn; không self-review</td><td>UC-05; FR-REV-14; FR-SEC-06</td></tr>
+<tr><td>Phân xử</td><td></td><td></td><td>✓</td><td></td><td>✓ (ghi đè)</td><td></td><td></td><td>Khác người chuyển cấp</td><td>UC-06; FR-SEC-04</td></tr>
+<tr><td>Tạo yêu cầu sửa</td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>—</td><td>FR-RWK-01</td></tr>
+<tr><td>Báo đã sửa</td><td>✓ (assignee của yêu cầu)</td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td>Revision mới khác revision gốc</td><td>FR-RWK-02, FR-RWK-03</td></tr>
+<tr><td>Verify sau sửa</td><td></td><td>✓</td><td></td><td></td><td>✓</td><td></td><td></td><td>Khác annotator đã sửa</td><td>FR-RWK-05</td></tr>
+<tr><td>Khoá reference</td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Khác người lập GT</td><td>FR-EVL-04; FR-SEC-04</td></tr>
+<tr><td>Chạy đánh giá KPI</td><td></td><td></td><td>✓</td><td></td><td>✓</td><td>✓ (UC-10)</td><td></td><td>—</td><td>UC-09, UC-10</td></tr>
+<tr><td>Đề nghị / duyệt waiver</td><td></td><td>đề nghị</td><td>đề nghị / duyệt</td><td></td><td></td><td></td><td></td><td>Người duyệt khác người đề nghị</td><td>FR-GTE-03; FR-SEC-04</td></tr>
+<tr><td>Xem báo cáo hiệu quả</td><td>giới hạn</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>tab:rbac; UC-11</td></tr>
+<tr><td>Khoá artifact Detector</td><td></td><td></td><td></td><td></td><td></td><td></td><td>✓</td><td>—</td><td>SRS ch.6 sau tab:rbac</td></tr>
+<tr><td>Cấu hình engine, quyền</td><td></td><td></td><td>giới hạn</td><td>✓</td><td>✓</td><td></td><td></td><td>Config đã publish không sửa được</td><td>tab:rbac; FR-ENG-01</td></tr>
+</tbody>
+</table>
+
+<h2 id="invariants">4. Bất biến áp cho mọi action</h2>
+<ul>
+<li>Thiếu identity mapping: từ chối mọi thao tác review, phân xử, verify với <code>403 IDENTITY_MAPPING_MISSING</code> (fail closed, FR-SEC-02).</li>
+<li>Self-review theo assignee tại snapshot: <code>403 SELF_REVIEW_FORBIDDEN</code> (FR-SEC-03), kể cả Super Admin ghi đè (FR-SEC-06).</li>
+<li>Tách nhiệm vụ: người duyệt khác người yêu cầu, không dùng tài khoản khác của cùng người: <code>403 SAME_REQUESTER_APPROVER</code> (FR-SEC-04).</li>
+<li>Product Owner và Data/Model Owner không thao tác review và không là reviewer trong thí nghiệm mình thiết kế.</li>
+<li>Worker Detector không gọi được API ghi quyết định (rest-api.html §6).</li>
+</ul>
+</article></main></body></html>

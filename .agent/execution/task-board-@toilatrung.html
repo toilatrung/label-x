@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>API Documentation — LabelX</title>
-<meta name="labelx:id" content="api-overview">
-<meta name="labelx:title" content="API Documentation">
-<meta name="labelx:type" content="reference">
-<meta name="labelx:domain" content="api">
-<meta name="labelx:module" content="repository">
-<meta name="labelx:tags" content="[api, contracts, events]">
-<meta name="labelx:priority" content="3">
+<title>Task Board — @toilatrung — LabelX</title>
+<meta name="labelx:id" content="task-board-toilatrung">
+<meta name="labelx:title" content="Task Board — @toilatrung">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-001]">
+<meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -42,21 +42,46 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / index</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board-@toilatrung</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>api-overview</span><b>title</b><span>API Documentation</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>repository</span><b>tags</b><span>[api, contracts, events]</span><b>priority</b><span>3</span></div>
-<h1 id="api-documentation">API Documentation</h1>
+<div class="meta"><b>id</b><span>task-board-toilatrung</span><b>title</b><span>Task Board — @toilatrung</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-001]</span><b>priority</b><span>2</span></div>
+<h1 id="task-board-toilatrung">Task Board — @toilatrung</h1>
 <h2 id="purpose">Purpose</h2>
-<p>Mục lục hợp đồng giao diện có thẩm quyền của LabelX QC: endpoint, schema, mã lỗi và Celery task.</p>
-<h2 id="contents">Contents</h2>
+<p>File riêng của Trịnh Quang Trung (@toilatrung) theo CR-100: cập nhật trạng thái task của mình. Integrator gộp vào <code>.agent/execution/task-board.html</code>.</p>
 <ul>
-<li><a href="contract.html">contract.html</a> — intake: nguồn, kết quả kiểm tra, các mục còn mở</li>
-<li><a href="openapi.yaml">openapi.yaml</a> — contract M13 v1 (T-001): OpenAPI 3.0.3 cho auth, dataset, snapshot, QC Run, guideline, hàng đợi/lease/frame; nguồn sinh type frontend</li>
-<li><a href="state-machines.html">state-machines.html</a> — bảng transition Snapshot, QC Run, Issue, frame (có trạng thái "đang dở")</li>
-<li><a href="rbac-matrix.html">rbac-matrix.html</a> — ma trận actor/action/scope</li>
-<li><a href="rest-api.html">rest-api.html</a> — REST API (DRF): endpoint, quyền, request/response, mã lỗi, idempotency</li>
-<li><a href="event-contracts.html">event-contracts.html</a> — Celery task: tên, payload, khoá idempotent, retry; ghi chú về domain event</li>
-<li><code>graphql.html</code> — <strong>không dùng</strong>. Hệ thống chỉ có REST (SRS §9.3; DEC-001)</li>
+<li><strong>Base Commit</strong>: <code>28be098</code></li>
 </ul>
-<p>Contract có thẩm quyền là <code>openapi.yaml</code>: đổi tệp này trước rồi mới đổi code. Khi backend có view, schema drf-spectacular tại <code>/api/schema/</code> phải khớp tệp này. Frontend sinh type từ tệp bằng <code>npm run gen:api:contract</code>, hoặc từ backend đang chạy bằng <code>npm run gen:api</code> (DEC-001). Test <code>src/backend/tests/test_contract.py</code> kiểm tệp hợp lệ OpenAPI 3.0 và mỗi operation có trích FR/BR/UC và vai trò.</p>
+<h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+</ul>
+<h2 id="task-records">Task Records</h2>
+<table>
+<thead>
+<tr>
+<th>Task ID</th>
+<th>Epic ID</th>
+<th>Title</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Dependencies</th>
+<th>Blocker IDs</th>
+<th>Evidence Links</th>
+<th>Updated Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-001</td>
+<td>E-01</td>
+<td>Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>review</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-001-@toilatrung.html">.agent/reports/implementation/T-001-@toilatrung.html</a></td>
+<td>2026-10-07</td>
+</tr>
+</tbody>
+</table>
 </article></main></body></html>

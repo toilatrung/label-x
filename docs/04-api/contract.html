@@ -94,6 +94,7 @@ ul.dir{columns:2;font-size:14px}
 </table>
 <h2 id="validation-result">Validation Result</h2>
 <ul>
+<li>T-001 (2026-10-07): contract máy đọc được <a href="openapi.yaml">openapi.yaml</a> cho auth/phiên, dataset, snapshot, QC Run, guideline rule, hàng đợi/lease/frame; bảng transition <a href="state-machines.html">state-machines.html</a> (thêm trạng thái frame "đang dở", BLOCKER-008); ma trận quyền <a href="rbac-matrix.html">rbac-matrix.html</a>; ADR DEC-005 (lineage), DEC-006 (neo). Các endpoint quyết định, phân xử, rework, reference, evaluation, gate, waiver, report chưa có trong openapi.yaml.</li>
 <li>Toàn bộ 28 endpoint trong <code>tab:api</code> của SRS đã được đưa vào <a href="rest-api.html">rest-api.html</a>, kèm quyền, idempotency và mã lỗi 400/403/404/409/422.</li>
 <li>Endpoint của A chỉ được nhận khi khớp một FR của SRS. Các endpoint release, assistant, calibration session và SSE bị loại (B-13, FR-GTE-04).</li>
 <li>Mâu thuẫn đã xử lý:</li>
