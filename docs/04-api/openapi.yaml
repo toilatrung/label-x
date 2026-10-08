@@ -34,6 +34,14 @@ tags:
     description: Tra rule guideline tĩnh (module GDL, CR-101)
   - name: review
     description: Hàng đợi, lease, frame (UC-04, UC-05, module REV)
+  - name: rework
+    description: Yêu cầu sửa và xác minh trên revision mới (UC-07)
+  - name: evaluation
+    description: Reference, effort và đánh giá KPI (UC-08, UC-09, UC-10)
+  - name: gate
+    description: Điều kiện gate và waiver (UC-14)
+  - name: reports
+    description: Báo cáo hiệu quả có provenance (UC-11)
 
 paths:
   # ------------------------------------------------------------------ auth
@@ -496,6 +504,384 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /api/issues/:
+    post:
+      operationId: issues_create
+      tags: [review]
+      summary: Tạo issue thủ công trên frame đang giữ lease
+      description: Neo manual_object hoặc manual_region; server gán origin=reviewer. Ghi audit cùng transaction.
+      x-labelx-trace: [UC-05, FR-REV-09, FR-REV-10]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      x-labelx-transition: issue.create_manual
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ManualIssueCreate" }
+      responses:
+        "201":
+          description: Issue vừa tạo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/issues/{id}/decisions/:
+    post:
+      operationId: issues_decide
+      tags: [review]
+      summary: Lưu quyết định reviewer cho issue
+      description: |
+        Lease còn hạn và đúng người giữ; kiểm lại assignee tại snapshot để chặn self-review.
+        confirm yêu cầu family và severity; reject/uncertain/escalate yêu cầu reason.
+        Super Admin ghi đè cần override_reason và vẫn chịu kiểm self-review.
+      x-labelx-trace: [UC-05, FR-REV-08, FR-REV-10, FR-REV-14, FR-SEC-06]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/IssueDecisionCreate" }
+      responses:
+        "201":
+          description: Quyết định đã lưu và audit
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IssueDecision" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/issues/{id}/adjudications/:
+    post:
+      operationId: issues_adjudicate
+      tags: [review]
+      summary: Phân xử issue đã chuyển cấp
+      description: |
+        Chỉ từ escalated; người phân xử khác người chuyển cấp, kể cả qua tài khoản khác cùng người.
+        Guideline Gap giữ issue ở escalated đến guideline version mới; lưu Decision Case có version.
+      x-labelx-trace: [UC-06, FR-ESC-02, FR-ESC-03, FR-ESC-04, FR-ESC-05, FR-SEC-04]
+      x-labelx-roles: [qa_lead, super_admin]
+      x-labelx-transition: issue.adjudicate
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdjudicationCreate" }
+      responses:
+        "201":
+          description: Phân xử và Decision Case
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Adjudication" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /api/rework/:
+    post:
+      operationId: rework_create
+      tags: [rework]
+      summary: Tạo yêu cầu sửa cho issue confirmed
+      x-labelx-trace: [UC-07, FR-RWK-01]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      x-labelx-transition: issue.request_fix
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReworkCreate" }
+      responses:
+        "201":
+          description: Yêu cầu sửa mới
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReworkRequest" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/rework/{id}/submitted/:
+    post:
+      operationId: rework_submitted
+      tags: [rework]
+      summary: Annotator báo đã sửa trên CVAT
+      description: Chỉ assignee được báo đã sửa; revision mới phải khác revision gốc, sau đó tạo snapshot job mới.
+      x-labelx-trace: [UC-07, FR-RWK-02, FR-RWK-03]
+      x-labelx-roles: [annotator, super_admin]
+      x-labelx-transition: issue.fix_submitted
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReworkSubmission" }
+      responses:
+        "202":
+          description: Đã nhận revision mới và yêu cầu snapshot/re-check
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReworkRequest" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/rework/{id}/verify/:
+    post:
+      operationId: rework_verify
+      tags: [rework]
+      summary: Verify sửa lỗi trên revision mới
+      description: Người verify khác annotator đã sửa; chỉ verify sau re-check trên revision mới.
+      x-labelx-trace: [UC-07, FR-RWK-04, FR-RWK-05, FR-SEC-04]
+      x-labelx-roles: [reviewer, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReworkVerification" }
+      responses:
+        "200":
+          description: Trạng thái issue sau verify
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReworkRequest" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /api/references/:
+    post:
+      operationId: references_create
+      tags: [evaluation]
+      summary: Tạo phiên reference và nhập GT
+      description: Pilot nhập một GT BDD100K với checksum; hai GT độc lập dành cho giai đoạn sau (CR-101).
+      x-labelx-trace: [UC-08, FR-EVL-01, FR-EVL-03]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReferenceCreate" }
+      responses:
+        "201":
+          description: Phiên reference
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Reference" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/references/{id}/lock/:
+    post:
+      operationId: references_lock
+      tags: [evaluation]
+      summary: Khoá reference và provenance
+      description: Người khoá khác người lập GT; chỉ khoá sau khi bất đồng đã phân xử.
+      x-labelx-trace: [UC-08, FR-EVL-04, FR-SEC-04]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Reference đã khoá
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Reference" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/effort-events/:
+    post:
+      operationId: effort_events_create
+      tags: [evaluation]
+      summary: Ghi batch effort event từ client
+      description: client_event_id chống ghi trùng; khoảng idle quá t_idle không tính vào effort.
+      x-labelx-trace: [UC-05, FR-EVL-06]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EffortEventBatch" }
+      responses:
+        "202":
+          description: Số event được ghi mới
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EffortEventReceipt" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/evaluations/:
+    post:
+      operationId: evaluations_create
+      tags: [evaluation]
+      summary: Chạy đánh giá KPI trên reference đã khoá
+      description: Chặn leakage held-out và không tính KPI khi mẫu dưới E_min.
+      x-labelx-trace: [UC-09, UC-10, FR-EVL-05, FR-EVL-07, FR-EVL-10, FR-EVL-13, FR-EVL-14]
+      x-labelx-roles: [qa_lead, super_admin, product_owner]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EvaluationCreate" }
+      responses:
+        "202":
+          description: Evaluation đã nhận xử lý
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Evaluation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/evaluations/{id}/:
+    get:
+      operationId: evaluations_retrieve
+      tags: [evaluation]
+      summary: Kết quả KPI và provenance
+      x-labelx-trace: [UC-09, UC-10, FR-EVL-08, FR-EVL-09, FR-EVL-13, FR-EVL-14]
+      x-labelx-roles: [qa_lead, super_admin, product_owner]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Kết quả đánh giá
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Evaluation" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/runs/{id}/gate/:
+    get:
+      operationId: runs_gate
+      tags: [gate]
+      summary: Kết quả từng điều kiện gate
+      description: Thiếu dữ liệu hoặc run cuối chưa Completed là chưa đạt; waiver chỉ hiệu lực sau duyệt và trước hạn.
+      x-labelx-trace: [UC-14, FR-GTE-01, FR-GTE-02, FR-GTE-03, FR-RWK-08]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin, product_owner]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Gate theo run cuối đủ điều kiện hoặc run gốc kèm lý do
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GateResult" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/waivers/:
+    post:
+      operationId: waivers_create
+      tags: [gate]
+      summary: Đề nghị waiver một điều kiện gate
+      description: Chỉ coverage và agreement được waiver trong pilot; phải có lý do, evidence và hạn hiệu lực.
+      x-labelx-trace: [UC-14, FR-GTE-03, FR-SEC-04]
+      x-labelx-roles: [reviewer, qa_lead]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WaiverCreate" }
+      responses:
+        "201":
+          description: Waiver đang chờ duyệt
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Waiver" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/waivers/{id}/approve/:
+    post:
+      operationId: waivers_approve
+      tags: [gate]
+      summary: Duyệt hoặc từ chối waiver
+      description: Người duyệt khác người đề nghị, kể cả qua tài khoản khác cùng người.
+      x-labelx-trace: [UC-14, FR-GTE-03, FR-SEC-04]
+      x-labelx-roles: [qa_lead]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WaiverDecision" }
+      responses:
+        "200":
+          description: Waiver đã được quyết định
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Waiver" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /api/reports/{id}/:
+    get:
+      operationId: reports_retrieve
+      tags: [reports]
+      summary: Xuất báo cáo hiệu quả theo format
+      description: KPI dùng input snapshot/reference; vận hành và gate dùng run cuối đủ điều kiện, nếu chưa thì run gốc kèm lý do.
+      x-labelx-trace: [UC-11, FR-RPT-01, FR-RPT-02, FR-RPT-03, FR-RPT-04, FR-RPT-05, FR-RPT-06]
+      x-labelx-roles: [annotator, reviewer, qa_lead, qc_admin, super_admin, product_owner, data_model_owner]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: format
+          in: query
+          required: false
+          schema: { type: string, enum: [pdf, csv, json], default: json }
+      responses:
+        "200":
+          description: JSON báo cáo; pdf/csv trả file với Content-Type tương ứng
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EffectivenessReport" }
+            application/pdf:
+              schema: { type: string, format: binary }
+            text/csv:
+              schema: { type: string, format: binary }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
 components:
   securitySchemes:
@@ -1299,6 +1685,279 @@ components:
       required: [lease_id]
       properties:
         lease_id: { type: integer }
+
+    # -------------------------------------------- quyết định, phân xử, rework
+    ManualIssueCreate:
+      type: object
+      required: [frame_id, lease_id, family, anchor]
+      properties:
+        frame_id: { type: integer }
+        lease_id: { type: integer }
+        family: { $ref: "#/components/schemas/IssueFamily" }
+        anchor: { $ref: "#/components/schemas/Anchor" }
+        description: { type: string }
+      description: anchor.kind chỉ nhận manual_object hoặc manual_region; kiểm lease và self-review.
+    IssueDecisionAction:
+      type: string
+      enum: [confirm, reject, uncertain, escalate, request_fix]
+    IssueDecisionCreate:
+      type: object
+      required: [lease_id, action, revision]
+      properties:
+        lease_id: { type: integer }
+        action: { $ref: "#/components/schemas/IssueDecisionAction" }
+        revision: { type: string, description: Revision snapshot đang review }
+        family: { $ref: "#/components/schemas/IssueFamily" }
+        severity: { $ref: "#/components/schemas/Severity" }
+        reason: { type: string }
+        rule_id: { type: string }
+        override_reason: { type: string }
+      description: |
+        confirm bắt buộc family và severity. reject/uncertain/escalate bắt buộc reason.
+        request_fix chỉ sau confirmed; chi tiết yêu cầu sửa gửi tới /api/rework/.
+        override_reason bắt buộc nếu Super Admin dùng quyền ghi đè.
+    IssueDecision:
+      type: object
+      required: [id, issue_id, action, actor_user_id, revision, created_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        action: { $ref: "#/components/schemas/IssueDecisionAction" }
+        actor_user_id: { type: integer }
+        revision: { type: string }
+        family: { $ref: "#/components/schemas/IssueFamily" }
+        severity: { $ref: "#/components/schemas/Severity" }
+        reason: { type: string, nullable: true }
+        rule_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        audit_event_id: { type: integer }
+    AdjudicationCreate:
+      type: object
+      required: [outcome, rule_id, reason]
+      properties:
+        outcome: { type: string, enum: [confirm, reject, guideline_gap] }
+        rule_id: { type: string }
+        correct_label: { type: string, nullable: true }
+        reason: { type: string, minLength: 1 }
+        override_reason: { type: string }
+    Adjudication:
+      type: object
+      required: [id, issue_id, outcome, actor_user_id, rule_id, reason, case_version, created_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        outcome: { type: string, enum: [confirm, reject, guideline_gap] }
+        actor_user_id: { type: integer }
+        rule_id: { type: string }
+        correct_label: { type: string, nullable: true }
+        reason: { type: string }
+        case_version: { type: string }
+        created_at: { type: string, format: date-time }
+    ReworkCreate:
+      type: object
+      required: [issue_id, instruction, annotator_user_id, due_at, severity, cvat_deep_link]
+      properties:
+        issue_id: { type: integer }
+        instruction: { type: string, minLength: 1 }
+        annotator_user_id: { type: integer }
+        due_at: { type: string, format: date-time }
+        severity: { $ref: "#/components/schemas/Severity" }
+        cvat_deep_link: { type: string, format: uri }
+    ReworkSubmission:
+      type: object
+      required: [cvat_revision]
+      properties:
+        cvat_revision: { type: string, minLength: 1 }
+    ReworkVerification:
+      type: object
+      required: [passed, revision]
+      properties:
+        passed: { type: boolean }
+        revision: { type: string }
+        reason: { type: string, description: Bắt buộc khi passed=false }
+        override_reason: { type: string }
+    ReworkRequest:
+      type: object
+      required: [id, issue_id, annotator_user_id, status, original_revision, due_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        annotator_user_id: { type: integer }
+        status: { type: string, enum: [fix_pending, recheck_pending, resolved, reopened] }
+        original_revision: { type: string }
+        submitted_revision: { type: string, nullable: true }
+        recheck_run_id: { type: integer, nullable: true }
+        due_at: { type: string, format: date-time }
+        cvat_deep_link: { type: string, format: uri }
+
+    # ----------------------------------------------- reference và evaluation
+    ReferenceCreate:
+      type: object
+      required: [snapshot_id, gt_source, gt_checksum, mapping_version]
+      properties:
+        snapshot_id: { type: integer }
+        gt_source: { type: string, description: Pilot dùng tệp nhãn gốc BDD100K }
+        gt_checksum: { type: string, description: SHA-256 của GT đầu vào }
+        mapping_version: { type: string }
+        matching_threshold: { type: number, minimum: 0, maximum: 1 }
+        minimum_area: { type: number, minimum: 0 }
+        algorithm_version: { type: string }
+    Reference:
+      type: object
+      required: [id, snapshot_id, gt_checksum, mapping_version, status, created_by]
+      properties:
+        id: { type: integer }
+        snapshot_id: { type: integer }
+        gt_checksum: { type: string }
+        mapping_version: { type: string }
+        matching_threshold: { type: number }
+        minimum_area: { type: number }
+        algorithm_version: { type: string }
+        status: { type: string, enum: [draft, locked] }
+        created_by: { type: integer }
+        locked_by: { type: integer, nullable: true }
+        locked_at: { type: string, format: date-time, nullable: true }
+    EffortEventBatch:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/EffortEvent" }
+    EffortEvent:
+      type: object
+      required: [client_event_id, frame_id, activity, started_at, ended_at]
+      properties:
+        client_event_id: { type: string, format: uuid }
+        frame_id: { type: integer }
+        activity: { type: string, enum: [view_frame, review_issue, adjudicate, recheck_verify] }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+    EffortEventReceipt:
+      type: object
+      required: [accepted, duplicates]
+      properties:
+        accepted: { type: integer, minimum: 0 }
+        duplicates: { type: integer, minimum: 0 }
+    EvaluationCreate:
+      type: object
+      required: [snapshot_id, run_id, reference_id, score_version, parameters]
+      properties:
+        snapshot_id: { type: integer }
+        run_id: { type: integer }
+        reference_id: { type: integer }
+        score_version: { type: string }
+        experiment_id: { type: integer, nullable: true }
+        parameters: { type: object, additionalProperties: true }
+    Evaluation:
+      type: object
+      required: [id, status, snapshot_id, run_id, reference_id, score_version, parameters, created_by, created_at]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [queued, running, completed, failed, insufficient_sample] }
+        snapshot_id: { type: integer }
+        run_id: { type: integer }
+        reference_id: { type: integer }
+        score_version: { type: string }
+        experiment_id: { type: integer, nullable: true }
+        parameters: { type: object, additionalProperties: true }
+        metrics:
+          type: object
+          nullable: true
+          additionalProperties: { $ref: "#/components/schemas/MetricValue" }
+          description: KPI-1, KPI-2, KPI-2b, G-1…G-4; thiếu mẫu dùng status=not_checked.
+        leakage_check: { type: string, enum: [passed, failed, not_checked] }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+    MetricValue:
+      type: object
+      required: [status, sample_size, denominator, method]
+      properties:
+        status: { type: string, enum: [computed, not_checked, insufficient_sample] }
+        value: { type: number, nullable: true }
+        sample_size: { type: integer, minimum: 0 }
+        denominator: { type: integer, minimum: 0 }
+        method: { type: string }
+        confidence_interval:
+          type: array
+          nullable: true
+          minItems: 2
+          maxItems: 2
+          items: { type: number }
+
+    # ------------------------------------------------------------ gate/report
+    GateConditionName:
+      type: string
+      enum: [coverage, open_critical_issues, rework_verified, residual, agreement]
+    GateCondition:
+      type: object
+      required: [name, status, observed, threshold]
+      properties:
+        name: { $ref: "#/components/schemas/GateConditionName" }
+        status: { type: string, enum: [passed, failed, not_checked, waived] }
+        observed: { type: number, nullable: true }
+        threshold: { type: number }
+        waiver_id: { type: integer, nullable: true }
+        reason: { type: string, nullable: true }
+    GateResult:
+      type: object
+      required: [run_id, source_run_id, source_reason, status, conditions]
+      properties:
+        run_id: { type: integer }
+        source_run_id: { type: integer }
+        source_reason: { type: string, description: Lý do dùng run gốc nếu run cuối chưa đủ điều kiện }
+        status: { type: string, enum: [passed, failed, not_checked] }
+        conditions:
+          type: array
+          items: { $ref: "#/components/schemas/GateCondition" }
+    WaiverCreate:
+      type: object
+      required: [run_id, condition, reason, evidence, expires_at]
+      properties:
+        run_id: { type: integer }
+        condition: { $ref: "#/components/schemas/GateConditionName" }
+        reason: { type: string, minLength: 1 }
+        evidence: { type: string, minLength: 1 }
+        expires_at: { type: string, format: date-time }
+      description: condition chỉ coverage hoặc agreement; các điều kiện khác không được waiver.
+    WaiverDecision:
+      type: object
+      required: [approved, reason]
+      properties:
+        approved: { type: boolean }
+        reason: { type: string, minLength: 1 }
+    Waiver:
+      type: object
+      required: [id, run_id, condition, reason, evidence, expires_at, requested_by, status]
+      properties:
+        id: { type: integer }
+        run_id: { type: integer }
+        condition: { $ref: "#/components/schemas/GateConditionName" }
+        reason: { type: string }
+        evidence: { type: string }
+        expires_at: { type: string, format: date-time }
+        requested_by: { type: integer }
+        approved_by: { type: integer, nullable: true }
+        status: { type: string, enum: [pending, approved, rejected, expired] }
+    EffectivenessReport:
+      type: object
+      required: [id, input_snapshot_id, reference_id, source_run_id, source_reason, metrics, risk_queue, random_queue, engine_coverage]
+      properties:
+        id: { type: integer }
+        input_snapshot_id: { type: integer }
+        reference_id: { type: integer }
+        source_run_id: { type: integer }
+        source_reason: { type: string }
+        score_version: { type: string }
+        metrics:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/MetricValue" }
+        risk_queue: { type: object, additionalProperties: true }
+        random_queue: { type: object, additionalProperties: true }
+        engine_coverage:
+          type: array
+          items: { $ref: "#/components/schemas/LedgerEntry" }
 
     # ------------------------------------------------------------ phân trang
     PaginatedDatasetList:
