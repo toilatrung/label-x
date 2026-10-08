@@ -572,10 +572,13 @@ export interface components {
         };
         /**
          * @description Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
-         *     total = completed + failed + pending + not_checked;
-         *     eligible = total − not_checked_reasons.not_applicable − not_checked_reasons.not_triggered;
-         *     đơn vị failed và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
+         *     total = completed + failed + pending + not_checked = eligible + excluded;
+         *     excluded = not_checked_reasons.not_applicable + not_checked_reasons.not_triggered
+         *     (đơn vị ngoài phạm vi áp dụng theo applicability_version; B-04 "mẫu số áp dụng", DEC-010);
+         *     đơn vị failed, pending và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
          *     (không loại đơn vị lỗi khỏi mẫu số); coverage = completed / eligible, null khi eligible = 0.
+         *     Khi excluded > 0, mọi nơi hiển thị coverage hoặc trạng thái engine phải hiện cảnh báo kèm số
+         *     đơn vị bị loại theo lý do và applicability_version (engine-interface.html §4).
          */
         LedgerEntry: {
             engine: components["schemas"]["EngineName"];
@@ -587,6 +590,10 @@ export interface components {
             total: number;
             /** @description Mẫu số coverage; gồm cả đơn vị failed, pending và not_checked chặn (disabled, no_model, no_reference) */
             eligible: number;
+            /** @description Đơn vị ngoài phạm vi áp dụng (not_applicable + not_triggered), không vào mẫu số; > 0 thì phải hiện cảnh báo */
+            excluded: number;
+            /** @description Version quy tắc áp dụng đã dùng để loại đơn vị (EngineDescriptor.applicability_version) */
+            applicability_version: string;
             completed: number;
             /** @description Đơn vị lỗi thực thi sau retry; vẫn trong mẫu số */
             failed: number;
@@ -607,14 +614,15 @@ export interface components {
         EngineUnitKind: "frame" | "shape";
         /**
          * @description Trạng thái nội bộ của một đơn vị (không hiển thị). Map sang EngineStatus của đơn vị theo
-         *     x-labelx-public-status; trạng thái engine tổng hợp theo engine-interface.html §3.
+         *     x-labelx-public-status, trùng kết quả tính từ ledger một đơn vị; trạng thái engine tổng hợp
+         *     luôn tính từ LedgerEntry (engine-interface.html §3).
          * @enum {string}
          */
         EngineUnitOutcome: "pending" | "running" | "retrying" | "completed" | "failed" | "not_checked";
         /**
-         * @description Trạng thái nội bộ của một engine trong run (orchestrator, không hiển thị). Map sang
-         *     EngineStatus theo x-labelx-public-status; chỉ `succeeded` (mọi đơn vị eligible completed)
-         *     thành `checked` (FR-AGG-05, B-19).
+         * @description Trạng thái điều phối của engine trong run (orchestrator, không hiển thị). Không map trực
+         *     tiếp sang EngineStatus: trạng thái hiển thị luôn tính từ LedgerEntry
+         *     (engine-interface.html §3); x-labelx-terminal là các giá trị mà engine đã dừng.
          * @enum {string}
          */
         EngineInternalState: "queued" | "running" | "retrying" | "succeeded" | "partially_succeeded" | "failed" | "cancelled" | "disabled" | "model_unavailable" | "reference_unavailable" | "not_applicable";
