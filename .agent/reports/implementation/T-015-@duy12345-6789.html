@@ -45,7 +45,7 @@
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
 <li><strong>Change Requests</strong>: <code>CR-100, CR-102, CR-103, CR-104</code></li>
 <li><strong>Risks or Blockers</strong>: <code>none</code></li>
-<li><strong>Review Request</strong>: <code>pending PR to develop; independent reviewer @toilatrung or @DucHa180104</code></li>
+<li><strong>Review Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/49">PR #49 vào develop</a>; đã request <code>@toilatrung</code> và <code>@DucHa180104</code>; chờ comment <code>Đã xem và duyệt</code></li>
 <li><strong>Commits</strong>: <code>9005250</code></li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
@@ -57,6 +57,7 @@
 <tr><td><code>uv run --frozen --extra dev ruff check/format; pytest</code> trong Python 3.10 container</td><td><code>passed</code></td><td>Detector Ruff/format pass; 10 tests passed.</td></tr>
 <tr><td><code>uv run --no-project --python 3.12 python scripts/validate-framework.py</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
 <tr><td><code>make check</code> wrapper</td><td><code>passed by constituent commands</code></td><td>Windows không có make và Ubuntu/WSL trả lỗi dịch vụ <code>Wsl/Service/0x8007274c</code>; toàn bộ lệnh của target được chạy trực tiếp: backend, frontend, detector và validate-kit đều pass.</td></tr>
+<tr><td>GitHub Actions PR #49</td><td><code>passed</code></td><td>Cả 5 job <code>backend</code>, <code>frontend</code>, <code>detector</code>, <code>framework</code>, <code>bootstrap-windows</code> đều success.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
