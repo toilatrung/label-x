@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol, cast
@@ -21,7 +20,6 @@ from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
-_EXTENSION = re.compile(r"^[a-z0-9][a-z0-9._-]{0,31}$")
 _NOT_FOUND_CODES = {"404", "NoSuchKey", "NotFound"}
 
 
@@ -70,16 +68,14 @@ class ObjectHead:
 
 
 def content_key(content: bytes, extension: str | None = None) -> tuple[str, str]:
-    """Return ``(key, digest)`` using the documented SHA-256 key layout."""
+    """Return ``(key, digest)`` using the canonical SHA-256 key layout.
+
+    ``extension`` remains accepted for caller compatibility, but it does not
+    participate in the key: identical bytes must always resolve to one object.
+    """
 
     digest = hashlib.sha256(content).hexdigest()
-    suffix = ""
-    if extension:
-        normalized = extension.removeprefix(".").lower()
-        if not _EXTENSION.fullmatch(normalized):
-            raise ValueError("extension must contain only safe lowercase filename characters")
-        suffix = f".{normalized}"
-    return f"sha256/{digest[:2]}/{digest}{suffix}", digest
+    return f"sha256/{digest[:2]}/{digest}", digest
 
 
 def _is_not_found(error: ClientError) -> bool:

@@ -57,7 +57,14 @@ class FakeS3:
 def test_content_key_uses_documented_sha256_layout() -> None:
     key, digest = content_key(b"test", ".JPG")
     assert digest == "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
-    assert key == f"sha256/9f/{digest}.jpg"
+    assert key == f"sha256/9f/{digest}"
+
+
+def test_content_key_is_independent_of_caller_extension() -> None:
+    jpg_key, _ = content_key(b"same image bytes", "jpg")
+    jpeg_key, _ = content_key(b"same image bytes", "jpeg")
+
+    assert jpg_key == jpeg_key
 
 
 def test_put_same_content_twice_is_a_noop_and_get_round_trips() -> None:
@@ -73,6 +80,20 @@ def test_put_same_content_twice_is_a_noop_and_get_round_trips() -> None:
     assert backend.put_calls == 1
     assert len(backend.objects) == 1
     assert storage.get(first.key) == b"same content"
+
+
+def test_put_same_content_with_different_extensions_uses_one_object() -> None:
+    backend = FakeS3()
+    storage = ObjectStorage(backend, "labelx-evidence")
+
+    first = storage.put(b"same image bytes", extension="jpg", content_type="image/jpeg")
+    second = storage.put(b"same image bytes", extension="jpeg", content_type="image/jpeg")
+
+    assert first.key == second.key
+    assert first.created is True
+    assert second.created is False
+    assert backend.put_calls == 1
+    assert len(backend.objects) == 1
 
 
 def test_upload_failure_does_not_call_metadata_commit(monkeypatch: pytest.MonkeyPatch) -> None:
