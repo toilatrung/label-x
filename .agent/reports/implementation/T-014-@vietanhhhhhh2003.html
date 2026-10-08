@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Implementation Report T-014: lớp Object Storage content-addressed — LabelX</title>
-<meta name="labelx:id" content="implementation-t-014">
+<meta name="labelx:id" content="implementation-t-014-vietanhhhhhh2003">
 <meta name="labelx:title" content="Implementation Report T-014: lớp Object Storage content-addressed">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="execution">
 <meta name="labelx:module" content="implementation"><meta name="labelx:tags" content="[implementation, t-014, e-02, storage, s3]">
@@ -10,14 +10,14 @@
 :root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--border:#e3e6ea;--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
 *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}.top{height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}main{max-width:1100px;margin:24px auto;padding:0 24px 64px}article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}.meta b{color:var(--muted)}h1{font-size:24px}h2{font-size:19px;margin-top:28px;border-bottom:1px solid var(--border)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle)}th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
 </style></head><body>
-<header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-014</span></header>
+<header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-014-@vietanhhhhhh2003</span></header>
 <main><article>
-<div class="meta"><b>id</b><span>implementation-t-014</span><b>title</b><span>Implementation Report T-014: lớp Object Storage content-addressed</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, t-014, e-02, storage, s3]</span><b>priority</b><span>2</span></div>
+<div class="meta"><b>id</b><span>implementation-t-014-vietanhhhhhh2003</span><b>title</b><span>Implementation Report T-014: lớp Object Storage content-addressed</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, t-014, e-02, storage, s3, per-user]</span><b>priority</b><span>2</span></div>
 <h1 id="t-014">Implementation Report T-014: lớp Object Storage content-addressed</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Ghi kết quả triển khai T-014 (E-02, issue #37): lớp truy cập Object Storage S3-compatible dùng chung, upload blob theo SHA-256 trước khi commit metadata.</p>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-014</code></li><li><strong>Title</strong>: <code>Implementation Report T-014: lớp Object Storage content-addressed</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex cho @toilatrung</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-014</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-014-@vietanhhhhhh2003</code></li><li><strong>Title</strong>: <code>Implementation Report T-014: lớp Object Storage content-addressed</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>@vietanhhhhhh2003 với Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-014</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Base Commit</strong>: <code>bc07d28</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: <code>SHA-256 key, idempotent HEAD-before-PUT, head/get, presigned GET sau callback kiểm quyền, factory lấy credential từ Django settings, helper upload-then-transaction, unit test fake S3 và integration test SeaweedFS</code></li><li><strong>Not Implemented</strong>: <code>GC/retention (BLOCKER-014); model metadata nghiệp vụ cụ thể thuộc các task snapshot/evidence/report</code></li></ul>
 <h2 id="changes-made">Changes Made</h2>
@@ -28,7 +28,7 @@
 <tr><td><code>scripts/init-develop-environment.mk</code></td><td>Thêm module <code>storage</code> vào mypy quality gate.</td><td>T-014</td></tr>
 </tbody></table>
 <h2 id="related-files">Related Files</h2>
-<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-014; GitHub issue #37</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li><li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li><li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.html</code></li><li><strong>Review Request</strong>: <code>chờ independent review trên PR</code></li><li><strong>Commits</strong>: <code>78af2d2</code></li></ul>
+<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board-@vietanhhhhhh2003.html; GitHub issue #37</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@vietanhhhhhh2003.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@vietanhhhhhh2003.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-101, CR-102, CR-103, CR-104</code></li><li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.html</code></li><li><strong>Review Request</strong>: <code>chờ independent review trên PR</code></li><li><strong>Commits</strong>: <code>78af2d2</code></li></ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>uv run --frozen ruff check .; ruff format --check .; mypy config accounts engines guideline cvat_adapter storage</code></td><td><code>passed</code></td><td>Ruff: all checks passed, 63 files formatted; mypy: 48 source files, no issues.</td></tr>
@@ -50,5 +50,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Do not report unperformed work as implemented.</li><li>Do not omit failed or unexecuted required checks.</li><li>Do not claim review approval or move the task to <code>DONE</code>.</li><li>Do not change roadmap or acceptance criteria.</li><li>Do not use this report as a substitute for independent review.</li><li>Do not include secrets or sensitive command output.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Save as <code>.agent/reports/implementation/T-014.html</code>.</li><li>Preserve every heading and table column in this template.</li><li>Set status <code>complete</code> only after implementation completion criteria pass.</li></ul>
+<ul><li>Save as <code>.agent/reports/implementation/T-014-@vietanhhhhhh2003.html</code>.</li><li>Preserve every heading and table column in this template.</li><li>Set status <code>complete</code> only after implementation completion criteria pass.</li></ul>
 </article></main></body></html>
