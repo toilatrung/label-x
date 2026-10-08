@@ -26,7 +26,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <li><strong>Title</strong>: <code>Implementation Report T-009: cập nhật SRS M13 v1.2</code></li>
 <li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
 <li><strong>Executor</strong>: <code>Codex (Phiên 2)</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
 <li><strong>Task ID</strong>: <code>T-009</code></li>
 <li><strong>Epic ID</strong>: <code>E-01</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-08</code></li>
@@ -34,7 +34,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Implemented</strong>: <code>SRS M13 v1.2; frame incomplete transitions; no-rework gate and waiver rules with verification methods; two-source report; DEC-010 coverage exclusions and warnings; synchronized API references and generated HTML.</code></li>
-<li><strong>Not Implemented</strong>: <code>DOCX output: repository has no DOCX generator or build target; source workflow specifies HTML and XeLaTeX via TeXPage. No DOCX artifact was added, consistent with CR-103 HTML documentation policy.</code></li>
+<li><strong>Not Implemented</strong>: <code>PDF/DOCX output is not required; PO confirmed SRS HTML is the only deliverable.</code></li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
@@ -60,7 +60,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <tr><td><code>uv run --no-project --with markdown --with pymdown-extensions python scripts/srs_tex2docs.py</code></td><td><code>passed</code></td><td>Sinh lại requirements, use-cases, domain-model và các trang tham chiếu.</td></tr>
 <tr><td><code>make validate-kit</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
 <tr><td><code>git diff --check</code></td><td><code>passed</code></td><td>Không có lỗi whitespace.</td></tr>
-<tr><td>Kiểm tra DOCX build target/generator trong repository</td><td><code>not-run</code></td><td>Không có DOCX generator/target; workflow hiện có được ghi trong <code>docs/01-business/srs.html</code> và <code>docs/08-devops/ci-cd.html</code>.</td></tr>
+<tr><td>PO xác nhận định dạng deliverable</td><td><code>passed</code></td><td>PO xác nhận chỉ cần SRS HTML, không cần PDF/DOCX.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -71,18 +71,18 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <tr><td>BLOCKER-012 report source split</td><td><code>passed</code></td><td>FR-RPT-06 và mục evaluation gắn KPI với input snapshot/reference, vận hành và gate với run cuối.</td></tr>
 <tr><td>DEC-010 coverage exclusions</td><td><code>passed</code></td><td><code>not_applicable</code>/<code>not_triggered</code> excluded; các lý do chặn giữ trong mẫu số; cảnh báo theo lý do và applicability version.</td></tr>
 <tr><td>Không mâu thuẫn với <code>docs/04-api</code></td><td><code>passed</code></td><td>Đã đồng bộ engine-interface và state-machines với v1.2.</td></tr>
-<tr><td>Acceptance criterion HTML/DOCX</td><td><code>partial</code></td><td>HTML đã sinh lại; DOCX chưa có pipeline trong repo. Cần PO xác nhận cách xử lý tiêu chí DOCX.</td></tr>
+<tr><td>Acceptance criterion SRS HTML</td><td><code>passed</code></td><td>HTML đã sinh lại; PO xác nhận không cần PDF/DOCX output.</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: <code>Không tạo DOCX một lần hoặc thêm pipeline mới vì repo quy định docs HTML (CR-103) và SRS source workflow là XeLaTeX/TeXPage; task criterion đang ghi HTML/DOCX.</code></li>
-<li><strong>Approved By</strong>: <code>PO clarification pending</code></li>
-<li><strong>Known Limitations</strong>: <code>Không có XeLaTeX/pandoc build command trong môi trường/repository; PDF/DOCX không được sinh tại chỗ. Independent review và PO đọc diff còn chờ.</code></li>
+<li><strong>Plan Deviations</strong>: <code>Không có; PO xác nhận SRS HTML là deliverable duy nhất.</code></li>
+<li><strong>Approved By</strong>: <code>Product Owner (user clarification, 2026-10-08)</code></li>
+<li><strong>Known Limitations</strong>: <code>Independent review của Phiên 3 và PO đọc diff vẫn đang chờ.</code></li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Every reported change maps to an authorized task.</li>
-<li>[x] Acceptance criteria results and evidence are linked; DOCX criterion is explicitly unresolved.</li>
+<li>[x] Acceptance criteria results and evidence are linked; PO clarified HTML-only output.</li>
 <li>[x] Deviations and limitations are explicit.</li>
 <li>[x] Build and validation checks are recorded; unavailable artifact generation is marked with rationale.</li>
 <li>[x] Reviewer handoff identifies Phiên 3 as independent Reviewer Agent.</li>
@@ -102,6 +102,6 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <ul>
 <li>Save as <code>.agent/reports/implementation/T-009.html</code>.</li>
 <li>Preserve every heading and table column in the implementation-report template.</li>
-<li>Keep status <code>draft</code> until PO resolves the DOCX criterion and acceptance review is complete.</li>
+<li>Implementation status is <code>complete</code>; task status remains <code>review</code> pending independent review.</li>
 </ul>
 </article></main></body></html>
