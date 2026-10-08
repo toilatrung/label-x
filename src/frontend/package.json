@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "gen:api": "openapi-typescript http://localhost:8000/api/schema/ -o src/lib/api/schema.d.ts",
+    "pretest": "npm run gen:api:contract",
     "test": "vitest run",
     "gen:api:contract": "openapi-typescript ../../docs/04-api/openapi.yaml -o src/lib/api/contract.d.ts"
   },

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import type { MockUserRecord } from '@/lib/auth/mock-users';
 import { ROLE_LABELS } from '@/lib/auth/roles';
 import { apiBaseUrl, isMockAuth } from '@/lib/auth/config';
+import { FALLBACK_ERROR_MESSAGE } from '@/lib/api/errors';
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading, authError } = useAuth();
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
     const result = await login({ username, password });
     if (!result.success) {
-      setError(result.error || 'Đăng nhập không thành công');
+      setError(result.error || FALLBACK_ERROR_MESSAGE);
       setLoading(false);
     }
   };

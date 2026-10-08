@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
     "accounts.apps.AccountsConfig",
+    "audit.apps.AuditConfig",
     "guideline",
 ]
 
@@ -148,6 +149,8 @@ SPECTACULAR_SETTINGS = {
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+# Frontend khác origin cần đọc mã tra cứu cả khi lỗi 5xx trả HTML thay vì Error JSON.
+CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 # Frontend khác origin (dev: :3000 gọi API :8000) gửi POST kèm session cookie phải qua kiểm Origin
 # của CSRF; mặc định tin cùng danh sách với CORS.
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
@@ -175,3 +178,27 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # CVAT adapter — chỉ đọc job/meta/annotation/media bằng service account (B-18).
 CVAT_BASE_URL = env("CVAT_BASE_URL", default="")
 CVAT_SERVICE_TOKEN = env("CVAT_SERVICE_TOKEN", default="")
+
+# JSON request/worker logs with request context and secret redaction.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_context": {"()": "config.logging.RequestContextFilter"},
+        "redact_secrets": {"()": "config.logging.SecretRedactionFilter"},
+    },
+    "formatters": {"json": {"()": "config.logging.JsonFormatter"}},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_context", "redact_secrets"],
+            "formatter": "json",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "labelx": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}

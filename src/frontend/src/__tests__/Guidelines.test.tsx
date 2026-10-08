@@ -4,10 +4,12 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GuidelinesPage from '@/app/configuration/guidelines/page';
 import { AuthProvider } from '@/lib/auth/auth-context';
+import { AUTH_EXPIRED_EVENT } from '@/lib/api/client';
 import { installMockAuthApi } from './helpers/mock-api';
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), usePathname: () => '/configuration/guidelines',
+  useRouter: () => ({ push: vi.fn(), replace }), usePathname: () => '/configuration/guidelines',
 }));
 
 const RULES_PATH = '/api/guidelines/rules/';
@@ -50,7 +52,7 @@ describe('Guidelines page', () => {
     expect(screen.getByTestId('guideline-version').textContent).toBe('—');
   });
 
-  it('shows the API message for a 404 on an unknown version', async () => {
+  it('shows the common NOT_FOUND message for an unknown version', async () => {
     await setup('qcadmin', (url) => url.searchParams.get('version')
       ? json({ code: 'NOT_FOUND', message: "Guideline version 'v9' không tồn tại.", request_id: 'r1' }, 404)
       : json({ next: null, previous: null, results: [rule('VEH-03', 'Nội dung')] }));
@@ -58,9 +60,50 @@ describe('Guidelines page', () => {
     fireEvent.change(screen.getByLabelText('Guideline version'), { target: { value: 'v9' } });
     fireEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     const alert = await screen.findByRole('alert');
-    expect(within(alert).getByText('Không tìm thấy guideline')).toBeDefined();
-    expect(within(alert).getByText("Guideline version 'v9' không tồn tại.")).toBeDefined();
+    expect(within(alert).getByText('Không tải được guideline')).toBeDefined();
+    expect(within(alert).getByText('Không tìm thấy tài nguyên yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')).toBeDefined();
+    expect(screen.queryByText("Guideline version 'v9' không tồn tại.")).toBeNull();
     expect(screen.queryByText('VEH-03')).toBeNull();
+  });
+
+  it.each([
+    { status: 400, code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.' },
+    { status: 403, code: 'OUT_OF_SCOPE', message: 'Dataset nằm ngoài phạm vi được cấp quyền của bạn.' },
+    { status: 418, code: 'NEW_BACKEND_CODE', message: 'Không thể xử lý yêu cầu. Vui lòng thử lại.' },
+  ])('maps guideline $status $code while keeping the authenticated page', async ({ status, code, message }) => {
+    const expired = vi.fn();
+    window.addEventListener(AUTH_EXPIRED_EVENT, expired);
+    try {
+      await setup('reviewer', () => json({ code, message: 'Sensitive backend diagnostic', request_id: 'guideline-client-error' }, status));
+      const alert = await screen.findByRole('alert');
+      expect(within(alert).getByText(message)).toBeDefined();
+      expect(screen.queryByText('Sensitive backend diagnostic')).toBeNull();
+      expect(screen.getByRole('heading', { name: 'Models và Guidelines' })).toBeDefined();
+      expect(replace).not.toHaveBeenCalled();
+      expect(expired).not.toHaveBeenCalled();
+    } finally { window.removeEventListener(AUTH_EXPIRED_EVENT, expired); }
+  });
+
+  it.each([
+    { format: 'JSON', response: () => Response.json({ code: 'NOT_FOUND', message: 'Sensitive server traceback',
+      request_id: 'guideline-body-request' }, { status: 500, headers: { 'X-Request-ID': 'guideline-header-request' } }),
+      requestId: 'guideline-body-request' },
+    { format: 'HTML', response: () => new Response('<h1>Sensitive proxy error</h1>', {
+      status: 502, headers: { 'Content-Type': 'text/html', 'X-Request-ID': 'guideline-header-request' },
+    }), requestId: 'guideline-header-request' },
+  ])('shows a safe server message and trace for a $format guideline failure', async ({ response, requestId }) => {
+    await setup('reviewer', response);
+    const alert = await screen.findByRole('alert');
+    expect(within(alert).getByText(`Máy chủ gặp lỗi. Vui lòng thử lại sau. Mã yêu cầu: ${requestId}`)).toBeDefined();
+    expect(screen.queryByText(/Sensitive/)).toBeNull();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('uses the status fallback for malformed guideline error JSON', async () => {
+    await setup('reviewer', () => new Response('{', { status: 404, headers: { 'Content-Type': 'application/json' } }));
+    expect(within(await screen.findByRole('alert'))
+      .getByText('Không tìm thấy tài nguyên yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')).toBeDefined();
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it('sends family and class_name filters and resets to the first page', async () => {

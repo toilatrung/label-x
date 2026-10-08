@@ -1,16 +1,11 @@
 import createClient from 'openapi-fetch';
 import type { paths } from './contract';
-import type { ApiError } from '@/types/auth';
+import { ApiRequestError, readErrorDetail } from './errors';
 import { apiBaseUrl } from '@/lib/auth/config';
 
 export const AUTH_EXPIRED_EVENT = 'labelx:auth-expired';
 
-export class ApiRequestError extends Error {
-  constructor(public status: number, public detail?: ApiError) {
-    super(detail?.message || (status === 401 ? 'Phiên đăng nhập đã hết hạn.' :
-      status === 403 ? 'Bạn không có quyền thực hiện yêu cầu này.' : 'Không thể xử lý yêu cầu.'));
-  }
-}
+export { ApiRequestError } from './errors';
 
 function csrfCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
@@ -28,14 +23,19 @@ export function createApiClient(options: { baseUrl?: string; fetch?: (request: R
       }
     },
     async onResponse({ request, response }) {
-      if (response.status !== 401 && response.status !== 403) return;
-      const detail: ApiError | undefined = await response.clone().json().catch(() => undefined);
+      if (response.ok) return;
+      const detail = readErrorDetail(await response.clone().json().catch(() => undefined));
       if (request.signal.aborted) return;
-      const expired = response.status === 401 || detail?.code === 'NOT_AUTHENTICATED';
+      // HTML, empty and malformed error bodies must keep the status and trace header.
+      if (!detail && response.status !== 401) {
+        throw new ApiRequestError(response.status, undefined, response.headers);
+      }
+      const expired = response.status === 401 ||
+        (response.status === 403 && detail?.code === 'NOT_AUTHENTICATED');
       // Operation-level 403 errors stay with the caller; they must not replace the page.
       if (!expired) return;
       if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, { detail }));
-      throw new ApiRequestError(response.status, detail);
+      throw new ApiRequestError(response.status, detail, response.headers);
     },
   });
   return client;

@@ -56,7 +56,62 @@ describe('Login page', () => {
     fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'wrong_password' } });
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
     expect(await screen.findByRole('alert')).toBeDefined();
-    expect(screen.getByText('Tên đăng nhập hoặc mật khẩu không chính xác')).toBeDefined();
+    expect(screen.getByText('Tên đăng nhập hoặc mật khẩu không chính xác.')).toBeDefined();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { status: 400, code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.' },
+    { status: 403, code: 'FORBIDDEN', message: 'Bạn không có quyền thực hiện thao tác này.' },
+    { status: 418, code: 'NEW_BACKEND_CODE', message: 'Không thể xử lý yêu cầu. Vui lòng thử lại.' },
+  ])('maps login $status $code without displaying backend diagnostics', async ({ status, code, message }) => {
+    const api = installMockAuthApi();
+    await mountLogin();
+    const passthrough = api.fetchSpy.getMockImplementation()!;
+    api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
+      ? Response.json({ code, message: 'Sensitive backend diagnostic', request_id: 'login-client-error' }, { status })
+      : passthrough(request));
+    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    expect((await screen.findByRole('alert')).textContent).toBe(message);
+    expect(screen.queryByText('Sensitive backend diagnostic')).toBeNull();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { format: 'JSON', response: () => Response.json({ code: 'VALIDATION_ERROR', message: 'Sensitive server traceback',
+      request_id: 'login-body-request' }, { status: 503, headers: { 'X-Request-ID': 'login-header-request' } }),
+      requestId: 'login-body-request' },
+    { format: 'HTML', response: () => new Response('<h1>Sensitive proxy error</h1>', {
+      status: 502, headers: { 'Content-Type': 'text/html', 'X-Request-ID': 'login-header-request' },
+    }), requestId: 'login-header-request' },
+  ])('shows a safe server message and trace for a $format login failure', async ({ response, requestId }) => {
+    const api = installMockAuthApi();
+    await mountLogin();
+    const passthrough = api.fetchSpy.getMockImplementation()!;
+    api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
+      ? response() : passthrough(request));
+    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    expect((await screen.findByRole('alert')).textContent)
+      .toBe(`Máy chủ gặp lỗi. Vui lòng thử lại sau. Mã yêu cầu: ${requestId}`);
+    expect(screen.queryByText(/Sensitive/)).toBeNull();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('uses the status fallback for malformed login error JSON', async () => {
+    const api = installMockAuthApi();
+    await mountLogin();
+    const passthrough = api.fetchSpy.getMockImplementation()!;
+    api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
+      ? new Response('{', { status: 400, headers: { 'Content-Type': 'application/json' } }) : passthrough(request));
+    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    expect((await screen.findByRole('alert')).textContent)
+      .toBe('Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.');
     expect(push).not.toHaveBeenCalled();
   });
 
