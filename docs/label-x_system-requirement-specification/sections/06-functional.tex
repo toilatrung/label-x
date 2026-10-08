@@ -256,6 +256,19 @@ riêng (FR-RNK-06), không bị coi là điểm thấp an toàn.
 \req{FR-RWK-07} & Rework Tracking hiển thị: chờ sửa, chờ xác minh, hoàn thành, tỉ lệ đóng, quá hạn. & \should & H\\
 \end{xltabular}
 
+Với mỗi điều kiện gate, hệ thống ghi nguồn, scope, tử số/mẫu số, phương pháp
+kiểm chứng và evidence để QA Lead đối chiếu trên báo cáo. Coverage được tính
+riêng từng engine bằng \(completed/eligible\) từ ledger theo DEC-010. Lỗi nghiêm
+trọng là số issue mức nghiêm trọng đã xác nhận còn mở trên run cuối (G-2). Rework
+là số yêu cầu sửa bắt buộc đã verify đạt trên revision mới chia tổng số yêu cầu sửa
+bắt buộc trong scope; nếu không có yêu cầu bắt buộc thì điều kiện này đạt. Residual
+dùng \(\rho\) đo trên toàn bộ reference nếu đã có reference toàn tập; nếu không,
+dùng ước lượng G-4 từ lát kiểm tra ngẫu nhiên theo kế hoạch đã khoá trước khi đo.
+Đồng thuận reviewer dùng quyết định trùng adjudicator chia tổng quyết định được
+chấm trên tập case chuẩn theo G-3. Thiếu mẫu hoặc evidence cho một điều kiện là
+chưa đạt theo FR-GTE-02. Chỉ điều kiện coverage và đồng thuận reviewer được waiver
+theo FR-GTE-03; waiver không thay đổi số đo/evidence gốc.
+
 % ---------------------------------------------------------------------
 \section{Module GDL — Tra cứu guideline}
 \begin{xltabular}{\linewidth}{@{}L{1.9cm}Y C{0.9cm}L{2.4cm}@{}}
