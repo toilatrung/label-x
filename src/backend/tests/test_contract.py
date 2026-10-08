@@ -66,6 +66,40 @@ def test_contract_covers_t001_endpoints(spec):
         assert method in spec["paths"].get(path, {}), f"thiếu {method.upper()} {path}"
 
 
+def test_contract_covers_every_srs_api_table_endpoint(spec):
+    """The SRS table is the source of the endpoint inventory, including T-008."""
+    interface = (SRS_SECTIONS / "09-interfaces.tex").read_text(encoding="utf-8")
+    rows = re.findall(r"^(POST|GET) & \\code\{(/api/.*?)\} &", interface, re.M)
+    assert len(rows) == 28, "SRS endpoint table changed; review the new inventory"
+    for method, raw_path in rows:
+        path = raw_path.replace(r"\{", "{").replace(r"\}", "}").replace(r"\_", "_").split("?")[0]
+        contract_path = path.rstrip("/") + "/"
+        assert method.lower() in spec["paths"].get(contract_path, {}), (
+            f"missing {method} {contract_path}"
+        )
+
+
+def test_t008_state_guards_and_error_contract(spec):
+    expected = {
+        "/api/issues/": {"400", "403", "409"},
+        "/api/issues/{id}/decisions/": {"400", "403", "409"},
+        "/api/issues/{id}/adjudications/": {"400", "403", "409"},
+        "/api/rework/": {"400", "403", "409"},
+        "/api/rework/{id}/submitted/": {"400", "403", "409"},
+        "/api/rework/{id}/verify/": {"400", "403", "409"},
+        "/api/references/{id}/lock/": {"403", "409", "422"},
+        "/api/evaluations/": {"400", "403", "422"},
+        "/api/waivers/": {"400", "403", "422"},
+        "/api/waivers/{id}/approve/": {"400", "403", "409"},
+    }
+    for path, codes in expected.items():
+        operation = spec["paths"][path]["post"]
+        assert codes <= set(operation["responses"]), path
+        assert operation["x-labelx-trace"] and operation["x-labelx-roles"]
+        if path != "/api/references/{id}/lock/":
+            assert operation["requestBody"]["required"]
+
+
 def test_every_ref_resolves(spec):
     def walk(node: Any) -> None:
         if isinstance(node, dict):
@@ -119,8 +153,11 @@ def test_review_decision_schema_preserves_audit_and_reference_links(spec):
         "reject",
         "uncertain",
         "escalate",
-        "request_rework",
+        "request_fix",
     } <= set(properties["decision"]["enum"])
+    assert set(schemas["IssueDecisionAction"]["enum"]) <= set(properties["decision"]["enum"])
+    assert properties["revision"]["type"] == "string"
+    assert schemas["IssueDecision"]["properties"]["revision"]["type"] == "string"
     assert {
         "adjudicate_confirm",
         "adjudicate_reject",

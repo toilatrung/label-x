@@ -391,6 +391,303 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/issues/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tạo issue thủ công trên frame đang giữ lease
+         * @description Neo manual_object hoặc manual_region; server gán origin=reviewer. Ghi audit cùng transaction.
+         */
+        post: operations["issues_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues/{id}/decisions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lưu quyết định reviewer cho issue
+         * @description Lease còn hạn và đúng người giữ; kiểm lại assignee tại snapshot để chặn self-review.
+         *     confirm yêu cầu family và severity; reject/uncertain/escalate yêu cầu reason.
+         *     Super Admin ghi đè cần override_reason và vẫn chịu kiểm self-review.
+         */
+        post: operations["issues_decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues/{id}/adjudications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Phân xử issue đã chuyển cấp
+         * @description Chỉ từ escalated; người phân xử khác người chuyển cấp, kể cả qua tài khoản khác cùng người.
+         *     Guideline Gap giữ issue ở escalated đến guideline version mới; lưu Decision Case có version.
+         */
+        post: operations["issues_adjudicate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rework/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tạo yêu cầu sửa cho issue confirmed */
+        post: operations["rework_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rework/{id}/submitted/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Annotator báo đã sửa trên CVAT
+         * @description Chỉ assignee được báo đã sửa; revision mới phải khác revision gốc, sau đó tạo snapshot job mới.
+         */
+        post: operations["rework_submitted"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rework/{id}/verify/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify sửa lỗi trên revision mới
+         * @description Người verify khác annotator đã sửa; chỉ verify sau re-check trên revision mới.
+         */
+        post: operations["rework_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tạo phiên reference và nhập GT
+         * @description Pilot nhập một GT BDD100K với checksum; hai GT độc lập dành cho giai đoạn sau (CR-101).
+         */
+        post: operations["references_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/{id}/lock/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Khoá reference và provenance
+         * @description Người khoá khác người lập GT; chỉ khoá sau khi bất đồng đã phân xử.
+         */
+        post: operations["references_lock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/effort-events/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ghi batch effort event từ client
+         * @description client_event_id chống ghi trùng; khoảng idle quá t_idle không tính vào effort.
+         */
+        post: operations["effort_events_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chạy đánh giá KPI trên reference đã khoá
+         * @description Chặn leakage held-out và không tính KPI khi mẫu dưới E_min.
+         */
+        post: operations["evaluations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kết quả KPI và provenance */
+        get: operations["evaluations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/gate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kết quả từng điều kiện gate
+         * @description Thiếu dữ liệu hoặc run cuối chưa Completed là chưa đạt; waiver chỉ hiệu lực sau duyệt và trước hạn.
+         */
+        get: operations["runs_gate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waivers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đề nghị waiver một điều kiện gate
+         * @description Chỉ coverage và agreement được waiver trong pilot; phải có lý do, evidence và hạn hiệu lực.
+         */
+        post: operations["waivers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waivers/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duyệt hoặc từ chối waiver
+         * @description Người duyệt khác người đề nghị, kể cả qua tài khoản khác cùng người.
+         */
+        post: operations["waivers_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Xuất báo cáo hiệu quả theo format
+         * @description KPI dùng input snapshot/reference; vận hành và gate dùng run cuối đủ điều kiện, nếu chưa thì run gốc kèm lý do.
+         */
+        get: operations["reports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -870,9 +1167,9 @@ export interface components {
              * @description Các action reviewer theo FR-REV-08; adjudicate_* ghi đủ ba kết luận FR-ESC-02 và chỉ dành cho QA Lead. Không adjudication nào được tính KPI-2b.
              * @enum {string}
              */
-            decision: "confirm" | "reject" | "uncertain" | "escalate" | "request_rework" | "adjudicate_confirm" | "adjudicate_reject" | "adjudicate_guideline_gap";
-            /** @description Revision snapshot gắn với quyết định (FR-REV-10). */
-            revision: number;
+            decision: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix" | "adjudicate_confirm" | "adjudicate_reject" | "adjudicate_guideline_gap";
+            /** @description Revision hash của snapshot gắn với quyết định (FR-REV-10). */
+            revision: string;
             /** @description Lý do đã ghi cùng quyết định và audit event (FR-REV-08, FR-REV-10). */
             reason: string;
             /** @description Rule ID được chọn hoặc áp dụng; rỗng khi quyết định không gắn rule (FR-REV-10). */
@@ -897,6 +1194,250 @@ export interface components {
         };
         FrameCompleteRequest: {
             lease_id: number;
+        };
+        /** @description anchor.kind chỉ nhận manual_object hoặc manual_region; kiểm lease và self-review. */
+        ManualIssueCreate: {
+            frame_id: number;
+            lease_id: number;
+            family: components["schemas"]["IssueFamily"];
+            anchor: components["schemas"]["Anchor"];
+            description?: string;
+        };
+        /** @enum {string} */
+        IssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix";
+        /**
+         * @description confirm bắt buộc family và severity. reject/uncertain/escalate bắt buộc reason.
+         *     request_fix chỉ sau confirmed; chi tiết yêu cầu sửa gửi tới /api/rework/.
+         *     override_reason bắt buộc nếu Super Admin dùng quyền ghi đè.
+         */
+        IssueDecisionCreate: {
+            lease_id: number;
+            action: components["schemas"]["IssueDecisionAction"];
+            /** @description Revision snapshot đang review */
+            revision: string;
+            family?: components["schemas"]["IssueFamily"];
+            severity?: components["schemas"]["Severity"];
+            reason?: string;
+            rule_id?: string;
+            override_reason?: string;
+        };
+        IssueDecision: {
+            id: number;
+            issue_id: number;
+            action: components["schemas"]["IssueDecisionAction"];
+            actor_user_id: number;
+            revision: string;
+            family?: components["schemas"]["IssueFamily"];
+            severity?: components["schemas"]["Severity"];
+            reason?: string | null;
+            rule_id?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            audit_event_id?: number;
+        };
+        AdjudicationCreate: {
+            /** @enum {string} */
+            outcome: "confirm" | "reject" | "guideline_gap";
+            rule_id: string;
+            correct_label?: string | null;
+            reason: string;
+            override_reason?: string;
+        };
+        Adjudication: {
+            id: number;
+            issue_id: number;
+            /** @enum {string} */
+            outcome: "confirm" | "reject" | "guideline_gap";
+            actor_user_id: number;
+            rule_id: string;
+            correct_label?: string | null;
+            reason: string;
+            case_version: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ReworkCreate: {
+            issue_id: number;
+            instruction: string;
+            annotator_user_id: number;
+            /** Format: date-time */
+            due_at: string;
+            severity: components["schemas"]["Severity"];
+            /** Format: uri */
+            cvat_deep_link: string;
+        };
+        ReworkSubmission: {
+            cvat_revision: string;
+        };
+        ReworkVerification: {
+            passed: boolean;
+            revision: string;
+            /** @description Bắt buộc khi passed=false */
+            reason?: string;
+            override_reason?: string;
+        };
+        ReworkRequest: {
+            id: number;
+            issue_id: number;
+            annotator_user_id: number;
+            /** @enum {string} */
+            status: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+            original_revision: string;
+            submitted_revision?: string | null;
+            recheck_run_id?: number | null;
+            /** Format: date-time */
+            due_at: string;
+            /** Format: uri */
+            cvat_deep_link?: string;
+        };
+        ReferenceCreate: {
+            snapshot_id: number;
+            /** @description Pilot dùng tệp nhãn gốc BDD100K */
+            gt_source: string;
+            /** @description SHA-256 của GT đầu vào */
+            gt_checksum: string;
+            mapping_version: string;
+            matching_threshold?: number;
+            minimum_area?: number;
+            algorithm_version?: string;
+        };
+        Reference: {
+            id: number;
+            snapshot_id: number;
+            gt_checksum: string;
+            mapping_version: string;
+            matching_threshold?: number;
+            minimum_area?: number;
+            algorithm_version?: string;
+            /** @enum {string} */
+            status: "draft" | "locked";
+            created_by: number;
+            locked_by?: number | null;
+            /** Format: date-time */
+            locked_at?: string | null;
+        };
+        EffortEventBatch: {
+            events: components["schemas"]["EffortEvent"][];
+        };
+        EffortEvent: {
+            /** Format: uuid */
+            client_event_id: string;
+            frame_id: number;
+            /** @enum {string} */
+            activity: "view_frame" | "review_issue" | "adjudicate" | "recheck_verify";
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string;
+        };
+        EffortEventReceipt: {
+            accepted: number;
+            duplicates: number;
+        };
+        EvaluationCreate: {
+            snapshot_id: number;
+            run_id: number;
+            reference_id: number;
+            score_version: string;
+            experiment_id?: number | null;
+            parameters: {
+                [key: string]: unknown;
+            };
+        };
+        Evaluation: {
+            id: number;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "failed" | "insufficient_sample";
+            snapshot_id: number;
+            run_id: number;
+            reference_id: number;
+            score_version: string;
+            experiment_id?: number | null;
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** @description KPI-1, KPI-2, KPI-2b, G-1…G-4; thiếu mẫu dùng status=not_checked. */
+            metrics?: {
+                [key: string]: components["schemas"]["MetricValue"];
+            } | null;
+            /** @enum {string} */
+            leakage_check?: "passed" | "failed" | "not_checked";
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        MetricValue: {
+            /** @enum {string} */
+            status: "computed" | "not_checked" | "insufficient_sample";
+            value?: number | null;
+            sample_size: number;
+            denominator: number;
+            method: string;
+            confidence_interval?: number[] | null;
+        };
+        /** @enum {string} */
+        GateConditionName: "coverage" | "open_critical_issues" | "rework_verified" | "residual" | "agreement";
+        GateCondition: {
+            name: components["schemas"]["GateConditionName"];
+            /** @enum {string} */
+            status: "passed" | "failed" | "not_checked" | "waived";
+            observed: number | null;
+            threshold: number;
+            waiver_id?: number | null;
+            reason?: string | null;
+        };
+        GateResult: {
+            run_id: number;
+            source_run_id: number;
+            /** @description Lý do dùng run gốc nếu run cuối chưa đủ điều kiện */
+            source_reason: string;
+            /** @enum {string} */
+            status: "passed" | "failed" | "not_checked";
+            conditions: components["schemas"]["GateCondition"][];
+        };
+        /** @description condition chỉ coverage hoặc agreement; các điều kiện khác không được waiver. */
+        WaiverCreate: {
+            run_id: number;
+            condition: components["schemas"]["GateConditionName"];
+            reason: string;
+            evidence: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        WaiverDecision: {
+            approved: boolean;
+            reason: string;
+        };
+        Waiver: {
+            id: number;
+            run_id: number;
+            condition: components["schemas"]["GateConditionName"];
+            reason: string;
+            evidence: string;
+            /** Format: date-time */
+            expires_at: string;
+            requested_by: number;
+            approved_by?: number | null;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "expired";
+        };
+        EffectivenessReport: {
+            id: number;
+            input_snapshot_id: number;
+            reference_id: number;
+            source_run_id: number;
+            source_reason: string;
+            score_version?: string;
+            metrics: {
+                [key: string]: components["schemas"]["MetricValue"];
+            };
+            risk_queue: {
+                [key: string]: unknown;
+            };
+            random_queue: {
+                [key: string]: unknown;
+            };
+            engine_coverage: components["schemas"]["LedgerEntry"][];
         };
         PaginatedDatasetList: {
             next?: string | null;
@@ -1542,6 +2083,497 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    issues_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualIssueCreate"];
+            };
+        };
+        responses: {
+            /** @description Issue vừa tạo */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Issue"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    issues_decide: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueDecisionCreate"];
+            };
+        };
+        responses: {
+            /** @description Quyết định đã lưu và audit */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueDecision"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    issues_adjudicate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjudicationCreate"];
+            };
+        };
+        responses: {
+            /** @description Phân xử và Decision Case */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adjudication"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    rework_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReworkCreate"];
+            };
+        };
+        responses: {
+            /** @description Yêu cầu sửa mới */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkRequest"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    rework_submitted: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReworkSubmission"];
+            };
+        };
+        responses: {
+            /** @description Đã nhận revision mới và yêu cầu snapshot/re-check */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkRequest"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    rework_verify: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReworkVerification"];
+            };
+        };
+        responses: {
+            /** @description Trạng thái issue sau verify */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkRequest"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    references_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Phiên reference */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reference"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    references_lock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reference đã khoá */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reference"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    effort_events_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EffortEventBatch"];
+            };
+        };
+        responses: {
+            /** @description Số event được ghi mới */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffortEventReceipt"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    evaluations_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationCreate"];
+            };
+        };
+        responses: {
+            /** @description Evaluation đã nhận xử lý */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    evaluations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kết quả đánh giá */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evaluation"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_gate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Gate theo run cuối đủ điều kiện hoặc run gốc kèm lý do */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GateResult"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    waivers_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaiverCreate"];
+            };
+        };
+        responses: {
+            /** @description Waiver đang chờ duyệt */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Waiver"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    waivers_approve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaiverDecision"];
+            };
+        };
+        responses: {
+            /** @description Waiver đã được quyết định */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Waiver"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    reports_retrieve: {
+        parameters: {
+            query?: {
+                format?: "pdf" | "csv" | "json";
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON báo cáo; pdf/csv trả file với Content-Type tương ứng */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectivenessReport"];
+                    "application/pdf": string;
+                    "text/csv": string;
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

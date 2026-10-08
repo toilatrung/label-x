@@ -156,10 +156,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-01</td>
 <td>OpenAPI bổ sung quyết định review, phân xử, rework, gate, báo cáo</td>
 <td>Trịnh Quang Trung (@toilatrung)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-001, T-006</td>
 <td>none</td>
-<td>none</td>
+<td><a href="../reports/implementation/T-008.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/54">PR #54</a> chờ review</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -735,7 +735,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-01</code></li>
 <li><strong>Title</strong>: <code>OpenAPI bổ sung quyết định review, phân xử, rework, gate, báo cáo</code></li>
 <li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -770,10 +770,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_7">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Mọi endpoint trong tab:api có operation và trace FR/BR/UC (test kiểm)</li>
-<li>[ ] OpenAPI hợp lệ; contract.d.ts sinh lại và commit cùng PR</li>
-<li>[ ] Mọi guard của state machine có mã lỗi tương ứng; mọi mã lỗi view trả về đều khai báo trong contract</li>
-<li>[ ] Verification method is specified for each condition.</li>
+<li>[x] Mọi endpoint trong tab:api có operation và trace FR/BR/UC (test kiểm 28 dòng SRS)</li>
+<li>[x] OpenAPI hợp lệ; contract.d.ts sinh lại và commit cùng mã T-008 (3d46054)</li>
+<li>[x] Guard của các operation mới khai báo mã lỗi tương ứng; chưa có view mới trong phạm vi T-008</li>
+<li>[x] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_7">Verification Requirements</h4>
 <ul>
@@ -784,8 +784,8 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="completion-criteria_7">Completion Criteria</h4>
 <ul>
 <li>[ ] Every acceptance criterion passes.</li>
-<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
-<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[x] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
 <h3 id="t-009">T-009</h3>
