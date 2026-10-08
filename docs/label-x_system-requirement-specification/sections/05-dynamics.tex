@@ -83,6 +83,7 @@ F-07 & Sửa trên CVAT, re-check, verify & Annotator, worker, Reviewer & Đóng
 F-08 & QC run cuối, gate, báo cáo & Hệ thống, QA Lead & Báo cáo/gate trỏ run cuối (B-03).\\
 \end{xltabular}
 
+
 % ---------------------------------------------------------------------
 \section{Sequence diagram}
 \label{sec:sequence}
@@ -354,11 +355,14 @@ F-08 & QC run cuối, gate, báo cáo & Hệ thống, QA Lead & Báo cáo/gate t
   \node[state, right=of i] (u) {Chưa review};
   \node[state, right=of u] (l) {Đang review\\\scriptsize (có lease)};
   \node[statef, right=of l] (d) {Đã review};
+  \node[state, fill=lxamberl, draw=lxamber, above=of l] (inc) {Đang dở\\\scriptsize (đã lưu quyết định)};
   \node[state, fill=lxamberl, draw=lxamber, below=of d] (w) {Còn issue chờ\\phân xử / sửa};
   \node[statef, right=of d] (v) {Hoàn tất\\\scriptsize (run cuối)};
   \draw[arr] (i) -- (u);
   \draw[arr] (u) -- node[lbl, above]{cấp lease} (l);
   \draw[arr] (l.south west) to[bend left=35] node[lbl, below]{lease hết hạn} (u.south east);
+  \draw[arr] (l) -- node[lbl, right]{lease hết hạn, đã lưu quyết định} (inc);
+  \draw[arr] (inc) -- node[lbl, above]{resume; ưu tiên reviewer cũ} (l);
   \draw[arr] (l) -- node[lbl, above]{xong} (d);
   \draw[arr] (d) -- node[lbl, right]{có issue mở} (w);
   \draw[arr] (w) -| node[lbl, pos=0.25, below]{đóng hết + run cuối đạt} (v);
@@ -385,6 +389,8 @@ kiểm tra. Chuyển trạng thái không có trong bảng phải bị từ ch�
 \endfoot
 Chờ review & Đang review & claim & Reviewer & Có quyền Review trong scope; không phải annotator của object theo assignee tại snapshot; chưa có lease khác còn hạn.\\
 Đang review & Chờ review & lease\_expired & Hệ thống & Hết thời gian lease \TBD[-09]; không có quyết định đã lưu.\\
+Đang review & Đang dở & lease\_expired & Hệ thống & Hết thời gian lease \TBD[-09]; đã lưu ít nhất một quyết định.\\
+Đang dở & Đang review & resume / claim & Reviewer cũ, hệ thống & Reviewer cũ được ưu tiên; chỉ tiếp tục sau khi nhận lease mới còn hạn.\\
 Đang review & Đã xác nhận & confirm & Reviewer & Có nhóm lỗi, mức độ; lease còn hạn; không self-review (kiểm lại khi lưu).\\
 Đang review & Bác bỏ & reject & Reviewer & Có lý do; lease còn hạn; không self-review.\\
 Đang review & Chờ phân xử & uncertain / escalate & Reviewer & Có lý do; lease còn hạn; không self-review.\\
@@ -397,6 +403,12 @@ Chờ kiểm lại & Mở lại & verify\_fail & Reviewer & Có lý do; người
 Mở lại & Chờ sửa & request\_fix & Hệ thống & Tự động khi mở lại.\\
 Như các dòng trên & Như các dòng trên & override & Super Admin & Super Admin có thể thực hiện quyết định, phân xử, xác minh thay vai trò thường (theo H); bắt buộc lý do, audit gắn nhãn ghi đè, vẫn chịu self-review và tách nhiệm vụ. Không có chuyển trạng thái ngoài bảng.\\
 \end{xltabular}
+
+Frame đang review có thể giữ trạng thái trung gian khi lease hết hạn. Nếu chưa có
+quyết định đã lưu, frame trở về Chưa review. Nếu đã lưu ít nhất một quyết định,
+frame chuyển sang Đang dở; quyết định và phần việc đã lưu được giữ nguyên, frame
+được ưu tiên trả lại reviewer cũ và có thể tiếp tục khi người đó nhận lease mới
+(DEC-002, BLOCKER-008). Lease hết hạn không tự hoàn tất frame.
 
 \section{Trạng thái engine và lý do áp dụng}
 \label{sec:enginestates}
@@ -416,7 +428,16 @@ riêng trong ledger. Không trạng thái nào dưới đây được tính là 
 Checked & Mọi đơn vị áp dụng đã xong. & Dùng cho ranking, coverage.\\
 Partial & Một số đơn vị Failed hoặc chưa xong. & Frame thiếu kết quả mang cờ ``thiếu bằng chứng'' (FR-RNK-06).\\
 Failed & Lỗi thực thi (timeout, ảnh hỏng, worker lỗi) sau retry. & Không pass, không reject annotation; hiển thị lỗi, cho chạy lại.\\
-Not checked & \code{disabled} (engine tắt theo cấu hình); \code{no\_model} (thiếu Detector); \code{no\_reference} (Metric thiếu GT); \code{not\_applicable} (shape ngoài phạm vi). & Không pass; coverage engine bắt buộc chưa đạt.\\
-Not checked & \code{not\_triggered}: candidate không thoả điều kiện kiểm chọn lọc (VLM, nếu bật). & Khác lỗi thực thi; không tính vào mẫu số của kiểm chọn lọc.\\
+Not checked & \code{disabled} (engine tắt theo cấu hình); \code{no\_model} (thiếu Detector); \code{no\_reference} (Metric thiếu GT). Các đơn vị \code{not\_applicable} bị loại khỏi mẫu số theo applicability version (B-04; DEC-010). & Không pass; lý do chặn vẫn trong mẫu số; đơn vị bị loại phải có cảnh báo khi số lượng lớn hơn 0.\\
+Not checked & \code{not\_triggered}: candidate không thoả điều kiện kiểm chọn lọc (VLM, nếu bật); loại khỏi mẫu số theo DEC-010. & Khác lỗi thực thi; không tính vào mẫu số của kiểm chọn lọc.\\
 (waiver) & Waiver được duyệt cho một điều kiện gate. & Không đổi trạng thái engine; chỉ gate ghi ``miễn có điều kiện'' kèm hạn.\\
 \end{xltabular}
+
+Theo B-04 và DEC-010, mẫu số là số đơn vị eligible: \(eligible = total - excluded\),
+trong đó \(excluded = not\_applicable + not\_triggered\). Các đơn vị excluded
+không phải lỗi thực thi và không vào mẫu số coverage. Khi
+\(excluded > 0\), mọi nơi hiển thị
+coverage hoặc trạng thái engine phải cảnh báo, gồm màn hình, báo cáo và gate, với
+số lượng theo từng lý do cùng \code{applicability\_version};
+trạng thái công khai không đổi. Các lý do chặn như \code{disabled}, \code{no\_model}
+và \code{no\_reference} vẫn nằm trong mẫu số.

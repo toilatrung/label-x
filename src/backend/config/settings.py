@@ -15,6 +15,7 @@ env = environ.Env(
     DJANGO_ALLOWED_HOSTS=(list, []),
     CORS_ALLOWED_ORIGINS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, None),
+    OBJECT_STORAGE_PRESIGNED_TTL_SECONDS=(int, 300),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
     "accounts.apps.AccountsConfig",
+    "audit.apps.AuditConfig",
     "guideline",
 ]
 
@@ -125,6 +127,7 @@ STORAGES = {
     ),
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+OBJECT_STORAGE_PRESIGNED_TTL_SECONDS = env("OBJECT_STORAGE_PRESIGNED_TTL_SECONDS")
 
 # DRF — quyền project/job kiểm ở API (B-12); mặc định yêu cầu đăng nhập.
 REST_FRAMEWORK = {

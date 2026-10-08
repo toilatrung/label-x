@@ -1150,6 +1150,41 @@ export interface components {
             rule_ids?: string[];
             evidence: components["schemas"]["Evidence"][];
             links: components["schemas"]["IssueLink"][];
+            /** @description Quyết định reviewer bất biến, gồm liên kết phần tử reference cho KPI-2b (DEC-009) */
+            review_decisions: components["schemas"]["ReviewDecision"][];
+        };
+        /** @description Bản ghi bất biến cho một quyết định của actor trên issue; không suy ra từ trạng thái issue. Chỉ confirm của reviewer được nối reference và tính KPI-2b; mọi kết luận adjudication của QA Lead được lưu riêng (FR-REV-08, FR-REV-10, FR-ESC-02, FR-SEC-05, FR-EVL-13, FR-EVL-14, BR-01…BR-07, UC-05, UC-06, UC-08, UC-10; DEC-009). */
+        ReviewDecision: {
+            id: number;
+            issue_id: number;
+            actor_user_id: number;
+            /**
+             * @description Chỉ actor_role reviewer với decision confirm được tính vào KPI-2b.
+             * @enum {string}
+             */
+            actor_role: "reviewer" | "qa_lead" | "super_admin";
+            /**
+             * @description Các action reviewer theo FR-REV-08; adjudicate_* ghi đủ ba kết luận FR-ESC-02 và chỉ dành cho QA Lead. Không adjudication nào được tính KPI-2b.
+             * @enum {string}
+             */
+            decision: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix" | "adjudicate_confirm" | "adjudicate_reject" | "adjudicate_guideline_gap";
+            /** @description Revision hash của snapshot gắn với quyết định (FR-REV-10). */
+            revision: string;
+            /** @description Lý do đã ghi cùng quyết định và audit event (FR-REV-08, FR-REV-10). */
+            reason: string;
+            /** @description Rule ID được chọn hoặc áp dụng; rỗng khi quyết định không gắn rule (FR-REV-10). */
+            rule_ids: string[];
+            /** @description Version reference đã khoá dùng để resolve reference_error_ids. */
+            reference_version: string | null;
+            /**
+             * @description matched/not_matched yêu cầu reference_version đã khoá; not_evaluated dùng khi chưa có reference và reference_version là null.
+             * @enum {string}
+             */
+            reference_match_status: "matched" | "not_matched" | "not_evaluated";
+            /** @description Danh sách phần tử E khớp chính xác theo reference_version và DEC-006 anchor. Chỉ được có phần tử khi actor_role=reviewer, decision=confirm và reference_match_status=matched; rỗng ở trường hợp khác. KPI-2b đếm distinct ID. */
+            reference_error_ids: string[];
+            /** Format: date-time */
+            recorded_at: string;
         };
         FrameIssues: {
             frame: components["schemas"]["FrameSummary"];

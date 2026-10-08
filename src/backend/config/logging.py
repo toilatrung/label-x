@@ -25,12 +25,14 @@ class _Unset:
 _UNSET = _Unset()
 
 _SENSITIVE_KEY_RE = re.compile(
-    r"(?:authorization|cookie|password|passwd|secret|token|api[_-]?key)", re.IGNORECASE
+    r"(?:authorization|cookie|password|passwd|secret|token|api[_-]?key|"
+    r"private[_-]?key|session[_-]?key)",
+    re.IGNORECASE,
 )
 _SENSITIVE_FIELD = (
     r"authorization|proxy[-_ ]authorization|cookie|set[-_ ]cookie|password|passwd|secret|"
     r"token|access[-_ ]token|refresh[-_ ]token|cvat[-_ ]service[-_ ]token|"
-    r"api[-_ ]key|x[-_ ]api[-_ ]key"
+    r"api[-_ ]key|x[-_ ]api[-_ ]key|private[-_ ]key|session[-_ ]key"
 )
 _QUOTED_SECRET_RE = re.compile(
     rf"(?P<prefix>[\"']?(?:{_SENSITIVE_FIELD})[\"']?\s*[:=]\s*)"
@@ -53,6 +55,11 @@ _UNQUOTED_SECRET_RE = re.compile(
 _AUTH_SCHEME_RE = re.compile(
     r"\b(?P<scheme>bearer|basic|token)\s+[A-Za-z0-9._~+/=-]+", re.IGNORECASE
 )
+_CONNECTION_URL_CREDENTIAL_RE = re.compile(
+    r"(?P<scheme>\b[a-z][a-z0-9+.-]*://)(?P<username>[^/\s:@]+):(?P<password>[^@\s/]+)@",
+    re.IGNORECASE,
+)
+_DUPLICATE_REDACTION_BRACKET_RE = re.compile(r"\[REDACTED\]\]+")
 
 _STANDARD_LOG_RECORD_FIELDS = set(logging.makeLogRecord({}).__dict__) | {
     "message",
@@ -106,6 +113,10 @@ def bind_log_context(*, run_id: object = _UNSET, snapshot_id: object = _UNSET) -
 def redact_text(value: str) -> str:
     """Redact common secret representations without exposing their values."""
 
+    value = _CONNECTION_URL_CREDENTIAL_RE.sub(
+        lambda match: f"{match.group('scheme')}{match.group('username')}:{REDACTED}@",
+        value,
+    )
     value = _QUOTED_SECRET_RE.sub(
         lambda match: (
             f"{match.group('prefix')}{match.group('quote')}{REDACTED}{match.group('quote')}"
@@ -115,7 +126,8 @@ def redact_text(value: str) -> str:
     value = _AUTHORIZATION_RE.sub(lambda match: f"{match.group('prefix')}{REDACTED}", value)
     value = _COOKIE_RE.sub(lambda match: f"{match.group('prefix')}{REDACTED}", value)
     value = _UNQUOTED_SECRET_RE.sub(lambda match: f"{match.group('prefix')}{REDACTED}", value)
-    return _AUTH_SCHEME_RE.sub(lambda match: f"{match.group('scheme')} {REDACTED}", value)
+    value = _AUTH_SCHEME_RE.sub(lambda match: f"{match.group('scheme')} {REDACTED}", value)
+    return _DUPLICATE_REDACTION_BRACKET_RE.sub(REDACTED, value)
 
 
 def redact_value(value: object, *, key: object | None = None) -> object:
