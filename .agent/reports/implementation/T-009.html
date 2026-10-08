@@ -34,7 +34,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Implemented</strong>: <code>SRS M13 v1.2; frame incomplete transitions; no-rework gate and waiver rules with verification methods; two-source report; DEC-010 coverage exclusions and warnings; synchronized API references and generated HTML.</code></li>
-<li><strong>Not Implemented</strong>: <code>PDF/DOCX output is not required; PO confirmed SRS HTML is the only deliverable.</code></li>
+<li><strong>Not Implemented</strong>: <code>LaTeX/PDF/DOCX deliverables; PO clarified that only generated SRS HTML is required.</code></li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
@@ -60,7 +60,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <tr><td><code>uv run --no-project --with markdown --with pymdown-extensions python scripts/srs_tex2docs.py</code></td><td><code>passed</code></td><td>Sinh lại requirements, use-cases, domain-model và các trang tham chiếu.</td></tr>
 <tr><td><code>make validate-kit</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
 <tr><td><code>git diff --check</code></td><td><code>passed</code></td><td>Không có lỗi whitespace.</td></tr>
-<tr><td>PO xác nhận định dạng deliverable</td><td><code>passed</code></td><td>PO xác nhận chỉ cần SRS HTML, không cần PDF/DOCX.</td></tr>
+<tr><td>Requested deliverable format</td><td><code>passed</code></td><td>PO clarification on 2026-10-08: generated SRS HTML only; no LaTeX or DOCX deliverable.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -71,11 +71,11 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <tr><td>BLOCKER-012 report source split</td><td><code>passed</code></td><td>FR-RPT-06 và mục evaluation gắn KPI với input snapshot/reference, vận hành và gate với run cuối.</td></tr>
 <tr><td>DEC-010 coverage exclusions</td><td><code>passed</code></td><td><code>not_applicable</code>/<code>not_triggered</code> excluded; các lý do chặn giữ trong mẫu số; cảnh báo theo lý do và applicability version.</td></tr>
 <tr><td>Không mâu thuẫn với <code>docs/04-api</code></td><td><code>passed</code></td><td>Đã đồng bộ engine-interface và state-machines với v1.2.</td></tr>
-<tr><td>Acceptance criterion SRS HTML</td><td><code>passed</code></td><td>HTML đã sinh lại; PO xác nhận không cần PDF/DOCX output.</td></tr>
+<tr><td>Acceptance criterion SRS HTML</td><td><code>passed</code></td><td>HTML đã sinh lại; PO xác nhận không yêu cầu LaTeX/DOCX deliverable.</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: <code>Không có; PO xác nhận SRS HTML là deliverable duy nhất.</code></li>
+<li><strong>Plan Deviations</strong>: <code>Task ghi HTML/DOCX; PO xác nhận chỉ cần output HTML, nên không tạo DOCX deliverable. LaTeX vẫn là nguồn để sinh HTML theo pipeline hiện hành.</code></li>
 <li><strong>Approved By</strong>: <code>Product Owner (user clarification, 2026-10-08)</code></li>
 <li><strong>Known Limitations</strong>: <code>Independent review của Phiên 3 và PO đọc diff vẫn đang chờ.</code></li>
 </ul>
@@ -86,7 +86,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <li>[x] Deviations and limitations are explicit.</li>
 <li>[x] Build and validation checks are recorded; unavailable artifact generation is marked with rationale.</li>
 <li>[x] Reviewer handoff identifies Phiên 3 as independent Reviewer Agent.</li>
-<li>[x] Git Nexus mappings are updated when commits exist.</li>
+<li>[ ] Git Nexus mappings are updated when commits exist; deferred until review/merge establishes stable commit references.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
@@ -94,7 +94,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}th,td{b
 <li>Do not omit failed or unexecuted required checks.</li>
 <li>Do not claim completion with unmet task acceptance criteria.</li>
 <li>Do not claim review approval or move the task to <code>DONE</code>.</li>
-<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not change roadmap or acceptance criteria without PO approval; the HTML-only clarification is recorded in this report and the task board.</li>
 <li>Do not use this report as a substitute for independent review.</li>
 <li>Do not include secrets or sensitive command output.</li>
 </ul>
