@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine interface: input, output, trạng thái công khai, coverage ledger — LabelX</title>
+<meta name="labelx:id" content="api-engine-interface">
+<meta name="labelx:title" content="Engine interface: input, output, trạng thái công khai, coverage ledger">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[api, engine, ledger, coverage, contract, t-006]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / engine-interface</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>api-engine-interface</span><b>title</b><span>Engine interface: input, output, trạng thái công khai, coverage ledger</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, engine, ledger, coverage, contract, t-006]</span><b>priority</b><span>1</span></div>
+<h1 id="engine-interface">Engine interface: input, output, trạng thái công khai, coverage ledger</h1>
+<p>Hợp đồng chung giữa QC Orchestrator và mọi engine (Schema/Taxonomy, Geometry, Duplicate, Detector, Metric, VLM) để thêm engine mới không phải sửa luồng review (NFR-13, B-19). Quyết định: <a href="../../.agent/governance/decisions/DEC-010.html">DEC-010</a>. Schema máy đọc được trong <a href="openapi.yaml">openapi.yaml</a> (<code>components.schemas</code>, mục engine interface); quy tắc tham chiếu bằng code: <code>src/backend/engines/interface.py</code>, test <code>src/backend/tests/test_engine_interface.py</code>.</p>
+<p>Nguồn: SRS <code>06-functional.tex</code> FR-ENG-01…09, FR-AGG-01…06, FR-RPT-04, FR-GTE-01; <code>05-dynamics.tex</code> tab:enginestates; <code>08-nonfunctional.tex</code> NFR-13. Mỗi trường của schema có <code>x-labelx-trace</code> trỏ mã SRS (test kiểm mã tồn tại).</p>
+
+<h2 id="1-luong">1. Luồng một shard</h2>
+<ol>
+<li>Orchestrator đọc <code>EngineDescriptor</code> của engine (đơn vị <code>frame</code>/<code>shape</code>, bắt buộc cho gate hay không, cần model/reference, version quy tắc áp dụng).</li>
+<li>Orchestrator chia đơn vị trong phạm vi snapshot thành shard, gửi <code>EngineInput</code> có <code>idempotency_key</code> = băm (snapshot, engine, config, model, shard) (FR-AGG-02).</li>
+<li>Engine trả <code>EngineOutput</code>: danh sách <code>Candidate</code> (bất biến, khác Issue, FR-AGG-01; evidence theo FR-ENG-08) và <code>EngineUnitResult</code> cho mọi đơn vị của shard (completed, failed sau retry, hoặc not_checked kèm lý do).</li>
+<li>Orchestrator ghi candidate, evidence và cập nhật <code>LedgerEntry</code> của shard trong cùng transaction (FR-AGG-06); retry cùng <code>idempotency_key</code> không tạo bản trùng.</li>
+<li>Trạng thái công khai <code>EngineStatus</code> suy ra từ ledger theo §3; không engine nào tự khai trạng thái công khai.</li>
+</ol>
+
+<h2 id="2-schema">2. Schema</h2>
+<table><thead><tr><th>Schema</th><th>Vai trò</th><th>Trace chính</th></tr></thead><tbody>
+<tr><td><code>EngineDescriptor</code></td><td>Đăng ký engine: name, version, unit, required, needs_model, needs_reference, applicability_version</td><td>NFR-13, FR-ENG-01, FR-AGG-04, FR-GTE-01</td></tr>
+<tr><td><code>EngineConfig</code></td><td>Cấu hình có version, bật/tắt, tham số (ngưỡng có version)</td><td>FR-ENG-01, FR-ENG-07</td></tr>
+<tr><td><code>EngineUnitRef</code></td><td>Đơn vị áp dụng: frame (<code>FrameKey</code>) hoặc shape (<code>ObjectRef</code> namespace cvat_shape, DEC-005)</td><td>FR-AGG-03, FR-AGG-04</td></tr>
+<tr><td><code>EngineInput</code></td><td>Input một shard: snapshot, engine + version, config, model artifact (nullable), seed, đơn vị</td><td>FR-ENG-01, FR-ENG-05, FR-AGG-02</td></tr>
+<tr><td><code>Candidate</code></td><td>Output nghi vấn: family, severity, frame, neo (<code>Anchor</code>, DEC-006), <code>Evidence</code></td><td>FR-AGG-01, FR-AGG-03, FR-ENG-08</td></tr>
+<tr><td><code>EngineUnitResult</code></td><td>Kết quả cuối từng đơn vị: completed/failed/not_checked, lý do, lỗi, số lần thử</td><td>FR-AGG-04, FR-ENG-09</td></tr>
+<tr><td><code>EngineOutput</code></td><td>Output một shard: candidates + unit_results</td><td>FR-AGG-06</td></tr>
+<tr><td><code>LedgerEntry</code> (mở rộng)</td><td>Thêm total, pending, coverage; ghi bất biến của mẫu số</td><td>FR-AGG-04, FR-RPT-04</td></tr>
+<tr><td><code>EngineUnitOutcome</code>, <code>EngineInternalState</code></td><td>Trạng thái nội bộ (không hiển thị) kèm map sang <code>EngineStatus</code></td><td>FR-AGG-05, FR-ENG-09</td></tr>
+</tbody></table>
+<p>Tái dùng schema có sẵn của T-001: <code>EngineName</code>, <code>EngineStatus</code>, <code>NotCheckedReason</code>, <code>EngineRunStatus</code>, <code>ModelArtifact</code>, <code>FrameKey</code>, <code>ObjectRef</code>, <code>Anchor</code>, <code>Evidence</code>. Không đổi tên hay giá trị enum nào; <code>LedgerEntry</code> chỉ thêm trường.</p>
+
+<h2 id="3-trang-thai">3. Trạng thái công khai</h2>
+<p>Trạng thái công khai chỉ gồm <code>running</code>, <code>checked</code>, <code>partial</code>, <code>failed</code>, <code>not_checked</code> (FR-AGG-05). Không trạng thái nào nghĩa là “đạt”; <code>checked</code> chỉ nói engine đã kiểm hết đơn vị áp dụng.</p>
+<h3 id="3-1-quy-tac">3.1 Suy từ ledger (áp dụng theo thứ tự)</h3>
+<table><thead><tr><th>#</th><th>Điều kiện</th><th>EngineStatus</th></tr></thead><tbody>
+<tr><td>1</td><td>Còn đơn vị pending và engine chưa dừng</td><td><code>running</code></td></tr>
+<tr><td>2</td><td>eligible = 0, hoặc mọi đơn vị eligible là not_checked chặn (disabled, no_model, no_reference)</td><td><code>not_checked</code></td></tr>
+<tr><td>3</td><td>completed = eligible</td><td><code>checked</code></td></tr>
+<tr><td>4</td><td>completed = 0 và failed = eligible</td><td><code>failed</code></td></tr>
+<tr><td>5</td><td>Còn lại (một phần failed, chưa xong khi đã dừng/huỷ, hoặc lẫn not_checked chặn)</td><td><code>partial</code></td></tr>
+</tbody></table>
+<h3 id="3-2-noi-bo">3.2 Map trạng thái nội bộ</h3>
+<table><thead><tr><th>EngineInternalState</th><th>EngineStatus</th></tr></thead><tbody>
+<tr><td><code>queued</code></td><td><code>running</code></td></tr>
+<tr><td><code>running</code></td><td><code>running</code></td></tr>
+<tr><td><code>retrying</code></td><td><code>running</code></td></tr>
+<tr><td><code>succeeded</code></td><td><code>checked</code></td></tr>
+<tr><td><code>partially_succeeded</code></td><td><code>partial</code></td></tr>
+<tr><td><code>failed</code></td><td><code>failed</code></td></tr>
+<tr><td><code>cancelled</code></td><td><code>partial</code></td></tr>
+<tr><td><code>disabled</code></td><td><code>not_checked</code></td></tr>
+<tr><td><code>model_unavailable</code></td><td><code>not_checked</code></td></tr>
+<tr><td><code>reference_unavailable</code></td><td><code>not_checked</code></td></tr>
+<tr><td><code>not_applicable</code></td><td><code>not_checked</code></td></tr>
+</tbody></table>
+<table><thead><tr><th>EngineUnitOutcome</th><th>EngineStatus của đơn vị</th></tr></thead><tbody>
+<tr><td><code>pending</code></td><td><code>running</code></td></tr>
+<tr><td><code>running</code></td><td><code>running</code></td></tr>
+<tr><td><code>retrying</code></td><td><code>running</code></td></tr>
+<tr><td><code>completed</code></td><td><code>checked</code></td></tr>
+<tr><td><code>failed</code></td><td><code>failed</code></td></tr>
+<tr><td><code>not_checked</code></td><td><code>not_checked</code></td></tr>
+</tbody></table>
+<p>Chỉ <code>succeeded</code> và <code>completed</code> thành <code>checked</code>; test duyệt mọi ledger nhỏ để chắc <code>checked</code> xảy ra khi và chỉ khi mọi đơn vị eligible completed.</p>
+
+<h2 id="4-ledger">4. Coverage ledger</h2>
+<p>Mỗi engine trong một run có một <code>LedgerEntry</code> (FR-AGG-04). Bất biến:</p>
+<ul>
+<li><code>total = completed + failed + pending + not_checked</code>; <code>not_checked</code> = tổng <code>not_checked_reasons</code>.</li>
+<li><code>eligible = total − not_applicable − not_triggered</code>: đơn vị ngoài phạm vi áp dụng (shape ngoài phạm vi; candidate không thoả điều kiện kiểm chọn lọc) không vào mẫu số (tab:enginestates).</li>
+<li>Đơn vị <code>failed</code>, <code>pending</code> và not_checked chặn (<code>disabled</code>, <code>no_model</code>, <code>no_reference</code>) <strong>vẫn trong mẫu số</strong>: lỗi không làm coverage đẹp hơn.</li>
+<li><code>coverage = completed / eligible</code>; <code>null</code> khi eligible = 0 (báo cáo ghi “không có đơn vị áp dụng”, không tính là đạt).</li>
+</ul>
+<p>Coverage engine bắt buộc (<code>required</code>) dùng cho gate FR-GTE-01 (≥ 95% theo mẫu số ledger) và hiển thị theo từng engine (FR-RPT-04).</p>
+
+<h2 id="5-them-engine">5. Thêm engine mới</h2>
+<ol>
+<li>Thêm giá trị vào <code>EngineName</code> (sửa contract trước).</li>
+<li>Khai <code>EngineDescriptor</code> và <code>EngineConfig</code> có version.</li>
+<li>Worker nhận <code>EngineInput</code>, trả <code>EngineOutput</code> đúng schema; không đổi luồng review, ledger hay trạng thái công khai.</li>
+</ol>
+
+<h2 id="6-ngoai-pham-vi">6. Ngoài phạm vi</h2>
+<p>Cài đặt engine cụ thể (E-08, E-10), lưu trữ candidate/ledger trong DB, API orchestrator nội bộ (giao thức Celery) thuộc các task sau.</p>
+</article></main></body></html>

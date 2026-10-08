@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-010: Engine interface chung: input/output theo shard, trạng thái công khai suy từ ledger — LabelX</title>
+<meta name="labelx:id" content="DEC-010">
+<meta name="labelx:title" content="Engine interface chung: input/output theo shard, trạng thái công khai suy từ ledger">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, adr, engine, ledger, t-006]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-010</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-010</span><b>title</b><span>Engine interface chung: input/output theo shard, trạng thái công khai suy từ ledger</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, adr, engine, ledger, t-006]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-010">DEC-010: Engine interface chung: input/output theo shard, trạng thái công khai suy từ ledger</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>ADR cho engine interface chung (T-006, E-01): mọi engine giao tiếp với QC Orchestrator qua một hợp đồng, để thêm engine không phải sửa luồng review (NFR-13, B-19).</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-010</code></li>
+<li><strong>Title</strong>: <code>Engine interface chung: input/output theo shard, trạng thái công khai suy từ ledger</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung), owner E-01/T-006</code></li>
+<li><strong>Decision Makers</strong>: <code>Trịnh Quang Trung (@toilatrung, Product Owner, owner E-01); duyệt PR theo CR-102 bởi Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>architecture</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>SRS yêu cầu engine đăng ký qua interface chung (NFR-13), trạng thái công khai chỉ gồm Checked/Partial/Failed/Not checked/Running và không trạng thái nào thành “đạt” khi engine chưa hoàn tất (FR-AGG-05, B-19), ledger theo engine không loại đơn vị lỗi khỏi mẫu số (FR-AGG-04), khoá idempotent theo shard (FR-AGG-02) và ghi candidate/evidence/ledger cùng transaction (FR-AGG-06). Contract T-001 đã có <code>EngineName</code>, <code>EngineStatus</code>, <code>NotCheckedReason</code>, <code>EngineRunStatus</code>, <code>LedgerEntry</code> nhưng chưa có input/output engine và quy tắc suy trạng thái. Mã DEC-009 dành cho ADR KPI-2b của T-007 nên quyết định này dùng DEC-010.</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Một nơi duy nhất quyết định trạng thái công khai, không để từng engine tự khai “checked”.</li>
+<li>Mẫu số coverage không giảm khi có lỗi; gate FR-GTE-01 dùng mẫu số ledger.</li>
+<li>Tái dùng enum của T-001, không tạo enum trạng thái công khai song song.</li>
+<li>Retry an toàn: cùng shard cho cùng kết quả, không tạo bản trùng.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>A. Input/output theo shard; trạng thái công khai suy từ ledger bằng một hàm chung</td><td>Engine chỉ báo kết quả từng đơn vị; trạng thái và coverage nhất quán; dễ test toàn bộ không gian ledger nhỏ</td><td>Orchestrator phải giữ ledger theo đơn vị</td><td>meets</td></tr>
+<tr><td>B. Engine tự báo EngineStatus công khai</td><td>Đơn giản cho engine</td><td>Mỗi engine có thể hiểu “checked” khác nhau; vi phạm B-19 khi engine báo checked lúc còn đơn vị lỗi</td><td>does-not-meet</td></tr>
+<tr><td>C. Ledger chỉ đếm đơn vị đã xử lý (bỏ failed khỏi mẫu số)</td><td>Coverage trông cao</td><td>Trái FR-AGG-04</td><td>does-not-meet</td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>A</code></li>
+<li><strong>Rationale</strong>: Interface gồm <code>EngineDescriptor</code>, <code>EngineConfig</code>, <code>EngineInput</code>, <code>EngineOutput</code>, <code>Candidate</code>, <code>EngineUnitResult</code>, <code>EngineUnitRef</code>; <code>LedgerEntry</code> thêm <code>total</code>, <code>pending</code>, <code>coverage</code>. Trạng thái nội bộ (<code>EngineUnitOutcome</code>, <code>EngineInternalState</code>) map sang <code>EngineStatus</code>; chỉ <code>completed</code>/<code>succeeded</code> thành <code>checked</code>. Quy tắc đầy đủ: <a href="../../../docs/04-api/engine-interface.html">docs/04-api/engine-interface.html</a>.</li>
+<li><strong>Effective Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>Thêm engine chỉ cần descriptor + worker đúng schema; trạng thái và coverage do orchestrator tính một cách; test bao phủ mọi ledger nhỏ.</code></li>
+<li><strong>Negative</strong>: <code>LedgerEntry có thêm trường bắt buộc (total, pending, coverage); chưa có view dùng nên không phá client hiện có.</code></li>
+<li><strong>Follow-up Work</strong>: <code>E-08 (orchestrator, ledger trong DB) và E-10 (Detector) cài theo interface; T-008 dùng schema khi bổ sung operation.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml, docs/04-api/engine-interface.html, src/backend/engines/interface.py, src/frontend/src/lib/api/contract.d.ts</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-01, T-006; E-08, E-10</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[x] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-010.md</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

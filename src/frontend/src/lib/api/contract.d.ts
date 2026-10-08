@@ -524,7 +524,9 @@ export interface components {
         /** @enum {string} */
         EngineName: "schema" | "geometry" | "duplicate" | "detector" | "metric" | "vlm";
         /**
-         * @description Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt"
+         * @description Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt".
+         *     Suy ra từ LedgerEntry theo quy tắc trong docs/04-api/engine-interface.html §3 (T-006,
+         *     DEC-010); `checked` chỉ khi mọi đơn vị eligible đã completed.
          * @enum {string}
          */
         EngineStatus: "running" | "checked" | "partial" | "failed" | "not_checked";
@@ -568,21 +570,133 @@ export interface components {
             /** Format: date-time */
             finished_at?: string | null;
         };
+        /**
+         * @description Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
+         *     total = completed + failed + pending + not_checked;
+         *     eligible = total − not_checked_reasons.not_applicable − not_checked_reasons.not_triggered;
+         *     đơn vị failed và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
+         *     (không loại đơn vị lỗi khỏi mẫu số); coverage = completed / eligible, null khi eligible = 0.
+         */
         LedgerEntry: {
             engine: components["schemas"]["EngineName"];
             status: components["schemas"]["EngineStatus"];
             /** @description Engine bắt buộc cho coverage gate */
             required?: boolean;
-            /** @enum {string} */
-            unit: "frame" | "shape";
+            unit: components["schemas"]["EngineUnitKind"];
+            /** @description Số đơn vị trong phạm vi snapshot của engine */
+            total: number;
+            /** @description Mẫu số coverage; gồm cả đơn vị failed, pending và not_checked chặn (disabled, no_model, no_reference) */
             eligible: number;
             completed: number;
+            /** @description Đơn vị lỗi thực thi sau retry; vẫn trong mẫu số */
             failed: number;
+            /** @description Đơn vị chưa có kết quả (pending, running, retrying) */
+            pending: number;
             not_checked: number;
-            /** @description Số đơn vị theo NotCheckedReason */
-            not_checked_reasons?: {
+            /** @description Số đơn vị theo NotCheckedReason; tổng bằng not_checked */
+            not_checked_reasons: {
                 [key: string]: number;
             };
+            /** @description completed / eligible; null khi eligible = 0 */
+            coverage: number | null;
+        };
+        /**
+         * @description Đơn vị áp dụng của engine (FR-AGG-04)
+         * @enum {string}
+         */
+        EngineUnitKind: "frame" | "shape";
+        /**
+         * @description Trạng thái nội bộ của một đơn vị (không hiển thị). Map sang EngineStatus của đơn vị theo
+         *     x-labelx-public-status; trạng thái engine tổng hợp theo engine-interface.html §3.
+         * @enum {string}
+         */
+        EngineUnitOutcome: "pending" | "running" | "retrying" | "completed" | "failed" | "not_checked";
+        /**
+         * @description Trạng thái nội bộ của một engine trong run (orchestrator, không hiển thị). Map sang
+         *     EngineStatus theo x-labelx-public-status; chỉ `succeeded` (mọi đơn vị eligible completed)
+         *     thành `checked` (FR-AGG-05, B-19).
+         * @enum {string}
+         */
+        EngineInternalState: "queued" | "running" | "retrying" | "succeeded" | "partially_succeeded" | "failed" | "cancelled" | "disabled" | "model_unavailable" | "reference_unavailable" | "not_applicable";
+        /** @description Đăng ký engine với orchestrator; thêm engine mới chỉ cần descriptor + worker (NFR-13) */
+        EngineDescriptor: {
+            name: components["schemas"]["EngineName"];
+            /** @description Version code engine, ghi vào run (FR-ENG-01) */
+            version: string;
+            unit: components["schemas"]["EngineUnitKind"];
+            /** @description Engine bắt buộc cho coverage gate */
+            required: boolean;
+            /** @description Thiếu model artifact thì engine Not checked (no_model) */
+            needs_model: boolean;
+            /** @description Thiếu GT/reference thì engine Not checked (no_reference) */
+            needs_reference: boolean;
+            /** @description Version quy tắc chọn đơn vị áp dụng; đơn vị ngoài phạm vi ghi not_applicable */
+            applicability_version: string;
+        };
+        /** @description Cấu hình engine có version, nằm trong config version của run */
+        EngineConfig: {
+            engine: components["schemas"]["EngineName"];
+            /** @description Version cấu hình (ngưỡng có version, FR-ENG-07) */
+            version: string;
+            /** @description false → mọi đơn vị not_checked với lý do disabled */
+            enabled: boolean;
+            /** @description Tham số riêng engine (ngưỡng IoU, τ_E1, τ_E2…) */
+            params: {
+                [key: string]: unknown;
+            };
+        };
+        /** @description Một đơn vị áp dụng; shape định danh qua namespace cvat_shape (DEC-005) */
+        EngineUnitRef: {
+            kind: components["schemas"]["EngineUnitKind"];
+            frame: components["schemas"]["FrameKey"];
+            /** @description Bắt buộc khi kind = shape */
+            object?: components["schemas"]["ObjectRef"] | null;
+        };
+        /** @description Một shard công việc gửi cho engine */
+        EngineInput: {
+            /** @description Băm của (snapshot, engine, config, model, shard); retry không tạo candidate trùng (FR-AGG-02) */
+            idempotency_key: string;
+            run_id: number;
+            snapshot_id: number;
+            engine: components["schemas"]["EngineName"];
+            engine_version: string;
+            config: components["schemas"]["EngineConfig"];
+            model_artifact?: components["schemas"]["ModelArtifact"] | null;
+            seed: number;
+            shard_index: number;
+            units: components["schemas"]["EngineUnitRef"][];
+        };
+        /** @description Nghi vấn do engine sinh; bất biến sau khi ghi, khác Issue (FR-AGG-01) */
+        Candidate: {
+            engine: components["schemas"]["EngineName"];
+            engine_version: string;
+            family: components["schemas"]["IssueFamily"];
+            severity?: components["schemas"]["Severity"] | null;
+            frame: components["schemas"]["FrameKey"];
+            anchor: components["schemas"]["Anchor"];
+            evidence: components["schemas"]["Evidence"];
+        };
+        /** @description Kết quả cuối của một đơn vị trong shard */
+        EngineUnitResult: {
+            unit: components["schemas"]["EngineUnitRef"];
+            /**
+             * @description Giá trị kết thúc của EngineUnitOutcome
+             * @enum {string}
+             */
+            outcome: "completed" | "failed" | "not_checked";
+            /** @description Bắt buộc khi outcome = not_checked */
+            not_checked_reason?: components["schemas"]["NotCheckedReason"] | null;
+            /** @description Lỗi thực thi khi outcome = failed (timeout, ảnh hỏng, worker lỗi); không chứa secret */
+            error?: string | null;
+            attempts: number;
+        };
+        /** @description Kết quả một shard; orchestrator ghi candidates và cập nhật ledger trong cùng transaction (FR-AGG-06) */
+        EngineOutput: {
+            idempotency_key: string;
+            engine: components["schemas"]["EngineName"];
+            engine_version: string;
+            candidates: components["schemas"]["Candidate"][];
+            unit_results: components["schemas"]["EngineUnitResult"][];
         };
         RankedFrame: {
             frame_id: number;

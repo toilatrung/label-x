@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-006: engine interface chung — input/output, trạng thái công khai, coverage ledger — LabelX</title>
+<meta name="labelx:id" content="implementation-t-006">
+<meta name="labelx:title" content="Implementation Report T-006: engine interface chung — input/output, trạng thái công khai, coverage ledger">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="execution">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[implementation, t-006, e-01, engine, contract]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-006</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-006</span><b>title</b><span>Implementation Report T-006: engine interface chung — input/output, trạng thái công khai, coverage ledger</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, t-006, e-01, engine, contract]</span><b>priority</b><span>1</span></div>
+<h1 id="t-006">Implementation Report T-006: engine interface chung — input/output, trạng thái công khai, coverage ledger</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi kết quả T-006 (E-01, issue #32): engine interface dùng chung để thêm engine không phải sửa luồng review (NFR-13, B-19).</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-006</code></li>
+<li><strong>Title</strong>: <code>Implementation Report T-006: engine interface chung — input/output, trạng thái công khai, coverage ledger</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Executor</strong>: <code>claude-code (session label-x-30) cho @toilatrung</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-006</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>Schema engine interface trong openapi.yaml (input, output, candidate, evidence, ledger, trạng thái nội bộ và map công khai); quy tắc tham chiếu engines/interface.py; tài liệu docs/04-api/engine-interface.html; ADR DEC-010 accepted; test contract</code></li>
+<li><strong>Not Implemented</strong>: <code>Cài đặt engine cụ thể (E-08, E-10); lưu candidate/ledger trong DB và orchestrator (E-08); operation REST mới (T-008)</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>Thêm EngineUnitKind, EngineUnitOutcome, EngineInternalState (x-labelx-public-status), EngineDescriptor, EngineConfig, EngineUnitRef, EngineInput, Candidate, EngineUnitResult, EngineOutput; LedgerEntry thêm total, pending, coverage và bất biến mẫu số; mọi trường có x-labelx-trace. Tái dùng EngineName, EngineStatus, NotCheckedReason, ModelArtifact, FrameKey, ObjectRef, Anchor, Evidence, không đổi giá trị enum</td><td>T-006</td></tr>
+<tr><td><code>src/backend/engines/interface.py</code></td><td>LedgerCounts (total, eligible, blocked, coverage, from_outcomes) và public_status theo thứ tự quy tắc; enum Python trùng contract</td><td>T-006</td></tr>
+<tr><td><code>docs/04-api/engine-interface.html</code>, <code>docs/04-api/index.html</code></td><td>Luồng một shard, bảng schema, quy tắc trạng thái, bất biến ledger, cách thêm engine</td><td>T-006</td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-010.html</code></td><td>ADR engine interface, accepted; DEC-009 để dành cho T-007</td><td>T-006</td></tr>
+<tr><td><code>src/backend/tests/test_engine_interface.py</code></td><td>21 test</td><td>T-006</td></tr>
+<tr><td><code>src/frontend/src/lib/api/contract.d.ts</code></td><td>Sinh lại từ openapi.yaml</td><td>T-006</td></tr>
+<tr><td><code>scripts/init-develop-environment.mk</code></td><td>mypy thêm engines</td><td>T-006</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-006; GitHub issue #32</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html, .agent/governance/decisions/DEC-010.html</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/risks/RISK-012.html</code></li>
+<li><strong>Review Request</strong>: <code>label-x-88 theo .agent/skills/labelx-pr-review/SKILL.md; PR do @DucHa180104 duyệt (CR-102)</code></li>
+<li><strong>Commits</strong>: <code>388ba0e (code, nhánh feat/T-006-e01-engine-interface); hash đổi nếu PR squash</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>sg docker -c "make check"</code> (worktree, DB labelx_t006)</td><td><code>passed</code></td><td>exit 0: ruff, mypy 46 file, pytest backend 105 passed trên Postgres, eslint, tsc, vitest 58 passed, detector 10 passed, FRAMEWORK_VALIDATION_PASS</td></tr>
+<tr><td><code>uv run pytest tests/test_engine_interface.py tests/test_contract.py</code></td><td><code>passed</code></td><td>21 + 10 passed; test_contract_is_valid_openapi_3 (drf_spectacular.validation) đạt với schema mới</td></tr>
+<tr><td><code>npm run gen:api:contract</code>; <code>npm run typecheck</code></td><td><code>passed</code></td><td>contract.d.ts sinh lại; tsc không lỗi</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Schema hợp lệ, có test contract; mọi trường trích FR/BR/NFR</td><td><code>passed</code></td><td>test_contract_is_valid_openapi_3; test_every_field_traces_to_srs (8 schema: trace phủ đúng mọi property, mã đúng định dạng và có trong SRS); test_internal_enums_trace_and_map_every_value</td></tr>
+<tr><td>ADR accepted</td><td><code>passed</code></td><td>DEC-010 Status accepted, có decision makers</td></tr>
+<tr><td>Không trạng thái chưa hoàn tất nào thành “đạt”</td><td><code>passed</code></td><td>test_only_completed_unit_maps_to_checked; test_no_unfinished_internal_state_maps_to_checked (queued, running, retrying, partially_succeeded, failed, cancelled, disabled, model_unavailable, reference_unavailable, not_applicable); test_checked_only_when_every_eligible_unit_completed duyệt mọi ledger nhỏ (completed/failed/pending 0–2 × mọi tổ hợp lý do) × finished</td></tr>
+<tr><td>Ledger: mẫu số không giảm khi có đơn vị failed</td><td><code>passed</code></td><td>test_failed_unit_stays_in_denominator; test_denominator_never_shrinks_when_units_fail; test_blocking_not_checked_stays_in_denominator_but_out_of_scope_does_not; test_ledger_invariants</td></tr>
+<tr><td>Enum Python khớp contract</td><td><code>passed</code></td><td>test_python_enums_match_contract</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>ADR dùng DEC-010 vì DEC-009 đã ghi cho T-007 trong task board. Thêm module tham chiếu engines/interface.py (không phụ thuộc Django) để test quy tắc trạng thái/ledger bằng code; không cài engine.</code></li>
+<li><strong>Approved By</strong>: <code>chờ review label-x-88 và @DucHa180104 trên PR</code></li>
+<li><strong>Known Limitations</strong>: <code>LedgerEntry thêm trường bắt buộc total, pending, coverage: chưa có view hay frontend dùng nên không phá client; EngineUnitRef.object bắt buộc khi kind = shape mới ghi bằng mô tả, chưa ràng buộc bằng schema (OpenAPI 3.0 không có if/then)</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[x] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/T-006.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>
