@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { AuthSession, AuthUser, LoginCredentials, UserRole } from '@/types/auth';
 import { apiClient, ApiRequestError, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
+import { errorMessage } from '@/lib/api/errors';
 import { hasDatasetPermission, rolesForDataset } from './roles';
 
 type LoginResult = { success: boolean; error?: string };
@@ -20,8 +21,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const errorMessage = (error: unknown) => error instanceof ApiRequestError ? error.message :
-  'Không kết nối được máy chủ. Vui lòng thử lại.';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -52,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener(AUTH_EXPIRED_EVENT, expired);
     apiClient.GET('/api/auth/session/', { cache: 'no-store', signal: controller.signal }).then(({ data, error, response }) => {
       if (!mounted || version !== revision.current) return;
-      if (error || !data) throw new ApiRequestError(response.status, error);
+      if (error || !data) throw new ApiRequestError(response.status, error, response.headers);
       acceptSession(data);
     }).catch((error: unknown) => {
       if (!mounted || version !== revision.current) return;
@@ -75,9 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthError(null);
     try {
       const csrf = await apiClient.GET('/api/auth/csrf/');
-      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status);
+      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status, csrf.error, csrf.response.headers);
       const { data, error, response } = await apiClient.POST('/api/auth/login/', { body: credentials });
-      if (error || !data) throw new ApiRequestError(response.status, error);
+      if (error || !data) throw new ApiRequestError(response.status, error, response.headers);
       acceptSession(data);
       return { success: true };
     } catch (error) {
@@ -95,9 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthError(null);
     try {
       const csrf = await apiClient.GET('/api/auth/csrf/');
-      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status);
+      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status, csrf.error, csrf.response.headers);
       const result = await apiClient.POST('/api/auth/logout/');
-      if (!result.response.ok) throw new ApiRequestError(result.response.status);
+      if (!result.response.ok) throw new ApiRequestError(result.response.status, result.error, result.response.headers);
       setSession(null);
       setDatasetId(null);
     } catch (error) {

@@ -13,14 +13,14 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AppShell } from "@/components/layout/AppShell";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, ApiRequestError } from "@/lib/api/client";
+import { errorMessage } from "@/lib/api/errors";
 import type { components, operations } from "@/lib/api/contract";
 import { canAccessGuidelines } from "@/lib/auth/roles";
 
 type GuidelineRule = components["schemas"]["GuidelineRule"];
 type PaginatedGuidelineRuleList = components["schemas"]["PaginatedGuidelineRuleList"];
 type IssueFamily = components["schemas"]["IssueFamily"];
-type ApiErrorBody = components["schemas"]["Error"];
 type RulesQuery = NonNullable<operations["guidelines_rules_list"]["parameters"]["query"]>;
 
 const FAMILY_OPTIONS: { value: IssueFamily; label: string }[] = [
@@ -37,12 +37,6 @@ interface Filters {
 }
 
 const EMPTY_FILTERS: Filters = { version: "", family: "", className: "" };
-
-class GuidelineRequestError extends Error {
-  constructor(public status: number, public code?: ApiErrorBody["code"], message?: string) {
-    super(message || `HTTP ${status}`);
-  }
-}
 
 /** Lấy giá trị cursor từ URL next/previous do API trả về. */
 function cursorFrom(link: string | null | undefined): string | null {
@@ -65,26 +59,9 @@ async function fetchRules(filters: Filters, cursor: string | null): Promise<Pagi
     params: { query },
   });
   if (error || !data) {
-    const body = error as ApiErrorBody | undefined;
-    throw new GuidelineRequestError(response.status, body?.code, body?.message);
+    throw new ApiRequestError(response.status, error, response.headers);
   }
   return data;
-}
-
-function errorText(error: GuidelineRequestError): { title: string; body: string } {
-  if (error.status === 404 || error.code === "NOT_FOUND") {
-    return { title: "Không tìm thấy guideline", body: error.message };
-  }
-  if (error.code === "FORBIDDEN" || error.status === 403) {
-    return {
-      title: "Không có quyền truy cập",
-      body: "Tài khoản hiện tại không có quyền xem guideline trong phạm vi này.",
-    };
-  }
-  if (error.code === "VALIDATION_ERROR" || error.status === 400) {
-    return { title: "Bộ lọc không hợp lệ", body: error.message };
-  }
-  return { title: "Không tải được dữ liệu", body: "Đã xảy ra lỗi khi tải danh sách rule từ máy chủ." };
 }
 
 function GuidelineRules() {
@@ -120,9 +97,8 @@ function GuidelineRules() {
   const rules: GuidelineRule[] = rulesQuery.data?.results ?? [];
   const versions = [...new Set(rules.map((rule) => rule.guideline_version))];
   const nextCursor = cursorFrom(rulesQuery.data?.next);
-  const error = rulesQuery.error instanceof GuidelineRequestError ? rulesQuery.error : null;
   const failure = rulesQuery.isError
-    ? errorText(error ?? new GuidelineRequestError(0))
+    ? { title: "Không tải được guideline", body: errorMessage(rulesQuery.error) }
     : null;
   const hasFilter = Boolean(filters.version || filters.family || filters.className);
 

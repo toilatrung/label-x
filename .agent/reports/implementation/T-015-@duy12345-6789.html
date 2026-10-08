@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-015 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-015-@duy12345-6789">
+<meta name="labelx:title" content="T-015 Implementation Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="backend-logging">
+<meta name="labelx:tags" content="[implementation, structured-logging, request-id, secret-redaction]">
+<meta name="labelx:priority" content="2">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>T-015-@duy12345-6789</span><b>title</b><span>T-015 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>backend-logging</span><b>tags</b><span>[implementation, structured-logging, request-id, secret-redaction]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-report-template">T-015 — Log có cấu trúc kèm request_id, secret không vào log</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng triển khai và kiểm thử T-015 trên nhánh <code>feat/T-015-e02-structured-log</code>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-015-@duy12345-6789</code></li>
+<li><strong>Title</strong>: <code>Structured backend logging and secret redaction</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
+<li><strong>Executor</strong>: <code>@duy12345-6789 với Codex</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-015</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>JSON formatter; request_id/run_id/snapshot_id context vars; one completion/failure event per request; recursive redaction for token/password/secret/API key/Authorization/Cookie; automated error-request test</code></li>
+<li><strong>Not Implemented</strong>: <code>observability dashboard and metrics (E-23, explicitly excluded)</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/config/logging.py</code></td><td>ContextVar binding, JSON formatter, request context filter and recursive secret-redaction filter using only Python standard library.</td><td>T-015</td></tr>
+<tr><td><code>src/backend/config/middleware.py</code></td><td>Bind X-Request-ID for the request lifetime and emit structured completion/failure logs with method, safe path, status and duration.</td><td>T-015</td></tr>
+<tr><td><code>src/backend/config/settings.py</code></td><td>Configure root, Django and LabelX loggers to use the JSON handler with context and redaction filters.</td><td>T-015</td></tr>
+<tr><td><code>src/backend/tests/test_structured_logging.py</code></td><td>Verify an error request carries request_id while fake CVAT token, password, Authorization and Cookie values never appear; verify run/snapshot context and recursive fields.</td><td>T-015</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-015</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Change Requests</strong>: <code>CR-100, CR-102, CR-103, CR-104</code></li>
+<li><strong>Risks or Blockers</strong>: <code>none</code></li>
+<li><strong>Review Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/49">PR #49 vào develop</a>; đã request <code>@toilatrung</code> và <code>@DucHa180104</code>; chờ comment <code>Đã xem và duyệt</code></li>
+<li><strong>Commits</strong>: <code>9005250</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>uv run --frozen ruff check . &amp;&amp; ruff format --check .</code></td><td><code>passed</code></td><td>All checks passed; 60 files formatted.</td></tr>
+<tr><td><code>uv run --frozen mypy config accounts engines guideline cvat_adapter</code></td><td><code>passed</code></td><td>No issues in 47 source files.</td></tr>
+<tr><td><code>uv run --frozen pytest -q</code> trên PostgreSQL 17</td><td><code>passed</code></td><td>107 passed in 41.68s.</td></tr>
+<tr><td><code>npm run lint; npm run typecheck; npm test</code> trong Node 22 container</td><td><code>passed</code></td><td>ESLint và TypeScript pass; 9 test files, 58 tests passed.</td></tr>
+<tr><td><code>uv run --frozen --extra dev ruff check/format; pytest</code> trong Python 3.10 container</td><td><code>passed</code></td><td>Detector Ruff/format pass; 10 tests passed.</td></tr>
+<tr><td><code>uv run --no-project --python 3.12 python scripts/validate-framework.py</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
+<tr><td><code>make check</code> wrapper</td><td><code>passed by constituent commands</code></td><td>Windows không có make và Ubuntu/WSL trả lỗi dịch vụ <code>Wsl/Service/0x8007274c</code>; toàn bộ lệnh của target được chạy trực tiếp: backend, frontend, detector và validate-kit đều pass.</td></tr>
+<tr><td>GitHub Actions PR #49</td><td><code>passed</code></td><td>Cả 5 job <code>backend</code>, <code>frontend</code>, <code>detector</code>, <code>framework</code>, <code>bootstrap-windows</code> đều success.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Mỗi dòng log của request lỗi có request_id</td><td><code>passed</code></td><td><code>test_error_request_log_has_request_id_and_redacts_secrets</code> parse từng JSON line và kiểm cùng <code>request-t015-test</code>.</td></tr>
+<tr><td>Token giả và secret không xuất hiện trong log</td><td><code>passed</code></td><td>Test đưa token vào message args, Authorization, Cookie và structured field; output không chứa token/password và có <code>[REDACTED]</code>.</td></tr>
+<tr><td>run_id/snapshot_id có mặt khi bind</td><td><code>passed</code></td><td><code>test_run_and_snapshot_context_are_structured_and_secrets_are_recursive</code>.</td></tr>
+<tr><td>Backend regression trên PostgreSQL</td><td><code>passed</code></td><td>107/107 tests passed.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>none in implementation scope; local make wrapper unavailable, component gates invoked directly</code></li>
+<li><strong>Approved By</strong>: <code>pending independent review</code></li>
+<li><strong>Known Limitations</strong>: <code>logs outside request/task context use request_id "-"; callers bind run_id/snapshot_id through log_context or bind_log_context</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to T-015.</li>
+<li>[x] Acceptance criteria have automated evidence.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Backend, frontend, detector and framework checks are recorded and pass.</li>
+<li>[x] Reviewer handoff identifies independent reviewers.</li>
+<li>[x] Git Nexus maps implementation commit <code>9005250</code>.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không ghi secret hoặc giá trị token thử nghiệm vào report.</li><li>Không tự nhận review approval hoặc chuyển task sang done.</li><li>Không sửa canonical .agent files.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Report lưu tại <code>.agent/reports/implementation/T-015-@duy12345-6789.html</code>.</li><li>Task chỉ chuyển <code>review</code> sau khi bằng chứng hoàn tất.</li><li>PR nhắm <code>develop</code> và chờ comment <code>Đã xem và duyệt</code>.</li></ul>
+</article></main></body></html>

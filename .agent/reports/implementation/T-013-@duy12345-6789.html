@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-013 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-013-duy12345-6789">
+<meta name="labelx:title" content="T-013 Append-only Audit Log Implementation Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="audit">
+<meta name="labelx:tags" content="[implementation, audit, postgres, security, t-013]">
+<meta name="labelx:priority" content="1">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>T-013-duy12345-6789</span><b>title</b><span>T-013 Append-only Audit Log Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>audit</span><b>tags</b><span>[implementation, audit, postgres, security, t-013]</span><b>priority</b><span>1</span></div>
+<h1 id="implementation-report-template">T-013 — Audit log append-only</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Cung cấp bằng chứng triển khai và nghiệm thu T-013 theo FR-SEC-05, NFR-08.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-013-@duy12345-6789</code></li><li><strong>Title</strong>: <code>Audit log append-only ghi cùng transaction, kiểm DB grant</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-013</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>AuditEvent model; transaction-bound append service; recursive secret redaction; ORM guards; PostgreSQL trigger; runtime-role SELECT/INSERT grant command; Postgres integration tests; no admin/API mutation surface.</code></li><li><strong>Not Implemented</strong>: <code>FR-SEC-07 audit viewer (deferred by CR-101); CR-107 T-017 load integration because T-017 had not merged.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/audit/models.py</code></td><td>Immutable AuditEvent fields: actor, action, object, before/after, revision, reason and timestamp.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/audit/services.py</code></td><td>Requires caller-owned transaction.atomic and sanitizes snapshots before INSERT.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/audit/migrations/0001_initial.py</code></td><td>Creates table, constraints, indexes and DB trigger rejecting UPDATE/DELETE.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/audit/management/commands/configure_audit_db_role.py</code></td><td>Grants runtime role only SELECT/INSERT on table and sequence usage; rejects table-owner role.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/tests/audit/test_audit_log.py</code></td><td>Seven Postgres tests for atomic commit/rollback, secret filtering, immutability, grants and absent mutation surfaces.</td><td>T-013</td></tr>
+<tr><td><code>src/backend/config/logging.py</code></td><td>Makes repeated redaction canonical; covers private/session keys and passwords embedded in connection URLs.</td><td>T-013</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-013</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-101, CR-103, CR-104, CR-107</code></li><li><strong>Risks or Blockers</strong>: <code>RISK-012; no active blocker</code></li><li><strong>Review Request</strong>: <code>PR #53 — @toilatrung or @DucHa180104</code></li><li><strong>Commits</strong>: <code>9ed81b5, a2003e6</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>python manage.py migrate --noinput</code></td><td><code>passed</code></td><td><code>audit.0001_initial OK on PostgreSQL 17</code></td></tr>
+<tr><td><code>pytest -q --strict-markers</code></td><td><code>passed</code></td><td><code>132 passed after review fix</code></td></tr>
+<tr><td><code>ruff check .; ruff format --check .</code></td><td><code>passed</code></td><td><code>All checks passed; 72 files formatted</code></td></tr>
+<tr><td><code>mypy config accounts audit engines guideline cvat_adapter</code></td><td><code>passed</code></td><td><code>56 source files, no issues</code></td></tr>
+<tr><td><code>make check</code></td><td><code>not-run</code></td><td><code>Windows WSL bash inaccessible; constituent checks executed directly.</code></td></tr>
+<tr><td><code>GitHub CI — PR #53</code></td><td><code>pending</code></td><td><code>Previous SHA passed 5/5; rerun required after review fix a2003e6.</code></td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Rollback removes operation and audit</td><td><code>passed</code></td><td><code>test_operation_rollback_removes_the_audit_event</code></td></tr>
+<tr><td>Runtime DB role cannot UPDATE/DELETE/TRUNCATE</td><td><code>passed</code></td><td><code>has_table_privilege = true,true,false,false,false and SQL permission-denied assertions</code></td></tr>
+<tr><td>ORM and DB reject mutation</td><td><code>passed</code></td><td><code>model guard plus PostgreSQL trigger test</code></td></tr>
+<tr><td>Secrets absent from before/after</td><td><code>passed</code></td><td><code>Password, token, API/private/session key, Authorization and connection URL password replaced by [REDACTED].</code></td></tr>
+<tr><td>No audit admin/API mutation endpoint</td><td><code>passed</code></td><td><code>admin registry and root URL resolver assertions</code></td></tr>
+<tr><td>Detector and framework regression checks</td><td><code>passed</code></td><td><code>10 detector tests; FRAMEWORK_VALIDATION_PASS</code></td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: <code>make check wrapper unavailable because WSL bash cannot be accessed; equivalent local components ran directly and GitHub CI validated all five repository jobs.</code></li><li><strong>Approved By</strong>: <code>not applicable; no scope change</code></li><li><strong>Known Limitations</strong>: <code>Deployment must use a runtime DB role distinct from migration/table owner and run configure_audit_db_role ROLE. Table owners retain implicit PostgreSQL privileges, but the DB trigger still rejects UPDATE/DELETE.</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li><li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[x] Git Nexus mappings are updated when commits exist.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>No work outside T-013 is claimed.</li><li>No review approval or done status is claimed.</li><li>No secret or credential is stored in this report.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Stored at <code>.agent/reports/implementation/T-013-@duy12345-6789.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Status is complete for implementation evidence; task remains review until independent approval.</li></ul>
+</article></main></body></html>
