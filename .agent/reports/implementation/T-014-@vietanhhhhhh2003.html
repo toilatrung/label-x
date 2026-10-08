@@ -22,8 +22,8 @@
 <ul><li><strong>Implemented</strong>: <code>SHA-256 key, idempotent HEAD-before-PUT, head/get, presigned GET sau callback kiểm quyền, factory lấy credential từ Django settings, helper upload-then-transaction, unit test fake S3 và integration test SeaweedFS</code></li><li><strong>Not Implemented</strong>: <code>GC/retention (BLOCKER-014); model metadata nghiệp vụ cụ thể thuộc các task snapshot/evidence/report</code></li></ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
-<tr><td><code>src/backend/storage/client.py</code>, <code>storage/__init__.py</code></td><td>Boundary S3 inject được; key <code>sha256/&lt;prefix&gt;/&lt;digest&gt;.&lt;ext&gt;</code>; put/head/get; presigned URL chỉ ký sau kiểm quyền; upload trước rồi commit callback trong <code>transaction.atomic()</code>.</td><td>T-014</td></tr>
-<tr><td><code>src/backend/tests/storage/</code></td><td>6 unit test với fake backend và 1 integration test opt-in trên SeaweedFS dev.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/storage/client.py</code>, <code>storage/__init__.py</code></td><td>Boundary S3 inject được; key <code>sha256/&lt;prefix&gt;/&lt;digest&gt;</code> không phụ thuộc phần mở rộng; put/head/get; presigned URL chỉ ký sau kiểm quyền; upload trước rồi commit callback trong <code>transaction.atomic()</code>.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/tests/storage/</code></td><td>8 unit test với fake backend và 1 integration test opt-in trên SeaweedFS dev.</td><td>T-014</td></tr>
 <tr><td><code>src/backend/config/settings.py</code>, <code>.env.example</code></td><td>TTL presigned URL mặc định 300 giây, cấu hình qua env; credential vẫn chỉ lấy từ <code>OBJECT_STORAGE_*</code>.</td><td>T-014</td></tr>
 <tr><td><code>scripts/init-develop-environment.mk</code></td><td>Thêm module <code>storage</code> vào mypy quality gate.</td><td>T-014</td></tr>
 </tbody></table>

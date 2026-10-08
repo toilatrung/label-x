@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createApiClient, ApiRequestError, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
+import { SERVER_ERROR_MESSAGE } from '@/lib/api/errors';
 import { GET as csrf } from '@/app/api/auth/csrf/route';
 import { POST as login } from '@/app/api/auth/login/route';
 import { GET as session } from '@/app/api/auth/session/route';
@@ -112,6 +113,21 @@ describe('T-001 auth contract', () => {
 });
 
 describe('Shared typed API client', () => {
+  it('keeps the session on a server failure even if its code says NOT_AUTHENTICATED', async () => {
+    const expired = vi.fn();
+    window.addEventListener(AUTH_EXPIRED_EVENT, expired);
+    try {
+      const client = createApiClient({ baseUrl: 'http://localhost:3000', fetch: async () =>
+        Response.json({ code: 'NOT_AUTHENTICATED', request_id: 'server-trace' }, { status: 503 }) });
+      const { error, response } = await client.GET('/api/guidelines/rules/');
+      expect(expired).not.toHaveBeenCalled();
+      expect(new ApiRequestError(response.status, error, response.headers).message)
+        .toBe(`${SERVER_ERROR_MESSAGE} Mã yêu cầu: server-trace`);
+    } finally {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, expired);
+    }
+  });
+
   it('sends CSRF and cookies on contract write paths', async () => {
     document.cookie = 'csrftoken=client-csrf; path=/';
     const transport = vi.fn(async (request: Request) => {
@@ -151,5 +167,35 @@ describe('Shared typed API client', () => {
     } finally {
       window.removeEventListener(AUTH_EXPIRED_EVENT, expired);
     }
+  });
+
+  it.each([
+    { body: '<h1>Proxy traceback</h1>', contentType: 'text/html' },
+    { body: '{', contentType: 'application/json' },
+    { body: 'null', contentType: 'application/json' },
+    { body: '["Server diagnostic"]', contentType: 'application/json' },
+    { body: '', contentType: 'text/plain' },
+  ])('preserves server status and trace when the error body is $body', async ({ body, contentType }) => {
+    const expired = vi.fn();
+    window.addEventListener(AUTH_EXPIRED_EVENT, expired);
+    try {
+      const client = createApiClient({ baseUrl: 'http://localhost:3000', fetch: async () => new Response(body, {
+        status: 502, headers: { 'Content-Type': contentType, 'X-Request-ID': 'proxy-request' },
+      }) });
+      await expect(client.GET('/api/guidelines/rules/')).rejects.toMatchObject({
+        name: 'ApiRequestError', status: 502, requestId: 'proxy-request',
+        message: 'Máy chủ gặp lỗi. Vui lòng thử lại sau. Mã yêu cầu: proxy-request',
+      });
+      expect(expired).not.toHaveBeenCalled();
+    } finally { window.removeEventListener(AUTH_EXPIRED_EVENT, expired); }
+  });
+
+  it('preserves the server trace when authentication expires', async () => {
+    const client = createApiClient({ baseUrl: 'http://localhost:3000', fetch: async () =>
+      Response.json({ code: 'NOT_AUTHENTICATED', message: 'Server diagnostic', request_id: 'expired-request' }, { status: 403 }) });
+    await expect(client.GET('/api/auth/session/')).rejects.toMatchObject({
+      name: 'ApiRequestError', status: 403, requestId: 'expired-request',
+      message: 'Phiên đăng nhập đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại.',
+    });
   });
 });

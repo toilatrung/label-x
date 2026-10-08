@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-010 — Independent Technical Review — LabelX</title>
+<meta name="labelx:id" content="T-010-review-tdt2112">
+<meta name="labelx:title" content="T-010 — Independent Technical Review">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="api-errors">
+<meta name="labelx:tags" content="[T-010, review, error-code, frontend, backend, tdt2112]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / T-010</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-010-review-tdt2112</span><b>title</b><span>T-010 — Independent Technical Review</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>api-errors</span><b>tags</b><span>[T-010, review, error-code, frontend, backend, tdt2112]</span><b>priority</b><span>3</span></div>
+<h1 id="review-report-template">T-010 — Independent Technical Review</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Independent technical review of T-010 by a separate Codex agent. The reviewer read the final working diff and evidence artifacts; execution of automated suites and browser scenarios was performed by the parent Executor and is attributed accordingly.</p>
+<p><strong>Outcome:</strong> no unresolved technical finding in the reviewed scope. This report is technical evidence only. T-010 remains <code>review</code> pending human approval and merge under CR-102; this agent does not provide human approval or change task status.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-010-review-tdt2112</code></li>
+<li><strong>Title</strong>: <code>T-010 — Independent Technical Review</code></li>
+<li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
+<li><strong>Reviewer</strong>: <code>Codex independent_review (/root/independent_review)</code></li>
+<li><strong>Executor</strong>: <code>Codex parent (/root), acting for @tdt2112</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Review Type</strong>: <code>code</code></li>
+<li><strong>Task ID</strong>: <code>T-010</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>: <code>src/frontend/src/lib/api/errors.ts</code>, <code>client.ts</code>, auth context, login, guideline, related Vitest suites, <code>src/frontend/package.json</code>, backend CORS setting and <code>src/backend/tests/test_error_contract.py</code></li>
+<li><strong>Code Diff</strong>: source implementation commit <code>16e62a2447dcde20bd08d4566f8c3ef70ae35162</code> against <code>decfe71a033b68a9deff1e620d5a0155073c3a15</code> (develop base). Initial and remedial source were reviewed before commit; reviewer then verified the recorded implementing commit. Evidence/report changes are separate from this source commit.</li>
+<li><strong>Excluded Artifacts</strong>: unrelated application flows; live re-execution of test suites, build, API/browser scenarios; GitHub CI; human approval and merge.</li>
+<li><strong>Review Standard</strong>: <code>AGENT.html</code>, <code>CLAUDE.md</code>, <code>.agent/skills/labelx-pr-review/SKILL.md</code>, T-010 acceptance criteria.</li>
+</ul>
+<p>Source inspection covered every currently emitted backend literal code in the handler, middleware and existing views. The AST guard is bounded: it does not prove arbitrary dynamically computed codes, aliased constructors or future views packaged in subdirectories.</p>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Implementation Report</strong>: <a href="../implementation/T-010-@tdt2112.html">T-010 implementation report</a></li>
+<li><strong>Task or Epic Records</strong>: <a href="../../execution/task-board.html#t-010">canonical T-010</a></li>
+<li><strong>Task Board</strong>: <a href="../../execution/task-board-@tdt2112.html">per-user task board</a></li>
+<li><strong>Current Context</strong>: <a href="../../execution/current-context-@tdt2112.html">per-user context</a></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>; no architecture change.</li>
+<li><strong>Risks or Issues</strong>: none unresolved in technical scope.</li>
+<li><strong>Verification Evidence</strong>: <a href="../../../src/frontend/evidence/t010/login-400.png">login 400</a>, <a href="../../../src/frontend/evidence/t010/guideline-404.png">guideline 404</a>, <a href="../../../src/frontend/evidence/t010/guideline-403.png">guideline 403</a>, named tests below.</li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>git diff</code>; read final source, task and policy</td><td><code>passed</code></td><td>Executed by independent_review; final auth predicate and corrected middleware order verified directly.</td></tr>
+<tr><td><code>npm test</code></td><td><code>passed</code> (Executor-reported)</td><td>119 frontend tests, including every generated ErrorCode, login/guideline integration, malformed responses, 5xx trace and auth regression. Reviewer did not rerun this command.</td></tr>
+<tr><td>Backend pytest on PostgreSQL in locked uv environment</td><td><code>passed</code> (Executor-reported)</td><td>98 tests; includes error contract and CORS trace tests. Reviewer did not rerun this command.</td></tr>
+<tr><td>Detector tests</td><td><code>passed</code> (Executor-reported)</td><td>10 tests. No detector code is in the reviewed change.</td></tr>
+<tr><td>Frontend/backend lint, typecheck and frontend production build</td><td><code>passed</code> (Executor-reported)</td><td>Reported by parent in review handoff; precise commands/environment belong to the implementation report.</td></tr>
+<tr><td>Production browser against real backend</td><td><code>passed</code> (Executor-executed; screenshots inspected by reviewer)</td><td>Login 400, guideline unknown version 404, revoked permission 403. All three PNGs were opened directly by independent_review; guideline screenshots retain shell and authenticated user.</td></tr>
+<tr><td>GitHub CI and human approval</td><td><code>not-run</code></td><td>Outside this independent technical review. Requires eventual PR and an authorized human approver.</td></tr>
+</tbody></table>
+<h2 id="required-review-checks">Required Review Checks</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Code diff</td><td><code>passed</code></td><td>Direct source review of all task changes and corrected findings F-1/F-2.</td></tr>
+<tr><td>Acceptance criteria</td><td><code>passed</code></td><td>17 ErrorCode mappings; regenerated-contract-derived parameterized tests; current backend code audit; common module integrated into existing login and guideline flows.</td></tr>
+<tr><td>Architecture compliance</td><td><code>passed</code></td><td>No new framework/library, no contract or authorization policy changes; errors live under the existing API library.</td></tr>
+<tr><td>Security</td><td><code>passed</code></td><td>Raw backend diagnostics are not rendered; unknown/prototype keys use safe lookup; request IDs render as React text. Session-expiry events are limited to 401 and 403 NOT_AUTHENTICATED. No new secrets in reviewed source.</td></tr>
+<tr><td>Performance</td><td><code>passed</code></td><td>Small static mapping and constant-time code lookup. Only failed responses are cloned for inspection; no benchmark was performed.</td></tr>
+<tr><td>Regression risk</td><td><code>passed</code></td><td>Operation-level 403 retains session and shell; actual expired session retains previous behavior; 503 NOT_AUTHENTICATED regression test added; source keeps the existing aborted-request event guard.</td></tr>
+<tr><td>Test/lint/build evidence</td><td><code>passed</code> (Executor-reported)</td><td>119 frontend, 98 PostgreSQL backend, 10 detector tests plus lint/typecheck/build; commands were not independently re-executed by reviewer.</td></tr>
+</tbody></table>
+<p><strong>AC → evidence:</strong></p>
+<table><thead><tr><th>Acceptance criterion</th><th>Verifiable evidence</th></tr></thead><tbody>
+<tr><td>Every contract ErrorCode has a Vietnamese message</td><td><code>ERROR_MESSAGES satisfies Record&lt;ErrorCode, string&gt;</code>; <code>api-errors.test.ts</code> extracts the generated ErrorCode union; <code>npm pretest</code> regenerates <code>contract.d.ts</code> from <code>openapi.yaml</code>.</td></tr>
+<tr><td>All currently emitted backend codes are in contract</td><td><code>test_backend_literal_error_codes_are_declared_in_contract</code>; exception-handler parameterized tests; existing backend serializer/enum matching test; direct source inspection.</td></tr>
+<tr><td>Existing API-backed screens use common module</td><td>AuthProvider creates shared ApiRequestError instances with response headers; login consumes its mapped result; guideline does the same. Screenshot evidence shows shared 400/403/404 messages.</td></tr>
+<tr><td>Fallback and request_id on 5xx</td><td>Unknown-code/status and malformed-body tests, body/header precedence tests, login/guideline JSON and HTML 5xx integration tests, CORS exposure tests.</td></tr>
+</tbody></table>
+<h2 id="findings">Findings</h2>
+<table><thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead><tbody>
+<tr><td><code>F-1</code></td><td><code>major</code></td><td><code>src/frontend/src/lib/api/client.ts:33</code></td><td>Initial diff extended expiry detection to every non-2xx response. A 5xx carrying NOT_AUTHENTICATED could clear session and redirect before showing trace. <strong>Resolved:</strong> predicate now requires 401, or 403 with NOT_AUTHENTICATED.</td><td>Completed: preserve prior auth predicate and add <code>keeps the session on a server failure even if its code says NOT_AUTHENTICATED</code> test. Reviewer inspected both changes.</td><td>Codex parent / @tdt2112</td></tr>
+<tr><td><code>F-2</code></td><td><code>observation</code></td><td><code>src/backend/tests/test_error_contract.py:113</code></td><td>Initial CORS test wrapped middleware in the opposite order to settings. <strong>Resolved:</strong> test now constructs RequestIDMiddleware outside CorsMiddleware, matching production order.</td><td>Completed: correct test composition. Reviewer inspected final source.</td><td>Codex parent / @tdt2112</td></tr>
+</tbody></table>
+<p>No critical, major, minor or observation finding remains open in the reviewed technical scope.</p>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[x] Review scope and standard are explicit.</li>
+<li>[x] Each finding identifies evidence, severity, action, and owner.</li>
+<li>[x] Critical and major findings are resolved or formally accepted.</li>
+<li>[x] Approval outcome matches unresolved findings.</li>
+<li>[x] Code diff, acceptance criteria, architecture, security, performance, regression risk, and test/lint/build evidence are checked within the stated scope and execution attribution.</li>
+<li>[x] Reviewer identity is independent from Executor identity.</li>
+</ul>
+<h2 id="approval-outcome">Approval Outcome</h2>
+<ul>
+<li><strong>Decision</strong>: <code>APPROVED</code> (independent technical review only)</li>
+<li><strong>Rationale</strong>: <code>No unresolved technical findings; remediation verified in source; execution results attributed to parent Executor.</code></li>
+<li><strong>Approved By</strong>: <code>Codex independent_review — technical assessment, not CR-102 human approval</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Follow-up Tasks</strong>: <code>T-010: authorized human review, PR CI and merge into develop; task stays review.</code></li>
+</ul>
+<p>The fixed mapping intentionally ignores backend message text, which prevents accidental diagnostic disclosure but loses some contextual wording (for example FORBIDDEN from a CSRF rejection). This is consistent with T-010's fixed Vietnamese code mapping. 5xx status takes priority over a misleading code; request IDs prefer body then header.</p>
+<p>This report does not independently attest suite execution, live API behavior, PostgreSQL environment setup or generated-contract command output; those are Executor evidence. Screenshots demonstrate visible messages, not independently verified HTTP transport. No GitHub review/comment/approval or task transition was performed.</p>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] All required actions are linked to tasks or verified as resolved.</li>
+<li>[x] Approval outcome and rationale are recorded.</li>
+<li>[x] Related issue, risk, and report records are updated through this independent review evidence; no separate unresolved issue/risk record is required.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not approve artifacts with unresolved critical findings.</li>
+<li>Do not remove findings after remediation; record their resolution.</li>
+<li>Do not assign ambiguous severity or ownership.</li>
+<li>Do not claim review coverage outside the declared scope.</li>
+<li>Do not act as the Executor Agent for the same task.</li>
+<li>Do not move a task to <code>DONE</code>; QA must run after <code>APPROVED</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Saved as <code>.agent/reports/review/T-010-@tdt2112.html</code> under CR-100/CR-103 per-user HTML rules.</li>
+<li>Every heading and required table column from the review-report template is preserved.</li>
+<li>Repository-relative links and exact review enums are used; technical approval is explicitly separate from human approval.</li>
+</ul>
+</article></main></body></html>

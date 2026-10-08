@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Report T-014 — LabelX</title>
+<meta name="labelx:id" content="review-t-014"><meta name="labelx:title" content="Review Report T-014">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[review, t-014, storage]">
+<meta name="labelx:priority" content="2">
+<style>body{font:15px/1.6 Inter,"Segoe UI",sans-serif;max-width:1050px;margin:32px auto;padding:0 24px;color:#1a1d23}h2{border-bottom:1px solid #ddd;margin-top:28px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:6px 9px;text-align:left;vertical-align:top}code{background:#f3f4f6;padding:1px 3px}</style></head><body><article>
+<h1>Review Report T-014</h1>
+<h2 id="usage-purpose">Usage Purpose</h2><p>Đánh giá độc lập PR #50 trước khi merge vào develop.</p>
+<h2 id="record-metadata">Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: T-014</li><li><strong>Title</strong>: Review lớp Object Storage</li>
+<li><strong>Owner</strong>: @vietanhhhhhh2003</li><li><strong>Reviewer</strong>: @toilatrung (Codex hỗ trợ)</li>
+<li><strong>Executor</strong>: @vietanhhhhhh2003</li><li><strong>Status</strong>: <code>approved</code></li><li><strong>Decision</strong>: APPROVED</li>
+<li><strong>Review Type</strong>: code, security, governance</li><li><strong>Task ID</strong>: T-014</li><li><strong>Report Date</strong>: 2026-10-08</li></ul>
+<h2 id="review-scope">Review Scope</h2><ul>
+<li><strong>Included Artifacts</strong>: PR #50, storage module, settings, tests, tài liệu và kết quả ghép origin/develop.</li>
+<li><strong>Code Diff</strong>: origin/develop...e7c5f7307579e61b684e14812f8a21d79f4431ed; sau đó giải quyết xung đột typecheck.</li>
+<li><strong>Excluded Artifacts</strong>: GC/retention (BLOCKER-014).</li>
+<li><strong>Review Standard</strong>: .agent/skills/labelx-pr-review/SKILL.md, CR-102, AC T-014.</li></ul>
+<h2 id="related-files">Related Files</h2><ul>
+<li><strong>Implementation Report</strong>: .agent/reports/implementation/T-014-@vietanhhhhhh2003.html</li>
+<li><strong>Task or Epic Records</strong>: .agent/execution/task-board.html#t-014</li>
+<li><strong>Task Board</strong>: .agent/execution/task-board-@vietanhhhhhh2003.html</li>
+<li><strong>Current Context</strong>: .agent/execution/current-context-@vietanhhhhhh2003.html</li>
+<li><strong>Decisions</strong>: DEC-001; CR-102</li><li><strong>Risks or Issues</strong>: BLOCKER-014 (GC ngoài phạm vi)</li>
+<li><strong>Verification Evidence</strong>: src/backend/tests/storage/; CI PR #50; kết quả lệnh bên dưới.</li></ul>
+<h2 id="command-evidence">Command Evidence</h2><table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>pytest -q -p no:cacheprovider</code> trên PostgreSQL dev</td><td>passed</td><td>140 passed, 1 skipped, 11.35s; sau khi ghép develop.</td></tr>
+<tr><td><code>LABELX_RUN_S3_INTEGRATION=1 pytest tests/storage/test_seaweedfs_integration.py -q</code></td><td>passed</td><td>1 passed trên SeaweedFS dev; upload, head, get, presign.</td></tr>
+<tr><td><code>mypy config accounts audit engines guideline cvat_adapter storage</code></td><td>passed</td><td>58 source files, no issues.</td></tr>
+<tr><td><code>ruff check .; python3 scripts/validate-framework.py</code></td><td>passed</td><td>All checks passed; FRAMEWORK_VALIDATION_PASS.</td></tr>
+</tbody></table>
+<h2 id="required-review-checks">Required Review Checks</h2><table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Code diff</td><td>passed</td><td>Đọc toàn bộ storage/client.py, cấu hình và test.</td></tr>
+<tr><td>Acceptance criteria</td><td>passed</td><td>Test duplicate content kể cả khác extension; upload failure; log secret; test SeaweedFS.</td></tr>
+<tr><td>Architecture compliance</td><td>passed</td><td>Content key SHA-256, upload trước transaction metadata, S3 settings hiện có.</td></tr>
+<tr><td>Security</td><td>passed</td><td>Callback quyền chạy trước presign; test secret không vào log; TTL giới hạn.</td></tr>
+<tr><td>Performance</td><td>passed</td><td>HEAD trước PUT tránh tải lại blob; bytes trong bộ nhớ phù hợp phạm vi task hiện tại.</td></tr>
+<tr><td>Regression risk</td><td>passed</td><td>Giải quyết xung đột mypy giữ cả audit và storage; backend suite sau ghép đạt.</td></tr>
+<tr><td>Test/lint/build evidence</td><td>passed</td><td>CI trên e7c5f73 xanh; backend suite, mypy, Ruff và validate-kit chạy lại.</td></tr>
+</tbody></table>
+<h2 id="findings">Findings</h2><table><thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead><tbody>
+<tr><td>F-1</td><td>minor, resolved</td><td>src/backend/storage/client.py</td><td>Extension từng tham gia key, làm trùng blob khác đuôi.</td><td>Đã sửa ở e7c5f73 và kiểm bằng test khác extension.</td><td>@vietanhhhhhh2003</td></tr>
+<tr><td>F-2</td><td>minor, resolved</td><td>scripts/init-develop-environment.mk</td><td>Nhánh cũ xung đột với mypy audit mới ở develop.</td><td>Đã ghép cả audit và storage vào typecheck.</td><td>@toilatrung</td></tr>
+</tbody></table>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2><ul>
+<li>[x] Scope và chuẩn review rõ ràng.</li><li>[x] Finding có bằng chứng, mức độ, hành động, owner.</li>
+<li>[x] Không còn finding critical/major mở.</li><li>[x] Quyết định phù hợp findings.</li>
+<li>[x] Đã kiểm code, AC, kiến trúc, bảo mật, hiệu năng, regression và test.</li><li>[x] Reviewer độc lập với executor.</li></ul>
+<h2 id="approval-outcome">Approval Outcome</h2><ul><li><strong>Decision</strong>: APPROVED</li>
+<li><strong>Rationale</strong>: Mọi AC có test chạy được; xung đột với develop đã giải quyết và test tích hợp đạt.</li>
+<li><strong>Approved By</strong>: @toilatrung</li><li><strong>Decision Date</strong>: 2026-10-08</li>
+<li><strong>Follow-up Tasks</strong>: GC/retention theo BLOCKER-014.</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul><li>[x] Finding đã được giải quyết.</li><li>[x] Quyết định và lý do đã ghi.</li><li>[x] Báo cáo liên quan đã cập nhật.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2><p>Không chuyển task sang done trước QA; không thay đổi acceptance criteria.</p>
+<h2 id="output-requirements">Output Requirements</h2><p>Lưu tại .agent/reports/review/T-014.html với đầy đủ các mục của template.</p>
+</article></body></html>
