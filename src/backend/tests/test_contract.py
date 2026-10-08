@@ -94,6 +94,53 @@ def test_every_operation_traces_to_srs(spec):
             assert ref in srs, f"{path}: {ref} không có trong SRS"
 
 
+def test_review_decision_schema_preserves_audit_and_reference_links(spec):
+    schemas = spec["components"]["schemas"]
+    issue = schemas["Issue"]["properties"]["review_decisions"]
+    assert issue["type"] == "array"
+    assert issue["items"]["$ref"] == "#/components/schemas/ReviewDecision"
+
+    decision = schemas["ReviewDecision"]
+    properties = decision["properties"]
+    assert {
+        "actor_user_id",
+        "actor_role",
+        "decision",
+        "revision",
+        "reason",
+        "rule_ids",
+        "reference_version",
+        "reference_match_status",
+        "reference_error_ids",
+        "recorded_at",
+    } <= set(decision["required"])
+    assert {
+        "confirm",
+        "reject",
+        "uncertain",
+        "escalate",
+        "request_rework",
+    } <= set(properties["decision"]["enum"])
+    assert {
+        "adjudicate_confirm",
+        "adjudicate_reject",
+        "adjudicate_guideline_gap",
+    } <= set(properties["decision"]["enum"])
+    assert properties["reference_error_ids"]["uniqueItems"] is True
+    assert properties["reference_match_status"]["enum"] == [
+        "matched",
+        "not_matched",
+        "not_evaluated",
+    ]
+
+    srs = "\n".join(p.read_text(encoding="utf-8") for p in SRS_SECTIONS.glob("*.tex"))
+    trace = schemas["ReviewDecision"]["x-labelx-trace"]
+    assert {"FR-REV-08", "FR-REV-10", "FR-ESC-02", "FR-EVL-13"} <= set(trace)
+    for ref in trace:
+        assert TRACE_ID.match(ref), f"ReviewDecision: mã truy vết sai dạng {ref}"
+        assert ref in srs, f"ReviewDecision: {ref} không có trong SRS"
+
+
 def test_every_operation_declares_known_roles(spec):
     roles = set(spec["components"]["schemas"]["Role"]["enum"]) | PSEUDO_ROLES
     for path, method, op in operations(spec):
