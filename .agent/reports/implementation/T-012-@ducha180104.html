@@ -77,7 +77,12 @@ th{background:var(--sunken)}
 <tr><td><code>src/backend/accounts/views.py</code></td><td>Sửa đổi</td><td>Thêm <code>WorkflowPermissionsView</code> trả về cấu hình ma trận phân quyền và quy tắc workflow.</td></tr>
 <tr><td><code>src/backend/accounts/urls.py</code></td><td>Sửa đổi</td><td>Đăng ký routing <code>/api/auth/workflow-permissions/</code>.</td></tr>
 <tr><td><code>src/backend/guideline/permissions.py</code></td><td>Sửa đổi</td><td>Refactor <code>HasGuidelineRole</code> kế thừa <code>HasRoleAndDatasetScope</code>, loại bỏ hoàn toàn kiểm tra Django groups.</td></tr>
-<tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Tạo mới</td><td>44 unit & integration tests bao quát 7 vai trò, dataset scope, unique mapping constraint, fail-closed identity, anti-self-review, separation of duties, override validation, và kiểm toán trước mutation.</td></tr>
+<tr><td><code>src/backend/accounts/models.py</code></td><td>Sửa đổi</td><td>Thêm model <code>EmployeeIdentity</code> (employee_id unique, verified_at, verified_by, CheckConstraint verified_fields_consistent, UniqueConstraint Lower('employee_id') chống trùng khác hoa thường) và liên kết ForeignKey nullable từ <code>CvatIdentity</code> với <code>on_delete=models.PROTECT</code>.</td></tr>
+<tr><td><code>src/backend/accounts/services.py</code></td><td>Tạo mới</td><td>Cung cấp service <code>assign_employee_identity()</code> bọc trong <code>transaction.atomic()</code>, <code>select_for_update()</code>, kiểm tra target <code>CvatIdentity</code>, kiểm tra quyền <code>SUPER_ADMIN</code>/<code>QC_ADMIN</code>, chặn tự gán/tự sửa (SELF_MODIFICATION_FORBIDDEN), chuẩn hóa hoa thường, kiểm tra reason, và tích hợp <code>append_audit_event()</code>.</td></tr>
+<tr><td><code>src/backend/accounts/management/commands/set_cvat_identity.py</code></td><td>Sửa đổi</td><td>Thẩm định đầu vào (actor, reason, role, self-mod) TRƯỚC mọi mutation; bọc CVAT mapping + EmployeeIdentity + Audit trong cùng outer atomic transaction (rollback toàn bộ khi lỗi).</td></tr>
+<tr><td><code>src/backend/accounts/admin.py</code></td><td>Sửa đổi</td><td>Đăng ký <code>EmployeeIdentityAdmin</code> ở chế độ chỉ đọc hoàn toàn (vô hiệu hóa add/change/delete) để chống bypass service.</td></tr>
+<tr><td><code>src/backend/accounts/migrations/0002_employeeidentity.py</code></td><td>Tạo mới</td><td>Migration tạo bảng <code>EmployeeIdentity</code> và trường <code>employee</code> trên <code>CvatIdentity</code>, không tự động backfill dữ liệu cũ.</td></tr>
+<tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Sửa đổi</td><td>Mở rộng lên 74 unit & integration tests bao quát toàn diện các kịch bản F-1 (cross-account anti-self-review, separation of duties qua employee_id, provisioning security, audit rollback, command validation, và admin read-only).</td></tr>
 <tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture cấp phát <code>RoleAssignment</code> thay thế Django Group (21/21 passed).</td></tr>
 <tr><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
 <tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật tiến độ T-012 và liên kết DEC-011.</td></tr>
@@ -120,6 +125,20 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
 <tr><td>Ràng buộc Unique trên CvatIdentity ngăn chặn gán trùng cvat_user_id cho 2 LabelX user</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:66</code></td><td><code>test_cvat_user_id_unique_constraint_prevents_duplicate_mapping</code></td></tr>
 <tr><td>Tài khoản thứ hai thiếu mapping khi duyệt bị fail-closed trả 403 IDENTITY_MAPPING_MISSING kèm audit log</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-485</code></td><td><code>test_second_account_missing_mapping_fails_closed_when_adjudicating_with_audit</code>, <code>test_separation_of_duties_approver_missing_identity_fails_closed</code></td></tr>
 <tr><td>Tách biệt vai trò: Cùng LabelX user requester và approver trả về 403 SAME_REQUESTER_APPROVER</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:414-485</code></td><td><code>test_separation_of_duties_same_labelx_user_rejected</code></td></tr>
+<tr><td>Bảo vệ Separation of Duties qua EmployeeIdentity: Hai tài khoản khác nhau nhưng cùng mã nhân viên bị từ chối 403 SAME_REQUESTER_APPROVER</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:530-610</code></td><td><code>test_f1_same_employee_different_cvat_accounts_rejected</code>, <code>test_f1_different_employees_allowed</code></td></tr>
+<tr><td>Fail-closed khi thiếu hoặc chưa xác minh EmployeeIdentity trong luồng phê duyệt</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:560-590</code></td><td><code>test_f1_requester_unverified_employee_fails_closed</code>, <code>test_f1_approver_missing_employee_fails_closed</code>, <code>test_f1_migration_old_accounts_null_employee_fail_closed</code></td></tr>
+<tr><td>Client không thể tự khai báo hoặc inject employee_id để bypass thẩm định</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:555-585</code></td><td><code>test_f1_client_cannot_inject_employee_id</code></td></tr>
+<tr><td>Phân quyền gán EmployeeIdentity: Chỉ SUPER_ADMIN hoặc QC_ADMIN qua RoleAssignment, cấm bypass bằng is_staff/is_superuser</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:50-80</code></td><td><code>test_f1_provisioning_unprivileged_rejected</code>, <code>test_f1_staff_superuser_without_role_rejected</code></td></tr>
+<tr><td>Khóa kiểm tra tiền điều kiện: Bắt buộc target đã có CvatIdentity trước khi tạo EmployeeIdentity</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:90-110</code></td><td><code>test_f1_target_without_cvat_identity_rejected_before_employee_created</code></td></tr>
+<tr><td>Bắt buộc lý do không rỗng và đảm bảo rollback toàn bộ khi ghi audit thất bại</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:65, 140-160</code></td><td><code>test_f1_reason_required_not_empty</code>, <code>test_f1_audit_failure_rolls_back_mapping</code></td></tr>
+<tr><td>Lệnh set_cvat_identity bắt buộc --actor, --reason, kiểm tra role và thực thi atomic</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:25-95</code></td><td><code>test_f1_command_missing_actor_rejected</code>, <code>test_f1_command_missing_reason_rejected</code>, <code>test_f1_command_unprivileged_actor_rejected</code>, <code>test_f1_set_cvat_identity_command_with_employee</code></td></tr>
+<tr><td>Django Admin EmployeeIdentity ở chế độ chỉ đọc hoàn toàn (không cho add/change/delete)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/admin.py:10-25</code></td><td><code>test_f1_admin_cannot_add_employee_identity</code>, <code>test_f1_admin_cannot_change_employee_identity</code>, <code>test_f1_admin_cannot_delete_employee_identity</code></td></tr>
+<tr><td>Ràng buộc CheckConstraint bảo đảm tính nhất quán của verified_at và verified_by</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:35-45</code></td><td><code>test_f1_model_constraint_verified_fields_consistent</code>, <code>test_f1_is_verified_requires_both_fields</code></td></tr>
+<tr><td>Lệnh set_cvat_identity: Thiếu --actor, --reason hoặc actor không đủ quyền không tạo và không thay đổi CvatIdentity</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:48-95</code></td><td><code>test_f1_command_missing_actor_does_not_create_or_modify_cvat_identity</code>, <code>test_f1_command_missing_reason_does_not_create_or_modify_cvat_identity</code>, <code>test_f1_command_unprivileged_actor_does_not_create_or_modify_cvat_identity</code></td></tr>
+<tr><td>Lệnh set_cvat_identity: Audit failure trong atomic transaction rollback toàn bộ cả CVAT mapping lẫn employee mapping</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:90-135</code></td><td><code>test_f1_command_audit_failure_rolls_back_both_cvat_and_employee_mapping</code></td></tr>
+<tr><td>Chặn actor tự gán hoặc tự đổi EmployeeIdentity của chính mình (SELF_MODIFICATION_FORBIDDEN)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:65-75</code></td><td><code>test_f1_self_modification_forbidden_for_super_admin_and_qc_admin</code></td></tr>
+<tr><td>Chuẩn hóa employee_id hoa thường và UniqueConstraint DB không phân biệt hoa thường chống trùng lặp</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:100-115</code>, <code>accounts/services.py:125-135</code></td><td><code>test_f1_employee_id_case_insensitive_normalization_and_uniqueness</code></td></tr>
+<tr><td>Chính sách PROTECT: EmployeeIdentity đang được CvatIdentity liên kết tuyệt đối không thể bị xóa (ProtectedError)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:155-165</code></td><td><code>test_f1_employee_identity_protected_from_deletion_while_linked</code></td></tr>
 <tr><td>Reviewer có CVAT identity trùng snapshot author trả về 403 SELF_REVIEW_FORBIDDEN</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-411</code></td><td><code>test_anti_self_review_reviewer_matches_author_rejected</code></td></tr>
 <tr><td>Super Admin Override bị cấm trên Anti-Self-Review; vẫn bị từ chối 403 SELF_REVIEW_FORBIDDEN</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-411</code></td><td><code>test_anti_self_review_super_admin_with_override_cannot_self_review</code></td></tr>
 <tr><td>Super Admin Override hợp lệ: Thiếu lý do trả về 422 BUSINESS_RULE_UNMET có audit; có lý do code tự động gắn nhãn is_override=True</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:488-565</code></td><td><code>test_super_admin_override_without_reason_returns_422_and_records_audit</code>, <code>test_super_admin_override_whitespace_reason_returns_422_and_records_audit</code>, <code>test_super_admin_override_representative_view_succeeds_and_labels_audit</code></td></tr>
@@ -163,11 +182,48 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
   </li>
 </ol>
 
+<h2 id="khac-phuc-f1">Khắc phục Lỗ hổng F-1 và Hardening Vòng Cuối (PR #56 Review Round 3)</h2>
+<p>Thực hiện chỉ đạo xử lý Finding F-1 trên PR #56 từ commit <code>fdd7775d82fd89d8d2117c10856c4be299cb6424</code> theo quyết định bổ sung <code>employee_id</code> và hoàn tất 4 yêu cầu hardening bắt buộc:</p>
+<ol>
+  <li><strong>Lệnh set_cvat_identity: Thẩm định Trước Mutation & Giao dịch Toàn vẹn (Atomic All-or-Nothing)</strong>:
+    <ul>
+      <li><em>Lỗ hổng trước đó</em>: Lệnh ghi <code>CvatIdentity</code> vào DB trước khi kiểm tra <code>--actor</code>, <code>--reason</code> và quyền của actor.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thực hiện toàn bộ kiểm tra đầu vào (sự tồn tại của target user, bắt buộc <code>--actor</code> và <code>--reason</code> khi có <code>--employee-id</code>, kiểm tra actor có <code>RoleAssignment</code> là <code>SUPER_ADMIN</code>/<code>QC_ADMIN</code>, và kiểm tra chống tự gán <code>actor.pk == user.pk</code>) <strong>TRƯỚC MỌI THAO TÁC GHI DB</strong>. Nếu thiếu actor/reason hoặc actor không đủ quyền, lệnh lập tức từ chối mà tuyệt đối không tạo mới và không thay đổi bất kỳ bản ghi <code>CvatIdentity</code> nào.</li>
+      <li>Bọc toàn bộ thao tác cập nhật <code>CvatIdentity</code>, gán <code>EmployeeIdentity</code> và ghi <code>AuditEvent</code> trong cùng một outer <code>transaction.atomic()</code> duy nhất. Bất kỳ lỗi quyền, validation hoặc lỗi ghi audit nào (kể cả lỗi disk full) cũng rollback toàn bộ, không để lại bất kỳ dữ liệu mồ côi hay mapping dở dang nào.</li>
+    </ul>
+  </li>
+  <li><strong>Chặn Tự Gán và Tự Sửa EmployeeIdentity (Anti-Self-Modification)</strong>:
+    <ul>
+      <li>Service <code>assign_employee_identity()</code> kiểm tra và từ chối dứt khoát khi actor tự gán hoặc tự đổi EmployeeIdentity của chính mình (<code>actor.pk == user.pk</code>) với mã lỗi rõ ràng <code>403 SELF_MODIFICATION_FORBIDDEN</code>.</li>
+      <li>Quy tắc áp dụng đồng nhất cho cả <code>SUPER_ADMIN</code> và <code>QC_ADMIN</code>, cũng như chặn đứng khi gọi qua command CLI. Việc cấp phát bắt buộc phải do một quản trị viên độc lập khác thực hiện theo nguyên tắc four-eyes.</li>
+    </ul>
+  </li>
+  <li><strong>Chuẩn hóa Mã Nhân sự và Bảo vệ Database Case-Insensitive Unique</strong>:
+    <ul>
+      <li>Chuẩn hóa mã nhân sự trong code: Các chuỗi như <code>EMP-001</code> và <code>emp-001</code> được chuẩn hóa và nhận diện là cùng một định danh nhân sự, tự động liên kết về cùng một bản ghi <code>EmployeeIdentity</code>.</li>
+      <li>Bảo vệ đa tầng tại database: Thêm ràng buộc <code>UniqueConstraint(Lower('employee_id'), name='accounts_employee_identity_employee_id_ci_unique')</code>. Bất kỳ nỗ lực tạo bản ghi đối nghịch khác hoa thường trực tiếp ở DB đều bị từ chối với <code>IntegrityError</code>.</li>
+      <li>Quy tắc Separation of Duties tự động nhận diện và chặn đứng việc tự duyệt chéo giữa hai tài khoản mang mã nhân viên khác hoa thường (<code>403 SAME_REQUESTER_APPROVER</code>).</li>
+    </ul>
+  </li>
+  <li><strong>Thống nhất Chính sách Xóa: Khóa Bảo vệ PROTECT cho CvatIdentity.employee</strong>:
+    <ul>
+      <li>Thống nhất mã nguồn với tài liệu thiết kế: Thiết lập <code>on_delete=models.PROTECT</code> cho trường <code>CvatIdentity.employee</code>.</li>
+      <li>Cập nhật migration <code>0002_employeeidentity</code>. Khi một <code>EmployeeIdentity</code> đang được liên kết với bất kỳ tài khoản <code>CvatIdentity</code> nào, thao tác xóa <code>EmployeeIdentity</code> sẽ bị từ chối mức DB/ORM bằng ngoại lệ <code>ProtectedError</code>, ngăn chặn hoàn toàn việc xóa nhầm hoặc xóa trộm định danh nhân sự đang hoạt động.</li>
+    </ul>
+  </li>
+  <li><strong>Bảo vệ Django Admin và Separation of Duties</strong>:
+    <ul>
+      <li>Khóa hoàn toàn quyền tạo mới, chỉnh sửa, xóa trên Django Admin đối với <code>EmployeeIdentity</code> (<code>has_add_permission=False</code>, <code>has_change_permission=False</code>, <code>has_delete_permission=False</code>), chỉ dùng để tra cứu / đối soát.</li>
+      <li>Separation of duties fail-closed khi thiếu hoặc chưa xác minh <code>EmployeeIdentity</code>; chặn 100% tự duyệt chéo đa tài khoản.</li>
+    </ul>
+  </li>
+</ol>
+
 <h2 id="deviations">Deviations</h2>
 <p>Hệ thống không tự ý bổ sung các bảng như <code>Person</code>, <code>employee_id</code> hay <code>sso_subject</code> ngoài phạm vi M-01. Thay vào đó, toàn bộ cơ chế bảo vệ dựa trên nguyên tắc <strong>Fail-Closed</strong> và đã được tài liệu hóa chính thức trong <strong>DEC-011</strong>.</p>
 
 <h2 id="completion-criteria">Completion Criteria</h2>
-<p>Toàn bộ 44 bài test tích hợp và unit test của T-012, 21 test guideline, 11 test contract, và 185 test toàn bộ backend repository đều pass 100%. Task hiện chuyển trạng thái <strong>review</strong> (DEC-011 giữ <strong>proposed</strong>) theo chỉ thị review, sẵn sàng cho vòng review độc lập tiếp theo bởi PO (@toilatrung).</p>
+<p>Toàn bộ 74 bài test tích hợp và unit test của T-012 (test_rbac_scope.py), cùng 215 test toàn bộ backend repository đều pass 100% (1 skipped hợp lệ cho SeaweedFS integration). Task hiện chuyển trạng thái <strong>review</strong> (DEC-011 giữ <strong>proposed</strong>) theo chỉ thị review, sẵn sàng cho vòng review độc lập tiếp theo bởi PO (@toilatrung).</p>
 
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>

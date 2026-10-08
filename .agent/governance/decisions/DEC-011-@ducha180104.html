@@ -147,6 +147,45 @@ ul.dir{columns:2;font-size:14px}
   </ul>
 </li>
 </ol>
+<h3>Bổ sung Quyết định F-1: Định danh Nhân sự Tập trung (EmployeeIdentity) và Khóa Kỹ thuật Đa Tài khoản (Hardening Vòng Cuối):</h3>
+<p>Nhằm loại bỏ hoàn toàn rủi ro người dùng sử dụng nhiều tài khoản CVAT/LabelX để tự duyệt chéo hoặc né Separation of Duties, kiến trúc T-012 được bổ sung giải pháp định danh nhân sự chính quy theo quyết định F-1 trên PR #56 và hoàn tất hardening kỹ thuật:</p>
+<ol>
+<li><strong>Mô hình dữ liệu EmployeeIdentity và Chuẩn hóa Không phân biệt Hoa thường</strong>:
+  <ul>
+    <li>Model <code>EmployeeIdentity</code> quản lý <code>employee_id</code> ổn định do HR/IT cấp, không cho người dùng tự khai báo.</li>
+    <li>Chuẩn hóa mã định danh: <code>EMP-001</code> và <code>emp-001</code> là cùng một định danh. Bảo vệ đa tầng ở mức cơ sở dữ liệu bằng ràng buộc <code>UniqueConstraint(Lower('employee_id'), name='accounts_employee_identity_employee_id_ci_unique')</code> chống tạo bản ghi trùng lặp đối nghịch.</li>
+    <li>Lưu vết xác thực thực thể qua <code>verified_at</code> và <code>verified_by</code> (khóa ngoại <code>PROTECT</code> tới <code>User</code>). Thuộc tính <code>is_verified</code> yêu cầu cả hai trường cùng tồn tại, được kiểm soát bằng ràng buộc mức DB <code>CheckConstraint</code>.</li>
+  </ul>
+</li>
+<li><strong>Chính sách Khóa và Xóa Liên kết (CvatIdentity.employee PROTECT)</strong>:
+  <ul>
+    <li><code>CvatIdentity</code> trỏ nullable tới <code>EmployeeIdentity</code> bằng ForeignKey với chính sách xóa <code>on_delete=models.PROTECT</code> (thống nhất hoàn toàn với báo cáo kiến trúc). Khi một <code>EmployeeIdentity</code> đang được gắn kết với bất kỳ tài khoản <code>CvatIdentity</code> nào, thao tác xóa <code>EmployeeIdentity</code> sẽ bị chặn mức DB/ORM với <code>ProtectedError</code>.</li>
+    <li>Nhiều tài khoản CVAT/LabelX của cùng một nhân viên có thể trỏ về cùng một <code>EmployeeIdentity</code>. Dữ liệu cũ chưa đối soát giữ <code>null</code> và bị fail-closed khi thẩm định phân quyền.</li>
+  </ul>
+</li>
+<li><strong>Dịch vụ Cấp phát An toàn và Chặn Tự Gán / Tự Sửa (Anti-Self-Modification)</strong>:
+  <ul>
+    <li>Service <code>assign_employee_identity()</code> khóa hàng mục tiêu bằng <code>select_for_update()</code> trong <code>transaction.atomic()</code>.</li>
+    <li>Chặn đứng hành vi tự cấp / tự sửa: Actor không được phép tự gán hoặc tự thay đổi <code>EmployeeIdentity</code> cho chính tài khoản của mình (<code>actor.pk == user.pk</code>), từ chối ngay với <code>403 SELF_MODIFICATION_FORBIDDEN</code> (áp dụng nghiêm ngặt cho cả <code>SUPER_ADMIN</code> và <code>QC_ADMIN</code>).</li>
+    <li>Bắt buộc tài khoản mục tiêu đã có <code>CvatIdentity</code> trước; từ chối <code>422 IDENTITY_MAPPING_MISSING</code> trước khi tạo <code>EmployeeIdentity</code>.</li>
+    <li>Bắt buộc <code>reason</code> có nội dung thực tế; thẩm quyền chỉ dành cho actor có <code>RoleAssignment</code> thuộc <code>SUPER_ADMIN</code> hoặc <code>QC_ADMIN</code> (cấm bypass qua <code>is_staff</code>/<code>is_superuser</code>).</li>
+    <li>Tích hợp <code>append_audit_event()</code> của T-013. Bất kỳ lỗi audit nào cũng tự động rollback toàn bộ mapping.</li>
+  </ul>
+</li>
+<li><strong>Lệnh Quản trị set_cvat_identity: Thẩm định Trước Mutation & Atomic Transaction Hoàn toàn</strong>:
+  <ul>
+    <li>Kiểm tra toàn bộ tính hợp lệ của đầu vào (sự tồn tại của target, cờ <code>--actor</code>, cờ <code>--reason</code>, quyền quản trị của actor, và kiểm tra chống tự gán <code>actor.pk == user.pk</code>) <strong>TRƯỚC MỌI THAO TÁC GHI CƠ SỞ DỮ LIỆU</strong>. Nếu thiếu actor/reason hoặc actor không đủ quyền, tuyệt đối không tạo mới và không thay đổi bất kỳ bản ghi <code>CvatIdentity</code> nào.</li>
+    <li>Bọc việc cập nhật CVAT mapping, gán <code>EmployeeIdentity</code> và ghi <code>AuditEvent</code> trong cùng một outer <code>transaction.atomic()</code>. Bất kỳ lỗi quyền, lỗi validation hoặc lỗi audit nào cũng rollback toàn bộ, đảm bảo tính toàn vẹn tất cả hoặc không có gì (all-or-nothing).</li>
+  </ul>
+</li>
+<li><strong>Bảo vệ Django Admin và Separation of Duties</strong>:
+  <ul>
+    <li><code>EmployeeIdentityAdmin</code> ở chế độ chỉ đọc hoàn toàn (vô hiệu hóa <code>has_add_permission</code>, <code>has_change_permission</code>, <code>has_delete_permission</code>).</li>
+    <li><code>check_separation_of_duties()</code> resolve định danh từ DB; chặn <code>403 SAME_REQUESTER_APPROVER</code> khi hai tài khoản khác nhau nhưng cùng <code>employee_id</code> (kể cả khi nhập khác hoa thường).</li>
+  </ul>
+</li>
+</ol>
+
 <h3>Ranh giới Kỹ thuật và Rủi ro còn lại (Residual Risk):</h3>
 <ul>
 <li><strong>Kỹ thuật đảm bảo</strong>: Ngăn chặn 100% việc tự duyệt trên cùng một tài khoản LabelX, ngăn chặn cùng tài khoản CVAT, ngăn chặn tài khoản không có mapping (Fail-Closed), ngăn chặn Super Admin tự duyệt bài của mình, và ghi nhận kiểm toán toàn diện.</li>

@@ -21,7 +21,13 @@ from rest_framework import status
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 
-from accounts.models import SYSTEM_WIDE_ROLES, CvatIdentity, Role, RoleAssignment
+from accounts.models import (
+    SYSTEM_WIDE_ROLES,
+    CvatIdentity,
+    EmployeeIdentity,
+    Role,
+    RoleAssignment,
+)
 from audit.models import AuditEvent
 from audit.services import append_audit_event
 from config.exceptions import ApiError
@@ -512,16 +518,26 @@ def check_separation_of_duties(
     object_type: str = "request",
     object_id: object = "",
 ) -> None:
-    """FR-SEC-04, AC 2: Separation of duties (approver != requester, cross-account check)."""
+    """FR-SEC-04, AC 2 + F-1 fix: Separation of duties with EmployeeIdentity cross-account check.
+
+    Steps:
+    1. Both requester identities missing -> 403
+    2. Same LabelX user_id -> 403
+    3. Resolve requester CvatIdentity from DB; mismatch -> 403
+    4. Resolve approver CvatIdentity from DB; missing -> 403
+    5. Same CVAT user_id -> 403
+    6. (F-1) EmployeeIdentity check: both must have verified employee; same employee -> 403.
+       Account without verified EmployeeIdentity is fail-closed for approval role.
+    """
     user = getattr(request, "user", None)
     if not user or not getattr(user, "is_authenticated", False):
         raise ApiError(
             status.HTTP_403_FORBIDDEN,
             "NOT_AUTHENTICATED",
-            "Chưa đăng nhập hoặc phiên hết hạn.",
+            "Chua dang nhap hoac phien het han.",
         )
 
-    # 1. Không cho phép cả requester_user_id và requester_cvat_user_id cùng thiếu
+    # 1. Khong cho phep ca requester_user_id va requester_cvat_user_id cung thieu
     if requester_user_id is None and requester_cvat_user_id is None:
         record_rejection_audit(
             request=request,
@@ -537,7 +553,7 @@ def check_separation_of_duties(
             "Thiếu thông tin định danh của người yêu cầu (requester identity missing).",
         )
 
-    # 2. So sánh cùng LabelX user (chặn ngay lập tức vi phạm four-eyes, bao gồm cả Super Admin)
+    # 2. Cùng LabelX user → chặn ngay lập tức (vi phạm four-eyes, gồm cả Super Admin)
     if requester_user_id is not None and user.pk == requester_user_id:
         record_rejection_audit(
             request=request,
@@ -557,6 +573,7 @@ def check_separation_of_duties(
 
     # 3. Resolve CvatIdentity của requester từ DB
     resolved_requester_cvat_id: int | None = None
+    req_identity: CvatIdentity | None
     if requester_user_id is not None:
         req_identity = CvatIdentity.objects.filter(user_id=requester_user_id).first()
         if req_identity is None:
@@ -584,13 +601,13 @@ def check_separation_of_duties(
                 object_id=str(object_id),
                 action=action,
                 message=(
-                    "Thông tin danh tính người yêu cầu không khớp với cơ sở dữ liệu (fail-closed)."
+                    "Thông tin định danh người yêu cầu không khớp với cơ sở dữ liệu (fail-closed)."
                 ),
             )
             raise ApiError(
                 status.HTTP_403_FORBIDDEN,
                 "IDENTITY_MAPPING_MISSING",
-                "Thông tin danh tính người yêu cầu không khớp với cơ sở dữ liệu (fail-closed).",
+                "Thông tin định danh người yêu cầu không khớp với cơ sở dữ liệu (fail-closed).",
             )
         resolved_requester_cvat_id = req_identity.cvat_user_id
     else:
@@ -663,6 +680,66 @@ def check_separation_of_duties(
             status.HTTP_403_FORBIDDEN,
             "SAME_REQUESTER_APPROVER",
             "Người phê duyệt trùng danh tính thực tế với người yêu cầu qua tài khoản khác.",
+        )
+
+    # 6. (F-1) Kiểm tra EmployeeIdentity cross-account
+    # Nguyên tắc: cả requester và approver phải có EmployeeIdentity đã xác minh.
+    # Cùng employee_id → cùng thể nhân → 403 SAME_REQUESTER_APPROVER.
+    # Thiếu / chưa xác minh → fail-closed 403 IDENTITY_MAPPING_MISSING.
+    req_emp: EmployeeIdentity | None = req_identity.employee if req_identity is not None else None
+    app_emp: EmployeeIdentity | None = app_identity.employee
+
+    if req_emp is None or not req_emp.is_verified:
+        record_rejection_audit(
+            request=request,
+            code="IDENTITY_MAPPING_MISSING",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message=(
+                "Người yêu cầu chưa có EmployeeIdentity đã xác minh."
+                " Không thể phê duyệt (fail-closed)."
+            ),
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "IDENTITY_MAPPING_MISSING",
+            "Người yêu cầu chưa có EmployeeIdentity đã xác minh."
+            " Không thể phê duyệt (fail-closed).",
+        )
+
+    if app_emp is None or not app_emp.is_verified:
+        record_rejection_audit(
+            request=request,
+            code="IDENTITY_MAPPING_MISSING",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message=("Người phê duyệt chưa có EmployeeIdentity đã xác minh (fail-closed)."),
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "IDENTITY_MAPPING_MISSING",
+            "Người phê duyệt chưa có EmployeeIdentity đã xác minh (fail-closed).",
+        )
+
+    if req_emp.pk == app_emp.pk:
+        record_rejection_audit(
+            request=request,
+            code="SAME_REQUESTER_APPROVER",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message=(
+                f"Người phê duyệt và người yêu cầu cùng thể nhân"
+                f" (employee_id={req_emp.employee_id}). Vi phạm nguyên tắc bốn mắt."
+            ),
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "SAME_REQUESTER_APPROVER",
+            f"Người phê duyệt và người yêu cầu cùng thể nhân"
+            f" (employee_id={req_emp.employee_id}). Vi phạm nguyên tắc bốn mắt.",
         )
 
 
