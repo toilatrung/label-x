@@ -27,6 +27,7 @@
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td><code>.agent/governance/decisions/DEC-009.html</code></td><td>Ghi actor/action, exact anchor/reference version, trường hợp một-nhiều/không khớp, quy tắc loại adjudication khỏi tử số, ví dụ 3/5 và phương pháp kiểm chứng từng điều kiện.</td><td>T-007</td></tr>
 <tr><td><code>docs/04-api/openapi.yaml</code></td><td>Thêm <code>Issue.review_decisions</code> và <code>ReviewDecision</code> với actor, action, revision, reason, rule IDs, reference version, trạng thái match, danh sách ID reference và thời điểm lưu.</td><td>T-007</td></tr>
+<tr><td><code>src/frontend/src/lib/api/contract.d.ts</code>, <code>src/backend/tests/test_contract.py</code></td><td>Sinh lại TypeScript contract và thêm regression test cho schema audit, enum adjudication, reference IDs và trace SRS.</td><td>T-007</td></tr>
 </tbody></table>
 <h2>Related Files</h2>
 <ul><li><strong>Task Record</strong>: <code>.agent/execution/task-board.html#t-007</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, DEC-005.html, DEC-006.html, DEC-009.html</code></li><li><strong>Contract</strong>: <code>docs/04-api/openapi.yaml</code></li><li><strong>Review Request</strong>: <code>Independent review/QC session; PR target develop</code></li></ul>
@@ -34,6 +35,7 @@
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>UV_CACHE_DIR=/tmp/uv-cache-labelx make validate-kit</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code></td></tr>
 <tr><td><code>python3 YAML parse of docs/04-api/openapi.yaml</code></td><td><code>passed</code></td><td>Parsed OpenAPI YAML and confirmed <code>components.schemas.ReviewDecision</code> exists.</td></tr>
+<tr><td><code>openapi-typescript docs/04-api/openapi.yaml -o src/frontend/src/lib/api/contract.d.ts</code></td><td><code>passed</code></td><td>Generated contract with openapi-typescript 7.13.0; output includes <code>ReviewDecision</code> and <code>Issue.review_decisions</code>.</td></tr>
 <tr><td><code>DJANGO_SECRET_KEY=test-only DATABASE_URL=sqlite:////tmp/labelx-t007-test.sqlite3 uv run --directory src/backend --frozen pytest -q tests/test_contract.py</code></td><td><code>passed</code></td><td>11 passed; the contract tests validate OpenAPI structure, references, trace IDs, and the new review-decision schema. No database behavior is under test.</td></tr>
 <tr><td><code>git diff --check</code></td><td><code>passed</code></td><td>No whitespace errors in the T-007 worktree at check time.</td></tr>
 <tr><td><code>make check</code></td><td><code>not run</code></td><td>Full application checks are broader than this documentation/contract task; no runtime application code changed.</td></tr>
