@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision KPI-2b: nối quyết định reviewer với lỗi reference — LabelX</title>
+<meta name="labelx:id" content="DEC-009">
+<meta name="labelx:title" content="Nối quyết định reviewer với lỗi reference cho KPI-2b">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="evaluation">
+<meta name="labelx:module" content="reference">
+<meta name="labelx:tags" content="[decision, kpi-2b, reference, review, m13]">
+<meta name="labelx:priority" content="1"></head><body>
+<main><article>
+<h1>DEC-009: Nối quyết định reviewer với lỗi reference cho KPI-2b</h1>
+<h2>Usage Purpose</h2>
+<p>Ghi cách lưu riêng quyết định reviewer và nối quyết định xác nhận với phần tử lỗi reference để tính KPI-2b theo FR-EVL-13.</p>
+<h2>Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-009</code></li>
+<li><strong>Title</strong>: <code>Nối quyết định reviewer với lỗi reference cho KPI-2b</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>product</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2>Context</h2>
+<p>KPI-2b (FR-EVL-13) là số lỗi reference reviewer thực sự xác nhận chia cho tổng số lỗi reference của phần dữ liệu đó, theo từng nhánh (SRS §7, KPI-2b; UC-05, UC-06, UC-08, UC-10). Issue có thể đại diện cho nhiều lỗi đếm; trạng thái cuối <code>confirmed</code> cũng có thể là kết quả phân xử của QA Lead theo FR-ESC-02. Vì vậy không thể suy numerator chỉ từ trạng thái hiện tại của issue.</p>
+<h2>Decision Drivers</h2>
+<ul>
+<li>Đếm phần tử lỗi reference riêng lẻ theo định nghĩa \(\mathcal{E}\) và BR-01…BR-07; BR-06/BR-07 không thuộc tử số hoặc mẫu số.</li>
+<li>Truy vết bằng anchor đã chuẩn hóa theo DEC-006 và lineage/reference version theo DEC-005.</li>
+<li>Lưu đủ ba kết luận adjudication của QA Lead theo FR-ESC-02 (xác nhận lỗi, bác bỏ, guideline còn thiếu), nhưng không tính kết luận nào thành xác nhận ban đầu của reviewer.</li>
+<li>Không nhân đôi phần tử reference khi nhiều issue hoặc quyết định trỏ cùng một phần tử.</li>
+</ul>
+<h2>Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>Exact match bằng reference version, frame key, family, anchor kind/objects/rule ID; lưu danh sách ID phần tử \(\mathcal{E}\)</td><td>Tất định, audit được, hỗ trợ một-nhiều và đếm distinct</td><td>Không tự ghép khi anchor không tương thích</td><td><code>meets</code></td></tr>
+<tr><td>Ghép theo frame hoặc overlap hình học</td><td>Có thể tạo gợi ý cho vùng gần nhau</td><td>Không xác định phần tử nào được xác nhận; phụ thuộc ngưỡng và có thể ghép nhầm</td><td><code>does-not-meet</code></td></tr>
+<tr><td>Dùng trạng thái cuối <code>confirmed</code> của issue</td><td>Đơn giản</td><td>Trộn quyết định reviewer với adjudication; không biểu diễn lỗi reference cụ thể trong issue nhiều lỗi</td><td><code>does-not-meet</code></td></tr>
+</tbody></table>
+<h2>Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>Exact anchor-to-reference match with explicit links</code>.</li>
+<li><strong>Rationale</strong>: Chỉ quyết định <code>confirm</code> do actor là reviewer mới là input cho KPI-2b. Ghép exact dùng reference version và khóa anchor; số phần tử \(\mathcal{E}\) được lưu thành liên kết rõ ràng, không suy diễn từ issue state.</li>
+<li><strong>Effective Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h3>Quy tắc nối và tính</h3>
+<ol>
+<li>Mỗi phần tử \(e \in \mathcal{E}\) có <code>reference_error_id</code> bất biến trong một <code>reference_version</code> đã khoá. Phần tử giữ <code>frame_key</code>, <code>family</code> và anchor theo DEC-006; anchor gồm <code>kind</code>, tập <code>objects</code> đã sắp thứ tự và <code>rule_id</code> khi áp dụng (BR-01…BR-07).</li>
+<li>Match chính xác yêu cầu cùng <code>reference_version</code>, <code>frame_key</code>, <code>family</code>, <code>anchor.kind</code>, tập <code>anchor.objects</code> và <code>rule_id</code>. <code>issue.n_i</code> không thay thế danh sách phần tử reference; với cụm E3, issue có thể liên kết nhiều <code>reference_error_id</code>.</li>
+<li>Mỗi quyết định reviewer được lưu độc lập, bất biến, cùng issue, actor, action và reference version. Khi action là <code>confirm</code>, lưu mọi ID match chính xác. Match status là <code>matched</code> nếu danh sách không rỗng, <code>not_matched</code> nếu reference đã khoá nhưng không có phần tử khớp, hoặc <code>not_evaluated</code> nếu chưa có reference version.</li>
+<li>Một quyết định có thể liên kết nhiều phần tử \(\mathcal{E}\); nhiều quyết định có thể trỏ cùng một phần tử. Numerator KPI-2b là số ID distinct trong các liên kết của quyết định <code>confirm</code> do reviewer tạo trong phần dữ liệu/nhánh đó; denominator là tổng phần tử lỗi reference đủ điều kiện của đúng phần dữ liệu theo SRS §7. Không cộng hai lần ID trùng.</li>
+<li><code>not_matched</code> không tăng numerator và không sửa reference; có thể là cảnh báo sai hoặc lỗi reviewer phát hiện ngoài reference. <code>not_evaluated</code> không được tính như không khớp. Mọi adjudication theo FR-ESC-02, <code>reject</code>, <code>uncertain</code>, và <code>escalate</code> không tăng numerator.</li>
+</ol>
+<h3>Ví dụ kiểm định</h3>
+<p>Reference <code>R7</code> có năm lỗi đủ điều kiện: lỗi <code>E-101</code>, hai lỗi E3 <code>E-102</code> và <code>E-103</code> theo BR-04, cùng hai lỗi ở frame khác. Reviewer xác nhận issue <code>I-20</code> khớp <code>[E-101]</code> và issue <code>I-21</code> khớp <code>[E-102, E-103]</code>. Nếu một quyết định lặp lại cũng trỏ <code>E-101</code>, numerator vẫn là 3 ID distinct. Issue <code>I-22</code> không khớp ID nào được lưu với <code>not_matched</code> và không tăng numerator. KPI-2b bằng <code>3 / 5 = 0,6</code> cho phần dữ liệu/nhánh này.</p>
+<h3>Verification Methods</h3>
+<table><thead><tr><th>Condition</th><th>Verification method</th></tr></thead><tbody>
+<tr><td>Only reviewer <code>confirm</code> decisions contribute; all three FR-ESC-02 adjudication outcomes do not.</td><td>Inspect actor/action values and recompute the example numerator from qualifying records only.</td></tr>
+<tr><td>Exact links use the locked reference version and DEC-006 anchor; one issue may link several E elements.</td><td>Check the decision rules against the anchor fields and inspect the OpenAPI schema for required version/status/ID fields.</td></tr>
+<tr><td>Repeated links to an E element count once; BR-06/BR-07 are excluded.</td><td>Recompute distinct linked IDs and denominator eligibility from the stated BR rules.</td></tr>
+<tr><td>Unmatched and unevaluated decisions remain distinguishable.</td><td>Check that <code>not_matched</code> requires a locked reference while <code>not_evaluated</code> has no reference version and neither contributes numerator.</td></tr>
+</tbody></table>
+<h2>Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: KPI-2b tái lập được từ quyết định reviewer và reference đã khoá; giữ được một-nhiều và không match mà không thay đổi \(\mathcal{E}\).</li>
+<li><strong>Negative</strong>: Cần lưu liên kết quyết định–reference và version ngay cả khi issue được adjudicate sau đó.</li>
+<li><strong>Follow-up Work</strong>: T-008 bổ sung operation quyết định vào OpenAPI; E-19/E-20 tính KPI-2b và kiểm định theo tập dữ liệu/nhánh.</li>
+</ul>
+<h2>Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml</code>, <code>docs/label-x_system-requirement-specification/sections/07-evaluation.tex</code>, <code>docs/label-x_system-requirement-specification/sections/03-data-errors.tex</code>, <code>docs/label-x_system-requirement-specification/sections/04-usecases.tex</code>, <code>docs/label-x_system-requirement-specification/sections/06-functional.tex</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-01, T-007, T-008, E-19, E-20</code></li>
+<li><strong>Change Requests</strong>: <code>CR-101</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2>Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[x] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented (4261234 trên nhánh T-007; thay hash sau squash).</li>
+</ul>
+<h2>Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2>Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-009.html</code>.</li>
+<li>Preserve every heading and table column in the decision template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

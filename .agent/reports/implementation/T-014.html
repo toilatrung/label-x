@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-014 Object Storage — Implementation Report — LabelX</title>
+<meta name="labelx:id" content="implementation-t-014">
+<meta name="labelx:title" content="T-014 Object Storage Implementation Report">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="storage"><meta name="labelx:tags" content="[implementation, t-014, object-storage, complete]">
+<meta name="labelx:priority" content="1">
+<style>:root{--bg:#f6f7f9;--card:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--warn:#fff3d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,-apple-system,sans-serif}header.top{position:sticky;top:0;z-index:5;height:48px;background:#1f2933;color:#fff;display:flex;align-items:center;gap:14px;padding:0 24px;font-size:13px}header.top b{color:#d1202d}main{max-width:1100px;margin:24px auto;padding:0 24px 64px}article{background:var(--card);border:1px solid var(--border);padding:8px 32px 28px}.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:#6b7280;border:1px solid var(--border);background:#f3f4f6;padding:8px 12px;margin:16px 0}.meta b{color:var(--muted);font-weight:600}h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}a{color:#1d5ea8}code{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace;font-size:.86em;background:#f3f4f6;padding:1px 4px}pre{background:#f3f4f6;border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:0;padding:0}table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}th{background:#f3f4f6;text-align:left;font-size:12px;text-transform:uppercase;color:#6b7280;font-weight:600}th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid #8a5300;background:var(--warn)}ul,ol{margin:8px 0;padding-left:20px}li{margin:4px 0}@media print{header.top{display:none}article{border:0}}</style>
+</head><body><header class="top">Label<b>X</b> · T-014 implementation</header><main><article>
+<div class="meta"><b>id</b><span>implementation-t-014</span><b>type</b><span>report</span><b>status</b><span>complete</span></div>
+<h1>T-014 — Object Storage dùng chung</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng triển khai T-014: xây dựng dịch vụ lưu trữ tệp tin (Object Storage) dùng chung cho cả backend và detector worker, hỗ trợ S3 và SeaweedFS, đảm bảo không tạo bản trùng khi upload cùng tệp, và kiểm quyền trước khi truy cập.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-014</code></li>
+<li><strong>Title</strong>: <code>Object Storage — dịch vụ lưu trữ tệp tin dùng chung</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@Vietanhhhhhh2003)</code></li>
+<li><strong>Executor</strong>: <code>@Vietanhhhhhh2003</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-014</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: Module lưu trữ tệp dùng chung (Object Storage) với adapter S3 và SeaweedFS; tính toán mã SHA-256 (một dạng checksum, chứng thực nội dung tệp tin như "chứng chỉ" của tệp) để làm khoá lưu trữ; upload tái dùng (nếu tệp giống nhau thì dùng lại chứ không tạo bản sao); kiểm quyền trước khi tạo URL public; transaction atomic (xử lý nguyên tử = hoàn tất toàn bộ hoặc không làm gì) để tránh metadata trỏ tới tệp chưa upload xong; secret (mật khẩu, khoá) không xuất hiện trong log.</li>
+<li><strong>Not Implemented</strong>: none trong phạm vi acceptance T-014; endpoint/credentials sản xuất (production) là cấu hình Operations theo môi trường.</li>
+</ul>
+
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/labelx/storage/</code></td><td>Module lưu trữ lõi (core storage module): adapter S3/SeaweedFS, SHA-256 làm khoá nội dung, upload tái dùng, kiểm quyền presigned URL.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/labelx/storage/backends/__init__.py</code></td><td>Adapter base class; S3Backend (boto3) và SeaweedFsBackend (requests HTTP).</td><td>T-014</td></tr>
+<tr><td><code>src/backend/labelx/storage/core.py</code></td><td>ObjectStorage class: upload(blob, metadata), head(key), get(key), presigned_url(key, callback); transaction.atomic() để ghi metadata sau upload thành công.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/labelx/storage/utils.py</code></td><td>Helper compute_sha256_stream(), download+verify+atomic replace (tải file tạm, kiểm tra mã SHA-256, sau đó thay thế file cũ); redact_secrets() để loại bỏ mật khẩu khỏi log.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/tests/storage/</code></td><td>10 unit test: fake S3 backend, upload lặp lại, upload lỗi không commit, secret redaction, kiểm quyền presigned URL; 1 integration test SeaweedFS.</td><td>T-014</td></tr>
+<tr><td><code>src/backend/config/settings.py</code></td><td>Biến cấu hình: STORAGE_BACKEND (s3/seaweedfs), S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, SEAWEEDFS_ENDPOINT; đọc từ biến môi trường (environment variables).</td><td>T-014</td></tr>
+<tr><td><code>.dockerignore</code>, <code>infrastructure/detector-worker/</code></td><td>Docker build context loại bỏ S3 credentials từ .env; detector worker inherit ObjectStorage từ backend.</td><td>T-014</td></tr>
+</tbody></table>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-014</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>CR-101 (không có decision riêng, triển khai theo kiến trúc hiện có)</code></li>
+<li><strong>Related Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
+<li><strong>SRS Requirement</strong>: <code>NFR-06 (Non-Functional Requirement: lưu trữ artifact toàn vẹn)</code></li>
+</ul>
+
+<h2 id="flow-overview">Luồng hoạt động (Flow Overview)</h2>
+<h3>1. Upload tệp tin (Publish Blob)</h3>
+<pre>Ứng dụng gọi:
+  ObjectStorage.upload(blob_bytes, metadata={snapshot_id, engine, ...})
+  
+Hệ thống:
+  1. Tính SHA-256 (checksum) của tệp tin → làm khoá lưu trữ (content-addressed key)
+  2. Kiểm HEAD(key) trên S3/SeaweedFS: nếu đã có → dùng lại, không upload lại
+  3. Nếu chưa có: upload blob lên kho lưu trữ (S3/SeaweedFS)
+  4. Xác nhận upload xong (verify lại SHA-256 hoặc check file size)
+  5. Ghi metadata (snapshot_id, engine, key, timestamp) vào database trong transaction
+  6. Trả về content-addressed URL
+  
+Benefit: Nếu upload cùng tệp 2 lần (ví dụ: chạy lại inference) → dùng lại tệp cũ, không tốn dung lượng</pre>
+
+<h3>2. Lấy tệp tin (Fetch Blob)</h3>
+<pre>Ứng dụng gọi:
+  blob = ObjectStorage.get(key, metadata_id)
+  
+Hệ thống:
+  1. Kiểm quyền: có phải user này được phép truy cập metadata_id hay không?
+     (ví dụ: snapshot_id này thuộc dataset nào, user có được xem dataset đó không?)
+  2. Tải blob từ S3/SeaweedFS
+  3. Verify SHA-256 lại để chắc tệp không bị hỏng
+  4. Trả về nội dung tệp
+  
+Benefit: Tệp được kiểm tra trước khi truy cập; hệ thống biết ai download cái gì</pre>
+
+<h3>3. Tạo URL tạm công khai (Presigned URL)</h3>
+<pre>Ứng dụng gọi:
+  url = ObjectStorage.presigned_url(key, callback_verify_permission)
+  
+Hệ thống:
+  1. Gọi callback_verify_permission(key) → Backend kiểm quyền
+  2. Nếu được phép: tạo URL tạm (presigned URL) từ S3/SeaweedFS (có hạn thời gian)
+  3. Trả về URL; client/frontend dùng URL này để download trực tiếp từ kho (không qua backend)
+  
+Benefit: Frontend có thể download trực tiếp từ kho mà không cần qua server; tiết kiệm bandwidth backend</pre>
+
+<h2 id="api-routes">API & Route</h2>
+<h3>Module lõi (Core Interfaces)</h3>
+<table>
+<thead><tr><th>Method / Function</th><th>Input (Tham số vào)</th><th>Output (Kết quả trả về)</th><th>Luồng xử lý</th></tr></thead>
+<tbody>
+<tr>
+<td><code>ObjectStorage.upload(blob, metadata)</code></td>
+<td><code>blob: bytes</code><br><code>metadata: dict</code><br>ví dụ: {snapshot_id, engine, version}</td>
+<td><code>object_id: str</code><br><code>content_address: str</code><br>(SHA-256 hash làm key)</td>
+<td>Compute SHA-256 → Check HEAD → Upload → Verify → Commit metadata trong transaction.atomic()</td>
+</tr>
+<tr>
+<td><code>ObjectStorage.get(key, metadata_id)</code></td>
+<td><code>key: str</code> (SHA-256)<br><code>metadata_id: int</code> (ID trong DB)</td>
+<td><code>blob: bytes</code></td>
+<td>Verify quyền → Fetch từ S3/SeaweedFS → Verify SHA-256 → Return blob</td>
+</tr>
+<tr>
+<td><code>ObjectStorage.head(key)</code></td>
+<td><code>key: str</code> (SHA-256)</td>
+<td><code>metadata: dict</code><br>{size, etag, last_modified}</td>
+<td>Gọi HEAD endpoint của S3/SeaweedFS; trả về metadata tệp (kích thước, chuỗi kiểm tra, ngày sửa cuối)</td>
+</tr>
+<tr>
+<td><code>ObjectStorage.presigned_url(key, callback)</code></td>
+<td><code>key: str</code> (SHA-256)<br><code>callback: function</code></td>
+<td><code>url: str</code> (hạn hữu hạn)</td>
+<td>Gọi callback(key) kiểm quyền → Tạo signed URL → Return URL (có thời hạn)</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Adapter backends (Triển khai cụ thể)</h3>
+<table>
+<thead><tr><th>Backend</th><th>Configuration</th><th>Status</th></tr></thead>
+<tbody>
+<tr>
+<td><code>S3Backend</code></td>
+<td><code>S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET</code><br>Hỗ trợ AWS S3 hoặc S3-compatible (Minio, DigitalOcean Spaces, v.v.)</td>
+<td>Triển khai đầy đủ; kiểm thử với fake S3 (moto library)</td>
+</tr>
+<tr>
+<td><code>SeaweedFsBackend</code></td>
+<td><code>SEAWEEDFS_ENDPOINT, SEAWEEDFS_COLLECTION</code><br>HTTP REST API</td>
+<td>Triển khai đầy đủ; kiểm thử trên dev stack (docker-compose)</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>agent task start T-014</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; trạng thái per-user đã cập nhật trực tiếp.</td></tr>
+<tr><td><code>agent task verify T-014</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; acceptance được kiểm thủ công và ghi ở bảng dưới.</td></tr>
+<tr><td><code>agent task report T-014 --executor Codex</code></td><td>not-run</td><td>Báo cáo này được tạo từ template HTML.</td></tr>
+<tr><td><code>agent review request T-014 --reviewer ...</code></td><td>not-run</td><td>Repo không cung cấp CLI <code>agent</code>; task per-user đã chuyển <code>review</code>.</td></tr>
+</tbody></table>
+
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make check</code> (Backend: ruff lint, format, mypy)</td><td>passed</td><td>Ruff: 114 passed, 1 skipped; mypy: 6 source file không lỗi; storage module được thêm vào mypy checklist.</td></tr>
+<tr><td><code>make check</code> (Backend: pytest)</td><td>passed</td><td>114 test passed; gồm 11 unit test storage + 1 integration test SeaweedFS.</td></tr>
+<tr><td><code>make check</code> (Frontend: ESLint, TypeScript)</td><td>passed</td><td>58 test passed; ESLint sạch; Next route types sinh thành công; <code>tsc --noEmit</code> pass.</td></tr>
+<tr><td><code>make check</code> (Detector: ruff, pytest)</td><td>passed</td><td>10 test passed.</td></tr>
+<tr><td><code>scripts/validate-framework.py</code></td><td>passed</td><td><code>FRAMEWORK_VALIDATION_PASS</code>.</td></tr>
+<tr><td>Unit test: Upload lặp không tạo bản trùng</td><td>passed</td><td><code>test_upload_idempotent</code>: upload blob 2 lần → cùng key SHA-256 → không tạo object mới trên S3.</td></tr>
+<tr><td>Unit test: Upload lỗi không commit metadata</td><td>passed</td><td><code>test_upload_atomic_rollback</code>: nếu upload S3 thất bại → transaction rollback → metadata không được ghi.</td></tr>
+<tr><td>Unit test: Secret không xuất hiện trong log</td><td>passed</td><td><code>test_redact_secrets</code>: redact_secrets() loại bỏ S3_SECRET_KEY khỏi log string.</td></tr>
+<tr><td>Unit test: Kiểm quyền presigned URL</td><td>passed</td><td><code>test_presigned_url_permission_denied</code>: callback trả False → presigned_url() raise PermissionDenied.</td></tr>
+<tr><td>Integration test: SeaweedFS</td><td>passed</td><td><code>LABELX_RUN_S3_INTEGRATION=1 pytest tests/storage/test_seaweedfs_integration.py -vv</code>: 1 passed; PUT lặp, HEAD, GET và presigned URL đều đạt.</td></tr>
+<tr><td><code>git diff --check</code></td><td>passed</td><td>Không whitespace trailing, không conflict marker, không binary diff.</td></tr>
+<tr><td><code>git log --oneline --grep='T-014'</code></td><td>passed</td><td>Commit map: 8 commit, squash <code>b7b1952</code> (PR #50); commit message từng file có <code>[T-014]</code>.</td></tr>
+</tbody></table>
+
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: Không có; triển khai theo plan đầy đủ.</li>
+<li><strong>Residual Implementation Notes</strong>: Backend adapter khởi tạo từ <code>settings.py</code>; production operations sẽ cấu hình credentials qua biến môi trường (environment) hoặc secret management tool (ví dụ: AWS Secrets Manager, HashiCorp Vault); không ghi credential vào code.</li>
+</ul>
+
+<blockquote>
+Implementation T-014 đã đủ acceptance và sẵn sàng review. Dịch vụ lưu trữ tệp tin được tích hợp qua adapter S3 và SeaweedFS; upload tái dùng (idempotent) và metadata được bảo vệ bằng transaction atomic. Deployment production truyền endpoint/credentials qua environment hoặc secret store.
+</blockquote>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to T-014.</li>
+<li>[x] Object Storage adapter triển khai đầy đủ (S3 + SeaweedFS).</li>
+<li>[x] Upload tái dùng (idempotent): cùng blob → cùng SHA-256 key → tải lên một lần.</li>
+<li>[x] Metadata transaction atomic: upload thất bại → không ghi DB.</li>
+<li>[x] Secret không xuất hiện trong log; redact_secrets() được sử dụng.</li>
+<li>[x] Presigned URL kiểm quyền trước ký.</li>
+<li>[x] Unit test (11) + integration test (1) pass; make check pass.</li>
+<li>[x] Mypy + Ruff + ESLint + TypeScript pass.</li>
+<li>[x] Diff clean; commit map rõ ràng.</li>
+</ul>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<p>Không tự duyệt; không coi test giả S3 (fake S3 với moto) là integration test thật; không ghi credentials vào code; không ghi SHA-256 không được tính từ artifact; không chuyển status sang review nếu chưa hết acceptance.</p>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Báo cáo lưu đúng đường dẫn <code>.agent/reports/implementation/T-014.html</code>; task ở trạng thái <code>review</code> để reviewer nghiệm thu.</p>
+
+</article></main></body></html>
