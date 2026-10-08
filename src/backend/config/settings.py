@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
     "accounts.apps.AccountsConfig",
+    "audit.apps.AuditConfig",
     "guideline",
 ]
 
