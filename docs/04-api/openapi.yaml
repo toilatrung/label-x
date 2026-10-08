@@ -818,11 +818,14 @@ components:
       type: object
       description: |
         Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
-        total = completed + failed + pending + not_checked;
-        eligible = total − not_checked_reasons.not_applicable − not_checked_reasons.not_triggered;
-        đơn vị failed và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
+        total = completed + failed + pending + not_checked = eligible + excluded;
+        excluded = not_checked_reasons.not_applicable + not_checked_reasons.not_triggered
+        (đơn vị ngoài phạm vi áp dụng theo applicability_version; B-04 "mẫu số áp dụng", DEC-010);
+        đơn vị failed, pending và not_checked do disabled/no_model/no_reference vẫn nằm trong eligible
         (không loại đơn vị lỗi khỏi mẫu số); coverage = completed / eligible, null khi eligible = 0.
-      required: [engine, status, unit, total, eligible, completed, failed, pending, not_checked, not_checked_reasons, coverage]
+        Khi excluded > 0, mọi nơi hiển thị coverage hoặc trạng thái engine phải hiện cảnh báo kèm số
+        đơn vị bị loại theo lý do và applicability_version (engine-interface.html §4).
+      required: [engine, status, unit, total, eligible, excluded, applicability_version, completed, failed, pending, not_checked, not_checked_reasons, coverage]
       x-labelx-trace:
         engine: [FR-AGG-04]
         status: [FR-AGG-05]
@@ -830,6 +833,8 @@ components:
         unit: [FR-AGG-04]
         total: [FR-AGG-04]
         eligible: [FR-AGG-04, FR-RPT-04]
+        excluded: [FR-AGG-04, FR-RPT-04]
+        applicability_version: [FR-AGG-04]
         completed: [FR-AGG-04]
         failed: [FR-AGG-04]
         pending: [FR-AGG-04, FR-AGG-05]
@@ -851,6 +856,13 @@ components:
           type: integer
           minimum: 0
           description: Mẫu số coverage; gồm cả đơn vị failed, pending và not_checked chặn (disabled, no_model, no_reference)
+        excluded:
+          type: integer
+          minimum: 0
+          description: Đơn vị ngoài phạm vi áp dụng (not_applicable + not_triggered), không vào mẫu số; > 0 thì phải hiện cảnh báo
+        applicability_version:
+          type: string
+          description: Version quy tắc áp dụng đã dùng để loại đơn vị (EngineDescriptor.applicability_version)
         completed: { type: integer, minimum: 0 }
         failed:
           type: integer
@@ -883,7 +895,8 @@ components:
       type: string
       description: |
         Trạng thái nội bộ của một đơn vị (không hiển thị). Map sang EngineStatus của đơn vị theo
-        x-labelx-public-status; trạng thái engine tổng hợp theo engine-interface.html §3.
+        x-labelx-public-status, trùng kết quả tính từ ledger một đơn vị; trạng thái engine tổng hợp
+        luôn tính từ LedgerEntry (engine-interface.html §3).
       enum: [pending, running, retrying, completed, failed, not_checked]
       x-labelx-trace: [FR-AGG-04, FR-AGG-05]
       x-labelx-public-status:
@@ -896,23 +909,12 @@ components:
     EngineInternalState:
       type: string
       description: |
-        Trạng thái nội bộ của một engine trong run (orchestrator, không hiển thị). Map sang
-        EngineStatus theo x-labelx-public-status; chỉ `succeeded` (mọi đơn vị eligible completed)
-        thành `checked` (FR-AGG-05, B-19).
+        Trạng thái điều phối của engine trong run (orchestrator, không hiển thị). Không map trực
+        tiếp sang EngineStatus: trạng thái hiển thị luôn tính từ LedgerEntry
+        (engine-interface.html §3); x-labelx-terminal là các giá trị mà engine đã dừng.
       enum: [queued, running, retrying, succeeded, partially_succeeded, failed, cancelled, disabled, model_unavailable, reference_unavailable, not_applicable]
       x-labelx-trace: [FR-AGG-05, FR-ENG-09]
-      x-labelx-public-status:
-        queued: running
-        running: running
-        retrying: running
-        succeeded: checked
-        partially_succeeded: partial
-        failed: failed
-        cancelled: partial
-        disabled: not_checked
-        model_unavailable: not_checked
-        reference_unavailable: not_checked
-        not_applicable: not_checked
+      x-labelx-terminal: [succeeded, partially_succeeded, failed, cancelled, disabled, model_unavailable, reference_unavailable, not_applicable]
     EngineDescriptor:
       type: object
       description: Đăng ký engine với orchestrator; thêm engine mới chỉ cần descriptor + worker (NFR-13)

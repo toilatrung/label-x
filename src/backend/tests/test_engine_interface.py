@@ -16,13 +16,14 @@ import pytest
 import yaml
 
 from engines.interface import (
-    INTERNAL_PUBLIC_STATUS,
+    TERMINAL_INTERNAL_STATES,
     UNIT_PUBLIC_STATUS,
     EngineInternalState,
     EngineStatus,
     EngineUnitOutcome,
     LedgerCounts,
     NotCheckedReason,
+    display_status,
     public_status,
 )
 
@@ -46,19 +47,7 @@ OBJECT_SCHEMAS = [
     "EngineUnitResult",
     "EngineOutput",
 ]
-ENUM_SCHEMAS = ["EngineUnitOutcome", "EngineInternalState"]
-UNFINISHED_INTERNAL = {
-    EngineInternalState.QUEUED,
-    EngineInternalState.RUNNING,
-    EngineInternalState.RETRYING,
-    EngineInternalState.PARTIALLY_SUCCEEDED,
-    EngineInternalState.FAILED,
-    EngineInternalState.CANCELLED,
-    EngineInternalState.DISABLED,
-    EngineInternalState.MODEL_UNAVAILABLE,
-    EngineInternalState.REFERENCE_UNAVAILABLE,
-    EngineInternalState.NOT_APPLICABLE,
-}
+
 R = NotCheckedReason
 
 
@@ -83,14 +72,20 @@ def test_every_field_traces_to_srs(name: str) -> None:
         _codes_exist(codes, f"{name}.{prop}")
 
 
-@pytest.mark.parametrize("name", ENUM_SCHEMAS)
-def test_internal_enums_trace_and_map_every_value(name: str) -> None:
-    schema = SCHEMAS[name]
-    _codes_exist(schema["x-labelx-trace"], name)
-    public = set(SCHEMAS["EngineStatus"]["enum"])
+def test_unit_outcome_enum_traces_and_maps_every_value() -> None:
+    schema = SCHEMAS["EngineUnitOutcome"]
+    _codes_exist(schema["x-labelx-trace"], "EngineUnitOutcome")
     mapping: dict[str, str] = schema["x-labelx-public-status"]
-    assert set(mapping) == set(schema["enum"]), f"{name}: mọi giá trị phải có map"
-    assert set(mapping.values()) <= public
+    assert set(mapping) == set(schema["enum"])
+    assert set(mapping.values()) <= set(SCHEMAS["EngineStatus"]["enum"])
+
+
+def test_internal_state_has_no_direct_public_map() -> None:
+    """EngineInternalState chỉ điều phối; trạng thái hiển thị luôn từ ledger (review F-2)."""
+    schema = SCHEMAS["EngineInternalState"]
+    _codes_exist(schema["x-labelx-trace"], "EngineInternalState")
+    assert "x-labelx-public-status" not in schema
+    assert set(schema["x-labelx-terminal"]) <= set(schema["enum"])
 
 
 def test_python_enums_match_contract() -> None:
@@ -101,9 +96,9 @@ def test_python_enums_match_contract() -> None:
     assert {k.value: v.value for k, v in UNIT_PUBLIC_STATUS.items()} == SCHEMAS[
         "EngineUnitOutcome"
     ]["x-labelx-public-status"]
-    assert {k.value: v.value for k, v in INTERNAL_PUBLIC_STATUS.items()} == SCHEMAS[
-        "EngineInternalState"
-    ]["x-labelx-public-status"]
+    assert {s.value for s in TERMINAL_INTERNAL_STATES} == set(
+        SCHEMAS["EngineInternalState"]["x-labelx-terminal"]
+    )
 
 
 def test_ledger_entry_requires_denominator_fields() -> None:
@@ -127,10 +122,41 @@ def test_only_completed_unit_maps_to_checked() -> None:
     assert checked == {EngineUnitOutcome.COMPLETED}
 
 
-def test_no_unfinished_internal_state_maps_to_checked() -> None:
-    assert set(EngineInternalState) == UNFINISHED_INTERNAL | {EngineInternalState.SUCCEEDED}
-    for state in UNFINISHED_INTERNAL:
-        assert INTERNAL_PUBLIC_STATUS[state] is not EngineStatus.CHECKED, state
+def test_unit_map_equals_single_unit_ledger() -> None:
+    """Bảng map từng đơn vị trùng quy tắc ledger: không có nguồn trạng thái thứ hai."""
+    for outcome, expected in UNIT_PUBLIC_STATUS.items():
+        reasons = list(NotCheckedReason) if outcome is EngineUnitOutcome.NOT_CHECKED else [None]
+        for reason in reasons:
+            ledger = LedgerCounts.from_outcomes([(outcome, reason)])
+            finished = outcome not in {
+                EngineUnitOutcome.PENDING,
+                EngineUnitOutcome.RUNNING,
+                EngineUnitOutcome.RETRYING,
+            }
+            assert public_status(ledger, finished=finished) is expected, (outcome, reason)
+
+
+def test_display_status_always_from_ledger() -> None:
+    """Hiển thị luôn bằng public_status(ledger); chưa dừng mà còn pending thì running."""
+    for state in EngineInternalState:
+        finished = state in TERMINAL_INTERNAL_STATES
+        for ledger in _all_ledgers():
+            status = display_status(state, ledger)
+            assert status is public_status(ledger, finished=finished)
+            if not finished and ledger.pending:
+                assert status is EngineStatus.RUNNING
+            if status is EngineStatus.CHECKED:
+                assert ledger.completed == ledger.eligible > 0
+
+
+def test_display_examples_resolve_former_conflicts() -> None:
+    blocked = LedgerCounts(completed=4, not_checked_reasons={R.NO_MODEL: 1})
+    assert display_status(EngineInternalState.SUCCEEDED, blocked) is EngineStatus.PARTIAL
+    done = LedgerCounts(completed=5)
+    assert display_status(EngineInternalState.CANCELLED, done) is EngineStatus.CHECKED
+    assert (
+        display_status(EngineInternalState.QUEUED, LedgerCounts(pending=5)) is EngineStatus.RUNNING
+    )
 
 
 def _all_ledgers(limit: int = 2) -> Any:
@@ -249,3 +275,18 @@ def test_from_outcomes_counts_and_requires_reason() -> None:
         LedgerCounts.from_outcomes([(U.FAILED, R.DISABLED)])
     with pytest.raises(ValueError, match="âm"):
         LedgerCounts(completed=-1)
+
+
+def test_excluded_units_still_checked_but_warned() -> None:
+    """PO 2026-10-08 (DEC-010): loại khỏi mẫu số nhưng phải cảnh báo; trạng thái vẫn checked."""
+    ledger = LedgerCounts(
+        completed=900, not_checked_reasons={R.NOT_APPLICABLE: 100, R.NOT_TRIGGERED: 0}
+    )
+    assert public_status(ledger, finished=True) is EngineStatus.CHECKED
+    assert ledger.coverage == 1.0
+    assert (ledger.total, ledger.eligible, ledger.excluded) == (1000, 900, 100)
+    assert ledger.needs_exclusion_warning
+    assert ledger.excluded_reasons == {R.NOT_APPLICABLE: 100}
+    assert not LedgerCounts(completed=5).needs_exclusion_warning
+    blocked = LedgerCounts(completed=5, not_checked_reasons={R.NO_MODEL: 1})
+    assert blocked.excluded == 0 and blocked.excluded_reasons == {}

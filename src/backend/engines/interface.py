@@ -34,7 +34,8 @@ class NotCheckedReason(StrEnum):
     NOT_TRIGGERED = "not_triggered"
 
 
-# Đơn vị ngoài phạm vi áp dụng: không tính vào mẫu số (tab:enginestates).
+# Đơn vị ngoài phạm vi áp dụng: không vào mẫu số (B-04 "mẫu số áp dụng", DEC-010; PO 2026-10-08).
+# Bị loại phải được cảnh báo khi hiển thị (excluded > 0), không im lặng.
 EXCLUDED_FROM_ELIGIBLE = frozenset(
     {NotCheckedReason.NOT_APPLICABLE, NotCheckedReason.NOT_TRIGGERED}
 )
@@ -66,7 +67,7 @@ UNIT_PUBLIC_STATUS: Mapping[EngineUnitOutcome, EngineStatus] = {
 
 
 class EngineInternalState(StrEnum):
-    """Trạng thái nội bộ của engine trong run, schema `EngineInternalState`."""
+    """Trạng thái điều phối của engine trong run, schema `EngineInternalState` (không hiển thị)."""
 
     QUEUED = "queued"
     RUNNING = "running"
@@ -81,19 +82,20 @@ class EngineInternalState(StrEnum):
     NOT_APPLICABLE = "not_applicable"
 
 
-INTERNAL_PUBLIC_STATUS: Mapping[EngineInternalState, EngineStatus] = {
-    EngineInternalState.QUEUED: EngineStatus.RUNNING,
-    EngineInternalState.RUNNING: EngineStatus.RUNNING,
-    EngineInternalState.RETRYING: EngineStatus.RUNNING,
-    EngineInternalState.SUCCEEDED: EngineStatus.CHECKED,
-    EngineInternalState.PARTIALLY_SUCCEEDED: EngineStatus.PARTIAL,
-    EngineInternalState.FAILED: EngineStatus.FAILED,
-    EngineInternalState.CANCELLED: EngineStatus.PARTIAL,
-    EngineInternalState.DISABLED: EngineStatus.NOT_CHECKED,
-    EngineInternalState.MODEL_UNAVAILABLE: EngineStatus.NOT_CHECKED,
-    EngineInternalState.REFERENCE_UNAVAILABLE: EngineStatus.NOT_CHECKED,
-    EngineInternalState.NOT_APPLICABLE: EngineStatus.NOT_CHECKED,
-}
+# Trạng thái điều phối mà engine đã dừng trong run. EngineInternalState không quyết định trạng thái
+# hiển thị: hiển thị luôn tính từ ledger bằng display_status() (DEC-010, review F-2).
+TERMINAL_INTERNAL_STATES = frozenset(
+    {
+        EngineInternalState.SUCCEEDED,
+        EngineInternalState.PARTIALLY_SUCCEEDED,
+        EngineInternalState.FAILED,
+        EngineInternalState.CANCELLED,
+        EngineInternalState.DISABLED,
+        EngineInternalState.MODEL_UNAVAILABLE,
+        EngineInternalState.REFERENCE_UNAVAILABLE,
+        EngineInternalState.NOT_APPLICABLE,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -119,8 +121,21 @@ class LedgerCounts:
         return self.completed + self.failed + self.pending + self.not_checked
 
     @property
+    def excluded_reasons(self) -> dict[NotCheckedReason, int]:
+        """Đơn vị bị loại khỏi mẫu số theo lý do, dùng cho cảnh báo hiển thị."""
+        return {
+            r: n
+            for r, n in self.not_checked_reasons.items()
+            if r in EXCLUDED_FROM_ELIGIBLE and n > 0
+        }
+
+    @property
     def excluded(self) -> int:
-        return sum(self.not_checked_reasons.get(r, 0) for r in EXCLUDED_FROM_ELIGIBLE)
+        return sum(self.excluded_reasons.values())
+
+    @property
+    def needs_exclusion_warning(self) -> bool:
+        return self.excluded > 0
 
     @property
     def eligible(self) -> int:
@@ -173,3 +188,8 @@ def public_status(ledger: LedgerCounts, *, finished: bool) -> EngineStatus:
     if ledger.completed == 0 and ledger.failed == ledger.eligible:
         return EngineStatus.FAILED
     return EngineStatus.PARTIAL
+
+
+def display_status(state: EngineInternalState, ledger: LedgerCounts) -> EngineStatus:
+    """Trạng thái hiển thị: luôn tính từ ledger; state chỉ cho biết engine đã dừng hay chưa."""
+    return public_status(ledger, finished=state in TERMINAL_INTERNAL_STATES)
