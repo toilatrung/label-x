@@ -232,3 +232,27 @@ def test_every_state_transition_cites_srs_requirement():
 def test_frame_states_include_incomplete(spec):
     # BLOCKER-008 / DEC-002: lease hết hạn khi đã lưu một phần → frame "đang dở".
     assert "incomplete" in spec["components"]["schemas"]["FrameReviewState"]["enum"]
+
+
+def test_contract_declares_workflow_permissions(spec: dict[str, Any]) -> None:
+    """T-012, AC 1: /api/auth/workflow-permissions/ declared with 7 roles in matrix."""
+    path_item = spec["paths"].get("/api/auth/workflow-permissions/")
+    assert path_item is not None, "Thiếu /api/auth/workflow-permissions/ trong OpenAPI contract"
+    get_op = path_item.get("get")
+    assert get_op is not None
+    assert get_op["operationId"] == "auth_workflow_permissions"
+    assert set(get_op["x-labelx-roles"]) == {"qa_lead", "qc_admin", "super_admin"}
+    assert "WorkflowPermissions" in spec["components"]["schemas"]
+    matrix_roles = set(
+        spec["components"]["schemas"]["WorkflowMatrixItem"]["properties"]["roles"]["required"]
+    )
+    assert len(matrix_roles) == 7
+    assert matrix_roles == {
+        "annotator",
+        "reviewer",
+        "qa_lead",
+        "qc_admin",
+        "super_admin",
+        "product_owner",
+        "data_model_owner",
+    }

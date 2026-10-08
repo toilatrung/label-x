@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-011: Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01 — LabelX</title>
+<meta name="labelx:id" content="DEC-011">
+<meta name="labelx:title" content="Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, adr, security, rbac, identity, m-01, t-012]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-011</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-011</span><b>title</b><span>Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, adr, security, rbac, identity, m-01, t-012]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-011">DEC-011: Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Quyết định kiến trúc (ADR) xác lập cơ chế bảo mật Fail-Closed cho Anti-Self-Review và Separation of Duties trong phạm vi Milestone M-01 (Task T-012, Epic E-02), làm rõ giới hạn định danh kỹ thuật và rủi ro còn lại (Residual Risk) cần phối hợp quy trình quản trị tài khoản.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-011</code></li>
+<li><strong>Title</strong>: <code>Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104), executor T-012/E-02</code></li>
+<li><strong>Decision Makers</strong>: <code>Trịnh Quang Trung (@toilatrung, Product Owner)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Accepted By</strong>: <code>Trịnh Quang Trung (@toilatrung, Product Owner) — 2026-10-08, PR #56 review</code></li>
+<li><strong>Decision Type</strong>: <code>architecture</code></li>
+<li><strong>Target Audience</strong>: <code>Dev, Security Auditor, Reviewer, Ops</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Review Cycle</strong>: <code>Xem xét lại khi triển khai SSO/IdP hoặc bắt đầu Milestone M-02</code></li>
+</ul>
+
+<h2 id="context">Context</h2>
+<p>Theo Issue #41 và các tài liệu hợp đồng bảo mật (FR-SEC-01..05, NFR-08):</p>
+<ul>
+<li>Hệ thống bắt buộc phải thực thi phân tách vai trò (Separation of Duties): Requester không được đồng thời là Approver; Reviewer không được trùng Snapshot Annotation Author (Anti-Self-Review).</li>
+<li>Trong schema nền kế thừa từ T-011, trước thay đổi của T-012 (<code>src/backend/accounts/models.py</code>), bảng <code>CvatIdentity</code> định nghĩa <code>cvat_user_id = models.PositiveIntegerField(unique=True)</code>. Đây là quan hệ 1-1 chặt chẽ giữa <code>User</code> của LabelX và ID người dùng trong CVAT.</li>
+<li>Schema trước T-012 không có bảng <code>Person</code>, trường <code>employee_id</code> hay <code>sso_subject</code> để liên kết nhiều tài khoản người dùng độc lập về cùng một thể nhân vật lý. Khoảng trống này khiến so sánh riêng LabelX user ID và CVAT user ID không đáp ứng đầy đủ yêu cầu cùng một nhân sự không được tự duyệt qua tài khoản khác.</li>
+<li>Căn cứ <code>docs/06-security/threat-model.html</code> (mục S-1): Kiểm tra kỹ thuật thuần túy tại tầng ứng dụng không thể nhận diện toàn bộ trường hợp một thể nhân sở hữu nhiều tài khoản độc lập trên các hệ thống khác nhau nếu không có hạ tầng IdP tập trung; cần phối hợp quy trình quản trị cấp phát tài khoản.</li>
+</ul>
+
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ol>
+<li><strong>Thay đổi schema có kiểm soát</strong>: Chỉ bổ sung định danh nhân sự tối thiểu cần thiết để đáp ứng FR-SEC-04; migration phải tương thích dữ liệu cũ và được Product Owner phê duyệt trong decision record này.</li>
+<li><strong>Nguyên tắc bảo mật Fail-Closed</strong>: Mọi tài khoản thiếu định danh hoặc thiếu liên kết CVAT hợp lệ phải bị từ chối ngay lập tức khi thực hiện thao tác kiểm tra/duyệt.</li>
+<li><strong>Bất biến Chống Tự Duyệt (Anti-Self-Review Invariant)</strong>: Tuyệt đối không cho phép Super Admin override quy tắc Anti-Self-Review để tự phê duyệt dữ liệu gán nhãn của chính mình.</li>
+<li><strong>Minh bạch ranh giới kỹ thuật & Residual Risk</strong>: Tuyên bố rõ ràng ranh giới những gì mã nguồn đảm bảo và rủi ro còn lại thuộc về quy trình quản trị nhân sự.</li>
+</ol>
+
+<h2 id="options-considered">Options Considered</h2>
+<h3>Phương án 1: Cơ chế Fail-Closed chỉ dựa trên CvatIdentity hiện có</h3>
+<ul>
+<li>Giữ nguyên schema T-011 (<code>CvatIdentity.cvat_user_id</code> có ràng buộc <code>unique=True</code>).</li>
+<li>Mỗi tài khoản LabelX muốn claim hoặc review snapshot bắt buộc phải có bản ghi <code>CvatIdentity</code>.</li>
+<li>Một tài khoản LabelX thứ hai không thể gán cùng <code>cvat_user_id</code> do unique constraint; nếu không có mapping hợp lệ, thao tác claim/review/adjudicate bị từ chối với <code>403 IDENTITY_MAPPING_MISSING</code> và được ghi Audit Event. Tuy nhiên, tài khoản thứ hai vẫn có thể dùng một CVAT user ID khác, vì vậy phương án này không đủ để nhận diện cùng thể nhân.</li>
+<li>Cùng một tài khoản LabelX bị chặn bởi <code>403 SAME_REQUESTER_APPROVER</code> hoặc <code>403 SELF_REVIEW_FORBIDDEN</code>.</li>
+<li>Cấm Super Admin override Anti-Self-Review.</li>
+<li><em>Lý do không chọn</em>: Chỉ chặn được cùng LabelX user hoặc cùng CVAT user; không thể chứng minh hai tài khoản độc lập thuộc cùng một nhân sự nên chưa đáp ứng đầy đủ tiêu chí chống tự duyệt đa tài khoản.</li>
+</ul>
+<h3>Phương án 2: Mở rộng schema có quản trị với EmployeeIdentity trong T-012 (Được chọn)</h3>
+<ul>
+<li>Thêm bảng <code>EmployeeIdentity</code> và liên kết nullable từ <code>CvatIdentity</code>, cho phép nhiều tài khoản được quy về cùng một nhân sự đã xác minh.</li>
+<li><em>Lý do chọn</em>: Đây là phần mở rộng tối thiểu đóng được đường bypass đa tài khoản, giữ fail-closed cho dữ liệu cũ và đã được Product Owner phê duyệt tại PR #56.</li>
+</ul>
+<h3>Phương án 3: Bắt buộc tích hợp hạ tầng IdP / SSO Subject ID (Keycloak / Google Workspace)</h3>
+<ul>
+<li>Định danh thể nhân qua claim <code>sub</code> chuẩn của OIDC.</li>
+<li><em>Lý do không chọn</em>: Nằm ngoài kế hoạch phát triển của M-01 (M-01 chỉ chạy session/token nội bộ), thuộc phạm vi của Epic tương lai.</li>
+</ul>
+
+<h2 id="decision-outcome">Decision Outcome</h2>
+<p><strong>Lựa chọn Phương án 2 (EmployeeIdentity được quản trị) kết hợp Fail-Closed cho Milestone M-01</strong>.</p>
+<h3>Chi tiết thực thi:</h3>
+<ol>
+<li>Bổ sung model <code>EmployeeIdentity</code> và migration <code>accounts.0002_employeeidentity</code>; <code>CvatIdentity.employee</code> là liên kết nullable để dữ liệu cũ migrate an toàn nhưng mọi luồng duyệt sẽ fail-closed cho tới khi liên kết đã được xác minh. Hệ thống không tự đoán định danh và không nhận <code>employee_id</code> do client tự khai báo.</li>
+<li>Tại <code>src/backend/accounts/permissions.py</code>:
+  <ul>
+    <li>Hàm <code>check_anti_self_review()</code> kiểm tra ánh xạ CVAT của caller. Nếu thiếu, từ chối ngay với <code>403 IDENTITY_MAPPING_MISSING</code> kèm Audit Event. Nếu <code>reviewer_cvat_id == author_cvat_id</code>, từ chối với <code>403 SELF_REVIEW_FORBIDDEN</code> kèm Audit Event.</li>
+    <li>Quy tắc Anti-Self-Review được khóa cứng: Super Admin có cờ <code>override=true</code> cùng lý do hợp lệ vẫn bị từ chối <code>403 SELF_REVIEW_FORBIDDEN</code>.</li>
+    <li>Hàm <code>check_separation_of_duties()</code> thực thi Fail-Closed toàn diện:
+      <ul>
+        <li>Không cho phép cả <code>requester_user_id</code> và <code>requester_cvat_user_id</code> cùng thiếu (từ chối <code>403 IDENTITY_MAPPING_MISSING</code>).</li>
+        <li>Tự resolve <code>CvatIdentity</code> của requester từ DB; nếu thiếu mapping hoặc mâu thuẫn DB thì từ chối <code>403 IDENTITY_MAPPING_MISSING</code>.</li>
+        <li>Approver thiếu mapping bị từ chối <code>403 IDENTITY_MAPPING_MISSING</code>.</li>
+        <li>Chặn <code>403 SAME_REQUESTER_APPROVER</code> khi trùng LabelX user ID hoặc trùng CVAT user ID; Super Admin tuyệt đối không được tự duyệt.</li>
+      </ul>
+    </li>
+    <li>Hàm <code>check_super_admin_override()</code> chặn né lý do ghi đè:
+      <ul>
+        <li>Xác định <code>RoleAssignment</code> của caller trước khi xử lý cờ.</li>
+        <li>Caller là Super Admin trên endpoint hỗ trợ nhánh override: thiếu cờ hoặc cờ False &rarr; <code>422 BUSINESS_RULE_UNMET</code>; có cờ mà thiếu lý do &rarr; <code>422 BUSINESS_RULE_UNMET</code>.</li>
+        <li>Caller không phải Super Admin: gửi cờ override &rarr; <code>403 FORBIDDEN</code>; không gửi cờ override &rarr; đi luồng nghiệp vụ thông thường.</li>
+      </ul>
+    </li>
+    <li>Trong <code>_extract_dataset_id()</code>: Server hook <code>get_dataset_id(request)</code> là nguồn authoritative duy nhất:
+      <ul>
+        <li>Không fallback sang query/body/kwargs do client cung cấp.</li>
+        <li>Hook trả <code>None</code> (đối tượng không tồn tại) &rarr; fail-closed <code>404 NOT_FOUND</code>; không thể bypass bằng cách gửi <code>?dataset_id</code> trong phạm vi của client.</li>
+        <li>Client gửi dataset khác với hook trả về &rarr; <code>400 VALIDATION_ERROR</code>.</li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li>Cơ chế Rejection Audit và Middleware đệm độc lập với <code>ATOMIC_REQUESTS=True</code>:
+  <ul>
+    <li>Trong cấu hình <code>ATOMIC_REQUESTS=True</code>, request chạy trong transaction của view. Khi request bị từ chối với lỗi 403 hoặc 422, DRF exception handler xử lý lỗi và transaction của view có thể bị rollback.</li>
+    <li>Do đó, permission/guard không ghi trực tiếp rejection audit vào database trong view transaction (tránh bị rollback). Thay vào đó, <code>record_rejection_audit()</code> đệm (buffer) pending audit vào <code>request._pending_rejection_audit</code>.</li>
+    <li><code>AuditRejectionMiddleware</code> (đăng ký tại <code>src/backend/config/middleware.py</code>) chạy ngoài view transaction, sau khi response hoàn tất với mã lỗi HTTP &ge; 400, sẽ mở một transaction độc lập qua <code>transaction.atomic()</code> để commit các rejection audit đã đệm.</li>
+    <li>Mutation audit thành công (T-013) nằm cùng transaction với mutation để rollback nguyên khối nếu mutation thất bại.</li>
+  </ul>
+</li>
+<li>Thực thi kiểm thử trên môi trường Windows:
+  <ul>
+    <li>Môi trường Windows không có tiện ích GNU Make mặc định nên không chạy lệnh literal <code>make check</code>. Toàn bộ các target kiểm thử thành phần tương đương đã được thực thi độc lập và đầy đủ: backend test/lint/mypy, frontend test/lint/typecheck, detector test/lint, <code>scripts/validate-framework.py</code> và <code>git diff --check</code>.</li>
+  </ul>
+</li>
+</ol>
+<h3>Thiết kế được chấp thuận: Định danh Nhân sự Tập trung (EmployeeIdentity) và Khóa Kỹ thuật Đa Tài khoản:</h3>
+<p>Để chặn người dùng sử dụng nhiều tài khoản CVAT/LabelX đã được quy về cùng một nhân sự nhằm tự duyệt chéo hoặc né Separation of Duties, kiến trúc T-012 áp dụng giải pháp định danh nhân sự theo Phương án 2 và hoàn tất hardening kỹ thuật:</p>
+<ol>
+<li><strong>Mô hình dữ liệu EmployeeIdentity và Chuẩn hóa Không phân biệt Hoa thường</strong>:
+  <ul>
+    <li>Model <code>EmployeeIdentity</code> quản lý <code>employee_id</code> ổn định do HR/IT cấp, không cho người dùng tự khai báo.</li>
+    <li>Chuẩn hóa mã định danh: <code>EMP-001</code> và <code>emp-001</code> là cùng một định danh. Bảo vệ đa tầng ở mức cơ sở dữ liệu bằng ràng buộc <code>UniqueConstraint(Lower('employee_id'), name='accounts_employee_identity_employee_id_ci_unique')</code> chống tạo bản ghi trùng lặp đối nghịch.</li>
+    <li>Lưu vết xác thực thực thể qua <code>verified_at</code> và <code>verified_by</code> (khóa ngoại <code>PROTECT</code> tới <code>User</code>). Thuộc tính <code>is_verified</code> yêu cầu cả hai trường cùng tồn tại, được kiểm soát bằng ràng buộc mức DB <code>CheckConstraint</code>.</li>
+  </ul>
+</li>
+<li><strong>Chính sách Khóa và Xóa Liên kết (CvatIdentity.employee PROTECT)</strong>:
+  <ul>
+    <li><code>CvatIdentity</code> trỏ nullable tới <code>EmployeeIdentity</code> bằng ForeignKey với chính sách xóa <code>on_delete=models.PROTECT</code> (thống nhất hoàn toàn với báo cáo kiến trúc). Khi một <code>EmployeeIdentity</code> đang được gắn kết với bất kỳ tài khoản <code>CvatIdentity</code> nào, thao tác xóa <code>EmployeeIdentity</code> sẽ bị chặn mức DB/ORM với <code>ProtectedError</code>.</li>
+    <li>Nhiều tài khoản CVAT/LabelX của cùng một nhân viên có thể trỏ về cùng một <code>EmployeeIdentity</code>. Dữ liệu cũ chưa đối soát giữ <code>null</code> và bị fail-closed khi thẩm định phân quyền.</li>
+  </ul>
+</li>
+<li><strong>Dịch vụ Cấp phát An toàn và Chặn Tự Gán / Tự Sửa (Anti-Self-Modification)</strong>:
+  <ul>
+    <li>Service <code>assign_employee_identity()</code> khóa hàng mục tiêu bằng <code>select_for_update()</code> trong <code>transaction.atomic()</code>.</li>
+    <li>Chặn đứng hành vi tự cấp / tự sửa: Actor không được phép tự gán hoặc tự thay đổi <code>EmployeeIdentity</code> cho chính tài khoản của mình (<code>actor.pk == user.pk</code>), từ chối ngay với <code>403 SELF_MODIFICATION_FORBIDDEN</code> (áp dụng nghiêm ngặt cho cả <code>SUPER_ADMIN</code> và <code>QC_ADMIN</code>).</li>
+    <li>Bắt buộc tài khoản mục tiêu đã có <code>CvatIdentity</code> trước; từ chối <code>422 IDENTITY_MAPPING_MISSING</code> trước khi tạo <code>EmployeeIdentity</code>.</li>
+    <li>Bắt buộc <code>reason</code> có nội dung thực tế; thẩm quyền chỉ dành cho actor có <code>RoleAssignment</code> thuộc <code>SUPER_ADMIN</code> hoặc <code>QC_ADMIN</code> (cấm bypass qua <code>is_staff</code>/<code>is_superuser</code>).</li>
+    <li>Tích hợp <code>append_audit_event()</code> của T-013. Bất kỳ lỗi audit nào cũng tự động rollback toàn bộ mapping.</li>
+  </ul>
+</li>
+<li><strong>Lệnh Quản trị set_cvat_identity: Thẩm định Trước Mutation & Atomic Transaction Hoàn toàn</strong>:
+  <ul>
+    <li>Kiểm tra toàn bộ tính hợp lệ của đầu vào (sự tồn tại của target, cờ <code>--actor</code>, cờ <code>--reason</code>, quyền quản trị của actor, và kiểm tra chống tự gán <code>actor.pk == user.pk</code>) <strong>TRƯỚC MỌI THAO TÁC GHI CƠ SỞ DỮ LIỆU</strong>. Nếu thiếu actor/reason hoặc actor không đủ quyền, tuyệt đối không tạo mới và không thay đổi bất kỳ bản ghi <code>CvatIdentity</code> nào.</li>
+    <li>Bọc việc cập nhật CVAT mapping, gán <code>EmployeeIdentity</code> và ghi <code>AuditEvent</code> trong cùng một outer <code>transaction.atomic()</code>. Bất kỳ lỗi quyền, lỗi validation hoặc lỗi audit nào cũng rollback toàn bộ, đảm bảo tính toàn vẹn tất cả hoặc không có gì (all-or-nothing).</li>
+  </ul>
+</li>
+<li><strong>Bảo vệ Django Admin và Separation of Duties</strong>:
+  <ul>
+    <li><code>EmployeeIdentityAdmin</code> ở chế độ chỉ đọc hoàn toàn (vô hiệu hóa <code>has_add_permission</code>, <code>has_change_permission</code>, <code>has_delete_permission</code>).</li>
+    <li><code>check_separation_of_duties()</code> resolve định danh từ DB; chặn <code>403 SAME_REQUESTER_APPROVER</code> khi hai tài khoản khác nhau nhưng cùng <code>employee_id</code> (kể cả khi nhập khác hoa thường).</li>
+  </ul>
+</li>
+</ol>
+
+<h3>Ranh giới Kỹ thuật và Rủi ro còn lại (Residual Risk):</h3>
+<ul>
+<li><strong>Kỹ thuật đảm bảo</strong>: Chặn tự duyệt trên cùng LabelX user, cùng CVAT user và giữa các tài khoản khác nhau cùng trỏ tới một <code>EmployeeIdentity</code> đã xác minh; tài khoản thiếu mapping hoặc thiếu định danh nhân sự đã xác minh bị chặn theo Fail-Closed; Super Admin không được override quy tắc này; mọi lần từ chối được ghi audit.</li>
+<li><strong>Rủi ro còn lại (Residual Risk)</strong>: Hệ thống không thể liên kết hai tài khoản nếu quy trình cấp phát tạo nhầm hai <code>EmployeeIdentity</code> khác nhau cho cùng một người hoặc không có nguồn HR/IT đáng tin cậy. Rủi ro này được kiểm soát bằng cấp phát tập trung, nguyên tắc four-eyes và đối soát định kỳ; SSO/IdP vẫn là hướng nâng cấp dài hạn.</li>
+</ul>
+
+<h2 id="consequences">Consequences</h2>
+<h3>Tích cực</h3>
+<ul>
+<li>Migration <code>accounts.0002_employeeidentity</code> bổ sung định danh nhân sự theo hướng tương thích ngược: liên kết cũ được giữ nullable và bị fail-closed cho tới khi đối soát.</li>
+<li>Bảo vệ hệ thống theo nguyên tắc Fail-Closed: Tài khoản lách luật không có mapping sẽ bị chặn đứng hoàn toàn.</li>
+<li>Audit log ghi nhận mọi nỗ lực truy cập bất hợp lệ phục vụ hậu kiểm an ninh.</li>
+</ul>
+<h3>Hạn chế & Điều kiện xem xét lại</h3>
+<ul>
+<li>Phụ thuộc vào HR/IT cấp <code>employee_id</code> ổn định, duy nhất và vào quy trình four-eyes khi gán định danh.</li>
+<li>Xem xét nâng cấp lên SSO/IdP tập trung (Phương án 3) khi có nguồn định danh doanh nghiệp authoritative; việc này không làm suy yếu chính sách Fail-Closed hiện tại.</li>
+</ul>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><code>src/backend/accounts/models.py</code></li>
+<li><code>src/backend/accounts/permissions.py</code></li>
+<li><code>src/backend/tests/accounts/test_rbac_scope.py</code></li>
+<li><code>docs/06-security/threat-model.html</code></li>
+<li><code>.agent/execution/task-board.html</code></li>
+<li><code>.agent/reports/implementation/T-012-@ducha180104.html</code></li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<p>Đã hoàn tất: Product Owner Trịnh Quang Trung (@toilatrung) chấp thuận Phương án 2 kết hợp Fail-Closed ngày 2026-10-08 trong quá trình review PR #56; decision record chuyển sang <code>accepted</code>.</p>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không thay đổi quyết định đã chấp thuận hoặc mở rộng schema ngoài phạm vi <code>EmployeeIdentity</code> nếu chưa có decision record kế tiếp.</li>
+<li>Không cho người dùng tự khai báo, tự gán hoặc tự sửa định danh nhân sự; không fallback sang so sánh identity do client cung cấp.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Tệp được lưu trữ tại <code>.agent/governance/decisions/DEC-011-@ducha180104.html</code> và vượt qua kiểm tra của <code>scripts/validate-framework.py</code>.</p>
+</article></main></body></html>

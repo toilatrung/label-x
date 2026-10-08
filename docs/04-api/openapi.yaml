@@ -108,6 +108,24 @@ paths:
               schema: { $ref: "#/components/schemas/Session" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /api/auth/workflow-permissions/:
+    get:
+      operationId: auth_workflow_permissions
+      tags: [auth]
+      summary: Ma trận phân quyền và quy tắc workflow
+      description: |
+        Cung cấp cấu hình ma trận phân quyền theo vai trò (7 vai trò) và các quy tắc workflow
+        (anti-self-review, super admin override, separation of duties) phục vụ màn hình WorkflowPermissions.
+      x-labelx-trace: [FR-SEC-01, FR-SEC-06]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      responses:
+        "200":
+          description: Ma trận phân quyền và quy tắc workflow
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowPermissions" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
   # -------------------------------------------------------------- datasets
   /api/datasets/:
     get:
@@ -1035,6 +1053,43 @@ components:
               enum: [mapped, missing]
               description: missing → mọi thao tác review/phân xử/verify bị từ chối (fail closed)
             cvat_user_id: { type: integer, nullable: true }
+    WorkflowPermissions:
+      type: object
+      required: [matrix, rules, user_roles]
+      properties:
+        matrix:
+          type: array
+          items: { $ref: "#/components/schemas/WorkflowMatrixItem" }
+        rules:
+          type: array
+          items: { $ref: "#/components/schemas/WorkflowRule" }
+        user_roles:
+          type: array
+          items: { $ref: "#/components/schemas/RoleAssignment" }
+    WorkflowMatrixItem:
+      type: object
+      required: [function, roles]
+      properties:
+        function: { type: string }
+        roles:
+          type: object
+          required: [annotator, reviewer, qa_lead, qc_admin, super_admin, product_owner, data_model_owner]
+          properties:
+            annotator: { type: string }
+            reviewer: { type: string }
+            qa_lead: { type: string }
+            qc_admin: { type: string }
+            super_admin: { type: string }
+            product_owner: { type: string }
+            data_model_owner: { type: string }
+    WorkflowRule:
+      type: object
+      required: [rule, name, description, enforced]
+      properties:
+        rule: { type: string }
+        name: { type: string }
+        description: { type: string }
+        enforced: { type: boolean }
 
     # -------------------------------------------------------------- datasets
     Dataset:

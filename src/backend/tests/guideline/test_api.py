@@ -26,10 +26,11 @@ from typing import Any
 
 import pytest
 import yaml
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.core.management import CommandError, call_command
 from rest_framework.test import APIClient
 
+from accounts.models import RoleAssignment
 from guideline.models import GuidelineRule, GuidelineVersion, RuleMapping
 
 # ---------------------------------------------------------------------------
@@ -112,8 +113,17 @@ def client_factory(db: Any):
             is_superuser=is_superuser,
         )
         if role:
-            group, _ = Group.objects.get_or_create(name=role)
-            user.groups.add(group)
+            RoleAssignment.objects.create(
+                user=user,
+                role=role,
+                dataset_id=None if role in ("super_admin", "qc_admin") else 1,
+            )
+        elif is_superuser:
+            RoleAssignment.objects.create(
+                user=user,
+                role="super_admin",
+                dataset_id=None,
+            )
         client.force_authenticate(user=user)
         return client
 
