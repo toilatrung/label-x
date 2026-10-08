@@ -5,7 +5,7 @@ Nếu version_tag đã tồn tại nhưng checksum khác, command từ chối
 để tránh ghi đè phiên bản đang dùng.
 
 Dùng:
-    python manage.py load_guideline fixtures/bdd100k_guideline_v1.yaml
+    python manage.py load_guideline fixtures/bdd100k_guideline_v1.yaml --actor qc-admin
 """
 
 from __future__ import annotations
@@ -15,10 +15,17 @@ from pathlib import Path
 from typing import Any, cast
 
 import yaml
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from guideline.models import GuidelineRule, GuidelineVersion, RuleMapping
+from guideline.models import GuidelineLoadRecord, GuidelineRule, GuidelineVersion, RuleMapping
+
+BDD100K_CLASSES = {
+    "car", "truck", "bus", "pedestrian", "rider", "bicycle", "motorcycle",
+    "traffic light", "traffic sign", "train",
+}
+VALID_ERROR_GROUPS = {"", "E1", "E2", "E3", "structural"}
 
 
 def _mapping(value: object, context: str) -> dict[str, Any]:
@@ -79,6 +86,7 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
         raise CommandError("guideline.mappings must be a list.")
 
     mappings: list[dict[str, Any]] = []
+    errors: list[str] = []
     seen_mappings: set[tuple[str, str, str, str]] = set()
     for index, raw_mapping in enumerate(raw_mappings):
         context = f"mappings[{index}]"
@@ -87,7 +95,13 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
         class_name = _optional_text(mapping, "class_name", context)
         paired_class = _optional_text(mapping, "paired_class", context)
         if not any((error_group, class_name, paired_class)):
-            raise CommandError(f"{context} must contain at least one mapping selector.")
+            errors.append(f"{context} must contain at least one mapping selector.")
+        if error_group not in VALID_ERROR_GROUPS:
+            errors.append(f"{context}.error_group '{error_group}' is not a valid IssueFamily.")
+        if class_name and class_name not in BDD100K_CLASSES:
+            errors.append(f"{context}.class_name '{class_name}' is outside BDD100K taxonomy.")
+        if paired_class and paired_class not in BDD100K_CLASSES:
+            errors.append(f"{context}.paired_class '{paired_class}' is outside BDD100K taxonomy.")
 
         raw_rule_ids = mapping.get("rule_ids")
         if not isinstance(raw_rule_ids, list) or not raw_rule_ids:
@@ -96,13 +110,16 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
         rule_ids: list[str] = []
         for raw_rule_id in raw_rule_ids:
             if not isinstance(raw_rule_id, str) or not raw_rule_id.strip():
-                raise CommandError(f"{context}.rule_ids must contain only non-empty strings.")
+                errors.append(f"{context}.rule_ids must contain only non-empty strings.")
+                continue
             rule_id = raw_rule_id.strip()
             if rule_id not in known_rule_ids:
-                raise CommandError(f"{context} references unknown rule_id '{rule_id}'.")
+                errors.append(f"{context} references unknown rule_id '{rule_id}'.")
+                continue
             mapping_key = (error_group, class_name, paired_class, rule_id)
             if mapping_key in seen_mappings:
-                raise CommandError(f"Duplicate mapping to rule_id '{rule_id}' at {context}.")
+                errors.append(f"Duplicate mapping to rule_id '{rule_id}' at {context}.")
+                continue
             seen_mappings.add(mapping_key)
             rule_ids.append(rule_id)
 
@@ -115,6 +132,8 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
             }
         )
 
+    if errors:
+        raise CommandError("Invalid guideline mappings: " + " ".join(errors))
     return version_tag, name, rules, mappings
 
 
@@ -123,6 +142,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument("file", type=str, help="Đường dẫn tệp YAML guideline")
+        parser.add_argument("--actor", required=True, help="Username người thực hiện lần nạp")
 
     def handle(self, *args: Any, **options: Any) -> None:
         file_path = Path(options["file"])
@@ -131,9 +151,30 @@ class Command(BaseCommand):
 
         raw = file_path.read_bytes()
         checksum = hashlib.sha256(raw).hexdigest()
+        row_count = len(raw.splitlines())
+        actor_username = str(options["actor"]).strip()
+        actor = get_user_model().objects.filter(username=actor_username).first()
+
+        def record(result: str, errors: list[str]) -> None:
+            GuidelineLoadRecord.objects.create(
+                actor_username=actor_username,
+                actor=actor,
+                file_checksum=checksum,
+                row_count=row_count,
+                result=result,
+                errors=errors,
+            )
+
+        if actor is None:
+            record(
+                GuidelineLoadRecord.Result.REJECTED,
+                [f"Actor '{actor_username}' does not exist."],
+            )
+            raise CommandError(f"Actor '{actor_username}' does not exist.")
 
         # Idempotency: cùng checksum → bỏ qua
         if GuidelineVersion.objects.filter(file_checksum=checksum).exists():
+            record(GuidelineLoadRecord.Result.SKIPPED, [])
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Guideline already loaded (checksum {checksum[:12]}...). Skipping."
@@ -141,10 +182,18 @@ class Command(BaseCommand):
             )
             return
 
-        version_tag, name, rules_data, mappings_data = _parse_guideline(raw)
+        try:
+            version_tag, name, rules_data, mappings_data = _parse_guideline(raw)
+        except CommandError as exc:
+            record(GuidelineLoadRecord.Result.REJECTED, [str(exc)])
+            raise
 
         # Chặn ghi đè version_tag đã tồn tại với nội dung khác
         if GuidelineVersion.objects.filter(version_tag=version_tag).exists():
+            record(
+                GuidelineLoadRecord.Result.REJECTED,
+                [f"Version '{version_tag}' already exists with different content."],
+            )
             raise CommandError(
                 f"Version '{version_tag}' already exists with different content. "
                 "Use a new version_tag or verify the file."
@@ -183,6 +232,8 @@ class Command(BaseCommand):
                         paired_class=paired_class,
                         rule=rule_map[rid],
                     )
+
+            record(GuidelineLoadRecord.Result.ACCEPTED, [])
 
         rule_count = len(rules_data)
         mapping_count = len(mappings_data)

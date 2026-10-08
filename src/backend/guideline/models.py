@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from django.conf import settings
 from django.db import models
 
 
@@ -97,3 +98,37 @@ class RuleMapping(models.Model):
     def __str__(self) -> str:
         parts = [p for p in [self.error_group, self.class_name, self.paired_class] if p]
         return f"({', '.join(parts)}) → {self.rule.rule_id}"
+
+
+class GuidelineLoadRecord(models.Model):
+    """Append-only record of each guideline load attempt (T-017)."""
+
+    class Result(models.TextChoices):
+        ACCEPTED = "accepted", "Accepted"
+        REJECTED = "rejected", "Rejected"
+        SKIPPED = "skipped", "Skipped"
+
+    actor_username = models.CharField(max_length=150)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="guideline_loads",
+    )
+    attempted_at = models.DateTimeField(auto_now_add=True)
+    file_checksum = models.CharField(max_length=64)
+    row_count = models.PositiveIntegerField(default=0)
+    result = models.CharField(max_length=16, choices=Result.choices)
+    errors = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ["-attempted_at", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.actor_username} — {self.result} ({self.file_checksum[:12]})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk is not None:
+            raise ValueError("GuidelineLoadRecord is append-only.")
+        super().save(*args, **kwargs)

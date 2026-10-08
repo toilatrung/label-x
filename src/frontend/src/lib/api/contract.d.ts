@@ -313,6 +313,11 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/guidelines/mappings/": {
+        parameters: { query?: never; header?: never; path?: never; cookie?: never; };
+        get: operations["guidelines_mappings_list"];
+        put?: never; post?: never; delete?: never; options?: never; head?: never; patch?: never; trace?: never;
+    };
     "/api/guidelines/rules/{rule_id}/": {
         parameters: {
             query?: never;
@@ -772,6 +777,13 @@ export interface components {
             content: string;
             guideline_version: string;
         };
+        RuleMapping: {
+            error_group: string;
+            class_name: string;
+            paired_class: string;
+            rule_id: string;
+            guideline_version: string;
+        };
         /** @enum {string} */
         QueueName: "risk" | "random";
         /**
@@ -926,6 +938,11 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["GuidelineRule"][];
+        };
+        PaginatedRuleMappingList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["RuleMapping"][];
         };
     };
     responses: {
@@ -1454,6 +1471,25 @@ export interface operations {
                     "application/json": components["schemas"]["GuidelineRule"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    guidelines_mappings_list: {
+        parameters: {
+            query?: {
+                version?: components["parameters"]["GuidelineVersion"];
+                family?: components["schemas"]["IssueFamily"];
+                class_name?: string;
+                paired_class?: string;
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never; path?: never; cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: { headers: { [name: string]: unknown }; content: { "application/json": components["schemas"]["PaginatedRuleMappingList"] } };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };

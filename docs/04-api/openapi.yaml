@@ -390,6 +390,34 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /api/guidelines/mappings/:
+    get:
+      operationId: guidelines_mappings_list
+      tags: [guidelines]
+      summary: Tra mapping nhóm lỗi/lớp tới rule ID
+      x-labelx-trace: [FR-GDL-02, FR-SEC-01]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/GuidelineVersion"
+        - name: family
+          in: query
+          schema: { $ref: "#/components/schemas/IssueFamily" }
+        - name: class_name
+          in: query
+          schema: { type: string }
+        - name: paired_class
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang mapping chỉ đọc
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedRuleMappingList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/guidelines/rules/{rule_id}/:
     get:
       operationId: guidelines_rules_retrieve
@@ -1163,6 +1191,15 @@ components:
         section: { type: string }
         content: { type: string }
         guideline_version: { type: string }
+    RuleMapping:
+      type: object
+      required: [error_group, class_name, paired_class, rule_id, guideline_version]
+      properties:
+        error_group: { type: string }
+        class_name: { type: string }
+        paired_class: { type: string }
+        rule_id: { type: string }
+        guideline_version: { type: string }
 
     # ---------------------------------------------------------------- review
     QueueName:
@@ -1392,6 +1429,15 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/GuidelineRule" }
+    PaginatedRuleMappingList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/RuleMapping" }
 
 security:
   - sessionAuth: []

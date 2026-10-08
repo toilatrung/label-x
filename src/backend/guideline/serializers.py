@@ -6,7 +6,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from guideline.models import GuidelineRule, GuidelineVersion
+from guideline.models import GuidelineRule, GuidelineVersion, RuleMapping
 
 
 class ErrorResponseSerializer(serializers.Serializer[dict[str, Any]]):
@@ -38,3 +38,20 @@ class PaginatedGuidelineRuleListSerializer(serializers.Serializer[dict[str, Any]
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
     results = GuidelineRuleSerializer(many=True)
+
+
+class RuleMappingSerializer(serializers.ModelSerializer[RuleMapping]):
+    rule_id = serializers.CharField(source="rule.rule_id", read_only=True)
+    guideline_version = serializers.CharField(source="version.version_tag", read_only=True)
+
+    class Meta:
+        model = RuleMapping
+        fields = [
+            "error_group", "class_name", "paired_class", "rule_id", "guideline_version",
+        ]
+
+
+class PaginatedRuleMappingListSerializer(serializers.Serializer[dict[str, Any]]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = RuleMappingSerializer(many=True)

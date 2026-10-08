@@ -28,6 +28,8 @@ from guideline.serializers import (
     ErrorResponseSerializer,
     GuidelineRuleSerializer,
     PaginatedGuidelineRuleListSerializer,
+    PaginatedRuleMappingListSerializer,
+    RuleMappingSerializer,
 )
 
 # IssueFamily trong docs/04-api/openapi.yaml; giữ thứ tự enum của contract.
@@ -175,3 +177,51 @@ class GuidelineRuleDetailView(GuidelineAPIView):
 
         serializer = GuidelineRuleSerializer(rule)
         return Response(serializer.data)
+
+
+class GuidelineMappingListView(GuidelineAPIView):
+    """GET /api/guidelines/mappings/ — read-only mapping context → rule IDs."""
+
+    @extend_schema(
+        operation_id="guidelines_mappings_list",
+        summary="Tra mapping nhóm lỗi/lớp tới rule ID",
+        parameters=[
+            OpenApiParameter("version", str),
+            OpenApiParameter("family", str, enum=ISSUE_FAMILIES),
+            OpenApiParameter("class_name", str),
+            OpenApiParameter("paired_class", str),
+            OpenApiParameter("cursor", str),
+        ],
+        responses={
+            200: PaginatedRuleMappingListSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+            404: ErrorResponseSerializer,
+        },
+        tags=["guidelines"],
+    )
+    def get(self, request: Request) -> Response:
+        version_tag = request.query_params.get("version", "").strip()
+        if version_tag:
+            try:
+                version = GuidelineVersion.objects.get(version_tag=version_tag)
+            except GuidelineVersion.DoesNotExist as exc:
+                raise NotFound(f"Guideline version '{version_tag}' không tồn tại.") from exc
+        else:
+            version = get_latest_guideline_version()
+        if version is None:
+            return Response({"next": None, "previous": None, "results": []})
+
+        family = request.query_params.get("family", "").strip()
+        if family and family not in VALID_FAMILIES:
+            raise ValidationError({"family": [f"Giá trị '{family}' không hợp lệ."]})
+        mappings = RuleMapping.objects.filter(version=version).select_related("rule")
+        if family:
+            mappings = mappings.filter(error_group=family)
+        for field in ("class_name", "paired_class"):
+            value = request.query_params.get(field, "").strip()
+            if value:
+                mappings = mappings.filter(**{field: value})
+        paginator = GuidelineCursorPagination()
+        page = paginator.paginate_queryset(mappings, request, view=self)
+        return paginator.get_paginated_response(RuleMappingSerializer(page, many=True).data)

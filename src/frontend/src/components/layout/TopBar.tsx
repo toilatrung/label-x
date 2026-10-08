@@ -145,6 +145,17 @@ export function TopBar({ activeKey }: TopBarProps) {
               </Link>
             </div>
           )}
+          {showGuidelines && (
+            <div className="lx-nav__group">
+              <Link
+                className={`lx-navbtn ${pathname.startsWith('/configuration/rules-thresholds') ? 'is-active' : ''}`}
+                href="/configuration/rules-thresholds"
+                onClick={closeAll}
+              >
+                Rules & Thresholds
+              </Link>
+            </div>
+          )}
 
           {/* 4. Phân xử (Escalations) - Chỉ QA Lead, Super Admin */}
           {showEscalations && (
@@ -227,10 +238,10 @@ export function TopBar({ activeKey }: TopBarProps) {
                     <span className="lx-menu__t">Quy trình & Phân quyền</span>
                     <span className="lx-menu__d">Phân quyền theo vai trò và quy tắc kiểm soát</span>
                   </Link>
-                  <span className="lx-menu__item" role="menuitem" aria-disabled="true" title="Chưa khả dụng">
+                  <Link className="lx-menu__item" role="menuitem" href="/configuration/rules-thresholds" onClick={closeAll}>
                     <span className="lx-menu__t">Quy tắc & Ngưỡng</span>
-                    <span className="lx-menu__d">Quy tắc kiểm tra và chính sách lấy mẫu (chưa khả dụng)</span>
-                  </span>
+                    <span className="lx-menu__d">Mapping nhóm lỗi/lớp tới rule ID (chỉ xem)</span>
+                  </Link>
                 </div>
               )}
             </div>
