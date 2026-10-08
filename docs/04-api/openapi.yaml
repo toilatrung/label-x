@@ -1259,7 +1259,8 @@ components:
         iou: { type: number, nullable: true }
     Issue:
       type: object
-      required: [id, family, origin, state, anchor, n_i, evidence, links]
+      required: [id, family, origin, state, anchor, n_i, evidence, links, review_decisions]
+      x-labelx-trace: [FR-REV-08, FR-REV-10, FR-ESC-02, FR-SEC-05, FR-EVL-13, FR-EVL-14, BR-01, BR-02, BR-03, BR-04, BR-05, BR-06, BR-07, UC-05, UC-06, UC-08, UC-10]
       properties:
         id: { type: integer }
         family: { $ref: "#/components/schemas/IssueFamily" }
@@ -1282,6 +1283,48 @@ components:
         links:
           type: array
           items: { $ref: "#/components/schemas/IssueLink" }
+        review_decisions:
+          type: array
+          description: Quyết định reviewer bất biến, gồm liên kết phần tử reference cho KPI-2b (DEC-009)
+          items: { $ref: "#/components/schemas/ReviewDecision" }
+    ReviewDecision:
+      type: object
+      description: Bản ghi bất biến cho một quyết định của actor trên issue; không suy ra từ trạng thái issue. Chỉ confirm của reviewer được nối reference và tính KPI-2b; mọi kết luận adjudication của QA Lead được lưu riêng (FR-REV-08, FR-REV-10, FR-ESC-02, FR-SEC-05, FR-EVL-13, FR-EVL-14, BR-01…BR-07, UC-05, UC-06, UC-08, UC-10; DEC-009).
+      x-labelx-trace: [FR-REV-08, FR-REV-10, FR-ESC-02, FR-SEC-05, FR-EVL-13, FR-EVL-14, BR-01, BR-02, BR-03, BR-04, BR-05, BR-06, BR-07, UC-05, UC-06, UC-08, UC-10]
+      required: [id, issue_id, actor_user_id, actor_role, decision, revision, reason, rule_ids, reference_version, reference_match_status, reference_error_ids, recorded_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        actor_user_id: { type: integer }
+        actor_role:
+          type: string
+          enum: [reviewer, qa_lead, super_admin]
+          description: Chỉ actor_role reviewer với decision confirm được tính vào KPI-2b.
+        decision:
+          type: string
+          enum: [confirm, reject, uncertain, escalate, request_rework, adjudicate_confirm, adjudicate_reject, adjudicate_guideline_gap]
+          description: Các action reviewer theo FR-REV-08; adjudicate_* ghi đủ ba kết luận FR-ESC-02 và chỉ dành cho QA Lead. Không adjudication nào được tính KPI-2b.
+        revision: { type: integer, description: Revision snapshot gắn với quyết định (FR-REV-10). }
+        reason: { type: string, description: "Lý do đã ghi cùng quyết định và audit event (FR-REV-08, FR-REV-10)." }
+        rule_ids:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+          description: Rule ID được chọn hoặc áp dụng; rỗng khi quyết định không gắn rule (FR-REV-10).
+        reference_version:
+          type: string
+          nullable: true
+          description: Version reference đã khoá dùng để resolve reference_error_ids.
+        reference_match_status:
+          type: string
+          enum: [matched, not_matched, not_evaluated]
+          description: matched/not_matched yêu cầu reference_version đã khoá; not_evaluated dùng khi chưa có reference và reference_version là null.
+        reference_error_ids:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+          description: Danh sách phần tử E khớp chính xác theo reference_version và DEC-006 anchor. Chỉ được có phần tử khi actor_role=reviewer, decision=confirm và reference_match_status=matched; rỗng ở trường hợp khác. KPI-2b đếm distinct ID.
+        recorded_at: { type: string, format: date-time }
     FrameIssues:
       type: object
       required: [frame, engines, issues]

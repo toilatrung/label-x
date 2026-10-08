@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-007: nối quyết định reviewer với lỗi reference cho KPI-2b — LabelX</title>
+<meta name="labelx:id" content="implementation-t-007">
+<meta name="labelx:title" content="Implementation Report T-007: nối quyết định reviewer với lỗi reference cho KPI-2b">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="execution">
+<meta name="labelx:module" content="implementation"><meta name="labelx:tags" content="[implementation, t-007, e-01, kpi-2b, reference]">
+<meta name="labelx:priority" content="1">
+<style>:root{--bg:#f6f7f9;--surface:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--sunken:#f3f4f6;--info:#1d5ea8}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,sans-serif}header{background:#1f2933;color:#fff;padding:12px 24px}header b{color:#d1202d}main{max-width:1100px;margin:24px auto;padding:0 24px 60px}article{background:var(--surface);border:1px solid var(--border);padding:12px 32px 28px}.meta{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;background:var(--sunken);padding:10px;margin:12px 0;color:var(--muted)}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}a{color:var(--info)}code{background:var(--sunken);padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:var(--sunken)}@media(max-width:600px){main{padding:0 10px 32px}article{padding:10px 14px 22px}.meta{grid-template-columns:1fr;gap:0}}</style>
+</head><body><header>Label<b>X</b> · .agent / reports / implementation / T-007</header><main><article>
+<div class="meta"><b>id</b><span>implementation-t-007</span><b>title</b><span>Implementation Report T-007: nối quyết định reviewer với lỗi reference cho KPI-2b</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, t-007, e-01, kpi-2b, reference]</span><b>priority</b><span>1</span></div>
+<h1>T-007: Nối quyết định reviewer với lỗi reference cho KPI-2b</h1>
+<h2>Usage Purpose</h2>
+<p>Ghi quyết định sản phẩm và contract lưu các quyết định review bất biến, liên kết chính xác với lỗi reference để tính KPI-2b theo distinct reference error ID.</p>
+<h2>Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-007</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Executor</strong>: <code>Codex orchestrator cùng phiên triển khai T-007</code></li><li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>T-007</code></li><li><strong>Epic ID</strong>: <code>E-01</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2>Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>DEC-009 accepted; OpenAPI ReviewDecision schema and Issue.review_decisions field; exact version and anchor linkage; one-to-many links and distinct-ID KPI-2b example</code></li>
+<li><strong>Not Implemented</strong>: <code>KPI calculation and decision write operation (follow-up E-19/E-20 and T-008); runtime/database implementation is outside T-007 scope</code></li>
+</ul>
+<h2>Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>.agent/governance/decisions/DEC-009.html</code></td><td>Ghi actor/action, exact anchor/reference version, trường hợp một-nhiều/không khớp, quy tắc loại adjudication khỏi tử số, ví dụ 3/5 và phương pháp kiểm chứng từng điều kiện.</td><td>T-007</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>Thêm <code>Issue.review_decisions</code> và <code>ReviewDecision</code> với actor, action, revision, reason, rule IDs, reference version, trạng thái match, danh sách ID reference và thời điểm lưu.</td><td>T-007</td></tr>
+</tbody></table>
+<h2>Related Files</h2>
+<ul><li><strong>Task Record</strong>: <code>.agent/execution/task-board.html#t-007</code></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, DEC-005.html, DEC-006.html, DEC-009.html</code></li><li><strong>Contract</strong>: <code>docs/04-api/openapi.yaml</code></li><li><strong>Review Request</strong>: <code>Independent review/QC session; PR target develop</code></li></ul>
+<h2>Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>UV_CACHE_DIR=/tmp/uv-cache-labelx make validate-kit</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code></td></tr>
+<tr><td><code>python3 YAML parse of docs/04-api/openapi.yaml</code></td><td><code>passed</code></td><td>Parsed OpenAPI YAML and confirmed <code>components.schemas.ReviewDecision</code> exists.</td></tr>
+<tr><td><code>DJANGO_SECRET_KEY=test-only DATABASE_URL=sqlite:////tmp/labelx-t007-test.sqlite3 uv run --directory src/backend --frozen pytest -q tests/test_contract.py</code></td><td><code>passed</code></td><td>11 passed; the contract tests validate OpenAPI structure, references, trace IDs, and the new review-decision schema. No database behavior is under test.</td></tr>
+<tr><td><code>git diff --check</code></td><td><code>passed</code></td><td>No whitespace errors in the T-007 worktree at check time.</td></tr>
+<tr><td><code>make check</code></td><td><code>not run</code></td><td>Full application checks are broader than this documentation/contract task; no runtime application code changed.</td></tr>
+</tbody></table>
+<h2>Verification Evidence</h2>
+<table><thead><tr><th>Acceptance Criterion</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>DEC-009 accepted and decision maker recorded</td><td><code>passed</code></td><td>DEC-009 metadata records accepted status, owner, decision maker, and decision date.</td></tr>
+<tr><td>Contract stores linkage and traces FR/BR/UC</td><td><code>passed</code></td><td>Issue and ReviewDecision schemas link a decision to explicit reference error IDs; the contract test checks audit/reference fields and SRS traces, including all three FR-ESC-02 adjudication actions.</td></tr>
+<tr><td>Example follows the SRS definition</td><td><code>passed</code></td><td>DEC-009 example counts distinct IDs E-101, E-102, E-103 once over five eligible reference errors: 3/5.</td></tr>
+<tr><td>Verification method exists for each condition</td><td><code>passed</code></td><td>DEC-009 Verification Methods table covers qualifying actor/action, exact link, distinct IDs/exclusions, and matched versus unevaluated.</td></tr>
+</tbody></table>
+<h2>Deviations</h2>
+<ul><li><strong>Known Limitation</strong>: <code>OpenAPI 3.0 descriptions document conditional invariants (such as reviewer-confirm-only reference links); runtime enforcement is follow-up work and not claimed by T-007.</code></li><li><strong>Review Status</strong>: <code>Independent QC is pending; no approval or merge is claimed.</code></li></ul>
+<h2>Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to T-007 scope.</li><li>[x] Acceptance results and evidence are linked.</li><li>[x] Unimplemented behavior and verification gap are explicit.</li><li>[x] Checks are recorded without claiming a full application suite passed.</li><li>[ ] Independent review/QC completed.</li></ul>
+<h2>Output Requirements</h2><ul><li>Save as <code>.agent/reports/implementation/T-007.html</code>.</li><li>Do not claim QA passed or mark the task done before independent review.</li></ul>
+</article></main></body></html>
