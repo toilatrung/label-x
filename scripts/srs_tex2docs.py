@@ -100,7 +100,7 @@ def table(head,rows):
         r=(r+['']*len(head))[:len(head)]
         o.append('| '+' | '.join(r)+' |')
     return '\n'.join(o)
-SRC_NOTE="Nguồn chuẩn: [labelX.html](labelX.html) (bản HTML) và `docs/label-x_system-requirement-specification/` (bản LaTeX), SRS M13 v1.0, 05/10/2026. Khi có khác biệt, bản LaTeX là gốc; HTML được sinh lại bằng `python3 scripts/srs_tex2html.py`."
+SRC_NOTE="Nguồn chuẩn: [labelX.html](labelX.html) (bản HTML) và `docs/label-x_system-requirement-specification/` (bản LaTeX), SRS M13 v1.2, 08/10/2026. Khi có khác biệt, bản LaTeX là gốc; HTML được sinh lại bằng `python3 scripts/srs_tex2html.py`."
 FRT={'tab:fr-snp':'SNP — CVAT Adapter và Snapshot','tab:fr-eng':'ENG — Engine phân tích nghi vấn','tab:fr-agg':'AGG — Candidate, Issue và Coverage ledger','tab:fr-rnk':'RNK — Chấm điểm rủi ro và xếp hạng','tab:fr-rev':'REV — Hàng đợi và Review Workspace','tab:fr-esc':'ESC — Chuyển cấp và phân xử','tab:fr-rwk':'RWK — Rework và kiểm lại','tab:fr-gdl':'GDL — Tra cứu guideline','tab:fr-evl':'EVL — Reference, đo lường và effort','tab:fr-rpt':'RPT — Báo cáo hiệu quả','tab:fr-sec':'SEC — Phân quyền và kiểm toán','tab:fr-gte':'GTE — Quality Gate tối thiểu'}
 # requirements
 o=[fm('business-requirements','Yêu cầu nghiệp vụ và hệ thống — SRS M13','business','requirements',['requirements','functional','non-functional','kpi','m13'],1)]
