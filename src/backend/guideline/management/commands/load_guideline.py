@@ -22,8 +22,16 @@ from django.db import transaction
 from guideline.models import GuidelineLoadRecord, GuidelineRule, GuidelineVersion, RuleMapping
 
 BDD100K_CLASSES = {
-    "car", "truck", "bus", "pedestrian", "rider", "bicycle", "motorcycle",
-    "traffic light", "traffic sign", "train",
+    "car",
+    "truck",
+    "bus",
+    "pedestrian",
+    "rider",
+    "bicycle",
+    "motorcycle",
+    "traffic light",
+    "traffic sign",
+    "train",
 }
 VALID_ERROR_GROUPS = {"", "E1", "E2", "E3", "structural"}
 

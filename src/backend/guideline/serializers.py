@@ -47,7 +47,11 @@ class RuleMappingSerializer(serializers.ModelSerializer[RuleMapping]):
     class Meta:
         model = RuleMapping
         fields = [
-            "error_group", "class_name", "paired_class", "rule_id", "guideline_version",
+            "error_group",
+            "class_name",
+            "paired_class",
+            "rule_id",
+            "guideline_version",
         ]
 
 
