@@ -128,6 +128,13 @@ khoảng không thao tác dài hơn \(t_{idle}\). Thời gian được gán vào
 Chỉ số phụ: lỗi xác nhận trên giờ review, \(t_{fa}/T\) (tỉ trọng thời gian cho cảnh
 báo sai), KPI-2b (recall phát hiện thực tế).
 
+KPI-1, KPI-2 và KPI-2b luôn gắn với snapshot annotation đầu vào đã khoá và
+reference đã khoá, không đổi nguồn sang revision sau rework. Phần chất lượng
+vận hành và Quality Gate của báo cáo đọc run cuối. Nếu không có rework, run gốc
+Completed được coi là run cuối; nếu có rework, run cuối chỉ hợp lệ khi thoả
+FR-RWK-08. Báo cáo phải nêu snapshot, run và reference version riêng cho từng
+phần (DEC-002, BLOCKER-012).
+
 \subsection{Thiết kế thí nghiệm}
 Thí nghiệm so sánh \emph{hai quy trình} (baseline và assisted) trên cùng dữ liệu
 và đo chất lượng cuối trên toàn tập. Lợi ích đo được là của cả quy trình
