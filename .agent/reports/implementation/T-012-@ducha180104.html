@@ -77,7 +77,7 @@ th{background:var(--sunken)}
 <tr><td><code>src/backend/accounts/views.py</code></td><td>Sửa đổi</td><td>Thêm <code>WorkflowPermissionsView</code> trả về cấu hình ma trận phân quyền và quy tắc workflow.</td></tr>
 <tr><td><code>src/backend/accounts/urls.py</code></td><td>Sửa đổi</td><td>Đăng ký routing <code>/api/auth/workflow-permissions/</code>.</td></tr>
 <tr><td><code>src/backend/guideline/permissions.py</code></td><td>Sửa đổi</td><td>Refactor <code>HasGuidelineRole</code> kế thừa <code>HasRoleAndDatasetScope</code>, loại bỏ hoàn toàn kiểm tra Django groups.</td></tr>
-<tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Tạo mới</td><td>34 unit & integration tests bao quát 7 vai trò, dataset scope, unique mapping constraint, fail-closed identity, anti-self-review, separation of duties, override validation, và kiểm toán trước mutation.</td></tr>
+<tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Tạo mới</td><td>44 unit & integration tests bao quát 7 vai trò, dataset scope, unique mapping constraint, fail-closed identity, anti-self-review, separation of duties, override validation, và kiểm toán trước mutation.</td></tr>
 <tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture cấp phát <code>RoleAssignment</code> thay thế Django Group (21/21 passed).</td></tr>
 <tr><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
 <tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật tiến độ T-012 và liên kết DEC-011.</td></tr>
@@ -97,10 +97,10 @@ th{background:var(--sunken)}
 </ul>
 
 <h2 id="command-evidence">Command Evidence</h2>
-<pre><code>pytest tests/accounts/test_rbac_scope.py -v -> 34 passed in 30.10s
+<pre><code>pytest tests/accounts/test_rbac_scope.py -v -> 44 passed in 147.66s
 pytest tests/test_contract.py -v -> 11 passed in 0.37s
 pytest tests/guideline/test_api.py -v -> 21 passed in 6.85s
-pytest -q (toàn repo backend) -> 175 passed, 1 skipped in 102.23s
+pytest -q (toàn repo backend) -> 185 passed, 1 skipped in 301.41s
 frontend checks (eslint, typecheck, vitest) -> 119 passed in 5.59s
 detector_worker checks (ruff, typecheck, pytest) -> 10 passed in 3.11s
 ruff check . -> All checks passed!
@@ -132,15 +132,42 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
 <tr><td>Rejection audit không thu thập query string chứa secret (path thuần); payload được redaction an toàn qua dịch vụ T-013</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:54</code>, <code>tests/audit/test_audit_log.py:12-65</code></td><td><code>test_integration_rejection_audit_does_not_collect_query_string_secrets</code>, dẫn chứng redaction payload thực sự bởi T-013 tại <code>tests/audit/test_audit_log.py:test_snapshots_and_reason_are_redacted_before_storage</code></td></tr>
 <tr><td>View thiếu allowed_roles fail-closed và raise ImproperlyConfigured</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:178-189</code></td><td><code>test_view_missing_allowed_roles_raises_improperly_configured</code></td></tr>
 <tr><td>Không coi generic pk là dataset ID; sử dụng server hook get_dataset_id(request); client query/body mâu thuẫn bị từ chối 400 VALIDATION_ERROR</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:192-300</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code></td></tr>
+<tr><td>Finding 1: Super Admin không được né override_reason trên endpoint hỗ trợ override (RoleAssignment xác định trước; thiếu/false cờ hoặc thiếu lý do trả 422 BUSINESS_RULE_UNMET; non-admin gửi cờ trả 403; test URL thật không tạo mutation/audit)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:650-715</code></td><td><code>test_integration_super_admin_missing_override_flag_returns_422_and_no_mutation</code>, <code>test_integration_super_admin_override_false_returns_422_and_no_mutation</code>, <code>test_integration_non_super_admin_normal_flow_allowed_without_override</code>, <code>test_integration_non_super_admin_attempting_override_flag_returns_403</code></td></tr>
+<tr><td>Finding 2: Server hook get_dataset_id(request) là nguồn authoritative duy nhất (không fallback sang query/body/kwargs; hook trả None trả 404 NOT_FOUND; client gửi dataset khác trả 400 VALIDATION_ERROR; test object không tồn tại gửi dataset hợp lệ trả 404)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:207-310</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code>, <code>test_object_endpoint_nonexistent_object_client_scoped_dataset_returns_404</code></td></tr>
+<tr><td>Finding 3: Separation of duties fail-closed khi thiếu identity (không cho phép cả hai identity cùng thiếu; tự resolve requester từ DB; thiếu mapping hoặc mâu thuẫn DB trả 403 IDENTITY_MAPPING_MISSING; approver thiếu mapping trả 403; so sánh cùng LabelX user và cùng CVAT ID)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:510-645</code></td><td><code>test_separation_of_duties_both_identities_missing_fails_closed</code>, <code>test_separation_of_duties_requester_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_approver_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_input_identity_conflicts_db_fails_closed</code>, <code>test_separation_of_duties_two_distinct_valid_identities_allowed</code></td></tr>
 <tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pending">CHỜ DUYỆT</span></td><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>DEC-011 ở trạng thái <code>proposed</code> chờ Product Owner (@toilatrung) chấp thuận</td></tr>
 </tbody>
 </table>
+
+
+<h2 id="defense-against-bypasses">Phản biện 3 Đường Bypass Kỹ thuật (Review Round 2)</h2>
+<p>Báo cáo phản biện giải thích chi tiết vì sao ba đường bypass kỹ thuật đã bị đóng hoàn toàn và không còn khả thi:</p>
+<ol>
+  <li><strong>Bypass 1: Super Admin né cung cấp lý do giải trình (override_reason)</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Hàm <code>check_super_admin_override()</code> kiểm tra <code>if not override_flag: return None</code> trước khi xác thực vai trò. Super Admin gọi endpoint hỗ trợ override mà không gửi <code>override=true</code> sẽ lọt qua luồng bình thường mà không phải ghi nhận <code>override_reason</code>.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Đảo ngược thứ tự thẩm định: Xác định <code>RoleAssignment</code> của caller trước. Nếu caller có vai trò <code>Role.SUPER_ADMIN</code> trên endpoint hỗ trợ nhánh override, hệ thống bắt buộc caller phải kích hoạt <code>override=true</code> và cung cấp <code>override_reason</code> hợp lệ. Nếu thiếu cờ hoặc cờ False hoặc thiếu lý do, hệ thống lập tức từ chối với <code>422 BUSINESS_RULE_UNMET</code> kèm rejection audit. Thử nghiệm trên URL thật với <code>APIClient</code> chứng minh không có mutation hay mutation audit nào được tạo ra. Người dùng không phải Super Admin cố gửi <code>override=true</code> sẽ nhận ngay <code>403 FORBIDDEN</code>; nếu không yêu cầu override thì được đi luồng nghiệp vụ thông thường.</li>
+    </ul>
+  </li>
+  <li><strong>Bypass 2: Giả mạo dataset_id khi truy cập đối tượng không tồn tại</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Trong <code>_extract_dataset_id()</code>, khi server hook <code>get_dataset_id(request)</code> trả về <code>None</code> (đối tượng không tồn tại), hệ thống fallback sang tìm kiếm <code>dataset_id</code> trong query params / body. Attacker có thể gửi <code>?dataset_id=10</code> (dataset mà attacker có quyền) đối với <code>pk=999</code> không tồn tại, khiến permission check trả về <code>True</code> và lọt vào view.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thiết lập server hook là <strong>nguồn authoritative duy nhất</strong>. Khi view khai báo <code>get_dataset_id(request)</code>, hệ thống tuyệt đối không fallback sang client input. Nếu hook trả <code>None</code>, hệ thống fail-closed ngay lập tức với <code>404 NOT_FOUND</code> kèm rejection audit, request không bao giờ lọt vào view logic. Nếu hook trả dataset hợp lệ nhưng client gửi dataset khác thì bị từ chối <code>400 VALIDATION_ERROR</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Bypass 3: Separation of Duties bị vô hiệu hóa khi thiếu thông tin danh tính</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Khi cả <code>requester_user_id</code> và <code>requester_cvat_user_id</code> cùng thiếu, hoặc khi truyền <code>requester_user_id</code> mà requester chưa liên kết <code>CvatIdentity</code>, guard không kiểm tra chặt chẽ và để lọt qua.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thực thi nguyên tắc <strong>Fail-Closed tuyệt đối</strong>: (1) Từ chối <code>403 IDENTITY_MAPPING_MISSING</code> nếu cả hai identity cùng thiếu. (2) Khi có <code>requester_user_id</code>, bắt buộc resolve <code>CvatIdentity</code> của requester từ DB; nếu thiếu mapping hoặc nếu input <code>requester_cvat_user_id</code> mâu thuẫn với DB thì từ chối ngay <code>403 IDENTITY_MAPPING_MISSING</code>. (3) Approver bắt buộc phải có mapping trong DB, nếu thiếu từ chối <code>403 IDENTITY_MAPPING_MISSING</code>. (4) So sánh cả LabelX user ID và CVAT user ID; Super Admin cũng tuyệt đối bị chặn tự duyệt.</li>
+    </ul>
+  </li>
+</ol>
 
 <h2 id="deviations">Deviations</h2>
 <p>Hệ thống không tự ý bổ sung các bảng như <code>Person</code>, <code>employee_id</code> hay <code>sso_subject</code> ngoài phạm vi M-01. Thay vào đó, toàn bộ cơ chế bảo vệ dựa trên nguyên tắc <strong>Fail-Closed</strong> và đã được tài liệu hóa chính thức trong <strong>DEC-011</strong>.</p>
 
 <h2 id="completion-criteria">Completion Criteria</h2>
-<p>Toàn bộ 34 bài test tích hợp và unit test của T-012, 21 test guideline, 11 test contract, và 175 test toàn bộ backend repository đều pass 100%. Task hiện chuyển trạng thái <strong>review</strong> (DEC-011 giữ <strong>proposed</strong>) theo chỉ thị review, sẵn sàng cho vòng review độc lập tiếp theo bởi PO (@toilatrung).</p>
+<p>Toàn bộ 44 bài test tích hợp và unit test của T-012, 21 test guideline, 11 test contract, và 185 test toàn bộ backend repository đều pass 100%. Task hiện chuyển trạng thái <strong>review</strong> (DEC-011 giữ <strong>proposed</strong>) theo chỉ thị review, sẵn sàng cho vòng review độc lập tiếp theo bởi PO (@toilatrung).</p>
 
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>

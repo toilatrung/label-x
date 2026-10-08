@@ -530,6 +530,8 @@ def test_separation_of_duties_same_labelx_user_rejected():
 def test_separation_of_duties_approver_missing_identity_fails_closed():
     """Approver missing CvatIdentity when comparing identities fails closed with 403."""
     factory = APIRequestFactory()
+    requester = _create_user("requester_cvat_555")
+    CvatIdentity.objects.create(user=requester, cvat_user_id=555, cvat_username="cvat555")
     approver = _create_user("approver_no_cvat")
 
     request = factory.post("/api/adjudicate/")
@@ -538,7 +540,7 @@ def test_separation_of_duties_approver_missing_identity_fails_closed():
     with pytest.raises(ApiError) as exc_info:
         check_separation_of_duties(
             request=request,
-            requester_user_id=99999,
+            requester_user_id=requester.pk,
             requester_cvat_user_id=555,
             action="approval.adjudicate",
             object_id="req-missing-id",
@@ -564,7 +566,6 @@ def test_separation_of_duties_cross_account_same_person_rejected():
     with pytest.raises(ApiError) as exc_info:
         check_separation_of_duties(
             request=request,
-            requester_user_id=99999,
             requester_cvat_user_id=777,
             action="approval.adjudicate",
             object_id="req-789",
@@ -903,3 +904,265 @@ def test_object_endpoint_query_body_dataset_id_conflict_rejected_400():
     assert resp_body.status_code == status.HTTP_400_BAD_REQUEST
     assert resp_body.data["code"] == "VALIDATION_ERROR"
     assert "Mâu thuẫn dataset_id" in str(resp_body.data["message"])
+
+
+# ---------------------------------------------------------------------------
+# Finding 1: Super Admin Override Edge Cases via Real URL & Permissions
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.urls("tests.accounts.test_rbac_scope")
+def test_integration_super_admin_missing_override_flag_returns_422_and_no_mutation():
+    """Super Admin on override endpoint without override flag returns 422 and no mutation."""
+    client = APIClient()
+    admin = _create_user("admin_no_flag")
+    RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
+    client.force_authenticate(user=admin)
+
+    response = client.post(
+        "/api/test/override/?dataset_id=10",
+        {"dataset_id": 10},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.data["code"] == "BUSINESS_RULE_UNMET"
+
+    rejection_event = AuditEvent.objects.filter(
+        actor=admin, action="run.override_action.rejected"
+    ).first()
+    assert rejection_event is not None
+    assert rejection_event.after["code"] == "BUSINESS_RULE_UNMET"
+
+    mutation_audit_exists = AuditEvent.objects.filter(
+        actor=admin, action="run.override_action"
+    ).exists()
+    assert not mutation_audit_exists
+
+
+@pytest.mark.urls("tests.accounts.test_rbac_scope")
+def test_integration_super_admin_override_false_returns_422_and_no_mutation():
+    """Super Admin on override endpoint with override=false returns 422 and no mutation."""
+    client = APIClient()
+    admin = _create_user("admin_false_flag")
+    RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
+    client.force_authenticate(user=admin)
+
+    response = client.post(
+        "/api/test/override/?dataset_id=10",
+        {"dataset_id": 10, "override": False},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.data["code"] == "BUSINESS_RULE_UNMET"
+
+    rejection_event = AuditEvent.objects.filter(
+        actor=admin, action="run.override_action.rejected"
+    ).first()
+    assert rejection_event is not None
+    assert rejection_event.after["code"] == "BUSINESS_RULE_UNMET"
+
+    mutation_audit_exists = AuditEvent.objects.filter(
+        actor=admin, action="run.override_action"
+    ).exists()
+    assert not mutation_audit_exists
+
+
+@pytest.mark.urls("tests.accounts.test_rbac_scope")
+def test_integration_non_super_admin_normal_flow_allowed_without_override():
+    """Non-super admin (QA_LEAD) on endpoint without override flag proceeds normally."""
+    client = APIClient()
+    qa_lead = _create_user("qa_lead_normal")
+    RoleAssignment.objects.create(user=qa_lead, role=Role.QA_LEAD, dataset_id=10)
+    client.force_authenticate(user=qa_lead)
+
+    response = client.post(
+        "/api/test/override/?dataset_id=10",
+        {"dataset_id": 10},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    mutation_event = AuditEvent.objects.filter(actor=qa_lead, action="run.override_action").first()
+    assert mutation_event is not None
+    assert mutation_event.after.get("is_override") is not True
+
+
+@pytest.mark.urls("tests.accounts.test_rbac_scope")
+def test_integration_non_super_admin_attempting_override_flag_returns_403():
+    """Non-super admin attempting override=True returns 403 and creates no mutation."""
+    client = APIClient()
+    qa_lead = _create_user("qa_lead_spoof_override")
+    RoleAssignment.objects.create(user=qa_lead, role=Role.QA_LEAD, dataset_id=10)
+    client.force_authenticate(user=qa_lead)
+
+    response = client.post(
+        "/api/test/override/?dataset_id=10",
+        {"dataset_id": 10, "override": True},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data["code"] == "FORBIDDEN"
+
+    rejection_event = AuditEvent.objects.filter(
+        actor=qa_lead, action="run.override_action.rejected"
+    ).first()
+    assert rejection_event is not None
+
+    mutation_audit_exists = AuditEvent.objects.filter(
+        actor=qa_lead, action="run.override_action"
+    ).exists()
+    assert not mutation_audit_exists
+
+
+# ---------------------------------------------------------------------------
+# Finding 2: Authoritative Server Hook & Nonexistent Object 404
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.urls("tests.accounts.test_rbac_scope")
+def test_object_endpoint_nonexistent_object_client_scoped_dataset_returns_404():
+    """Object does not exist (get_dataset_id returns None) -> 404 NOT_FOUND."""
+    client = APIClient()
+    qa_lead = _create_user("qa_lead_obj_404")
+    RoleAssignment.objects.create(user=qa_lead, role=Role.QA_LEAD, dataset_id=10)
+    client.force_authenticate(user=qa_lead)
+
+    response = client.get("/api/test/run/999/?dataset_id=10")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.data["code"] == "NOT_FOUND"
+
+    event = AuditEvent.objects.filter(actor=qa_lead, action="run.detail.rejected").first()
+    assert event is not None
+    assert event.after["code"] == "NOT_FOUND"
+    assert event.object_id == "999"
+
+
+# ---------------------------------------------------------------------------
+# Finding 3: Separation of Duties Fail-Closed Identity Coverage
+# ---------------------------------------------------------------------------
+
+
+def test_separation_of_duties_both_identities_missing_fails_closed():
+    """check_separation_of_duties with neither user_id nor cvat_user_id fails closed 403."""
+    factory = APIRequestFactory()
+    approver = _create_user("approver_both_missing")
+    CvatIdentity.objects.create(user=approver, cvat_user_id=301, cvat_username="cvat301")
+
+    request = factory.post("/api/adjudicate/")
+    request.user = approver
+
+    with pytest.raises(ApiError) as exc_info:
+        check_separation_of_duties(
+            request=request,
+            requester_user_id=None,
+            requester_cvat_user_id=None,
+            action="approval.adjudicate",
+        )
+
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert exc_info.value.error_code == "IDENTITY_MAPPING_MISSING"
+
+    event = AuditEvent.objects.filter(actor=approver).order_by("-id").first()
+    assert event is not None
+    assert event.action == "approval.adjudicate.rejected"
+    assert event.after["code"] == "IDENTITY_MAPPING_MISSING"
+
+
+def test_separation_of_duties_requester_missing_mapping_fails_closed():
+    """Requester has user_id but no CvatIdentity in DB -> fails closed 403."""
+    factory = APIRequestFactory()
+    requester = _create_user("requester_no_mapping")
+    approver = _create_user("approver_with_mapping")
+    CvatIdentity.objects.create(user=approver, cvat_user_id=302, cvat_username="cvat302")
+
+    request = factory.post("/api/adjudicate/")
+    request.user = approver
+
+    with pytest.raises(ApiError) as exc_info:
+        check_separation_of_duties(
+            request=request,
+            requester_user_id=requester.pk,
+            action="approval.adjudicate",
+        )
+
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert exc_info.value.error_code == "IDENTITY_MAPPING_MISSING"
+
+    event = AuditEvent.objects.filter(actor=approver).order_by("-id").first()
+    assert event is not None
+    assert event.action == "approval.adjudicate.rejected"
+    assert event.after["code"] == "IDENTITY_MAPPING_MISSING"
+
+
+def test_separation_of_duties_approver_missing_mapping_fails_closed():
+    """Approver missing CvatIdentity when reviewing a valid requester -> fails closed 403."""
+    factory = APIRequestFactory()
+    requester = _create_user("requester_valid_mapping")
+    CvatIdentity.objects.create(user=requester, cvat_user_id=303, cvat_username="cvat303")
+    approver = _create_user("approver_no_mapping")
+
+    request = factory.post("/api/adjudicate/")
+    request.user = approver
+
+    with pytest.raises(ApiError) as exc_info:
+        check_separation_of_duties(
+            request=request,
+            requester_user_id=requester.pk,
+            action="approval.adjudicate",
+        )
+
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert exc_info.value.error_code == "IDENTITY_MAPPING_MISSING"
+
+    event = AuditEvent.objects.filter(actor=approver).order_by("-id").first()
+    assert event is not None
+    assert event.action == "approval.adjudicate.rejected"
+    assert event.after["code"] == "IDENTITY_MAPPING_MISSING"
+
+
+def test_separation_of_duties_input_identity_conflicts_db_fails_closed():
+    """Input requester_cvat_user_id contradicts DB CvatIdentity -> fails closed."""
+    factory = APIRequestFactory()
+    requester = _create_user("requester_db_mapped")
+    CvatIdentity.objects.create(user=requester, cvat_user_id=304, cvat_username="cvat304")
+    approver = _create_user("approver_db_mapped")
+    CvatIdentity.objects.create(user=approver, cvat_user_id=305, cvat_username="cvat305")
+
+    request = factory.post("/api/adjudicate/")
+    request.user = approver
+
+    with pytest.raises(ApiError) as exc_info:
+        check_separation_of_duties(
+            request=request,
+            requester_user_id=requester.pk,
+            requester_cvat_user_id=9999,  # Contradicts DB (304)
+            action="approval.adjudicate",
+        )
+
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert exc_info.value.error_code == "IDENTITY_MAPPING_MISSING"
+
+    event = AuditEvent.objects.filter(actor=approver).order_by("-id").first()
+    assert event is not None
+    assert event.action == "approval.adjudicate.rejected"
+    assert event.after["code"] == "IDENTITY_MAPPING_MISSING"
+
+
+def test_separation_of_duties_two_distinct_valid_identities_allowed():
+    """Two distinct valid identities (different LabelX user and different CVAT user) succeeds."""
+    factory = APIRequestFactory()
+    requester = _create_user("requester_distinct")
+    CvatIdentity.objects.create(user=requester, cvat_user_id=306, cvat_username="cvat306")
+    approver = _create_user("approver_distinct")
+    CvatIdentity.objects.create(user=approver, cvat_user_id=307, cvat_username="cvat307")
+
+    request = factory.post("/api/adjudicate/")
+    request.user = approver
+
+    # Should not raise any error
+    check_separation_of_duties(
+        request=request,
+        requester_user_id=requester.pk,
+        requester_cvat_user_id=306,
+        action="approval.adjudicate",
+    )

@@ -202,32 +202,124 @@ class HasRoleAndDatasetScope(BasePermission):
         if not requires_dataset or scope_type == "system":
             return None
 
-        candidates: list[tuple[str, Any]] = []
+        action = getattr(view, "action_name", getattr(view, "operation_id", self.action_name))
+        obj_type = getattr(view, "object_type", self.object_type)
+        kwargs = getattr(view, "kwargs", {}) or {}
 
         # 1. Server-side authoritative hook on view (get_dataset_id(request))
+        # Finding 2: Server hook phải là nguồn authoritative duy nhất.
+        # Nếu view có get_dataset_id(request), không được fallback sang query/body/kwargs.
         hook = getattr(view, "get_dataset_id", None)
         if callable(hook):
             hook_val = hook(request)
-            if hook_val is not None:
-                candidates.append(("server_hook", hook_val))
+            if hook_val is None:
+                record_rejection_audit(
+                    request=request,
+                    code="NOT_FOUND",
+                    object_type=obj_type,
+                    object_id=str(kwargs.get("pk") or "not_found"),
+                    action=action,
+                    message="Tài nguyên yêu cầu không tồn tại.",
+                )
+                raise ApiError(
+                    status.HTTP_404_NOT_FOUND,
+                    "NOT_FOUND",
+                    "Tài nguyên yêu cầu không tồn tại.",
+                )
 
-        # 2. URL kwargs (only explicit dataset_id, NEVER generic pk!)
-        kwargs = getattr(view, "kwargs", {}) or {}
+            # Validate hook_val
+            if (
+                isinstance(hook_val, bool)
+                or not str(hook_val).strip().isdigit()
+                or int(str(hook_val).strip()) <= 0
+            ):
+                record_rejection_audit(
+                    request=request,
+                    code="VALIDATION_ERROR",
+                    object_type=obj_type,
+                    object_id=str(hook_val),
+                    action=action,
+                    message="dataset_id từ server_hook không hợp lệ.",
+                )
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST,
+                    "VALIDATION_ERROR",
+                    "dataset_id từ server_hook không hợp lệ.",
+                )
+            auth_dataset_id = int(str(hook_val).strip())
+
+            # Check if client also sent dataset_id in kwargs, query_params, or body:
+            # Client gửi dataset khác -> 400 VALIDATION_ERROR
+            client_candidates: list[tuple[str, Any]] = []
+            if "dataset_id" in kwargs and kwargs["dataset_id"] is not None:
+                client_candidates.append(("kwargs.dataset_id", kwargs["dataset_id"]))
+
+            query_params = getattr(request, "query_params", getattr(request, "GET", {}))
+            if hasattr(query_params, "get") and query_params.get("dataset_id") is not None:
+                client_candidates.append(
+                    ("query_params.dataset_id", query_params.get("dataset_id"))
+                )
+
+            data = getattr(request, "data", getattr(request, "POST", {}))
+            if isinstance(data, dict) and data.get("dataset_id") is not None:
+                client_candidates.append(("data.dataset_id", data.get("dataset_id")))
+
+            for src, raw_c in client_candidates:
+                if (
+                    isinstance(raw_c, bool)
+                    or not str(raw_c).strip().isdigit()
+                    or int(str(raw_c).strip()) <= 0
+                ):
+                    record_rejection_audit(
+                        request=request,
+                        code="VALIDATION_ERROR",
+                        object_type=obj_type,
+                        object_id=str(raw_c),
+                        action=action,
+                        message=f"dataset_id từ {src} sai kiểu (phải là số nguyên dương).",
+                    )
+                    raise ApiError(
+                        status.HTTP_400_BAD_REQUEST,
+                        "VALIDATION_ERROR",
+                        f"dataset_id từ {src} sai kiểu (phải là số nguyên dương).",
+                    )
+                if int(str(raw_c).strip()) != auth_dataset_id:
+                    record_rejection_audit(
+                        request=request,
+                        code="VALIDATION_ERROR",
+                        object_type=obj_type,
+                        object_id=f"{auth_dataset_id}!={raw_c}",
+                        action=action,
+                        message=(
+                            f"Mâu thuẫn dataset_id giữa server_hook ({auth_dataset_id}) "
+                            f"và {src} ({raw_c})."
+                        ),
+                    )
+                    raise ApiError(
+                        status.HTTP_400_BAD_REQUEST,
+                        "VALIDATION_ERROR",
+                        f"Mâu thuẫn dataset_id giữa server_hook ({auth_dataset_id}) "
+                        f"và {src} ({raw_c}).",
+                    )
+
+            return auth_dataset_id
+
+        # 2. View không có server hook: trích xuất từ kwargs/query/body
+        candidates: list[tuple[str, Any]] = []
+
+        # URL kwargs (only explicit dataset_id, NEVER generic pk!)
         if "dataset_id" in kwargs and kwargs["dataset_id"] is not None:
             candidates.append(("kwargs.dataset_id", kwargs["dataset_id"]))
 
-        # 3. Query params
+        # Query params
         query_params = getattr(request, "query_params", getattr(request, "GET", {}))
         if hasattr(query_params, "get") and query_params.get("dataset_id") is not None:
             candidates.append(("query_params.dataset_id", query_params.get("dataset_id")))
 
-        # 3. Body data
+        # Body data
         data = getattr(request, "data", getattr(request, "POST", {}))
         if isinstance(data, dict) and data.get("dataset_id") is not None:
             candidates.append(("data.dataset_id", data.get("dataset_id")))
-
-        action = getattr(view, "action_name", getattr(view, "operation_id", self.action_name))
-        obj_type = getattr(view, "object_type", self.object_type)
 
         if not candidates:
             # Missing dataset_id on a dataset-scoped view -> fail-closed
@@ -429,7 +521,23 @@ def check_separation_of_duties(
             "Chưa đăng nhập hoặc phiên hết hạn.",
         )
 
-    # Approver matching requester by LabelX user ID
+    # 1. Không cho phép cả requester_user_id và requester_cvat_user_id cùng thiếu
+    if requester_user_id is None and requester_cvat_user_id is None:
+        record_rejection_audit(
+            request=request,
+            code="IDENTITY_MAPPING_MISSING",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message="Thiếu thông tin định danh của người yêu cầu (requester identity missing).",
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "IDENTITY_MAPPING_MISSING",
+            "Thiếu thông tin định danh của người yêu cầu (requester identity missing).",
+        )
+
+    # 2. So sánh cùng LabelX user (chặn ngay lập tức vi phạm four-eyes, bao gồm cả Super Admin)
     if requester_user_id is not None and user.pk == requester_user_id:
         record_rejection_audit(
             request=request,
@@ -447,27 +555,63 @@ def check_separation_of_duties(
             "Người phê duyệt không được trùng với người yêu cầu (vi phạm nguyên tắc bốn mắt).",
         )
 
-    # When cross-account check is required or requester has CVAT identity
-    if requester_cvat_user_id is not None:
-        user_id = int(user.pk) if user.pk is not None else 0
-        identity = CvatIdentity.objects.filter(user_id=user_id).first()
-        if identity is None:
-            # Fail-closed when identity is missing on approver
+    # 3. Resolve CvatIdentity của requester từ DB
+    resolved_requester_cvat_id: int | None = None
+    if requester_user_id is not None:
+        req_identity = CvatIdentity.objects.filter(user_id=requester_user_id).first()
+        if req_identity is None:
             record_rejection_audit(
                 request=request,
                 code="IDENTITY_MAPPING_MISSING",
                 object_type=object_type,
                 object_id=str(object_id),
                 action=action,
-                message="Người phê duyệt chưa liên kết danh tính CVAT (fail-closed).",
+                message="Người yêu cầu chưa liên kết danh tính CVAT (fail-closed).",
             )
             raise ApiError(
                 status.HTTP_403_FORBIDDEN,
                 "IDENTITY_MAPPING_MISSING",
-                "Người phê duyệt chưa liên kết danh tính CVAT (fail-closed).",
+                "Người yêu cầu chưa liên kết danh tính CVAT (fail-closed).",
             )
-
-        if identity.cvat_user_id == requester_cvat_user_id:
+        if (
+            requester_cvat_user_id is not None
+            and req_identity.cvat_user_id != requester_cvat_user_id
+        ):
+            record_rejection_audit(
+                request=request,
+                code="IDENTITY_MAPPING_MISSING",
+                object_type=object_type,
+                object_id=str(object_id),
+                action=action,
+                message=(
+                    "Thông tin danh tính người yêu cầu không khớp với cơ sở dữ liệu (fail-closed)."
+                ),
+            )
+            raise ApiError(
+                status.HTTP_403_FORBIDDEN,
+                "IDENTITY_MAPPING_MISSING",
+                "Thông tin danh tính người yêu cầu không khớp với cơ sở dữ liệu (fail-closed).",
+            )
+        resolved_requester_cvat_id = req_identity.cvat_user_id
+    else:
+        # Chỉ có requester_cvat_user_id
+        assert requester_cvat_user_id is not None
+        req_identity = CvatIdentity.objects.filter(cvat_user_id=requester_cvat_user_id).first()
+        if req_identity is None:
+            record_rejection_audit(
+                request=request,
+                code="IDENTITY_MAPPING_MISSING",
+                object_type=object_type,
+                object_id=str(object_id),
+                action=action,
+                message="Người yêu cầu chưa liên kết danh tính CVAT (fail-closed).",
+            )
+            raise ApiError(
+                status.HTTP_403_FORBIDDEN,
+                "IDENTITY_MAPPING_MISSING",
+                "Người yêu cầu chưa liên kết danh tính CVAT (fail-closed).",
+            )
+        if req_identity.user_id == user.pk:
             record_rejection_audit(
                 request=request,
                 code="SAME_REQUESTER_APPROVER",
@@ -483,6 +627,43 @@ def check_separation_of_duties(
                 "SAME_REQUESTER_APPROVER",
                 "Người phê duyệt trùng danh tính thực tế với người yêu cầu qua tài khoản khác.",
             )
+        resolved_requester_cvat_id = requester_cvat_user_id
+
+    # 4. Resolve CvatIdentity của approver từ DB (fail-closed nếu thiếu)
+    app_identity = CvatIdentity.objects.filter(user_id=user.pk).first()
+    if app_identity is None:
+        record_rejection_audit(
+            request=request,
+            code="IDENTITY_MAPPING_MISSING",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message="Người phê duyệt chưa liên kết danh tính CVAT (fail-closed).",
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "IDENTITY_MAPPING_MISSING",
+            "Người phê duyệt chưa liên kết danh tính CVAT (fail-closed).",
+        )
+
+    # 5. So sánh cùng CVAT identity
+    if (
+        resolved_requester_cvat_id is not None
+        and app_identity.cvat_user_id == resolved_requester_cvat_id
+    ):
+        record_rejection_audit(
+            request=request,
+            code="SAME_REQUESTER_APPROVER",
+            object_type=object_type,
+            object_id=str(object_id),
+            action=action,
+            message="Người phê duyệt trùng danh tính thực tế với người yêu cầu qua tài khoản khác.",
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "SAME_REQUESTER_APPROVER",
+            "Người phê duyệt trùng danh tính thực tế với người yêu cầu qua tài khoản khác.",
+        )
 
 
 def check_super_admin_override(
@@ -495,6 +676,14 @@ def check_super_admin_override(
     object_id: object = "global",
 ) -> str | None:
     """FR-SEC-06, AC 3: Super Admin override validation with audit labeling."""
+    user = getattr(request, "user", None)
+    caller_id = int(user.pk) if user and user.pk is not None else 0
+
+    # 1. Xác định RoleAssignment của caller trước khi xử lý cờ override
+    is_super_admin = RoleAssignment.objects.filter(
+        user_id=caller_id, role=Role.SUPER_ADMIN
+    ).exists()
+
     query_params = getattr(request, "query_params", getattr(request, "GET", {}))
     data = getattr(request, "data", getattr(request, "POST", {}))
 
@@ -507,51 +696,70 @@ def check_super_admin_override(
         else:
             override_flag = False
 
-    if not override_flag:
+    # 2. Caller có vai trò SUPER_ADMIN trên endpoint hỗ trợ nhánh override:
+    if is_super_admin:
+        # Thiếu override hoặc override=false -> 422 BUSINESS_RULE_UNMET
+        if not override_flag:
+            record_rejection_audit(
+                request=request,
+                code="BUSINESS_RULE_UNMET",
+                object_type=object_type,
+                object_id=str(object_id),
+                action=action,
+                message=(
+                    "Super Admin thao tác trên endpoint ghi đè bắt buộc phải kích hoạt "
+                    "cờ override=true kèm lý do."
+                ),
+            )
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "BUSINESS_RULE_UNMET",
+                "Super Admin thao tác trên endpoint ghi đè bắt buộc phải kích hoạt "
+                "cờ override=true kèm lý do.",
+            )
+
+        # override=true nhưng thiếu/rỗng override_reason -> 422
+        reason = query_params.get(reason_field)
+        if (reason is None or not str(reason).strip()) and isinstance(data, dict):
+            reason = data.get(reason_field) or data.get("reason")
+
+        if reason is None or not str(reason).strip():
+            record_rejection_audit(
+                request=request,
+                code="BUSINESS_RULE_UNMET",
+                object_type=object_type,
+                object_id=str(object_id),
+                action=action,
+                message="Ghi đè của Super Admin bắt buộc phải có lý do (override_reason).",
+            )
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "BUSINESS_RULE_UNMET",
+                "Ghi đè của Super Admin bắt buộc phải có lý do (override_reason).",
+            )
+
+        reason_str = str(reason).strip()
+        setattr(request, "is_override", True)  # noqa: B010
+        setattr(request, "override_reason", reason_str)  # noqa: B010
+        return reason_str
+
+    # 3. Người không phải Super Admin:
+    else:
+        # Cố gửi override=true -> 403 FORBIDDEN
+        if override_flag:
+            record_rejection_audit(
+                request=request,
+                code="FORBIDDEN",
+                object_type=object_type,
+                object_id=str(object_id),
+                action=action,
+                message="Chỉ Super Admin mới có quyền thực hiện thao tác ghi đè.",
+            )
+            raise ApiError(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "Chỉ Super Admin mới có quyền thực hiện thao tác ghi đè.",
+            )
+
+        # Không yêu cầu override -> được đi luồng bình thường nếu role cho phép
         return None
-
-    user = getattr(request, "user", None)
-    caller_id = int(user.pk) if user and user.pk is not None else 0
-    # Strict: only RoleAssignment(role=SUPER_ADMIN), NO is_superuser shortcut!
-    is_super_admin = RoleAssignment.objects.filter(
-        user_id=caller_id, role=Role.SUPER_ADMIN
-    ).exists()
-    if not is_super_admin:
-        record_rejection_audit(
-            request=request,
-            code="FORBIDDEN",
-            object_type=object_type,
-            object_id=str(object_id),
-            action=action,
-            message="Chỉ Super Admin mới có quyền thực hiện thao tác ghi đè.",
-        )
-        raise ApiError(
-            status.HTTP_403_FORBIDDEN,
-            "FORBIDDEN",
-            "Chỉ Super Admin mới có quyền thực hiện thao tác ghi đè.",
-        )
-
-    reason = query_params.get(reason_field)
-    if (reason is None or not str(reason).strip()) and isinstance(data, dict):
-        reason = data.get(reason_field) or data.get("reason")
-
-    if reason is None or not str(reason).strip():
-        record_rejection_audit(
-            request=request,
-            code="BUSINESS_RULE_UNMET",
-            object_type=object_type,
-            object_id=str(object_id),
-            action=action,
-            message="Ghi đè của Super Admin bắt buộc phải có lý do (override_reason).",
-        )
-        raise ApiError(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "BUSINESS_RULE_UNMET",
-            "Ghi đè của Super Admin bắt buộc phải có lý do (override_reason).",
-        )
-
-    reason_str = str(reason).strip()
-    # Mark override on request for downstream audit logging
-    setattr(request, "is_override", True)  # noqa: B010
-    setattr(request, "override_reason", reason_str)  # noqa: B010
-    return reason_str

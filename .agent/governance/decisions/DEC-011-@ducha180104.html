@@ -109,7 +109,28 @@ ul.dir{columns:2;font-size:14px}
   <ul>
     <li>Hàm <code>check_anti_self_review()</code> kiểm tra ánh xạ CVAT của caller. Nếu thiếu, từ chối ngay với <code>403 IDENTITY_MAPPING_MISSING</code> kèm Audit Event. Nếu <code>reviewer_cvat_id == author_cvat_id</code>, từ chối với <code>403 SELF_REVIEW_FORBIDDEN</code> kèm Audit Event.</li>
     <li>Quy tắc Anti-Self-Review được khóa cứng: Super Admin có cờ <code>override=true</code> cùng lý do hợp lệ vẫn bị từ chối <code>403 SELF_REVIEW_FORBIDDEN</code>.</li>
-    <li>Hàm <code>check_separation_of_duties()</code> từ chối <code>403 SAME_REQUESTER_APPROVER</code> nếu cùng LabelX user ID hoặc cùng CVAT user ID.</li>
+    <li>Hàm <code>check_separation_of_duties()</code> thực thi Fail-Closed toàn diện:
+      <ul>
+        <li>Không cho phép cả <code>requester_user_id</code> và <code>requester_cvat_user_id</code> cùng thiếu (từ chối <code>403 IDENTITY_MAPPING_MISSING</code>).</li>
+        <li>Tự resolve <code>CvatIdentity</code> của requester từ DB; nếu thiếu mapping hoặc mâu thuẫn DB thì từ chối <code>403 IDENTITY_MAPPING_MISSING</code>.</li>
+        <li>Approver thiếu mapping bị từ chối <code>403 IDENTITY_MAPPING_MISSING</code>.</li>
+        <li>Chặn <code>403 SAME_REQUESTER_APPROVER</code> khi trùng LabelX user ID hoặc trùng CVAT user ID; Super Admin tuyệt đối không được tự duyệt.</li>
+      </ul>
+    </li>
+    <li>Hàm <code>check_super_admin_override()</code> chặn né lý do ghi đè:
+      <ul>
+        <li>Xác định <code>RoleAssignment</code> của caller trước khi xử lý cờ.</li>
+        <li>Caller là Super Admin trên endpoint hỗ trợ nhánh override: thiếu cờ hoặc cờ False &rarr; <code>422 BUSINESS_RULE_UNMET</code>; có cờ mà thiếu lý do &rarr; <code>422 BUSINESS_RULE_UNMET</code>.</li>
+        <li>Caller không phải Super Admin: gửi cờ override &rarr; <code>403 FORBIDDEN</code>; không gửi cờ override &rarr; đi luồng nghiệp vụ thông thường.</li>
+      </ul>
+    </li>
+    <li>Trong <code>_extract_dataset_id()</code>: Server hook <code>get_dataset_id(request)</code> là nguồn authoritative duy nhất:
+      <ul>
+        <li>Không fallback sang query/body/kwargs do client cung cấp.</li>
+        <li>Hook trả <code>None</code> (đối tượng không tồn tại) &rarr; fail-closed <code>404 NOT_FOUND</code>; không thể bypass bằng cách gửi <code>?dataset_id</code> trong phạm vi của client.</li>
+        <li>Client gửi dataset khác với hook trả về &rarr; <code>400 VALIDATION_ERROR</code>.</li>
+      </ul>
+    </li>
   </ul>
 </li>
 <li>Cơ chế Rejection Audit và Middleware đệm độc lập với <code>ATOMIC_REQUESTS=True</code>:
