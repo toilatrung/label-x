@@ -100,8 +100,16 @@ class RuleMapping(models.Model):
         return f"({', '.join(parts)}) → {self.rule.rule_id}"
 
 
+class GuidelineLoadRecordQuerySet(models.QuerySet["GuidelineLoadRecord"]):
+    def delete(self) -> tuple[int, dict[str, int]]:
+        raise ValueError("GuidelineLoadRecord is append-only and cannot be deleted.")
+
+    def update(self, **kwargs: Any) -> int:
+        raise ValueError("GuidelineLoadRecord is append-only and cannot be updated.")
+
+
 class GuidelineLoadRecord(models.Model):
-    """Append-only record of each guideline load attempt (T-017)."""
+    """Append-only record of each guideline load attempt (T-017, FR-SEC-05)."""
 
     class Result(models.TextChoices):
         ACCEPTED = "accepted", "Accepted"
@@ -122,6 +130,8 @@ class GuidelineLoadRecord(models.Model):
     result = models.CharField(max_length=16, choices=Result.choices)
     errors = models.JSONField(default=list)
 
+    objects = GuidelineLoadRecordQuerySet.as_manager()
+
     class Meta:
         ordering = ["-attempted_at", "-id"]
 
@@ -132,3 +142,6 @@ class GuidelineLoadRecord(models.Model):
         if self.pk is not None:
             raise ValueError("GuidelineLoadRecord is append-only.")
         super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise ValueError("GuidelineLoadRecord is append-only and cannot be deleted.")

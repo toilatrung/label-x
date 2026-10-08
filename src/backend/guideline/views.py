@@ -215,7 +215,7 @@ class GuidelineMappingListView(GuidelineAPIView):
         family = request.query_params.get("family", "").strip()
         if family and family not in VALID_FAMILIES:
             raise ValidationError({"family": [f"Giá trị '{family}' không hợp lệ."]})
-        mappings = RuleMapping.objects.filter(version=version).select_related("rule")
+        mappings = RuleMapping.objects.filter(version=version).select_related("rule", "version")
         if family:
             mappings = mappings.filter(error_group=family)
         for field in ("class_name", "paired_class"):
