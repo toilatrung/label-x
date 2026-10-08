@@ -177,3 +177,27 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # CVAT adapter — chỉ đọc job/meta/annotation/media bằng service account (B-18).
 CVAT_BASE_URL = env("CVAT_BASE_URL", default="")
 CVAT_SERVICE_TOKEN = env("CVAT_SERVICE_TOKEN", default="")
+
+# JSON request/worker logs with request context and secret redaction.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_context": {"()": "config.logging.RequestContextFilter"},
+        "redact_secrets": {"()": "config.logging.SecretRedactionFilter"},
+    },
+    "formatters": {"json": {"()": "config.logging.JsonFormatter"}},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_context", "redact_secrets"],
+            "formatter": "json",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "labelx": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
