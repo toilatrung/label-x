@@ -98,14 +98,14 @@ ul.dir{columns:2;font-size:14px}
 <p>Mỗi engine trong một run có một <code>LedgerEntry</code> (FR-AGG-04). Bất biến:</p>
 <ul>
 <li><code>total = completed + failed + pending + not_checked</code>; <code>not_checked</code> = tổng <code>not_checked_reasons</code>.</li>
-<li><code>excluded = not_applicable + not_triggered</code>; <code>eligible = total − excluded</code> (tức <code>total = eligible + excluded</code>): đơn vị ngoài phạm vi áp dụng theo <code>applicability_version</code> (shape ngoài phạm vi; candidate không thoả điều kiện kiểm chọn lọc) không vào mẫu số (B-04 “mẫu số áp dụng”, DEC-010; PO chốt 2026-10-08). Dòng <code>not_applicable</code> trong SRS tab:enginestates sẽ sửa cho khớp ở T-009.</li>
+<li><code>excluded = not_applicable + not_triggered</code>; <code>eligible = total − excluded</code> (tức <code>total = eligible + excluded</code>): đơn vị ngoài phạm vi áp dụng theo <code>applicability_version</code> (shape ngoài phạm vi; candidate không thoả điều kiện kiểm chọn lọc) không vào mẫu số (B-04 “mẫu số áp dụng”, DEC-010; PO chốt 2026-10-08). SRS mục 5.5 dùng cùng quy tắc.</li>
 <li>Đơn vị <code>failed</code>, <code>pending</code> và not_checked chặn (<code>disabled</code>, <code>no_model</code>, <code>no_reference</code>) <strong>vẫn trong mẫu số</strong>: lỗi không làm coverage đẹp hơn.</li>
 <li><code>coverage = completed / eligible</code>; <code>null</code> khi eligible = 0 (báo cáo ghi “không có đơn vị áp dụng”, không tính là đạt).</li>
 </ul>
 <h3 id="4-1-canh-bao">4.1 Cảnh báo đơn vị bị loại</h3>
 <p>Loại đơn vị khỏi mẫu số không được im lặng. Khi <code>excluded &gt; 0</code>, mọi nơi hiển thị coverage hoặc trạng thái engine (màn run, báo cáo, gate) <strong>phải</strong> hiện cảnh báo kèm số đơn vị bị loại, tách theo lý do, và <code>applicability_version</code>. Trạng thái công khai không đổi (không thêm trạng thái ngoài 5 giá trị của FR-AGG-05); cảnh báo là thông tin đi kèm. Ví dụ:</p>
 <blockquote>Checked · 100% (900/900) · ⚠ 100 shape ngoài phạm vi engine (not_applicable, applicability v1), không tính vào coverage</blockquote>
-<p>Coverage engine bắt buộc (<code>required</code>) dùng cho gate FR-GTE-01 (≥ 95% theo mẫu số ledger) và hiển thị theo từng engine (FR-RPT-04).</p>
+<p>Coverage engine bắt buộc (<code>required</code>) dùng cho gate FR-GTE-01 (≥ 95% theo mẫu số ledger); chỉ ngưỡng coverage mới có thể được miễn bằng waiver còn hiệu lực, được duyệt theo policy (DEC-002). Waiver không thay đổi ledger, coverage thực tế hay trạng thái engine/run. Coverage vẫn hiển thị theo từng engine (FR-RPT-04).</p>
 
 <h2 id="5-them-engine">5. Thêm engine mới</h2>
 <ol>
