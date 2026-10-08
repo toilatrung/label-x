@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Report — T-006 engine interface — LabelX</title>
+<meta name="labelx:id" content="review-t-006"><meta name="labelx:title" content="Review Report — T-006 engine interface">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="quality"><meta name="labelx:module" content="review">
+<meta name="labelx:tags" content="[review, report, t-006, engine]"><meta name="labelx:priority" content="1">
+<style>body{max-width:1050px;margin:2rem auto;padding:0 1.5rem;font:15px/1.6 system-ui,sans-serif;color:#1a1d23}h2{border-bottom:1px solid #ddd;padding-top:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:.4rem;text-align:left;vertical-align:top}th{background:#f3f4f6}code{background:#f3f4f6;padding:.1rem .25rem}</style></head>
+<body><main><article>
+<h1>Review Report — T-006 engine interface</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Review độc lập mã T-006 sau khi PR #46 và bản sửa review #48 đã merge vào develop.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-006</code></li><li><strong>Title</strong>: <code>Review Report — T-006 engine interface</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Reviewer</strong>: <code>Codex, phiên khôi phục T-006…T-009; khác executor label-x-30</code></li><li><strong>Executor</strong>: <code>claude-code label-x-30</code></li><li><strong>Status</strong>: <code>approved</code></li><li><strong>Decision</strong>: <code>APPROVED</code></li><li><strong>Review Type</strong>: <code>code</code></li><li><strong>Task ID</strong>: <code>T-006</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul><li><strong>Included Artifacts</strong>: <code>src/backend/engines/interface.py, tests/test_engine_interface.py, docs/04-api/openapi.yaml, engine-interface.html, DEC-010, generated contract.d.ts</code></li><li><strong>Code Diff</strong>: <code>develop daf264c và bc07d28; nguồn PR #46/#48</code></li><li><strong>Excluded Artifacts</strong>: <code>engine cụ thể và orchestrator E-08</code></li><li><strong>Review Standard</strong>: <code>.agent/skills/labelx-pr-review/SKILL.md; task-board#t-006; FR-AGG-04/05, B-04/B-19, NFR-13</code></li></ul>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-006.html</code></li><li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-006, .agent/planning/epics.html#e-01</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Decisions</strong>: <code>DEC-010 accepted</code></li><li><strong>Risks or Issues</strong>: <code>none</code></li><li><strong>Verification Evidence</strong>: <code>make check trên develop cc27674; CI PR #46/#48 đều 5/5 xanh</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td><code>agent review start/approve T-006</code></td><td>not-run</td><td>Repo không có CLI agent; quyết định lưu trong báo cáo.</td></tr><tr><td><code>make check</code></td><td>passed</td><td>PostgreSQL: backend 132, frontend 119, detector 10; lint/typecheck/mypy/validate-kit đạt.</td></tr><tr><td><code>npm run build</code></td><td>passed</td><td>Next.js 16.3.8 compile và typecheck đạt; không thấy <code>password123</code> trong .next/static.</td></tr></tbody></table>
+<h2 id="required-review-checks">Required Review Checks</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Code diff</td><td>passed</td><td>Hai squash commit trên develop; PR #48 sửa F-1/F-2 của review trước đó.</td></tr>
+<tr><td>Acceptance criteria</td><td>passed</td><td>test_every_field_traces_to_srs phủ đủ property của 8 schema; DEC-010 accepted; test_checked_only_when_every_eligible_unit_completed duyệt ledger nhỏ và điều kiện không hiện checked khi chưa xong.</td></tr>
+<tr><td>Architecture compliance</td><td>passed</td><td>EngineInput/Output theo shard; trạng thái hiển thị suy từ ledger; excluded/not_applicable theo DEC-010.</td></tr>
+<tr><td>Security</td><td>passed</td><td>Task chỉ khai báo interface, không thêm API hoặc quyền thực thi; không thấy secret trong diff.</td></tr>
+<tr><td>Performance</td><td>not-run</td><td>Không có worker/runtime engine trong phạm vi T-006.</td></tr>
+<tr><td>Regression risk</td><td>passed</td><td>make check và build frontend trên develop mới nhất; type sinh từ contract.</td></tr>
+<tr><td>Test/lint/build evidence</td><td>passed</td><td>make check, npm run build; PR #46/#48 CI xanh 5/5.</td></tr>
+</tbody></table>
+<h2 id="findings">Findings</h2>
+<table><thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead><tbody>
+<tr><td>F-1</td><td>major, resolved</td><td><code>LedgerEntry</code></td><td>Review trước phát hiện đơn vị ngoài phạm vi chưa được phân định khỏi mẫu số.</td><td>Đã sửa trong PR #48: excluded, applicability_version, cảnh báo; DEC-010 chốt.</td><td>@toilatrung</td></tr>
+<tr><td>F-2</td><td>major, resolved</td><td><code>EngineInternalState</code></td><td>Review trước phát hiện trạng thái nội bộ có thể thành nguồn hiển thị thứ hai.</td><td>Đã sửa trong PR #48: display_status chỉ tính từ ledger.</td><td>@toilatrung</td></tr>
+<tr><td>O-1</td><td>observation</td><td>PR #46/#48</td><td>GitHub không ghi reviewDecision hoặc comment “Đã xem và duyệt”, dù hai PR đã merge.</td><td>PO xác nhận ngoại lệ quy trình CR-102 trước khi đánh dấu task done.</td><td>@toilatrung</td></tr>
+</tbody></table>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul><li>[x] Review scope and standard are explicit.</li><li>[x] Each finding identifies evidence, severity, action, and owner.</li><li>[x] Critical and major findings are resolved or formally accepted.</li><li>[x] Approval outcome matches unresolved findings.</li><li>[x] Code diff, acceptance criteria, architecture, security, performance, regression risk, and test/lint/build evidence are checked.</li><li>[x] Reviewer identity is independent from Executor identity.</li></ul>
+<h2 id="approval-outcome">Approval Outcome</h2>
+<ul><li><strong>Decision</strong>: <code>APPROVED</code></li><li><strong>Rationale</strong>: <code>AC kỹ thuật đạt, F-1/F-2 đã sửa; O-1 còn chờ PO xác nhận tuân thủ CR-102.</code></li><li><strong>Approved By</strong>: <code>Codex reviewer; không thay comment duyệt PR của PO</code></li><li><strong>Decision Date</strong>: <code>2026-10-08</code></li><li><strong>Follow-up Tasks</strong>: <code>PO xác nhận O-1, sau đó QA và closeout</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] All required actions are linked to tasks or verified as resolved.</li><li>[x] Approval outcome and rationale are recorded.</li><li>[x] Related issue, risk, and report records are updated.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Do not approve artifacts with unresolved critical findings.</li><li>Do not remove findings after remediation; record their resolution.</li><li>Do not assign ambiguous severity or ownership.</li><li>Do not claim review coverage outside the declared scope.</li><li>Do not act as the Executor Agent for the same task.</li><li>Do not move a task to DONE; QA must run after APPROVED.</li><li>Do not change roadmap or acceptance criteria.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Save as <code>.agent/reports/review/T-006.html</code>.</li><li>Preserve every heading and table column in this template.</li><li>Use repository-relative links and exact enum values.</li></ul>
+</article></main></body></html>
