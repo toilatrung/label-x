@@ -103,6 +103,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="deviations">Deviations</h2>
 <ul>
 <li><strong>Plan Deviations</strong>: <code>ADR dùng DEC-010 vì DEC-009 đã ghi cho T-007 trong task board. Thêm module tham chiếu engines/interface.py (không phụ thuộc Django) để test quy tắc trạng thái/ledger bằng code; không cài engine.</code></li>
+<li><strong>Review Fixes</strong>: <code>F-2: trạng thái hiển thị chỉ tính từ ledger (display_status), EngineInternalState chỉ điều phối (x-labelx-terminal). F-1: PO 2026-10-08 (qua label-x-88) chốt loại not_applicable/not_triggered khỏi mẫu số kèm cảnh báo bắt buộc — LedgerEntry thêm excluded, applicability_version; bất biến total = eligible + excluded; ghi chú T-009, E-08, E-21, E-22. make check sau sửa: backend 108 passed.</code></li>
 <li><strong>Approved By</strong>: <code>chờ review label-x-88 và @DucHa180104 trên PR</code></li>
 <li><strong>Known Limitations</strong>: <code>LedgerEntry thêm trường bắt buộc total, pending, coverage: chưa có view hay frontend dùng nên không phá client; EngineUnitRef.object bắt buộc khi kind = shape mới ghi bằng mô tả, chưa ràng buộc bằng schema (OpenAPI 3.0 không có if/then)</code></li>
 </ul>

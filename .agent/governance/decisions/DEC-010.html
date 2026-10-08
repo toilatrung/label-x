@@ -77,14 +77,15 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="decision-outcome">Decision Outcome</h2>
 <ul>
 <li><strong>Selected Option</strong>: <code>A</code></li>
-<li><strong>Rationale</strong>: Interface gồm <code>EngineDescriptor</code>, <code>EngineConfig</code>, <code>EngineInput</code>, <code>EngineOutput</code>, <code>Candidate</code>, <code>EngineUnitResult</code>, <code>EngineUnitRef</code>; <code>LedgerEntry</code> thêm <code>total</code>, <code>pending</code>, <code>coverage</code>. Trạng thái nội bộ (<code>EngineUnitOutcome</code>, <code>EngineInternalState</code>) map sang <code>EngineStatus</code>; chỉ <code>completed</code>/<code>succeeded</code> thành <code>checked</code>. Quy tắc đầy đủ: <a href="../../../docs/04-api/engine-interface.html">docs/04-api/engine-interface.html</a>.</li>
+<li><strong>Rationale</strong>: Interface gồm <code>EngineDescriptor</code>, <code>EngineConfig</code>, <code>EngineInput</code>, <code>EngineOutput</code>, <code>Candidate</code>, <code>EngineUnitResult</code>, <code>EngineUnitRef</code>; <code>LedgerEntry</code> thêm <code>total</code>, <code>pending</code>, <code>coverage</code>. Trạng thái hiển thị <code>EngineStatus</code> luôn tính từ ledger (một nguồn duy nhất); <code>EngineInternalState</code> chỉ là trạng thái điều phối cho biết engine đã dừng hay chưa, không map trực tiếp sang trạng thái hiển thị (review F-2). <code>EngineUnitOutcome</code> có bảng map cho từng đơn vị, trùng kết quả tính từ ledger một đơn vị; chỉ <code>completed</code> thành <code>checked</code>. Quy tắc đầy đủ: <a href="../../../docs/04-api/engine-interface.html">docs/04-api/engine-interface.html</a>.</li>
+<li><strong>Mẫu số coverage</strong>: Loại <code>not_applicable</code> và <code>not_triggered</code> khỏi mẫu số (phương án a, PO 2026-10-08, chuyển qua label-x-88). Lý do: B-04 và thuật ngữ “mẫu số áp dụng” (coverage theo đơn vị áp dụng của engine); dòng <code>not_applicable</code> trong SRS tab:enginestates chưa nhất quán với B-04 và T-009 sẽ sửa. Ràng buộc kèm theo: không im lặng — <code>LedgerEntry</code> có <code>excluded</code> (bất biến <code>total = eligible + excluded</code>) và <code>applicability_version</code>; khi <code>excluded &gt; 0</code> mọi nơi hiển thị coverage hoặc trạng thái engine phải hiện cảnh báo kèm số đơn vị bị loại theo lý do và version quy tắc; không thêm trạng thái công khai mới (FR-AGG-05).</li>
 <li><strong>Effective Date</strong>: <code>2026-10-08</code></li>
 </ul>
 <h2 id="consequences">Consequences</h2>
 <ul>
 <li><strong>Positive</strong>: <code>Thêm engine chỉ cần descriptor + worker đúng schema; trạng thái và coverage do orchestrator tính một cách; test bao phủ mọi ledger nhỏ.</code></li>
 <li><strong>Negative</strong>: <code>LedgerEntry có thêm trường bắt buộc (total, pending, coverage); chưa có view dùng nên không phá client hiện có.</code></li>
-<li><strong>Follow-up Work</strong>: <code>E-08 (orchestrator, ledger trong DB) và E-10 (Detector) cài theo interface; T-008 dùng schema khi bổ sung operation.</code></li>
+<li><strong>Follow-up Work</strong>: <code>E-08 (orchestrator, ledger trong DB) và E-10 (Detector) cài theo interface; T-008 dùng schema khi bổ sung operation; T-009 sửa dòng not_applicable của tab:enginestates và ghi yêu cầu cảnh báo; E-08, E-21, E-22 hiển thị cảnh báo excluded.</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>

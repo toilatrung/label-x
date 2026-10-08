@@ -82,20 +82,8 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>4</td><td>completed = 0 và failed = eligible</td><td><code>failed</code></td></tr>
 <tr><td>5</td><td>Còn lại (một phần failed, chưa xong khi đã dừng/huỷ, hoặc lẫn not_checked chặn)</td><td><code>partial</code></td></tr>
 </tbody></table>
-<h3 id="3-2-noi-bo">3.2 Map trạng thái nội bộ</h3>
-<table><thead><tr><th>EngineInternalState</th><th>EngineStatus</th></tr></thead><tbody>
-<tr><td><code>queued</code></td><td><code>running</code></td></tr>
-<tr><td><code>running</code></td><td><code>running</code></td></tr>
-<tr><td><code>retrying</code></td><td><code>running</code></td></tr>
-<tr><td><code>succeeded</code></td><td><code>checked</code></td></tr>
-<tr><td><code>partially_succeeded</code></td><td><code>partial</code></td></tr>
-<tr><td><code>failed</code></td><td><code>failed</code></td></tr>
-<tr><td><code>cancelled</code></td><td><code>partial</code></td></tr>
-<tr><td><code>disabled</code></td><td><code>not_checked</code></td></tr>
-<tr><td><code>model_unavailable</code></td><td><code>not_checked</code></td></tr>
-<tr><td><code>reference_unavailable</code></td><td><code>not_checked</code></td></tr>
-<tr><td><code>not_applicable</code></td><td><code>not_checked</code></td></tr>
-</tbody></table>
+<h3 id="3-2-noi-bo">3.2 Trạng thái nội bộ</h3>
+<p><strong>Trạng thái hiển thị luôn tính từ ledger bằng quy tắc §3.1</strong> (<code>display_status</code> trong <code>src/backend/engines/interface.py</code>). <code>EngineInternalState</code> chỉ là trạng thái điều phối của orchestrator; nó không map trực tiếp sang <code>EngineStatus</code>, chỉ cho biết engine đã dừng hay chưa (<code>x-labelx-terminal</code>: <code>succeeded</code>, <code>partially_succeeded</code>, <code>failed</code>, <code>cancelled</code>, <code>disabled</code>, <code>model_unavailable</code>, <code>reference_unavailable</code>, <code>not_applicable</code>). Vì vậy không có hai nguồn trạng thái mâu thuẫn: ví dụ <code>succeeded</code> mà ledger còn đơn vị bị chặn vẫn hiển thị <code>partial</code>; <code>cancelled</code> khi mọi đơn vị eligible đã completed hiển thị <code>checked</code>.</p>
 <table><thead><tr><th>EngineUnitOutcome</th><th>EngineStatus của đơn vị</th></tr></thead><tbody>
 <tr><td><code>pending</code></td><td><code>running</code></td></tr>
 <tr><td><code>running</code></td><td><code>running</code></td></tr>
@@ -104,16 +92,19 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>failed</code></td><td><code>failed</code></td></tr>
 <tr><td><code>not_checked</code></td><td><code>not_checked</code></td></tr>
 </tbody></table>
-<p>Chỉ <code>succeeded</code> và <code>completed</code> thành <code>checked</code>; test duyệt mọi ledger nhỏ để chắc <code>checked</code> xảy ra khi và chỉ khi mọi đơn vị eligible completed.</p>
+<p>Bảng đơn vị trùng kết quả của §3.1 áp dụng cho ledger chỉ có một đơn vị (test kiểm). Chỉ <code>completed</code> thành <code>checked</code>; test duyệt mọi ledger nhỏ để chắc <code>checked</code> xảy ra khi và chỉ khi mọi đơn vị eligible completed và không còn đơn vị chưa xong khi engine chưa dừng.</p>
 
 <h2 id="4-ledger">4. Coverage ledger</h2>
 <p>Mỗi engine trong một run có một <code>LedgerEntry</code> (FR-AGG-04). Bất biến:</p>
 <ul>
 <li><code>total = completed + failed + pending + not_checked</code>; <code>not_checked</code> = tổng <code>not_checked_reasons</code>.</li>
-<li><code>eligible = total − not_applicable − not_triggered</code>: đơn vị ngoài phạm vi áp dụng (shape ngoài phạm vi; candidate không thoả điều kiện kiểm chọn lọc) không vào mẫu số (tab:enginestates).</li>
+<li><code>excluded = not_applicable + not_triggered</code>; <code>eligible = total − excluded</code> (tức <code>total = eligible + excluded</code>): đơn vị ngoài phạm vi áp dụng theo <code>applicability_version</code> (shape ngoài phạm vi; candidate không thoả điều kiện kiểm chọn lọc) không vào mẫu số (B-04 “mẫu số áp dụng”, DEC-010; PO chốt 2026-10-08). Dòng <code>not_applicable</code> trong SRS tab:enginestates sẽ sửa cho khớp ở T-009.</li>
 <li>Đơn vị <code>failed</code>, <code>pending</code> và not_checked chặn (<code>disabled</code>, <code>no_model</code>, <code>no_reference</code>) <strong>vẫn trong mẫu số</strong>: lỗi không làm coverage đẹp hơn.</li>
 <li><code>coverage = completed / eligible</code>; <code>null</code> khi eligible = 0 (báo cáo ghi “không có đơn vị áp dụng”, không tính là đạt).</li>
 </ul>
+<h3 id="4-1-canh-bao">4.1 Cảnh báo đơn vị bị loại</h3>
+<p>Loại đơn vị khỏi mẫu số không được im lặng. Khi <code>excluded &gt; 0</code>, mọi nơi hiển thị coverage hoặc trạng thái engine (màn run, báo cáo, gate) <strong>phải</strong> hiện cảnh báo kèm số đơn vị bị loại, tách theo lý do, và <code>applicability_version</code>. Trạng thái công khai không đổi (không thêm trạng thái ngoài 5 giá trị của FR-AGG-05); cảnh báo là thông tin đi kèm. Ví dụ:</p>
+<blockquote>Checked · 100% (900/900) · ⚠ 100 shape ngoài phạm vi engine (not_applicable, applicability v1), không tính vào coverage</blockquote>
 <p>Coverage engine bắt buộc (<code>required</code>) dùng cho gate FR-GTE-01 (≥ 95% theo mẫu số ledger) và hiển thị theo từng engine (FR-RPT-04).</p>
 
 <h2 id="5-them-engine">5. Thêm engine mới</h2>

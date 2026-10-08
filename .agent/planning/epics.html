@@ -818,6 +818,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Metric hàng đợi/shard (NFR-12)</li>
 <li>Màn AnalysisConfig, ExecutionHistory</li>
 <li>Frontend: AnalysisConfig (chọn snapshot, engine, tạo run, huỷ, retry-failed) và ExecutionHistory (trạng thái run/shard, ledger theo engine, trạng thái công khai Checked/Partial/Failed/Not checked/Running, tự làm mới khi run đang chạy)</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_7">Excluded</h5>
 <ul>
@@ -1669,6 +1670,7 @@ ul.dir{columns:2;font-size:14px}
 <li>FR-RPT-01…06</li>
 <li>Phân biệt lineage KPI (snapshot đầu vào) với báo cáo/gate revision cuối</li>
 <li>Frontend: QualityReport hai phần (KPI theo snapshot đầu vào; chất lượng/gate theo run cuối), ghi rõ nguồn từng phần; xuất PDF/CSV/JSON</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_20">Excluded</h5>
 <ul>
@@ -1735,6 +1737,7 @@ ul.dir{columns:2;font-size:14px}
 <li>G-4: lát ngẫu nhiên trên snapshot run cuối, đạt khi cận trên KTC 95% ≤ 5% (BLOCKER-006 phương án A)</li>
 <li>Không phát hành dataset (FR-GTE-04)</li>
 <li>Frontend: QualityGate — từng điều kiện kèm nguồn dữ liệu và trạng thái; form waiver chỉ cho coverage và đồng thuận reviewer; người duyệt khác người đề nghị</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_21">Excluded</h5>
 <ul>
