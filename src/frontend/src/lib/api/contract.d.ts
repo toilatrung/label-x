@@ -82,6 +82,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/workflow-permissions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ma trận phân quyền và quy tắc workflow
+         * @description Cung cấp cấu hình ma trận phân quyền theo vai trò (7 vai trò) và các quy tắc workflow
+         *     (anti-self-review, super admin override, separation of duties) phục vụ màn hình WorkflowPermissions.
+         */
+        get: operations["auth_workflow_permissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/": {
         parameters: {
             query?: never;
@@ -450,6 +471,29 @@ export interface components {
                 status: "mapped" | "missing";
                 cvat_user_id?: number | null;
             };
+        };
+        WorkflowPermissions: {
+            matrix: components["schemas"]["WorkflowMatrixItem"][];
+            rules: components["schemas"]["WorkflowRule"][];
+            user_roles: components["schemas"]["RoleAssignment"][];
+        };
+        WorkflowMatrixItem: {
+            function: string;
+            roles: {
+                annotator: string;
+                reviewer: string;
+                qa_lead: string;
+                qc_admin: string;
+                super_admin: string;
+                product_owner: string;
+                data_model_owner: string;
+            };
+        };
+        WorkflowRule: {
+            rule: string;
+            name: string;
+            description: string;
+            enforced: boolean;
         };
         Dataset: {
             id: number;
@@ -1035,6 +1079,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Session"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    auth_workflow_permissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ma trận phân quyền và quy tắc workflow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowPermissions"];
                 };
             };
             403: components["responses"]["Forbidden"];

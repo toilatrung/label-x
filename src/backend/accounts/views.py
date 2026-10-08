@@ -19,7 +19,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.serializers import LoginRequestSerializer, SessionSerializer, build_session
+from accounts.models import Role
+from accounts.permissions import HasRoleAndDatasetScope
+from accounts.serializers import (
+    LoginRequestSerializer,
+    SessionSerializer,
+    WorkflowPermissionsSerializer,
+    build_session,
+)
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 
@@ -130,3 +137,160 @@ class SessionView(APIView):
     )
     def get(self, request: Request) -> Response:
         return Response(build_session(request.user), headers={"Cache-Control": "no-store"})
+
+
+ROLE_MATRIX = [
+    {
+        "function": "Datasets",
+        "roles": {
+            "annotator": "view_assigned",
+            "reviewer": "view_assigned",
+            "qa_lead": "view_assigned",
+            "qc_admin": "view_all",
+            "super_admin": "view_all",
+            "product_owner": "view_assigned",
+            "data_model_owner": "view_assigned",
+        },
+    },
+    {
+        "function": "Quality Analysis",
+        "roles": {
+            "annotator": "none",
+            "reviewer": "none",
+            "qa_lead": "run_view",
+            "qc_admin": "configure",
+            "super_admin": "run_configure",
+            "product_owner": "view_kpi",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Review Queues & Workspace",
+        "roles": {
+            "annotator": "none",
+            "reviewer": "review",
+            "qa_lead": "review_monitor",
+            "qc_admin": "view",
+            "super_admin": "review_monitor",
+            "product_owner": "none",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Rework",
+        "roles": {
+            "annotator": "execute",
+            "reviewer": "request_verify",
+            "qa_lead": "request_monitor",
+            "qc_admin": "none",
+            "super_admin": "execute_verify",
+            "product_owner": "none",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Adjudication",
+        "roles": {
+            "annotator": "none",
+            "reviewer": "none",
+            "qa_lead": "yes",
+            "qc_admin": "none",
+            "super_admin": "override_with_reason",
+            "product_owner": "none",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Calibration & Audit",
+        "roles": {
+            "annotator": "participate",
+            "reviewer": "participate",
+            "qa_lead": "manage",
+            "qc_admin": "configure",
+            "super_admin": "manage_configure",
+            "product_owner": "none",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Phê duyệt phát hành",
+        "roles": {
+            "annotator": "none",
+            "reviewer": "none",
+            "qa_lead": "authorized",
+            "qc_admin": "none",
+            "super_admin": "override_with_reason",
+            "product_owner": "none",
+            "data_model_owner": "none",
+        },
+    },
+    {
+        "function": "Configuration",
+        "roles": {
+            "annotator": "none",
+            "reviewer": "none",
+            "qa_lead": "limited",
+            "qc_admin": "yes",
+            "super_admin": "full_including_permissions",
+            "product_owner": "none",
+            "data_model_owner": "lock_detector_artifact",
+        },
+    },
+]
+
+WORKFLOW_RULES = [
+    {
+        "rule": "anti_self_review",
+        "name": "Reviewer không review annotation của chính mình",
+        "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
+        "enforced": True,
+    },
+    {
+        "rule": "super_admin_override_reason",
+        "name": "Ghi đè của Super Admin phải có lý do",
+        "description": (
+            "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline"
+        ),
+        "enforced": True,
+    },
+    {
+        "rule": "audit_logging",
+        "name": "Mọi thao tác ghi nhật ký kiểm toán",
+        "description": "Gắn nhãn Super Admin khi dùng quyền ghi đè; ghi sự kiện từ chối",
+        "enforced": True,
+    },
+    {
+        "rule": "separation_of_duties",
+        "name": "Người duyệt khác người yêu cầu",
+        "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
+        "enforced": True,
+    },
+]
+
+
+class WorkflowPermissionsView(APIView):
+    permission_classes = [IsAuthenticated, HasRoleAndDatasetScope]
+    allowed_roles = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
+    action_name = "auth_workflow_permissions"
+    requires_dataset = False
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="auth_workflow_permissions",
+        tags=["auth"],
+        summary="Ma trận phân quyền và quy tắc quy trình cho màn WorkflowPermissions",
+        responses={
+            200: WorkflowPermissionsSerializer,
+            403: _error("Chưa đăng nhập hoặc không đủ quyền (FORBIDDEN, NOT_AUTHENTICATED)"),
+        },
+    )
+    def get(self, request: Request) -> Response:
+        session = build_session(request.user)
+        return Response(
+            {
+                "matrix": ROLE_MATRIX,
+                "rules": WORKFLOW_RULES,
+                "user_roles": session["roles"],
+            },
+            headers={"Cache-Control": "no-store"},
+        )

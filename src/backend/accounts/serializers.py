@@ -59,3 +59,16 @@ def build_session(user: AbstractBaseUser | AnonymousUser) -> dict[str, Any]:
         "roles": roles,
         "identity_mapping": mapping,
     }
+
+
+class WorkflowRuleSerializer(serializers.Serializer[dict[str, Any]]):
+    rule = serializers.CharField()
+    name = serializers.CharField()
+    description = serializers.CharField()
+    enforced = serializers.BooleanField()
+
+
+class WorkflowPermissionsSerializer(serializers.Serializer[dict[str, Any]]):
+    matrix = serializers.ListField(child=serializers.DictField())
+    rules = WorkflowRuleSerializer(many=True)
+    user_roles = RoleAssignmentSerializer(many=True)
