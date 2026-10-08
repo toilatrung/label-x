@@ -79,7 +79,7 @@ th{background:var(--sunken)}
 <tr><td><code>src/backend/guideline/permissions.py</code></td><td>Sửa đổi</td><td>Refactor <code>HasGuidelineRole</code> kế thừa <code>HasRoleAndDatasetScope</code>, loại bỏ hoàn toàn kiểm tra Django groups.</td></tr>
 <tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Tạo mới</td><td>34 unit & integration tests bao quát 7 vai trò, dataset scope, unique mapping constraint, fail-closed identity, anti-self-review, separation of duties, override validation, và kiểm toán trước mutation.</td></tr>
 <tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture cấp phát <code>RoleAssignment</code> thay thế Django Group (21/21 passed).</td></tr>
-<tr><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
 <tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật tiến độ T-012 và liên kết DEC-011.</td></tr>
 <tr><td><code>.agent/execution/current-context-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật deadline 19:00 ngày 08/10/2026 và trạng thái task.</td></tr>
 </tbody>
@@ -91,7 +91,7 @@ th{background:var(--sunken)}
 <li><code>src/backend/accounts/permissions.py</code></li>
 <li><code>src/backend/guideline/permissions.py</code></li>
 <li><code>src/backend/audit/services.py</code></li>
-<li><code>.agent/governance/decisions/DEC-011.html</code></li>
+<li><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></li>
 <li><code>docs/06-security/threat-model.html</code></li>
 <li><code>docs/07-development/coding-standards.html</code></li>
 </ul>
@@ -132,7 +132,7 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
 <tr><td>Rejection audit không thu thập query string chứa secret (path thuần); payload được redaction an toàn qua dịch vụ T-013</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:54</code>, <code>tests/audit/test_audit_log.py:12-65</code></td><td><code>test_integration_rejection_audit_does_not_collect_query_string_secrets</code>, dẫn chứng redaction payload thực sự bởi T-013 tại <code>tests/audit/test_audit_log.py:test_snapshots_and_reason_are_redacted_before_storage</code></td></tr>
 <tr><td>View thiếu allowed_roles fail-closed và raise ImproperlyConfigured</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:178-189</code></td><td><code>test_view_missing_allowed_roles_raises_improperly_configured</code></td></tr>
 <tr><td>Không coi generic pk là dataset ID; sử dụng server hook get_dataset_id(request); client query/body mâu thuẫn bị từ chối 400 VALIDATION_ERROR</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:192-300</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code></td></tr>
-<tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pending">CHỜ DUYỆT</span></td><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>DEC-011 ở trạng thái <code>proposed</code> chờ Product Owner (@toilatrung) chấp thuận</td></tr>
+<tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pending">CHỜ DUYỆT</span></td><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>DEC-011 ở trạng thái <code>proposed</code> chờ Product Owner (@toilatrung) chấp thuận</td></tr>
 </tbody>
 </table>
 
