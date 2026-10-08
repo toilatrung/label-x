@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-008 — OpenAPI cho các luồng nghiệp vụ còn thiếu — LabelX</title>
+<meta name="labelx:id" content="implementation-t-008">
+<meta name="labelx:title" content="Implementation Report T-008 — OpenAPI cho các luồng nghiệp vụ còn thiếu">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[implementation, t-008, e-01, openapi]">
+<meta name="labelx:priority" content="1">
+<style>body{max-width:1050px;margin:2rem auto;padding:0 1.5rem;font:15px/1.6 system-ui,sans-serif;color:#1a1d23}h2{border-bottom:1px solid #ddd;padding-top:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:.4rem;text-align:left;vertical-align:top}th{background:#f3f4f6}code{background:#f3f4f6;padding:.1rem .25rem}</style></head>
+<body><main><article>
+<h1>Implementation Report T-008 — OpenAPI cho các luồng nghiệp vụ còn thiếu</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi bằng chứng triển khai T-008 thuộc E-01, phủ các endpoint còn thiếu trong bảng <code>tab:api</code> của SRS.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-008</code></li>
+<li><strong>Title</strong>: <code>Implementation Report T-008 — OpenAPI cho các luồng nghiệp vụ còn thiếu</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Executor</strong>: <code>Codex trong phiên khôi phục T-006…T-009</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-008</code></li>
+<li><strong>Epic ID</strong>: <code>E-01</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>15 operation còn thiếu của SRS: issue, decision, adjudication, rework, reference, effort, evaluation, gate, waiver, report; schema request/response, quyền, trace, guard và lỗi; type frontend; test đối chiếu trực tiếp bảng endpoint SRS.</code></li>
+<li><strong>Not Implemented</strong>: <code>Backend view và nghiệp vụ chạy thật thuộc các epic tương ứng; T-008 chỉ tạo contract.</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>Thêm 15 operation và schema cho quyết định review, phân xử, rework, reference, effort, evaluation, gate, waiver, report; mọi operation có x-labelx-trace và x-labelx-roles, guard 403/409/422 theo luồng.</td><td>T-008</td></tr>
+<tr><td><code>src/backend/tests/test_contract.py</code></td><td>Đọc trực tiếp 28 dòng endpoint từ SRS tab:api; kiểm method/path; kiểm mã lỗi cho các luồng có guard.</td><td>T-008</td></tr>
+<tr><td><code>src/frontend/src/lib/api/contract.d.ts</code></td><td>Sinh lại type bằng openapi-typescript 7.13.0.</td><td>T-008</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-008</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>DEC-002, DEC-005, DEC-006, DEC-010</code></li>
+<li><strong>Change Requests</strong>: <code>CR-101</code></li>
+<li><strong>Risks or Blockers</strong>: <code>none</code></li>
+<li><strong>Review Request</strong>: <code>independent reviewer của PR T-008; chưa duyệt</code></li>
+<li><strong>Commits</strong>: <code>3d46054 trên feat/T-008-e01-openapi; hash sẽ đổi nếu squash merge</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make infra-up</code></td><td>passed</td><td>Postgres, Redis, SeaweedFS healthy.</td></tr>
+<tr><td><code>UV_CACHE_DIR=/tmp/labelx-uv-cache make check</code></td><td>passed</td><td>Ruff, mypy 47 files, backend 126 passed trên PostgreSQL, eslint/typecheck, frontend 119 passed, detector 10 passed, FRAMEWORK_VALIDATION_PASS.</td></tr>
+<tr><td><code>npm run gen:api:contract</code></td><td>passed</td><td>openapi-typescript 7.13.0 sinh contract.d.ts từ openapi.yaml.</td></tr>
+<tr><td><code>git diff --check</code></td><td>passed</td><td>Không có lỗi whitespace.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Mọi endpoint của tab:api có operation</td><td>passed</td><td><code>test_contract_covers_every_srs_api_table_endpoint</code> đọc đủ 28 dòng SRS và so method/path.</td></tr>
+<tr><td>Trace FR/BR/UC, role, OpenAPI hợp lệ</td><td>passed</td><td><code>test_every_operation_traces_to_srs</code>, <code>test_every_operation_declares_known_roles</code>, <code>test_contract_is_valid_openapi_3</code>.</td></tr>
+<tr><td>Guard và lỗi của luồng nghiệp vụ</td><td>passed</td><td><code>test_t008_state_guards_and_error_contract</code> và <code>test_error_responses_use_shared_error_schema</code>.</td></tr>
+<tr><td>Type frontend được sinh và dùng được</td><td>passed</td><td>openapi-typescript hoàn tất; frontend typecheck và 119 test đạt.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>none</code></li>
+<li><strong>Approved By</strong>: <code>chờ review độc lập theo CR-102</code></li>
+<li><strong>Known Limitations</strong>: <code>OpenAPI 3.0 mô tả điều kiện chéo như confirm cần family/severity, waiver chỉ coverage/agreement và quyền tách nhiệm vụ; backend view tương lai phải thực thi các điều kiện này. T-007 đang thêm schema ReviewDecision riêng; cần đối chiếu khi merge hai PR.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li><li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[x] Git Nexus mappings are updated when commits exist.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Do not report unperformed work as implemented.</li><li>Do not omit failed or unexecuted required checks.</li><li>Do not claim completion with unmet task acceptance criteria.</li><li>Do not claim review approval or move the task to DONE.</li><li>Do not change roadmap or acceptance criteria.</li><li>Do not use this report as a substitute for independent review.</li><li>Do not include secrets or sensitive command output.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Save as <code>.agent/reports/implementation/T-008.html</code>.</li><li>Preserve every heading and table column in this template.</li><li>Set status <code>complete</code> only after completion criteria pass.</li></ul>
+</article></main></body></html>
