@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-011: Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01 — LabelX</title>
+<meta name="labelx:id" content="DEC-011">
+<meta name="labelx:title" content="Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, adr, security, rbac, identity, m-01, t-012]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-011</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>DEC-011</span><b>title</b><span>Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, adr, security, rbac, identity, m-01, t-012]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-011">DEC-011: Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Quyết định kiến trúc (ADR) xác lập cơ chế bảo mật Fail-Closed cho Anti-Self-Review và Separation of Duties trong phạm vi Milestone M-01 (Task T-012, Epic E-02), làm rõ giới hạn định danh kỹ thuật và rủi ro còn lại (Residual Risk) cần phối hợp quy trình quản trị tài khoản.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-011</code></li>
+<li><strong>Title</strong>: <code>Cơ chế Fail-Closed và Ranh giới Định danh Đa Tài khoản cho Anti-Self-Review trong Milestone M-01</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104), executor T-012/E-02</code></li>
+<li><strong>Decision Makers</strong>: <code>Trịnh Quang Trung (@toilatrung, Product Owner)</code></li>
+<li><strong>Status</strong>: <code>proposed</code></li>
+<li><strong>Decision Type</strong>: <code>architecture</code></li>
+<li><strong>Target Audience</strong>: <code>Dev, Security Auditor, Reviewer, Ops</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Review Cycle</strong>: <code>Xem xét lại khi triển khai SSO/IdP hoặc bắt đầu Milestone M-02</code></li>
+</ul>
+
+<h2 id="context">Context</h2>
+<p>Theo Issue #41 và các tài liệu hợp đồng bảo mật (FR-SEC-01..05, NFR-08):</p>
+<ul>
+<li>Hệ thống bắt buộc phải thực thi phân tách vai trò (Separation of Duties): Requester không được đồng thời là Approver; Reviewer không được trùng Snapshot Annotation Author (Anti-Self-Review).</li>
+<li>Trong schema hiện tại kế thừa từ T-011 (<code>src/backend/accounts/models.py</code>), bảng <code>CvatIdentity</code> định nghĩa <code>cvat_user_id = models.PositiveIntegerField(unique=True)</code>. Đây là quan hệ 1-1 chặt chẽ giữa <code>User</code> của LabelX và ID người dùng trong CVAT.</li>
+<li>Cơ sở dữ liệu của M-01 không có bảng <code>Person</code>, không có trường <code>employee_id</code> hay <code>sso_subject</code> để liên kết nhiều tài khoản người dùng độc lập về cùng một thể nhân vật lý.</li>
+<li>Căn cứ <code>docs/06-security/threat-model.html</code> (mục S-1): Kiểm tra kỹ thuật thuần túy tại tầng ứng dụng không thể nhận diện toàn bộ trường hợp một thể nhân sở hữu nhiều tài khoản độc lập trên các hệ thống khác nhau nếu không có hạ tầng IdP tập trung; cần phối hợp quy trình quản trị cấp phát tài khoản.</li>
+</ul>
+
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ol>
+<li><strong>Bảo toàn ranh giới hợp đồng M-01</strong>: Giữ nguyên schema T-011, không tự tiện thêm bảng hay trường định danh ngoài phạm vi đã được phê duyệt.</li>
+<li><strong>Nguyên tắc bảo mật Fail-Closed</strong>: Mọi tài khoản thiếu định danh hoặc thiếu liên kết CVAT hợp lệ phải bị từ chối ngay lập tức khi thực hiện thao tác kiểm tra/duyệt.</li>
+<li><strong>Bất biến Chống Tự Duyệt (Anti-Self-Review Invariant)</strong>: Tuyệt đối không cho phép Super Admin override quy tắc Anti-Self-Review để tự phê duyệt dữ liệu gán nhãn của chính mình.</li>
+<li><strong>Minh bạch ranh giới kỹ thuật & Residual Risk</strong>: Tuyên bố rõ ràng ranh giới những gì mã nguồn đảm bảo và rủi ro còn lại thuộc về quy trình quản trị nhân sự.</li>
+</ol>
+
+<h2 id="options-considered">Options Considered</h2>
+<h3>Phương án 1: Cơ chế Fail-Closed tại tầng ứng dụng dựa trên CvatIdentity hiện có (Được đề xuất cho M-01)</h3>
+<ul>
+<li>Giữ nguyên schema T-011 (<code>CvatIdentity.cvat_user_id</code> có ràng buộc <code>unique=True</code>).</li>
+<li>Mỗi tài khoản LabelX muốn claim hoặc review snapshot bắt buộc phải có bản ghi <code>CvatIdentity</code>.</li>
+<li>Nếu một người sở hữu tài khoản thứ hai (tài khoản này không thể gán cùng <code>cvat_user_id</code> do unique constraint), tài khoản đó sẽ không có mapping CVAT identity hợp lệ. Khi cố gắng claim/review/adjudicate, hệ thống lập tức từ chối với mã lỗi <code>403 IDENTITY_MAPPING_MISSING</code> và ghi nhận Audit Event.</li>
+<li>Cùng một tài khoản LabelX bị chặn bởi <code>403 SAME_REQUESTER_APPROVER</code> hoặc <code>403 SELF_REVIEW_FORBIDDEN</code>.</li>
+<li>Cấm Super Admin override Anti-Self-Review.</li>
+</ul>
+<h3>Phương án 2: Tự động mở rộng schema với bảng Person / EmployeeIdentity trong T-012</h3>
+<ul>
+<li>Thêm bảng thể nhân hoặc trường <code>employee_id</code> liên kết nhiều user LabelX.</li>
+<li><em>Lý do không chọn</em>: Phá vỡ phạm vi M-01, thay đổi schema T-011 chưa qua thẩm định của PO/Tech Lead, tạo nợ kỹ thuật trước khi tích hợp SSO chính thức.</li>
+</ul>
+<h3>Phương án 3: Bắt buộc tích hợp hạ tầng IdP / SSO Subject ID (Keycloak / Google Workspace)</h3>
+<ul>
+<li>Định danh thể nhân qua claim <code>sub</code> chuẩn của OIDC.</li>
+<li><em>Lý do không chọn</em>: Nằm ngoài kế hoạch phát triển của M-01 (M-01 chỉ chạy session/token nội bộ), thuộc phạm vi của Epic tương lai.</li>
+</ul>
+
+<h2 id="decision-outcome">Decision Outcome</h2>
+<p><strong>Lựa chọn Phương án 1 (Fail-Closed) cho Milestone M-01</strong>.</p>
+<h3>Chi tiết thực thi:</h3>
+<ol>
+<li>Giữ nguyên schema T-011. Không sửa đổi model để tự đoán định danh cá nhân.</li>
+<li>Tại <code>src/backend/accounts/permissions.py</code>:
+  <ul>
+    <li>Hàm <code>check_anti_self_review()</code> kiểm tra ánh xạ CVAT của caller. Nếu thiếu, từ chối ngay với <code>403 IDENTITY_MAPPING_MISSING</code> kèm Audit Event. Nếu <code>reviewer_cvat_id == author_cvat_id</code>, từ chối với <code>403 SELF_REVIEW_FORBIDDEN</code> kèm Audit Event.</li>
+    <li>Quy tắc Anti-Self-Review được khóa cứng: Super Admin có cờ <code>override=true</code> cùng lý do hợp lệ vẫn bị từ chối <code>403 SELF_REVIEW_FORBIDDEN</code>.</li>
+    <li>Hàm <code>check_separation_of_duties()</code> từ chối <code>403 SAME_REQUESTER_APPROVER</code> nếu cùng LabelX user ID hoặc cùng CVAT user ID.</li>
+  </ul>
+</li>
+<li>Cơ chế Rejection Audit và Middleware đệm độc lập với <code>ATOMIC_REQUESTS=True</code>:
+  <ul>
+    <li>Trong cấu hình <code>ATOMIC_REQUESTS=True</code>, request chạy trong transaction của view. Khi request bị từ chối với lỗi 403 hoặc 422, DRF exception handler xử lý lỗi và transaction của view có thể bị rollback.</li>
+    <li>Do đó, permission/guard không ghi trực tiếp rejection audit vào database trong view transaction (tránh bị rollback). Thay vào đó, <code>record_rejection_audit()</code> đệm (buffer) pending audit vào <code>request._pending_rejection_audit</code>.</li>
+    <li><code>AuditRejectionMiddleware</code> (đăng ký tại <code>src/backend/config/middleware.py</code>) chạy ngoài view transaction, sau khi response hoàn tất với mã lỗi HTTP &ge; 400, sẽ mở một transaction độc lập qua <code>transaction.atomic()</code> để commit các rejection audit đã đệm.</li>
+    <li>Mutation audit thành công (T-013) nằm cùng transaction với mutation để rollback nguyên khối nếu mutation thất bại.</li>
+  </ul>
+</li>
+<li>Thực thi kiểm thử trên môi trường Windows:
+  <ul>
+    <li>Môi trường Windows không có tiện ích GNU Make mặc định nên không chạy lệnh literal <code>make check</code>. Toàn bộ các target kiểm thử thành phần tương đương đã được thực thi độc lập và đầy đủ: backend test/lint/mypy, frontend test/lint/typecheck, detector test/lint, <code>scripts/validate-framework.py</code> và <code>git diff --check</code>.</li>
+  </ul>
+</li>
+</ol>
+<h3>Ranh giới Kỹ thuật và Rủi ro còn lại (Residual Risk):</h3>
+<ul>
+<li><strong>Kỹ thuật đảm bảo</strong>: Ngăn chặn 100% việc tự duyệt trên cùng một tài khoản LabelX, ngăn chặn cùng tài khoản CVAT, ngăn chặn tài khoản không có mapping (Fail-Closed), ngăn chặn Super Admin tự duyệt bài của mình, và ghi nhận kiểm toán toàn diện.</li>
+<li><strong>Rủi ro còn lại (Residual Risk)</strong>: Hệ thống kỹ thuật tại M-01 không thể tự động phát hiện nếu một nhân sự được cấp phát 2 tài khoản CVAT độc lập và 2 tài khoản LabelX độc lập tương ứng. Rủi ro này phải được kiểm soát thông qua <strong>Quy trình cấp phát tài khoản tập trung</strong> (chính sách mỗi nhân sự duy nhất 1 tài khoản CVAT / LabelX) theo <code>docs/06-security/threat-model.html</code> mục S-1.</li>
+</ul>
+
+<h2 id="consequences">Consequences</h2>
+<h3>Tích cực</h3>
+<ul>
+<li>Không phá vỡ schema hay migration của T-011; toàn bộ 155 test hiện có của dự án tiếp tục tương thích hoàn toàn.</li>
+<li>Bảo vệ hệ thống theo nguyên tắc Fail-Closed: Tài khoản lách luật không có mapping sẽ bị chặn đứng hoàn toàn.</li>
+<li>Audit log ghi nhận mọi nỗ lực truy cập bất hợp lệ phục vụ hậu kiểm an ninh.</li>
+</ul>
+<h3>Hạn chế & Điều kiện xem xét lại</h3>
+<ul>
+<li>Phụ thuộc vào quy trình quản trị nhân sự trong M-01 để đảm bảo tính độc nhất của tài khoản.</li>
+<li>Cần nâng cấp lên giải pháp SSO/IdP tập trung (Phương án 3) khi hệ thống bước vào Milestone M-02 hoặc môi trường doanh nghiệp mở rộng.</li>
+</ul>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><code>src/backend/accounts/models.py</code></li>
+<li><code>src/backend/accounts/permissions.py</code></li>
+<li><code>src/backend/tests/accounts/test_rbac_scope.py</code></li>
+<li><code>docs/06-security/threat-model.html</code></li>
+<li><code>.agent/execution/task-board.html</code></li>
+<li><code>.agent/reports/implementation/T-012-@ducha180104.html</code></li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<p>Decision record này đạt trạng thái hợp lệ khi được Product Owner (@toilatrung) chấp thuận theo Issue #41 (chuyển sang <code>accepted</code>) trong quá trình review PR của T-012.</p>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không tự ý chuyển trạng thái sang <code>accepted</code> khi chưa có sự đồng thuận từ Decision Makers.</li>
+<li>Không sửa đổi schema T-011 để thêm trường tạm bợ ngoài hợp đồng.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Tệp được lưu trữ tại <code>.agent/governance/decisions/DEC-011.html</code> và vượt qua kiểm tra của <code>scripts/validate-framework.py</code>.</p>
+</article></main></body></html>

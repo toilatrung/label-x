@@ -2,26 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from rest_framework.permissions import BasePermission
-from rest_framework.request import Request
+from accounts.models import Role
+from accounts.permissions import HasRoleAndDatasetScope
 
 
-class HasGuidelineRole(BasePermission):
+class HasGuidelineRole(HasRoleAndDatasetScope):
     """Quyền truy cập guideline (openapi.yaml x-labelx-roles, rbac-matrix.html).
 
     Vai trò cho phép: reviewer, qa_lead, qc_admin, super_admin.
-    Annotator và user thường không có quyền (403 FORBIDDEN).
+    Annotator và các vai trò khác không có quyền (403 FORBIDDEN kèm bản ghi audit log).
     Chưa đăng nhập trả về 403 NOT_AUTHENTICATED (xử lý qua exception handler).
+    Guideline là tài nguyên toàn hệ thống, không yêu cầu scope dataset.
     """
 
-    ALLOWED_ROLES = {"reviewer", "qa_lead", "qc_admin", "super_admin"}
-
-    def has_permission(self, request: Request, view: Any) -> bool:
-        user = request.user
-        if not user or not user.is_authenticated:
-            return False
-        if user.is_superuser:
-            return True
-        return user.groups.filter(name__in=self.ALLOWED_ROLES).exists()
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
+    action_name = "guidelines.rules"
+    object_type = "guideline"
+    requires_dataset = False
