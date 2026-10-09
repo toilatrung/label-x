@@ -295,6 +295,19 @@ def test_service_rejects_stale_job_hash() -> None:
     assert snapshot.status == "exporting"
 
 
+@pytest.mark.parametrize("kind", ["job", "frame"])
+def test_deferred_fk_cannot_bypass_a_missing_parent_lock(kind: str) -> None:
+    snapshot = mutable_snapshot("deferred-parent")
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ALL DEFERRED")
+        with pytest.raises(DatabaseError, match="must exist"), transaction.atomic():
+            if kind == "job":
+                snapshot.jobs.update(snapshot_id=10_000_000)
+            else:
+                snapshot.jobs.get().frames.update(snapshot_job_id=10_000_000)
+
+
 def test_migration_upgrades_existing_snapshot_data() -> None:
     executor = MigrationExecutor(connection)
     executor.migrate([("snapshots", "0001_initial")])

@@ -8,7 +8,9 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 LOCKING_SQL = """
 CREATE OR REPLACE FUNCTION snapshots_lock_mutable_parents(parent_ids bigint[])
 RETURNS void LANGUAGE plpgsql AS $$
-DECLARE parent record;
+DECLARE
+    parent record;
+    seen_ids bigint[] := ARRAY[]::bigint[];
 BEGIN
     -- Check status AFTER obtaining the row lock; never filter out mutable rows
     -- before waiting. NO KEY UPDATE permits ordinary FK KEY SHARE checks.
@@ -16,11 +18,21 @@ BEGIN
         SELECT id, status FROM snapshots_snapshot
         WHERE id = ANY(parent_ids) ORDER BY id FOR NO KEY UPDATE
     LOOP
+        seen_ids := array_append(seen_ids, parent.id);
         IF parent.status = 'locked' THEN
             RAISE EXCEPTION 'children of a locked snapshot are immutable'
                 USING ERRCODE = '55000';
         END IF;
     END LOOP;
+    -- FK constraints can be deferred. A reference that is not visible yet
+    -- must not skip the lock and become attached after another tx freezes it.
+    IF EXISTS (
+        SELECT 1 FROM unnest(parent_ids) AS requested(id)
+        WHERE requested.id IS NULL OR NOT (requested.id = ANY(seen_ids))
+    ) THEN
+        RAISE EXCEPTION 'snapshot parent must exist before child mutation'
+            USING ERRCODE = '23503';
+    END IF;
 END;
 $$;
 
@@ -44,6 +56,7 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     job_ids bigint[] := ARRAY[]::bigint[];
     parent_ids bigint[] := ARRAY[]::bigint[];
+    seen_job_ids bigint[] := ARRAY[]::bigint[];
     job record;
 BEGIN
     IF TG_OP <> 'INSERT' THEN
@@ -58,8 +71,16 @@ BEGIN
         SELECT id, snapshot_id FROM snapshots_snapshotjob
         WHERE id = ANY(job_ids) ORDER BY id FOR SHARE
     LOOP
+        seen_job_ids := array_append(seen_job_ids, job.id);
         parent_ids := array_append(parent_ids, job.snapshot_id);
     END LOOP;
+    IF EXISTS (
+        SELECT 1 FROM unnest(job_ids) AS requested(id)
+        WHERE requested.id IS NULL OR NOT (requested.id = ANY(seen_job_ids))
+    ) THEN
+        RAISE EXCEPTION 'snapshot job must exist before frame mutation'
+            USING ERRCODE = '23503';
+    END IF;
     PERFORM snapshots_lock_mutable_parents(parent_ids);
     RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
