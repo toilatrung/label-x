@@ -213,7 +213,11 @@ class Command(BaseCommand):
         # Chỉ QC_ADMIN hoặc SUPER_ADMIN được cấu hình/nạp guideline (FR-GDL-02, FR-SEC-05)
         has_perm = (
             actor.is_superuser
-            or actor.role_assignments.filter(role__in=["qc_admin", "super_admin"]).exists()
+            or getattr(  # noqa: B009
+                actor, "role_assignments"
+            )
+            .filter(role__in=["qc_admin", "super_admin"])
+            .exists()
         )
         if not has_perm:
             record(
