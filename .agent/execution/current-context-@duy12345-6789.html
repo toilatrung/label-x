@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Current Context — @duy12345-6789 — LabelX</title>
+<meta name="labelx:id" content="current-context-duy12345-6789"><meta name="labelx:title" content="Current Context — @duy12345-6789">
+<meta name="labelx:type" content="execution"><meta name="labelx:domain" content="governance"><meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-019, e-04, bdd100k]"><meta name="labelx:priority" content="1">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>current-context-duy12345-6789</span><b>title</b><span>Current Context — @duy12345-6789</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-019, e-04, bdd100k]</span><b>priority</b><span>1</span></div>
+<h1 id="current-context-duy12345-6789">Current Context — @duy12345-6789</h1>
+<h2 id="purpose">Purpose</h2><p>File riêng theo CR-100 ghi trạng thái review T-019 và evidence learner annotation BDD100K.</p>
+<ul><li><strong>Base Commit</strong>: <code>6588c0fbdcaad19f032a5b2b100ddbd5961d1dfc</code></li><li><strong>Branch</strong>: <code>feat/T-019-e04-learner-annotation-bdd100k</code></li></ul>
+<h2 id="status-model">Status Model</h2><ul><li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li><li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li></ul>
+<h2 id="current-state">Current State</h2><ul><li><strong>Context Status</strong>: <code>current</code></li><li><strong>Last Updated</strong>: <code>2026-10-09</code></li><li><strong>Updated By</strong>: <code>duy12345-6789</code></li><li><strong>Active Epic IDs</strong>: <code>E-04</code></li><li><strong>Active Task IDs</strong>: <code>T-019</code></li><li><strong>Active Blocker IDs</strong>: <code>BLOCKER-024 (open; PO giữ nghiệm thu dữ liệu thật chờ bàn giao)</code></li><li><strong>Deadline</strong>: <code>2026-10-09 10:00 Asia/Ho_Chi_Minh (missed; implementation evidence completed afterward)</code></li></ul>
+<h2 id="required-context">Required Context</h2><table><thead><tr><th>Path</th><th>Purpose</th><th>Authority</th><th>Required</th></tr></thead><tbody>
+<tr><td><code>GitHub issue #61</code></td><td>Scope và acceptance criteria T-019</td><td><code>task</code></td><td><code>yes</code></td></tr>
+<tr><td><code>.agent/governance/blockers/BLOCKER-024.html</code></td><td>Điều kiện learner annotation phải thuộc BDD100K</td><td><code>governance</code></td><td><code>yes</code></td></tr>
+<tr><td><code>C:/Users/admin/Downloads/BDD100K/bdd100k/images/100k</code></td><td>Listing ảnh BDD100K chính thức trên máy dev</td><td><code>local input</code></td><td><code>yes</code></td></tr>
+</tbody></table>
+<h2 id="expected-outputs">Expected Outputs</h2><table><thead><tr><th>Output</th><th>Required Path</th><th>Verification</th></tr></thead><tbody>
+<tr><td>Audit strict checksum/membership/bounds/taxonomy</td><td><code>scripts/development/learner_annotation_audit.py</code></td><td><code>pytest tests/test_cvat_dev_scripts.py</code></td></tr>
+<tr><td>Manifest chỉ tham chiếu ảnh BDD100K chính thức</td><td><code>.cache/cvat/t019-job20-learner-manifest.json</code></td><td><code>strict audit passed</code></td></tr>
+<tr><td>Learner annotation</td><td><code>CVAT task 23 / job 20</code></td><td><code>10 ảnh val, 68 bbox</code></td></tr>
+<tr><td>Adapter hash evidence</td><td><code>sha256:3e02b8c3b226066dd3ad90964927d0bf629a62097cd3947921201348235c80d9</code></td><td><code>hai lần giống nhau</code></td></tr>
+<tr><td>Implementation report</td><td><code>.agent/reports/implementation/T-019-@duy12345-6789.html</code></td><td><code>make validate-kit</code></td></tr>
+</tbody></table>
+<h2 id="notes">Notes</h2><ul><li>Review request: <a href="https://github.com/toilatrung/label-x/pull/74">PR #74</a>.</li><li>Implementation commits: <code>297c6bb</code>, <code>1b0a16d</code>, <code>9c5c58a</code>.</li><li>Learner export SHA-256: <code>e4dbc74a770b0b00e126caf7da2be5368dc4c3344a468d250ccbf58e2da1775c</code>.</li><li>Strict audit: 10/10 ảnh BDD100K val, 10 frame có annotation, 0 frame thiếu, 68 bbox, 0 lỗi bounds, 0 ảnh ngoài BDD100K.</li><li>Artifact T-005 giữ đúng vai trò Detector prediction độc lập.</li><li>Adapter job 20 đọc hai lần cùng hash; không có ignored shape/track.</li><li>Quyết định PO mới: giữ BLOCKER-024 open; chưa nghiệm thu dataset annotation thật. Các số liệu export/job cũ là lịch sử tự khai của dev, chưa được QC hiện tại xác minh. Phần code/fixture có thể review và merge riêng; T-019 chưa done.</li></ul>
+</article></main></body></html>
