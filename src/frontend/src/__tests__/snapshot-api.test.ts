@@ -27,5 +27,8 @@ describe('Snapshot API wiring', () => {
   it('rejects unsafe CVAT URLs from a server response', () => {
     expect(safeCvatUrl('javascript:alert(1)')).toBeNull();
     expect(safeCvatUrl('https://cvat.example.test/tasks/1/jobs/2')).toContain('cvat.example.test');
+    expect(safeCvatUrl('')).toBeNull();
+    expect(safeCvatUrl(null)).toBeNull();
+    expect(safeCvatUrl(undefined)).toBeNull();
   });
 });

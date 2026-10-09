@@ -65,8 +65,15 @@ function SnapshotWorkspace() {
             </select></div>
           {datasetQuery.isPending && <p role="status">Đang tải Dataset…</p>}
           {datasetQuery.isError && <div className="lx-callout" role="alert">{errorMessage(datasetQuery.error)}</div>}
+          {datasetQuery.isSuccess && !allDatasets.length && (
+            <p className="lx-muted">Chưa có Dataset nào trong phạm vi tài khoản của bạn.</p>
+          )}
           {datasetQuery.hasNextPage && <button className="lx-btn" type="button" disabled={datasetQuery.isFetchingNextPage}
             onClick={() => void datasetQuery.fetchNextPage()}>Tải thêm Dataset</button>}
+          {datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để tạo Snapshot.</p>}
+          {datasetId !== null && !selectedDataset && datasetQuery.isSuccess && (
+            <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
+          )}
           {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
           {selectedDataset && canRead && <>
             {taskQuery.isPending && <p role="status">Đang tải Task/Job…</p>}

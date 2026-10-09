@@ -55,7 +55,15 @@ def test_scoped_user_sees_only_assigned_project_and_can_select_jobs(monkeypatch)
 
     listing = client.get("/api/datasets/")
     assert listing.status_code == 200
-    assert listing.data["results"] == [{"id": 42, "cvat_project_id": 42, "name": "Urban"}]
+    assert listing.data["results"] == [
+        {
+            "id": 42,
+            "cvat_project_id": 42,
+            "name": "Urban",
+            "taxonomy_version": None,
+            "guideline_version": None,
+        }
+    ]
 
     tree = client.get("/api/datasets/42/tasks/")
     assert tree.status_code == 200
@@ -121,3 +129,58 @@ def test_global_dataset_list_paginates_and_rejects_invalid_cursor(monkeypatch):
 
     invalid = client.get("/api/datasets/?cursor=not-a-number")
     assert invalid.status_code == 400
+
+
+def test_cvat_nonexistent_dataset_tasks_returns_404_not_found(monkeypatch):
+    import httpx
+
+    class MissingProject(FakeCvat):
+        def get_project(self, id_):
+            request = httpx.Request("GET", f"http://cvat.example.test/api/projects/{id_}")
+            response = httpx.Response(404, request=request)
+            raise httpx.HTTPStatusError("Not Found", request=request, response=response)
+
+    monkeypatch.setattr("snapshots.dataset_views._client", MissingProject)
+    client = _client(Role.SUPER_ADMIN, None)
+    response = client.get("/api/datasets/999/tasks/")
+    assert response.status_code == 404
+    assert response.data["code"] == "NOT_FOUND"
+
+
+def test_scoped_user_skips_cvat_project_returning_404(monkeypatch):
+    import httpx
+
+    class OneProjectMissing(FakeCvat):
+        def get_project(self, id_):
+            if id_ == 99:
+                request = httpx.Request("GET", f"http://cvat.example.test/api/projects/{id_}")
+                response = httpx.Response(404, request=request)
+                raise httpx.HTTPStatusError("Not Found", request=request, response=response)
+            return super().get_project(id_)
+
+    monkeypatch.setattr("snapshots.dataset_views._client", OneProjectMissing)
+    user = get_user_model().objects.create_user(username="multi-project-user")
+    RoleAssignment.objects.create(user=user, role=Role.QA_LEAD, dataset_id=42)
+    RoleAssignment.objects.create(user=user, role=Role.QA_LEAD, dataset_id=99)
+    client = APIClient()
+    client.force_authenticate(user)
+
+    response = client.get("/api/datasets/")
+    assert response.status_code == 200
+    assert response.data["results"] == [
+        {
+            "id": 42,
+            "cvat_project_id": 42,
+            "name": "Urban",
+            "taxonomy_version": None,
+            "guideline_version": None,
+        }
+    ]
+
+
+def test_dataset_list_handles_empty_cursor_gracefully(monkeypatch):
+    monkeypatch.setattr("snapshots.dataset_views._client", FakeCvat)
+    client = _client(Role.SUPER_ADMIN, None)
+    response = client.get("/api/datasets/?cursor=")
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 2

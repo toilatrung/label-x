@@ -58,7 +58,8 @@ export function cursorFrom(next?: string | null): string | undefined {
   catch { return undefined; }
 }
 
-export function safeCvatUrl(value: string): string | null {
+export function safeCvatUrl(value?: string | null): string | null {
+  if (!value || typeof value !== 'string') return null;
   try {
     const url = new URL(value);
     return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;

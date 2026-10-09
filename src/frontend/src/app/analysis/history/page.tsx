@@ -40,9 +40,16 @@ export default function SnapshotHistoryPage() {
           {items.map(item => <option key={item.id} value={item.id}>{item.name} · project #{item.cvat_project_id}</option>)}
         </select></div>
         {datasets.isError && <div className="lx-callout" role="alert">{errorMessage(datasets.error)}</div>}
+        {datasets.isSuccess && !items.length && (
+          <p className="lx-muted">Chưa có Dataset nào trong phạm vi tài khoản của bạn.</p>
+        )}
         {datasets.hasNextPage && <button className="lx-btn" type="button" disabled={datasets.isFetchingNextPage}
           onClick={() => void datasets.fetchNextPage()}>Tải thêm Dataset</button>}
-        {datasetId !== null && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
+        {datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để xem lịch sử Snapshot.</p>}
+        {datasetId !== null && !selectedDataset && datasets.isSuccess && (
+          <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
+        )}
+        {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
         {history.isPending && canRead && <p role="status">Đang tải lịch sử…</p>}
         {history.isError && <div className="lx-callout" role="alert">{errorMessage(history.error)}
           <button className="lx-btn" type="button" onClick={() => void history.refetch()}>Thử lại</button></div>}

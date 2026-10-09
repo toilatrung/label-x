@@ -25,6 +25,8 @@ class DatasetSerializer(serializers.Serializer[dict[str, Any]]):
     id = serializers.IntegerField()
     name = serializers.CharField()
     cvat_project_id = serializers.IntegerField()
+    taxonomy_version = serializers.CharField(allow_null=True, required=False, default=None)
+    guideline_version = serializers.CharField(allow_null=True, required=False, default=None)
 
 
 class PaginatedDatasetSerializer(serializers.Serializer[dict[str, Any]]):
@@ -78,11 +80,14 @@ class DatasetListView(APIView):
     )
     def get(self, request: Request) -> Response:
         cursor_text = request.query_params.get("cursor")
-        if cursor_text is not None and (not cursor_text.isdigit() or int(cursor_text) < 0):
-            raise ApiError(
-                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Cursor Dataset không hợp lệ."
-            )
-        after_id = int(cursor_text) if cursor_text is not None else 0
+        if cursor_text:
+            if not cursor_text.isdigit() or int(cursor_text) < 0:
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Cursor Dataset không hợp lệ."
+                )
+            after_id = int(cursor_text)
+        else:
+            after_id = 0
         assignments = list(RoleAssignment.objects.filter(user=cast(User, request.user)))
         if not assignments:
             raise ApiError(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "Không có phạm vi Dataset.")
@@ -92,11 +97,17 @@ class DatasetListView(APIView):
         scoped_ids = {item.dataset_id for item in assignments if item.dataset_id is not None}
         try:
             with _client() as cvat:
-                projects = (
-                    cvat.list_projects()
-                    if global_access
-                    else [cvat.get_project(id_) for id_ in sorted(scoped_ids)]
-                )
+                projects: list[dict[str, object]] = []
+                if global_access:
+                    projects = cvat.list_projects()
+                else:
+                    for id_ in sorted(scoped_ids):
+                        try:
+                            projects.append(cvat.get_project(id_))
+                        except httpx.HTTPStatusError as exc:
+                            if exc.response.status_code == 404:
+                                continue
+                            raise
         except (httpx.HTTPError, RuntimeError, ValueError, TypeError) as exc:
             raise ApiError(
                 status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được project CVAT."
@@ -110,6 +121,8 @@ class DatasetListView(APIView):
                         "id": project_id,
                         "cvat_project_id": project_id,
                         "name": _name(project.get("name"), "project.name"),
+                        "taxonomy_version": None,
+                        "guideline_version": None,
                     }
                 )
         results.sort(key=lambda item: cast(int, item["id"]))
@@ -138,7 +151,14 @@ class DatasetTasksView(APIView):
     def get(self, _request: Request, dataset_id: int) -> Response:
         try:
             with _client() as cvat:
-                cvat.get_project(dataset_id)
+                try:
+                    cvat.get_project(dataset_id)
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code == 404:
+                        raise ApiError(
+                            status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Dataset không tồn tại."
+                        ) from exc
+                    raise
                 tasks = cvat.list_tasks(project_id=dataset_id)
                 output: list[dict[str, Any]] = []
                 for task in tasks:
@@ -181,6 +201,8 @@ class DatasetTasksView(APIView):
                             "jobs": sorted(jobs, key=lambda job: cast(int, job["cvat_job_id"])),
                         }
                     )
+        except ApiError:
+            raise
         except (httpx.HTTPError, RuntimeError, ValueError, TypeError) as exc:
             raise ApiError(
                 status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được Task/Job CVAT."
