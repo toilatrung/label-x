@@ -201,6 +201,7 @@ class GuidelineMappingListView(GuidelineAPIView):
         tags=["guidelines"],
     )
     def get(self, request: Request) -> Response:
+        version: GuidelineVersion | None
         version_tag = request.query_params.get("version", "").strip()
         if version_tag:
             try:

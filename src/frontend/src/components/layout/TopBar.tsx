@@ -1,300 +1,105 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import {
-  ROLE_LABELS,
-  ROLE_CODES,
-  canAccessAnalysis,
-  canAccessReview,
-  canAccessEscalations,
-  canAccessReports,
-  canAccessConfiguration,
-  canAccessGuidelines,
-} from '@/lib/auth/roles';
+import { ROLE_LABELS, canAccessAnalysis, canAccessReview, canAccessEscalations,
+  canAccessReports, canAccessConfiguration, canAccessGuidelines } from '@/lib/auth/roles';
+import { Icon } from '@/components/ui/Icon';
 
-interface TopBarProps {
-  activeKey?: string;
-}
+interface MenuItem { label: string; icon: string; href?: string; }
+interface Module { key: string; label: string; href?: string; items?: MenuItem[]; }
 
-export function TopBar({ activeKey }: TopBarProps) {
+export function TopBar({ activeKey }: { activeKey?: string }) {
   const { user, logout, hasPermission } = useAuth();
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const root = useRef<HTMLElement>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const roleName = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
+  const initials = user?.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'LX';
+  const closeAll = () => setOpenMenu(null);
+  useEffect(() => {
+    const outside = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) setOpenMenu(null); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setOpenMenu(null); trigger.current?.focus(); } };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+  }, []);
 
-  const role = user?.role;
-  const roleName = role ? ROLE_LABELS[role] : 'Chưa có quyền trong phạm vi này';
-  const roleCode = role ? ROLE_CODES[role] : '--';
-  const initials = user
-    ? user.fullName
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'LX';
-
-  const closeAll = () => {
-    setOpenMenu(null);
-    setUserMenuOpen(false);
-  };
-
-  const toggleMenu = (key: string) => {
-    setUserMenuOpen(false);
+  const configItems: MenuItem[] = [];
+  if (hasPermission(canAccessGuidelines)) configItems.push(
+    { label: 'Rules & Thresholds', icon: 'rules', href: '/configuration/rules-thresholds' },
+    { label: 'Models & Guidelines', icon: 'model', href: '/configuration/guidelines' });
+  if (hasPermission(canAccessConfiguration)) configItems.push(
+    { label: 'Workflow & Permissions', icon: 'users', href: '/configuration' });
+  const modules: Module[] = [
+    { key: 'overview', label: 'Overview', items: [{ label: 'Quality Control Home', icon: 'home', href: '/' },
+      { label: 'Quality Summary', icon: 'chart' }] },
+    ...(hasPermission(canAccessAnalysis) ? [{ key: 'analysis', label: 'Quality Analysis', href: '/analysis' }] : []),
+    ...(hasPermission(canAccessReview, true) ? [{ key: 'review', label: 'Review Center', href: '/review' }] : []),
+    ...(hasPermission(canAccessEscalations, true) ? [{ key: 'escalations', label: 'Escalations' }] : []),
+    { key: 'calibration', label: 'Calibration & Audit', items: [
+      { label: 'Performance Evaluation', icon: 'chart' }, { label: 'Ground Truth Benchmark', icon: 'target' },
+      { label: 'Audit Sampling', icon: 'check' }, { label: 'Calibration', icon: 'scale' }] },
+    ...(hasPermission(canAccessReports) ? [{ key: 'reports', label: 'Reports & Releases' }] : []),
+    ...(configItems.length ? [{ key: 'configuration', label: 'Configuration', items: configItems }] : []),
+  ];
+  const active = pathname.startsWith('/configuration') ? 'configuration' : pathname.startsWith('/review') ? 'review'
+    : pathname.startsWith('/analysis') ? 'analysis' : activeKey || 'overview';
+  function toggle(key: string, event: React.MouseEvent<HTMLButtonElement>) {
+    trigger.current = event.currentTarget;
     setOpenMenu(openMenu === key ? null : key);
-  };
-
-  const toggleUserMenu = () => {
-    setOpenMenu(null);
-    setUserMenuOpen(!userMenuOpen);
-  };
-
-  // Lọc menu theo quyền vai trò (Role-based access control)
-  const showAnalysis = hasPermission(canAccessAnalysis);
-  const showReview = hasPermission(canAccessReview, true);
-  const showEscalations = hasPermission(canAccessEscalations, true);
-  const showReports = hasPermission(canAccessReports);
-  const showConfig = hasPermission(canAccessConfiguration);
-  const showGuidelines = hasPermission(canAccessGuidelines);
-
-  return (
-    <>
-      <header className="lx-topnav">
-        <Link className="lx-logo" href="/" onClick={closeAll}>
-          Label<b>X</b>
-        </Link>
-
-        <nav className="lx-nav" aria-label="Quality Control Navigation">
-          {/* 1. Tổng quan (Overview) - Dành cho mọi vai trò */}
-          <div className="lx-nav__group" style={{ position: 'relative' }}>
-            <button
-              type="button"
-              className={`lx-navbtn ${pathname === '/' || activeKey === 'overview' ? 'is-active' : ''}`}
-              aria-haspopup="menu"
-              aria-expanded={openMenu === 'overview'}
-              onClick={() => toggleMenu('overview')}
-            >
-              Tổng quan
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" style={{ width: 10, height: 10, marginLeft: 4 }}>
-                <path d="M3 4.5 6 7.5 9 4.5" />
-              </svg>
-            </button>
-            {openMenu === 'overview' && (
-              <div className="lx-menu" role="menu">
-                <div className="lx-menu__head">Tổng quan & Báo cáo chất lượng</div>
-                <Link
-                  className="lx-menu__item"
-                  role="menuitem"
-                  href="/"
-                  onClick={closeAll}
-                >
-                  <span className="lx-menu__t">Trang chủ QC</span>
-                  <span className="lx-menu__d">Chọn Dataset và Version để làm việc</span>
-                </Link>
-                <Link
-                  className="lx-menu__item"
-                  role="menuitem"
-                  href="/"
-                  onClick={closeAll}
-                >
-                  <span className="lx-menu__t">Tóm tắt chất lượng</span>
-                  <span className="lx-menu__d">Tình trạng chất lượng, coverage, khối lượng review</span>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* 2. Phân tích chất lượng (Quality Analysis) - Ẩn với Annotator, Reviewer */}
-          {showAnalysis && (
-            <div className="lx-nav__group">
-              <Link
-                className={`lx-navbtn ${pathname === '/analysis' || activeKey === 'analysis' ? 'is-active' : ''}`}
-                href="/analysis"
-                onClick={closeAll}
-              >
-                Phân tích chất lượng
-              </Link>
-            </div>
-          )}
-
-          {/* 3. Trung tâm kiểm tra (Review Center) - Ẩn với Annotator */}
-          {showReview && (
-            <div className="lx-nav__group">
-              <Link
-                className={`lx-navbtn ${pathname === '/review' || activeKey === 'review' ? 'is-active' : ''}`}
-                href="/review"
-                onClick={closeAll}
-              >
-                Trung tâm kiểm tra
-              </Link>
-            </div>
-          )}
-
-          {/* Guideline (UC-05) - Reviewer, QA Lead, QC Admin, Super Admin */}
-          {showGuidelines && (
-            <div className="lx-nav__group">
-              <Link
-                className={`lx-navbtn ${pathname.startsWith('/configuration/guidelines') || activeKey === 'guidelines' ? 'is-active' : ''}`}
-                href="/configuration/guidelines"
-                onClick={closeAll}
-              >
-                Guideline
-              </Link>
-            </div>
-          )}
-          {showGuidelines && (
-            <div className="lx-nav__group">
-              <Link
-                className={`lx-navbtn ${pathname.startsWith('/configuration/rules-thresholds') ? 'is-active' : ''}`}
-                href="/configuration/rules-thresholds"
-                onClick={closeAll}
-              >
-                Rules & Thresholds
-              </Link>
-            </div>
-          )}
-
-          {/* 4. Phân xử (Escalations) - Chỉ QA Lead, Super Admin */}
-          {showEscalations && (
-            <div className="lx-nav__group">
-              <button type="button" disabled title="Chưa khả dụng"
-                className={`lx-navbtn ${pathname === '/escalations' || activeKey === 'escalations' ? 'is-active' : ''}`}
-              >
-                Phân xử
-              </button>
-            </div>
-          )}
-
-          {/* 5. Hiệu chuẩn & Kiểm toán (Calibration & Audit) */}
-          <div className="lx-nav__group" style={{ position: 'relative' }}>
-            <button
-              type="button"
-              className={`lx-navbtn ${activeKey === 'calibration' ? 'is-active' : ''}`}
-              aria-haspopup="menu"
-              aria-expanded={openMenu === 'calibration'}
-              onClick={() => toggleMenu('calibration')}
-            >
-              Hiệu chuẩn & Kiểm toán
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" style={{ width: 10, height: 10, marginLeft: 4 }}>
-                <path d="M3 4.5 6 7.5 9 4.5" />
-              </svg>
-            </button>
-            {openMenu === 'calibration' && (
-              <div className="lx-menu" role="menu">
-                <div className="lx-menu__head">Hiệu chuẩn & Kiểm toán</div>
-                <Link className="lx-menu__item" role="menuitem" href="#" onClick={closeAll}>
-                  <span className="lx-menu__t">Đánh giá quy trình</span>
-                  <span className="lx-menu__d">Đánh giá chất lượng của chính quy trình kiểm tra</span>
-                </Link>
-                <Link className="lx-menu__item" role="menuitem" href="#" onClick={closeAll}>
-                  <span className="lx-menu__t">Tập chuẩn chuyên gia</span>
-                  <span className="lx-menu__d">Tập chuẩn đã được chuyên gia khoá</span>
-                </Link>
-                <Link className="lx-menu__item" role="menuitem" href="#" onClick={closeAll}>
-                  <span className="lx-menu__t">Lấy mẫu kiểm toán</span>
-                  <span className="lx-menu__d">Lấy mẫu ngẫu nhiên và lấy mẫu theo rủi ro</span>
-                </Link>
-                <Link className="lx-menu__item" role="menuitem" href="#" onClick={closeAll}>
-                  <span className="lx-menu__t">Hiệu chuẩn</span>
-                  <span className="lx-menu__d">Hiệu chỉnh reviewer và mô hình</span>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* 6. Báo cáo & Phát hành - Các vai trò có quyền đọc báo cáo theo canAccessReports */}
-          {showReports && (
-            <div className="lx-nav__group">
-              <button type="button" disabled title="Chưa khả dụng"
-                className={`lx-navbtn ${pathname === '/reports' || activeKey === 'reports' ? 'is-active' : ''}`}
-              >
-                Báo cáo & Phát hành
-              </button>
-            </div>
-          )}
-
-          {/* 7. Cấu hình (Configuration) - QC Admin, Super Admin, QA Lead */}
-          {showConfig && (
-            <div className="lx-nav__group" style={{ position: 'relative' }}>
-              <button
-                type="button"
-                className={`lx-navbtn ${(pathname.startsWith('/configuration') && !pathname.startsWith('/configuration/guidelines')) || activeKey === 'configuration' ? 'is-active' : ''}`}
-                aria-haspopup="menu"
-                aria-expanded={openMenu === 'configuration'}
-                onClick={() => toggleMenu('configuration')}
-              >
-                Cấu hình
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" style={{ width: 10, height: 10, marginLeft: 4 }}>
-                  <path d="M3 4.5 6 7.5 9 4.5" />
-                </svg>
-              </button>
-              {openMenu === 'configuration' && (
-                <div className="lx-menu" role="menu">
-                  <div className="lx-menu__head">Cấu hình & Phân quyền</div>
-                  <Link className="lx-menu__item" role="menuitem" href="/configuration" onClick={closeAll}>
-                    <span className="lx-menu__t">Quy trình & Phân quyền</span>
-                    <span className="lx-menu__d">Phân quyền theo vai trò và quy tắc kiểm soát</span>
-                  </Link>
-                  <Link className="lx-menu__item" role="menuitem" href="/configuration/rules-thresholds" onClick={closeAll}>
-                    <span className="lx-menu__t">Quy tắc & Ngưỡng</span>
-                    <span className="lx-menu__d">Mapping nhóm lỗi/lớp tới rule ID (chỉ xem)</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-        </nav>
-
-        {/* User profile & actions */}
-        <div className="lx-userwrap" style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className="lx-user lx-user--btn"
-            aria-haspopup="menu"
-            aria-expanded={userMenuOpen}
-            onClick={toggleUserMenu}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'inherit' }}
-          >
-            <span className="lx-user__meta">
-              <span className="lx-user__name">{user?.fullName || 'Khách'}</span>
-              <span className="lx-user__role">{roleName} ({roleCode})</span>
-            </span>
-            <span className="lx-avatar" role="img" aria-label={user?.fullName || 'User'}>
-              {initials}
-            </span>
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" style={{ width: 12, height: 12 }}>
-              <path d="M3 4.5 6 7.5 9 4.5" />
-            </svg>
+  }
+  function menuKey(event: React.KeyboardEvent<HTMLDivElement>) {
+    const items = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)')];
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    if (!items.length || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[next]?.focus();
+  }
+  function triggerKey(event: React.KeyboardEvent<HTMLButtonElement>, key: string) {
+    if (event.key !== 'ArrowDown') return;
+    event.preventDefault(); trigger.current = event.currentTarget; setOpenMenu(key);
+    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>(`#nav-menu-${key} [role="menuitem"]:not(:disabled)`)?.focus());
+  }
+  return <header className="lx-topnav" ref={root}>
+    <Link className="lx-logo" href="/" aria-label="Về Quality Control Home" onClick={closeAll}>Label<b>X</b></Link>
+    <nav className="lx-nav" aria-label="Quality Control Navigation">
+      {modules.map(module => <div className="lx-nav__group" key={module.key}>
+        {module.items ? <>
+          <button className={`lx-navbtn${active === module.key ? ' is-active' : ''}`} type="button"
+            aria-haspopup="menu" aria-expanded={openMenu === module.key} aria-controls={`nav-menu-${module.key}`}
+            onClick={event => toggle(module.key, event)} onKeyDown={event => triggerKey(event, module.key)}>
+            {module.label}<Icon name="chevron" />
           </button>
-
-          {userMenuOpen && (
-            <div className="lx-menu lx-menu--user" role="menu" style={{ right: 0, left: 'auto', minWidth: '220px' }}>
-              <div className="lx-menu__head">Tài khoản</div>
-
-              <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
-
-              <button
-                type="button"
-                className="lx-menu__item"
-                style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--danger)' }}
-                onClick={() => {
-                  void logout();
-                  closeAll();
-                }}
-              >
-                <span className="lx-menu__t">Đăng xuất</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {(openMenu || userMenuOpen) && (
-        <div className="lx-backdrop" onClick={closeAll} />
-      )}
-    </>
-  );
+          {openMenu === module.key && <div className="lx-menu" role="menu" id={`nav-menu-${module.key}`} onKeyDown={menuKey}>
+            {module.items.map(item => item.href ? <Link key={item.label} href={item.href} role="menuitem"
+              className={`lx-menu__item${pathname === item.href ? ' is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined}
+              onClick={closeAll}><span className="lx-menu__t">{item.label}</span><Icon name={item.icon} /></Link>
+              : <button key={item.label} className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
+                <span className="lx-menu__t">{item.label}</span><Icon name={item.icon} /></button>)}
+          </div>}
+        </> : module.href ? <Link href={module.href} onClick={closeAll}
+          className={`lx-navbtn${active === module.key ? ' is-active' : ''}`} aria-current={active === module.key ? 'page' : undefined}>{module.label}</Link>
+          : <button className="lx-navbtn" type="button" disabled title="Chưa khả dụng">{module.label}</button>}
+      </div>)}
+    </nav>
+    <div className="lx-userwrap">
+      <button className="lx-user lx-user--btn" type="button" aria-haspopup="menu" aria-expanded={openMenu === 'user'}
+        aria-controls="nav-menu-user" onClick={event => toggle('user', event)} onKeyDown={event => triggerKey(event, 'user')}>
+        <span className="lx-avatar" aria-hidden="true">{initials}</span>
+        <span className="lx-user__meta"><span className="lx-user__name">{user?.fullName || 'Khách'}</span><span className="lx-user__role">{roleName}</span></span>
+        <Icon name="chevron" />
+      </button>
+      {openMenu === 'user' && <div className="lx-menu lx-menu--user" id="nav-menu-user" role="menu" onKeyDown={menuKey}>
+        <button className="lx-menu__item" type="button" role="menuitem" onClick={() => { void logout(); closeAll(); }}>
+          <Icon name="logout" /><span className="lx-menu__t">Đăng xuất</span>
+        </button>
+      </div>}
+    </div>
+  </header>;
 }

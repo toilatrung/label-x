@@ -73,7 +73,7 @@
       "y": 1800
     },
     "FlowNav.dc.html": {
-      "h": 120,
+      "h": 100,
       "w": 1392,
       "x": 6200,
       "y": 0
@@ -142,16 +142,16 @@
     },
     "ReviewQueues.dc.html": {
       "expand": "fill",
-      "h": 900,
+      "h": 1000,
       "is_interactive": true,
-      "title": "06 · Review Queues",
+      "title": "06 · Trung tâm kiểm tra",
       "w": 1440,
       "x": 0,
       "y": 3300
     },
     "ReviewWorkspace.dc.html": {
       "expand": "fill",
-      "h": 1040,
+      "h": 1260,
       "is_interactive": true,
       "title": "07 · Review Workspace",
       "w": 1440,

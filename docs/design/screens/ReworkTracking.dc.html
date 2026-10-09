@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rework Tracking</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/labelx/tokens.css">
@@ -16,7 +17,7 @@
 <div class="lx" style="min-height: 100vh; background: var(--canvas)">
 <dc-import name="TopBar" active="review" active-item="rework" hint-size="100%,100px"></dc-import>
 <main class="lx-page">
-<dc-import name="FlowNav" flow="review" step="rework" hint-size="100%,48px"></dc-import>
+
 
 <div class="lx-head">
 <div class="lx-head__text">
@@ -24,6 +25,7 @@
 <p class="lx-lead">Theo dõi các yêu cầu sửa từ lúc tạo đến khi được xác minh. Annotator sửa trực tiếp trên CVAT; snapshot gốc luôn giữ nguyên.</p>
 </div>
 </div>
+<dc-import name="FlowNav" flow="review" step="rework" hint-size="100%,74px"></dc-import>
 
 <div class="lx-grid lx-grid--4">
 <div class="lx-metric"><span class="lx-metric__k">Tổng yêu cầu sửa</span><span class="lx-metric__v">86</span><span class="lx-metric__n">Từ 126 lỗi đã xác nhận</span></div>

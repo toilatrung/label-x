@@ -11,10 +11,10 @@
  },
  "groups": [],
  "lastChange": {
-  "by": "Quality Control Novaon Group",
-  "at": "2026-10-04T11:57:16Z",
-  "via": "Cowork",
-  "note": "Added IconButton, Tabs, MetricTile, DropdownMenu; navigation dropdowns; full-name wording"
+  "by": "LabelX design update",
+  "at": "2026-10-09T00:00:00Z",
+  "via": "repository",
+  "note": "Aligned to supplied previews: image queue, expanded flows, clear dropdowns and responsive shell. Review Workspace preserves all original information and controls; presentation only."
  },
  "layout": "files",
  "libraries": [],

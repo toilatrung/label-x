@@ -1,0 +1,98 @@
+{
+  "status": "passed",
+  "auth": "real Django session + CSRF",
+  "backend": "http://localhost:8000",
+  "viewports": [
+    "1345x1077",
+    "390x844"
+  ],
+  "checks": [
+    "Reviewer login",
+    "real rule list",
+    "rule ID/version detail",
+    "family/class filter",
+    "dropdown permissions",
+    "Escape focus",
+    "mobile overflow",
+    "404 without stale rule",
+    "Annotator frontend/API 403"
+  ],
+  "api": [
+    {
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "path": "/api/guidelines/rules/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "path": "/api/guidelines/rules/VEH-03/",
+      "query": "?version=v1",
+      "status": 200
+    },
+    {
+      "path": "/api/guidelines/rules/",
+      "query": "?family=E2&class_name=truck",
+      "status": 200
+    },
+    {
+      "path": "/api/guidelines/rules/MISSING/",
+      "query": "",
+      "status": 404
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/logout/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ]
+}

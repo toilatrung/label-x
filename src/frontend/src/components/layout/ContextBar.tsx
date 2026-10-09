@@ -24,14 +24,20 @@ export function ContextBar({
   const roleLabel = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
 
   return (
-    <div className="lx-ctxbar">
-      <div className="lx-ctx">
+    <div className="lx-ctxbar" aria-label="Ngữ cảnh làm việc">
+      <div className="lx-row lx-context-items">
         {/* Chip Dataset */}
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Dataset:</span>
           <span className="lx-chip__v">{datasetId === null ? 'Chưa chọn' :
             (datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetId}`)}</span>
           {isReadOnly && <span className="lx-tag lx-tag--ro">read-only</span>}
+        </div>
+
+        {/* Chip QC Run */}
+        <div className="lx-chip lx-chip--static">
+          <span className="lx-chip__k">Quality Control Run:</span>
+          <span className="lx-chip__v" style={{ color: 'var(--warning)' }}>{activeRun}</span>
         </div>
 
         <div className="lx-chip lx-chip--static">
@@ -49,12 +55,6 @@ export function ContextBar({
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Taxonomy:</span>
           <span className="lx-chip__v">{taxonomyVersion}</span>
-        </div>
-
-        {/* Chip QC Run */}
-        <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Run:</span>
-          <span className="lx-chip__v" style={{ color: 'var(--warning)' }}>{activeRun}</span>
         </div>
 
         {/* Chip Vai trò hiện tại */}

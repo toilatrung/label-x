@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Board — LabelX</title>
+<meta name="labelx:id" content="task-board-toilatrung">
+<meta name="labelx:title" content="Task Board — @toilatrung">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[tasks, execution, board]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>task-board</span><b>title</b><span>Task Board</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[tasks, execution, board]</span><b>priority</b><span>1</span></div>
+<h1 id="task-board">Task Board — @toilatrung</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Maintain the authoritative registry of executable tasks and their lifecycle state.</p>
+<p>Delta CR-100; base <code>3c5ab60</code>. Code và bằng chứng được chuẩn bị theo yêu cầu người dùng. T-018 giữ <code>pending</code> tới khi T-016 (#42) được xác minh merge. Executor @toilatrung; owner Nguyễn Đức Hà.</p><h2 id="status-model">Status Model</h2>
+<ul>
+<li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
+<li><code>pending -&gt; in-progress</code> requires an owner, sufficient context, satisfied dependencies, and parent epic <code>EPIC_IN_PROGRESS</code>.</li>
+<li><code>in-progress -&gt; blocked</code> requires a linked blocker.</li>
+<li><code>in-progress -&gt; review</code> requires implementation evidence and acceptance-criteria results.</li>
+<li><code>review -&gt; done</code> requires required review and QA evidence.</li>
+<li><code>blocked -&gt; in-progress</code> requires verified blocker resolution.</li>
+<li><code>cancelled</code> requires an authorized rationale; <code>done</code> and <code>cancelled</code> are terminal.</li>
+</ul>
+<h2 id="task-records">Task Records</h2>
+<table>
+<thead>
+<tr>
+<th>Task ID</th>
+<th>Epic ID</th>
+<th>Title</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Dependencies</th>
+<th>Blocker IDs</th>
+<th>Evidence Links</th>
+<th>Updated Date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T-018</td>
+<td>E-03</td>
+<td>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>pending</td>
+<td>T-016</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-018-@toilatrung.html">Implementation/API browser evidence</a></td>
+<td>2026-10-09</td>
+</tr></tbody>
+</table>
+<h2 id="task-details">Task Details</h2><h3 id="t-018">T-018</h3>
+<h4 id="record-metadata_17">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-018</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Title</strong>: <code>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_17">Objective</h4>
+<p>Màn ModelsGuidelines phần guideline (version, rule ID, section, trích đoạn) chạy trên API thật, và có component tra rule dùng lại ở Workspace (E-14).</p>
+<h4 id="scope_17">Scope</h4>
+<h5 id="included_17">Included</h5>
+<ul>
+<li>Màn ModelsGuidelines theo docs/design, dùng API guideline hiện có qua auth thật</li>
+<li>Component tra rule theo rule ID / family / lớp tách khỏi trang, có test</li>
+<li>Mở màn trên trình duyệt với reviewer (thay mục QA skipped của T-003)</li>
+</ul>
+<h5 id="excluded_17">Excluded</h5>
+<ul>
+<li>Versioning guideline theo snapshot (xem quyết định PO ở mục kế hoạch M-01)</li>
+</ul>
+<h4 id="preconditions_17">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available. (PO duyệt và gán owner 2026-10-08, chuyển qua label-x-88; phụ thuộc phải merge trước khi bắt đầu: T-016)</li>
+</ul>
+<h4 id="related-files_17">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-03</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h4 id="acceptance-criteria_17">Acceptance Criteria</h4>
+<ul>
+<li>[ ] Màn hiển thị rule từ API thật, đúng quyền</li>
+<li>[ ] Component tra rule có test và được export dùng lại</li>
+<li>[ ] Verification method is specified for each condition.</li>
+</ul>
+<h4 id="verification-requirements_17">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>cd src/frontend &amp;&amp; npm test; make check</code></li>
+<li><strong>Manual Checks</strong>: <code>Mở màn và tra rule với reviewer</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-018.html</code></li>
+</ul>
+<h4 id="completion-criteria_17">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+</article></main></body></html>
