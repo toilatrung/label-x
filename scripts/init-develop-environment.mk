@@ -25,7 +25,7 @@ export UV_PROJECT_ENVIRONMENT
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
+.PHONY: db-runtime-role check-audit-grants help setup doctor tools env infra-up infra-down infra-logs infra-reset \
         cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
@@ -119,6 +119,13 @@ frontend-install: ## Cài dependency Node theo package-lock.json
 
 migrate: ## Chạy Django migrations
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py migrate
+
+db-runtime-role: ## Tạo role DB runtime (không owner, audit chỉ SELECT/INSERT); cần RUNTIME_ROLE
+	@test -n "$(RUNTIME_ROLE)" || { echo "Cần RUNTIME_ROLE=<tên role>"; exit 1; }
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py provision_runtime_db_role "$(RUNTIME_ROLE)" $(if $(RUNTIME_PASSWORD_ENV),--password-env "$(RUNTIME_PASSWORD_ENV)")
+
+check-audit-grants: ## Kiểm role DB hiện tại không sửa/xoá được audit (manage.py check --deploy)
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check --deploy --tag database
 
 superuser: ## Tạo tài khoản Django admin
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py createsuperuser

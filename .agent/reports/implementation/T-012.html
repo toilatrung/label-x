@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-012 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-012-ducha180104">
+<meta name="labelx:id" content="implementation-t-012">
 <meta name="labelx:title" content="T-012 — RBAC theo vai trò và scope dataset ở API">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -30,7 +30,7 @@ th{background:var(--sunken)}
 <header class="top"><span class="logo">Label<b>X</b></span> &nbsp;/&nbsp; T-012 Implementation Report</header>
 <main><article>
 <div class="meta">
-<b>id</b><span>T-012-ducha180104</span>
+<b>id</b><span>implementation-t-012</span>
 <b>title</b><span>T-012 — RBAC theo vai trò và scope dataset ở API</span>
 <b>type</b><span>report</span>
 <b>domain</b><span>development</span>
@@ -45,7 +45,7 @@ th{background:var(--sunken)}
 
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>T-012-ducha180104</code></li>
+<li><strong>Report ID</strong>: <code>T-012</code></li>
 <li><strong>Title</strong>: <code>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
 <li><strong>Executor</strong>: <code>Antigravity Agent</code></li>
@@ -84,7 +84,7 @@ th{background:var(--sunken)}
 <tr><td><code>src/backend/accounts/migrations/0002_employeeidentity.py</code></td><td>Tạo mới</td><td>Migration tạo bảng <code>EmployeeIdentity</code> và trường <code>employee</code> trên <code>CvatIdentity</code>, không tự động backfill dữ liệu cũ.</td></tr>
 <tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Sửa đổi</td><td>Mở rộng lên 74 unit & integration tests bao quát toàn diện các kịch bản F-1 (cross-account anti-self-review, separation of duties qua employee_id, provisioning security, audit rollback, command validation, và admin read-only).</td></tr>
 <tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture cấp phát <code>RoleAssignment</code> thay thế Django Group (21/21 passed).</td></tr>
-<tr><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
 <tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật tiến độ T-012 và liên kết DEC-011.</td></tr>
 <tr><td><code>.agent/execution/current-context-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật deadline 19:00 ngày 08/10/2026 và trạng thái task.</td></tr>
 </tbody>
@@ -96,7 +96,7 @@ th{background:var(--sunken)}
 <li><code>src/backend/accounts/permissions.py</code></li>
 <li><code>src/backend/guideline/permissions.py</code></li>
 <li><code>src/backend/audit/services.py</code></li>
-<li><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></li>
+<li><code>.agent/governance/decisions/DEC-011.html</code></li>
 <li><code>docs/06-security/threat-model.html</code></li>
 <li><code>docs/07-development/coding-standards.html</code></li>
 </ul>
@@ -154,7 +154,7 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
 <tr><td>Finding 1: Super Admin không được né override_reason trên endpoint hỗ trợ override (RoleAssignment xác định trước; thiếu/false cờ hoặc thiếu lý do trả 422 BUSINESS_RULE_UNMET; non-admin gửi cờ trả 403; test URL thật không tạo mutation/audit)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:650-715</code></td><td><code>test_integration_super_admin_missing_override_flag_returns_422_and_no_mutation</code>, <code>test_integration_super_admin_override_false_returns_422_and_no_mutation</code>, <code>test_integration_non_super_admin_normal_flow_allowed_without_override</code>, <code>test_integration_non_super_admin_attempting_override_flag_returns_403</code></td></tr>
 <tr><td>Finding 2: Server hook get_dataset_id(request) là nguồn authoritative duy nhất (không fallback sang query/body/kwargs; hook trả None trả 404 NOT_FOUND; client gửi dataset khác trả 400 VALIDATION_ERROR; test object không tồn tại gửi dataset hợp lệ trả 404)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:207-310</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code>, <code>test_object_endpoint_nonexistent_object_client_scoped_dataset_returns_404</code></td></tr>
 <tr><td>Finding 3: Separation of duties fail-closed khi thiếu identity (không cho phép cả hai identity cùng thiếu; tự resolve requester từ DB; thiếu mapping hoặc mâu thuẫn DB trả 403 IDENTITY_MAPPING_MISSING; approver thiếu mapping trả 403; so sánh cùng LabelX user và cùng CVAT ID)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:510-645</code></td><td><code>test_separation_of_duties_both_identities_missing_fails_closed</code>, <code>test_separation_of_duties_requester_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_approver_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_input_identity_conflicts_db_fails_closed</code>, <code>test_separation_of_duties_two_distinct_valid_identities_allowed</code></td></tr>
-<tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pass">ĐẠT</span></td><td><code>.agent/governance/decisions/DEC-011-@ducha180104.html</code></td><td>DEC-011 ở trạng thái <code>accepted</code>; Product Owner (@toilatrung) chấp thuận Phương án 2 kết hợp Fail-Closed ngày 2026-10-08 trong review PR #56</td></tr>
+<tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pass">ĐẠT</span></td><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>DEC-011 ở trạng thái <code>accepted</code>; Product Owner (@toilatrung) chấp thuận Phương án 2 kết hợp Fail-Closed ngày 2026-10-08 trong review PR #56</td></tr>
 </tbody>
 </table>
 
@@ -233,5 +233,5 @@ git diff --check -> 0 whitespace/formatting errors</code></pre>
 </ul>
 
 <h2 id="output-requirements">Output Requirements</h2>
-<p>Báo cáo này được cập nhật và lưu tại <code>.agent/reports/implementation/T-012-@ducha180104.html</code>, tuân thủ đúng quy chuẩn HTML dự án và vượt qua <code>scripts/validate-framework.py</code>.</p>
+<p>Báo cáo này được cập nhật và lưu tại <code>.agent/reports/implementation/T-012.html</code>, tuân thủ đúng quy chuẩn HTML dự án và vượt qua <code>scripts/validate-framework.py</code>.</p>
 </article></main></body></html>

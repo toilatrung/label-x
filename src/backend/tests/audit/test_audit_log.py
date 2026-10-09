@@ -219,3 +219,31 @@ def test_audit_has_no_admin_or_api_mutation_surface():
 
     top_level_routes = {str(pattern.pattern) for pattern in get_resolver().url_patterns}
     assert not any("audit" in route for route in top_level_routes)
+
+
+def test_deploy_check_reports_owner_role_and_accepts_the_runtime_role(capsys):
+    from audit.checks import audit_runtime_role_is_restricted
+
+    role = f"labelx_runtime_test_{uuid.uuid4().hex[:12]}"
+    quoted_role = connection.ops.quote_name(role)
+
+    # The test connection is the table owner/superuser: the check must reject it.
+    errors = audit_runtime_role_is_restricted()
+    assert [error.id for error in errors] == ["audit.E001"]
+    assert "TRUNCATE" in errors[0].msg
+
+    try:
+        call_command("provision_runtime_db_role", role)
+        assert "provisioned" in capsys.readouterr().out
+        with connection.cursor() as cursor:
+            cursor.execute(f"SET ROLE {quoted_role}")
+            try:
+                assert audit_runtime_role_is_restricted() == []
+                cursor.execute("SELECT has_table_privilege(current_user, 'auth_user', 'UPDATE')")
+                assert cursor.fetchone() == (True,)  # still able to run the application
+            finally:
+                cursor.execute("RESET ROLE")
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP OWNED BY {quoted_role}")
+            cursor.execute(f"DROP ROLE IF EXISTS {quoted_role}")

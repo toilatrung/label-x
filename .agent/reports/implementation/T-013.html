@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-013 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-013-duy12345-6789">
+<meta name="labelx:id" content="implementation-t-013">
 <meta name="labelx:title" content="T-013 Append-only Audit Log Implementation Report">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -9,12 +9,12 @@
 <meta name="labelx:tags" content="[implementation, audit, postgres, security, t-013]">
 <meta name="labelx:priority" content="1">
 </head><body><main><article>
-<div class="meta"><b>id</b><span>T-013-duy12345-6789</span><b>title</b><span>T-013 Append-only Audit Log Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>audit</span><b>tags</b><span>[implementation, audit, postgres, security, t-013]</span><b>priority</b><span>1</span></div>
+<div class="meta"><b>id</b><span>implementation-t-013</span><b>title</b><span>T-013 Append-only Audit Log Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>audit</span><b>tags</b><span>[implementation, audit, postgres, security, t-013]</span><b>priority</b><span>1</span></div>
 <h1 id="implementation-report-template">T-013 — Audit log append-only</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Cung cấp bằng chứng triển khai và nghiệm thu T-013 theo FR-SEC-05, NFR-08.</p>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-013-@duy12345-6789</code></li><li><strong>Title</strong>: <code>Audit log append-only ghi cùng transaction, kiểm DB grant</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-013</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-013</code></li><li><strong>Title</strong>: <code>Audit log append-only ghi cùng transaction, kiểm DB grant</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-013</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Report Date</strong>: <code>2026-10-08</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: <code>AuditEvent model; transaction-bound append service; recursive secret redaction; ORM guards; PostgreSQL trigger; runtime-role SELECT/INSERT grant command; Postgres integration tests; no admin/API mutation surface.</code></li><li><strong>Not Implemented</strong>: <code>FR-SEC-07 audit viewer (deferred by CR-101); CR-107 T-017 load integration because T-017 had not merged.</code></li></ul>
 <h2 id="changes-made">Changes Made</h2>
@@ -53,5 +53,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>No work outside T-013 is claimed.</li><li>No review approval or done status is claimed.</li><li>No secret or credential is stored in this report.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Stored at <code>.agent/reports/implementation/T-013-@duy12345-6789.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Status is complete for implementation evidence; task remains review until independent approval.</li></ul>
+<ul><li>Stored at <code>.agent/reports/implementation/T-013.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Status is complete for implementation evidence; task remains review until independent approval.</li></ul>
 </article></main></body></html>
