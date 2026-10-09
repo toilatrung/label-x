@@ -176,6 +176,16 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 </tr>
 <tr>
 <td></td>
+<td><code>db-runtime-role</code></td>
+<td>Tạo role DB runtime (không superuser/owner; CRUD bảng ứng dụng, audit chỉ <code>SELECT/INSERT</code>): <code>make db-runtime-role RUNTIME_ROLE=labelx_app RUNTIME_PASSWORD_ENV=VAR</code>, rồi đặt <code>DATABASE_URL</code> runtime dùng role đó; migration vẫn chạy bằng role owner. Chạy lại sau mỗi lần migrate.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>check-audit-grants</code></td>
+<td><code>manage.py check --deploy --tag database</code>: báo <code>audit.E001</code> nếu role hiện tại còn <code>UPDATE/DELETE/TRUNCATE</code> trên audit log (FR-SEC-05). Dev mặc định dùng role owner nên sẽ báo lỗi; môi trường triển khai phải đạt.</td>
+</tr>
+<tr>
+<td></td>
 <td><code>superuser</code></td>
 <td><code>python manage.py createsuperuser</code></td>
 </tr>

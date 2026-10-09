@@ -129,6 +129,13 @@ jobs:
           uv run --frozen python manage.py makemigrations --check --dry-run
           uv run --frozen python manage.py migrate --noinput
           uv run --frozen python manage.py spectacular --file ../../.ci-artifacts/openapi.yaml --validate
+      - name: Audit runtime role cannot rewrite audit (F-02)
+        env:
+          RUNTIME_DB_PASSWORD: ci-only-runtime-role-password
+        run: |
+          uv run --frozen python manage.py provision_runtime_db_role labelx_runtime --password-env RUNTIME_DB_PASSWORD
+          DATABASE_URL=postgres://labelx_runtime:ci-only-runtime-role-password@localhost:5432/labelx_ci \
+            uv run --frozen python manage.py check --deploy --tag database
       - name: Full pytest suite
         # Chạy MỌI test trong src/backend/tests để test mới của collaborator không bị bỏ sót;
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
