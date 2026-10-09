@@ -19,6 +19,7 @@
 <h2 id="task-records">Task Records</h2>
 <table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Blocker IDs</th><th>Evidence Links</th><th>Updated Date</th></tr></thead><tbody>
 <tr><td>T-014</td><td>E-02</td><td>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-001 (satisfied)</td><td>none</td><td><a href="../reports/implementation/T-014-@vietanhhhhhh2003.html">implementation report</a>; commit <code>78af2d2</code></td><td>2026-10-08</td></tr>
+<tr><td>T-030</td><td>E-11</td><td>score_v0 cho mọi frame, score version bất biến, tie-break hash tất định</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-027/T-028 contract (soft)</td><td>none</td><td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/72">#72</a>; <a href="../reports/implementation/T-030-@vietanhhhhhh2003.html">implementation report</a>; branch <code>feat/T-030-e11-score-v0</code></td><td>2026-10-09</td></tr>
 </tbody></table>
 <h2 id="acceptance-criteria">Acceptance Criteria</h2>
 <ul><li>[x] Upload cùng nội dung hai lần cho cùng khoá, không tạo bản trùng.</li><li>[x] Lỗi upload thì không commit metadata.</li><li>[x] Secret không xuất hiện trong log.</li><li>[x] Verification method is specified for each condition.</li></ul>
