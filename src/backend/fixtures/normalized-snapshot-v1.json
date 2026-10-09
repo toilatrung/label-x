@@ -1,0 +1,71 @@
+{
+  "dataset_id": 42,
+  "guideline_version": "bdd100k-guideline-v1",
+  "jobs": [
+    {
+      "assignee_cvat_user_id": 501,
+      "assignee_user_id": null,
+      "cvat_job_id": 17,
+      "cvat_task_id": 9,
+      "frames": [
+        {
+          "file_name": "000000.jpg",
+          "frame_index": 0,
+          "height": 720,
+          "media": {
+            "mime_type": "image/jpeg",
+            "sha256": "f8952f8aff2a83a859aa47f33adb73441412143c3982ae0e7ec57d49d0ba7320",
+            "size_bytes": 7,
+            "storage_key": "snapshots/source/000000.jpg"
+          },
+          "shapes": [
+            {
+              "attributes": [],
+              "frame_index": 0,
+              "label_id": 4,
+              "occluded": true,
+              "outside": false,
+              "points": [10.0, 20.0, 110.0, 120.0],
+              "rotation": 0.0,
+              "source": {"id": 12, "kind": "shape"},
+              "z_order": 1
+            }
+          ],
+          "source_frame_id": 1000,
+          "width": 1280
+        },
+        {
+          "file_name": "000002.jpg",
+          "frame_index": 2,
+          "height": 720,
+          "media": {
+            "mime_type": "image/jpeg",
+            "sha256": "c898e17cd9040d633ba643e103ada73c9d3a94566e6cb40e93307d28b2577227",
+            "size_bytes": 7,
+            "storage_key": "snapshots/source/000002.jpg"
+          },
+          "shapes": [
+            {
+              "attributes": [{"spec_id": 8, "value": "moving"}],
+              "frame_index": 2,
+              "label_id": 4,
+              "occluded": false,
+              "outside": false,
+              "points": [20.123456, 40.0, 220.5, 181.0],
+              "rotation": 0.0,
+              "source": {"id": 91, "kind": "shape"},
+              "z_order": 0
+            }
+          ],
+          "source_frame_id": 1002,
+          "width": 1280
+        }
+      ],
+      "schema_version": "labelx.snapshot.v1",
+      "skipped_shapes": {"polygon": 1},
+      "source_updated_at": "2026-10-09T07:05:45Z"
+    }
+  ],
+  "schema_version": "labelx.snapshot.v1",
+  "taxonomy_version": "bdd100k-10-v1"
+}
