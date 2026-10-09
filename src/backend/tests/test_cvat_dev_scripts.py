@@ -86,6 +86,48 @@ def test_existing_project_taxonomy_must_match(monkeypatch: pytest.MonkeyPatch) -
         client.find_or_create_project("labelx-dev", [{"name": "car", "type": "rectangle"}])
 
 
+def test_existing_project_taxonomy_follows_cvat_labels_link(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = load_script("cvat_sample")
+    client = object.__new__(module.ProvisioningClient)
+    calls: list[tuple[str, str, object]] = []
+
+    def fake_json(method: str, endpoint: str, **kwargs: object) -> dict[str, object]:
+        calls.append((method, endpoint, kwargs.get("params")))
+        if endpoint == "api/projects":
+            return {"results": [{"id": 5, "name": "labelx-dev-bdd100k"}]}
+        if endpoint == "api/projects/5":
+            return {"id": 5, "labels": {"url": "http://cvat/api/labels?project_id=5"}}
+        if endpoint == "api/labels":
+            return {
+                "results": [
+                    {
+                        "name": "car",
+                        "type": "rectangle",
+                        "color": "#845ef7",
+                        "attributes": [],
+                    }
+                ]
+            }
+        raise AssertionError(endpoint)
+
+    monkeypatch.setattr(client, "_json", fake_json)
+
+    assert (
+        client.find_or_create_project(
+            "labelx-dev-bdd100k",
+            [{"name": "car", "type": "rectangle", "color": "#845ef7"}],
+        )
+        == 5
+    )
+    assert (
+        "GET",
+        "api/labels",
+        {"project_id": 5, "page_size": 100},
+    ) in calls
+
+
 def write_yolo_export(
     path: Path,
     images: list[str],
