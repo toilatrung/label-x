@@ -92,10 +92,18 @@ def guideline_file(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def loaded_version(guideline_file: Path) -> GuidelineVersion:
+def guideline_actor(db: Any) -> User:
+    """Tài khoản QC Admin hợp lệ để nạp guideline (FR-GDL-02, FR-SEC-05)."""
+    user = User.objects.create_user(username="qc_admin_actor", password="password")
+    RoleAssignment.objects.create(user=user, role="qc_admin", dataset_id=None)
+    return user
+
+
+@pytest.fixture()
+def loaded_version(guideline_file: Path, guideline_actor: User) -> GuidelineVersion:
     """Nạp guideline mẫu vào DB và trả về GuidelineVersion."""
     out = io.StringIO()
-    call_command("load_guideline", str(guideline_file), stdout=out)
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username, stdout=out)
     return GuidelineVersion.objects.get(version_tag="test-v1")
 
 
@@ -146,58 +154,60 @@ def anon_client() -> APIClient:
 
 
 @pytest.mark.django_db
-def test_load_guideline_idempotent(guideline_file: Path) -> None:
+def test_load_guideline_idempotent(guideline_file: Path, guideline_actor: User) -> None:
     """Nạp cùng tệp hai lần: chỉ tạo một GuidelineVersion, không trùng rule."""
     out = io.StringIO()
-    call_command("load_guideline", str(guideline_file), stdout=out)
-    call_command("load_guideline", str(guideline_file), stdout=out)
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username, stdout=out)
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username, stdout=out)
 
     assert GuidelineVersion.objects.filter(version_tag="test-v1").count() == 1
     assert GuidelineRule.objects.filter(version__version_tag="test-v1").count() == 4
 
 
 @pytest.mark.django_db
-def test_load_guideline_output_on_skip(guideline_file: Path) -> None:
+def test_load_guideline_output_on_skip(guideline_file: Path, guideline_actor: User) -> None:
     """Lần nạp thứ hai: stdout phải có thông báo bỏ qua."""
     out = io.StringIO()
-    call_command("load_guideline", str(guideline_file), stdout=out)
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username, stdout=out)
     out.truncate(0)
     out.seek(0)
-    call_command("load_guideline", str(guideline_file), stdout=out)
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username, stdout=out)
     assert "Skipping" in out.getvalue()
 
 
 @pytest.mark.django_db
-def test_load_guideline_checksum_stored(guideline_file: Path) -> None:
+def test_load_guideline_checksum_stored(guideline_file: Path, guideline_actor: User) -> None:
     """Checksum SHA-256 phải được lưu đúng."""
-    call_command("load_guideline", str(guideline_file))
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username)
     expected = hashlib.sha256(guideline_file.read_bytes()).hexdigest()
     version = GuidelineVersion.objects.get(version_tag="test-v1")
     assert version.file_checksum == expected
 
 
 @pytest.mark.django_db
-def test_load_guideline_creates_rules_and_mappings(guideline_file: Path) -> None:
+def test_load_guideline_creates_rules_and_mappings(
+    guideline_file: Path, guideline_actor: User
+) -> None:
     """Sau khi nạp: phải có đủ rules và mappings."""
-    call_command("load_guideline", str(guideline_file))
+    call_command("load_guideline", str(guideline_file), actor=guideline_actor.username)
     assert GuidelineRule.objects.filter(version__version_tag="test-v1").count() == 4
     assert RuleMapping.objects.filter(version__version_tag="test-v1").count() == 7
 
 
 @pytest.mark.django_db
-def test_load_guideline_rejects_invalid_yaml(tmp_path: Path) -> None:
+def test_load_guideline_rejects_invalid_yaml(tmp_path: Path, guideline_actor: User) -> None:
     """YAML lỗi phải trả CommandError rõ ràng và không ghi dữ liệu."""
     invalid_file = tmp_path / "invalid.yaml"
     invalid_file.write_text("rules: [", encoding="utf-8")
 
     with pytest.raises(CommandError, match="valid UTF-8 YAML"):
-        call_command("load_guideline", str(invalid_file))
+        call_command("load_guideline", str(invalid_file), actor=guideline_actor.username)
 
     assert GuidelineVersion.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_load_guideline_rejects_duplicate_rule_ids(tmp_path: Path) -> None:
+def test_load_guideline_rejects_duplicate_rule_ids(tmp_path: Path, guideline_actor: User) -> None:
     """Rule ID trùng trong cùng tệp phải bị từ chối trước transaction."""
     duplicate = dict(SAMPLE_GUIDELINE)
     duplicate["rules"] = [SAMPLE_GUIDELINE["rules"][0], SAMPLE_GUIDELINE["rules"][0]]
@@ -206,14 +216,14 @@ def test_load_guideline_rejects_duplicate_rule_ids(tmp_path: Path) -> None:
     duplicate_file.write_text(yaml.dump(duplicate, allow_unicode=True), encoding="utf-8")
 
     with pytest.raises(CommandError, match="Duplicate rule ID"):
-        call_command("load_guideline", str(duplicate_file))
+        call_command("load_guideline", str(duplicate_file), actor=guideline_actor.username)
 
     assert GuidelineVersion.objects.count() == 0
 
 
 @pytest.mark.django_db
 def test_latest_version_not_broken_when_old_version_reloaded(
-    tmp_path: Path, reviewer_client: APIClient
+    tmp_path: Path, reviewer_client: APIClient, guideline_actor: User
 ) -> None:
     """Nạp v1 rồi v2, sau đó cập nhật loaded_at của v1: default version vẫn là v2."""
     v1_data = {
@@ -233,8 +243,8 @@ def test_latest_version_not_broken_when_old_version_reloaded(
     f1.write_text(yaml.dump(v1_data, allow_unicode=True), encoding="utf-8")
     f2.write_text(yaml.dump(v2_data, allow_unicode=True), encoding="utf-8")
 
-    call_command("load_guideline", str(f1))
-    call_command("load_guideline", str(f2))
+    call_command("load_guideline", str(f1), actor=guideline_actor.username)
+    call_command("load_guideline", str(f2), actor=guideline_actor.username)
 
     # Cập nhật v1 loaded_at sau v2
     v1 = GuidelineVersion.objects.get(version_tag="v1")
@@ -492,7 +502,9 @@ def test_version_endpoint_removed(
 
 
 @pytest.mark.django_db
-def test_cursor_pagination_fifty_one_rules(reviewer_client: APIClient, tmp_path: Path) -> None:
+def test_cursor_pagination_fifty_one_rules(
+    reviewer_client: APIClient, tmp_path: Path, guideline_actor: User
+) -> None:
     """Tạo 51 rule: trang đầu có 50 rule, next != None, previous == None;
     gọi URL trong next -> trang 2 có 1 rule, previous != None; không có count."""
     rules = [{"id": f"RULE-{i:03d}", "section": "§1", "content": f"Rule {i}"} for i in range(1, 52)]
@@ -504,7 +516,7 @@ def test_cursor_pagination_fifty_one_rules(reviewer_client: APIClient, tmp_path:
     }
     file_path = tmp_path / "page_test.yaml"
     file_path.write_text(yaml.dump(data, allow_unicode=True), encoding="utf-8")
-    call_command("load_guideline", str(file_path))
+    call_command("load_guideline", str(file_path), actor=guideline_actor.username)
 
     # Trang 1
     resp1 = reviewer_client.get("/api/guidelines/rules/?version=page-v1")

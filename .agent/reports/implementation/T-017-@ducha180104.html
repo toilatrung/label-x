@@ -1,0 +1,159 @@
+﻿<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-017 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-017-ducha180104">
+<meta name="labelx:title" content="T-017 — Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="guideline">
+<meta name="labelx:tags" content="[implementation, report, T-017, guideline, mapping, GDL]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--border:#e3e6ea;--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;--warn:#8a5300;--warn-soft:#fdf2d8;--font:Inter,sans-serif;--mono:Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.6 var(--font)}
+.top{height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;padding:0 24px;font-size:13px}.logo{font-weight:800}.logo b{color:var(--brand)}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:24px 32px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:4px 12px;font-size:12px;border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+h1{font-size:22px;margin:16px 0}h2{font-size:17px;margin:24px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:8px 12px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;font-size:13px}th{background:var(--sunken)}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
+.badge-pass{background:#d1fae5;color:#065f46}.badge-info{background:#dbeafe;color:#1e40af}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo">Label<b>X</b></span> &nbsp;/&nbsp; T-017 Implementation Report</header>
+<main><article>
+<div class="meta">
+<b>id</b><span>T-017-ducha180104</span>
+<b>title</b><span>T-017 — Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</span>
+<b>type</b><span>report</span>
+<b>domain</b><span>development</span>
+<b>module</b><span>guideline</span>
+<b>tags</b><span>[implementation, report, T-017, guideline, mapping, GDL]</span>
+<b>priority</b><span>2</span>
+</div>
+
+<h1 id="t-017-implementation-report">T-017 — Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo triển khai kỹ thuật và bằng chứng nghiệm thu cho T-017 (Issue #43, Epic E-03, Milestone M-01) theo các quy định FR-GDL-02, CR-101 và CR-107.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-017-ducha180104</code></li>
+<li><strong>Title</strong>: <code>Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Executor</strong>: <code>Antigravity Agent</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-017</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Base Commit</strong>: <code>49fc126</code> (origin/develop)</li>
+<li><strong>Branch</strong>: <code>feat/issue-43-rbac-scope</code></li>
+</ul>
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li>Nạp mapping nhóm lỗi/lớp → rule ID từ tệp YAML, idempotent theo checksum SHA-256 (CR-101).</li>
+<li>Kiểm tra tính hợp lệ khi nạp: rule ID tồn tại trong guideline; <code>class_name</code> và <code>paired_class</code> thuộc taxonomy 10 lớp BDD100K; <code>family</code> thuộc enum IssueFamily; không trùng bộ selector. Lỗi từ chối toàn bộ file theo cơ chế all-or-nothing (CR-107).</li>
+<li>Lệnh nạp bắt buộc <code>--actor &lt;username&gt;</code>; kiểm tra tài khoản tồn tại, kích hoạt và có vai trò quản trị (<code>QC_ADMIN</code> hoặc <code>SUPER_ADMIN</code>).</li>
+<li>Mỗi lần nạp lưu bản ghi bất biến <code>GuidelineLoadRecord</code> (actor, thời điểm, SHA-256, số dòng, kết quả, mảng lỗi chi tiết theo dòng). Chặn cập nhật và xóa qua model, custom queryset và Django admin.</li>
+<li>API đọc mapping <code>GET /api/guidelines/mappings/</code> hỗ trợ lọc (<code>family</code>, <code>class_name</code>, <code>paired_class</code>, <code>version</code>) và phân trang con trỏ (cursor pagination). Quyền đọc tuân thủ ma trận RBAC (reviewer, qa_lead, qc_admin, super_admin); cấm các phương thức ghi (POST, PUT, PATCH, DELETE trả về 405).</li>
+<li>Màn hình <code>RulesThresholds</code> chỉ xem, hiển thị dữ liệu mapping từ API, hỗ trợ phân trang trước/sau bằng cursor, hiển thị trạng thái loading/empty/error an toàn, chặn truy cập khi thiếu quyền qua AuthGuard.</li>
+</ul>
+
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead><tr><th>File</th><th>Hành động</th><th>Mục đích</th></tr></thead>
+<tbody>
+<tr><td><code>src/backend/guideline/models.py</code></td><td>Sửa đổi</td><td>Bổ sung <code>GuidelineLoadRecordQuerySet</code> chặn delete() và update(); chặn save() và delete() trên model <code>GuidelineLoadRecord</code> để đảm bảo append-only.</td></tr>
+<tr><td><code>src/backend/guideline/admin.py</code></td><td>Tạo mới</td><td>Đăng ký Admin chỉ đọc cho <code>GuidelineLoadRecord</code>, <code>GuidelineVersion</code>, <code>GuidelineRule</code>, <code>RuleMapping</code> (vô hiệu hóa add, change, delete permission).</td></tr>
+<tr><td><code>src/backend/guideline/management/commands/load_guideline.py</code></td><td>Sửa đổi</td><td>Bắt buộc actor, kiểm tra vai trò admin, taxonomy 10 lớp BDD100K, enum IssueFamily, trùng lặp mapping; cơ chế all-or-nothing rollback trong transaction.atomic() và lưu lỗi có cấu trúc.</td></tr>
+<tr><td><code>src/backend/guideline/views.py</code></td><td>Sửa đổi</td><td>Tối ưu endpoint <code>GuidelineMappingListView</code> (GET /api/guidelines/mappings/) với select_related, cursor pagination và phân quyền RBAC.</td></tr>
+<tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture actor hợp lệ cho toàn bộ 21 unit tests guideline cũ (21/21 passed).</td></tr>
+<tr><td><code>src/backend/tests/guideline/test_t017_mapping.py</code></td><td>Tạo mới</td><td>18 ca kiểm thử backend chuyên sâu cho loader, actor, taxonomy, rollback, load record, API RBAC và 405 write-method (18/18 passed).</td></tr>
+<tr><td><code>src/frontend/src/app/configuration/rules-thresholds/page.tsx</code></td><td>Sửa đổi</td><td>Màn hình RulesThresholds chỉ xem với hỗ trợ phân trang cursor next/previous và bảo vệ AuthGuard.</td></tr>
+<tr><td><code>src/frontend/src/__tests__/RulesThresholds.test.tsx</code></td><td>Tạo mới</td><td>5 ca kiểm thử frontend chứng minh render dữ liệu API, phân trang, xử lý lỗi và chặn vai trò không hợp lệ.</td></tr>
+<tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật trạng thái T-017 sang review cho cá nhân Hà.</td></tr>
+</tbody>
+</table>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><code>src/backend/guideline/models.py</code></li>
+<li><code>src/backend/guideline/admin.py</code></li>
+<li><code>src/backend/guideline/management/commands/load_guideline.py</code></li>
+<li><code>src/backend/guideline/views.py</code></li>
+<li><code>src/backend/tests/guideline/test_api.py</code></li>
+<li><code>src/backend/tests/guideline/test_t017_mapping.py</code></li>
+<li><code>src/frontend/src/app/configuration/rules-thresholds/page.tsx</code></li>
+<li><code>src/frontend/src/__tests__/RulesThresholds.test.tsx</code></li>
+<li><code>.agent/execution/task-board-@ducha180104.html</code></li>
+<li><code>.agent/reports/implementation/T-017-@ducha180104.html</code></li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<pre><code># Chạy toàn bộ test guideline backend
+uv run pytest src/backend/tests/guideline/ -v
+# Kết quả: 39 passed in 4.74s
+
+# Kiểm tra linting và formatting backend
+uv run ruff check .
+# Kết quả: All checks passed!
+uv run ruff format --check .
+# Kết quả: 84 files already formatted.
+
+# Kiểm tra frontend test và build
+npm test -- src/__tests__/RulesThresholds.test.tsx
+# Kết quả: Tests: 5 passed, 5 total
+npm test
+# Kết quả: Test Suites: 11 passed, 11 total, Tests: 124 passed, 124 total
+npm run build
+# Kết quả: Compiled successfully, production build ready.
+</code></pre>
+
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead><tr><th>Hạng mục kiểm tra</th><th>Lệnh thực thi</th><th>Kết quả</th></tr></thead>
+<tbody>
+<tr><td>Guideline Tests (Backend)</td><td><code>pytest src/backend/tests/guideline/</code></td><td><span class="badge badge-pass">39/39 PASSED</span></td></tr>
+<tr><td>Ruff Lint &amp; Format</td><td><code>ruff check . &amp;&amp; ruff format --check .</code></td><td><span class="badge badge-pass">0 ERRORS</span></td></tr>
+<tr><td>Mypy Config</td><td><code>mypy config</code></td><td><span class="badge badge-pass">0 ISSUES</span></td></tr>
+<tr><td>Spectacular OpenAPI</td><td><code>python manage.py spectacular --validate</code></td><td><span class="badge badge-pass">VALID</span></td></tr>
+<tr><td>Frontend Tests</td><td><code>npm test</code></td><td><span class="badge badge-pass">124/124 PASSED</span></td></tr>
+<tr><td>Frontend Typecheck &amp; Lint</td><td><code>npm run typecheck &amp;&amp; npm run lint</code></td><td><span class="badge badge-pass">CLEAN</span></td></tr>
+<tr><td>Frontend Build</td><td><code>npm run build</code></td><td><span class="badge badge-pass">SUCCESS</span></td></tr>
+<tr><td>Framework Validation</td><td><code>python scripts/validate-framework.py</code></td><td><span class="badge badge-pass">PASS</span></td></tr>
+</tbody>
+</table>
+
+<h2 id="deviations">Deviations</h2>
+<p>Theo chỉ đạo trực tiếp của Product Owner (@toilatrung): Bỏ qua trạng thái lỗi của job <code>BE Build/backend CI hiện tại</code>; không dùng trạng thái đỏ này làm blocker và không sửa module ngoài phạm vi T-017 chỉ để làm xanh CI. Tập trung hoàn thành và kiểm thử 100% logic và phạm vi T-017.</p>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<table>
+<thead><tr><th>Tiêu chí nghiệm thu T-017</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr><td>Nạp tệp hợp lệ thành công (gồm paired_class); idempotent SHA-256 không trùng mapping</td><td><span class="badge badge-pass">ĐẠT</span></td></tr>
+<tr><td>Bắt buộc --actor, kiểm tra quyền và lưu bản ghi load bất biến</td><td><span class="badge badge-pass">ĐẠT</span></td></tr>
+<tr><td>Kiểm tra rule ID, taxonomy 10 lớp, IssueFamily, dòng trùng; từ chối cả tệp</td><td><span class="badge badge-pass">ĐẠT</span></td></tr>
+<tr><td>API GET /api/guidelines/mappings/ chỉ đọc, RBAC trả 403 cho vai trò bị cấm, 405 cho method ghi</td><td><span class="badge badge-pass">ĐẠT</span></td></tr>
+<tr><td>Màn RulesThresholds chỉ xem, phân trang đầy đủ, có test frontend</td><td><span class="badge badge-pass">ĐẠT</span></td></tr>
+</tbody>
+</table>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không chỉnh sửa hoặc xóa dữ liệu trên database chung ngoài transaction test.</li>
+<li>Không đưa secret, private key, token vào Git.</li>
+<li>Không sửa code ngoài phạm vi T-017 chỉ để phục vụ sửa lỗi build có sẵn của BE Build.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Báo cáo này được cập nhật và lưu tại <code>.agent/reports/implementation/T-017-@ducha180104.html</code>, tuân thủ đúng quy chuẩn HTML dự án và vượt qua <code>scripts/validate-framework.py</code>.</p>
+</article></main></body></html>

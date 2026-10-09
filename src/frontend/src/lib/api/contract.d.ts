@@ -313,6 +313,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/guidelines/mappings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tra mapping nhóm lỗi/lớp tới rule ID */
+        get: operations["guidelines_mappings_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/guidelines/rules/{rule_id}/": {
         parameters: {
             query?: never;
@@ -1069,6 +1086,13 @@ export interface components {
             content: string;
             guideline_version: string;
         };
+        RuleMapping: {
+            error_group: string;
+            class_name: string;
+            paired_class: string;
+            rule_id: string;
+            guideline_version: string;
+        };
         /** @enum {string} */
         QueueName: "risk" | "random";
         /**
@@ -1502,6 +1526,11 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["GuidelineRule"][];
+        };
+        PaginatedRuleMappingList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["RuleMapping"][];
         };
     };
     responses: {
@@ -2000,6 +2029,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedGuidelineRuleList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    guidelines_mappings_list: {
+        parameters: {
+            query?: {
+                /** @description Guideline version tag; bỏ trống là bản mới nhất. Workspace truyền version của snapshot. */
+                version?: components["parameters"]["GuidelineVersion"];
+                family?: components["schemas"]["IssueFamily"];
+                class_name?: string;
+                paired_class?: string;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang mapping chỉ đọc */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRuleMappingList"];
                 };
             };
             400: components["responses"]["BadRequest"];
