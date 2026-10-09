@@ -7,6 +7,8 @@ import { isMockAuth } from '@/lib/auth/config';
 
 interface ContextBarProps {
   datasetName?: string;
+  datasetIdOverride?: number;
+  snapshotName?: string;
   isReadOnly?: boolean;
   guidelineVersion?: string;
   taxonomyVersion?: string;
@@ -15,6 +17,8 @@ interface ContextBarProps {
 
 export function ContextBar({
   datasetName,
+  datasetIdOverride,
+  snapshotName = 'Chưa chọn',
   isReadOnly = false,
   guidelineVersion = '—',
   taxonomyVersion = '—',
@@ -29,8 +33,8 @@ export function ContextBar({
         {/* Chip Dataset */}
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Dataset:</span>
-          <span className="lx-chip__v">{datasetId === null ? 'Chưa chọn' :
-            (datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetId}`)}</span>
+          <span className="lx-chip__v">{(datasetIdOverride ?? datasetId) === null ? 'Chưa chọn' :
+            (datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${datasetIdOverride ?? datasetId}`)}</span>
           {isReadOnly && <span className="lx-tag lx-tag--ro">read-only</span>}
         </div>
 
@@ -42,7 +46,7 @@ export function ContextBar({
 
         <div className="lx-chip lx-chip--static">
           <span className="lx-chip__k">Snapshot:</span>
-          <span className="lx-chip__v">Chưa chọn</span>
+          <span className="lx-chip__v">{snapshotName}</span>
         </div>
 
         {/* Chip Guideline */}

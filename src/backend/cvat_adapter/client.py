@@ -132,6 +132,11 @@ class CvatReadClient:
             max_pages=max_pages,
         )
 
+    def list_projects(
+        self, *, page_size: int = 100, max_pages: int = 1000
+    ) -> list[dict[str, object]]:
+        return self._list("api/projects", page_size=page_size, max_pages=max_pages)
+
     def list_labels(
         self, *, project_id: int, page_size: int = 100, max_pages: int = 1000
     ) -> list[dict[str, object]]:
