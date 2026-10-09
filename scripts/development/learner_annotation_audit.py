@@ -29,6 +29,7 @@ BDD100K_CATEGORIES = {
     "traffic light",
     "traffic sign",
 }
+YOLO_BOUNDARY_EPSILON = 1e-6
 
 
 def parse_args() -> argparse.Namespace:
@@ -130,11 +131,85 @@ def _validate_yolo_line(line: str, source: str) -> tuple[int, list[float]]:
 def _box_inside_image(coordinates: list[float]) -> bool:
     x, y, width, height = coordinates
     return (
-        x - width / 2 >= 0
-        and x + width / 2 <= 1
-        and y - height / 2 >= 0
-        and y + height / 2 <= 1
+        x - width / 2 >= -YOLO_BOUNDARY_EPSILON
+        and x + width / 2 <= 1 + YOLO_BOUNDARY_EPSILON
+        and y - height / 2 >= -YOLO_BOUNDARY_EPSILON
+        and y + height / 2 <= 1 + YOLO_BOUNDARY_EPSILON
     )
+
+
+def _pixel_bbox(coordinates: list[float], width: int, height: int) -> list[float]:
+    """Convert YOLO coordinates and remove export-only boundary quantization."""
+
+    x, y, box_width, box_height = coordinates
+    return [
+        max(0.0, (x - box_width / 2) * width),
+        max(0.0, (y - box_height / 2) * height),
+        min(float(width), (x + box_width / 2) * width),
+        min(float(height), (y + box_height / 2) * height),
+    ]
+
+
+def _archive_dataset(
+    archive: zipfile.ZipFile, path: Path
+) -> tuple[dict[int, str], list[str], dict[str, str]]:
+    """Read CVAT YOLO dataset or annotations-only exports.
+
+    Dataset exports embed ``images/<split>`` while annotations-only exports
+    reference the same images from ``train.txt``/``val.txt``. T-019 resolves
+    the latter against the official BDD100K image tree.
+    """
+
+    files = {name for name in archive.namelist() if not name.endswith("/")}
+    if "data.yaml" not in files:
+        raise ValueError(f"{path.name}: missing data.yaml")
+    class_names = _class_names(_read_text(archive, "data.yaml"), path.name)
+    list_files = [name for name in ("train.txt", "val.txt") if name in files]
+    if not list_files:
+        raise ValueError(f"{path.name}: missing train.txt or val.txt")
+
+    image_names: list[str] = []
+    label_entries: list[str] = []
+    for list_file in list_files:
+        split = PurePosixPath(list_file).stem
+        listed = [
+            PurePosixPath(line.strip()).name
+            for line in _read_text(archive, list_file).splitlines()
+            if line.strip()
+        ]
+        if any(
+            PurePosixPath(name).suffix.lower() not in IMAGE_SUFFIXES for name in listed
+        ):
+            raise ValueError(f"{path.name}: {list_file} contains a non-image path")
+        embedded = sorted(
+            PurePosixPath(name).name
+            for name in files
+            if PurePosixPath(name).parent == PurePosixPath(f"images/{split}")
+            and PurePosixPath(name).suffix.lower() in IMAGE_SUFFIXES
+        )
+        if embedded and set(embedded) != set(listed):
+            raise ValueError(f"{path.name}: {list_file} does not match images/{split}")
+        image_names.extend(listed)
+        label_entries.extend(
+            sorted(
+                name
+                for name in files
+                if PurePosixPath(name).parent == PurePosixPath(f"labels/{split}")
+                and PurePosixPath(name).suffix.lower() == ".txt"
+            )
+        )
+
+    folded_names = [name.casefold() for name in image_names]
+    if len(set(folded_names)) != len(folded_names):
+        raise ValueError(f"{path.name}: duplicate image names")
+    image_stems = {PurePosixPath(name).stem for name in image_names}
+    label_by_stem = {PurePosixPath(name).stem: name for name in label_entries}
+    if len(label_by_stem) != len(label_entries):
+        raise ValueError(f"{path.name}: duplicate label stems")
+    orphan_labels = sorted(set(label_by_stem) - image_stems)
+    if orphan_labels:
+        raise ValueError(f"{path.name}: orphan labels: {', '.join(orphan_labels)}")
+    return class_names, sorted(image_names, key=str.casefold), label_by_stem
 
 
 def audit_export(
@@ -143,41 +218,8 @@ def audit_export(
     if not path.is_file():
         raise FileNotFoundError(path)
     with zipfile.ZipFile(path) as archive:
-        files = {name for name in archive.namelist() if not name.endswith("/")}
-        if "data.yaml" not in files or "train.txt" not in files:
-            raise ValueError(f"{path.name}: missing data.yaml or train.txt")
-        class_names = _class_names(_read_text(archive, "data.yaml"), path.name)
-        image_entries = sorted(
-            name
-            for name in files
-            if PurePosixPath(name).parent == PurePosixPath("images/train")
-            and PurePosixPath(name).suffix.lower() in IMAGE_SUFFIXES
-        )
-        label_entries = sorted(
-            name
-            for name in files
-            if PurePosixPath(name).parent == PurePosixPath("labels/train")
-            and PurePosixPath(name).suffix.lower() == ".txt"
-        )
-        if not image_entries:
-            raise ValueError(f"{path.name}: no images/train entries")
-
-        image_by_stem = {PurePosixPath(name).stem: name for name in image_entries}
-        if len(image_by_stem) != len(image_entries):
-            raise ValueError(f"{path.name}: duplicate image stems")
-        label_by_stem = {PurePosixPath(name).stem: name for name in label_entries}
-        orphan_labels = sorted(set(label_by_stem) - set(image_by_stem))
-        if orphan_labels:
-            raise ValueError(f"{path.name}: orphan labels: {', '.join(orphan_labels)}")
-
-        train_names = {
-            PurePosixPath(line.strip()).name
-            for line in _read_text(archive, "train.txt").splitlines()
-            if line.strip()
-        }
-        image_names = {PurePosixPath(name).name for name in image_entries}
-        if train_names != image_names:
-            raise ValueError(f"{path.name}: train.txt does not match images/train")
+        class_names, names, label_by_stem = _archive_dataset(archive, path)
+        image_by_stem = {PurePosixPath(name).stem: name for name in names}
 
         boxes = 0
         annotated_stems: set[str] = set()
@@ -210,7 +252,6 @@ def audit_export(
                     )
 
         membership: Counter[str] = Counter()
-        names = sorted(image_names, key=str.casefold)
         for name in names:
             folded = name.casefold()
             if folded in listings["train"]:
@@ -228,8 +269,8 @@ def audit_export(
             {
                 "file": path.name,
                 "sha256": sha256(path),
-                "images": len(image_entries),
-                "label_files": len(label_entries),
+                "images": len(names),
+                "label_files": len(label_by_stem),
                 "boxes": boxes,
                 "classes": {
                     str(key): class_counts[key] for key in sorted(class_counts)
@@ -357,28 +398,14 @@ def materialize_bdd100k_manifest(
 
     for export in exports:
         with zipfile.ZipFile(export) as archive:
-            class_names = _class_names(_read_text(archive, "data.yaml"), export.name)
+            class_names, image_names, label_by_stem = _archive_dataset(archive, export)
             if expected_names is None:
                 expected_names = class_names
             elif class_names != expected_names:
                 raise ValueError(
                     f"{export.name}: taxonomy differs across learner exports"
                 )
-            files = {name for name in archive.namelist() if not name.endswith("/")}
-            image_entries = sorted(
-                name
-                for name in files
-                if PurePosixPath(name).parent == PurePosixPath("images/train")
-                and PurePosixPath(name).suffix.lower() in IMAGE_SUFFIXES
-            )
-            label_by_stem = {
-                PurePosixPath(name).stem: name
-                for name in files
-                if PurePosixPath(name).parent == PurePosixPath("labels/train")
-                and PurePosixPath(name).suffix.lower() == ".txt"
-            }
-            for image_entry in image_entries:
-                image_name = PurePosixPath(image_entry).name
+            for image_name in image_names:
                 folded = image_name.casefold()
                 split = "train" if folded in listings["train"] else "val"
                 used_splits.add(split)
@@ -387,7 +414,7 @@ def materialize_bdd100k_manifest(
                     width, height = image.size
 
                 annotations: list[dict[str, Any]] = []
-                label_entry = label_by_stem.get(PurePosixPath(image_entry).stem)
+                label_entry = label_by_stem.get(PurePosixPath(image_name).stem)
                 if label_entry:
                     for line_number, line in enumerate(
                         _read_text(archive, label_entry).splitlines(), start=1
@@ -400,12 +427,9 @@ def materialize_bdd100k_manifest(
                         annotations.append(
                             {
                                 "label": class_names[class_id],
-                                "bbox": [
-                                    (x - box_width / 2) * width,
-                                    (y - box_height / 2) * height,
-                                    (x + box_width / 2) * width,
-                                    (y + box_height / 2) * height,
-                                ],
+                                "bbox": _pixel_bbox(
+                                    [x, y, box_width, box_height], width, height
+                                ),
                             }
                         )
                 images.append(
@@ -516,12 +540,9 @@ def materialize_labelx_manifest(
                         annotations.append(
                             {
                                 "label": class_names[class_id],
-                                "bbox": [
-                                    (x - box_width / 2) * width,
-                                    (y - box_height / 2) * height,
-                                    (x + box_width / 2) * width,
-                                    (y + box_height / 2) * height,
-                                ],
+                                "bbox": _pixel_bbox(
+                                    [x, y, box_width, box_height], width, height
+                                ),
                             }
                         )
                 if label_entry and any(

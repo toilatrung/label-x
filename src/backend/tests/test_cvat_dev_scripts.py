@@ -146,6 +146,24 @@ def write_yolo_export(
             archive.writestr(f"labels/train/{stem}.txt", content)
 
 
+def write_annotations_only_yolo_export(
+    path: Path,
+    images: list[str],
+    labels: dict[str, str],
+) -> None:
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr(
+            "data.yaml",
+            "names:\n  0: car\npath: .\nval: val.txt\n",
+        )
+        archive.writestr(
+            "val.txt",
+            "".join(f"data/images/val/{name}\n" for name in images),
+        )
+        for stem, content in labels.items():
+            archive.writestr(f"labels/val/{stem}.txt", content)
+
+
 def test_learner_audit_classifies_by_official_bdd100k_names(tmp_path: Path) -> None:
     module = load_script("learner_annotation_audit")
     official = tmp_path / "bdd100k"
@@ -281,4 +299,38 @@ def test_bdd100k_manifest_uses_official_image_and_reports_missing_annotations(
     assert importer.validate_sample(official, manifest) == [
         official / "val" / "missing-val.jpg",
         official / "val" / "official-val.jpg",
+    ]
+
+
+def test_annotations_only_export_uses_official_bdd100k_images(tmp_path: Path) -> None:
+    audit_module = load_script("learner_annotation_audit")
+    cvat_module = load_script("cvat_sample")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    Image.new("RGB", (20, 10)).save(official / "val" / "official-val.jpg")
+    export = tmp_path / "learner-annotations.zip"
+    write_annotations_only_yolo_export(
+        export,
+        ["official-val.jpg"],
+        {"official-val": "0 0.090988 0.505083 0.181977 0.322806\n"},
+    )
+
+    receipt = audit_module.build_receipt([export], official)
+    assert receipt["totals"]["membership"] == {
+        "train": 0,
+        "val": 1,
+        "not_bdd100k": 0,
+    }
+    assert receipt["totals"]["boxes"] == 1
+    assert receipt["totals"]["out_of_bounds_boxes"] == 0
+    manifest = audit_module.materialize_bdd100k_manifest(
+        [export], receipt, official, tmp_path / "manifest.json"
+    )
+    assert manifest["images"][0]["file_name"] == "val/official-val.jpg"
+    assert manifest["images"][0]["learner_annotation_status"] == "annotated"
+    assert manifest["images"][0]["annotations"][0]["label"] == "car"
+    assert manifest["images"][0]["annotations"][0]["bbox"][0] == 0.0
+    assert cvat_module.validate_sample(official, manifest) == [
+        official / "val" / "official-val.jpg"
     ]
