@@ -57,20 +57,102 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="current-state">Current State</h2>
 <ul>
-<li><strong>Context Revision</strong>: <code>4</code></li>
+<li><strong>Context Revision</strong>: <code>14</code></li>
 <li><strong>Context Status</strong>: <code>current</code></li>
-<li><strong>Last Updated</strong>: <code>2026-10-06</code></li>
-<li><strong>Updated By</strong>: <code>claude-code (coordinator) cho Trịnh Quang Trung</code></li>
-<li><strong>Update Trigger</strong>: <code>task-registration-wave-1</code></li>
+<li><strong>Last Updated</strong>: <code>2026-10-09</code></li>
+<li><strong>Updated By</strong>: <code>claude-code (integrator) cho Trịnh Quang Trung</code></li>
+<li><strong>Update Trigger</strong>: <code>m-01-resolve (gộp file riêng, đăng ký T-020…T-022)</code></li>
 <li><strong>Planning Roadmap ID</strong>: <code>R-001</code></li>
-<li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_APPROVED</code></li>
+<li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_ACTIVE</code> (từ 2026-10-08)</li>
 <li><strong>Onboarding State</strong>: <code>execution-started</code></li>
-<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-04, E-10 (EPIC_IN_PROGRESS); còn lại EPIC_PROPOSED</code></li>
-<li><strong>Active Task IDs</strong>: <code>T-001, T-002, T-003, T-004, T-005 (đợt 1, hạn 01:30 2026-10-07)</code></li>
-<li><strong>Active Blocker IDs</strong>: <code>BLOCKER-014, BLOCKER-015, BLOCKER-022</code></li>
-<li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004</code></li>
-<li><strong>Active Risk IDs</strong>: <code>RISK-001…RISK-011</code></li>
-<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing)</code></li>
-<li><strong>Current Session ID</strong>: <code>SES-003</code></li>
+<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-10 (EPIC_IN_PROGRESS); E-04 (EPIC_BLOCKED, BLOCKER-024); còn lại EPIC_PROPOSED</code></li>
+<li><strong>Active Task IDs</strong>: <code>T-004 (blocked, BLOCKER-024). T-001, T-002, T-003, T-005 done 2026-10-08 (QA passed; make check trên Postgres đạt; T-005 có bằng chứng CPU inference)</code></li>
+<li><strong>In Review</strong>: <code>T-006…T-018 đã merge vào develop (PR #31, #46…#60) hoặc đang review trên nhánh fix/M-01-RESOLVE (T-016, T-020, T-021); chưa task nào có QA độc lập từ T-008 trở đi; T-022 in-progress</code></li>
+<li><strong>Pending Task IDs</strong>: <code>không còn task M-01 pending; T-016/T-020/T-021 chờ review và merge vào develop; F-05, F-06 của audit flow-2026-10-09 chờ PO (xem T-022)</code></li>
+<li><strong>Active Blocker IDs</strong>: <code>BLOCKER-015, BLOCKER-022, BLOCKER-024, BLOCKER-025</code></li>
+<li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007 (proposed), DEC-008, DEC-010, DEC-012</code></li>
+<li><strong>Active Risk IDs</strong>: <code>RISK-001…RISK-012</code></li>
+<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing), CR-105 (implementing), CR-106 (implemented), CR-107 (implemented)</code></li>
+<li><strong>Current Session ID</strong>: <code>SES-006</code></li>
+</ul>
+<h2 id="wave-1-integration">Wave 1 Integration</h2>
+<p>Gộp ngày 2026-10-07 theo CR-100 từ 5 file <code>current-context-@&lt;user&gt;.html</code> (đã gộp vào <code>.agent/execution/current-context.html</code> và xoá). Mọi PR task nhắm <code>develop</code> (CR-104); chỉ PO merge <code>develop</code> sang <code>main</code>. Cả 5 PR (#19–#23) đã squash-merge vào <code>develop</code>; review/QA tại <code>.agent/reports/review/</code> và <code>.agent/reports/qa/</code>.</p>
+<table>
+<thead><tr><th>Task</th><th>Epic</th><th>Owner</th><th>Branch</th><th>Base Commit</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td><code>T-001</code></td><td><code>E-01</code></td><td>@toilatrung</td><td><code>feat/T-001-e01-contract</code></td><td><code>28be098</code></td><td><code>done</code></td></tr>
+<tr><td><code>T-002</code></td><td><code>E-02</code></td><td>@tdt2112</td><td><code>feat/T-002-e02-frontend-shell</code></td><td><code>4a68cce</code> (mốc sau khi ghép <code>origin/develop</code>)</td><td><code>done</code></td></tr>
+<tr><td><code>T-003</code></td><td><code>E-03</code></td><td>@ducha180104</td><td><code>feat/T-003-e03-guideline</code></td><td><code>28be098</code></td><td><code>done</code></td></tr>
+<tr><td><code>T-004</code></td><td><code>E-04</code></td><td>@duy12345-6789</td><td><code>feat/T-004-e04-cvat-adapter</code></td><td><code>28be098</code></td><td><code>blocked (BLOCKER-024)</code></td></tr>
+<tr><td><code>T-005</code></td><td><code>E-10</code></td><td>@vietanhhhhhh2003</td><td><code>feat/T-005-e10-detector-worker</code></td><td><code>28be098</code></td><td><code>done</code></td></tr>
+</tbody>
+</table>
+<h2 id="wave-2-integration">Wave 2 Integration</h2>
+<p>Gộp ngày 2026-10-09 theo CR-100 từ 4 file <code>current-context-@&lt;user&gt;.html</code>, 5 file <code>task-board-@&lt;user&gt;.html</code> và 4 file <code>task-commit-map-@&lt;user&gt;.html</code> (@ducha180104, @duy12345-6789, @tdt2112, @vietanhhhhhh2003, @toilatrung); các tệp riêng đã xoá. Báo cáo implementation/review riêng được đổi thành tên chuẩn <code>T-0xx.html</code>; DEC-011 đổi thành <code>DEC-011.html</code>; T-014 giữ báo cáo chính và bổ sung phần riêng.</p>
+<table>
+<thead><tr><th>Task</th><th>Epic</th><th>Owner</th><th>Branch</th><th>Base Commit</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td><code>T-010</code></td><td><code>E-01</code></td><td>@tdt2112</td><td><code>—</code></td><td><code>decfe71</code></td><td><code>review</code> (PR #47)</td></tr>
+<tr><td><code>T-012</code></td><td><code>E-02</code></td><td>@ducha180104</td><td><code>feat/T-012-e02-rbac-scope</code></td><td><code>49fc126</code></td><td><code>review</code> (PR #56)</td></tr>
+<tr><td><code>T-013</code></td><td><code>E-02</code></td><td>@duy12345-6789</td><td><code>feat/T-013-e02-audit-log</code></td><td><code>22467d2</code></td><td><code>review</code> (PR #53)</td></tr>
+<tr><td><code>T-014</code></td><td><code>E-02</code></td><td>@vietanhhhhhh2003</td><td><code>feat/T-014-object-storage</code></td><td><code>bc07d28</code></td><td><code>review</code> (PR #50)</td></tr>
+<tr><td><code>T-015</code></td><td><code>E-02</code></td><td>@duy12345-6789</td><td><code>—</code></td><td><code>22467d2</code></td><td><code>review</code> (PR #49)</td></tr>
+<tr><td><code>T-017</code></td><td><code>E-03</code></td><td>@ducha180104</td><td><code>—</code></td><td><code>—</code></td><td><code>review</code> (PR #59)</td></tr>
+<tr><td><code>T-018</code></td><td><code>E-03</code></td><td>@ducha180104 (executor @toilatrung)</td><td><code>feat/T-018-e03-models-guidelines</code></td><td><code>3c5ab60</code></td><td><code>review</code> (PR #60)</td></tr>
+</tbody>
+</table>
+<p>Cột Branch và Base Commit lấy từ file riêng; "—" là file riêng không ghi. Nhánh có thể đã bị xoá sau squash-merge.</p>
+<h2 id="carried-notes">Carried Notes</h2>
+<p>Ghi chú còn hiệu lực chép từ file riêng (bỏ hướng dẫn quy trình đã lỗi thời như "mở PR vào <code>main</code>").</p>
+<h3 id="notes-t-001">T-001 — @toilatrung</h3>
+<p><strong>2026-10-07</strong>: T-001 chuyển <code>review</code>. Commit <code>545eae1</code>; báo cáo <a href="../reports/implementation/T-001.html">T-001.html</a>. Còn lại của E-01 ngoài T-001: engine interface, ADR KPI-2b, cập nhật SRS (frame <code>incomplete</code>, FR-GTE-01, báo cáo hai phần), operation quyết định/phân xử/rework trong OpenAPI.</p>
+<ul>
+</ul>
+<h3 id="notes-t-002">T-002 — @tdt2112</h3>
+<ul>
+<li>PR #23 đã mở vào <code>develop</code> từ nhánh T-002, head đã push do người thực hiện xác nhận là <code>e7f2058</code>. CI #52 của bản cũ đạt 39/39 frontend và 12/12 backend. Đã nhận requested changes của @toilatrung và sửa: tách 403 cấp thao tác khỏi guard toàn trang, chặn mock trong production, bỏ Dataset #1 mặc định, hiện lỗi session trên login và dọn các điểm nhỏ. Bản sửa đạt 51/51 kiểm thử frontend, lint/typecheck/build. Người thực hiện xác nhận đã lưu commit <code>10bfad7</code> trên nhánh riêng, working tree sạch và chưa push; còn chờ lưu cập nhật tài liệu, push, CI mới và review lại.</li>
+<li>Trạng thái T-002 là <code>review</code> vì đã có mã và bằng chứng cục bộ. PR phải mở vào <code>develop</code> theo CR-104 trên Issue #14; chưa được đánh dấu <code>done</code> trước khi CI và duyệt PR đạt.</li>
+<li>Review độc lập vẫn cần Trịnh Quang Trung hoặc Nguyễn Đức Hà xác nhận sau sửa. Mail review do người thực hiện cung cấp cho biết CR-105 đã bỏ cổng pr-approval và check approval đỏ có thể bỏ qua; checkout hiện chưa có CR-105, nên không tự sửa governance/CI chung. Vitest/jsdom/testing-library chưa có trong DEC-001; PO sẽ xác nhận theo review.</li>
+<li>Chọn Dataset nằm ngoài T-002. Phiên có grant Dataset cụ thể dùng ID từ grant; phiên chỉ có quyền toàn hệ thống giữ Dataset null/Chưa chọn. Các task nghiệp vụ sau phải chọn và xác minh Dataset trước khi thao tác.</li>
+</ul>
+<h3 id="notes-t-003">T-003 — @ducha180104</h3>
+<ul>
+</ul>
+<h3 id="notes-t-004">T-004 — @duy12345-6789</h3>
+<ul>
+<li>T-004 đã audit bốn CVAT YOLO export learner, manual import tập hợp lệ vào task 22/job 19 và hash hai lần ổn định; task ở trạng thái <code>review</code>, <code>BLOCKER-023</code> resolved. PR vẫn mở vào <code>develop</code> theo CR-104.</li>
+</ul>
+<h3 id="notes-t-005">T-005 — @vietanhhhhhh2003</h3>
+<ul>
+<li>07/10/2026: code/test và image Docker đã build; NVIDIA Container Toolkit 1.20.1 hoạt động trong WSL. Checkpoint được phục hồi từ Wayback theo comment PO, khớp MD5 gốc và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>.</li>
+<li>07/10/2026: inference GPU pass trên 10 ảnh BDD100K validation, sinh 342 detection; 12,8189 giây tổng, 1,2819 giây/ảnh, batch 1 trên NVIDIA MX330 2 GB.</li>
+<li>07/10/2026: đã bổ sung publish/fetch S3-compatible fail-closed; checkpoint 165.899.860 byte đã upload và tải ngược từ object key content-addressed trong bucket <code>labelx-models</code>, SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code> sau round-trip khớp manifest. T-005 chuyển <code>review</code>.</li>
+<li>07/10/2026: commit triển khai <code>1169a60</code>; chuẩn bị PR từ <code>feat/T-005-e10-detector-worker</code> vào <code>develop</code>.</li>
+<li>07/10/2026: đã mở <a href="https://github.com/toilatrung/label-x/pull/22">PR #22</a> vào <code>develop</code>; chờ reviewer nghiệm thu theo CR-102.</li>
+</ul>
+<h3 id="notes-t-010">T-010 — @tdt2112</h3>
+<ul>
+<li>07/10/2026: triển khai hoàn tất, 119 test frontend + 98 backend Postgres + 10 detector đạt, build đạt; có báo cáo implementation và review kỹ thuật độc lập; đã merge qua PR #47. Chưa có QA độc lập.</li>
+</ul>
+<h3 id="notes-t-012">T-012 — @ducha180104</h3>
+<ul>
+<li>RBAC theo vai trò + scope dataset đã merge qua PR #56 (7a46665). Phụ thuộc T-011 (PR #31) và T-013 (PR #53). DEC-011 ghi quyết định liên quan. Quy ước: PR của Hà do Trịnh Quang Trung duyệt (CR-102). Chưa có review/QA độc lập.</li>
+</ul>
+<h3 id="notes-t-013">T-013 — @duy12345-6789</h3>
+<ul>
+<li>T-011 đã merge (PR #31). Commit triển khai <code>9ed81b5</code>; sửa review <code>a2003e6</code> che <code>private_key</code>, <code>session_key</code> và password trong connection URL. Backend 132 test và detector 10 test đạt lúc đó; đã merge qua PR #53 (cc27674).</li>
+<li>T-017 chưa merge khi T-013 bắt đầu, nên follow-up CR-107 chưa áp dụng cho T-013.</li>
+</ul>
+<h3 id="notes-t-014">T-014 — @vietanhhhhhh2003</h3>
+<ul>
+<li>08/10/2026: hoàn tất tại commit <code>78af2d2</code>, squash-merge PR #50 (49fc126). Unit test fake S3 và integration test SeaweedFS đạt; full make check lúc đó: backend 114 passed/1 skipped, frontend 58 passed, detector 10 passed, framework validation pass. BLOCKER-014 chỉ áp dụng cho GC/retention tương lai. Chờ QA độc lập.</li>
+</ul>
+<h3 id="notes-t-015">T-015 — @duy12345-6789</h3>
+<ul>
+<li>08/10/2026: JSON request logging và lọc secret; commit <code>9005250</code>; đã merge qua PR #49 (22467d2). Chưa có review/QA độc lập.</li>
+</ul>
+<h3 id="notes-t-017-t-018">T-017, T-018 — @ducha180104 / @toilatrung</h3>
+<ul>
+<li>T-017 (PR #59, 3c5ab60) và T-018 (PR #60, 9f9b509) đã merge. T-018 được chuẩn bị bởi @toilatrung theo yêu cầu PO, owner Nguyễn Đức Hà; phụ thuộc T-016 nay do nhánh <code>fix/M-01-RESOLVE</code> thực hiện. Chưa có review/QA độc lập.</li>
 </ul>
 </article></main></body></html>

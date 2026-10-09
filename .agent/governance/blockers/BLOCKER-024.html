@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-024: Annotation người học của T-004 không nằm trên ảnh BDD100K — LabelX</title>
+<meta name="labelx:id" content="blocker-024">
+<meta name="labelx:title" content="Annotation người học của T-004 không nằm trên ảnh BDD100K">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, data, learner-annotation, bdd100k, t-004]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-024</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>blocker-024</span><b>title</b><span>Annotation người học của T-004 không nằm trên ảnh BDD100K</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, data, learner-annotation, bdd100k, t-004]</span><b>priority</b><span>1</span></div>
+<h1 id="blocker-024">BLOCKER-024: Annotation người học của T-004 không nằm trên ảnh BDD100K</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Blocker ID</strong>: <code>BLOCKER-024</code></li>
+<li><strong>Title</strong>: <code>Annotation người học của T-004 không nằm trên ảnh BDD100K</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Reporter</strong>: <code>claude-code (reviewer/integrator) cho Trịnh Quang Trung</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Blocker Type</strong>: <code>dependency</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Target Resolution Date</strong>: <code>not-set</code></li>
+</ul>
+<h2 id="blocking-condition">Blocking Condition</h2>
+<p>Bộ annotation người học dùng cho T-004 (bốn CVAT YOLO export, lớp <code>GreenSM</code>; 252 ảnh duy nhất, 311 dòng bbox) được kiểm thành viên BDD100K bằng <code>scripts/development/learner_annotation_audit.py</code>: <strong>val 0 / train 0 / ngoài BDD100K 252</strong>. Task CVAT mẫu đã nạp (task 22/job 19, 249 ảnh, 305 box sau khi loại 3 box vượt biên) vì vậy không chứa ảnh BDD100K.</p>
+<p>Hệ quả: mục tiêu T-004 "task mẫu chứa ảnh BDD100K và annotation người học" chưa đạt, và giả định ground truth là nhãn BDD100K (CR-101) không áp dụng được cho dữ liệu này. Phần kỹ thuật của T-004 (CVAT dev pin phiên bản, adapter chỉ đọc, SHA-256 ổn định) đã đạt và không bị ảnh hưởng.</p>
+<p><strong>Quyết định PO ngày 2026-10-07</strong>: T-004 chuyển <code>blocked</code>. PO sẽ cung cấp sau bộ annotation người học trên ảnh BDD100K; bộ này <strong>chỉ phủ một số frame</strong>, không phủ 100% tệp.</p>
+<p>Bằng chứng: <code>.agent/reports/implementation/T-004.html</code> (mục audit learner); <code>.agent/reports/review/T-004.html</code>; <code>.agent/governance/blockers/BLOCKER-023.html</code>.</p>
+<h2 id="impact">Impact</h2>
+<ul>
+<li><strong>Blocked Epics or Tasks</strong>: <code>T-004 (E-04); hạ nguồn: E-05 snapshot dữ liệu thật, E-08/E-09 QC Run trên dữ liệu thật</code></li>
+<li><strong>Blocked Deliverables</strong>: task CVAT mẫu BDD100K + annotation người học; số đếm val/train có nghĩa cho kiểm leakage (AS-03)</li>
+<li><strong>Schedule or Quality Impact</strong>: pipeline M-02 chỉ chạy được trên dữ liệu ghi sẵn/không phải BDD100K cho tới khi có bộ mới; vì bộ mới chỉ phủ một phần frame, engine và báo cáo phải xử lý frame không có annotation người học (không coi là lỗi người học).</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Records</strong>: <code>.agent/execution/task-board.html#t-004</code>, <code>.agent/planning/epics.html</code></li>
+<li><strong>Issues</strong>: <code>none</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.html</code>, <code>.agent/governance/decisions/DEC-007.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+</ul>
+<h2 id="resolution-plan">Resolution Plan</h2>
+<ul>
+<li><strong>Required Action</strong>: PO cung cấp bộ annotation người học trên ảnh BDD100K (một phần frame); owner T-004 nạp lại bằng <code>scripts/development/cvat_sample.py</code>, chạy lại audit thành viên BDD100K, đọc adapter hai lần cho cùng SHA-256 và ghi số ảnh val/train, số frame có/không có annotation vào report T-004.</li>
+<li><strong>Responsible Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code> cấp dữ liệu; <code>Lê Duy Nam (@duy12345-6789)</code> nạp và audit</li>
+<li><strong>Dependency or Approval</strong>: <code>Product Owner</code></li>
+<li><strong>Workaround</strong>: <code>Dùng fixture ghi sẵn của adapter cho test; không dùng tập GreenSM làm dữ liệu đánh giá</code></li>
+<li><strong>Verification Method</strong>: Report T-004 cập nhật có số đếm val/train &gt; 0 cho tập mới, hash hai lần trùng, link commit.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
+<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not mark status <code>resolved</code> based only on a proposed action.</li>
+<li>Do not continue blocked work through an unauthorized workaround.</li>
+<li>Do not omit affected epic or task links.</li>
+<li>Do not fabricate resolution evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/blockers/BLOCKER-024.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

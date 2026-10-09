@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-018 — ModelsGuidelines và giao diện Next.js — LabelX</title>
+<meta name="labelx:id" content="implementation-t-018">
+<meta name="labelx:title" content="T-018 — ModelsGuidelines và giao diện Next.js">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="guideline">
+<meta name="labelx:tags" content="[implementation, report, template]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / implementation-t018-toilatrung</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-018</span><b>title</b><span>T-018 — ModelsGuidelines và giao diện Next.js</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>templates</span><b>tags</b><span>[implementation, report, template]</span><b>priority</b><span>3</span></div>
+<h1 id="implementation-t018-toilatrung">T-018 — ModelsGuidelines và giao diện Next.js</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Use this template to provide auditable evidence of work performed by an Executor Agent for one authorized task.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-018</code></li>
+<li><strong>Title</strong>: <code>ModelsGuidelines trên API thật và cập nhật UI theo thiết kế được duyệt</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@DucHa180104)</code></li>
+<li><strong>Executor</strong>: <code>Codex theo yêu cầu @toilatrung</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>T-018</code></li>
+<li><strong>Epic ID</strong>: <code>E-03</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-09</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>GuidelineRuleLookup export, tra Rule ID/version và family/class; màn guideline trên session/CSRF thật; cập nhật token, shell, dropdown, FlowNav và responsive theo thiết kế đã duyệt.</code></li>
+<li><strong>Not Implemented</strong>: <code>Nghiệp vụ mới Queue/Workspace (E-14), quản lý mô hình và versioning guideline theo Snapshot nằm ngoài T-018. Thiết kế Workspace giữ nguyên chức năng và thông tin ban đầu.</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead>
+<tr>
+<th>File or Artifact</th>
+<th>Change Summary</th>
+<th>Task ID</th>
+</tr>
+</thead>
+<tbody><tr><td>src/frontend/src/components/guidelines/GuidelineRuleLookup.tsx</td><td>Lookup API typed list/detail, hủy request, cache theo user/context, id input duy nhất, bảo vệ quyền khi dùng độc lập; chuẩn hóa context chưa có Rule ID/version để tránh lỗi khởi tạo.</td><td>T-018</td></tr><tr><td>src/frontend/src/app/configuration/guidelines/page.tsx</td><td>Trang Models và Guidelines dùng component và quyền từ session thật.</td><td>T-018</td></tr><tr><td>src/frontend/src/components/layout/ và src/styles/</td><td>Shell graphite, module theo quyền, icon nguồn mẫu, keyboard/escape focus, context wrap, FlowNav sau tiêu đề.</td><td>T-018 + yêu cầu UI</td></tr><tr><td>docs/design/</td><td>Thiết kế được duyệt; Workspace giữ nguyên nội dung, controls và render logic ban đầu.</td><td>Yêu cầu UI</td></tr><tr><td>src/backend/guideline/views.py</td><td>Annotation GuidelineVersion | None cho mapping list; không thay hành vi runtime.</td><td>T-018: sửa lỗi mypy trong kiểm tra bắt buộc</td></tr></tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#t-018</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board-@toilatrung.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html; UI được người dùng duyệt và yêu cầu triển khai trực tiếp.</code></li>
+<li><strong>Risks or Blockers</strong>: <code>T-016 (#42) chưa có bằng chứng PR task riêng đã merge. Giữ task pending và PR draft cho tới khi phụ thuộc được xác minh.</code></li>
+<li><strong>Review Request</strong>: <code>@DucHa180104; chưa có review độc lập hoặc phê duyệt.</code></li>
+<li><strong>Commits</strong>: <code>dbc03e3 (triển khai), ab7edef (context Workspace) — feat/T-018-e03-models-guidelines; xem task-commit-map-@toilatrung.html.</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr><td>git fetch; git worktree add -b feat/T-018-e03-models-guidelines /tmp/labelx-t018 origin/develop</td><td>passed</td><td>Base 3c5ab60; giữ nguyên worktree H:/label-x.</td></tr><tr><td>migrate; load_guideline qua actor qc_admin; tạo fixture Reviewer/Annotator local</td><td>passed</td><td>PostgreSQL Docker, 13 rules version v1; mật khẩu ngoài repo.</td></tr><tr><td>node scripts/development/t018-browser-check.cjs</td><td>passed</td><td>docs/design/evidence/T-018/browser-evidence.json; không intercept/mock API.</td></tr></tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr><td>make check</td><td>passed</td><td>Ruff; mypy 63 files; frontend lint/typecheck; backend 236 passed / 1 opt-in skip; frontend 135 passed; detector 10 passed; FRAMEWORK_VALIDATION_PASS.</td></tr><tr><td>npm run build</td><td>passed</td><td>Next.js 16.3.8 production; font Inter/JetBrains Mono tải thành công.</td></tr><tr><td>Chromium Reviewer: login, rules, ID/version, family/class, dropdown, mobile</td><td>passed</td><td>API thật localhost:8000; desktop 1345x1077, mobile 390x844; không pageerror. Console có HTTP lỗi dự kiến từ kiểm tra session chưa đăng nhập và rule 404.</td></tr><tr><td>Annotator URL guideline + API trực tiếp</td><td>passed</td><td>Frontend chặn trước request; API trả 403 FORBIDDEN.</td></tr><tr><td>Bảo toàn Review Workspace</td><td>passed</td><td>Nội dung, form, SVG và render logic ban đầu giữ nguyên; class/layout/FlowNav/viewport thay đổi.</td></tr></tbody>
+</table>
+<h3 id="reuse">Tái sử dụng trong Workspace</h3><pre><code>&lt;GuidelineRuleLookup compact initialFilters={{ ruleId: issue.rule_id ?? "", version: guidelineVersion }} /&gt;
+&lt;GuidelineRuleLookup compact initialFilters={{ family: issue.family, className: object.class_name }} /&gt;</code></pre>
+<p>Component tự kiểm quyền khi dùng độc lập. Thay initialFilters để chuyển Issue sẽ tạo context mới và bỏ dữ liệu cũ. Với Rule ID, lookup dùng endpoint detail; family/class chỉ áp dụng cho endpoint list.</p>
+<h3 id="browser-evidence">Ảnh và bằng chứng trình duyệt</h3><ul><li><a href="../../../docs/design/evidence/T-018/reviewer-dropdown.png">Reviewer — dropdown</a></li><li><a href="../../../docs/design/evidence/T-018/reviewer-exact-rule.png">Reviewer — Rule ID/version</a></li><li><a href="../../../docs/design/evidence/T-018/reviewer-mobile.png">Reviewer — mobile</a></li><li><a href="../../../docs/design/evidence/T-018/annotator-forbidden.png">Annotator — forbidden</a></li><li><a href="../../../docs/design/evidence/T-018/browser-evidence.json">API/browser evidence</a></li></ul><h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>Theo yêu cầu thực hiện issue #44 ngay, mã được chuẩn bị từ develop 3c5ab60; không chuyển in-progress khi T-016 chưa được xác minh merge.</code></li>
+<li><strong>Approved By</strong>: <code>Yêu cầu trực tiếp của người dùng: cập nhật Next.js theo thiết kế và thực hiện issue #44.</code></li>
+<li><strong>Known Limitations</strong>: <code>Dữ liệu trình duyệt là fixture nạp vào Django/PostgreSQL thật tại local. Chưa kiểm thử môi trường triển khai. Một test Object Storage opt-in skip trong make check.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[x] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

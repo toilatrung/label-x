@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Điều hướng theo quy trình</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/labelx/tokens.css">
@@ -14,21 +15,10 @@
 <style>body{margin:0}</style>
 </helmet>
 <div class="lx">
-<nav class="lx-flow" aria-label="{{flowLabel}}">
-<span class="lx-flow__k">{{flowLabel}}</span>
-<a class="{{prevCls}}" href="{{prevHref}}" data-tip="{{prevTip}}" aria-label="{{prevTip}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"></path></svg></a>
-<ol class="lx-flow__steps">
-<sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
-<li class="{{s.cls}}"><a href="{{s.href}}" aria-current="{{s.current}}"><span class="lx-flow__n">{{s.n}}</span>{{s.title}}</a></li>
-<sc-if value="{{s.sep}}" hint-placeholder-val="{{true}}"><li aria-hidden="true"><svg class="lx-flow__sep" viewBox="0 0 12 12"><path d="M4.5 3 7.5 6 4.5 9"></path></svg></li></sc-if>
-</sc-for>
-</ol>
-<span class="lx-flow__pos">{{pos}}</span>
-<a class="{{nextCls}}" href="{{nextHref}}" data-tip="{{nextTip}}" aria-label="{{nextTip}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"></path></svg></a>
-</nav>
+<nav class="lx-flow" aria-label="{{flowLabel}}"><ol class="lx-flow__steps"><sc-for list="{{steps}}" as="s"><li class="{{s.cls}}"><a href="{{s.href}}" aria-current="{{s.current}}"><span class="lx-flow__n">{{s.n}}</span><span>{{s.title}}<small class="lx-flow__description">{{s.description}}</small></span></a></li></sc-for></ol></nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"flow":{"editor":"text","default":"analysis"},"step":{"editor":"text","default":"snapshot"},"$preview":{"width":1392,"height":48}}'>
+<script type="text/x-dc" data-dc-script data-props='{"flow":{"editor":"text","default":"analysis"},"step":{"editor":"text","default":"snapshot"},"$preview":{"width":1392,"height":74}}'>
 class Component extends DCLogic {
   renderVals() {
     const FLOWS = {
@@ -37,9 +27,9 @@ class Component extends DCLogic {
         { key: 'config', href: 'AnalysisConfig.dc.html', title: 'Analysis Configuration' },
         { key: 'history', href: 'ExecutionHistory.dc.html', title: 'Execution History' } ] },
       review: { label: 'Quy trình review', steps: [
-        { key: 'queues', href: 'ReviewQueues.dc.html', title: 'Review Queues' },
-        { key: 'workspace', href: 'ReviewWorkspace.dc.html', title: 'Review Workspace' },
-        { key: 'rework', href: 'ReworkTracking.dc.html', title: 'Rework Tracking' } ] },
+        { key: 'queues', href: 'ReviewQueues.dc.html', title: 'Hàng đợi', description: 'Ảnh cần kiểm tra' },
+        { key: 'workspace', href: 'ReviewWorkspace.dc.html', title: 'Kiểm tra ảnh', description: 'Xem và đánh giá' },
+        { key: 'rework', href: 'ReworkTracking.dc.html', title: 'Theo dõi sửa', description: 'Kiểm tra lại sau khi sửa' } ] },
       release: { label: 'Quy trình nghiệm thu', steps: [
         { key: 'report', href: 'QualityReport.dc.html', title: 'Quality Report' },
         { key: 'gate', href: 'QualityGate.dc.html', title: 'Quality Gate' },
@@ -51,7 +41,7 @@ class Component extends DCLogic {
     return {
       flowLabel: f.label,
       pos: 'Bước ' + (idx + 1) + ' / ' + f.steps.length,
-      steps: f.steps.map((s, i) => ({ n: i + 1, title: s.title, href: s.href, cls: 'lx-flow__step' + (i === idx ? ' is-active' : ''), current: i === idx ? 'step' : 'false', sep: i < f.steps.length - 1 })),
+      steps: f.steps.map((s, i) => ({ n: i + 1, title: s.title, description: s.description || '', href: s.href, cls: 'lx-flow__step' + (i === idx ? ' is-active' : ''), current: i === idx ? 'step' : 'false', sep: i < f.steps.length - 1 })),
       prevHref: prev ? prev.href : '#', prevCls: 'lx-iconbtn lx-flow__arrow' + (prev ? '' : ' is-off'), prevTip: prev ? 'Bước trước: ' + prev.title : 'Đây là bước đầu tiên',
       nextHref: next ? next.href : '#', nextCls: 'lx-iconbtn lx-flow__arrow' + (next ? '' : ' is-off'), nextTip: next ? 'Bước sau: ' + next.title : 'Đây là bước cuối cùng'
     };

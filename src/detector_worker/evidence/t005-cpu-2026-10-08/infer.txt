@@ -1,0 +1,9 @@
+$WORK/venv/lib/python3.10/site-packages/mmcv/__init__.py:20: UserWarning: On January 1, 2023, MMCV will release v2.0.0, in which it will remove components related to the training process and add a data transformation module. In addition, it will rename the package names mmcv to mmcv-lite and mmcv-full to mmcv. See https://github.com/open-mmlab/mmcv/blob/master/docs/en/compatibility.md for more details.
+  warnings.warn(
+$WORK/venv/lib/python3.10/site-packages/mmdet/apis/inference.py:51: UserWarning: Class names are not saved in the checkpoint's meta data, use COCO classes by default.
+  warnings.warn('Class names are not saved in the checkpoint\'s '
+$WORK/venv/lib/python3.10/site-packages/mmdet/datasets/utils.py:66: UserWarning: "ImageToTensor" pipeline is replaced by "DefaultFormatBundle" for batch inference. It is recommended to manually replace it in the test data pipeline in your config file.
+  warnings.warn(
+load checkpoint from local path: $WORK/dl_ckpt/faster_rcnn_r50_fpn_3x_det_bdd100k.pth
+{"status": "ok", "images": 10, "seconds_per_image": 2.019744115100002, "output": "$WORK/out/predictions.json"}
+infer rc=0

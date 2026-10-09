@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage — LabelX</title>
+<meta name="labelx:id" content="review-t-001">
+<meta name="labelx:title" content="Review Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="review">
+<meta name="labelx:tags" content="[review, report, t-001, wave-1]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / T-001</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>review-t-001</span><b>title</b><span>Review Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>review</span><b>tags</b><span>[review, report, t-001, wave-1]</span><b>priority</b><span>1</span></div>
+<h1 id="review-report">Review Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Đánh giá độc lập phần triển khai T-001 đã merge vào <code>develop</code> và phần sửa sau review trên nhánh <code>chore/wave1-closeout</code>, đối chiếu từng acceptance criterion trong <a href="../../execution/task-board.html#t-001">task board</a>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-001</code></li>
+<li><strong>Title</strong>: <code>Review Report — T-001: Contract M13 v1: OpenAPI baseline, state machine, ADR lineage</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Reviewer</strong>: <code>claude-code (session label-x-30, reviewer subagents) cho integrator @toilatrung</code></li>
+<li><strong>Executor</strong>: <code>@toilatrung</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Review Type</strong>: <code>documentation</code></li>
+<li><strong>Task ID</strong>: <code>T-001</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>: <code>docs/04-api/openapi.yaml, docs/04-api/state-machines.html, docs/04-api/rbac-matrix.html, .agent/governance/decisions/DEC-005.html, DEC-006.html, src/backend/tests/test_contract.py, src/frontend/src/lib/api/contract.d.ts</code></li>
+<li><strong>Code Diff</strong>: <code>54a5162 (PR #21); remediation a2aca6e, 2536210 trên chore/wave1-closeout</code></li>
+<li><strong>Excluded Artifacts</strong>: <code>task khác của đợt 1; make check trên Postgres (ghi ở QA report)</code></li>
+<li><strong>Review Standard</strong>: <code>.agent/execution/task-board.html#t-001 (Acceptance Criteria, Verification Requirements); CLAUDE.md; DEC-001</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-001.html</code></li>
+<li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-001, .agent/planning/epics.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, DEC-005.html, DEC-006.html</code></li>
+<li><strong>Risks or Issues</strong>: <code>none</code></li>
+<li><strong>Verification Evidence</strong>: <code>.agent/reports/qa/T-001.html</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<p>Repo không có CLI <code>agent</code>; trạng thái review ghi trực tiếp vào bản ghi này và task board.</p>
+<table>
+<thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>agent review start T-001</code></td><td><code>not-run</code></td><td><code>không có CLI; review bắt đầu 2026-10-08</code></td></tr>
+<tr><td><code>agent review approve T-001</code></td><td><code>not-run</code></td><td><code>Decision APPROVED ghi trong báo cáo này</code></td></tr>
+<tr><td><code>agent review request-changes T-001</code></td><td><code>not-run</code></td><td><code>thay đổi yêu cầu đã sửa trên chore/wave1-closeout</code></td></tr>
+<tr><td><code>agent review block T-001</code></td><td><code>not-run</code></td><td><code>không áp dụng</code></td></tr>
+</tbody>
+</table>
+<h2 id="required-review-checks">Required Review Checks</h2>
+<table>
+<thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td>Code diff</td><td><code>passed</code></td><td>squash 54a5162 (PR #21), a2aca6e, 2536210; contract YAML viết tay, test_contract.py kiểm cấu trúc</td></tr>
+<tr><td>Acceptance criteria</td><td><code>passed</code></td><td>OpenAPI 21 operation, Error bắt buộc code/message/request_id (openapi.yaml:583-593); contract.d.ts sinh lại bằng gen:api:contract khớp file đã commit; mọi operation có x-labelx-trace; mọi transition có FR/BR/UC sau a2aca6e/2536210; DEC-005, DEC-006 accepted</td></tr>
+<tr><td>Architecture compliance</td><td><code>passed</code></td><td>state machine có trạng thái frame incomplete ("đang dở", BLOCKER-008); RBAC matrix docs/04-api/rbac-matrix.html</td></tr>
+<tr><td>Security</td><td><code>passed</code></td><td>hợp đồng lỗi 403/404 không lộ chi tiết; quyền kiểm ở API theo RBAC matrix</td></tr>
+<tr><td>Performance</td><td><code>not-run</code></td><td>task chỉ là contract, không có runtime</td></tr>
+<tr><td>Regression risk</td><td><code>passed</code></td><td>test_contract.py chạy trong pytest backend</td></tr>
+<tr><td>Test/lint/build evidence</td><td><code>passed</code></td><td>pytest tests/test_contract.py tests/test_settings.py tests/guideline: 31 passed (SQLite); manage.py spectacular --validate không lỗi</td></tr>
+</tbody>
+</table>
+<h2 id="findings">Findings</h2>
+<table>
+<thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead>
+<tbody>
+<tr><td><code>F-1</code></td><td><code>minor</code></td><td><code>docs/04-api/state-machines.html</code></td><td>6 transition (run.start, run.fail, run.cancel, issue.reopen_fix, frame.lease_expired, frame.followup) chỉ trích hình/bảng SRS, không có mã FR/BR/UC (AC "Mỗi endpoint/transition có trích FR/BR/UC").</td><td>Resolved trong a2aca6e và 2536210: thêm UC-02, UC-07, FR-RWK-01, FR-REV-04, UC-04, FR-REV-13, UC-06 (và UC-06/FR-ESC-05 cho issue.guideline_gap); run.fail chỉ trích UC-02 vì FR-RWK-08 không quy định running→failed. Test test_every_state_transition_cites_srs_requirement chỉ kiểm mã tồn tại trong SRS, không kiểm đúng nghĩa; ngữ nghĩa được label-x-88 đối chiếu thủ công.</td><td><code>@toilatrung</code></td></tr>
+<tr><td><code>F-2</code></td><td><code>major</code></td><td><code>.agent/governance/decisions/DEC-008.html (trước đây DEC-005-@vietanhhhhhh2003.html, đã gộp)</code></td><td>Bản ghi quyết định của T-005 (DEC-005-@vietanhhhhhh2003.html) cũng xưng DEC-005, trùng mã ADR lineage; gộp theo CR-100 sẽ đè DEC-005.</td><td>Resolved trong commit integrator: đổi thành DEC-008.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-3</code></td><td><code>minor</code></td><td><code>.agent/reports/implementation/T-001.html</code></td><td>Report còn draft; commit map ghi 545eae1 (commit nhánh) thay vì squash 54a5162; decision-commit-map chưa map DEC-005/006.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-4</code></td><td><code>observation</code></td><td><code>docs/04-api/openapi.yaml</code></td><td>Contract chưa phủ quyết định, phân xử, rework, gate, report; chưa có test so YAML với schema drf-spectacular khi có view thật.</td><td>Theo dõi ở task E-01/M-03 sau; không chặn T-001.</td><td><code>@toilatrung</code></td></tr>
+</tbody>
+</table>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[x] Review scope and standard are explicit.</li>
+<li>[x] Each finding identifies evidence, severity, action, and owner.</li>
+<li>[x] Critical and major findings are resolved or formally accepted.</li>
+<li>[x] Approval outcome matches unresolved findings.</li>
+<li>[x] Code diff, acceptance criteria, architecture, security, performance, regression risk, and test/lint/build evidence are checked.</li>
+<li>[x] Reviewer identity is independent from Executor identity.</li>
+</ul>
+<h2 id="approval-outcome">Approval Outcome</h2>
+<ul>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Rationale</strong>: <code>Mọi acceptance criterion đạt sau a2aca6e; finding major F-2 đã xử lý ở commit integrator.</code></li>
+<li><strong>Approved By</strong>: <code>claude-code (session label-x-30, reviewer subagents) cho integrator @toilatrung; chờ label-x-88 review chéo và comment "Đã xem và duyệt" trên PR (CR-102)</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Follow-up Tasks</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] All required actions are linked to tasks or verified as resolved.</li>
+<li>[x] Approval outcome and rationale are recorded.</li>
+<li>[x] Related issue, risk, and report records are updated.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not approve artifacts with unresolved critical findings.</li>
+<li>Do not remove findings after remediation; record their resolution.</li>
+<li>Do not assign ambiguous severity or ownership.</li>
+<li>Do not claim review coverage outside the declared scope.</li>
+<li>Do not act as the Executor Agent for the same task.</li>
+<li>Do not move a task to <code>DONE</code>; QA must run after <code>APPROVED</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/review/T-001.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

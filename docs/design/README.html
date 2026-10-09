@@ -47,12 +47,15 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>design-index</span><b>title</b><span>LabelX Design</span><b>type</b><span>reference</span><b>domain</b><span>design</span><b>module</b><span>index</span><b>tags</b><span>[design, design-system, screens]</span><b>priority</b><span>2</span></div>
 <h1 id="labelx-design">LabelX Design</h1>
 <h2 id="purpose">Purpose</h2>
-<p>Nguồn thiết kế chuẩn của LabelX (nguồn <strong>H</strong> trong tài liệu): Design System và 25 màn hình Quality Control. Skill thiết kế cho agent nằm ở <a href="../../.agent/skills/labelx-design/SKILL.md">.agent/skills/labelx-design/SKILL.md</a>.</p>
+<p>Nguồn thiết kế chuẩn của LabelX (nguồn <strong>H</strong> trong tài liệu): Design System và 24 màn hình và component Quality Control. Skill thiết kế cho agent nằm ở <a href="../../.agent/skills/labelx-design/SKILL.md">.agent/skills/labelx-design/SKILL.md</a>.</p>
+<h2 id="preview-standard">Chuẩn UI/UX cập nhật · 09/10/2026</h2>
+<p>Đối chiếu bộ mẫu <code>C:\Users\William Trinh\Downloads\previews\previews</code>: giữ thanh điều hướng graphite, dropdown nền trắng rõ ràng, ba bước có mô tả, hàng đợi ảnh có thumbnail và Workspace riêng. Review Workspace giữ nguyên toàn bộ thông tin, chế độ Issue/Frame Review, annotation, bằng chứng, Guideline, case tương tự và các thao tác quyết định của bản gốc; chỉ cập nhật cách trình bày.</p>
+<p><a href="screens/preview.html">Mở bản thiết kế tương tác</a> — mở trực tiếp bằng trình duyệt, mở Workspace, thử bộ lọc và quay lại hàng đợi. Workspace giữ bộ dữ liệu Issue minh họa ban đầu; ảnh mẫu trong hàng đợi chưa nối vào dữ liệu nghiệp vụ Workspace. Bản này được tạo từ các nguồn <code>.dc.html</code>; tạo lại bằng <code>python3 docs/design/tools/build-preview.py</code> từ repo root.</p>
 <h2 id="noi-dung">Nội dung</h2>
 <ul>
 <li><a href="design-system.html">design-system.html</a> — tài liệu Design System (nguyên tắc, quy tắc nội dung, layout, trạng thái, mọi component).</li>
 <li><a href="design-system/README.html">design-system/</a> — <code>tokens.json</code>, <code>design-system.json</code>, <code>components/bundle.css</code> (toàn bộ style <code>lx-*</code>) và README + <code>preview.html</code> cho từng component.</li>
-<li><a href="screens/Main.dc.html">screens/</a> — 25 màn hình dạng <code>.dc.html</code>, kèm <code>canvas.json</code> (bố cục board), component dùng chung <code>TopBar.dc.html</code>, <code>FlowNav.dc.html</code> và <code>ds/labelx/</code> (bản sao tokens và style mà màn hình link tới).</li>
+<li><a href="screens/Main.dc.html">screens/</a> — 24 màn hình/component dạng <code>.dc.html</code>, kèm <code>canvas.json</code> (bố cục board), component dùng chung <code>TopBar.dc.html</code>, <code>FlowNav.dc.html</code> và <code>ds/labelx/</code> (bản sao tokens và style mà màn hình link tới).</li>
 </ul>
-<p>Màn hình dùng canvas runtime của artifact đã publish (<code>support.js</code>), nên mở trong canvas đã publish; file ở đây dùng để sửa và bàn giao. Frontend chép tokens/style vào <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
+<p>Nguồn <code>.dc.html</code> giữ cấu trúc canvas. <code>support.js</code> cung cấp fallback để xem cục bộ qua HTTP khi không có runtime canvas; <code>preview.html</code> có sẵn nguồn component để mở trực tiếp. Các thao tác nghiệp vụ dùng dữ liệu mẫu, chưa nối API. Frontend chép tokens/style vào <code>src/frontend/src/styles/tokens.css</code> và <code>labelx.css</code>.</p>
 </article></main></body></html>

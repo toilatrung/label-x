@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Report — T-011: Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT — LabelX</title>
+<meta name="labelx:id" content="review-t-011">
+<meta name="labelx:title" content="Review Report — T-011: Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="review">
+<meta name="labelx:tags" content="[review, report, t-011, e-02, auth]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / T-011</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>review-t-011</span><b>title</b><span>Review Report — T-011: Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>review</span><b>tags</b><span>[review, report, t-011, e-02, auth]</span><b>priority</b><span>1</span></div>
+<h1 id="review-report">Review Report — T-011: Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi kết quả review độc lập PR #31 (T-011) theo <code>.agent/skills/labelx-pr-review/SKILL.md</code>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-011</code></li>
+<li><strong>Title</strong>: <code>Review Report — T-011: Backend auth phiên + CSRF Next.js↔DRF, identity mapping LabelX↔CVAT</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Reviewer</strong>: <code>claude-code session label-x-88 (reviewer), độc lập với executor</code></li>
+<li><strong>Executor</strong>: <code>claude-code session label-x-30 cho @toilatrung</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Review Type</strong>: <code>code</code></li>
+<li><strong>Task ID</strong>: <code>T-011</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>: <code>src/backend/accounts, src/backend/config/{exceptions,serializers,settings,urls}.py, src/backend/tests/accounts, docs/04-api/openapi.yaml (auth_logout), src/frontend/src/lib/api/contract.d.ts, scripts/init-develop-environment.mk, .agent T-011</code></li>
+<li><strong>Code Diff</strong>: <code>origin/develop 76e7079..0c52a40 (PR #31)</code></li>
+<li><strong>Excluded Artifacts</strong>: <code>task khác của M-01</code></li>
+<li><strong>Review Standard</strong>: <code>.agent/skills/labelx-pr-review/SKILL.md; .agent/execution/task-board.html#t-011; docs/04-api/openapi.yaml, rbac-matrix.html</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/T-011.html</code></li>
+<li><strong>Task or Epic Records</strong>: <code>.agent/execution/task-board.html#t-011, .agent/planning/epics.html#e-02</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Risks or Issues</strong>: <code>.agent/governance/risks/RISK-012.html</code></li>
+<li><strong>Verification Evidence</strong>: <code>CI PR #31; make check; curl transcript trong implementation report</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<p>Repo không có CLI <code>agent</code>; trạng thái review ghi trực tiếp vào bản ghi này.</p>
+<table>
+<thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>agent review start T-011</code></td><td><code>not-run</code></td><td><code>không có CLI; review bắt đầu 2026-10-08</code></td></tr>
+<tr><td><code>agent review approve T-011</code></td><td><code>not-run</code></td><td><code>Decision APPROVED ghi trong báo cáo này</code></td></tr>
+<tr><td><code>agent review request-changes T-011</code></td><td><code>not-run</code></td><td><code>F-1, F-2 minor đã sửa trước khi duyệt</code></td></tr>
+<tr><td><code>agent review block T-011</code></td><td><code>not-run</code></td><td><code>không áp dụng</code></td></tr>
+</tbody>
+</table>
+<h2 id="required-review-checks">Required Review Checks</h2>
+<table>
+<thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td>Code diff</td><td><code>passed</code></td><td>PR #31, head 0c52a40 sau rebase lên develop 76e7079; code a782f6f (hash trước rebase)</td></tr>
+<tr><td>Acceptance criteria</td><td><code>passed</code></td><td>test_auth_schema_matches_contract (operationId, tập response, shape request/response); ca từ chối CSRF/origin/mật khẩu/user không tồn tại hoặc inactive/thiếu trường/chưa đăng nhập/phiên hết hạn/logout thiếu CSRF; identity mapping lưu, cập nhật, tra qua session; mã lỗi thuộc ErrorCode</td></tr>
+<tr><td>Architecture compliance</td><td><code>passed</code></td><td>Django session + DRF theo DEC-001; contract sửa trước code (auth_logout 403), contract.d.ts sinh lại; RoleAssignment theo rbac-matrix §1</td></tr>
+<tr><td>Security</td><td><code>passed</code></td><td>CSRF kiểm cả khi chưa đăng nhập; sai thông tin cùng thông báo; cookie sessionid HttpOnly, Secure theo env; observation O-1 (chưa throttle login)</td></tr>
+<tr><td>Performance</td><td><code>not-run</code></td><td>ngoài phạm vi task</td></tr>
+<tr><td>Regression risk</td><td><code>passed</code></td><td>make check toàn repo; ApiError chỉ thêm nhánh mới trong exception handler</td></tr>
+<tr><td>Test/lint/build evidence</td><td><code>passed</code></td><td>label-x-88 chạy trong worktree riêng, DB labelx_review: pytest 84 passed trên Postgres 17, mypy config accounts guideline cvat_adapter sạch, ruff sạch, makemigrations --check không đổi; CI PR #31 xanh 5 job</td></tr>
+</tbody>
+</table>
+<h2 id="findings">Findings</h2>
+<table>
+<thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead>
+<tbody>
+<tr><td><code>F-1</code></td><td><code>minor</code></td><td><code>.agent/execution/current-context.html</code></td><td>Xung đột rev 11 với PR #29 sau khi develop tiến lên 76e7079.</td><td>Resolved: rebase lên 76e7079, giữ nội dung hai bên, rev 12 (0c52a40).</td><td><code>@toilatrung</code></td></tr>
+<tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>.agent/reports/review/T-011.html</code></td><td>Thiếu review report.</td><td>Resolved: báo cáo này.</td><td><code>@toilatrung</code></td></tr>
+<tr><td><code>O-1</code></td><td><code>observation</code></td><td><code>src/backend/accounts/views.py</code></td><td>auth_login chưa có throttle hay khoá khi sai nhiều lần; contract không yêu cầu.</td><td>Đề xuất DRF throttle cho auth_login, thêm 429 vào contract qua CR; đưa vào T-015 hoặc task mới — PO quyết.</td><td><code>@toilatrung (PO)</code></td></tr>
+<tr><td><code>O-2</code></td><td><code>observation</code></td><td><code>src/backend/accounts/models.py</code></td><td>cvat_user_id unique: mỗi user CVAT chỉ gắn một tài khoản LabelX; tài khoản thứ hai của cùng người có identity_mapping missing và bị chặn bởi IDENTITY_MAPPING_MISSING (fail closed), không được nhận ra là cùng người.</td><td>Ghi chú vào T-012 (FR-SEC-04); nếu giữ hành vi này thì ghi DEC.</td><td><code>@ducha180104</code></td></tr>
+<tr><td><code>O-3</code></td><td><code>observation</code></td><td><code>src/backend/accounts/views.py</code></td><td>Django login() xoay csrftoken; frontend phải đọc lại cookie csrftoken sau login trước request ghi kế tiếp.</td><td>Ghi chú vào T-016.</td><td><code>@tdt2112</code></td></tr>
+<tr><td><code>O-4</code></td><td><code>observation</code></td><td><code>src/frontend/src/app/api/auth/logout/route.ts</code></td><td>Contract thêm 403 cho auth_logout; route mock logout nên trả 403 khi thiếu CSRF cho khớp.</td><td>Ghi chú vào T-016.</td><td><code>@tdt2112</code></td></tr>
+<tr><td><code>O-5</code></td><td><code>observation</code></td><td><code>.agent/execution/task-board.html#t-011</code></td><td>AC ghi “phiên hết hạn → 401”, contract chỉ có 403 NOT_AUTHENTICATED.</td><td>Chấp nhận theo contract; đã ghi trong task-board và implementation report.</td><td><code>label-x-88</code></td></tr>
+</tbody>
+</table>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[x] Review scope and standard are explicit.</li>
+<li>[x] Each finding identifies evidence, severity, action, and owner.</li>
+<li>[x] Critical and major findings are resolved or formally accepted.</li>
+<li>[x] Approval outcome matches unresolved findings.</li>
+<li>[x] Code diff, acceptance criteria, architecture, security, performance, regression risk, and test/lint/build evidence are checked.</li>
+<li>[x] Reviewer identity is independent from Executor identity.</li>
+</ul>
+<h2 id="approval-outcome">Approval Outcome</h2>
+<ul>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Rationale</strong>: <code>Không có finding critical/major; minor F-1, F-2 đã sửa; observation O-1…O-5 chuyển sang task liên quan.</code></li>
+<li><strong>Approved By</strong>: <code>label-x-88 (reviewer); chờ comment "Đã xem và duyệt" trên PR #31 (CR-102)</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Follow-up Tasks</strong>: <code>T-012 (O-2), T-016 (O-3, O-4), PO quyết O-1 (throttle login, CR thêm 429)</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] All required actions are linked to tasks or verified as resolved.</li>
+<li>[x] Approval outcome and rationale are recorded.</li>
+<li>[x] Related issue, risk, and report records are updated.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not approve artifacts with unresolved critical findings.</li>
+<li>Do not remove findings after remediation; record their resolution.</li>
+<li>Do not assign ambiguous severity or ownership.</li>
+<li>Do not claim review coverage outside the declared scope.</li>
+<li>Do not act as the Executor Agent for the same task.</li>
+<li>Do not move a task to <code>DONE</code>; QA must run after <code>APPROVED</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/review/T-011.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

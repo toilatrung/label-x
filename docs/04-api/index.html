@@ -51,9 +51,13 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="contents">Contents</h2>
 <ul>
 <li><a href="contract.html">contract.html</a> — intake: nguồn, kết quả kiểm tra, các mục còn mở</li>
+<li><a href="openapi.yaml">openapi.yaml</a> — contract M13 v1 (T-001): OpenAPI 3.0.3 cho auth, dataset, snapshot, QC Run, guideline, hàng đợi/lease/frame; nguồn sinh type frontend</li>
+<li><a href="state-machines.html">state-machines.html</a> — bảng transition Snapshot, QC Run, Issue, frame (có trạng thái "đang dở")</li>
+<li><a href="rbac-matrix.html">rbac-matrix.html</a> — ma trận actor/action/scope</li>
+<li><a href="engine-interface.html">engine-interface.html</a> — engine interface: input/output theo shard, trạng thái công khai, coverage ledger (T-006, DEC-010)</li>
 <li><a href="rest-api.html">rest-api.html</a> — REST API (DRF): endpoint, quyền, request/response, mã lỗi, idempotency</li>
 <li><a href="event-contracts.html">event-contracts.html</a> — Celery task: tên, payload, khoá idempotent, retry; ghi chú về domain event</li>
 <li><code>graphql.html</code> — <strong>không dùng</strong>. Hệ thống chỉ có REST (SRS §9.3; DEC-001)</li>
 </ul>
-<p>Schema OpenAPI được sinh tự động tại <code>/api/schema/</code> (drf-spectacular). Frontend sinh type từ schema này (DEC-001).</p>
+<p>Contract có thẩm quyền là <code>openapi.yaml</code>: đổi tệp này trước rồi mới đổi code. Khi backend có view, schema drf-spectacular tại <code>/api/schema/</code> phải khớp tệp này. Frontend sinh type từ tệp bằng <code>npm run gen:api:contract</code>, hoặc từ backend đang chạy bằng <code>npm run gen:api</code> (DEC-001). Test <code>src/backend/tests/test_contract.py</code> kiểm tệp hợp lệ OpenAPI 3.0 và mỗi operation có trích FR/BR/UC và vai trò.</p>
 </article></main></body></html>

@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quality Report</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/labelx/tokens.css">
@@ -16,7 +17,7 @@
 <div class="lx" style="min-height: 100vh; background: var(--canvas)">
 <dc-import name="TopBar" active="reports" active-item="report" hint-size="100%,100px"></dc-import>
 <main class="lx-page">
-<dc-import name="FlowNav" flow="release" step="report" hint-size="100%,48px"></dc-import>
+
 
 <div class="lx-head">
 <div class="lx-head__text">
@@ -36,6 +37,7 @@
 </sc-if>
 </div>
 </div>
+<dc-import name="FlowNav" flow="release" step="report" hint-size="100%,74px"></dc-import>
 
 <div class="lx-grid lx-grid--4">
 <div class="lx-metric"><span class="lx-metric__k">Frame trong phạm vi</span><span class="lx-metric__v">12,500</span><span class="lx-metric__n">3 task · 7 job</span></div>

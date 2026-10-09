@@ -1,102 +1,40 @@
 <!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<title>Review Queues</title>
-<script src="./support.js"></script>
-<link rel="stylesheet" href="ds/labelx/tokens.css">
-<link rel="stylesheet" href="ds/labelx/components/bundle.css">
-</head>
-<body>
-<x-dc>
-<helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
-<style>body{margin:0;background:#f6f7f9}</style>
-</helmet>
-<div class="lx" style="min-height: 100vh; background: var(--canvas)">
-<dc-import name="TopBar" active="review" active-item="queues" hint-size="100%,100px"></dc-import>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trung tâm kiểm tra</title><script src="./support.js"></script><script src="./review-data.js"></script>
+<link rel="stylesheet" href="ds/labelx/tokens.css"><link rel="stylesheet" href="ds/labelx/components/bundle.css">
+</head><body><x-dc><div class="lx" style="min-height:100vh;background:var(--canvas)">
+<dc-import name="TopBar" active="review" hint-size="100%,100px"></dc-import>
 <main class="lx-page">
-<dc-import name="FlowNav" flow="review" step="queues" hint-size="100%,48px"></dc-import>
-
-<div class="lx-head">
-<div class="lx-head__text">
-<h1 class="lx-h1">Review Queues</h1>
-<p class="lx-lead">Điểm vào công việc hằng ngày của Reviewer. Các hàng đợi tách theo nguồn mẫu và mục tiêu, không chỉ xếp theo một điểm rủi ro.</p>
+<div class="lx-head"><div class="lx-head__text"><h1 class="lx-h1">Trung tâm kiểm tra</h1><p class="lx-lead">Ưu tiên ảnh cần kiểm tra. Chọn một ảnh để mở màn kiểm tra riêng.</p></div><span class="lx-review-badge lx-review-badge--neutral"><svg class="lx-review-icon" aria-hidden="true"><use href="assets/icons.svg#i-image"></use></svg>3 ảnh mẫu</span></div>
+<dc-import name="FlowNav" flow="review" step="queues" hint-size="100%,74px"></dc-import>
+<div class="lx-review-filters">
+<label class="lx-field">Tìm kiếm<span class="lx-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input id="review-search" type="search" value="{{search}}" onInput="{{searchChange}}" placeholder="Tìm ảnh hoặc mã công việc" aria-label="Tìm ảnh hoặc mã công việc"></span></label>
+<label class="lx-field">Mức ưu tiên<select id="review-priority" class="lx-select" value="{{priority}}" onChange="{{priorityChange}}"><option>Tất cả</option><option>Cao</option><option>Trung bình</option></select></label>
+<label class="lx-field">Loại cảnh báo<select id="review-alert" class="lx-select" value="{{alert}}" onChange="{{alertChange}}"><option>Tất cả</option><option>Thiếu nhãn</option><option>Hộp lệch</option><option>Nhãn trùng</option></select></label>
 </div>
-<div class="lx-actions"><a class="lx-btn lx-btn--primary" href="ReviewWorkspace.dc.html">Bắt đầu review →</a></div>
-</div>
-
-<section class="lx-card">
-<div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
-<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
-<button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}<span class="lx-count">{{t.count}}</span></button>
+<section class="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
+<div class="lx-card__head"><strong>Ảnh cần kiểm tra</strong><span class="lx-hint" role="status">{{count}} ảnh</span></div>
+<sc-for list="{{rows}}" as="r">
+<article class="lx-review-row"><span class="lx-review-rank">{{r.rank}}</span><a class="lx-review-thumb" href="{{r.href}}" aria-label="{{r.openLabel}}"><img src="{{r.image}}" alt="{{r.alt}}" width="203" height="92"></a>
+<div class="lx-review-info"><div class="lx-review-title"><h2 class="lx-h2"><a href="{{r.href}}">{{r.name}}</a></h2><span class="lx-review-badge"><svg class="lx-review-icon" aria-hidden="true"><use href="assets/icons.svg#i-alert"></use></svg>{{r.alert}}</span><span class="{{r.priorityClass}}"><svg class="lx-review-icon" aria-hidden="true"><use href="{{r.priorityIcon}}"></use></svg>{{r.priority}}</span></div><div class="lx-mono lx-subtle">{{r.id}}</div><div class="lx-review-meta"><span><svg class="lx-review-icon" aria-hidden="true"><use href="assets/icons.svg#i-frame"></use></svg>Frame {{r.frame}}</span><span><svg class="lx-review-icon" aria-hidden="true"><use href="assets/icons.svg#i-scene"></use></svg>{{r.scene}}</span><time><svg class="lx-review-icon" aria-hidden="true"><use href="assets/icons.svg#i-clock"></use></svg>{{r.time}}</time></div></div>
+<a class="lx-btn lx-btn--primary lx-review-start" href="{{r.href}}" aria-label="{{r.openLabel}}">Bắt đầu kiểm tra</a></article>
 </sc-for>
-</div>
-<div class="lx-toolbar">
-<label class="lx-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg><input type="search" aria-label="Tìm issue" placeholder="Tìm theo mã issue, frame, object…"></label>
-<select class="lx-select lx-select--inline" aria-label="Loại issue"><option>Loại issue: Tất cả</option><option>Sai nhãn</option><option>Hình học</option><option>Thiếu object</option></select>
-<select class="lx-select lx-select--inline" aria-label="Nguồn"><option>Nguồn: Tất cả</option><option>Quy tắc</option><option>Mô hình</option><option>Kiểm tra ngẫu nhiên</option></select>
-<select class="lx-select lx-select--inline" aria-label="Phạm vi"><option>Phạm vi: Toàn dataset</option><option>T-119 · Urban night</option><option>Job 2272</option></select>
-</div>
-<div class="lx-scroll">
-<table class="lx-table" style="min-width: 900px">
-<thead><tr><th>Mã issue</th><th>Loại</th><th>Frame · Object</th><th>Nguồn</th><th>Ưu tiên</th><th>Trạng thái</th><th>Reviewer</th><th></th></tr></thead>
-<tbody>
-<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
-<tr><td class="lx-mono">{{r.id}}</td><td class="lx-cell__main">{{r.type}}</td><td class="lx-muted">{{r.where}}</td><td class="lx-muted">{{r.source}}</td><td><span class="{{r.prioCls}}">{{r.prio}}</span></td><td><span class="{{r.statusCls}}">{{r.status}}</span></td><td class="lx-muted">{{r.who}}</td><td class="r"><a class="lx-iconbtn" href="ReviewWorkspace.dc.html" data-tip="Mở trong Review Workspace" aria-label="Mở trong Review Workspace"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></td></tr>
-</sc-for>
-</tbody>
-</table>
-</div>
-<div class="lx-card__foot"><span>Hiển thị 6 / {{total}} issue</span><span class="lx-pager"><button class="lx-btn lx-btn--sm" disabled="">Trước</button><button class="lx-btn lx-btn--sm">Sau</button></span></div>
-</section>
-
-</main>
-</div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+<sc-if value="{{empty}}"><div class="lx-review-empty"><p>Không có ảnh khớp bộ lọc.</p><button class="lx-btn" onClick="{{reset}}">Xóa bộ lọc</button></div></sc-if>
+<div class="lx-card__foot"><span>Ưu tiên cao được hiển thị trước</span><span>{{range}}</span></div></section>
+<p class="lx-hint">Dữ liệu và ảnh mẫu để đối chiếu thiết kế; chưa kết nối API.</p>
+</main></div></x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
 class Component extends DCLogic {
-  renderVals() {
-    const cur = (this.state && this.state.tab) || 'risk';
-    const B = (c) => 'lx-badge' + (c ? ' lx-badge--' + c : '');
-    const DATA = {
-      risk: { total: 124, rows: [
-        ['QC-00128','Sai nhãn','Frame 00428 · #18','Mô hình bất đồng','Cao','danger','Chờ review','','Chưa nhận'],
-        ['QC-00129','Hình học','Frame 00431 · #07','Quy tắc G-014','Trung bình','warning','Đang review','info','Bình Hồ'],
-        ['QC-00131','Trùng / chồng lấn','Frame 00436 · #02, #05','Duplicate / Overlap','Trung bình','warning','Chờ review','','Chưa nhận'],
-        ['QC-00133','Thiếu object','Frame 00502 · —','Mô hình bất đồng','Cao','danger','Chờ review','','Chưa nhận'],
-        ['QC-00137','Sai nhãn','Frame 00519 · #11','Mô hình thị giác – ngôn ngữ','Thấp','','Chờ review','','Chưa nhận'],
-        ['QC-00140','Hình học','Frame 00544 · #23','Quy tắc G-009','Thấp','','Chờ review','','Chưa nhận'] ] },
-      audit: { total: 50, rows: [
-        ['AUD-0007','Thiếu object','Frame 01204 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
-        ['AUD-0012','Rà soát frame','Frame 01877 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Đang review','info','An Nguyễn'],
-        ['AUD-0019','Rà soát frame','Frame 02310 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
-        ['AUD-0021','Rà soát frame','Frame 02955 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
-        ['AUD-0026','Rà soát frame','Frame 03408 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'],
-        ['AUD-0030','Rà soát frame','Frame 03912 · —','Kiểm tra ngẫu nhiên','Kiểm tra','','Chờ review','','Chưa nhận'] ] },
-      escalated: { total: 18, rows: [
-        ['QC-00098','Sai nhãn','Frame 00212 · #04','Mô hình bất đồng','Cao','danger','Chuyển cấp trên','warning','Chờ phân xử'],
-        ['QC-00104','Hình học','Frame 00255 · #09','Quy tắc G-014','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
-        ['QC-00112','Thuộc tính','Frame 00310 · #14','Quy tắc A-003','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
-        ['QC-00115','Sai nhãn','Frame 00366 · #02','Mô hình bất đồng','Cao','danger','Chuyển cấp trên','warning','Chờ phân xử'],
-        ['QC-00121','Thiếu object','Frame 00390 · —','Mô hình bất đồng','Trung bình','warning','Chưa chắc chắn','warning','Chờ phân xử'],
-        ['QC-00126','Hình học','Frame 00401 · #21','Quy tắc G-014','Thấp','','Chưa chắc chắn','warning','Chờ phân xử'] ] },
-      resolved: { total: 242, rows: [
-        ['QC-00061','Sai nhãn','Frame 00104 · #12','Mô hình bất đồng','Cao','danger','Đã xác nhận','success','Bình Hồ'],
-        ['QC-00062','Hình học','Frame 00110 · #03','Quy tắc G-014','Trung bình','warning','Bị bác bỏ','','Bình Hồ'],
-        ['QC-00064','Trùng / chồng lấn','Frame 00118 · #08','Duplicate / Overlap','Trung bình','warning','Đã xác nhận','success','An Nguyễn'],
-        ['QC-00067','Thiếu object','Frame 00131 · —','Mô hình bất đồng','Cao','danger','Đã đóng','success','An Nguyễn'],
-        ['QC-00070','Sai nhãn','Frame 00140 · #06','Mô hình bất đồng','Thấp','','Bị bác bỏ','','Chi Lâm'],
-        ['QC-00073','Hình học','Frame 00152 · #19','Quy tắc G-009','Thấp','','Đã đóng','success','Chi Lâm'] ] }
-    };
-    const TABS = [['risk','Ưu tiên theo rủi ro',124],['audit','Kiểm tra ngẫu nhiên',50],['escalated','Chưa chắc chắn / Chuyển cấp trên',18],['resolved','Đã xử lý',242]];
-    return {
-      total: DATA[cur].total,
-      tabs: TABS.map(([k, label, count]) => ({ label, count, selected: cur === k, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) })),
-      rows: DATA[cur].rows.map(([id, type, where, source, prio, prioC, status, statusC, who]) => ({ id, type, where, source, prio, prioCls: B(prioC), status, statusCls: B(statusC), who }))
-    };
-  }
+ renderVals() {
+ const stored = window.LabelXReview.readFilters();
+ const filters = Object.assign({search:'',priority:'Tất cả',alert:'Tất cả'}, stored, this.state || {});
+ const update = (key) => (event) => { const next = Object.assign({}, filters, {[key]:event.target.value}); window.LabelXReview.saveFilters(next); this.setState(next); };
+ const matches = window.LabelXReview.frames.filter(f => `${f.name} ${f.id} ${f.frame}`.toLowerCase().includes(filters.search.toLowerCase()) && (filters.priority === 'Tất cả' || f.priority === filters.priority) && (filters.alert === 'Tất cả' || f.alert === filters.alert));
+ return Object.assign({}, filters, {count:matches.length, empty:matches.length === 0, range:matches.length ? `1–${matches.length} / ${matches.length}` : '0 / 0',
+  rows: matches.map((f,i) => Object.assign({},f,{rank:i+1, priorityIcon:'assets/icons.svg#i-' + (f.priority === 'Cao' ? 'up' : 'equal'), href:`ReviewWorkspace.dc.html?frame=${f.frame}`, openLabel:`Bắt đầu kiểm tra ${f.name}`,alt:`${f.name}: ${f.scene}, cảnh báo ${f.alert}`,priorityClass:'lx-review-badge' + (f.priority === 'Cao' ? ' lx-review-badge--danger' : '')})),
+  searchChange:update('search'),priorityChange:update('priority'),alertChange:update('alert'),
+  reset:()=>{const next={search:'',priority:'Tất cả',alert:'Tất cả'};window.LabelXReview.saveFilters(next);this.setState(next);}
+ });
+ }
 }
-</script>
-</body>
-</html>
+</script></body></html>

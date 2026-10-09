@@ -36,6 +36,9 @@
   --radius-sm: 4px;
   --radius-md: 0px;
   --radius-lg: 0px;
+  --radius-list: 4px;
+  --radius-menu: 6px;
+  --flow-height: 74px;
   --radius-full: 999px;
   --shadow-menu: 0 4px 16px rgba(17,24,39,0.12);
   --topnav-height: 56px;

@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelx.detector.model.v1",
+  "model": {
+    "name": "Faster R-CNN R-50-FPN 3x BDD100K",
+    "version": "syscv-bdd100k-models@0935a8a3",
+    "architecture": "faster_rcnn_r50_fpn",
+    "checkpoint_filename": "faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "source_url": "https://web.archive.org/web/20250219032106id_/https://dl.cv.ethz.ch/bdd100k/det/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "original_source_url": "https://dl.cv.ethz.ch/bdd100k/det/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth",
+    "source_snapshot": "2025-02-19T03:21:06Z",
+    "source_decision": "https://github.com/toilatrung/label-x/issues/17#issuecomment-6032604847",
+    "expected_md5": "d2a866749432b7bd8436f0001c1625d7",
+    "verified_md5": "d2a866749432b7bd8436f0001c1625d7",
+    "source_repository": "https://github.com/SysCV/bdd100k-models",
+    "source_commit": "0935a8a3eb4c7442efdce2a8ce4b93fbe585be15",
+    "reported_box_ap_val": 32.3,
+    "sha256": "ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540",
+    "size_bytes": 165899860,
+    "frozen_at": "2026-10-07T09:04:12.506464Z",
+    "artifact_state": "frozen",
+    "artifact_uri": "s3://labelx-models/detector/syscv-bdd100k-models-0935a8a3/ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540/faster_rcnn_r50_fpn_3x_det_bdd100k.pth"
+  },
+  "class_mapping": {
+    "version": "bdd100k-det-10-v1",
+    "classes": [
+      "pedestrian",
+      "rider",
+      "car",
+      "truck",
+      "bus",
+      "train",
+      "motorcycle",
+      "bicycle",
+      "traffic light",
+      "traffic sign"
+    ]
+  },
+  "training_manifest": {
+    "dataset": "BDD100K",
+    "split": "train",
+    "policy": "All BDD100K train images are considered training data and must be excluded from held-out evaluation."
+  }
+}

@@ -73,9 +73,9 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Hợp đồng triển khai M13, lineage và phép đo</strong> — Có một contract duy nhất (entity, API, state machine, lỗi, engine interface, lineage, nối quyết định với reference) truy được tới FR/BR trước khi build.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-001</code></td>
+<td><code>T-001, T-006, T-007, T-008, T-009, T-010, T-021</code></td>
 <td>Xem <a href="#e-01">chi tiết</a></td>
-<td><code>BLOCKER-001, BLOCKER-003, BLOCKER-007, BLOCKER-009, BLOCKER-010, BLOCKER-012, DEC-002, DEC-003</code></td>
+<td><code>BLOCKER-001, BLOCKER-003, BLOCKER-007, BLOCKER-009, BLOCKER-010, BLOCKER-012, DEC-002, DEC-003, DEC-005, DEC-006, RISK-012</code></td>
 </tr>
 <tr>
 <td><code>E-02</code></td>
@@ -83,9 +83,9 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Nền backend/frontend, auth, RBAC, audit, storage và CI</strong> — Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</td>
 <td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-002</code></td>
+<td><code>T-002, T-011, T-012, T-013, T-014, T-015, T-016, T-020, T-022</code></td>
 <td>Xem <a href="#e-02">chi tiết</a></td>
-<td><code>BLOCKER-003, BLOCKER-013, BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
+<td><code>BLOCKER-003, BLOCKER-013, BLOCKER-025, DEC-002, DEC-003, CR-101, RISK-012</code></td>
 </tr>
 <tr>
 <td><code>E-03</code></td>
@@ -93,19 +93,19 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Guideline version và mapping rule</strong> — Workspace tra được rule theo rule ID + version + section của snapshot, không dùng RAG.</td>
 <td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-003</code></td>
+<td><code>T-003, T-017, T-018</code></td>
 <td>Xem <a href="#e-03">chi tiết</a></td>
-<td><code>DEC-002, DEC-003, CR-101</code></td>
+<td><code>DEC-002, DEC-003, CR-101, CR-106, CR-107, RISK-012</code></td>
 </tr>
 <tr>
 <td><code>E-04</code></td>
 <td><code>M-02</code></td>
 <td><strong>CVAT adapter chỉ đọc và snapshot bất biến</strong> — Tạo snapshot bất biến, có hash, phát hiện drift, từ CVAT thật mà không có đường ghi annotation.</td>
 <td><code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></td>
-<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>EPIC_BLOCKED</code></td>
 <td><code>T-004</code></td>
 <td>Xem <a href="#e-04">chi tiết</a></td>
-<td><code>BLOCKER-004, BLOCKER-020, DEC-002, DEC-003</code></td>
+<td><code>BLOCKER-004, BLOCKER-020, BLOCKER-023, BLOCKER-024, DEC-002, DEC-003, DEC-007</code></td>
 </tr>
 <tr>
 <td><code>E-05</code></td>
@@ -145,7 +145,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-08">chi tiết</a></td>
-<td><code>BLOCKER-003, BLOCKER-007, BLOCKER-014, DEC-002, DEC-003</code></td>
+<td><code>BLOCKER-003, BLOCKER-007, BLOCKER-025, DEC-002, DEC-003, DEC-005, DEC-006</code></td>
 </tr>
 <tr>
 <td><code>E-09</code></td>
@@ -155,7 +155,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-09">chi tiết</a></td>
-<td><code>DEC-002, DEC-003</code></td>
+<td><code>DEC-002, DEC-003, DEC-006</code></td>
 </tr>
 <tr>
 <td><code>E-10</code></td>
@@ -165,7 +165,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_IN_PROGRESS</code></td>
 <td><code>T-005</code></td>
 <td>Xem <a href="#e-10">chi tiết</a></td>
-<td><code>BLOCKER-005, BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
+<td><code>BLOCKER-005, BLOCKER-025, DEC-002, DEC-003, DEC-008, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-11</code></td>
@@ -175,7 +175,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-11">chi tiết</a></td>
-<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010, DEC-002, DEC-003</code></td>
+<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010, DEC-002, DEC-003, DEC-005</code></td>
 </tr>
 <tr>
 <td><code>E-12</code></td>
@@ -195,7 +195,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-13">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003</code></td>
+<td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003, DEC-006</code></td>
 </tr>
 <tr>
 <td><code>E-14</code></td>
@@ -205,7 +205,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-14">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101</code></td>
+<td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101, DEC-006</code></td>
 </tr>
 <tr>
 <td><code>E-15</code></td>
@@ -225,7 +225,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-16">chi tiết</a></td>
-<td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101</code></td>
+<td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101, DEC-005</code></td>
 </tr>
 <tr>
 <td><code>E-17</code></td>
@@ -295,7 +295,7 @@ ul.dir{columns:2;font-size:14px}
 <td><code>EPIC_PROPOSED</code></td>
 <td><code>none</code></td>
 <td>Xem <a href="#e-23">chi tiết</a></td>
-<td><code>BLOCKER-014, DEC-002, DEC-003, CR-101</code></td>
+<td><code>BLOCKER-025, DEC-002, DEC-003, CR-101</code></td>
 </tr>
 <tr>
 <td><code>E-24</code></td>
@@ -360,8 +360,8 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html, .agent/governance/decisions/DEC-005.html, .agent/governance/decisions/DEC-006.html</code></li>
+<li><strong>Risks</strong>: <code>RISK-012</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Main, ContextBarStates, WorkflowPermissions, AnalysisConfig, RulesThresholds</li>
 </ul>
@@ -421,7 +421,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_1">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-01</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>none</code> (BLOCKER-014 resolved theo DEC-012; phần nghiệm thu NFR theo dõi ở BLOCKER-025, không chặn EPIC_READY)</li>
 </ul>
 <h4 id="related-files_1">Related Files</h4>
 <ul>
@@ -429,7 +429,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>RISK-012</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: Main, WorkflowPermissions, TopBar, FlowNav, NavigationMenu, ContextBarStates</li>
 </ul>
@@ -476,7 +476,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Guideline tĩnh có rule ID, section, trích đoạn nạp từ tệp lúc khởi tạo; mapping nhóm lỗi/lớp → rule ID trong cùng tệp; API tra rule (thay FR-GDL-01…03 theo CR-101)</li>
 <li>Không retrieval ngữ nghĩa (FR-GDL-04)</li>
-<li>Frontend: ModelsGuidelines phần guideline (version, rule ID, section, trích đoạn) và RulesThresholds phần mapping nhóm lỗi/lớp → rule ID (QC Admin sửa, vai trò khác chỉ xem); component tra rule dùng lại ở Workspace (E-14)</li>
+<li>Frontend: ModelsGuidelines phần guideline (version, rule ID, section, trích đoạn) và RulesThresholds phần mapping nhóm lỗi/lớp → rule ID (chỉ xem; mapping nạp từ tệp có kiểm hợp lệ theo <a href="../governance/change-requests/CR-107.html">CR-107</a>); component tra rule dùng lại ở Workspace (E-14)</li>
 </ul>
 <h5 id="excluded_2">Excluded</h5>
 <ul>
@@ -494,13 +494,13 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>RISK-008</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>RISK-008, RISK-012</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html, .agent/governance/change-requests/CR-106.html, .agent/governance/change-requests/CR-107.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, RulesThresholds</li>
 </ul>
 <h4 id="acceptance-criteria_2">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Lookup trả đúng version gắn với snapshot</li>
+<li>[ ] Lookup trả version của tệp guideline đã nạp; snapshot ghi version guideline (E-05) — sửa theo <a href="../governance/change-requests/CR-106.html">CR-106</a></li>
 <li>[ ] Mapping không hợp lệ bị từ chối</li>
 <li>[ ] Rule tối thiểu cho 10 lớp BDD100K được nạp (AS-06, RK-08)</li>
 <li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
@@ -526,7 +526,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
 <li><strong>Title</strong>: <code>CVAT adapter chỉ đọc và snapshot bất biến</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></li>
-<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
+<li><strong>Status</strong>: <code>EPIC_BLOCKED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-02</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
@@ -558,14 +558,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_3">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-02, E-03</code></li>
-<li><strong>Blocked By</strong>: <code>none</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-024</code></li>
 </ul>
 <h4 id="related-files_3">Related Files</h4>
 <ul>
 <li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html, .agent/governance/decisions/DEC-007.html (proposed)</code></li>
 <li><strong>Risks</strong>: <code>RISK-006</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: Snapshot, SnapshotHistory, Main</li>
@@ -818,6 +818,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Metric hàng đợi/shard (NFR-12)</li>
 <li>Màn AnalysisConfig, ExecutionHistory</li>
 <li>Frontend: AnalysisConfig (chọn snapshot, engine, tạo run, huỷ, retry-failed) và ExecutionHistory (trạng thái run/shard, ledger theo engine, trạng thái công khai Checked/Partial/Failed/Not checked/Running, tự làm mới khi run đang chạy)</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_7">Excluded</h5>
 <ul>
@@ -826,7 +827,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_7">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-04</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>none</code> (BLOCKER-014 resolved theo DEC-012; phần nghiệm thu NFR theo dõi ở BLOCKER-025, không chặn EPIC_READY)</li>
 </ul>
 <h4 id="related-files_7">Related Files</h4>
 <ul>
@@ -956,14 +957,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_9">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-05, E-08, E-07</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>none</code> (BLOCKER-014 resolved theo DEC-012; phần nghiệm thu NFR theo dõi ở BLOCKER-025, không chặn EPIC_READY)</li>
 </ul>
 <h4 id="related-files_9">Related Files</h4>
 <ul>
 <li><strong>Roadmap</strong>: <code>.agent/planning/roadmap.html</code></li>
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html, .agent/governance/decisions/DEC-008.html</code></li>
 <li><strong>Risks</strong>: <code>RISK-001</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 <li><strong>Screens (H)</strong>: ModelsGuidelines, AnalysisConfig, ExecutionHistory</li>
@@ -1669,6 +1670,7 @@ ul.dir{columns:2;font-size:14px}
 <li>FR-RPT-01…06</li>
 <li>Phân biệt lineage KPI (snapshot đầu vào) với báo cáo/gate revision cuối</li>
 <li>Frontend: QualityReport hai phần (KPI theo snapshot đầu vào; chất lượng/gate theo run cuối), ghi rõ nguồn từng phần; xuất PDF/CSV/JSON</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_20">Excluded</h5>
 <ul>
@@ -1735,6 +1737,7 @@ ul.dir{columns:2;font-size:14px}
 <li>G-4: lát ngẫu nhiên trên snapshot run cuối, đạt khi cận trên KTC 95% ≤ 5% (BLOCKER-006 phương án A)</li>
 <li>Không phát hành dataset (FR-GTE-04)</li>
 <li>Frontend: QualityGate — từng điều kiện kèm nguồn dữ liệu và trạng thái; form waiver chỉ cho coverage và đồng thuận reviewer; người duyệt khác người đề nghị</li>
+<li>Hiển thị cảnh báo khi ledger có <code>excluded &gt; 0</code>: số đơn vị bị loại khỏi mẫu số theo lý do và <code>applicability_version</code>; trạng thái công khai không đổi (DEC-010, docs/04-api/engine-interface.html §4.1)</li>
 </ul>
 <h5 id="excluded_21">Excluded</h5>
 <ul>
@@ -1809,7 +1812,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_22">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-20</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-014</code></li>
+<li><strong>Blocked By</strong>: <code>none</code> (BLOCKER-014 resolved theo DEC-012; phần nghiệm thu NFR theo dõi ở BLOCKER-025, không chặn EPIC_READY)</li>
 </ul>
 <h4 id="related-files_22">Related Files</h4>
 <ul>

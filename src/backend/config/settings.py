@@ -15,6 +15,7 @@ env = environ.Env(
     DJANGO_ALLOWED_HOSTS=(list, []),
     CORS_ALLOWED_ORIGINS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, None),
+    OBJECT_STORAGE_PRESIGNED_TTL_SECONDS=(int, 300),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -35,11 +36,17 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "django_celery_beat",
+    "cvat_adapter.apps.CvatAdapterConfig",
     # LabelX modules (modular monolith) — thêm khi epic tương ứng được triển khai
+    "accounts.apps.AccountsConfig",
+    "audit.apps.AuditConfig",
+    "guideline",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "config.middleware.RequestIDMiddleware",
+    "config.middleware.AuditRejectionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -121,6 +128,7 @@ STORAGES = {
     ),
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+OBJECT_STORAGE_PRESIGNED_TTL_SECONDS = env("OBJECT_STORAGE_PRESIGNED_TTL_SECONDS")
 
 # DRF — quyền project/job kiểm ở API (B-12); mặc định yêu cầu đăng nhập.
 REST_FRAMEWORK = {
@@ -132,6 +140,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.CursorPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -143,9 +152,22 @@ SPECTACULAR_SETTINGS = {
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+# Frontend khác origin cần đọc mã tra cứu cả khi lỗi 5xx trả HTML thay vì Error JSON.
+CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 # Frontend khác origin (dev: :3000 gọi API :8000) gửi POST kèm session cookie phải qua kiểm Origin
 # của CSRF; mặc định tin cùng danh sách với CORS.
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
+
+# Phiên LabelX (T-011, contract auth): cookie `sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
+# `csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
+# (:8000) cùng site localhost nên SameSite=Lax đủ; production bật Secure qua env.
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 
 # Celery — task phải idempotent dù có retry; timeout đặt riêng theo loại task sau đo pilot.
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
@@ -159,3 +181,27 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # CVAT adapter — chỉ đọc job/meta/annotation/media bằng service account (B-18).
 CVAT_BASE_URL = env("CVAT_BASE_URL", default="")
 CVAT_SERVICE_TOKEN = env("CVAT_SERVICE_TOKEN", default="")
+
+# JSON request/worker logs with request context and secret redaction.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_context": {"()": "config.logging.RequestContextFilter"},
+        "redact_secrets": {"()": "config.logging.SecretRedactionFilter"},
+    },
+    "formatters": {"json": {"()": "config.logging.JsonFormatter"}},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_context", "redact_secrets"],
+            "formatter": "json",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "labelx": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}

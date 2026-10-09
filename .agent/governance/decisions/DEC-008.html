@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DEC-008 — Phục hồi checkpoint Detector từ Wayback — LabelX</title>
+<meta name="labelx:id" content="DEC-008">
+<meta name="labelx:title" content="Phục hồi checkpoint Detector từ Wayback">
+<meta name="labelx:type" content="governance"><meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="detector"><meta name="labelx:tags" content="[decision, detector, checkpoint, wayback, t-005]"><meta name="labelx:priority" content="1">
+<style>:root{--bg:#f6f7f9;--card:#fff;--border:#e3e6ea;--ink:#1a1d23;--muted:#596170;--warn:#fff3d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,sans-serif}.top{background:#1f2933;color:#fff;padding:12px 24px}.top b{color:#e1323e}main{max-width:1100px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 28px}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}code{background:#f0f1f3;padding:1px 4px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#f0f1f3}.meta{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;background:#f3f4f6;padding:10px;margin-top:12px}blockquote{background:var(--warn);border-left:4px solid #a66a00;padding:8px 14px}</style>
+</head><body><header class="top">Label<b>X</b> · .agent / governance / decisions / DEC-008</header><main><article>
+<div class="meta"><b>id</b><span>DEC-008</span><b>type</b><span>governance</span><b>status</b><span>accepted</span></div>
+<h1 id="decision-phuc-hoi-checkpoint-detector-tu-wayback">Decision: Phục hồi checkpoint Detector từ Wayback</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi bằng chứng quyết định của Product Owner về nguồn phục hồi checkpoint cho T-005 khi host model zoo chính thức không còn DNS.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-008</code></li>
+<li><strong>Title</strong>: <code>Phục hồi checkpoint Detector Faster R-CNN từ Wayback</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li>
+<li><strong>Decision Makers</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>operations</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-07</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p><code>dl.cv.ethz.ch</code> không phân giải DNS từ tháng 03/2026; issue <code>SysCV/bdd100k-models#28</code> vẫn mở và chưa có mirror chính thức. Product Owner đã comment hướng phục hồi tại <a href="https://github.com/toilatrung/label-x/issues/17#issuecomment-6032604847">issue #17, comment 6032604847</a>. Snapshot Wayback trả HTTP 200, <code>content-length=165899860</code>, thời điểm lưu <code>2025-02-19T03:21:06Z</code>.</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Giữ đúng Faster R-CNN R-50-FPN 3x đã chốt trong CR-101 và không đổi framework DEC-001.</li>
+<li>Artifact chỉ được freeze sau khi MD5 thực tế khớp <code>d2a866749432b7bd8436f0001c1625d7</code>.</li>
+<li>Worker phải dùng SHA-256 đã tính từ file hoàn chỉnh và tải vận hành từ object storage nội bộ, không phụ thuộc Wayback.</li>
+<li>Training manifest vẫn là toàn bộ BDD100K train; ảnh đánh giá phải loại trừ split này.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>Faster R-CNN 3x từ Wayback</td><td>Giữ nguyên model/config/AP val 32.30 và training manifest đã chốt.</td><td>Wayback chậm, có thể 429; phải kiểm MD5 rồi SHA-256.</td><td>meets</td></tr>
+<tr><td>Cascade R-CNN 3x từ Wayback</td><td>AP val báo cáo 33.72.</td><td>File lớn hơn, vẫn phụ thuộc Wayback và đổi artifact/config.</td><td>partially-meets</td></tr>
+<tr><td>Tự train Faster R-CNN 1x</td><td>Chủ động artifact.</td><td>Ước tính 40–60 GPU-giờ, AP mục tiêu thấp hơn và chưa đo.</td><td>partially-meets</td></tr>
+<tr><td>Checkpoint YOLO từ Hugging Face</td><td>Có mirror khác.</td><td>Đổi framework, license AGPL và metric không tương đương BDD100K val.</td><td>does-not-meet</td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>Faster R-CNN R-50-FPN 3x từ Wayback snapshot 20250219032106id_</code></li>
+<li><strong>Rationale</strong>: <code>Giữ đúng model đã chốt; chỉ thay nguồn phục hồi. PO @toilatrung cung cấp URL, MD5 và thứ tự phương án dự phòng tại issue #17.</code></li>
+<li><strong>Effective Date</strong>: <code>2026-10-07</code></li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>T-005 có đường phục hồi artifact mà không đổi kiến trúc/model/training manifest.</code></li>
+<li><strong>Negative</strong>: <code>Lần tải đầu chậm và không đủ tin cậy cho runtime production.</code></li>
+<li><strong>Follow-up Work</strong>: <code>Đã tải resumable, kiểm size/MD5, tính SHA-256, freeze manifest, inference 10 ảnh BDD100K validation, và xác minh publish/fetch round-trip trên object storage S3-compatible. Endpoint/credentials production do Operations cấp qua environment.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>src/detector_worker/model-manifest.json, src/detector_worker/README.html, .agent/reports/implementation/T-005.html</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-10, T-005</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
+<li><strong>Risks</strong>: <code>.agent/governance/blockers/BLOCKER-005.html; SysCV/bdd100k-models#28</code></li>
+<li><strong>Supersedes</strong>: <code>none; bổ sung nguồn phục hồi cho DEC-003/CR-101</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[x] Checkpoint 165.899.860 byte khớp MD5 <code>d2a866749432b7bd8436f0001c1625d7</code>.</li>
+<li>[x] Manifest freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>.</li>
+<li>[x] PO/QC integrator merge nội dung per-user vào decision chính (2026-10-07; trước đây là <code>DEC-005-@vietanhhhhhh2003</code>, đã gộp vào <code>DEC-008</code> vì mã trùng với quyết định lineage của T-001).</li>
+<li>[x] Accepted decision được map với commit triển khai trong Git Nexus (<code>852bfca</code>, <code>.agent/intelligence/git-nexus/decision-commit-map.html</code>).</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không freeze nếu size hoặc MD5 thực tế không khớp.</li>
+<li>Không dùng Wayback làm nguồn runtime sau khi đã có object storage nội bộ.</li>
+<li>Không sửa decision chính từ nhánh thành viên; PO/QC integrator thực hiện merge theo CR-100.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Lưu tại <code>.agent/governance/decisions/DEC-008.html</code>; giữ URL, expected MD5, SHA-256 thực tế và bằng chứng comment PO có thể truy vết.</li></ul>
+</article></main></body></html>

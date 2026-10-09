@@ -89,10 +89,11 @@ ul.dir{columns:2;font-size:14px}
 <p>Bucket mặc định của <code>STORAGES["default"]</code> trong <a href="../../src/backend/config/settings.py">settings.py</a> là <code>labelx-evidence</code> (biến <code>OBJECT_STORAGE_BUCKET</code>). Ngoài <code>default</code>, settings có ba storage tương ứng ba bucket: <code>storages["snapshots"]</code> (<code>OBJECT_STORAGE_BUCKET_SNAPSHOTS</code>), <code>storages["evidence"]</code> (<code>OBJECT_STORAGE_BUCKET_EVIDENCE</code>), <code>storages["reports"]</code> (<code>OBJECT_STORAGE_BUCKET_REPORTS</code>); mặc định là tên bucket trong compose.</p>
 <p>Vị trí lưu <strong>model artifact</strong> (L: "Model Registry") chưa có bucket trong compose và chưa chốt. Yêu cầu tối thiểu là lưu được checksum và mapping lớp (FR-ENG-05).</p>
 <h2 id="3-khoa-theo-hash-noi-dung">3. Khoá theo hash nội dung</h2>
-<pre class="highlight"><code class="language-text">&lt;bucket&gt;/sha256/&lt;2 ký tự đầu&gt;/&lt;sha256&gt;.&lt;ext&gt;
-ví dụ: labelx-snapshots/sha256/9f/9f86d081…0a08.jpg</code></pre>
+<pre class="highlight"><code class="language-text">&lt;bucket&gt;/sha256/&lt;2 ký tự đầu&gt;/&lt;sha256&gt;
+ví dụ: labelx-snapshots/sha256/9f/9f86d081…0a08</code></pre>
 <ul>
 <li>Khoá được tính từ SHA-256 của chính nội dung. Ghi lại cùng nội dung sẽ ra cùng khoá, nên <strong>ghi lặp là idempotent</strong> (NFR-06).</li>
+<li>Phần mở rộng tên tệp do caller cung cấp không tham gia vào khoá; cùng bytes luôn dùng chung một object.</li>
 <li>Cùng một ảnh xuất hiện trong nhiều snapshot (snapshot gia tăng, run cuối) chỉ được lưu một lần. Mỗi dòng <code>frame</code> vẫn ghi <code>image_sha256</code> riêng.</li>
 <li><code>frame.image_sha256</code> chính là checksum mà FR-SNP-05 yêu cầu. Worker kiểm lại checksum khi đọc ảnh để chạy engine.</li>
 <li>Cấu hình: storage <code>snapshots</code> và <code>evidence</code> đặt <code>file_overwrite=True</code>, vì <code>file_overwrite=False</code> của django-storages sẽ <strong>tự đổi tên</strong> khi khoá đã tồn tại và phá cơ chế content-addressed; ghi lại cùng khoá hash là ghi cùng nội dung nên idempotent. <code>reports</code> và <code>default</code> giữ <code>False</code>. Vẫn nên <code>HEAD</code> trước khi ghi blob lớn để tránh upload thừa. Kiểm bằng <code>src/backend/tests/test_settings.py</code>.</li>

@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Review Workspace</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/labelx/tokens.css">
@@ -15,8 +16,8 @@
 </helmet>
 <div class="lx" style="min-height: 100vh; background: var(--canvas)">
 <dc-import name="TopBar" active="review" active-item="workspace" hint-size="100%,100px"></dc-import>
-<main class="lx-page" style="gap: 16px">
-<dc-import name="FlowNav" flow="review" step="workspace" hint-size="100%,48px"></dc-import>
+<main class="lx-page">
+
 
 <div class="lx-head">
 <div class="lx-head__text">
@@ -26,7 +27,9 @@
 <div class="lx-actions"><span class="lx-hint">Job 2272 · An Nguyễn · validation</span><a class="lx-btn" href="ReviewQueues.dc.html">Về hàng đợi</a></div>
 </div>
 
-<div class="lx-ws">
+<dc-import name="FlowNav" flow="review" step="workspace" hint-size="100%,74px"></dc-import>
+
+<div class="lx-ws lx-ws--reference">
 
 <section class="lx-stage" aria-label="Khung hình annotation từ CVAT">
 <div class="lx-stage__bar">

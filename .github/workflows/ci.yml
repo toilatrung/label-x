@@ -129,10 +129,41 @@ jobs:
           uv run --frozen python manage.py makemigrations --check --dry-run
           uv run --frozen python manage.py migrate --noinput
           uv run --frozen python manage.py spectacular --file ../../.ci-artifacts/openapi.yaml --validate
+      - name: Audit runtime role cannot rewrite audit (F-02)
+        env:
+          RUNTIME_DB_PASSWORD: ci-only-runtime-role-password
+        run: |
+          uv run --frozen python manage.py provision_runtime_db_role labelx_runtime --password-env RUNTIME_DB_PASSWORD
+          DATABASE_URL=postgres://labelx_runtime:ci-only-runtime-role-password@localhost:5432/labelx_ci \
+            uv run --frozen python manage.py check --deploy --tag database
       - name: Full pytest suite
         # Chạy MỌI test trong src/backend/tests để test mới của collaborator không bị bỏ sót;
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
         run: uv run --frozen pytest -q --strict-markers
+      - name: S3 integration (SeaweedFS, F-10)
+        # Cùng image/cấu hình với infrastructure/docker-compose.dev.yml; services: không truyền được command nên dùng docker run.
+        env:
+          LABELX_RUN_S3_INTEGRATION: '1'
+          OBJECT_STORAGE_ENDPOINT_URL: http://localhost:9000
+          OBJECT_STORAGE_ACCESS_KEY: labelx
+          OBJECT_STORAGE_SECRET_KEY: labelx-secret
+          OBJECT_STORAGE_REGION: us-east-1
+        run: |
+          docker run -d --name seaweedfs -p 9000:9000 \
+            -v "$GITHUB_WORKSPACE/infrastructure/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro" \
+            chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a \
+            server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=1024
+          for i in $(seq 1 30); do
+            docker exec seaweedfs wget -q -O /dev/null http://127.0.0.1:9333/cluster/status && break
+            sleep 2
+          done
+          for b in labelx-snapshots labelx-evidence labelx-reports labelx-models; do
+            echo "s3.bucket.create -name $b" | docker exec -i seaweedfs weed shell -master=127.0.0.1:9333
+          done
+          uv run --frozen pytest tests/storage/test_seaweedfs_integration.py -q
+      - name: SeaweedFS logs on failure
+        if: failure()
+        run: docker logs seaweedfs || true
       - name: Execute registered scaffold tests
         working-directory: .
         run: |
@@ -149,6 +180,27 @@ jobs:
           # .ci-artifacts là thư mục ẩn; upload-artifact@v7 mặc định bỏ qua file ẩn.
           include-hidden-files: true
           if-no-files-found: error
+
+  detector:
+    # Tương đương `make detector-lint detector-test`; worker chạy độc lập, không cần GPU/MMDetection.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/detector_worker
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: '3.10' # pyproject: requires-python >=3.7,<3.11
+      - run: uv sync --frozen --extra dev
+      - name: Lint (detector-lint)
+        run: |
+          uv run --frozen --extra dev ruff check .
+          uv run --frozen --extra dev ruff format --check .
+      - name: Test (detector-test)
+        run: uv run --frozen --extra dev pytest -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -169,7 +221,14 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
+          npm test
           npm run build
+      - name: No mock credentials in client bundle (T-002)
+        run: |
+          if grep -rl 'password123' .next/static; then
+            echo "Mật khẩu tài khoản mẫu lọt vào bundle client" >&2
+            exit 1
+          fi
       - name: Package build without env/cache/node_modules
         working-directory: .
         run: |

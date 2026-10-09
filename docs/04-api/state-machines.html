@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>State machine Snapshot, QC Run, Issue, frame — LabelX</title>
+<meta name="labelx:id" content="api-state-machines">
+<meta name="labelx:title" content="State machine Snapshot, QC Run, Issue, frame">
+<meta name="labelx:type" content="reference">
+<meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="quality-control">
+<meta name="labelx:tags" content="[api, state-machine, transition, contract, t-001]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 04-api / state-machines</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>api-state-machines</span><b>title</b><span>State machine Snapshot, QC Run, Issue, frame</span><b>type</b><span>reference</span><b>domain</b><span>api</span><b>module</b><span>quality-control</span><b>tags</b><span>[api, state-machine, transition, contract, t-001]</span><b>priority</b><span>1</span></div>
+<h1 id="state-machines">State machine Snapshot, QC Run, Issue, frame</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Contract M13 v1 (T-001, E-01) cho bốn máy trạng thái mà backend phải kiểm. Mỗi transition có event, actor, guard, operation API và mã lỗi khi bị từ chối. Theo B-17, transition không có trong bảng bị từ chối bằng <code>409 INVALID_TRANSITION</code>. Mã trạng thái (cột <em>Mã</em>) là giá trị enum trong <a href="openapi.yaml">openapi.yaml</a>; tên tiếng Việt là nhãn UI theo SRS §5.3.</p>
+<p>Nguồn: SRS <code>05-dynamics.tex</code> (fig:runstate, fig:issuestate, fig:framestate, tab:transitions), <code>06-functional.tex</code>; quyết định <a href="../../.agent/governance/decisions/DEC-002.html">DEC-002</a> (BLOCKER-008, BLOCKER-011), <a href="../../.agent/governance/decisions/DEC-005.html">DEC-005</a> (lineage), <a href="../../.agent/governance/decisions/DEC-006.html">DEC-006</a> (neo issue). Event ID dạng <code>frame.claim</code> được dùng trong trường <code>x-labelx-transition</code> của OpenAPI và trong audit.</p>
+<div class="toc"><ul>
+<li><a href="#snapshot">1. Snapshot</a></li>
+<li><a href="#run">2. QC Run</a></li>
+<li><a href="#issue">3. Issue</a></li>
+<li><a href="#frame">4. Trạng thái review của frame (có "đang dở")</a></li>
+<li><a href="#rules">5. Quy tắc chung</a></li>
+<li><a href="#open">6. Còn mở</a></li>
+</ul></div>
+
+<h2 id="snapshot">1. Snapshot</h2>
+<table>
+<thead><tr><th>Mã</th><th>Nhãn UI</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td><code>pending</code></td><td>Chờ xuất</td><td>Đã tạo bản ghi, chờ worker</td></tr>
+<tr><td><code>exporting</code></td><td>Đang xuất</td><td>Worker đọc CVAT, chuẩn hoá, hash, lưu ảnh</td></tr>
+<tr><td><code>locked</code></td><td>Đã khoá</td><td>Bất biến; dùng được cho QC Run (FR-SNP-06)</td></tr>
+<tr><td><code>failed</code></td><td>Thất bại</td><td><code>failure_reason</code> ∈ <code>drift_detected</code>, <code>export_error</code></td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Event</th><th>Từ</th><th>Đến</th><th>Actor</th><th>Guard</th><th>API</th><th>Từ chối</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>snapshot.create</code></td><td>—</td><td><code>pending</code></td><td>QA Lead, Super Admin</td><td>Phạm vi thuộc scope người gọi; không có snapshot <code>pending</code>/<code>exporting</code> trùng phạm vi</td><td><code>snapshots_create</code></td><td>403 OUT_OF_SCOPE; 409 SCOPE_BUSY</td><td>UC-01; FR-SNP-05; SD-1</td></tr>
+<tr><td><code>snapshot.export_start</code></td><td><code>pending</code></td><td><code>exporting</code></td><td>Hệ thống (worker)</td><td>Task Celery idempotent theo snapshot id</td><td>—</td><td>—</td><td>FR-SNP-01, FR-SNP-03</td></tr>
+<tr><td><code>snapshot.lock</code></td><td><code>exporting</code></td><td><code>locked</code></td><td>Hệ thống</td><td>Đọc lại <code>updated_date</code> từng job, không đổi so với lần đọc đầu; mọi ảnh có checksum</td><td>—</td><td>—</td><td>FR-SNP-03, FR-SNP-04, FR-SNP-05; B-02</td></tr>
+<tr><td><code>snapshot.fail</code></td><td><code>exporting</code></td><td><code>failed</code></td><td>Hệ thống</td><td>Có job drift (<code>drift_detected</code>, kèm <code>drift_jobs</code>) hoặc lỗi xuất sau retry (<code>export_error</code>)</td><td>—</td><td>—</td><td>FR-SNP-04</td></tr>
+</tbody>
+</table>
+<p><code>locked</code> và <code>failed</code> là trạng thái cuối. Thay đổi annotation sau khoá tạo snapshot mới có <code>parent_snapshot_id</code> (FR-SNP-06).</p>
+
+<h2 id="run">2. QC Run</h2>
+<table>
+<thead><tr><th>Mã</th><th>Nhãn UI</th><th>Ghi chú</th></tr></thead>
+<tbody>
+<tr><td><code>queued</code></td><td>Queued</td><td>Đã tạo, chờ orchestrator</td></tr>
+<tr><td><code>running</code></td><td>Running</td><td>Các shard đang chạy</td></tr>
+<tr><td><code>completed</code></td><td>Completed</td><td>Mọi shard ok; cuối</td></tr>
+<tr><td><code>partial</code></td><td>Partial</td><td>Có shard lỗi sau retry; cho chạy lại phần lỗi</td></tr>
+<tr><td><code>failed</code></td><td>Failed</td><td>Lỗi toàn cục; cuối (tạo run mới)</td></tr>
+<tr><td><code>cancelled</code></td><td>Cancelled</td><td>Đã huỷ; cuối</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Event</th><th>Từ</th><th>Đến</th><th>Actor</th><th>Guard</th><th>API</th><th>Từ chối</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>run.create</code></td><td>—</td><td><code>queued</code></td><td>QA Lead, Super Admin</td><td>Snapshot <code>locked</code>; config version đã publish; ghi snapshot, config, seed, version engine, model artifact + checksum, người chạy</td><td><code>runs_create</code></td><td>404 NOT_FOUND; 422 BUSINESS_RULE_UNMET</td><td>UC-02; FR-ENG-01</td></tr>
+<tr><td><code>run.start</code></td><td><code>queued</code></td><td><code>running</code></td><td>Hệ thống (worker nhận)</td><td>—</td><td>—</td><td>—</td><td>UC-02 (luồng chính bước 2–3); fig:runstate; SD-2</td></tr>
+<tr><td><code>run.complete</code></td><td><code>running</code></td><td><code>completed</code></td><td>Hệ thống</td><td>Mọi work unit completed hoặc not_checked có lý do; gộp issue và ranking xong</td><td>—</td><td>—</td><td>FR-AGG-04, FR-AGG-05, FR-RNK-01</td></tr>
+<tr><td><code>run.partial</code></td><td><code>running</code></td><td><code>partial</code></td><td>Hệ thống</td><td>Còn work unit failed sau retry; ledger không loại đơn vị lỗi khỏi mẫu số</td><td>—</td><td>—</td><td>FR-AGG-04; B-19</td></tr>
+<tr><td><code>run.fail</code></td><td><code>running</code></td><td><code>failed</code></td><td>Hệ thống</td><td>Lỗi toàn cục (không đọc được snapshot, cấu hình hỏng)</td><td>—</td><td>—</td><td>UC-02 (hậu điều kiện); fig:runstate</td></tr>
+<tr><td><code>run.cancel</code></td><td><code>queued</code>, <code>running</code></td><td><code>cancelled</code></td><td>QA Lead, Super Admin</td><td>Gọi lại khi đã <code>cancelled</code> trả 200, không đổi gì</td><td><code>runs_cancel</code></td><td>409 INVALID_TRANSITION (từ <code>completed</code>, <code>partial</code>, <code>failed</code>)</td><td>UC-02 (ngoại lệ: actor huỷ run); fig:runstate; rest-api §4.1</td></tr>
+<tr><td><code>run.retry_failed</code></td><td><code>partial</code></td><td><code>running</code></td><td>QA Lead, Super Admin</td><td>Có work unit failed; chạy lại theo <code>work_unit.idempotency_key</code>, không tạo candidate/issue trùng</td><td><code>runs_retry_failed</code></td><td>409 INVALID_TRANSITION</td><td>FR-AGG-02; NFR-05</td></tr>
+</tbody>
+</table>
+<p><strong>Run cuối</strong> (<code>is_final</code>): khi mọi yêu cầu sửa trong phạm vi đã đóng, hệ thống tạo snapshot toàn phạm vi và run có <code>is_final=true</code>, <code>origin_run_id</code> trỏ run gốc (FR-RWK-06). Không có rework thì run gốc <code>completed</code> là run cuối (DEC-002, BLOCKER-011). Báo cáo và gate chỉ trỏ run cuối khi run cuối <code>completed</code> và coverage bắt buộc được ghi đủ trong ledger; gate áp dụng ngưỡng theo FR-GTE-01, với waiver coverage hợp lệ nếu được duyệt. Waiver không thể biến run không Completed thành run cuối.</p>
+
+<h2 id="issue">3. Issue</h2>
+<table>
+<thead><tr><th>Mã</th><th>Nhãn UI (H)</th></tr></thead>
+<tbody>
+<tr><td><code>pending_review</code></td><td>Chờ review</td></tr>
+<tr><td><code>in_review</code></td><td>Đang review</td></tr>
+<tr><td><code>confirmed</code></td><td>Đã xác nhận</td></tr>
+<tr><td><code>rejected</code></td><td>Bác bỏ (cảnh báo sai)</td></tr>
+<tr><td><code>escalated</code></td><td>Chờ phân xử (Chưa chắc / Chuyển cấp)</td></tr>
+<tr><td><code>fix_pending</code></td><td>Chờ sửa</td></tr>
+<tr><td><code>recheck_pending</code></td><td>Chờ kiểm lại</td></tr>
+<tr><td><code>resolved</code></td><td>Đã đóng</td></tr>
+<tr><td><code>reopened</code></td><td>Mở lại</td></tr>
+</tbody>
+</table>
+<p>Issue thuộc một run. Trạng thái <code>in_review</code> của issue đi theo lease của frame chứa nó: khi frame được claim, mọi issue chưa có quyết định của frame chuyển <code>in_review</code>.</p>
+<table>
+<thead><tr><th>Event</th><th>Từ</th><th>Đến</th><th>Actor</th><th>Guard</th><th>API</th><th>Từ chối</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>issue.create</code></td><td>—</td><td><code>pending_review</code></td><td>Hệ thống (aggregation)</td><td>Upsert theo <code>dedup_key</code> = (snapshot, frame, neo, nhóm lỗi); neo theo DEC-006</td><td>—</td><td>—</td><td>FR-AGG-03, FR-RNK-12; BR-08</td></tr>
+<tr><td><code>issue.recur</code></td><td>—</td><td><code>pending_review</code></td><td>Hệ thống (run cuối)</td><td>Run <code>is_final</code> gặp lại cùng neo của một issue ở run gốc: tạo issue mới có link <code>recurrence_of</code>; không kế thừa quyết định (DEC-005)</td><td>—</td><td>—</td><td>FR-RWK-06, FR-RWK-08</td></tr>
+<tr><td><code>issue.create_manual</code></td><td>—</td><td><code>in_review</code></td><td>Reviewer, QA Lead, Super Admin</td><td>Người tạo giữ lease còn hạn của frame; neo <code>manual_object</code> hoặc <code>manual_region</code> (DEC-006); <code>origin=reviewer</code></td><td><code>issues_create</code> (đợt sau)</td><td>409 LEASE_CONFLICT</td><td>FR-REV-09</td></tr>
+<tr><td><code>issue.claim</code></td><td><code>pending_review</code></td><td><code>in_review</code></td><td>Reviewer (qua <code>frame.claim</code>)</td><td>Có quyền Review trong scope; không phải assignee của job tại snapshot; chưa giữ lease khác còn hạn</td><td><code>queues_next</code></td><td>403 SELF_REVIEW_FORBIDDEN, IDENTITY_MAPPING_MISSING</td><td>tab:transitions; FR-REV-03</td></tr>
+<tr><td><code>issue.lease_expired</code></td><td><code>in_review</code></td><td><code>pending_review</code></td><td>Hệ thống</td><td>Lease hết hạn (TBD-09) và issue chưa có quyết định đã lưu. Issue đã có quyết định giữ nguyên trạng thái</td><td>—</td><td>—</td><td>tab:transitions; FR-REV-04; BLOCKER-008</td></tr>
+<tr><td><code>issue.confirm</code></td><td><code>in_review</code></td><td><code>confirmed</code></td><td>Reviewer</td><td>Có nhóm lỗi, mức độ; lease còn hạn; không self-review (kiểm lại khi lưu)</td><td><code>issues_decide</code> (đợt sau)</td><td>400; 403 SELF_REVIEW_FORBIDDEN; 409 LEASE_CONFLICT</td><td>UC-05; FR-REV-08, FR-REV-14</td></tr>
+<tr><td><code>issue.reject</code></td><td><code>in_review</code></td><td><code>rejected</code></td><td>Reviewer</td><td>Có lý do; lease còn hạn; không self-review</td><td><code>issues_decide</code></td><td>400; 403; 409</td><td>FR-REV-08, FR-REV-14</td></tr>
+<tr><td><code>issue.escalate</code></td><td><code>in_review</code></td><td><code>escalated</code></td><td>Reviewer</td><td>Quyết định <code>uncertain</code> hoặc <code>escalate</code>; có lý do; lease còn hạn; không self-review</td><td><code>issues_decide</code></td><td>400; 403; 409</td><td>FR-REV-08; UC-06</td></tr>
+<tr><td><code>issue.adjudicate</code></td><td><code>escalated</code></td><td><code>confirmed</code> / <code>rejected</code></td><td>QA Lead</td><td>Khác người chuyển cấp; có rule áp dụng và lý do</td><td><code>issues_adjudicate</code> (đợt sau)</td><td>403 SAME_REQUESTER_APPROVER</td><td>UC-06; FR-ESC-02, FR-ESC-03; FR-SEC-04</td></tr>
+<tr><td><code>issue.guideline_gap</code></td><td><code>escalated</code></td><td><code>escalated</code></td><td>QA Lead</td><td>Ghi Guideline Gap gắn rule; giữ trạng thái tới khi có guideline version mới (FR-ESC-05 hoãn theo CR-101)</td><td>—</td><td>—</td><td>UC-06 (luồng thay thế 3a); FR-ESC-05; tab:transitions</td></tr>
+<tr><td><code>issue.request_fix</code></td><td><code>confirmed</code></td><td><code>fix_pending</code></td><td>Reviewer, QA Lead</td><td>Có annotator, việc cần sửa, hạn, deep link</td><td><code>rework_create</code> (đợt sau)</td><td>400</td><td>FR-RWK-01</td></tr>
+<tr><td><code>issue.fix_submitted</code></td><td><code>fix_pending</code></td><td><code>recheck_pending</code></td><td>Annotator</td><td>Là assignee của yêu cầu; revision CVAT mới khác revision gốc</td><td><code>rework_submitted</code> (đợt sau)</td><td>403; 409 REVISION_UNCHANGED</td><td>FR-RWK-02, FR-RWK-03</td></tr>
+<tr><td><code>issue.verify_pass</code></td><td><code>recheck_pending</code></td><td><code>resolved</code></td><td>Reviewer</td><td>Re-check trên revision mới đã xong; người verify khác annotator đã sửa</td><td><code>rework_verify</code> (đợt sau)</td><td>403 SAME_REQUESTER_APPROVER</td><td>FR-RWK-04, FR-RWK-05</td></tr>
+<tr><td><code>issue.verify_fail</code></td><td><code>recheck_pending</code></td><td><code>reopened</code></td><td>Reviewer</td><td>Có lý do; người verify khác annotator đã sửa</td><td><code>rework_verify</code></td><td>400; 403</td><td>FR-RWK-05</td></tr>
+<tr><td><code>issue.reopen_fix</code></td><td><code>reopened</code></td><td><code>fix_pending</code></td><td>Hệ thống</td><td>Tự động ngay khi mở lại</td><td>—</td><td>—</td><td>UC-07 (luồng thay thế 4a); FR-RWK-01; tab:transitions</td></tr>
+<tr><td><code>issue.override</code></td><td colspan="2">Như các dòng trên</td><td>Super Admin</td><td>Thay vai trò thường cho quyết định, phân xử, xác minh; bắt buộc <code>override_reason</code>; audit gắn nhãn ghi đè; vẫn chịu self-review và tách nhiệm vụ</td><td>như dòng gốc</td><td>400 nếu thiếu lý do</td><td>FR-SEC-06</td></tr>
+</tbody>
+</table>
+<p>Trạng thái cuối: <code>rejected</code>, <code>resolved</code>. Issue <code>confirmed</code> không yêu cầu sửa vẫn mở cho gate (lỗi nghiêm trọng chưa đóng, FR-GTE-01).</p>
+
+<h2 id="frame">4. Trạng thái review của frame</h2>
+<p>Bổ sung trạng thái <strong>đang dở</strong> (<code>incomplete</code>) theo DEC-002 phương án A của BLOCKER-008: mỗi reviewer giữ một lease; lease hết hạn khi đã lưu một phần quyết định thì giữ các quyết định đó, frame về hàng đợi ở trạng thái đang dở và ưu tiên trả về reviewer cũ.</p>
+<pre class="mermaid">stateDiagram-v2
+  [*] --> unreviewed
+  unreviewed --> in_review: claim
+  incomplete --> in_review: claim
+  in_review --> in_review: renew
+  in_review --> unreviewed: lease_expired (chưa lưu quyết định)
+  in_review --> incomplete: lease_expired (đã lưu một phần)
+  in_review --> reviewed: complete
+  reviewed --> awaiting_followup: followup
+  reviewed --> completed: finalize
+  awaiting_followup --> completed: finalize
+</pre>
+<table>
+<thead><tr><th>Mã</th><th>Nhãn UI</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td><code>unreviewed</code></td><td>Chưa review</td><td>Chưa có lease, chưa có quyết định nào</td></tr>
+<tr><td><code>in_review</code></td><td>Đang review</td><td>Có lease còn hạn</td></tr>
+<tr><td><code>incomplete</code></td><td>Đang dở</td><td>Lease đã hết hạn, đã có ít nhất một quyết định lưu nhưng chưa <em>Đã review xong</em> (mới, BLOCKER-008)</td></tr>
+<tr><td><code>reviewed</code></td><td>Đã review</td><td>Reviewer bấm <em>Đã review xong</em></td></tr>
+<tr><td><code>awaiting_followup</code></td><td>Còn issue chờ phân xử / sửa</td><td>Có issue <code>escalated</code>, <code>fix_pending</code>, <code>recheck_pending</code> hoặc <code>reopened</code></td></tr>
+<tr><td><code>completed</code></td><td>Hoàn tất (run cuối)</td><td>Không còn issue mở và run cuối đạt</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Event</th><th>Từ</th><th>Đến</th><th>Actor</th><th>Guard</th><th>API</th><th>Từ chối</th><th>Nguồn</th></tr></thead>
+<tbody>
+<tr><td><code>frame.claim</code></td><td><code>unreviewed</code>, <code>incomplete</code></td><td><code>in_review</code></td><td>Reviewer, QA Lead, Super Admin</td><td>Có identity mapping; quyền Review trong scope dataset của run; người gọi không là assignee của job chứa frame tại snapshot; frame không có lease khác còn hạn; người gọi không giữ lease khác còn hạn (nếu đang giữ thì trả lại lease đó, <code>resumed=true</code>). Frame <code>incomplete</code> chỉ cấp cho reviewer cũ trong cửa sổ giữ chỗ (TBD-09), sau đó cấp cho bất kỳ reviewer hợp lệ</td><td><code>queues_next</code></td><td>403 IDENTITY_MAPPING_MISSING, OUT_OF_SCOPE; 204 khi hết frame</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03; BLOCKER-008</td></tr>
+<tr><td><code>frame.renew</code></td><td><code>in_review</code></td><td><code>in_review</code></td><td>Người giữ lease</td><td>Lease còn hạn và thuộc người gọi</td><td><code>leases_renew</code></td><td>409 LEASE_CONFLICT</td><td>FR-REV-04</td></tr>
+<tr><td><code>frame.lease_expired</code></td><td><code>in_review</code></td><td><code>unreviewed</code></td><td>Hệ thống</td><td>Hết hạn lease; frame chưa có quyết định đã lưu</td><td>—</td><td>—</td><td>FR-REV-04; tab:transitions</td></tr>
+<tr><td><code>frame.lease_expired</code></td><td><code>in_review</code></td><td><code>incomplete</code></td><td>Hệ thống</td><td>Hết hạn lease; có ít nhất một quyết định đã lưu. Giữ quyết định đã lưu; issue chưa quyết định về <code>pending_review</code>; ghi reviewer cũ để ưu tiên</td><td>—</td><td>—</td><td>FR-REV-04; UC-04; BLOCKER-008; DEC-002</td></tr>
+<tr><td><code>frame.complete</code></td><td><code>in_review</code></td><td><code>reviewed</code></td><td>Người giữ lease</td><td>Lease còn hạn; mọi issue của frame đã có quyết định hoặc đang <code>escalated</code>. Trả lease, dừng ghi effort. Gọi lại khi đã <code>reviewed</code> trả 200</td><td><code>frames_complete</code></td><td>409 LEASE_CONFLICT; 422 BUSINESS_RULE_UNMET (<code>undecided_issue_ids</code>)</td><td>UC-05; FR-REV-13; FR-EVL-06</td></tr>
+<tr><td><code>frame.followup</code></td><td><code>reviewed</code></td><td><code>awaiting_followup</code></td><td>Hệ thống</td><td>Có issue ở <code>escalated</code>, <code>fix_pending</code>, <code>recheck_pending</code> hoặc <code>reopened</code></td><td>—</td><td>—</td><td>FR-REV-13; UC-06; UC-07; fig:framestate</td></tr>
+<tr><td><code>frame.finalize</code></td><td><code>reviewed</code>, <code>awaiting_followup</code></td><td><code>completed</code></td><td>Hệ thống</td><td>Mọi issue của frame ở trạng thái cuối và run cuối <code>completed</code> với coverage engine bắt buộc đã ghi đủ theo ledger; ngưỡng gate và waiver áp dụng theo FR-GTE-01 (không rework thì run gốc là run cuối)</td><td>—</td><td>—</td><td>FR-RWK-06, FR-RWK-08; BLOCKER-011</td></tr>
+</tbody>
+</table>
+<p>Nhiều tab: tab thứ hai gọi <code>queues_next</code> nhận cùng lease; mọi ghi quyết định gửi <code>lease_id</code>, backend kiểm lease còn hạn và thuộc người gọi (FR-REV-14). Không có endpoint trả lease giữa chừng trong M13; reviewer rời frame thì lease tự hết hạn.</p>
+
+<h2 id="rules">5. Quy tắc chung</h2>
+<ul>
+<li>Mọi transition do người gọi kích hoạt ghi audit cùng transaction (FR-SEC-05); transition bị từ chối với 403/409 cũng được ghi audit (SRS §9.3.1).</li>
+<li>Transition do hệ thống chạy trong Celery task idempotent: chạy lại cùng event trên cùng đối tượng không đổi gì thêm (FR-AGG-02).</li>
+<li>Chuyển trạng thái không có trong bảng: <code>409 INVALID_TRANSITION</code>, <code>details = {"from": "&lt;mã&gt;", "event": "&lt;event&gt;"}</code>.</li>
+<li>Kiểm tra self-review dùng <code>snapshot_job.assignee_user_id</code> qua identity mapping, không dùng assignee hiện tại trên CVAT (FR-SEC-02, FR-SEC-03).</li>
+</ul>
+
+<h2 id="open">6. Còn mở</h2>
+<ul>
+<li>Thời hạn lease, quy tắc gia hạn và độ dài cửa sổ giữ chỗ cho frame <code>incomplete</code>: TBD-09, đo trong pilot rồi chốt (DEC-002).</li>
+<li>SRS <code>05-dynamics.tex</code> định nghĩa transition sang <code>incomplete</code> khi lease hết hạn sau khi đã lưu quyết định, và resume bằng lease mới (BLOCKER-008).</li>
+<li>Operation ghi quyết định, phân xử, rework (<code>issues_decide</code>, <code>issues_adjudicate</code>, <code>rework_*</code>) có trong bảng transition nhưng chưa có trong <a href="openapi.yaml">openapi.yaml</a>; bổ sung trong task M-03.</li>
+</ul>
+</article></main></body></html>

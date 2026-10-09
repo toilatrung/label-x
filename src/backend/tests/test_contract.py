@@ -1,0 +1,258 @@
+"""Contract M13 v1 (docs/04-api/openapi.yaml, T-001).
+
+Tệp YAML là nguồn sự thật cho frontend sinh type tới khi backend có view; test giữ cho nó
+hợp lệ OpenAPI 3.0 và truy được tới SRS (mỗi operation trích FR/BR/UC và vai trò).
+"""
+
+import re
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+from drf_spectacular.validation import validate_schema
+
+ROOT = Path(__file__).resolve().parents[3]
+CONTRACT = ROOT / "docs/04-api/openapi.yaml"
+STATE_MACHINES = ROOT / "docs/04-api/state-machines.html"
+SRS_SECTIONS = ROOT / "docs/label-x_system-requirement-specification/sections"
+
+METHODS = {"get", "post", "put", "patch", "delete"}
+TRACE_ID = re.compile(r"^(FR-[A-Z]{3}-\d{2}|BR-\d{2}|UC-\d{2}|NFR-\d{2})$")
+REQUIREMENT_ID = re.compile(r"\b(?:FR-[A-Z]{3}-\d{2}|BR-\d{2}|UC-\d{2})\b")
+PSEUDO_ROLES = {"anonymous", "authenticated", "lease_holder"}
+
+# Endpoint SRS tab:api thuộc phạm vi T-001 (auth/phiên, snapshot, QC Run, guideline, hàng đợi).
+REQUIRED_PATHS = {
+    "/api/auth/login/": "post",
+    "/api/auth/logout/": "post",
+    "/api/auth/session/": "get",
+    "/api/snapshots/": "post",
+    "/api/snapshots/{id}/": "get",
+    "/api/runs/": "post",
+    "/api/runs/{id}/": "get",
+    "/api/runs/{id}/cancel/": "post",
+    "/api/runs/{id}/retry-failed/": "post",
+    "/api/runs/{id}/ledger/": "get",
+    "/api/runs/{id}/ranking/": "get",
+    "/api/guidelines/rules/{rule_id}/": "get",
+    "/api/queues/{name}/next/": "post",
+    "/api/leases/{id}/renew/": "post",
+    "/api/frames/{id}/issues/": "get",
+    "/api/frames/{id}/complete/": "post",
+}
+
+
+@pytest.fixture(scope="module")
+def spec() -> dict[str, Any]:
+    return yaml.safe_load(CONTRACT.read_text(encoding="utf-8"))
+
+
+def operations(spec: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
+    return [
+        (path, method, op)
+        for path, item in spec["paths"].items()
+        for method, op in item.items()
+        if method in METHODS
+    ]
+
+
+def test_contract_is_valid_openapi_3(spec):
+    validate_schema(spec)
+
+
+def test_contract_covers_t001_endpoints(spec):
+    for path, method in REQUIRED_PATHS.items():
+        assert method in spec["paths"].get(path, {}), f"thiếu {method.upper()} {path}"
+
+
+def test_contract_covers_every_srs_api_table_endpoint(spec):
+    """The SRS table is the source of the endpoint inventory, including T-008."""
+    interface = (SRS_SECTIONS / "09-interfaces.tex").read_text(encoding="utf-8")
+    rows = re.findall(r"^(POST|GET) & \\code\{(/api/.*?)\} &", interface, re.M)
+    assert len(rows) == 28, "SRS endpoint table changed; review the new inventory"
+    for method, raw_path in rows:
+        path = raw_path.replace(r"\{", "{").replace(r"\}", "}").replace(r"\_", "_").split("?")[0]
+        contract_path = path.rstrip("/") + "/"
+        assert method.lower() in spec["paths"].get(contract_path, {}), (
+            f"missing {method} {contract_path}"
+        )
+
+
+def test_t008_state_guards_and_error_contract(spec):
+    expected = {
+        "/api/issues/": {"400", "403", "409"},
+        "/api/issues/{id}/decisions/": {"400", "403", "409"},
+        "/api/issues/{id}/adjudications/": {"400", "403", "409"},
+        "/api/rework/": {"400", "403", "409"},
+        "/api/rework/{id}/submitted/": {"400", "403", "409"},
+        "/api/rework/{id}/verify/": {"400", "403", "409"},
+        "/api/references/{id}/lock/": {"403", "409", "422"},
+        "/api/evaluations/": {"400", "403", "422"},
+        "/api/waivers/": {"400", "403", "422"},
+        "/api/waivers/{id}/approve/": {"400", "403", "409"},
+    }
+    for path, codes in expected.items():
+        operation = spec["paths"][path]["post"]
+        assert codes <= set(operation["responses"]), path
+        assert operation["x-labelx-trace"] and operation["x-labelx-roles"]
+        if path != "/api/references/{id}/lock/":
+            assert operation["requestBody"]["required"]
+
+
+def test_every_ref_resolves(spec):
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            ref = node.get("$ref")
+            if isinstance(ref, str):
+                target: Any = spec
+                for part in ref.removeprefix("#/").split("/"):
+                    assert part in target, f"$ref không trỏ tới đâu: {ref}"
+                    target = target[part]
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(spec)
+
+
+def test_every_operation_traces_to_srs(spec):
+    srs = "\n".join(p.read_text(encoding="utf-8") for p in SRS_SECTIONS.glob("*.tex"))
+    for path, method, op in operations(spec):
+        trace = op.get("x-labelx-trace")
+        assert trace, f"{method.upper()} {path} thiếu x-labelx-trace"
+        for ref in trace:
+            assert TRACE_ID.match(ref), f"{path}: mã truy vết sai dạng {ref}"
+            assert ref in srs, f"{path}: {ref} không có trong SRS"
+
+
+def test_review_decision_schema_preserves_audit_and_reference_links(spec):
+    schemas = spec["components"]["schemas"]
+    issue = schemas["Issue"]["properties"]["review_decisions"]
+    assert issue["type"] == "array"
+    assert issue["items"]["$ref"] == "#/components/schemas/ReviewDecision"
+
+    decision = schemas["ReviewDecision"]
+    properties = decision["properties"]
+    assert {
+        "actor_user_id",
+        "actor_role",
+        "decision",
+        "revision",
+        "reason",
+        "rule_ids",
+        "reference_version",
+        "reference_match_status",
+        "reference_error_ids",
+        "recorded_at",
+    } <= set(decision["required"])
+    assert {
+        "confirm",
+        "reject",
+        "uncertain",
+        "escalate",
+        "request_fix",
+    } <= set(properties["decision"]["enum"])
+    assert set(schemas["IssueDecisionAction"]["enum"]) <= set(properties["decision"]["enum"])
+    assert properties["revision"]["type"] == "string"
+    assert schemas["IssueDecision"]["properties"]["revision"]["type"] == "string"
+    assert {
+        "adjudicate_confirm",
+        "adjudicate_reject",
+        "adjudicate_guideline_gap",
+    } <= set(properties["decision"]["enum"])
+    assert properties["reference_error_ids"]["uniqueItems"] is True
+    assert properties["reference_match_status"]["enum"] == [
+        "matched",
+        "not_matched",
+        "not_evaluated",
+    ]
+
+    srs = "\n".join(p.read_text(encoding="utf-8") for p in SRS_SECTIONS.glob("*.tex"))
+    trace = schemas["ReviewDecision"]["x-labelx-trace"]
+    assert {"FR-REV-08", "FR-REV-10", "FR-ESC-02", "FR-EVL-13"} <= set(trace)
+    for ref in trace:
+        assert TRACE_ID.match(ref), f"ReviewDecision: mã truy vết sai dạng {ref}"
+        assert ref in srs, f"ReviewDecision: {ref} không có trong SRS"
+
+
+def test_every_operation_declares_known_roles(spec):
+    roles = set(spec["components"]["schemas"]["Role"]["enum"]) | PSEUDO_ROLES
+    for path, method, op in operations(spec):
+        declared = op.get("x-labelx-roles")
+        assert declared, f"{method.upper()} {path} thiếu x-labelx-roles"
+        assert set(declared) <= roles, f"{path}: vai trò lạ {set(declared) - roles}"
+
+
+def test_operation_ids_are_unique(spec):
+    ids = [op["operationId"] for _, _, op in operations(spec)]
+    assert len(ids) == len(set(ids))
+
+
+def test_error_responses_use_shared_error_schema(spec):
+    shared = spec["components"]["responses"]
+    for path, method, op in operations(spec):
+        for status, response in op["responses"].items():
+            if not status.startswith("4"):
+                continue
+            ref = response.get("$ref", "")
+            assert ref.startswith("#/components/responses/"), f"{method.upper()} {path} {status}"
+            schema = shared[ref.rsplit("/", 1)[1]]["content"]["application/json"]["schema"]
+            assert schema == {"$ref": "#/components/schemas/Error"}
+
+
+def test_transitions_exist_in_state_machine_doc(spec):
+    doc = STATE_MACHINES.read_text(encoding="utf-8")
+    for path, _method, op in operations(spec):
+        event = op.get("x-labelx-transition")
+        if event:
+            assert f"<code>{event}</code>" in doc, f"{path}: {event} không có trong state-machines"
+
+
+def test_every_state_transition_cites_srs_requirement():
+    # Cột "Nguồn" của mỗi transition phải trích ít nhất một mã FR/BR/UC có trong SRS;
+    # hình/bảng SRS hay BLOCKER/DEC chỉ là nguồn bổ sung.
+    doc = STATE_MACHINES.read_text(encoding="utf-8")
+    srs = "\n".join(p.read_text(encoding="utf-8") for p in SRS_SECTIONS.glob("*.tex"))
+    rows = [
+        (m.group(1), re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)[-1])
+        for row in re.findall(r"<tr>(.*?)</tr>", doc, re.S)
+        if (m := re.match(r"<td><code>([a-z_]+\.[a-z_]+)</code></td>", row))
+    ]
+    assert rows, "không đọc được bảng transition"
+    for event, source in rows:
+        refs = REQUIREMENT_ID.findall(source)
+        assert refs, f"{event}: cột Nguồn thiếu mã FR/BR/UC ({source})"
+        for ref in refs:
+            assert ref in srs, f"{event}: {ref} không có trong SRS"
+
+
+def test_frame_states_include_incomplete(spec):
+    # BLOCKER-008 / DEC-002: lease hết hạn khi đã lưu một phần → frame "đang dở".
+    assert "incomplete" in spec["components"]["schemas"]["FrameReviewState"]["enum"]
+
+
+def test_contract_declares_workflow_permissions(spec: dict[str, Any]) -> None:
+    """T-012, AC 1: /api/auth/workflow-permissions/ declared with 7 roles in matrix."""
+    path_item = spec["paths"].get("/api/auth/workflow-permissions/")
+    assert path_item is not None, "Thiếu /api/auth/workflow-permissions/ trong OpenAPI contract"
+    get_op = path_item.get("get")
+    assert get_op is not None
+    assert get_op["operationId"] == "auth_workflow_permissions"
+    assert set(get_op["x-labelx-roles"]) == {"qa_lead", "qc_admin", "super_admin"}
+    assert "WorkflowPermissions" in spec["components"]["schemas"]
+    matrix_roles = set(
+        spec["components"]["schemas"]["WorkflowMatrixItem"]["properties"]["roles"]["required"]
+    )
+    assert len(matrix_roles) == 7
+    assert matrix_roles == {
+        "annotator",
+        "reviewer",
+        "qa_lead",
+        "qc_admin",
+        "super_admin",
+        "product_owner",
+        "data_model_owner",
+    }

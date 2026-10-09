@@ -1,0 +1,38 @@
+{
+  "version": 23,
+  "tags": [],
+  "shapes": [
+    {
+      "id": 91,
+      "type": "rectangle",
+      "frame": 2,
+      "label_id": 4,
+      "points": [20.12345649, 40.0, 220.5, 180.9999999],
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "rotation": 0,
+      "attributes": [{"spec_id": 8, "value": "moving"}]
+    },
+    {
+      "id": 3,
+      "type": "polygon",
+      "frame": 0,
+      "label_id": 4,
+      "points": [0, 0, 1, 1, 2, 2]
+    },
+    {
+      "id": 12,
+      "type": "rectangle",
+      "frame": 0,
+      "label_id": 4,
+      "points": [10, 20, 110, 120],
+      "occluded": true,
+      "outside": false,
+      "z_order": 1,
+      "rotation": 0,
+      "attributes": []
+    }
+  ],
+  "tracks": []
+}

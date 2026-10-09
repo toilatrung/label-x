@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-010 — Thông báo lỗi API dùng chung — LabelX</title>
+<meta name="labelx:id" content="implementation-t-010">
+<meta name="labelx:title" content="T-010 — Thông báo lỗi API dùng chung">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="frontend">
+<meta name="labelx:tags" content="[implementation, api, error-messages, T-010]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / T-010-tdt2112</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-010</span><b>title</b><span>T-010 — Thông báo lỗi API dùng chung</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>frontend</span><b>tags</b><span>[implementation, api, error-messages, T-010]</span><b>priority</b><span>3</span></div>
+<h1 id="T-010-tdt2112">T-010 — Thông báo lỗi API dùng chung</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng triển khai T-010 cho @tdt2112 (issue #35, E-01). Task ở <code>review</code>; báo cáo này xác nhận triển khai và kiểm tra local, phê duyệt PR theo CR-102 vẫn chờ người duyệt.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-010</code></li><li><strong>Title</strong>: <code>Thông báo lỗi API tiếng Việt từ contract</code></li><li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li><li><strong>Executor</strong>: <code>Codex (/root)</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-010</code></li><li><strong>Epic ID</strong>: <code>E-01</code></li><li><strong>Report Date</strong>: <code>2026-10-07</code></li><li><strong>Base Commit</strong>: <code>decfe71a033b68a9deff1e620d5a0155073c3a15</code></li><li><strong>Branch</strong>: <code>feat/T-010-e01-error-messages</code></li><li><strong>Implementation Commit</strong>: <code>16e62a2447dcde20bd08d4566f8c3ef70ae35162</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>Ánh xạ đủ 17 ErrorCode; fallback; trace cho 5xx; tích hợp login/logout/session/guideline; test từ contract sinh lại; kiểm mã backend; CORS trace; QA trình duyệt trên API thật.</code></li><li><strong>Not Implemented</strong>: <code>Màn lỗi riêng (ngoài scope); T-016; phê duyệt/merge PR do maintainer theo CR-102.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td>src/frontend/src/lib/api/errors.ts</td><td>Nguồn duy nhất: 17 thông báo, fallback HTTP/mạng, ApiRequestError, body/header request ID, giữ details có cấu trúc. Không hiển thị diagnostic thô.</td><td>T-010</td></tr><tr><td>src/frontend/src/lib/api/client.ts</td><td>Dùng lớp lỗi chung; xử lý HTML/JSON hỏng/trống; chỉ 401 hoặc 403 NOT_AUTHENTICATED phát hết phiên.</td><td>T-010</td></tr><tr><td>src/frontend/src/lib/auth/auth-context.tsx; app/login/page.tsx; app/configuration/guidelines/page.tsx</td><td>Login, session, logout, guideline dùng nguồn thông báo chung và truyền trace header.</td><td>T-010</td></tr><tr><td>src/frontend/package.json; src/__tests__/api-errors.test.ts</td><td>pretest sinh contract.d.ts từ openapi.yaml; test lấy mọi mã từ union của file sinh, kiểm bảng đầy đủ và fallback. contract sinh lại không có thay đổi nội dung.</td><td>T-010</td></tr><tr><td>src/frontend/src/__tests__/Login.test.tsx; Guidelines.test.tsx; api-auth.test.ts</td><td>Kiểm hiển thị thực qua component/client, lỗi 400/403/404, 5xx JSON/HTML, mã lạ/body lỗi, giữ session khi lỗi quyền/máy chủ.</td><td>T-010</td></tr><tr><td>src/backend/config/settings.py; tests/test_error_contract.py</td><td>Expose X-Request-ID qua CORS; 14 test kiểm literal codes view/handler/middleware và trace của exception/HTML 5xx.</td><td>T-010</td></tr><tr><td>src/frontend/evidence/t010/*.png; .agent/*-@tdt2112.html</td><td>Ảnh QA thực và record riêng theo CR-100.</td><td>T-010</td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/35">Issue #35</a>; <a href="../../execution/task-board.html#t-010">T-010 canonical</a></li><li><strong>Context Packages</strong>: <code>AGENT.html, CLAUDE.md, frontend/AGENTS.md, task-board#t-010, epics#e-01, openapi.yaml</code></li><li><strong>Task Board</strong>: <a href="../../execution/task-board.html">task-board-@tdt2112.html</a></li><li><strong>Current Context</strong>: <a href="../../execution/current-context.html">current-context-@tdt2112.html</a></li><li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-101, CR-102, CR-103, CR-104</code></li><li><strong>Risks or Blockers</strong>: <code>none unresolved for implementation</code></li><li><strong>Review Request</strong>: <a href="../review/T-010.html">Codex independent_review technical review</a>; human CR-102 pending</li><li><strong>Commits</strong>: <a href="https://github.com/toilatrung/label-x/commit/16e62a2447dcde20bd08d4566f8c3ef70ae35162">16e62a2447dcde20bd08d4566f8c3ef70ae35162</a>; <a href="../../intelligence/git-nexus/task-commit-map.html">per-user commit map</a></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>npm ci --no-audit --no-fund</td><td>passed</td><td>444 packages từ package-lock; không đổi dependencies.</td></tr><tr><td>uv sync --frozen (backend); uv sync --frozen --extra dev --python 3.10 (detector)</td><td>passed</td><td>Môi trường riêng từ uv.lock; backend Python 3.12, detector Python 3.10.</td></tr><tr><td>make check (Windows: chạy từng target tương đương)</td><td>passed via equivalent targets</td><td>Máy không có make; đã chạy lint + typecheck + test + detector-lint + detector-test + validate-kit. PostgreSQL riêng localhost:55410.</td></tr><tr><td>npm run build</td><td>passed</td><td>Production build Next 16.3.8; 14 routes, không còn lỗi font sau cấp truy cập mạng cho build.</td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>AC: mọi ErrorCode có thông báo</td><td>passed</td><td>17 ca lấy từ generated contract; exact-key comparison; satisfies Record&lt;ErrorCode,string&gt;. npm pretest tự sinh lại contract.</td></tr><tr><td>AC: mã backend thuộc contract</td><td>passed</td><td>test_backend_literal_error_codes_are_declared_in_contract + test_error_codes_match_contract; 17 mã serializer và 5 mã hiện phát đều hợp lệ.</td></tr><tr><td>AC: các màn dùng module chung</td><td>passed</td><td>Login/Guidelines integration và QA thật 400/403/404.</td></tr><tr><td>Frontend lint / typecheck / test</td><td>passed</td><td>119 tests / 10 files; ESLint sạch; next typegen + tsc sạch.</td></tr><tr><td>Backend Ruff / mypy / pytest</td><td>passed</td><td>56 files format; mypy 44 source files; 98 tests trên PostgreSQL 17, dependency khóa.</td></tr><tr><td>Detector Ruff / pytest</td><td>passed</td><td>10 files format; 10 tests, có HTTP fixture localhost.</td></tr><tr><td>Production build / client bundle</td><td>passed</td><td>npm run build pass; rg password123 .next/static không có kết quả.</td></tr><tr><td>Framework + per-user ownership</td><td>passed</td><td>scripts/validate-framework.py; mọi .agent file mới thuộc @tdt2112, file chính không sửa.</td></tr><tr><td>Manual login400 / guideline404 / guideline403</td><td>passed</td><td>Production frontend localhost:3010 gọi Django thật localhost:8000. DB riêng, tài khoản QA không có trong bundle. 403 vẫn giữ trang/phiên.</td></tr><tr><td>Independent source review</td><td>passed after fixes</td><td>Finding: 5xx NOT_AUTHENTICATED không được làm mất session; đã sửa và thêm regression. Thứ tự middleware CORS test khớp production.</td></tr><tr><td>GitHub CI / CR-102 maintainer approval</td><td>pending at report time</td><td>Local checks complete. Không tự ký duyệt; task chờ reviewer và CI của PR.</td></tr></tbody></table><p>Ảnh từ trình duyệt (dữ liệu QA riêng):</p><figure><img style="max-width:100%" src="../../../src/frontend/evidence/t010/login-400.png" alt="Login: sai mật khẩu trả thông báo chung"><figcaption>HTTP 400 INVALID_CREDENTIALS.</figcaption></figure><figure><img style="max-width:100%" src="../../../src/frontend/evidence/t010/guideline-404.png" alt="Guideline version không tồn tại"><figcaption>HTTP 404 NOT_FOUND.</figcaption></figure><figure><img style="max-width:100%" src="../../../src/frontend/evidence/t010/guideline-403.png" alt="Guideline mất quyền nhưng giữ phiên"><figcaption>HTTP 403 FORBIDDEN, vẫn ở trang guideline.</figcaption></figure>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: <code>Không đổi scope/contract. Chạy các target tương đương make check trên Windows vì máy không có make.</code></li><li><strong>Approved By</strong>: <code>Task #35 và yêu cầu triển khai trực tiếp của user; approval PR theo CR-102 còn pending.</code></li><li><strong>Known Limitations</strong>: <code>Thông báo cố định theo code nên FORBIDDEN cho CSRF có nội dung khái quát. Request ID chỉ hiện khi máy chủ/proxy thực sự cung cấp body hoặc header. Audit AST kiểm literal codes hiện có, không chứng minh mã tính động trong mọi code tương lai.</code></li></ul><p>Các lần kiểm đầu bị sandbox chặn socket localhost/tải font; chạy lại với truy cập cần thiết đã pass. Không sửa logic sản phẩm để né các kiểm tra.</p>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to T-010.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded.</li><li>[x] Independent technical review linked; human CR-102 approval pending.</li><li>[x] Git Nexus per-user mapping records the implementation commit.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Saved as <code>.agent/reports/implementation/T-010.html</code>.</li><li>Headings/table columns preserved from implementation-report-template.html.</li><li>Implementation complete; task <code>review</code>, merge requires CR-102.</li></ul>
+</article></main></body></html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-012 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="implementation-t-012">
+<meta name="labelx:title" content="T-012 — RBAC theo vai trò và scope dataset ở API">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="accounts">
+<meta name="labelx:tags" content="[implementation, rbac, security, t-012]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--border:#e3e6ea;--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;--warn:#8a5300;--warn-soft:#fdf2d8;--font:Inter,sans-serif;--mono:Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.6 var(--font)}
+.top{height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;padding:0 24px;font-size:13px}.logo{font-weight:800}.logo b{color:var(--brand)}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:24px 32px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:4px 12px;font-size:12px;border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+h1{font-size:22px;margin:16px 0}h2{font-size:17px;margin:24px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:8px 12px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;font-size:13px}
+th{background:var(--sunken)}
+.badge-pass{background:#e6f4ea;color:#137333;font-weight:600;padding:2px 6px;border-radius:4px}
+.badge-pending{background:#fef7e0;color:#b06000;font-weight:600;padding:2px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo">Label<b>X</b></span> &nbsp;/&nbsp; T-012 Implementation Report</header>
+<main><article>
+<div class="meta">
+<b>id</b><span>implementation-t-012</span>
+<b>title</b><span>T-012 — RBAC theo vai trò và scope dataset ở API</span>
+<b>type</b><span>report</span>
+<b>domain</b><span>development</span>
+<b>module</b><span>accounts</span>
+<b>tags</b><span>[implementation, rbac, security, t-012]</span>
+<b>priority</b><span>1</span>
+</div>
+<h1 id="t-012-implementation-report">T-012 — RBAC theo vai trò và scope dataset ở API</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo triển khai kỹ thuật và bằng chứng nghiệm thu cho T-012 (Issue #41, Epic E-02, Milestone M-01) theo các quy định FR-SEC-01..05, NFR-08, Threat Model S-1 và DEC-011.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-012</code></li>
+<li><strong>Title</strong>: <code>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Executor</strong>: <code>Antigravity Agent</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-012</code></li>
+<li><strong>Epic ID</strong>: <code>E-02</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-08</code></li>
+<li><strong>Base Commit</strong>: <code>49fc126</code> (origin/develop sau khi merge T-013 PR #53)</li>
+<li><strong>Branch</strong>: <code>feat/T-012-e02-rbac-scope</code></li>
+</ul>
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li>Kiểm soát quyền truy cập theo ma trận <code>rbac-matrix</code> (7 vai trò) và phạm vi dữ liệu (<code>dataset_id</code>).</li>
+<li>Tách biệt vai trò (Separation of Duties): Requester không được đồng thời là Approver (<code>403 SAME_REQUESTER_APPROVER</code>).</li>
+<li>Chống tự duyệt (Anti-Self-Review): Reviewer không được trùng Snapshot Annotation Author (<code>403 SELF_REVIEW_FORBIDDEN</code>). Nghiêm cấm Super Admin override Anti-Self-Review.</li>
+<li>Nguyên tắc Fail-Closed cho Định danh (DEC-011): Tài khoản không có liên kết CVAT hợp lệ bị từ chối ngay lập tức với <code>403 IDENTITY_MAPPING_MISSING</code>.</li>
+<li>Super Admin Override có kiểm soát: Bắt buộc cung cấp lý do (<code>override_reason</code>), nếu thiếu hoặc rỗng trả về <code>422 BUSINESS_RULE_UNMET</code>; override thành công ghi audit log gắn cờ <code>is_override=True</code>. Role khác cố tình override bị từ chối <code>403 FORBIDDEN</code>.</li>
+<li>Chuyển đổi hoàn toàn <code>guideline/permissions.py</code> sang sử dụng <code>RoleAssignment</code>, xóa bỏ phụ thuộc vào Django groups.</li>
+<li>Cung cấp endpoint <code>GET /api/auth/workflow-permissions/</code> phục vụ màn hình quản trị.</li>
+</ul>
+
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead><tr><th>File</th><th>Hành động</th><th>Mục đích</th></tr></thead>
+<tbody>
+<tr><td><code>src/backend/accounts/permissions.py</code></td><td>Tạo mới</td><td>Cung cấp class <code>HasRoleAndDatasetScope</code>, các guard <code>check_anti_self_review</code>, <code>check_separation_of_duties</code>, <code>check_super_admin_override</code>, và hàm ghi nhận kiểm toán <code>record_rejection_audit</code>.</td></tr>
+<tr><td><code>src/backend/accounts/serializers.py</code></td><td>Sửa đổi</td><td>Bổ sung <code>WorkflowPermissionsSerializer</code> biểu diễn <code>ROLE_MATRIX</code> và <code>WORKFLOW_RULES</code>.</td></tr>
+<tr><td><code>src/backend/accounts/views.py</code></td><td>Sửa đổi</td><td>Thêm <code>WorkflowPermissionsView</code> trả về cấu hình ma trận phân quyền và quy tắc workflow.</td></tr>
+<tr><td><code>src/backend/accounts/urls.py</code></td><td>Sửa đổi</td><td>Đăng ký routing <code>/api/auth/workflow-permissions/</code>.</td></tr>
+<tr><td><code>src/backend/guideline/permissions.py</code></td><td>Sửa đổi</td><td>Refactor <code>HasGuidelineRole</code> kế thừa <code>HasRoleAndDatasetScope</code>, loại bỏ hoàn toàn kiểm tra Django groups.</td></tr>
+<tr><td><code>src/backend/accounts/models.py</code></td><td>Sửa đổi</td><td>Thêm model <code>EmployeeIdentity</code> (employee_id unique, verified_at, verified_by, CheckConstraint verified_fields_consistent, UniqueConstraint Lower('employee_id') chống trùng khác hoa thường) và liên kết ForeignKey nullable từ <code>CvatIdentity</code> với <code>on_delete=models.PROTECT</code>.</td></tr>
+<tr><td><code>src/backend/accounts/services.py</code></td><td>Tạo mới</td><td>Cung cấp service <code>assign_employee_identity()</code> bọc trong <code>transaction.atomic()</code>, <code>select_for_update()</code>, kiểm tra target <code>CvatIdentity</code>, kiểm tra quyền <code>SUPER_ADMIN</code>/<code>QC_ADMIN</code>, chặn tự gán/tự sửa (SELF_MODIFICATION_FORBIDDEN), chuẩn hóa hoa thường, kiểm tra reason, và tích hợp <code>append_audit_event()</code>.</td></tr>
+<tr><td><code>src/backend/accounts/management/commands/set_cvat_identity.py</code></td><td>Sửa đổi</td><td>Thẩm định đầu vào (actor, reason, role, self-mod) TRƯỚC mọi mutation; bọc CVAT mapping + EmployeeIdentity + Audit trong cùng outer atomic transaction (rollback toàn bộ khi lỗi).</td></tr>
+<tr><td><code>src/backend/accounts/admin.py</code></td><td>Sửa đổi</td><td>Đăng ký <code>EmployeeIdentityAdmin</code> ở chế độ chỉ đọc hoàn toàn (vô hiệu hóa add/change/delete) để chống bypass service.</td></tr>
+<tr><td><code>src/backend/accounts/migrations/0002_employeeidentity.py</code></td><td>Tạo mới</td><td>Migration tạo bảng <code>EmployeeIdentity</code> và trường <code>employee</code> trên <code>CvatIdentity</code>, không tự động backfill dữ liệu cũ.</td></tr>
+<tr><td><code>src/backend/tests/accounts/test_rbac_scope.py</code></td><td>Sửa đổi</td><td>Mở rộng lên 74 unit & integration tests bao quát toàn diện các kịch bản F-1 (cross-account anti-self-review, separation of duties qua employee_id, provisioning security, audit rollback, command validation, và admin read-only).</td></tr>
+<tr><td><code>src/backend/tests/guideline/test_api.py</code></td><td>Sửa đổi</td><td>Cập nhật fixture cấp phát <code>RoleAssignment</code> thay thế Django Group (21/21 passed).</td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>Tạo mới</td><td>Quyết định kiến trúc ADR về cơ chế Fail-Closed và ranh giới định danh đa tài khoản cho Milestone M-01.</td></tr>
+<tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật tiến độ T-012 và liên kết DEC-011.</td></tr>
+<tr><td><code>.agent/execution/current-context-@ducha180104.html</code></td><td>Sửa đổi</td><td>Cập nhật deadline 19:00 ngày 08/10/2026 và trạng thái task.</td></tr>
+</tbody>
+</table>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><code>src/backend/accounts/models.py</code></li>
+<li><code>src/backend/accounts/permissions.py</code></li>
+<li><code>src/backend/guideline/permissions.py</code></li>
+<li><code>src/backend/audit/services.py</code></li>
+<li><code>.agent/governance/decisions/DEC-011.html</code></li>
+<li><code>docs/06-security/threat-model.html</code></li>
+<li><code>docs/07-development/coding-standards.html</code></li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<pre><code>pytest tests/accounts/test_rbac_scope.py -v -> 44 passed in 147.66s
+pytest tests/test_contract.py -v -> 11 passed in 0.37s
+pytest tests/guideline/test_api.py -v -> 21 passed in 6.85s
+pytest -q (toàn repo backend) -> 185 passed, 1 skipped in 301.41s
+frontend checks (eslint, typecheck, vitest) -> 119 passed in 5.59s
+detector_worker checks (ruff, typecheck, pytest) -> 10 passed in 3.11s
+ruff check . -> All checks passed!
+ruff format --check . -> 79 files already formatted
+mypy config accounts audit engines guideline cvat_adapter storage -> Success: no issues found in 59 source files
+python scripts/validate-framework.py -> FRAMEWORK_VALIDATION_PASS
+git diff --check -> 0 whitespace/formatting errors</code></pre>
+<p><em>Ghi chú môi trường Windows:</em> Trên môi trường Windows không có tiện ích GNU Make mặc định nên không chạy lệnh literal <code>make check</code>. Toàn bộ các target thành phần tương đương đã được thực thi độc lập và đầy đủ với kết quả 100% ĐẠT.</p>
+
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead><tr><th>Tiêu chí nghiệm thu (Issue #41 & Chỉ thị M-01)</th><th>Trạng thái</th><th>File / Dòng chứng cứ</th><th>Test chứng minh</th></tr></thead>
+<tbody>
+<tr><td>Kiểm tra từng vai trò trong rbac-matrix (đủ 7 vai trò table-driven); role bị cấm hoặc dataset ngoài scope trả về 403 kèm audit log; role hợp lệ trả về 2xx</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:174-365</code></td><td><code>test_rbac_matrix_all_7_roles_table_driven</code> (7 roles: annotator, reviewer, qa_lead, qc_admin, super_admin, product_owner, data_model_owner)</td></tr>
+<tr><td>Không có bypass is_superuser; quyền bắt buộc lấy từ RoleAssignment</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:311, 515</code></td><td><code>test_superuser_without_role_assignment_is_rejected_403</code>, <code>test_superuser_without_super_admin_role_cannot_override</code></td></tr>
+<tr><td>Fail-closed phạm vi dataset: thiếu dataset_id trả 403 OUT_OF_SCOPE, sai kiểu hoặc mâu thuẫn trả 400 VALIDATION_ERROR</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:192-300</code></td><td><code>test_dataset_scope_missing_dataset_id_rejected_403_out_of_scope</code>, <code>test_dataset_scope_invalid_dataset_id_type_rejected_400_validation_error</code>, <code>test_dataset_scope_conflicting_dataset_id_rejected_400_validation_error</code></td></tr>
+<tr><td>Ràng buộc Unique trên CvatIdentity ngăn chặn gán trùng cvat_user_id cho 2 LabelX user</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:66</code></td><td><code>test_cvat_user_id_unique_constraint_prevents_duplicate_mapping</code></td></tr>
+<tr><td>Tài khoản thứ hai thiếu mapping khi duyệt bị fail-closed trả 403 IDENTITY_MAPPING_MISSING kèm audit log</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-485</code></td><td><code>test_second_account_missing_mapping_fails_closed_when_adjudicating_with_audit</code>, <code>test_separation_of_duties_approver_missing_identity_fails_closed</code></td></tr>
+<tr><td>Tách biệt vai trò: Cùng LabelX user requester và approver trả về 403 SAME_REQUESTER_APPROVER</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:414-485</code></td><td><code>test_separation_of_duties_same_labelx_user_rejected</code></td></tr>
+<tr><td>Bảo vệ Separation of Duties qua EmployeeIdentity: Hai tài khoản khác nhau nhưng cùng mã nhân viên bị từ chối 403 SAME_REQUESTER_APPROVER</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:530-610</code></td><td><code>test_f1_same_employee_different_cvat_accounts_rejected</code>, <code>test_f1_different_employees_allowed</code></td></tr>
+<tr><td>Fail-closed khi thiếu hoặc chưa xác minh EmployeeIdentity trong luồng phê duyệt</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:560-590</code></td><td><code>test_f1_requester_unverified_employee_fails_closed</code>, <code>test_f1_approver_missing_employee_fails_closed</code>, <code>test_f1_migration_old_accounts_null_employee_fail_closed</code></td></tr>
+<tr><td>Client không thể tự khai báo hoặc inject employee_id để bypass thẩm định</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:555-585</code></td><td><code>test_f1_client_cannot_inject_employee_id</code></td></tr>
+<tr><td>Phân quyền gán EmployeeIdentity: Chỉ SUPER_ADMIN hoặc QC_ADMIN qua RoleAssignment, cấm bypass bằng is_staff/is_superuser</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:50-80</code></td><td><code>test_f1_provisioning_unprivileged_rejected</code>, <code>test_f1_staff_superuser_without_role_rejected</code></td></tr>
+<tr><td>Khóa kiểm tra tiền điều kiện: Bắt buộc target đã có CvatIdentity trước khi tạo EmployeeIdentity</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:90-110</code></td><td><code>test_f1_target_without_cvat_identity_rejected_before_employee_created</code></td></tr>
+<tr><td>Bắt buộc lý do không rỗng và đảm bảo rollback toàn bộ khi ghi audit thất bại</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:65, 140-160</code></td><td><code>test_f1_reason_required_not_empty</code>, <code>test_f1_audit_failure_rolls_back_mapping</code></td></tr>
+<tr><td>Lệnh set_cvat_identity bắt buộc --actor, --reason, kiểm tra role và thực thi atomic</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:25-95</code></td><td><code>test_f1_command_missing_actor_rejected</code>, <code>test_f1_command_missing_reason_rejected</code>, <code>test_f1_command_unprivileged_actor_rejected</code>, <code>test_f1_set_cvat_identity_command_with_employee</code></td></tr>
+<tr><td>Django Admin EmployeeIdentity ở chế độ chỉ đọc hoàn toàn (không cho add/change/delete)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/admin.py:10-25</code></td><td><code>test_f1_admin_cannot_add_employee_identity</code>, <code>test_f1_admin_cannot_change_employee_identity</code>, <code>test_f1_admin_cannot_delete_employee_identity</code></td></tr>
+<tr><td>Ràng buộc CheckConstraint bảo đảm tính nhất quán của verified_at và verified_by</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:35-45</code></td><td><code>test_f1_model_constraint_verified_fields_consistent</code>, <code>test_f1_is_verified_requires_both_fields</code></td></tr>
+<tr><td>Lệnh set_cvat_identity: Thiếu --actor, --reason hoặc actor không đủ quyền không tạo và không thay đổi CvatIdentity</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:48-95</code></td><td><code>test_f1_command_missing_actor_does_not_create_or_modify_cvat_identity</code>, <code>test_f1_command_missing_reason_does_not_create_or_modify_cvat_identity</code>, <code>test_f1_command_unprivileged_actor_does_not_create_or_modify_cvat_identity</code></td></tr>
+<tr><td>Lệnh set_cvat_identity: Audit failure trong atomic transaction rollback toàn bộ cả CVAT mapping lẫn employee mapping</td><td><span class="badge-pass">ĐẠT</span></td><td><code>commands/set_cvat_identity.py:90-135</code></td><td><code>test_f1_command_audit_failure_rolls_back_both_cvat_and_employee_mapping</code></td></tr>
+<tr><td>Chặn actor tự gán hoặc tự đổi EmployeeIdentity của chính mình (SELF_MODIFICATION_FORBIDDEN)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/services.py:65-75</code></td><td><code>test_f1_self_modification_forbidden_for_super_admin_and_qc_admin</code></td></tr>
+<tr><td>Chuẩn hóa employee_id hoa thường và UniqueConstraint DB không phân biệt hoa thường chống trùng lặp</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:100-115</code>, <code>accounts/services.py:125-135</code></td><td><code>test_f1_employee_id_case_insensitive_normalization_and_uniqueness</code></td></tr>
+<tr><td>Chính sách PROTECT: EmployeeIdentity đang được CvatIdentity liên kết tuyệt đối không thể bị xóa (ProtectedError)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/models.py:155-165</code></td><td><code>test_f1_employee_identity_protected_from_deletion_while_linked</code></td></tr>
+<tr><td>Reviewer có CVAT identity trùng snapshot author trả về 403 SELF_REVIEW_FORBIDDEN</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-411</code></td><td><code>test_anti_self_review_reviewer_matches_author_rejected</code></td></tr>
+<tr><td>Super Admin Override bị cấm trên Anti-Self-Review; vẫn bị từ chối 403 SELF_REVIEW_FORBIDDEN</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:368-411</code></td><td><code>test_anti_self_review_super_admin_with_override_cannot_self_review</code></td></tr>
+<tr><td>Super Admin Override hợp lệ: Thiếu lý do trả về 422 BUSINESS_RULE_UNMET có audit; có lý do code tự động gắn nhãn is_override=True</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:488-565</code></td><td><code>test_super_admin_override_without_reason_returns_422_and_records_audit</code>, <code>test_super_admin_override_whitespace_reason_returns_422_and_records_audit</code>, <code>test_super_admin_override_representative_view_succeeds_and_labels_audit</code></td></tr>
+<tr><td>Thời điểm và tính bền vững của Audit Log khi bị từ chối trước mutation</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:30-104</code></td><td><code>test_rejection_audit_persisted_before_mutation_starts</code></td></tr>
+<tr><td>Thay thế Django groups trong guideline/permissions.py bằng RoleAssignment</td><td><span class="badge-pass">ĐẠT</span></td><td><code>guideline/permissions.py:9-22</code></td><td>21/21 tests <code>tests/guideline/test_api.py</code> pass</td></tr>
+<tr><td>Cung cấp endpoint /api/auth/workflow-permissions/</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/views.py:271-309</code></td><td><code>test_workflow_permissions_endpoint_serves_matrix_and_rules</code></td></tr>
+<tr><td>Rejection audit được đệm và commit bền vững qua AuditRejectionMiddleware với ATOMIC_REQUESTS=True (403 và 422 qua APIClient URL thật)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>config/middleware.py:85-135</code>, <code>accounts/permissions.py:30-104</code></td><td><code>test_integration_403_workflow_permissions_through_atomic_requests_pipeline</code>, <code>test_integration_422_override_missing_reason_through_atomic_requests_pipeline</code></td></tr>
+<tr><td>Mutation thất bại thì mutation và mutation audit cùng rollback (atomic transaction)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>tests/accounts/test_rbac_scope.py</code></td><td><code>test_integration_mutation_and_audit_rollback_together_on_failure</code></td></tr>
+<tr><td>Rejection audit không bị ghi trùng lặp hai lần</td><td><span class="badge-pass">ĐẠT</span></td><td><code>config/middleware.py:108-135</code></td><td><code>test_integration_rejection_audit_not_duplicated</code></td></tr>
+<tr><td>Rejection audit không thu thập query string chứa secret (path thuần); payload được redaction an toàn qua dịch vụ T-013</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:54</code>, <code>tests/audit/test_audit_log.py:12-65</code></td><td><code>test_integration_rejection_audit_does_not_collect_query_string_secrets</code>, dẫn chứng redaction payload thực sự bởi T-013 tại <code>tests/audit/test_audit_log.py:test_snapshots_and_reason_are_redacted_before_storage</code></td></tr>
+<tr><td>View thiếu allowed_roles fail-closed và raise ImproperlyConfigured</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:178-189</code></td><td><code>test_view_missing_allowed_roles_raises_improperly_configured</code></td></tr>
+<tr><td>Không coi generic pk là dataset ID; sử dụng server hook get_dataset_id(request); client query/body mâu thuẫn bị từ chối 400 VALIDATION_ERROR</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:192-300</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code></td></tr>
+<tr><td>Finding 1: Super Admin không được né override_reason trên endpoint hỗ trợ override (RoleAssignment xác định trước; thiếu/false cờ hoặc thiếu lý do trả 422 BUSINESS_RULE_UNMET; non-admin gửi cờ trả 403; test URL thật không tạo mutation/audit)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:650-715</code></td><td><code>test_integration_super_admin_missing_override_flag_returns_422_and_no_mutation</code>, <code>test_integration_super_admin_override_false_returns_422_and_no_mutation</code>, <code>test_integration_non_super_admin_normal_flow_allowed_without_override</code>, <code>test_integration_non_super_admin_attempting_override_flag_returns_403</code></td></tr>
+<tr><td>Finding 2: Server hook get_dataset_id(request) là nguồn authoritative duy nhất (không fallback sang query/body/kwargs; hook trả None trả 404 NOT_FOUND; client gửi dataset khác trả 400 VALIDATION_ERROR; test object không tồn tại gửi dataset hợp lệ trả 404)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:207-310</code></td><td><code>test_object_endpoint_server_hook_resolves_real_dataset_id_not_pk</code>, <code>test_object_endpoint_query_body_dataset_id_conflict_rejected_400</code>, <code>test_object_endpoint_nonexistent_object_client_scoped_dataset_returns_404</code></td></tr>
+<tr><td>Finding 3: Separation of duties fail-closed khi thiếu identity (không cho phép cả hai identity cùng thiếu; tự resolve requester từ DB; thiếu mapping hoặc mâu thuẫn DB trả 403 IDENTITY_MAPPING_MISSING; approver thiếu mapping trả 403; so sánh cùng LabelX user và cùng CVAT ID)</td><td><span class="badge-pass">ĐẠT</span></td><td><code>accounts/permissions.py:510-645</code></td><td><code>test_separation_of_duties_both_identities_missing_fails_closed</code>, <code>test_separation_of_duties_requester_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_approver_missing_mapping_fails_closed</code>, <code>test_separation_of_duties_input_identity_conflicts_db_fails_closed</code>, <code>test_separation_of_duties_two_distinct_valid_identities_allowed</code></td></tr>
+<tr><td>Quyết định Kiến trúc DEC-011 cho M-01</td><td><span class="badge-pass">ĐẠT</span></td><td><code>.agent/governance/decisions/DEC-011.html</code></td><td>DEC-011 ở trạng thái <code>accepted</code>; Product Owner (@toilatrung) chấp thuận Phương án 2 kết hợp Fail-Closed ngày 2026-10-08 trong review PR #56</td></tr>
+</tbody>
+</table>
+
+
+<h2 id="defense-against-bypasses">Phản biện 3 Đường Bypass Kỹ thuật (Review Round 2)</h2>
+<p>Báo cáo phản biện giải thích chi tiết vì sao ba đường bypass kỹ thuật đã bị đóng hoàn toàn và không còn khả thi:</p>
+<ol>
+  <li><strong>Bypass 1: Super Admin né cung cấp lý do giải trình (override_reason)</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Hàm <code>check_super_admin_override()</code> kiểm tra <code>if not override_flag: return None</code> trước khi xác thực vai trò. Super Admin gọi endpoint hỗ trợ override mà không gửi <code>override=true</code> sẽ lọt qua luồng bình thường mà không phải ghi nhận <code>override_reason</code>.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Đảo ngược thứ tự thẩm định: Xác định <code>RoleAssignment</code> của caller trước. Nếu caller có vai trò <code>Role.SUPER_ADMIN</code> trên endpoint hỗ trợ nhánh override, hệ thống bắt buộc caller phải kích hoạt <code>override=true</code> và cung cấp <code>override_reason</code> hợp lệ. Nếu thiếu cờ hoặc cờ False hoặc thiếu lý do, hệ thống lập tức từ chối với <code>422 BUSINESS_RULE_UNMET</code> kèm rejection audit. Thử nghiệm trên URL thật với <code>APIClient</code> chứng minh không có mutation hay mutation audit nào được tạo ra. Người dùng không phải Super Admin cố gửi <code>override=true</code> sẽ nhận ngay <code>403 FORBIDDEN</code>; nếu không yêu cầu override thì được đi luồng nghiệp vụ thông thường.</li>
+    </ul>
+  </li>
+  <li><strong>Bypass 2: Giả mạo dataset_id khi truy cập đối tượng không tồn tại</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Trong <code>_extract_dataset_id()</code>, khi server hook <code>get_dataset_id(request)</code> trả về <code>None</code> (đối tượng không tồn tại), hệ thống fallback sang tìm kiếm <code>dataset_id</code> trong query params / body. Attacker có thể gửi <code>?dataset_id=10</code> (dataset mà attacker có quyền) đối với <code>pk=999</code> không tồn tại, khiến permission check trả về <code>True</code> và lọt vào view.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thiết lập server hook là <strong>nguồn authoritative duy nhất</strong>. Khi view khai báo <code>get_dataset_id(request)</code>, hệ thống tuyệt đối không fallback sang client input. Nếu hook trả <code>None</code>, hệ thống fail-closed ngay lập tức với <code>404 NOT_FOUND</code> kèm rejection audit, request không bao giờ lọt vào view logic. Nếu hook trả dataset hợp lệ nhưng client gửi dataset khác thì bị từ chối <code>400 VALIDATION_ERROR</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Bypass 3: Separation of Duties bị vô hiệu hóa khi thiếu thông tin danh tính</strong>:
+    <ul>
+      <li><em>Lỗ hổng cũ</em>: Khi cả <code>requester_user_id</code> và <code>requester_cvat_user_id</code> cùng thiếu, hoặc khi truyền <code>requester_user_id</code> mà requester chưa liên kết <code>CvatIdentity</code>, guard không kiểm tra chặt chẽ và để lọt qua.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thực thi nguyên tắc <strong>Fail-Closed tuyệt đối</strong>: (1) Từ chối <code>403 IDENTITY_MAPPING_MISSING</code> nếu cả hai identity cùng thiếu. (2) Khi có <code>requester_user_id</code>, bắt buộc resolve <code>CvatIdentity</code> của requester từ DB; nếu thiếu mapping hoặc nếu input <code>requester_cvat_user_id</code> mâu thuẫn với DB thì từ chối ngay <code>403 IDENTITY_MAPPING_MISSING</code>. (3) Approver bắt buộc phải có mapping trong DB, nếu thiếu từ chối <code>403 IDENTITY_MAPPING_MISSING</code>. (4) So sánh cả LabelX user ID và CVAT user ID; Super Admin cũng tuyệt đối bị chặn tự duyệt.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="khac-phuc-f1">Khắc phục Lỗ hổng F-1 và Hardening Vòng Cuối (PR #56 Review Round 3)</h2>
+<p>Thực hiện chỉ đạo xử lý Finding F-1 trên PR #56 từ commit <code>fdd7775d82fd89d8d2117c10856c4be299cb6424</code> theo quyết định bổ sung <code>employee_id</code> và hoàn tất 4 yêu cầu hardening bắt buộc:</p>
+<ol>
+  <li><strong>Lệnh set_cvat_identity: Thẩm định Trước Mutation & Giao dịch Toàn vẹn (Atomic All-or-Nothing)</strong>:
+    <ul>
+      <li><em>Lỗ hổng trước đó</em>: Lệnh ghi <code>CvatIdentity</code> vào DB trước khi kiểm tra <code>--actor</code>, <code>--reason</code> và quyền của actor.</li>
+      <li><em>Giải pháp triệt tiêu</em>: Thực hiện toàn bộ kiểm tra đầu vào (sự tồn tại của target user, bắt buộc <code>--actor</code> và <code>--reason</code> khi có <code>--employee-id</code>, kiểm tra actor có <code>RoleAssignment</code> là <code>SUPER_ADMIN</code>/<code>QC_ADMIN</code>, và kiểm tra chống tự gán <code>actor.pk == user.pk</code>) <strong>TRƯỚC MỌI THAO TÁC GHI DB</strong>. Nếu thiếu actor/reason hoặc actor không đủ quyền, lệnh lập tức từ chối mà tuyệt đối không tạo mới và không thay đổi bất kỳ bản ghi <code>CvatIdentity</code> nào.</li>
+      <li>Bọc toàn bộ thao tác cập nhật <code>CvatIdentity</code>, gán <code>EmployeeIdentity</code> và ghi <code>AuditEvent</code> trong cùng một outer <code>transaction.atomic()</code> duy nhất. Bất kỳ lỗi quyền, validation hoặc lỗi ghi audit nào (kể cả lỗi disk full) cũng rollback toàn bộ, không để lại bất kỳ dữ liệu mồ côi hay mapping dở dang nào.</li>
+    </ul>
+  </li>
+  <li><strong>Chặn Tự Gán và Tự Sửa EmployeeIdentity (Anti-Self-Modification)</strong>:
+    <ul>
+      <li>Service <code>assign_employee_identity()</code> kiểm tra và từ chối dứt khoát khi actor tự gán hoặc tự đổi EmployeeIdentity của chính mình (<code>actor.pk == user.pk</code>) với mã lỗi rõ ràng <code>403 SELF_MODIFICATION_FORBIDDEN</code>.</li>
+      <li>Quy tắc áp dụng đồng nhất cho cả <code>SUPER_ADMIN</code> và <code>QC_ADMIN</code>, cũng như chặn đứng khi gọi qua command CLI. Việc cấp phát bắt buộc phải do một quản trị viên độc lập khác thực hiện theo nguyên tắc four-eyes.</li>
+    </ul>
+  </li>
+  <li><strong>Chuẩn hóa Mã Nhân sự và Bảo vệ Database Case-Insensitive Unique</strong>:
+    <ul>
+      <li>Chuẩn hóa mã nhân sự trong code: Các chuỗi như <code>EMP-001</code> và <code>emp-001</code> được chuẩn hóa và nhận diện là cùng một định danh nhân sự, tự động liên kết về cùng một bản ghi <code>EmployeeIdentity</code>.</li>
+      <li>Bảo vệ đa tầng tại database: Thêm ràng buộc <code>UniqueConstraint(Lower('employee_id'), name='accounts_employee_identity_employee_id_ci_unique')</code>. Bất kỳ nỗ lực tạo bản ghi đối nghịch khác hoa thường trực tiếp ở DB đều bị từ chối với <code>IntegrityError</code>.</li>
+      <li>Quy tắc Separation of Duties tự động nhận diện và chặn đứng việc tự duyệt chéo giữa hai tài khoản mang mã nhân viên khác hoa thường (<code>403 SAME_REQUESTER_APPROVER</code>).</li>
+    </ul>
+  </li>
+  <li><strong>Thống nhất Chính sách Xóa: Khóa Bảo vệ PROTECT cho CvatIdentity.employee</strong>:
+    <ul>
+      <li>Thống nhất mã nguồn với tài liệu thiết kế: Thiết lập <code>on_delete=models.PROTECT</code> cho trường <code>CvatIdentity.employee</code>.</li>
+      <li>Cập nhật migration <code>0002_employeeidentity</code>. Khi một <code>EmployeeIdentity</code> đang được liên kết với bất kỳ tài khoản <code>CvatIdentity</code> nào, thao tác xóa <code>EmployeeIdentity</code> sẽ bị từ chối mức DB/ORM bằng ngoại lệ <code>ProtectedError</code>, ngăn chặn hoàn toàn việc xóa nhầm hoặc xóa trộm định danh nhân sự đang hoạt động.</li>
+    </ul>
+  </li>
+  <li><strong>Bảo vệ Django Admin và Separation of Duties</strong>:
+    <ul>
+      <li>Khóa hoàn toàn quyền tạo mới, chỉnh sửa, xóa trên Django Admin đối với <code>EmployeeIdentity</code> (<code>has_add_permission=False</code>, <code>has_change_permission=False</code>, <code>has_delete_permission=False</code>), chỉ dùng để tra cứu / đối soát.</li>
+      <li>Separation of duties fail-closed khi thiếu hoặc chưa xác minh <code>EmployeeIdentity</code>; chặn 100% tự duyệt chéo đa tài khoản.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="deviations">Deviations</h2>
+<p>So với schema trước T-012, triển khai bổ sung model <code>EmployeeIdentity</code>, trường liên kết nullable <code>CvatIdentity.employee</code> và migration <code>accounts.0002_employeeidentity</code>. Đây là thay đổi có chủ đích được Product Owner chấp thuận trong <strong>DEC-011</strong> để đáp ứng chống tự duyệt đa tài khoản; không bổ sung <code>Person</code>, <code>sso_subject</code> hoặc tích hợp SSO ngoài phạm vi M-01.</p>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<p><code>test_rbac_scope.py</code> thu thập 74 test. CI run <code>37819819006</code> trên commit <code>45636b5</code> xác nhận toàn bộ backend repository đạt <strong>218 passed, 1 skipped</strong>; các job backend, frontend, framework, detector và bootstrap-windows đều pass. Phần triển khai đã <strong>complete</strong>, task vẫn ở trạng thái <strong>review</strong> cho tới khi head cuối của PR #56 được reviewer duyệt; DEC-011 đã <strong>accepted</strong> bởi PO (@toilatrung).</p>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không chỉnh sửa hoặc xóa dữ liệu trên database chung <code>labelx</code>.</li>
+<li>Không đưa secret, private key, token vào Git.</li>
+<li>Không commit, push hoặc tạo Pull Request trước khi người giám sát kiểm tra và phê duyệt báo cáo.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Báo cáo này được cập nhật và lưu tại <code>.agent/reports/implementation/T-012.html</code>, tuân thủ đúng quy chuẩn HTML dự án và vượt qua <code>scripts/validate-framework.py</code>.</p>
+</article></main></body></html>

@@ -1,0 +1,18 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Design QA — archived prototype notes</title>
+<meta name="labelx:id" content="design-qa-prototype-notes"><meta name="labelx:title" content="Design QA — archived prototype notes"><meta name="labelx:type" content="reference"><meta name="labelx:domain" content="design"><meta name="labelx:module" content="qa"><meta name="labelx:tags" content="[design, qa, archive]"><meta name="labelx:priority" content="3"></head><body><h1>Design QA — ghi chép prototype trước triển khai</h1>
+<p>Người dùng đã duyệt giao diện. Bằng chứng kiểm thử Next.js/API thật của T-018 nằm trong <a href="../../.agent/reports/implementation/T-018-@toilatrung.html">report T-018</a>. Nội dung ghi chép cũ được lưu nguyên văn dưới đây.</p><pre># Design QA — preview reference alignment
+
+final result: blocked
+
+Source visual truth: `C:\Users\William Trinh\Downloads\previews\previews\labelx-leader-preview.html`, `labelx-queue-preview.jpg` (1345 × 1077 px), `labelx-workspace-preview.jpg` (1345 × 1228 px).
+Implementation: `screens/preview.html`, generated from 24 canonical `.dc.html` files.
+Implementation screenshot: not captured. Viewport and density comparison: pending browser capture at the source viewport.
+
+Visual comparison is blocked pending permission to use Playwright directly. No full-view or focused-region comparison has been performed. Typography, spacing, colors, image scaling, responsive layout and content fidelity have not received browser-based visual acceptance. Source screenshots and the three extracted source thumbnails were inspected.
+
+The user clarified that Review Workspace must retain all original functionality and information. Its original document and render logic were restored; presentation changes are limited to shared styles, the workspace layout class, page spacing, viewport metadata and the position/height of FlowNav. Reversing those edits reproduces the original content and logic, ignoring blank-line whitespace. The original annotation SVG, Issue/Frame Review modes, model evidence, Guideline, similar cases, five decisions, error-type/severity fields, reason and Issue/Frame navigation controls are preserved. The Workspace remains the original illustrative Issue dataset; queue sample photos do not imply a backend binding to that Issue.
+
+Nonvisual verification: `node docs/design/tools/verify-design.cjs` passes for 24 source definitions and 18 tab states, queue search/empty states, original Workspace information and both review modes. JavaScript syntax, JSON, shared token/CSS copy parity, component imports and whitespace checks also pass. These checks do not substitute for browser interaction or visual QA.
+
+Next verification: capture Queue and the restored Workspace on desktop and a narrow viewport; compare the source styling while honoring the user&#x27;s requirement to retain Workspace content; check filters, navigation, mode switching, dropdown keyboard focus and console errors. No visual severity findings are assigned without rendered evidence.
+</pre></body></html>
