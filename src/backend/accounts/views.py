@@ -238,12 +238,15 @@ ROLE_MATRIX = [
     },
 ]
 
+# `enforced` = đã có route HTTP gọi kiểm tra này. anti_self_review, override và separation_of_duties
+# mới là hàm trong accounts/permissions.py (có test), chưa route nào dùng — chuyển True khi route
+# review/phân xử/phê duyệt đầu tiên (M-03) gọi chúng và có test tích hợp qua HTTP.
 WORKFLOW_RULES = [
     {
         "rule": "anti_self_review",
         "name": "Reviewer không review annotation của chính mình",
         "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
-        "enforced": True,
+        "enforced": False,
     },
     {
         "rule": "super_admin_override_reason",
@@ -251,7 +254,7 @@ WORKFLOW_RULES = [
         "description": (
             "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline"
         ),
-        "enforced": True,
+        "enforced": False,
     },
     {
         "rule": "audit_logging",
@@ -263,7 +266,7 @@ WORKFLOW_RULES = [
         "rule": "separation_of_duties",
         "name": "Người duyệt khác người yêu cầu",
         "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
-        "enforced": True,
+        "enforced": False,
     },
 ]
 
@@ -273,6 +276,7 @@ class WorkflowPermissionsView(APIView):
     allowed_roles = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
     action_name = "auth_workflow_permissions"
     requires_dataset = False
+    object_type = "system"
     scope_type = "system"
 
     @extend_schema(

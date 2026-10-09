@@ -237,4 +237,12 @@ FRAMEWORK_VALIDATION_PASS
 
 <h2 id="conclusion">Kết luận</h2>
 <p><strong>READY TO PUSH</strong>. Toàn bộ 4 phát hiện F1, F2, F3, F4 đã được giải quyết triệt để, thuật toán matching đạt 32/32 tests, lỗi mypy baseline ở <code>load_guideline.py</code> đã được phân tích và tách thành commit riêng biệt, và lệnh tổng <code>make check</code> trên Bash/WSL hoàn tất thành công 100% với exit code 0.</p>
+<h2 id="integration-qc">Integration QC — resolve PR #79</h2>
+<p>Integrator @toilatrung xử lý theo yêu cầu PO ngày 2026-10-09: merge develop <code>d7513267704eb54ea93d209d8fd6779ce98a8e9d</code> vào head đã review <code>4b15df45c7dcd3d12aca3c9be8d910bbdef39457</code>. Conflict modify/delete task board được resolve bằng file delta chỉ giữ T-023, cập nhật base commit; không phục hồi T-003/T-012/T-017 đã gộp qua PR #78. Matching và typing fix giữ nguyên.</p>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make check</code> trên code sau resolve</td><td>passed (exit 0)</td><td>Backend PostgreSQL: 269 passed, 1 skipped in 60.51s; frontend 138 passed; detector 10 passed. Backend/frontend lint và typecheck pass; mypy 66 source files; FRAMEWORK_VALIDATION_PASS.</td></tr>
+<tr><td>Database isolation</td><td>passed</td><td>Database pytest <code>labelx_pr79_resolved_qc</code> qua module settings tạm ngoài repo; không đổi schema/dữ liệu DB dev. Các env auth/CVAT là giá trị test.</td></tr>
+<tr><td>Ownership / scope</td><td>passed</td><td>Delta PR chỉ sửa file .agent của @ducha180104; AGENT_OWNERSHIP_PASS. Không thay thuật toán trong quá trình resolve.</td></tr>
+</tbody></table>
+<p>Commit sau tích hợp cần CI xanh trên đúng head trước khi comment duyệt. Không ghi task done hay claim đã merge PR ở bước resolve này.</p>
 </article></main></body></html>
