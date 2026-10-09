@@ -305,6 +305,17 @@ ul.dir{columns:2;font-size:14px}
 <td>implementation report (F-04, F-06 theo DEC-012, F-10 CI chưa chạy Actions, gộp file -@user xong; F-05 review/QA còn lại)</td>
 <td>2026-10-09</td>
 </tr>
+<tr>
+<td>T-028</td>
+<td>E-09</td>
+<td>Engine Duplicate/Overlap: IoU ≥ 0,85 sinh candidate E3</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td>
+<td>review</td>
+<td>T-023</td>
+<td>none</td>
+<td>implementation report; QA report passed (ec627bd); PR #77 (ec627bd); chờ review report dạng file (F-1)</td>
+<td>2026-10-09</td>
+</tr>
 </tbody>
 </table>
 <h2 id="task-details">Task Details</h2>
@@ -1434,5 +1445,65 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
 <li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-028">T-028</h3>
+<h4 id="record-metadata_28">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-028</code></li>
+<li><strong>Epic ID</strong>: <code>E-09</code></li>
+<li><strong>Title</strong>: <code>Engine Duplicate/Overlap: IoU ≥ 0,85 sinh candidate E3</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_28">Objective</h4>
+<p>Phát hiện bbox trùng/chồng tất định, có evidence, không tự thành lỗi KPI.</p>
+<h4 id="scope_28">Scope</h4>
+<h5 id="included_28">Included</h5>
+<ul>
+<li>Dùng matching T-023; IoU ≥ 0,85 sinh candidate E3</li>
+<li>Cặp tất định, anchors/evidence</li>
+<li>Structural warning không tự biến thành lỗi KPI</li>
+<li>Hàm thuần theo engine interface, test bằng fixture; đăng ký orchestrator do PR merge sau giữa engine và T-025 thực hiện</li>
+</ul>
+<h5 id="excluded_28">Excluded</h5>
+<ul>
+<li>Đăng ký engine vào orchestrator (T-025); annotation thật/live CVAT (BLOCKER-024)</li>
+</ul>
+<h4 id="preconditions_28">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available. (T-023 merge qua PR #79)</li>
+</ul>
+<h4 id="related-files_28">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-09</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-005.html, DEC-006.html, DEC-007.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>BLOCKER-024 (annotation thật, không chặn T-028)</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+</ul>
+<h4 id="acceptance-criteria_28">Acceptance Criteria</h4>
+<ul>
+<li>[x] Test theo rule ID, gồm tie và cluster</li>
+<li>[x] E3 có evidence</li>
+<li>[x] Chạy lại cho cùng thứ tự cặp</li>
+</ul>
+<h4 id="verification-requirements_28">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check (exit 0, ec627bd); pytest tests/test_duplicate_overlap_engine.py tests/test_engine_interface.py tests/engines/test_matching.py (63 passed)</code></li>
+<li><strong>Manual Checks</strong>: <code>Probe ignored/ngưỡng/hoán vị — xem QA report</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-028.html; .agent/reports/qa/T-028.html</code></li>
+</ul>
+<h4 id="completion-criteria_28">Completion Criteria</h4>
+<ul>
+<li>[x] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>. (còn thiếu review report dạng file, QA report F-1)</li>
+<li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status. (chuyển <code>done</code> sau khi có review report và xác nhận QC độc lập)</li>
 </ul>
 </article></main></body></html>
