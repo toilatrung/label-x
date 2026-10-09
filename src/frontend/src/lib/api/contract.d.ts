@@ -177,6 +177,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/config-versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách config version (engine, ngưỡng, model) */
+        get: operations["config_versions_list"];
+        put?: never;
+        /**
+         * Tạo config version nháp
+         * @description Bản nháp sửa được; bản đã publish không sửa được (đổi cấu hình = tạo version mới).
+         */
+        post: operations["config_versions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config-versions/{id}/publish/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish config version
+         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+         */
+        post: operations["config_versions_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/": {
         parameters: {
             query?: never;
@@ -465,6 +506,46 @@ export interface paths {
          *     Super Admin ghi đè cần override_reason và vẫn chịu kiểm self-review.
          */
         post: operations["issues_decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết issue và lịch sử quyết định
+         * @description Trả Issue kèm review_decisions bất biến theo thứ tự thời gian (rest-api.html §5, A §25).
+         */
+        get: operations["issues_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/escalations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Issue chờ phân xử kèm quyết định từng reviewer
+         * @description Issue ở trạng thái escalated; mỗi phần tử có review_decisions của từng reviewer (FR-ESC-01).
+         */
+        get: operations["escalations_list"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1512,6 +1593,50 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Dataset"][];
         };
+        ConfigVersionCreate: {
+            name: string;
+            /** @description Cấu hình theo engine (bật/tắt, tham số); không chứa secret. */
+            engines: {
+                [key: string]: unknown;
+            };
+            thresholds?: {
+                [key: string]: unknown;
+            };
+            /** @description Model/artifact tham chiếu theo version đã khoá. */
+            models?: {
+                [key: string]: unknown;
+            };
+        };
+        ConfigVersion: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            status: "draft" | "published";
+            engines: {
+                [key: string]: unknown;
+            };
+            thresholds?: {
+                [key: string]: unknown;
+            };
+            models?: {
+                [key: string]: unknown;
+            };
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            published_at?: string | null;
+        };
+        PaginatedConfigVersionList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["ConfigVersion"][];
+        };
+        PaginatedIssueList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Issue"][];
+        };
         PaginatedRunList: {
             next?: string | null;
             previous?: string | null;
@@ -1813,6 +1938,90 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    config_versions_list: {
+        parameters: {
+            query?: {
+                status?: "draft" | "published";
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang config version, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedConfigVersionList"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    config_versions_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigVersionCreate"];
+            };
+        };
+        responses: {
+            /** @description Config version nháp */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersion"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    config_versions_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Config version đã publish */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersion"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     runs_list: {
@@ -2279,6 +2488,55 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    issues_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Issue và lịch sử quyết định */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Issue"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    escalations_list: {
+        parameters: {
+            query?: {
+                run?: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang issue chờ phân xử, cũ nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedIssueList"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
         };
     };
     issues_adjudicate: {

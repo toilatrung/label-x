@@ -15,8 +15,10 @@ from snapshots.normalization import (
     SCHEMA_VERSION,
     JobExport,
     NormalizedJob,
+    canonical_json,
     normalize_job,
     normalize_snapshot,
+    sha256_json,
 )
 
 
@@ -76,6 +78,56 @@ def _persist_job(snapshot: Snapshot, export: JobExport, normalized: NormalizedJo
 
 
 @transaction.atomic
+def lock_snapshot(snapshot: Snapshot) -> Snapshot:
+    """Wait for writers, then hash the committed aggregate and freeze it.
+
+    Child triggers hold this same parent lock until their transaction ends.
+    Do not lock/update child rows here: a writer can already hold a child row
+    while waiting for this parent, and taking its row lock would deadlock.
+    The DB transition guard rejects child caches inconsistent with frames.
+    """
+
+    stored = Snapshot.objects.select_for_update(no_key=True).get(pk=snapshot.pk)
+    ensure_snapshot_mutable(stored)
+    normalized_jobs: list[NormalizedJob] = []
+    skipped: Counter[str] = Counter()
+    for job in stored.jobs.order_by("cvat_job_id"):
+        if sha256_json(job.normalized_json) != job.sha256:
+            raise ValueError("snapshot job hash must match its normalized JSON before locking")
+        normalized_jobs.append(
+            NormalizedJob(
+                payload=job.normalized_json,
+                canonical_json=canonical_json(job.normalized_json),
+                sha256=job.sha256,
+                rectangle_count=job.rectangle_count,
+                skipped_shape_counts=job.skipped_shape_counts,
+            )
+        )
+        skipped.update(job.skipped_shape_counts)
+    payload, digest = normalize_snapshot(
+        dataset_id=stored.dataset_id,
+        jobs=normalized_jobs,
+        taxonomy_version=stored.taxonomy_version,
+        guideline_version=stored.guideline_version,
+    )
+    stored.normalized_json = payload
+    stored.revision_sha256 = digest
+    stored.skipped_shape_counts = dict(sorted(skipped.items()))
+    stored.status = Snapshot.Status.LOCKED
+    stored.locked_at = timezone.now()
+    stored.save(
+        update_fields=[
+            "normalized_json",
+            "revision_sha256",
+            "skipped_shape_counts",
+            "status",
+            "locked_at",
+        ]
+    )
+    return stored
+
+
+@transaction.atomic
 def create_locked_snapshot(
     *,
     dataset_id: int,
@@ -95,7 +147,7 @@ def create_locked_snapshot(
 
     parent = _parent_for_update(parent_snapshot, dataset_id)
     normalized_jobs = [normalize_job(job) for job in jobs]
-    normalized_payload, revision_sha256 = normalize_snapshot(
+    normalize_snapshot(
         dataset_id=dataset_id,
         jobs=normalized_jobs,
         taxonomy_version=taxonomy_version,
@@ -113,35 +165,19 @@ def create_locked_snapshot(
         skipped_shape_counts={},
         created_by=created_by,
     )
-    skipped: Counter[str] = Counter()
     for export, normalized in sorted(
         zip(jobs, normalized_jobs, strict=True),
         key=lambda pair: pair[0].cvat_job_id,
     ):
         _persist_job(snapshot, export, normalized)
-        skipped.update(normalized.skipped_shape_counts)
-
-    snapshot.normalized_json = normalized_payload
-    snapshot.revision_sha256 = revision_sha256
-    snapshot.skipped_shape_counts = dict(sorted(skipped.items()))
-    snapshot.status = Snapshot.Status.LOCKED
-    snapshot.locked_at = timezone.now()
-    snapshot.save(
-        update_fields=[
-            "normalized_json",
-            "revision_sha256",
-            "skipped_shape_counts",
-            "status",
-            "locked_at",
-        ]
-    )
-    return snapshot
+    return lock_snapshot(snapshot)
 
 
 @transaction.atomic
 def mark_snapshot_failed(snapshot: Snapshot, *, reason: str) -> Snapshot:
     """Example lifecycle mutation used by the future export/drift orchestration."""
 
+    snapshot = Snapshot.objects.select_for_update(no_key=True).get(pk=snapshot.pk)
     ensure_snapshot_mutable(snapshot)
     if not reason.strip():
         raise ValueError("failure reason must not be empty")
