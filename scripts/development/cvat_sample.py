@@ -47,7 +47,9 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Official images/100k directory used to classify selected filenames",
     )
-    parser.add_argument("--base-url", default=os.getenv("CVAT_BASE_URL", "http://localhost:8080"))
+    parser.add_argument(
+        "--base-url", default=os.getenv("CVAT_BASE_URL", "http://localhost:8080")
+    )
     parser.add_argument("--token", default=os.getenv("CVAT_PROVISIONER_TOKEN", ""))
     parser.add_argument(
         "--token-file",
@@ -56,7 +58,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--project-name", default=DEFAULT_PROJECT)
     parser.add_argument("--task-name", default=DEFAULT_TASK)
-    parser.add_argument("--receipt", type=Path, default=Path(".cache/cvat/import-receipt.json"))
+    parser.add_argument(
+        "--receipt", type=Path, default=Path(".cache/cvat/import-receipt.json")
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.token_file:
@@ -72,7 +76,9 @@ def load_manifest(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "labelx-cvat-sample-v1":
         raise ValueError("unsupported annotation manifest schema")
-    if not isinstance(payload.get("labels"), list) or not isinstance(payload.get("images"), list):
+    if not isinstance(payload.get("labels"), list) or not isinstance(
+        payload.get("images"), list
+    ):
         raise TypeError("manifest must contain labels and images arrays")
     return payload
 
@@ -107,7 +113,9 @@ def validate_sample(images_dir: Path, manifest: dict[str, Any]) -> list[Path]:
             width, height = image.size
         for annotation in image_entry.get("annotations", []):
             if annotation.get("label") not in labels:
-                raise ValueError(f"unknown label in {path.name}: {annotation.get('label')}")
+                raise ValueError(
+                    f"unknown label in {path.name}: {annotation.get('label')}"
+                )
             bbox = annotation.get("bbox")
             if not isinstance(bbox, list) or len(bbox) != 4:
                 raise ValueError(f"invalid bbox in {path.name}")
@@ -116,11 +124,14 @@ def validate_sample(images_dir: Path, manifest: dict[str, Any]) -> list[Path]:
                 raise ValueError(f"bbox outside {width}x{height} image: {path.name}")
         selected.append(path)
     duplicate_names = [
-        name for name, count in Counter(path.name for path in selected).items() if count > 1
+        name
+        for name, count in Counter(path.name for path in selected).items()
+        if count > 1
     ]
     if duplicate_names:
         raise ValueError(
-            "duplicate upload filenames are not supported: " + ", ".join(sorted(duplicate_names))
+            "duplicate upload filenames are not supported: "
+            + ", ".join(sorted(duplicate_names))
         )
     return selected
 
@@ -206,21 +217,37 @@ class ProvisioningClient:
         return payload
 
     def find_or_create_project(self, name: str, labels: list[dict[str, Any]]) -> int:
-        payload = self._json("GET", "api/projects", params={"search": name, "page_size": 100})
+        payload = self._json(
+            "GET", "api/projects", params={"search": name, "page_size": 100}
+        )
         for project in payload.get("results", []):
             if project.get("name") == name:
                 project_id = int(project["id"])
                 existing = self._json("GET", f"api/projects/{project_id}")
                 expected_taxonomy = canonical_taxonomy(labels)
-                actual_taxonomy = canonical_taxonomy(existing.get("labels", []))
+                raw_labels = existing.get("labels", [])
+                if isinstance(raw_labels, dict):
+                    label_payload = self._json(
+                        "GET",
+                        "api/labels",
+                        params={"project_id": project_id, "page_size": 100},
+                    )
+                    raw_labels = label_payload.get("results", label_payload)
+                if not isinstance(raw_labels, list):
+                    raise TypeError(f"invalid CVAT project taxonomy response: {name}")
+                actual_taxonomy = canonical_taxonomy(raw_labels)
                 if actual_taxonomy != expected_taxonomy:
                     raise ValueError(f"existing CVAT project taxonomy differs: {name}")
                 return project_id
-        created = self._json("POST", "api/projects", json={"name": name, "labels": labels})
+        created = self._json(
+            "POST", "api/projects", json={"name": name, "labels": labels}
+        )
         return int(created["id"])
 
     def ensure_task_absent(self, name: str) -> None:
-        payload = self._json("GET", "api/tasks", params={"search": name, "page_size": 100})
+        payload = self._json(
+            "GET", "api/tasks", params={"search": name, "page_size": 100}
+        )
         if any(task.get("name") == name for task in payload.get("results", [])):
             raise ValueError(f"CVAT task already exists: {name}")
 
@@ -244,7 +271,8 @@ class ProvisioningClient:
                     (
                         path.name,
                         stack.enter_context(path.open("rb")),
-                        mimetypes.guess_type(path.name)[0] or "application/octet-stream",
+                        mimetypes.guess_type(path.name)[0]
+                        or "application/octet-stream",
                     ),
                 )
                 for index, path in enumerate(paths)
@@ -287,7 +315,9 @@ class ProvisioningClient:
         raise TimeoutError("CVAT image import did not finish within 10 minutes")
 
     def label_ids(self, task_id: int) -> dict[str, int]:
-        payload = self._json("GET", "api/labels", params={"task_id": task_id, "page_size": 100})
+        payload = self._json(
+            "GET", "api/labels", params={"task_id": task_id, "page_size": 100}
+        )
         raw_labels = payload.get("results", payload)
         if isinstance(raw_labels, dict):
             raw_labels = raw_labels.get("results", [])
@@ -358,7 +388,10 @@ def main() -> int:
     args = parse_args()
     manifest = load_manifest(args.annotations)
     selected = validate_sample(args.images, manifest)
-    if manifest.get("provenance", {}).get("dataset") == "bdd100k" and not args.bdd100k_images_root:
+    if (
+        manifest.get("provenance", {}).get("dataset") == "bdd100k"
+        and not args.bdd100k_images_root
+    ):
         raise ValueError("--bdd100k-images-root is required for BDD100K manifests")
     task_id: int | None = None
 
@@ -366,7 +399,9 @@ def main() -> int:
         client = ProvisioningClient(args.base_url, args.token)
         try:
             client.ensure_task_absent(args.task_name)
-            project_id = client.find_or_create_project(args.project_name, manifest["labels"])
+            project_id = client.find_or_create_project(
+                args.project_name, manifest["labels"]
+            )
             task_id = client.create_task(
                 args.task_name,
                 project_id,
