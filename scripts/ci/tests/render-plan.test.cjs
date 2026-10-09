@@ -9,7 +9,7 @@ test('three filters compose and empty matches stay empty',()=>{
  const rows=plan.cases.map(c=>({dataset:{phase:c.phase,state:c.implementation,level:c.level},hidden:false}));
  const el=id=>ids[id]||(ids[id]={value:'',textContent:'',addEventListener:(name,cb)=>handlers[id+':'+name]=cb});
  vm.runInNewContext(script,{document:{getElementById:el,querySelectorAll:()=>rows},window:{print(){}}});
- el('state').value='implemented';handlers['state:change']();assert.equal(rows.filter(r=>!r.hidden).length,1);
+ el('state').value='implemented';handlers['state:change']();assert.equal(rows.filter(r=>!r.hidden).length,5);
  el('phase').value='p0_snapshot';handlers['phase:change']();assert.equal(rows.filter(r=>!r.hidden).length,0);
  el('state').value='planned';el('level').value='contract';handlers['level:change']();assert.equal(rows.filter(r=>!r.hidden).length,2);
  el('phase').value='';el('state').value='';el('level').value='';handlers['phase:change']();assert.equal(rows.filter(r=>!r.hidden).length,62);

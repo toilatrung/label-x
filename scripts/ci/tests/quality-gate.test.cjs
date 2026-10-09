@@ -5,7 +5,7 @@ const gate=require('../quality-gate.cjs');
 const ROOT=path.resolve(__dirname,'../../..');
 const plan=JSON.parse(fs.readFileSync(path.join(ROOT,'docs/09-testing/test-matrix.json'),'utf8'));
 const sha='a'.repeat(40),passXml='<testsuites><testsuite tests="1" failures="0" errors="0" skipped="0"><testcase name="test_schema" /></testsuite></testsuites>';
-test('plan traces all cases; only real smoke is implemented',()=>{assert.deepEqual(gate.validatePlan(plan),{phases:12,cases:62,implemented:1});});
+test('plan traces all cases; only bound tests are implemented (SCF-01, SEC-01, SEC-02, AUD-01, GDL-01)',()=>{assert.deepEqual(gate.validatePlan(plan),{phases:12,cases:62,implemented:5});});
 test('all seven outcomes have traced scenarios',()=>{for(let i=1;i<=7;i++)assert(plan.cases.some(c=>c.requirements.includes('R-0'+i)||({1:['AC-01','AC-02','AC-03'],2:['AC-04'],3:['AC-06'],4:['AC-08','AC-10'],5:['AC-05','AC-11'],6:['AC-07'],7:['AC-09']}[i]).some(r=>c.requirements.includes(r))));});
 test('planned phases do not pass or silently skip',()=>assert.throws(()=>gate.selected(plan,'p0_snapshot'),gate.Blocked));
 test('cycles and nonexistent dependencies fail validation',()=>{const p=structuredClone(plan);p.phases[0].dependencies=['p0_snapshot'];assert.throws(()=>gate.validatePlan(p),/Cyclic/);p.phases[0].dependencies=['unknown'];assert.throws(()=>gate.validatePlan(p),/Unknown/);});

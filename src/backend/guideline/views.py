@@ -182,6 +182,8 @@ class GuidelineRuleDetailView(GuidelineAPIView):
 class GuidelineMappingListView(GuidelineAPIView):
     """GET /api/guidelines/mappings/ — read-only mapping context → rule IDs."""
 
+    action_name = "guidelines.mappings"
+
     @extend_schema(
         operation_id="guidelines_mappings_list",
         summary="Tra mapping nhóm lỗi/lớp tới rule ID",
