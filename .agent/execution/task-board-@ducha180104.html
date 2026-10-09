@@ -6,7 +6,7 @@
 <meta name="labelx:type" content="execution">
 <meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[execution, per-user, t-023]">
+<meta name="labelx:tags" content="[execution, per-user, t-023, t-024, t-025]">
 <meta name="labelx:priority" content="2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -44,12 +44,12 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board-@ducha180104</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>task-board-ducha180104</span><b>title</b><span>Task Board — @ducha180104</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-023]</span><b>priority</b><span>2</span></div>
+<div class="meta"><b>id</b><span>task-board-ducha180104</span><b>title</b><span>Task Board — @ducha180104</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-023, t-025]</span><b>priority</b><span>2</span></div>
 <h1 id="task-board-ducha180104">Task Board — @ducha180104</h1>
 <h2 id="purpose">Purpose</h2>
 <p>File riêng của Nguyễn Đức Hà (@ducha180104) theo CR-100: chỉ ghi delta T-023 sau khi develop đã gộp T-003/T-012/T-017 qua PR #78. Integrator gộp vào <code>.agent/execution/task-board.html</code>.</p>
 <ul>
-  <li><strong>Base Commit</strong>: <code>d7513267704eb54ea93d209d8fd6779ce98a8e9d</code></li>
+  <li><strong>Base Commit</strong>: <code>fe363c5a36b1c66782fe4bcd5fc7236a3ba207ca</code></li>
 </ul>
 <h2 id="status-model">Status Model</h2>
 <ul>
@@ -76,10 +76,32 @@ ul.dir{columns:2;font-size:14px}
 <td>E-05</td>
 <td>Thư viện matching một-một tất định, dùng chung</td>
 <td>Nguyễn Đức Hà (@ducha180104)</td>
-<td>review</td>
+<td>done</td>
 <td>none</td>
 <td>none</td>
 <td><a href="../reports/implementation/T-023-@ducha180104.html">T-023-@ducha180104.html</a></td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-024</td>
+<td>E-08</td>
+<td>QC Run domain, shard idempotency và lifecycle</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-020, T-021, T-023</td>
+<td>BLOCKER-025</td>
+<td><a href="../reports/implementation/T-024-@ducha180104.html">T-024-@ducha180104.html</a></td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-025</td>
+<td>E-08</td>
+<td>Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-024</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-025-@ducha180104.html">T-025-@ducha180104.html</a></td>
 <td>2026-10-09</td>
 </tr>
 </tbody>

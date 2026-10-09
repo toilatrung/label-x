@@ -10,4 +10,5 @@ urlpatterns = [
     path("api/guidelines/", include("guideline.urls")),
     path("api/snapshots/", include("snapshots.urls")),
     path("api/datasets/", include("snapshots.dataset_urls")),
+    path("api/runs/", include("runs.urls")),
 ]
