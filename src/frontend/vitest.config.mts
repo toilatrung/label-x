@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
+    env: { NEXT_PUBLIC_AUTH_MODE: 'mock' },
     globals: true,
     pool: 'threads',
     setupFiles: ['./src/__tests__/setup.ts'],

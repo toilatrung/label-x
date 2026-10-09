@@ -46,10 +46,10 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>design-component-flow-nav</span><b>title</b><span>FlowNav</span><b>type</b><span>reference</span><b>domain</b><span>design</span><b>module</b><span>components</span><b>tags</b><span>[design, component, flow-nav]</span><b>priority</b><span>2</span></div>
 <h1 id="flownav">FlowNav</h1>
-<p>A bar at the top of a page that merges sequential screens into one feature: flow name, back arrow, numbered steps, position ("Bước 2 / 3"), forward arrow.</p>
+<p>Thanh ba bước nằm sau tiêu đề trang, dùng số bước, nhãn và mô tả ngắn. Bước hiện tại dùng nền graphite và <code>aria-current="step"</code>; mỗi bước liên kết đến màn tương ứng.</p>
 <ul>
-<li>Provide: <code>nav.lx-flow</code> &gt; <code>.lx-flow__k</code>, <code>a.lx-iconbtn.lx-flow__arrow</code> (back and forward, each with <code>data-tip</code> naming the neighbouring step; <code>is-off</code> at the first and last step), <code>ol.lx-flow__steps</code> &gt; <code>li.lx-flow__step</code> (<code>is-active</code> for the current step) and <code>.lx-flow__pos</code>.</li>
-<li>Flows: Quy trình phân tích (Snapshot, Analysis Configuration, Execution History), Quy trình review (Review Queues, Review Workspace, Rework Tracking), Quy trình nghiệm thu (Quality Report, Quality Gate, Release History).</li>
+<li>Cấu trúc: <code>nav.lx-flow</code> &gt; <code>ol.lx-flow__steps</code> &gt; <code>li.lx-flow__step</code>, liên kết, <code>.lx-flow__n</code> và <code>.lx-flow__description</code>. Thanh cao tối thiểu 74px; mô tả được ẩn ở màn hẹp.</li>
+<li>Flows: Quy trình phân tích (Snapshot, Analysis Configuration, Execution History), Quy trình review (Hàng đợi, Kiểm tra ảnh, Theo dõi sửa), Quy trình nghiệm thu (Quality Report, Quality Gate, Release History).</li>
 <li>Use it instead of a dropdown when screens always follow each other.</li>
 </ul>
 </article></main></body></html>

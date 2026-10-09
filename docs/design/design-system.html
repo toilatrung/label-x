@@ -56,7 +56,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Sub-features live in dropdowns.</strong> Only tabs with independent screens (Overview, Calibration &amp; Audit, Configuration) open a dropdown menu listing its screens as a floating white card (soft shadow, small pointer toward the tab): label on the left, line icon on the right, hairline separators; descriptions appear only as a tooltip on hover; the active screen is highlighted. Do not add a second navigation row.</li>
 <li><strong>Sequential screens are one feature, without a dropdown.</strong> Tabs whose screens always follow each other (Quality Analysis, Review Center, Reports &amp; Releases) are a single nav button. Inside, a flow bar (<code>lx-flow</code>) shows the steps with back and forward arrow buttons, each with a tooltip naming the neighbouring step. A history or log that is not a step (Snapshot history) opens from a button on the page. Related lists that belong together (Escalations) are tabs inside one page.</li>
 <li><strong>Row actions are icon buttons.</strong> Actions inside table rows use <code>IconButton</code> (no box, tooltip on hover and focus, <code>aria-label</code> always set). Boxed <code>Button</code>s are for page-level actions and forms.</li>
-<li><strong>Square by default.</strong> Cards, tables, panels, buttons, inputs and the workspace have square corners. Only small elements are rounded: badges and tags (<code>radius-sm</code>), context chips (pill), switches, avatar, status dots, and floating dropdown cards (6px).</li>
+<li><strong>Square by default.</strong> Cards, tables, panels, buttons, inputs and the workspace have square corners. The image queue outer frame uses <code>radius-list</code> (4px), matching the selected preview. Small elements are rounded: badges and tags (<code>radius-sm</code>), context chips (pill), switches, avatar, status dots, and floating dropdown cards (6px).</li>
 <li><strong>Borders, not shadows.</strong> Cards and tables use a 1px <code>border</code>; <code>shadow-menu</code> only for dropdowns.</li>
 </ul>
 <h2 id="content">Content</h2>
@@ -74,12 +74,12 @@ ul.dir{columns:2;font-size:14px}
 <li>Content max width 1440px. Page header: <code>page-title</code> + one <code>body</code> description in <code>ink-muted</code>, primary action at the right.</li>
 <li>Lists are <code>DataTable</code> inside a <code>.lx-card</code>, with a toolbar holding <code>SearchField</code> and a count.</li>
 <li>Spacing steps: <code>space-1</code> 4, <code>space-2</code> 8, <code>space-3</code> 12, <code>space-4</code> 16, <code>space-6</code> 24, <code>space-8</code> 32. Nothing in between.</li>
-<li>Radii: <code>radius-md</code> and <code>radius-lg</code> are 0 (square); <code>radius-sm</code> 4px for badges and tags; <code>radius-full</code> for context chips and round controls only.</li>
+<li>Radii: <code>radius-md</code> and <code>radius-lg</code> are 0 (square); <code>radius-sm</code> 4px for badges and tags; <code>radius-full</code> for context chips and round controls; <code>radius-list</code> 4px for the image queue; <code>radius-menu</code> 6px for dropdown cards.</li>
 </ul>
 <h2 id="type">Type</h2>
 <ul>
 <li>Inter (Google Fonts) for everything; JetBrains Mono for IDs only.</li>
-<li><code>page-title</code> 22/28 · <code>section-title</code> 15/22 · <code>body</code> 14/20 · <code>table</code> 13/20 · <code>caption</code> 12/16 · <code>label</code> 11/16 uppercase.</li>
+<li><code>page-title</code> 26/32 (22/28 on narrow screens) · <code>section-title</code> 15/22 · <code>body</code> 14/20 · <code>table</code> 13/20 · <code>caption</code> 12/16 · <code>label</code> 11/16 uppercase.</li>
 <li>Weight 600 for emphasis; never 700+ outside the logo.</li>
 </ul>
 <h2 id="colour-and-states">Colour and states</h2>
@@ -164,10 +164,10 @@ ul.dir{columns:2;font-size:14px}
 <li>Keep to 2–4 items; use <code>lx-menu--end</code> when the menu opens at the right edge so tooltips open to the left.</li>
 </ul>
 <h1 id="flownav">FlowNav</h1>
-<p>A bar at the top of a page that merges sequential screens into one feature: flow name, back arrow, numbered steps, position ("Bước 2 / 3"), forward arrow.</p>
+<p>Thanh ba bước nằm sau tiêu đề trang, dùng số bước, nhãn và mô tả ngắn. Bước hiện tại dùng nền graphite và <code>aria-current="step"</code>; mỗi bước liên kết đến màn tương ứng.</p>
 <ul>
-<li>Provide: <code>nav.lx-flow</code> &gt; <code>.lx-flow__k</code>, <code>a.lx-iconbtn.lx-flow__arrow</code> (back and forward, each with <code>data-tip</code> naming the neighbouring step; <code>is-off</code> at the first and last step), <code>ol.lx-flow__steps</code> &gt; <code>li.lx-flow__step</code> (<code>is-active</code> for the current step) and <code>.lx-flow__pos</code>.</li>
-<li>Flows: Quy trình phân tích (Snapshot, Analysis Configuration, Execution History), Quy trình review (Review Queues, Review Workspace, Rework Tracking), Quy trình nghiệm thu (Quality Report, Quality Gate, Release History).</li>
+<li>Cấu trúc: <code>nav.lx-flow</code> &gt; <code>ol.lx-flow__steps</code> &gt; <code>li.lx-flow__step</code>, liên kết, <code>.lx-flow__n</code> và <code>.lx-flow__description</code>. Thanh cao tối thiểu 74px; mô tả được ẩn ở màn hẹp.</li>
+<li>Flows: Quy trình phân tích (Snapshot, Analysis Configuration, Execution History), Quy trình review (Hàng đợi, Kiểm tra ảnh, Theo dõi sửa), Quy trình nghiệm thu (Quality Report, Quality Gate, Release History).</li>
 <li>Use it instead of a dropdown when screens always follow each other.</li>
 </ul>
 <h1 id="iconbutton">IconButton</h1>

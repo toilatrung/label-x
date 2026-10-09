@@ -12,15 +12,15 @@ export default function ReviewPage() {
       requiresIdentity
       requiredPermissionName="Reviewer / QA Lead / Super Admin, có liên kết CVAT"
     >
-      <AppShell activeKey="review" flowStep={1}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div className="lx-card lx-card__body lx-stack">
-            <h1 className="lx-h1">
+      <AppShell activeKey="review" flowStep={1} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">
               Trung tâm kiểm tra (Review Center)
             </h1>
             <p className="lx-lead">
               Hàng đợi kiểm duyệt và không gian làm việc của Reviewer. Annotator không được vào màn hình này.
-            </p>
+            </p></div></div>}>
+        <div>
+          <div className="lx-card lx-card__body lx-stack">
+
             <div className="lx-stack">
               <span className="lx-badge lx-badge--success">Quyền truy cập hợp lệ</span>
               <p className="lx-muted">

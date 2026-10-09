@@ -11,8 +11,8 @@ it('shows review steps without revealing analysis navigation to a reviewer', asy
   const api = installMockAuthApi();
   await api.signIn('reviewer');
   render(<AuthProvider><FlowNav flow="review" /><FlowNav flow="analysis" /></AuthProvider>);
-  expect(await screen.findByText('Hàng đợi kiểm tra')).toBeDefined();
-  expect(screen.getByText('Không gian kiểm tra')).toBeDefined();
+  expect(await screen.findByText('Hàng đợi')).toBeDefined();
+  expect(screen.getByText('Kiểm tra ảnh')).toBeDefined();
   expect(screen.queryByText('Snapshot')).toBeNull();
   expect(screen.queryByRole('link')).toBeNull();
 });
@@ -23,5 +23,5 @@ it('uses analysis steps for an authorized QA Lead', async () => {
   render(<AuthProvider><FlowNav flow="analysis" /></AuthProvider>);
   expect(await screen.findByText('Snapshot')).toBeDefined();
   expect(screen.getByText('Cấu hình phân tích')).toBeDefined();
-  expect(screen.queryByText('Hàng đợi kiểm tra')).toBeNull();
+  expect(screen.queryByText('Hàng đợi')).toBeNull();
 });

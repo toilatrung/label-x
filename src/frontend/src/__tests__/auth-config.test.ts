@@ -31,9 +31,12 @@ describe('Mock auth deployment boundary', () => {
     }
   });
 
-  it('keeps mock available for local development and allows opting into the backend', async () => {
+  it('defaults to real auth and enables mock only explicitly in development', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('NEXT_PUBLIC_AUTH_MODE', '');
+    vi.resetModules();
+    expect((await import('@/lib/auth/config')).isMockAuth).toBe(false);
+    vi.stubEnv('NEXT_PUBLIC_AUTH_MODE', 'mock');
     vi.resetModules();
     expect((await import('@/lib/auth/config')).isMockAuth).toBe(true);
     vi.stubEnv('NEXT_PUBLIC_AUTH_MODE', 'backend');

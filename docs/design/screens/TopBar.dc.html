@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thanh điều hướng</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/labelx/tokens.css">
@@ -23,7 +24,7 @@
 <sc-if value="{{t.isMenu}}" hint-placeholder-val="{{true}}"><button class="{{t.cls}}" aria-haspopup="menu" aria-expanded="{{t.expanded}}" onClick="{{t.toggle}}">{{t.label}}<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg></button></sc-if>
 <sc-if value="{{t.isOpen}}" hint-placeholder-val="{{false}}">
 <div class="lx-menu" role="menu">
-<div class="lx-menu__head">{{t.label}}</div>
+
 <sc-for list="{{t.items}}" as="it" hint-placeholder-count="3">
 <a class="{{it.cls}}" role="menuitem" href="{{it.href}}"><span class="lx-menu__t">{{it.title}}</span>
 <sc-if value="{{it.active}}" hint-placeholder-val="{{false}}"><svg class="lx-menu__check" viewBox="0 0 16 16" role="img" aria-label="Đang xem"><path d="M3 8.5 6.5 12 13 4.5"></path></svg></sc-if>
@@ -36,8 +37,7 @@
 </nav>
 <div class="lx-userwrap">
 <button class="lx-user lx-user--btn" aria-haspopup="menu" aria-expanded="{{userOpen}}" onClick="{{toggleUser}}">
-<span class="lx-user__meta"><span class="lx-user__name">Mocking User</span><span class="lx-user__role">Super Admin</span></span>
-<span class="lx-avatar" role="img" aria-label="Mocking User">MU</span>
+<span class="lx-avatar" aria-hidden="true">TD</span><span class="lx-user__role">Super Admin</span>
 <svg class="lx-user__chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg>
 </button>
 <sc-if value="{{userOpen}}" hint-placeholder-val="{{false}}">
@@ -64,13 +64,13 @@
 </div></sc-if>
 </div>
 <div class="lx-ctx">
-<button class="lx-chip" aria-haspopup="menu" aria-expanded="{{runOpen}}" onClick="{{toggleRun}}"><span class="lx-chip__k">Quality Control Run</span><span class="lx-chip__v lx-mono">{{runId}}</span><span class="lx-dot" style="background: {{runColor}}" title="{{runTitle}}" aria-label="{{runTitle}}"></span>
+<button class="lx-chip" aria-haspopup="menu" aria-expanded="{{runOpen}}" onClick="{{toggleRun}}"><span class="lx-chip__k">Quality Control Run</span><span class="lx-chip__v">{{runId}} · {{runState}}</span>
 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"></path></svg></button>
 <sc-if value="{{runOpen}}" hint-placeholder-val="{{false}}"><div class="lx-menu" role="menu"><div class="lx-menu__head">Quality Control Run</div>
 <sc-for list="{{runItems}}" as="o" hint-placeholder-count="2"><button type="button" class="{{o.cls}}" role="menuitem" onClick="{{o.pick}}"><span class="lx-menu__t lx-mono">{{o.label}}</span><span class="lx-menu__meta">{{o.state}}</span></button></sc-for>
 </div></sc-if>
 </div>
-<span class="lx-chip lx-chip--static" title="Snapshot bất biến"><span class="lx-chip__k">Snapshot</span><span class="lx-chip__v lx-mono">{{snapshotId}}</span><span class="lx-mono" style="color: var(--ink-muted)">{{revision}}</span>
+<span class="lx-chip lx-chip--static" title="Snapshot bất biến"><span class="lx-chip__k">Snapshot</span><span class="lx-chip__v lx-mono">{{snapshotId}}</span>
 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" role="img" aria-label="Đã khoá"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg></span>
 <div class="lx-ctx">
 <button class="lx-chip" aria-haspopup="menu" aria-expanded="{{scopeOpen}}" onClick="{{toggleScope}}"><span class="lx-chip__k">Phạm vi</span><span class="lx-chip__v">{{scopeName}}</span>
@@ -124,13 +124,13 @@ class Component extends DCLogic {
     });
     const ST = this.state || {};
     const DATA = [
-      { key: 'v14', name: 'Road Vision Urban · v1.4', ro: false, gl: 'v1.2', tx: 'v3', runs: [
+      { key: 'v14', name: 'Road Vision Urban · v1.4', ro: false, gl: 'v1.2', tx: 'v1.4', runs: [
         { id: '#QC-091', st: 'PARTIAL', color: 'var(--warning)', snap: 'SNP-014', rev: 'rev a91f3c' },
         { id: '#QC-088', st: 'FAILED', color: 'var(--danger)', snap: 'SNP-013', rev: 'rev 7c20de' } ] },
-      { key: 'v13', name: 'Road Vision Urban · v1.3', ro: true, gl: 'v1.1', tx: 'v3', runs: [
+      { key: 'v13', name: 'Road Vision Urban · v1.3', ro: true, gl: 'v1.1', tx: 'v1.4', runs: [
         { id: '#QC-077', st: 'PASSED', color: 'var(--success)', snap: 'SNP-011', rev: 'rev f02a6d' } ] }
     ];
-    const SCOPES = ['Toàn dataset', 'Task T-118', 'Task T-119', 'Task T-120'];
+    const SCOPES = ['Validation', 'Toàn dataset', 'Task T-118', 'Task T-119', 'Task T-120'];
     const dsKey = ST.ds || (this.props.readonly ? 'v13' : 'v14');
     const ds = DATA.find((d) => d.key === dsKey) || DATA[0];
     const run = ds.runs.find((r) => r.id === ST.run) || ds.runs[0];
@@ -146,6 +146,7 @@ class Component extends DCLogic {
       readonly: ds.ro,
       datasetName: ds.name,
       runId: run.id,
+      runState: run.st.charAt(0) + run.st.slice(1).toLowerCase(),
       runColor: run.color,
       runTitle: 'Trạng thái: ' + run.st,
       snapshotId: run.snap,
