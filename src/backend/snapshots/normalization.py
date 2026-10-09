@@ -93,7 +93,10 @@ def _attributes(value: object) -> list[dict[str, object]]:
                 "value": raw.get("value"),
             }
         )
-    return sorted(result, key=lambda item: int(item["spec_id"]))
+    return sorted(
+        result,
+        key=lambda item: _integer(item["spec_id"], field="attribute.spec_id"),
+    )
 
 
 def _shape_type(raw: object) -> str:
@@ -135,8 +138,8 @@ def _shape_sort_key(shape: Mapping[str, object]) -> tuple[object, ...]:
         raise TypeError("shape.source must be an object")
     return (
         str(source["kind"]),
-        int(source["id"]),
-        int(shape["label_id"]),
+        _integer(source["id"], field="shape.source.id"),
+        _integer(shape["label_id"], field="shape.label_id"),
         canonical_json(shape),
     )
 
@@ -231,8 +234,8 @@ def normalize_job(export: JobExport) -> NormalizedJob:
 
     frames = [frame_payloads[index] for index in sorted(frame_payloads)]
     rectangle_count = 0
-    for frame in frames:
-        shapes = frame["shapes"]
+    for normalized_frame in frames:
+        shapes = normalized_frame["shapes"]
         assert isinstance(shapes, list)
         shapes.sort(key=_shape_sort_key)
         rectangle_count += len(shapes)
@@ -268,8 +271,11 @@ def normalize_snapshot(
 
     if not jobs:
         raise ValueError("a snapshot must contain at least one job")
-    ordered = sorted(jobs, key=lambda job: int(job.payload["cvat_job_id"]))
-    job_ids = [int(job.payload["cvat_job_id"]) for job in ordered]
+    ordered = sorted(
+        jobs,
+        key=lambda job: _integer(job.payload["cvat_job_id"], field="cvat_job_id"),
+    )
+    job_ids = [_integer(job.payload["cvat_job_id"], field="cvat_job_id") for job in ordered]
     if len(job_ids) != len(set(job_ids)):
         raise ValueError("cvat_job_id values must be unique within a snapshot")
     payload: dict[str, object] = {
