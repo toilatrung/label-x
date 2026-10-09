@@ -166,7 +166,7 @@ format: ## Tự format backend
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check --fix . && "$(UV)" run --frozen ruff format .
 
 typecheck: ## mypy + tsc
-	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit engines guideline cvat_adapter orchestration snapshots storage runs
+	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit engines guideline cvat_adapter orchestration ranking snapshots storage runs
 	cd "$(FRONTEND)" && npm run typecheck
 
 test: ## pytest (cần infra-up) + npm test
