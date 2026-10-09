@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "guideline",
     "snapshots.apps.SnapshotsConfig",
     "runs.apps.RunsConfig",
+    "orchestration.apps.OrchestrationConfig",
 ]
 
 MIDDLEWARE = [
