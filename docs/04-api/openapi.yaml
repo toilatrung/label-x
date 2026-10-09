@@ -1699,7 +1699,7 @@ components:
           items: { $ref: "#/components/schemas/EngineUnitResult" }
     RankedFrame:
       type: object
-      required: [frame_id, rank, score, review_state, missing_evidence, issue_counts]
+      required: [frame_id, frame_key, rank, score, baseline_score, score_version, queue, source, review_state, missing_evidence, issue_counts, explanation]
       properties:
         frame_id: { type: integer }
         frame_key: { $ref: "#/components/schemas/FrameKey" }
@@ -1707,13 +1707,24 @@ components:
         score:
           type: number
           description: s(f) theo score_version của run
+        baseline_score:
+          type: number
+          description: h(f), thành phần điểm nền của frame
+        score_version: { type: string, example: score_v0 }
         queue: { $ref: "#/components/schemas/QueueName" }
+        source:
+          type: string
+          enum: [risk, random_audit]
         review_state: { $ref: "#/components/schemas/FrameReviewState" }
         missing_evidence: { type: boolean }
         issue_counts:
           type: object
           additionalProperties: { type: integer }
           description: Số issue theo IssueFamily
+        explanation:
+          type: object
+          additionalProperties: true
+          description: Điểm nền và từng đóng góp n_i q_i để giải thích thứ hạng
         lease_holder_user_id: { type: integer, nullable: true }
 
     # ------------------------------------------------------------ guidelines
@@ -2312,10 +2323,19 @@ components:
           items: { $ref: "#/components/schemas/Run" }
     PaginatedRankedFrameList:
       type: object
-      required: [results]
+      required: [source, content_hash, ranking_hash, results]
       properties:
         next: { type: string, nullable: true }
         previous: { type: string, nullable: true }
+        source:
+          type: string
+          enum: [risk, random_audit]
+        content_hash:
+          type: string
+          description: SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate
+        ranking_hash:
+          type: string
+          description: SHA-256 của ordering đã lưu cho source
         results:
           type: array
           items: { $ref: "#/components/schemas/RankedFrame" }

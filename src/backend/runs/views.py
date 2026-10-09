@@ -15,9 +15,11 @@ from rest_framework.views import APIView
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
-from runs.models import QCRun
+from runs.models import QCRun, RunRanking
 from runs.serializers import (
+    PaginatedRankedFrameListSerializer,
     PaginatedRunListSerializer,
+    RankedFrameSerializer,
     RunCreateSerializer,
     RunSerializer,
 )
@@ -303,3 +305,96 @@ class RunRetryFailedView(APIView):
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", str(exc)) from exc
 
         return Response(RunSerializer(run).data, status=status.HTTP_202_ACCEPTED)
+
+
+class RunRankingView(APIView):
+    """Read a persisted risk or independent random-audit queue for one run."""
+
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
+    action_name = "runs.ranking"
+    object_type = "run"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
+        )
+
+    @extend_schema(
+        operation_id="runs_ranking",
+        parameters=[
+            OpenApiParameter("queue", str, required=False, enum=["risk", "random"]),
+            OpenApiParameter("family", str, required=False),
+            OpenApiParameter("origin", str, required=False, enum=["engine", "reviewer"]),
+            OpenApiParameter("review_state", str, required=False),
+        ],
+        responses={200: PaginatedRankedFrameListSerializer},
+        tags=["runs"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        if not QCRun.objects.filter(pk=pk).exists():
+            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
+
+        queue = request.query_params.get("queue", "risk")
+        source_by_queue = {
+            "risk": RunRanking.Source.RISK,
+            "random": RunRanking.Source.RANDOM_AUDIT,
+        }
+        if queue not in source_by_queue:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "queue phải là 'risk' hoặc 'random'.",
+            )
+        ranking = RunRanking.objects.filter(run_id=pk, source=source_by_queue[queue]).first()
+        if ranking is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "NOT_FOUND",
+                "Run chưa có ranking đã lưu cho queue này.",
+            )
+
+        entries = ranking.entries.select_related("ranking", "snapshot_frame__snapshot_job")
+        family = request.query_params.get("family")
+        if family is not None:
+            if family not in {"E1", "E2", "E3", "structural"}:
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST,
+                    "VALIDATION_ERROR",
+                    "family không hợp lệ.",
+                )
+            entries = entries.filter(issue_counts__has_key=family)  # noqa: E711
+
+        origin = request.query_params.get("origin")
+        if origin not in {None, "engine", "reviewer"}:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "origin không hợp lệ.")
+        if origin == "reviewer":
+            entries = entries.none()
+
+        review_state = request.query_params.get("review_state")
+        valid_review_states = {
+            "unreviewed",
+            "in_review",
+            "incomplete",
+            "reviewed",
+            "awaiting_followup",
+            "completed",
+        }
+        if review_state is not None and review_state not in valid_review_states:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "review_state không hợp lệ.",
+            )
+        if review_state not in {None, "unreviewed"}:
+            entries = entries.none()
+
+        paginator = RunCursorPagination()
+        paginator.ordering = "rank"
+        page = paginator.paginate_queryset(entries, request, view=self)
+        response = paginator.get_paginated_response(RankedFrameSerializer(page, many=True).data)
+        response.data["source"] = ranking.source
+        response.data["content_hash"] = ranking.content_hash
+        response.data["ranking_hash"] = ranking.ranking_hash
+        return response

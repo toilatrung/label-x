@@ -255,3 +255,73 @@ class EngineResult(dj_models.Model):
 
     def __str__(self) -> str:
         return f"EngineResult (run={self.run_id}, engine={self.engine}: {self.status})"
+
+
+class RunRanking(dj_models.Model):
+    """One immutable, source-separated ordering produced for a QC run."""
+
+    class Source(dj_models.TextChoices):
+        RISK = "risk", "Risk"
+        RANDOM_AUDIT = "random_audit", "Random audit"
+        RANDOM_CONTROL = "random_control", "Random control"
+        ANNOTATION_COUNT_CONTROL = "annotation_count_control", "Annotation count control"
+        MAX_CONFIDENCE_CONTROL = "max_confidence_control", "Max confidence control"
+
+    run = dj_models.ForeignKey(QCRun, on_delete=dj_models.CASCADE, related_name="rankings")
+    source = dj_models.CharField(max_length=32, choices=Source.choices)
+    seed = dj_models.BigIntegerField()
+    score_version = dj_models.CharField(max_length=64)
+    content_hash = dj_models.CharField(max_length=64)
+    ranking_hash = dj_models.CharField(max_length=64)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "run_ranking"
+        ordering = ["source"]
+        constraints = [
+            dj_models.UniqueConstraint(
+                fields=["run", "source"], name="run_ranking_unique_run_source"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"RunRanking (run={self.run_id}, source={self.source})"
+
+
+class RunRankingEntry(dj_models.Model):
+    """Persisted frame position and explanation within one run ordering."""
+
+    ranking = dj_models.ForeignKey(RunRanking, on_delete=dj_models.CASCADE, related_name="entries")
+    snapshot_frame = dj_models.ForeignKey(
+        "snapshots.SnapshotFrame",
+        on_delete=dj_models.PROTECT,
+        related_name="ranking_entries",
+    )
+    rank = dj_models.PositiveIntegerField()
+    score = dj_models.DecimalField(max_digits=30, decimal_places=12)
+    baseline_score = dj_models.DecimalField(max_digits=30, decimal_places=12)
+    missing_evidence = dj_models.BooleanField(default=False)
+    issue_counts = dj_models.JSONField(default=dict)
+    explanation = dj_models.JSONField(default=dict)
+    tie_break_hash = dj_models.CharField(max_length=64)
+    source_value = dj_models.DecimalField(max_digits=30, decimal_places=12, null=True, blank=True)
+
+    class Meta:
+        db_table = "run_ranking_entry"
+        ordering = ["rank"]
+        indexes = [dj_models.Index(fields=["ranking", "rank"], name="run_rank_entry_order_idx")]
+        constraints = [
+            dj_models.UniqueConstraint(
+                fields=["ranking", "snapshot_frame"],
+                name="run_rank_entry_unique_frame",
+            ),
+            dj_models.UniqueConstraint(
+                fields=["ranking", "rank"], name="run_rank_entry_unique_rank"
+            ),
+            dj_models.CheckConstraint(
+                condition=dj_models.Q(rank__gte=1), name="run_rank_entry_rank_positive"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"RunRankingEntry (ranking={self.ranking_id}, rank={self.rank})"

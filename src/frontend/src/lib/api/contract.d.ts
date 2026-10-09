@@ -1166,16 +1166,26 @@ export interface components {
         };
         RankedFrame: {
             frame_id: number;
-            frame_key?: components["schemas"]["FrameKey"];
+            frame_key: components["schemas"]["FrameKey"];
             rank: number;
             /** @description s(f) theo score_version của run */
             score: number;
-            queue?: components["schemas"]["QueueName"];
+            /** @description h(f), thành phần điểm nền của frame */
+            baseline_score: number;
+            /** @example score_v0 */
+            score_version: string;
+            queue: components["schemas"]["QueueName"];
+            /** @enum {string} */
+            source: "risk" | "random_audit";
             review_state: components["schemas"]["FrameReviewState"];
             missing_evidence: boolean;
             /** @description Số issue theo IssueFamily */
             issue_counts: {
                 [key: string]: number;
+            };
+            /** @description Điểm nền và từng đóng góp n_i q_i để giải thích thứ hạng */
+            explanation: {
+                [key: string]: unknown;
             };
             lease_holder_user_id?: number | null;
         };
@@ -1664,6 +1674,12 @@ export interface components {
         PaginatedRankedFrameList: {
             next?: string | null;
             previous?: string | null;
+            /** @enum {string} */
+            source: "risk" | "random_audit";
+            /** @description SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate */
+            content_hash: string;
+            /** @description SHA-256 của ordering đã lưu cho source */
+            ranking_hash: string;
             results: components["schemas"]["RankedFrame"][];
         };
         PaginatedGuidelineRuleList: {
