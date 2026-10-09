@@ -36,7 +36,10 @@ class MatchingPair:
 
     @property
     def annotation_ids(self) -> tuple[str, str]:
-        return tuple(sorted((self.left_annotation_id, self.right_annotation_id)))
+        return (
+            min(self.left_annotation_id, self.right_annotation_id),
+            max(self.left_annotation_id, self.right_annotation_id),
+        )
 
 
 @dataclass(frozen=True)
@@ -147,6 +150,4 @@ def _clusters(pairs_by_ids: dict[tuple[str, str], float]) -> dict[str, tuple[str
     members: dict[str, list[str]] = {}
     for annotation_id in parents:
         members.setdefault(find(annotation_id), []).append(annotation_id)
-    return {
-        annotation_id: tuple(sorted(members[find(annotation_id)])) for annotation_id in parents
-    }
+    return {annotation_id: tuple(sorted(members[find(annotation_id)])) for annotation_id in parents}
