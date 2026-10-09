@@ -178,10 +178,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-01</td>
 <td>Bảng mã lỗi 400/403/404/409/422 ↔ thông báo UI dùng chung</td>
 <td>Trần Đức Thọ (@tdt2112)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-001</td>
 <td>none</td>
-<td>none</td>
+<td>implementation report; review kỹ thuật; PR #47 (2507b9a); chờ QA độc lập</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -200,10 +200,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</td>
 <td>Nguyễn Đức Hà (@ducha180104)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-011, T-013</td>
-<td>none</td>
-<td>none</td>
+<td>none (DEC-011)</td>
+<td>implementation report; PR #56 (7a46665); chờ review/QA độc lập</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -211,10 +211,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>Audit log append-only ghi cùng transaction, kiểm DB grant</td>
 <td>Lê Duy Nam (@duy12345-6789)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-011</td>
 <td>none</td>
-<td>none</td>
+<td>implementation report; PR #53 (cc27674; commit 9ed81b5, a2003e6); chờ review/QA độc lập</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -222,10 +222,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</td>
 <td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-001</td>
-<td>BLOCKER-014</td>
-<td>none</td>
+<td>BLOCKER-025 (chỉ nghiệm thu NFR/GC, không chặn)</td>
+<td>implementation report; review; PR #50 (49fc126; commit 78af2d2); chờ QA độc lập</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -233,10 +233,10 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>Log có cấu trúc kèm request_id, secret không vào log</td>
 <td>Lê Duy Nam (@duy12345-6789)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-001</td>
 <td>none</td>
-<td>none</td>
+<td>implementation report; PR #49 (22467d2; commit 9005250); chờ review/QA độc lập</td>
 <td>2026-10-08</td>
 </tr>
 <tr>
@@ -244,33 +244,66 @@ ul.dir{columns:2;font-size:14px}
 <td>E-02</td>
 <td>Frontend chạy trên API auth thật, màn WorkflowPermissions</td>
 <td>Trần Đức Thọ (@tdt2112)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-011, T-012</td>
 <td>none</td>
-<td>none</td>
-<td>2026-10-08</td>
+<td>implementation report (thực hiện trong M-01-RESOLVE theo yêu cầu PO); chờ review/QA độc lập</td>
+<td>2026-10-09</td>
 </tr>
 <tr>
 <td>T-017</td>
 <td>E-03</td>
 <td>Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</td>
 <td>Nguyễn Đức Hà (@ducha180104)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-012</td>
 <td>none</td>
-<td>none</td>
-<td>2026-10-08</td>
+<td>implementation report; PR #59 (3c5ab60); chờ review/QA độc lập</td>
+<td>2026-10-09</td>
 </tr>
 <tr>
 <td>T-018</td>
 <td>E-03</td>
 <td>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</td>
 <td>Nguyễn Đức Hà (@ducha180104)</td>
-<td>pending</td>
+<td>review</td>
 <td>T-016</td>
 <td>none</td>
+<td>implementation report; browser evidence; PR #60 (9f9b509); chờ review/QA độc lập</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-020</td>
+<td>E-02</td>
+<td>DB role runtime không sửa/xoá được audit: check --deploy, lệnh cấp role, CI (M-01-RESOLVE F-02)</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>review</td>
+<td>T-013</td>
 <td>none</td>
-<td>2026-10-08</td>
+<td>implementation report; chờ review/QA độc lập</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-021</td>
+<td>E-01</td>
+<td>OpenAPI bổ sung issues/{id}, escalations, config-versions; gắn test_nodeid SEC/AUD/GDL (M-01-RESOLVE F-03, F-07)</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>review</td>
+<td>T-001, T-008</td>
+<td>none</td>
+<td>implementation report; chờ review/QA độc lập</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-022</td>
+<td>E-02</td>
+<td>Đóng hồ sơ M-01: merge main vào nhánh, gộp -@user, review/QA task còn thiếu, disposition BLOCKER-014 (M-01-RESOLVE F-04, F-05, F-06, F-10)</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>in-progress</td>
+<td>T-016, T-020, T-021</td>
+<td>none</td>
+<td>implementation report (F-04, F-06 theo DEC-012, F-10 CI chưa chạy Actions, gộp file -@user xong; F-05 review/QA còn lại)</td>
+<td>2026-10-09</td>
 </tr>
 </tbody>
 </table>
@@ -560,7 +593,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-10</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-003.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-005.html, .agent/governance/blockers/BLOCKER-014.html</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-005.html, .agent/governance/blockers/BLOCKER-025.html</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_4">Acceptance Criteria</h4>
@@ -855,7 +888,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-01</code></li>
 <li><strong>Title</strong>: <code>Bảng mã lỗi 400/403/404/409/422 ↔ thông báo UI dùng chung</code></li>
 <li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
@@ -907,6 +940,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
 </ul>
+<p><strong>2026-10-07</strong> (gộp từ file riêng @tdt2112, CR-100): in-progress → review sau code, test, QA thực và review kỹ thuật. Hạn merge 09:00 ngày 08/10/2026 theo issue #35; đã merge qua PR #47 (2507b9a). Không tự chuyển done.</p>
 <h3 id="t-011">T-011</h3>
 <h4 id="record-metadata_10">Record Metadata</h4>
 <ul>
@@ -976,7 +1010,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>RBAC theo vai trò + scope dataset ở API; tách người yêu cầu/duyệt; override Super Admin có lý do</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -1039,7 +1073,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>Audit log append-only ghi cùng transaction, kiểm DB grant</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -1100,7 +1134,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
@@ -1130,15 +1164,15 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-02</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-014.html</code></li>
+<li><strong>Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-025.html</code></li>
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-101.html</code></li>
 </ul>
 <h4 id="acceptance-criteria_13">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Upload cùng nội dung hai lần cho cùng khoá, không tạo bản trùng</li>
-<li>[ ] Lỗi upload thì không commit metadata (test)</li>
-<li>[ ] Secret không xuất hiện trong log (test)</li>
-<li>[ ] Verification method is specified for each condition.</li>
+<li>[x] Upload cùng nội dung hai lần cho cùng khoá, không tạo bản trùng</li>
+<li>[x] Lỗi upload thì không commit metadata (test)</li>
+<li>[x] Secret không xuất hiện trong log (test)</li>
+<li>[x] Verification method is specified for each condition.</li>
 </ul>
 <h4 id="verification-requirements_13">Verification Requirements</h4>
 <ul>
@@ -1160,7 +1194,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-02</code></li>
 <li><strong>Title</strong>: <code>Log có cấu trúc kèm request_id, secret không vào log</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
@@ -1283,7 +1317,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-03</code></li>
 <li><strong>Title</strong>: <code>Mapping nhóm lỗi/lớp → rule ID: nạp tệp có kiểm hợp lệ, màn RulesThresholds chỉ xem</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
@@ -1349,7 +1383,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-03</code></li>
 <li><strong>Title</strong>: <code>Màn ModelsGuidelines trên API thật, component tra rule dùng lại ở Workspace</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
-<li><strong>Status</strong>: <code>pending</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-08</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>

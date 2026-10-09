@@ -549,9 +549,9 @@
       "scenario": "Cross-project read/list, self-review, deep link trực tiếp",
       "expected": "API deny/filter đúng; self-review dựa assignee snapshot; không lộ data qua counts/export.",
       "fixtures": "Identity mapping + two project scopes",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/accounts/test_rbac_scope.py::test_anti_self_review_reviewer_matches_author_rejected"
     },
     {
       "id": "SEC-02",
@@ -564,9 +564,9 @@
       "scenario": "Tự duyệt; cùng người dùng tài khoản khác; Super Admin override",
       "expected": "Tách người thật; override có lý do và audit, vẫn chịu self-review/tách nhiệm vụ.",
       "fixtures": "Two identities + linked accounts",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/accounts/test_rbac_scope.py::test_separation_of_duties_cross_account_same_person_rejected"
     },
     {
       "id": "ESC-01",
@@ -630,9 +630,9 @@
       "scenario": "Lookup guideline rule ID/version và case khác scope",
       "expected": "Đúng rule/section/version; không retrieval RAG trong MVP; thiếu mapping báo thiếu căn cứ.",
       "fixtures": "Versioned guideline/cases",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/guideline/test_api.py::test_rule_detail_with_version_param"
     },
     {
       "id": "AUD-01",
@@ -646,9 +646,9 @@
       "scenario": "Decision/waiver/reference lock; thử update/delete audit",
       "expected": "Audit đủ actor/before-after/revision/reason; append-only được enforce, không chỉ ẩn UI.",
       "fixtures": "DB grants + transaction fixtures",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/audit/test_audit_log.py::test_operation_rollback_removes_the_audit_event"
     },
     {
       "id": "REF-01",

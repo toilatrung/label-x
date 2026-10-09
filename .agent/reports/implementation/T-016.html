@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Màn WorkflowPermissions gọi API thật (M-01-RESOLVE F-01, F-08, F-09)</title>
+<meta name="labelx:id" content="implementation-t-016">
+<meta name="labelx:title" content="Màn WorkflowPermissions gọi API thật (M-01-RESOLVE F-01, F-08, F-09)">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[implementation, report, t-016, m-01-resolve]">
+<meta name="labelx:priority" content="1">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style>
+</head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-016</span><span class="sp"></span></header>
+<main><article>
+<h1 id="t-016">Màn WorkflowPermissions gọi API thật (M-01-RESOLVE F-01, F-08, F-09)</h1>
+<h2 id="record-metadata">Record Metadata</h2><ul><li><strong>Report ID</strong>: <code>T-016</code></li><li><strong>Title</strong>: <code>Màn WorkflowPermissions gọi API thật (M-01-RESOLVE F-01, F-08, F-09)</code></li><li><strong>Owner</strong>: <code>@toilatrung</code></li><li><strong>Executor</strong>: <code>claude-code (theo yêu cầu PO, nhóm M-01-RESOLVE)</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-016</code></li><li><strong>Epic ID</strong>: <code>E-02</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<h2 id="scope">Scope</h2><ul><li><strong>Implemented</strong>: <code>Màn /configuration gọi GET /api/auth/workflow-permissions, hiển thị ma trận 7 vai trò, quy tắc quy trình và vai trò của tài khoản; cờ enforced phản ánh thực tế; nhãn audit action/object_type đúng</code></li><li><strong>Not Implemented</strong>: <code>Màn xem audit (FR-SEC-07, hoãn theo CR-101); review/QA độc lập</code></li></ul>
+<h2 id="changes-made">Changes Made</h2><table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td><code>src/frontend/src/app/configuration/page.tsx</code></td><td>Thay bảng vai trò tĩnh bằng màn dùng apiClient + react-query, trạng thái tải/lỗi dùng thông báo lỗi chung</td><td><code>T-016</code></td></tr><tr><td><code>src/frontend/src/__tests__/WorkflowPermissions.test.tsx</code></td><td>3 test: hiển thị dữ liệu API, lỗi 403, vai trò không đủ quyền không gọi API</td><td><code>T-016</code></td></tr><tr><td><code>src/backend/accounts/views.py</code></td><td>WORKFLOW_RULES.enforced=false cho anti_self_review, super_admin_override_reason, separation_of_duties (chưa route nào gọi); object_type &quot;system&quot;</td><td><code>T-016</code></td></tr><tr><td><code>src/backend/guideline/views.py</code></td><td>GuidelineMappingListView.action_name = guidelines.mappings</td><td><code>T-016</code></td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2><ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board.html</code></li><li><strong>Context Packages</strong>: <code>none</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Decisions</strong>: <code>none</code></li><li><strong>Change Requests</strong>: <code>none (nằm trong phạm vi AC đã duyệt của epic)</code></li><li><strong>Risks or Blockers</strong>: <code>.agent/reports/review/flow-2026-10-09.html: F-01, F-08, F-09</code></li><li><strong>Review Request</strong>: <code>pending (cần reviewer khác executor)</code></li><li><strong>Commits</strong>: <code>58c5a07</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2><table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td><code>agent task start T-016</code></td><td><code>passed</code></td><td><code>task-board: in-progress → review</code></td></tr><tr><td><code>agent task verify T-016</code></td><td><code>passed</code></td><td><code>make check (nhánh fix/M-01-RESOLVE, worktree sạch): exit 0; pytest 237 passed + 1 skipped; vitest 138 passed; ruff/mypy/eslint/tsc/validate-kit đạt</code></td></tr><tr><td><code>agent task report T-016 --executor claude-code</code></td><td><code>passed</code></td><td><code>.agent/reports/implementation/T-016.html</code></td></tr><tr><td><code>agent review request T-016 --reviewer &lt;reviewer-id&gt;</code></td><td><code>not-run</code></td><td><code>chờ PO chỉ định reviewer độc lập</code></td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2><table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td><code>vitest WorkflowPermissions + make check</code></td><td><code>passed</code></td><td><code>make check (nhánh fix/M-01-RESOLVE, worktree sạch): exit 0; pytest 237 passed + 1 skipped; vitest 138 passed; ruff/mypy/eslint/tsc/validate-kit đạt</code></td></tr><tr><td><code>Chromium + backend thật: u_qal mở /configuration</code></td><td><code>passed</code></td><td><code>Request GET /api/auth/workflow-permissions; hiển thị ma trận, 3 quy tắc &quot;Chờ triển khai&quot;, 1 &quot;Đã áp dụng&quot;; u_rev nhận 403 và không gọi API</code></td></tr></tbody></table>
+<h2 id="deviations">Deviations</h2><ul><li><strong>Plan Deviations</strong>: <code>none</code></li><li><strong>Approved By</strong>: <code>PO @toilatrung (yêu cầu giao việc M-01-RESOLVE trong phiên làm việc)</code></li><li><strong>Known Limitations</strong>: <code>Chưa có reviewer độc lập; quy tắc chuyển enforced=true khi route M-03 gọi chúng</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded.</li><li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[ ] Git Nexus mappings are updated when commits exist.</li></ul>
+</article></main></body></html>

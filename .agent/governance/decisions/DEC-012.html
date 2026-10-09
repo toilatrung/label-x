@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-012: Đóng BLOCKER-014: chốt phần cứng tạm, tách tham số NFR/retention sang theo dõi theo cổng — LabelX</title>
+<meta name="labelx:id" content="dec-012">
+<meta name="labelx:title" content="Đóng BLOCKER-014: chốt phần cứng tạm, tách tham số NFR/retention sang theo dõi theo cổng">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, blocker, m13, nfr, tbd]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-012</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-012</span><b>title</b><span>Đóng BLOCKER-014: chốt phần cứng tạm, tách tham số NFR/retention sang theo dõi theo cổng</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, blocker, m13, nfr, tbd]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-012">DEC-012: Đóng BLOCKER-014: chốt phần cứng tạm, tách tham số NFR/retention sang theo dõi theo cổng</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi quyết định ngày 2026-10-09 thực hiện phương án A của BLOCKER-014 (<a href="DEC-002.html">DEC-002</a>) theo hạn của <a href="DEC-004.html">DEC-004</a>: đóng phần “chốt ngay” và chuyển các tham số chốt sau sang một blocker theo dõi riêng để không chặn <code>EPIC_READY</code>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-012</code></li>
+<li><strong>Title</strong>: <code>Đóng BLOCKER-014: chốt phần cứng tạm, tách tham số NFR/retention sang theo dõi theo cổng</code></li>
+<li><strong>Owner</strong>: <code>Tech Lead Backend (vai trò chốt TBD-02, 13, 14, 17, 20); Product Owner (TBD-15)</code></li>
+<li><strong>Decision Makers</strong>: <code>Người dùng phiên làm việc label-x-03 (claude.qc@novaon.net) chốt hướng ngày 2026-10-09; vai trò Tech Lead/Product Owner xác nhận số liệu ở BLOCKER-025 và duyệt PR theo CR-102</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-09</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>BLOCKER-014 gộp TBD-02, 13, 14, 15, 17, 20 và việc chọn test runner frontend, đang chặn E-02, E-08, E-10, E-23. DEC-004 yêu cầu đóng trước 2026-10-09. Hiện trạng: test runner frontend đã xong (T-002 <code>done</code>, vitest 5, <code>npm test</code> chạy trong job <code>frontend</code> của CI). TBD-02 chưa chốt; máy dev hiện có 16 CPU, 4 GB RAM, GTX 1650; task đo Detector (T-005, E-10) cho số liệu thời gian/ảnh.</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Hạn 2026-10-09 của DEC-004 và khung 3 tuần (RISK-011).</li>
+<li>Không bịa số trước khi đo (DEC-002, BLOCKER-014 phương án A).</li>
+<li>Tham số chốt sau pilot không được giữ chặn <code>EPIC_READY</code> của các epic khác.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>A. Đóng BLOCKER-014; TBD-02 chốt tạm; TBD-13, 14, 15, 17, 20 sang BLOCKER-025 theo cổng</td><td>Mở E-02, E-08, E-10, E-23 ngay; mỗi TBD có cổng và người chốt rõ</td><td>Phần cứng và vài NFR chưa pass/fail được tới sau pilot</td><td>meets</td></tr>
+<tr><td>B. Giữ BLOCKER-014 mở tới hết pilot</td><td>Không phải tạo bản ghi mới</td><td>Chặn bốn epic không cần các số đó trước cổng của chúng</td><td>does-not-meet</td></tr>
+<tr><td>C. Chốt cứng mọi số ngay</td><td>Không còn TBD</td><td>Bịa số khi chưa đo, trái DEC-002</td><td>does-not-meet</td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>A</code></li>
+<li><strong>Rationale</strong>: Phần “chốt ngay” của DEC-002 đã đủ: test runner có, TBD-02 chốt tạm. Các tham số còn lại có cổng riêng và không cần để chặn epic.</li>
+<li><strong>TBD-02 (chốt tạm)</strong>: môi trường dev là máy hiện tại; GPU server pilot đề xuất 1 GPU có VRAM từ 8 GB trở lên, ghi rõ là tạm. Giá trị chính thức lấy từ báo cáo đo của T-005 và được cập nhật bằng decision mới nếu khác.</li>
+<li><strong>Chuyển sang BLOCKER-025</strong>: TBD-13 (giữ ngưỡng đề xuất của SRS: mở frame p95 ≤ 1,5 s, lưu quyết định p95 ≤ 500 ms; NFR-03 chốt sau pilot), TBD-14 (đề xuất 3 lần retry, backoff mũ; chốt sau pilot), TBD-15 (đề xuất giữ suốt vòng đời dataset, tối thiểu 1 năm; Product Owner chốt), TBD-17 (đề xuất RPO ≤ 24 giờ, RTO ≤ 8 giờ; Tech Lead xác nhận), TBD-20 (đề xuất t_gc 24 giờ; ε của <code>score_v0</code> và số chữ số làm tròn do đội mô hình chốt; VLM timeout bỏ qua vì VLM không bật trong pilot, BLOCKER-002).</li>
+<li><strong>Lưu ý</strong>: các số trong mục “Chuyển sang BLOCKER-025” là mặc định đề xuất của planner, không có trong SRS và chưa được Tech Lead/Product Owner xác nhận; không dùng như giá trị chốt chính thức.</li>
+<li><strong>Effective Date</strong>: <code>2026-10-09</code></li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>E-02, E-08, E-10, E-23 không còn bị BLOCKER-014 chặn; mỗi tham số còn lại có cổng và người chốt.</code></li>
+<li><strong>Negative</strong>: <code>NFR-01…03, NFR-05, NFR-08, NFR-16 và TBD-20 chưa pass/fail được tới khi chốt; cần người theo dõi lịch ở BLOCKER-025. Bảng TBD của SRS (11-traceability.tex) chưa cập nhật; cần bản SRS có version khi các giá trị được chốt.</code></li>
+<li><strong>Follow-up Work</strong>: <code>Cập nhật Blocked By của E-02, E-08, E-10, E-23, current-context.html và task-board.html (phiên M-01 xử lý sau khi nhánh fix/M-01-RESOLVE được merge); Tech Lead/PO xác nhận số ở BLOCKER-025; T-005 ghi số đo làm đầu vào TBD-02.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/label-x_system-requirement-specification/sections/11-traceability.tex, docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex</code></li>
+<li><strong>Epics or Tasks</strong>: <code>E-02, E-08, E-10, E-23; T-002, T-005, T-014</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>RISK-011</code></li>
+<li><strong>Supersedes</strong>: <code>none</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-012.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

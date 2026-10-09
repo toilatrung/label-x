@@ -32,6 +32,8 @@ tags:
     description: QC Run, ledger, ranking (UC-02, UC-03, module ENG/AGG/RNK)
   - name: guidelines
     description: Tra rule guideline tĩnh (module GDL, CR-101)
+  - name: config
+    description: Config version engine, ngưỡng, model (FR-ENG-01)
   - name: review
     description: Hàng đợi, lease, frame (UC-04, UC-05, module REV)
   - name: rework
@@ -210,6 +212,68 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
 
   # ------------------------------------------------------------------ runs
+  /api/config-versions/:
+    get:
+      operationId: config_versions_list
+      tags: [config]
+      summary: Danh sách config version (engine, ngưỡng, model)
+      x-labelx-trace: [FR-ENG-01]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, published] }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang config version, mới nhất trước
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedConfigVersionList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: config_versions_create
+      tags: [config]
+      summary: Tạo config version nháp
+      description: Bản nháp sửa được; bản đã publish không sửa được (đổi cấu hình = tạo version mới).
+      x-labelx-trace: [FR-ENG-01]
+      x-labelx-roles: [qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfigVersionCreate" }
+      responses:
+        "201":
+          description: Config version nháp
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfigVersion" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/config-versions/{id}/publish/:
+    post:
+      operationId: config_versions_publish
+      tags: [config]
+      summary: Publish config version
+      description: Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+      x-labelx-trace: [FR-ENG-01, FR-SEC-05]
+      x-labelx-roles: [qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Config version đã publish
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfigVersion" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /api/runs/:
     get:
       operationId: runs_list
@@ -607,6 +671,44 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/issues/{id}/:
+    get:
+      operationId: issues_retrieve
+      tags: [review]
+      summary: Chi tiết issue và lịch sử quyết định
+      description: Trả Issue kèm review_decisions bất biến theo thứ tự thời gian (rest-api.html §5, A §25).
+      x-labelx-trace: [UC-05, FR-REV-08, FR-REV-10, FR-ESC-02, FR-EVL-13]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Issue và lịch sử quyết định
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/escalations/:
+    get:
+      operationId: escalations_list
+      tags: [review]
+      summary: Issue chờ phân xử kèm quyết định từng reviewer
+      description: Issue ở trạng thái escalated; mỗi phần tử có review_decisions của từng reviewer (FR-ESC-01).
+      x-labelx-trace: [UC-06, FR-ESC-01, FR-ESC-02]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - name: run
+          in: query
+          schema: { type: integer }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang issue chờ phân xử, cũ nhất trước
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedIssueList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/issues/{id}/adjudications/:
     post:
       operationId: issues_adjudicate
@@ -2105,6 +2207,54 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/Dataset" }
+    ConfigVersionCreate:
+      type: object
+      required: [name, engines]
+      properties:
+        name: { type: string, minLength: 1 }
+        engines:
+          type: object
+          additionalProperties: true
+          description: Cấu hình theo engine (bật/tắt, tham số); không chứa secret.
+        thresholds:
+          type: object
+          additionalProperties: true
+        models:
+          type: object
+          additionalProperties: true
+          description: Model/artifact tham chiếu theo version đã khoá.
+    ConfigVersion:
+      type: object
+      required: [id, name, status, engines, created_by, created_at]
+      x-labelx-trace: [FR-ENG-01]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        status: { type: string, enum: [draft, published] }
+        engines: { type: object, additionalProperties: true }
+        thresholds: { type: object, additionalProperties: true }
+        models: { type: object, additionalProperties: true }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+        published_at: { type: string, format: date-time, nullable: true }
+    PaginatedConfigVersionList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/ConfigVersion" }
+    PaginatedIssueList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Issue" }
     PaginatedRunList:
       type: object
       required: [results]
