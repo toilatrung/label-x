@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "audit.apps.AuditConfig",
     "guideline",
     "snapshots.apps.SnapshotsConfig",
+    "runs.apps.RunsConfig",
 ]
 
 MIDDLEWARE = [
