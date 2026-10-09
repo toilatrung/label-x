@@ -1,7 +1,6 @@
 """Candidate, evidence, ledger của orchestrator (FR-AGG-01/04/06).
 
-Khoá theo `run_id` số nguyên (như EngineInput) để không phụ thuộc model QCRun của T-024;
-T-024 gắn FK/nối thật khi merge.
+FK tới `runs.QCRun` (cột `run_id`, khớp `EngineInput.run_id`).
 """
 
 from __future__ import annotations
@@ -13,7 +12,9 @@ class ShardCommit(models.Model):
     """Một shard đã commit. Tồn tại = kết quả shard đã ghi, retry cùng khoá là no-op."""
 
     idempotency_key = models.CharField(max_length=128)
-    run_id = models.PositiveBigIntegerField(db_index=True)
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
     snapshot_id = models.PositiveBigIntegerField()
     engine = models.CharField(max_length=64)
     engine_version = models.CharField(max_length=32)
@@ -26,10 +27,10 @@ class ShardCommit(models.Model):
         constraints = [
             # Khoá engine không chứa run_id (FR-AGG-02): hai run cùng input phải commit riêng.
             models.UniqueConstraint(
-                fields=["run_id", "idempotency_key"], name="uniq_shard_key_per_run"
+                fields=["run", "idempotency_key"], name="uniq_shard_key_per_run"
             ),
             models.UniqueConstraint(
-                fields=["run_id", "engine", "shard_index"], name="uniq_shard_per_run_engine"
+                fields=["run", "engine", "shard_index"], name="uniq_shard_per_run_engine"
             ),
         ]
 
@@ -38,7 +39,9 @@ class ShardCommit(models.Model):
 
 
 class CandidateRecord(models.Model):
-    run_id = models.PositiveBigIntegerField(db_index=True)
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
     dedup_key = models.CharField(max_length=64)
     shard = models.ForeignKey(ShardCommit, on_delete=models.PROTECT, related_name="candidates")
     engine = models.CharField(max_length=64)
@@ -53,7 +56,7 @@ class CandidateRecord(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["run_id", "dedup_key"], name="uniq_candidate_dedup")
+            models.UniqueConstraint(fields=["run", "dedup_key"], name="uniq_candidate_dedup")
         ]
 
     def __str__(self) -> str:
@@ -63,7 +66,9 @@ class CandidateRecord(models.Model):
 class LedgerUnit(models.Model):
     """Một đơn vị trong mẫu số ledger của engine trong run (FR-AGG-04)."""
 
-    run_id = models.PositiveBigIntegerField(db_index=True)
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
     engine = models.CharField(max_length=64)
     kind = models.CharField(max_length=16)
     cvat_task_id = models.PositiveBigIntegerField()
@@ -75,7 +80,7 @@ class LedgerUnit(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["run_id", "engine", "kind", "cvat_task_id", "frame_number"],
+                fields=["run", "engine", "kind", "cvat_task_id", "frame_number"],
                 name="uniq_ledger_unit",
             )
         ]
