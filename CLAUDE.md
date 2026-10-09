@@ -8,4 +8,5 @@
 - Backend: `src/backend` (uv). Frontend: `src/frontend` — đọc `src/frontend/AGENTS.md` trước khi viết code Next.js 16.
 - UI theo Design System `docs/design/` (class `lx-*`, Inter, bảng-trước) — dùng skill `labelx-design` (`.agent/skills/labelx-design/SKILL.md`).
 - Review PR trước khi comment duyệt: skill `labelx-pr-review` (`.agent/skills/labelx-pr-review/SKILL.md`). Review toàn luồng trước khi merge `develop` → `main` hoặc đóng đợt: skill `labelx-flow-review` (`.agent/skills/labelx-flow-review/SKILL.md`).
+- QC sau review, kèm gộp file `-@user` của dev vào file chính rồi xoá chúng (CR-100): skill `labelx-qc-integrate` (`.agent/skills/labelx-qc-integrate/SKILL.md`); chỉ integrator.
 - Kiểm tra trước khi báo xong: `make check` (cần `make infra-up`).
