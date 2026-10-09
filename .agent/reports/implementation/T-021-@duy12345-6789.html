@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>T-021 #63 — Snapshot API, drift và CVAT deep link</title>
+  <meta name="labelx:id" content="implementation-t-021-@duy12345-6789">
+  <meta name="labelx:title" content="T-021 #63 — Snapshot API, drift và CVAT deep link">
+  <meta name="labelx:type" content="report">
+  <meta name="labelx:domain" content="quality">
+  <meta name="labelx:module" content="implementation">
+  <meta name="labelx:tags" content="[implementation, report, t-021, e-04, snapshot]">
+  <meta name="labelx:priority" content="1">
+  <meta name="labelx:status" content="review">
+  <meta name="labelx:owner" content="@duy12345-6789">
+  <style>
+    body{font:15px/1.55 system-ui,sans-serif;max-width:920px;margin:32px auto;padding:0 20px;color:#172033}
+    h1{font-size:26px}h2{margin-top:28px;border-bottom:1px solid #d9deea;padding-bottom:6px}
+    code{background:#f1f3f7;padding:2px 5px;border-radius:3px}table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #d9deea;padding:8px;text-align:left;vertical-align:top}th{background:#f5f7fa}
+    .ok{color:#126b38;font-weight:700}.note{background:#eef5ff;padding:12px;border-left:4px solid #3578c7}
+  </style>
+</head>
+<body>
+<main><article>
+  <h1>T-021 #63 — Snapshot API, drift và CVAT deep link</h1>
+  <p><strong>Owner:</strong> @duy12345-6789 · <strong>Nhánh:</strong> <code>feat/T-021-e04-snapshot-api-drift</code> · <strong>Trạng thái:</strong> chờ review</p>
+  <h2 id="record-metadata">Record Metadata</h2>
+  <ul>
+    <li><strong>Report ID</strong>: <code>T-021-@duy12345-6789</code></li>
+    <li><strong>Title</strong>: <code>Snapshot API, drift và CVAT deep link</code></li>
+    <li><strong>Owner</strong>: <code>@duy12345-6789</code></li>
+    <li><strong>Executor</strong>: <code>Codex</code></li>
+    <li><strong>Status</strong>: <code>complete</code></li>
+    <li><strong>Task ID</strong>: <code>T-021</code></li>
+    <li><strong>Epic ID</strong>: <code>E-04</code></li>
+    <li><strong>Report Date</strong>: <code>2026-10-09</code></li>
+  </ul>
+
+  <h2>Mục tiêu</h2>
+  <p>Tạo và đọc snapshot từ CVAT nhưng không bao giờ ghi ngược vào CVAT. Snapshot chỉ được khóa khi dữ liệu nguồn không thay đổi trong lúc export.</p>
+
+  <h2>Luồng dễ hiểu</h2>
+  <ol>
+    <li>API kiểm role và <code>dataset_id</code> trước khi gọi CVAT.</li>
+    <li>Đọc project/task/job, annotation và từng frame bằng HTTP GET.</li>
+    <li>Lưu ảnh theo SHA-256 vào object storage; chuẩn hóa annotation theo schema của T-020.</li>
+    <li>Đọc lại <code>updated_date</code> và hash annotation ngay trước commit.</li>
+    <li>Nếu lệch: lưu trạng thái <code>failed</code>, lý do <code>drift_detected</code>, trả <code>drift_jobs</code>; không có snapshot <code>locked</code>.</li>
+    <li>Nếu không lệch: gọi dịch vụ khóa bất biến của T-020. Hai export giống nhau cho cùng revision hash.</li>
+  </ol>
+
+  <h2>Code chính</h2>
+  <table>
+    <tr><th>Phần</th><th>Vai trò</th></tr>
+    <tr><td><code>snapshots/orchestration.py</code></td><td>Chọn scope CVAT, export media/annotation, kiểm drift hai lần, idempotency và lineage.</td></tr>
+    <tr><td><code>snapshots/views.py</code></td><td><code>POST/GET /api/snapshots/</code> và <code>GET /api/snapshots/{id}/</code>; áp RBAC theo dataset.</td></tr>
+    <tr><td><code>snapshots/serializers.py</code></td><td>Validate request và trả job/frame kèm deep link CVAT.</td></tr>
+    <tr><td><code>cvat_adapter/client.py</code></td><td>Thêm API đọc project/task/label/frame. Guard vẫn chặn POST/PUT/PATCH/DELETE trước network.</td></tr>
+    <tr><td><code>0003_snapshot_api_metadata.py</code></td><td>Lưu idempotency key, request hash và danh sách job drift.</td></tr>
+    <tr><td><code>openapi.yaml</code></td><td>Bổ sung GET collection, drift response và schema deep link; TypeScript contract được sinh lại.</td></tr>
+  </table>
+
+  <h2>Quyền</h2>
+  <ul>
+    <li>Tạo snapshot: QA Lead, Super Admin.</li>
+    <li>Đọc snapshot: QA Lead, QC Admin, Super Admin.</li>
+    <li>Detail lấy <code>dataset_id</code> từ snapshot phía server; client không thể đổi query để vượt scope.</li>
+  </ul>
+
+  <h2>Bằng chứng</h2>
+  <ul>
+    <li class="ok">Backend: 320 passed, 1 skipped.</li>
+    <li class="ok">Focused T-021: 34 passed; Ruff và mypy sạch.</li>
+    <li class="ok">Frontend: ESLint và TypeScript sạch; 134 test pass, hai test timeout do worker trên Windows bind-mount đã pass riêng 8/8.</li>
+    <li class="ok">Django system check, migration check, OpenAPI validation và framework validation đều pass.</li>
+  </ul>
+  <p class="note"><strong>PR:</strong> sẽ điền link sau khi push. Không sửa report T-021 canonical của người khác; file này có hậu tố owner theo CR-100.</p>
+</article></main>
+</body>
+</html>

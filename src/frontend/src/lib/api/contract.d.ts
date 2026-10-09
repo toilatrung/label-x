@@ -150,7 +150,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Danh sách snapshot của dataset */
+        get: operations["snapshots_list"];
         put?: never;
         /** Tạo snapshot cho một phạm vi (chạy nền) */
         post: operations["snapshots_create"];
@@ -925,6 +926,7 @@ export interface components {
         SnapshotAccepted: {
             id: number;
             status: components["schemas"]["SnapshotStatus"];
+            drift_jobs?: number[];
         };
         Snapshot: {
             id: number;
@@ -940,9 +942,13 @@ export interface components {
             parent_snapshot_id: number | null;
             jobs: {
                 cvat_job_id: number;
+                cvat_task_id: number;
                 job_hash: string | null;
-                /** @description User LabelX của assignee tại snapshot qua identity mapping (FR-SNP-05) */
+                /** @description LabelX user mapped from the CVAT assignee at export time. */
                 assignee_user_id: number | null;
+                /** Format: uri */
+                cvat_url: string;
+                frames: components["schemas"]["SnapshotFrame"][];
             }[];
             taxonomy_version?: string | null;
             guideline_version?: string | null;
@@ -954,6 +960,19 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             locked_at?: string | null;
+        };
+        SnapshotFrame: {
+            frame_index: number;
+            file_name: string;
+            width: number;
+            height: number;
+            /** Format: uri */
+            cvat_url: string;
+        };
+        PaginatedSnapshotList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Snapshot"][];
         };
         /**
          * @description docs/04-api/state-machines.html §2
@@ -1881,6 +1900,32 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    snapshots_list: {
+        parameters: {
+            query: {
+                dataset_id: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Danh sách snapshot theo phạm vi dataset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSnapshotList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     snapshots_create: {

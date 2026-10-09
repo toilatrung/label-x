@@ -309,13 +309,14 @@ def test_deferred_fk_cannot_bypass_a_missing_parent_lock(kind: str) -> None:
 
 
 def test_migration_upgrades_existing_snapshot_data() -> None:
+    snapshot = lock_snapshot(mutable_snapshot("before-upgrade"))
+    original_hash = snapshot.revision_sha256
     executor = MigrationExecutor(connection)
     executor.migrate([("snapshots", "0001_initial")])
     try:
-        snapshot = lock_snapshot(mutable_snapshot("before-upgrade"))
-        original_hash = snapshot.revision_sha256
+        MigrationExecutor(connection).migrate([("snapshots", "0003_snapshot_api_metadata")])
     finally:
-        MigrationExecutor(connection).migrate([("snapshots", "0002_serialize_snapshot_mutations")])
+        MigrationExecutor(connection).migrate([("snapshots", "0003_snapshot_api_metadata")])
     snapshot.refresh_from_db()
     assert snapshot.revision_sha256 == original_hash
     with pytest.raises(DatabaseError, match="immutable"), transaction.atomic():

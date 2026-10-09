@@ -169,6 +169,26 @@ paths:
 
   # ------------------------------------------------------------- snapshots
   /api/snapshots/:
+    get:
+      operationId: snapshots_list
+      tags: [snapshots]
+      summary: Danh sách snapshot của dataset
+      x-labelx-trace: [FR-SNP-03, FR-SNP-05, FR-SNP-07]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      parameters:
+        - name: dataset_id
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Danh sách snapshot theo phạm vi dataset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedSnapshotList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: snapshots_create
       tags: [snapshots]
@@ -1275,6 +1295,9 @@ components:
       properties:
         id: { type: integer }
         status: { $ref: "#/components/schemas/SnapshotStatus" }
+        drift_jobs:
+          type: array
+          items: { type: integer }
     Snapshot:
       type: object
       required: [id, dataset_id, status, parent_snapshot_id, jobs, drift_jobs, created_by, created_at]
@@ -1296,14 +1319,19 @@ components:
           type: array
           items:
             type: object
-            required: [cvat_job_id, job_hash, assignee_user_id]
+            required: [cvat_job_id, cvat_task_id, job_hash, assignee_user_id, cvat_url, frames]
             properties:
               cvat_job_id: { type: integer }
+              cvat_task_id: { type: integer }
               job_hash: { type: string, nullable: true }
               assignee_user_id:
                 type: integer
                 nullable: true
-                description: User LabelX của assignee tại snapshot qua identity mapping (FR-SNP-05)
+                description: LabelX user mapped from the CVAT assignee at export time.
+              cvat_url: { type: string, format: uri }
+              frames:
+                type: array
+                items: { $ref: "#/components/schemas/SnapshotFrame" }
         taxonomy_version: { type: string, nullable: true }
         guideline_version: { type: string, nullable: true }
         out_of_scope_shapes:
@@ -1315,6 +1343,24 @@ components:
         created_by: { type: integer }
         created_at: { type: string, format: date-time }
         locked_at: { type: string, format: date-time, nullable: true }
+    SnapshotFrame:
+      type: object
+      required: [frame_index, file_name, width, height, cvat_url]
+      properties:
+        frame_index: { type: integer, minimum: 0 }
+        file_name: { type: string }
+        width: { type: integer, minimum: 1 }
+        height: { type: integer, minimum: 1 }
+        cvat_url: { type: string, format: uri }
+    PaginatedSnapshotList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Snapshot" }
 
     # ------------------------------------------------------------------ runs
     RunStatus:

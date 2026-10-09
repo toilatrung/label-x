@@ -100,6 +100,16 @@ def test_t008_state_guards_and_error_contract(spec):
             assert operation["requestBody"]["required"]
 
 
+def test_t021_snapshot_api_contract_has_list_drift_and_deep_links(spec):
+    assert "get" in spec["paths"]["/api/snapshots/"]
+    accepted = spec["components"]["schemas"]["SnapshotAccepted"]
+    assert "drift_jobs" in accepted["properties"]
+    snapshot = spec["components"]["schemas"]["Snapshot"]
+    job = snapshot["properties"]["jobs"]["items"]
+    assert {"cvat_url", "frames"} <= set(job["properties"])
+    assert job["properties"]["cvat_url"]["format"] == "uri"
+
+
 def test_every_ref_resolves(spec):
     def walk(node: Any) -> None:
         if isinstance(node, dict):
