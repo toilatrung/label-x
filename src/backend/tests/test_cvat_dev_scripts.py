@@ -86,11 +86,17 @@ def test_existing_project_taxonomy_must_match(monkeypatch: pytest.MonkeyPatch) -
         client.find_or_create_project("labelx-dev", [{"name": "car", "type": "rectangle"}])
 
 
-def write_yolo_export(path: Path, images: list[str], labels: dict[str, str]) -> None:
+def write_yolo_export(
+    path: Path,
+    images: list[str],
+    labels: dict[str, str],
+    *,
+    class_name: str = "GreenSM",
+) -> None:
     image_buffer = BytesIO()
     Image.new("RGB", (10, 10)).save(image_buffer, format="JPEG")
     with zipfile.ZipFile(path, "w") as archive:
-        archive.writestr("data.yaml", "names:\n  0: GreenSM\npath: .\ntrain: train.txt\n")
+        archive.writestr("data.yaml", f"names:\n  0: {class_name}\npath: .\ntrain: train.txt\n")
         archive.writestr("train.txt", "".join(f"./images/train/{name}\n" for name in images))
         for name in images:
             archive.writestr(f"images/train/{name}", image_buffer.getvalue())
@@ -121,6 +127,8 @@ def test_learner_audit_classifies_by_official_bdd100k_names(tmp_path: Path) -> N
         "boxes": 1,
         "out_of_bounds_boxes": 0,
         "out_of_bounds_images": 0,
+        "annotated_images": 1,
+        "without_annotations": 1,
         "empty_or_unlabeled_images": 1,
         "membership": {"train": 0, "val": 1, "not_bdd100k": 1},
     }
@@ -174,3 +182,61 @@ def test_learner_audit_rejects_cross_export_duplicates(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="duplicate image names"):
         module.build_receipt([first, second], official)
+
+
+def test_strict_bdd100k_validation_rejects_non_bdd_and_foreign_taxonomy(tmp_path: Path) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    export = tmp_path / "learner.zip"
+    write_yolo_export(export, ["greensm.jpg"], {"greensm": "0 0.5 0.5 0.2 0.3\n"})
+
+    receipt = module.build_receipt([export], official)
+
+    assert module.bdd100k_validation_errors(receipt) == [
+        "1 image(s) are not in official BDD100K listings",
+        "learner.zip: unsupported BDD100K class(es): GreenSM",
+    ]
+
+
+def test_bdd100k_manifest_uses_official_image_and_reports_missing_annotations(
+    tmp_path: Path,
+) -> None:
+    module = load_script("learner_annotation_audit")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    Image.new("RGB", (20, 10)).save(official / "val" / "official-val.jpg")
+    Image.new("RGB", (30, 20)).save(official / "val" / "missing-val.jpg")
+    export = tmp_path / "learner.zip"
+    write_yolo_export(
+        export,
+        ["official-val.jpg", "missing-val.jpg"],
+        {"official-val": "0 0.5 0.5 0.2 0.4\n", "missing-val": ""},
+        class_name="car",
+    )
+
+    receipt = module.build_receipt([export], official)
+    manifest = module.materialize_bdd100k_manifest(
+        [export], receipt, official, tmp_path / "manifest.json"
+    )
+    importer = load_script("cvat_sample")
+
+    assert module.bdd100k_validation_errors(receipt) == []
+    assert receipt["totals"]["annotated_images"] == 1
+    assert receipt["totals"]["without_annotations"] == 1
+    annotated = next(
+        item for item in manifest["images"] if item["file_name"] == "val/official-val.jpg"
+    )
+    missing = next(
+        item for item in manifest["images"] if item["file_name"] == "val/missing-val.jpg"
+    )
+    assert annotated["annotations"][0]["bbox"] == pytest.approx([8.0, 3.0, 12.0, 7.0])
+    assert annotated["learner_annotation_status"] == "annotated"
+    assert missing["learner_annotation_status"] == "missing"
+    assert missing["annotations"] == []
+    assert importer.validate_sample(official, manifest) == [
+        official / "val" / "missing-val.jpg",
+        official / "val" / "official-val.jpg",
+    ]
