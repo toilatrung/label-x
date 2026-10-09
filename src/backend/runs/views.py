@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from django.contrib.auth.models import User
-from django.db.models import QuerySet
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
@@ -68,21 +67,30 @@ class RunCollectionView(APIView):
     )
     def get(self, request: Request) -> Response:
         user = cast(User, request.user)
-        queryset = QCRun.objects.select_related(
-            "model_artifact", "origin_run", "created_by"
-        ).prefetch_related("engine_results").order_by("-id")
+        queryset = (
+            QCRun.objects.select_related("model_artifact", "origin_run", "created_by")
+            .prefetch_related("engine_results")
+            .order_by("-id")
+        )
 
         # Scope enforcement
-        is_super = user.is_superuser or RoleAssignment.objects.filter(
-            user=user, role=Role.SUPER_ADMIN
-        ).exists()
+        is_super = (
+            user.is_superuser
+            or RoleAssignment.objects.filter(user=user, role=Role.SUPER_ADMIN).exists()
+        )
 
-        dataset_param = request.query_params.get("dataset") or request.query_params.get("dataset_id")
+        dataset_param = request.query_params.get("dataset") or request.query_params.get(
+            "dataset_id"
+        )
         if dataset_param is not None:
             try:
                 ds_id = int(dataset_param)
             except (ValueError, TypeError) as exc:
-                raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "dataset parameter phải là số nguyên.") from exc
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST,
+                    "VALIDATION_ERROR",
+                    "dataset parameter phải là số nguyên.",
+                ) from exc
 
             if not is_super:
                 has_perm = RoleAssignment.objects.filter(
@@ -91,7 +99,9 @@ class RunCollectionView(APIView):
                     dataset_id=ds_id,
                 ).exists()
                 if not has_perm:
-                    raise ApiError(status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Dataset ngoài phạm vi của bạn.")
+                    raise ApiError(
+                        status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Dataset ngoài phạm vi của bạn."
+                    )
             queryset = queryset.filter(dataset_id=ds_id)
         else:
             if not is_super:
@@ -103,13 +113,19 @@ class RunCollectionView(APIView):
                 )
                 queryset = queryset.filter(dataset_id__in=allowed_datasets)
 
-        snapshot_param = request.query_params.get("snapshot") or request.query_params.get("snapshot_id")
+        snapshot_param = request.query_params.get("snapshot") or request.query_params.get(
+            "snapshot_id"
+        )
         if snapshot_param is not None:
             try:
                 snap_id = int(snapshot_param)
                 queryset = queryset.filter(snapshot_id=snap_id)
             except (ValueError, TypeError) as exc:
-                raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "snapshot parameter phải là số nguyên.") from exc
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST,
+                    "VALIDATION_ERROR",
+                    "snapshot parameter phải là số nguyên.",
+                ) from exc
 
         paginator = RunCursorPagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
@@ -135,9 +151,15 @@ class RunCollectionView(APIView):
 
         key = request.headers.get("Idempotency-Key", "").strip()
         if not key:
-            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Thiếu header Idempotency-Key.")
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Thiếu header Idempotency-Key."
+            )
         if len(key) > 128:
-            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Idempotency-Key không được dài quá 128 ký tự.")
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "Idempotency-Key không được dài quá 128 ký tự.",
+            )
 
         data = serializer.validated_data
         snapshot_id = data["snapshot_id"]
@@ -147,13 +169,16 @@ class RunCollectionView(APIView):
         # Authoritative dataset lookup from snapshot
         snap = Snapshot.objects.filter(pk=snapshot_id).values("dataset_id").first()
         if snap is None:
-            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Snapshot {snapshot_id} không tồn tại.")
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Snapshot {snapshot_id} không tồn tại."
+            )
 
         dataset_id = snap["dataset_id"]
         user = cast(User, request.user)
-        is_super = user.is_superuser or RoleAssignment.objects.filter(
-            user=user, role=Role.SUPER_ADMIN
-        ).exists()
+        is_super = (
+            user.is_superuser
+            or RoleAssignment.objects.filter(user=user, role=Role.SUPER_ADMIN).exists()
+        )
         if not is_super:
             has_perm = RoleAssignment.objects.filter(
                 user=user,
@@ -161,7 +186,11 @@ class RunCollectionView(APIView):
                 dataset_id=dataset_id,
             ).exists()
             if not has_perm:
-                raise ApiError(status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Snapshot ngoài phạm vi dataset của bạn.")
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    "Snapshot ngoài phạm vi dataset của bạn.",
+                )
 
         try:
             run, _created = create_qc_run(
@@ -176,7 +205,9 @@ class RunCollectionView(APIView):
         except ConfigVersionNotFoundError as exc:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", str(exc)) from exc
         except BusinessRuleUnmetError as exc:
-            raise ApiError(status.HTTP_422_UNPROCESSABLE_ENTITY, "BUSINESS_RULE_UNMET", str(exc)) from exc
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, "BUSINESS_RULE_UNMET", str(exc)
+            ) from exc
         except IdempotencyKeyReusedError as exc:
             raise ApiError(status.HTTP_409_CONFLICT, "IDEMPOTENCY_KEY_REUSED", str(exc)) from exc
         except ScopeBusyError as exc:
@@ -196,9 +227,7 @@ class RunDetailView(APIView):
 
     def get_dataset_id(self, _request: Request) -> int | None:
         return (
-            QCRun.objects.filter(pk=self.kwargs["pk"])
-            .values_list("dataset_id", flat=True)
-            .first()
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
         )
 
     @extend_schema(
@@ -229,9 +258,7 @@ class RunCancelView(APIView):
 
     def get_dataset_id(self, _request: Request) -> int | None:
         return (
-            QCRun.objects.filter(pk=self.kwargs["pk"])
-            .values_list("dataset_id", flat=True)
-            .first()
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
         )
 
     @extend_schema(
@@ -260,9 +287,7 @@ class RunRetryFailedView(APIView):
 
     def get_dataset_id(self, _request: Request) -> int | None:
         return (
-            QCRun.objects.filter(pk=self.kwargs["pk"])
-            .values_list("dataset_id", flat=True)
-            .first()
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
         )
 
     @extend_schema(

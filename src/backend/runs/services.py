@@ -110,7 +110,8 @@ def compute_shard_idempotency_key(
 ) -> str:
     """Deterministic hash of shard execution provenance.
 
-    Formula: sha256(snapshot_id ‖ engine ‖ engine_version ‖ config_version_id ‖ model_checksum ‖ shard_key).
+    Formula: sha256(snapshot_id ‖ engine ‖ engine_version ‖ config_version_id ‖
+    model_checksum ‖ shard_key).
     Uses canonical JSON serialization (sorted keys, compact separators, UTF-8 encoded)
     to guarantee zero collision and order independence. Run ID is strictly excluded.
     """
@@ -188,12 +189,14 @@ def generate_shards_for_snapshot(
             norm_jobs_sorted = sorted(norm_jobs, key=lambda j: int(j.get("cvat_job_id", 0)))
             for job_data in norm_jobs_sorted:
                 job_id = int(job_data.get("cvat_job_id", 0))
-                frames_data = sorted(job_data.get("frames", []), key=lambda f: int(f.get("frame_index", 0)))
+                frames_data = sorted(
+                    job_data.get("frames", []), key=lambda f: int(f.get("frame_index", 0))
+                )
                 if frames_data:
                     for i in range(0, len(frames_data), shard_size):
-                        chunk = frames_data[i : i + shard_size]
-                        start_idx = chunk[0].get("frame_index", 0)
-                        end_idx = chunk[-1].get("frame_index", 0)
+                        norm_chunk = frames_data[i : i + shard_size]
+                        start_idx = norm_chunk[0].get("frame_index", 0)
+                        end_idx = norm_chunk[-1].get("frame_index", 0)
                         shard_slices.append(f"job:{job_id}:frames:{start_idx}-{end_idx}")
                 else:
                     shard_slices.append(f"job:{job_id}:empty")
@@ -224,16 +227,18 @@ def generate_shards_for_snapshot(
         engine_versions_map[engine_name] = descriptor.version
 
         if descriptor.needs_model and not model_checksum:
-            engine_results_data.append({
-                "engine": engine_name,
-                "status": EngineStatus.NOT_CHECKED,
-                "reason": NotCheckedReason.NO_MODEL,
-                "eligible_units": 0,
-                "completed_units": 0,
-                "failed_units": 0,
-                "not_checked_units": 0,
-                "required": descriptor.required,
-            })
+            engine_results_data.append(
+                {
+                    "engine": engine_name,
+                    "status": EngineStatus.NOT_CHECKED,
+                    "reason": NotCheckedReason.NO_MODEL,
+                    "eligible_units": 0,
+                    "completed_units": 0,
+                    "failed_units": 0,
+                    "not_checked_units": 0,
+                    "required": descriptor.required,
+                }
+            )
             continue
 
         # Generate work units
@@ -246,25 +251,29 @@ def generate_shards_for_snapshot(
                 model_checksum=model_checksum,
                 shard_key=shard_key,
             )
-            work_units_data.append({
-                "engine": engine_name,
-                "shard_key": shard_key,
-                "shard_index": shard_idx,
-                "idempotency_key": idem_key,
-                "status": WorkUnit.Status.PENDING,
-                "attempt": 1,
-            })
+            work_units_data.append(
+                {
+                    "engine": engine_name,
+                    "shard_key": shard_key,
+                    "shard_index": shard_idx,
+                    "idempotency_key": idem_key,
+                    "status": WorkUnit.Status.PENDING,
+                    "attempt": 1,
+                }
+            )
 
-        engine_results_data.append({
-            "engine": engine_name,
-            "status": EngineStatus.RUNNING if shard_slices else EngineStatus.CHECKED,
-            "reason": None,
-            "eligible_units": len(shard_slices),
-            "completed_units": 0,
-            "failed_units": 0,
-            "not_checked_units": 0,
-            "required": descriptor.required,
-        })
+        engine_results_data.append(
+            {
+                "engine": engine_name,
+                "status": EngineStatus.RUNNING if shard_slices else EngineStatus.CHECKED,
+                "reason": None,
+                "eligible_units": len(shard_slices),
+                "completed_units": 0,
+                "failed_units": 0,
+                "not_checked_units": 0,
+                "required": descriptor.required,
+            }
+        )
 
     return engine_versions_map, work_units_data, engine_results_data
 
@@ -316,7 +325,8 @@ def create_qc_run(
         raise ConfigVersionNotFoundError(f"Config version {config_version_id} không tồn tại.")
     if config_version.status != ConfigVersion.Status.PUBLISHED:
         raise BusinessRuleUnmetError(
-            f"Config version {config_version_id} chưa ở trạng thái published (hiện tại: {config_version.status})."
+            f"Config version {config_version_id} chưa ở trạng thái published "
+            f"(hiện tại: {config_version.status})."
         )
 
     model_artifact: ModelArtifact | None = None
@@ -325,10 +335,14 @@ def create_qc_run(
         model_name = config_models.get("name")
         model_ver = config_models.get("version")
         if model_name and model_ver:
-            model_artifact = ModelArtifact.objects.filter(name=model_name, version=model_ver).first()
+            model_artifact = ModelArtifact.objects.filter(
+                name=model_name, version=model_ver
+            ).first()
 
     dataset_id = snapshot.dataset_id
-    scope_hash = snapshot.revision_sha256 or hashlib.sha256(str(dataset_id).encode("utf-8")).hexdigest()
+    scope_hash = (
+        snapshot.revision_sha256 or hashlib.sha256(str(dataset_id).encode("utf-8")).hexdigest()
+    )
 
     # Scope busy guard for active final runs
     if is_final:
@@ -419,7 +433,8 @@ def cancel_qc_run(*, run_id: int, actor: User, reason: str = "") -> QCRun:
 
         if run.status in (QCRun.Status.COMPLETED, QCRun.Status.PARTIAL, QCRun.Status.FAILED):
             raise InvalidTransitionError(
-                f"Không thể huỷ run ở trạng thái terminal '{run.status}' (chỉ cho phép queued/running)."
+                f"Không thể huỷ run ở trạng thái terminal '{run.status}' "
+                "(chỉ cho phép queued/running)."
             )
 
         old_status = run.status
@@ -430,9 +445,9 @@ def cancel_qc_run(*, run_id: int, actor: User, reason: str = "") -> QCRun:
         run.save(update_fields=["status", "cancel_requested_at", "finished_at"])
 
         # Cancel non-terminal work units
-        run.work_units.filter(
-            status__in=[WorkUnit.Status.PENDING, WorkUnit.Status.RUNNING]
-        ).update(status=WorkUnit.Status.CANCELLED, finished_at=now)
+        run.work_units.filter(status__in=[WorkUnit.Status.PENDING, WorkUnit.Status.RUNNING]).update(
+            status=WorkUnit.Status.CANCELLED, finished_at=now
+        )
 
         append_audit_event(
             actor=actor,
@@ -456,7 +471,8 @@ def retry_failed_qc_run(*, run_id: int, actor: User) -> QCRun:
 
         if run.status != QCRun.Status.PARTIAL:
             raise InvalidTransitionError(
-                f"Chỉ có thể retry-failed cho run ở trạng thái 'partial' (hiện tại: '{run.status}')."
+                "Chỉ có thể retry-failed cho run ở trạng thái 'partial' "
+                f"(hiện tại: '{run.status}')."
             )
 
         failed_units = list(run.work_units.filter(status=WorkUnit.Status.FAILED))
@@ -466,7 +482,9 @@ def retry_failed_qc_run(*, run_id: int, actor: User) -> QCRun:
             unit.started_at = None
             unit.finished_at = None
             unit.last_error = ""
-            unit.save(update_fields=["status", "attempt", "started_at", "finished_at", "last_error"])
+            unit.save(
+                update_fields=["status", "attempt", "started_at", "finished_at", "last_error"]
+            )
 
         old_status = run.status
         run.status = QCRun.Status.RUNNING

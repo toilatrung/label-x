@@ -6,152 +6,307 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('snapshots', '0003_snapshot_api_metadata'),
+        ("snapshots", "0003_snapshot_api_metadata"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ConfigVersion',
+            name="ConfigVersion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(default='default', max_length=128)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('published', 'Published')], default='draft', max_length=16)),
-                ('payload', models.JSONField(default=dict)),
-                ('engines', models.JSONField(default=dict)),
-                ('thresholds', models.JSONField(default=dict)),
-                ('models', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('published_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='created_config_versions', to=settings.AUTH_USER_MODEL)),
-                ('published_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='published_config_versions', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(default="default", max_length=128)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("draft", "Draft"), ("published", "Published")],
+                        default="draft",
+                        max_length=16,
+                    ),
+                ),
+                ("payload", models.JSONField(default=dict)),
+                ("engines", models.JSONField(default=dict)),
+                ("thresholds", models.JSONField(default=dict)),
+                ("models", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("published_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="created_config_versions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "published_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="published_config_versions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'config_version',
-                'ordering': ['-created_at', '-id'],
+                "db_table": "config_version",
+                "ordering": ["-created_at", "-id"],
             },
         ),
         migrations.CreateModel(
-            name='ModelArtifact',
+            name="ModelArtifact",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=128)),
-                ('version', models.CharField(max_length=64)),
-                ('checksum', models.CharField(max_length=64, unique=True)),
-                ('class_mapping_version', models.CharField(blank=True, default='', max_length=64)),
-                ('class_mapping', models.JSONField(default=dict)),
-                ('artifact_key', models.CharField(blank=True, default='', max_length=512)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=128)),
+                ("version", models.CharField(max_length=64)),
+                ("checksum", models.CharField(max_length=64, unique=True)),
+                ("class_mapping_version", models.CharField(blank=True, default="", max_length=64)),
+                ("class_mapping", models.JSONField(default=dict)),
+                ("artifact_key", models.CharField(blank=True, default="", max_length=512)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'model_artifact',
-                'ordering': ['name', 'version'],
-                'constraints': [models.UniqueConstraint(fields=('name', 'version'), name='model_artifact_unique_name_version')],
+                "db_table": "model_artifact",
+                "ordering": ["name", "version"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("name", "version"), name="model_artifact_unique_name_version"
+                    )
+                ],
             },
         ),
         migrations.CreateModel(
-            name='QCRun',
+            name="QCRun",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seed', models.BigIntegerField(default=42)),
-                ('engine_versions', models.JSONField(default=dict)),
-                ('status', models.CharField(choices=[('queued', 'Queued'), ('running', 'Running'), ('completed', 'Completed'), ('partial', 'Partial'), ('failed', 'Failed'), ('cancelled', 'Cancelled')], db_index=True, default='queued', max_length=16)),
-                ('is_final', models.BooleanField(default=False)),
-                ('dataset_id', models.PositiveBigIntegerField(db_index=True)),
-                ('scope_hash', models.CharField(db_index=True, max_length=64)),
-                ('score_version', models.CharField(blank=True, max_length=64, null=True)),
-                ('cancel_requested_at', models.DateTimeField(blank=True, null=True)),
-                ('next_step_enqueued_at', models.DateTimeField(blank=True, null=True)),
-                ('claimed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('finished_at', models.DateTimeField(blank=True, null=True)),
-                ('idempotency_key', models.CharField(blank=True, db_index=True, max_length=128, null=True)),
-                ('request_sha256', models.CharField(blank=True, max_length=64)),
-                ('config_version', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='qc_runs', to='runs.configversion')),
-                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='created_qc_runs', to=settings.AUTH_USER_MODEL)),
-                ('model_artifact', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='qc_runs', to='runs.modelartifact')),
-                ('origin_run', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='rework_runs', to='runs.qcrun')),
-                ('snapshot', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='qc_runs', to='snapshots.snapshot')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("seed", models.BigIntegerField(default=42)),
+                ("engine_versions", models.JSONField(default=dict)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("queued", "Queued"),
+                            ("running", "Running"),
+                            ("completed", "Completed"),
+                            ("partial", "Partial"),
+                            ("failed", "Failed"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        db_index=True,
+                        default="queued",
+                        max_length=16,
+                    ),
+                ),
+                ("is_final", models.BooleanField(default=False)),
+                ("dataset_id", models.PositiveBigIntegerField(db_index=True)),
+                ("scope_hash", models.CharField(db_index=True, max_length=64)),
+                ("score_version", models.CharField(blank=True, max_length=64, null=True)),
+                ("cancel_requested_at", models.DateTimeField(blank=True, null=True)),
+                ("next_step_enqueued_at", models.DateTimeField(blank=True, null=True)),
+                ("claimed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("finished_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "idempotency_key",
+                    models.CharField(blank=True, db_index=True, max_length=128, null=True),
+                ),
+                ("request_sha256", models.CharField(blank=True, max_length=64)),
+                (
+                    "config_version",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="qc_runs",
+                        to="runs.configversion",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="created_qc_runs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "model_artifact",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="qc_runs",
+                        to="runs.modelartifact",
+                    ),
+                ),
+                (
+                    "origin_run",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="rework_runs",
+                        to="runs.qcrun",
+                    ),
+                ),
+                (
+                    "snapshot",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="qc_runs",
+                        to="snapshots.snapshot",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'qc_run',
-                'ordering': ['-created_at', '-id'],
+                "db_table": "qc_run",
+                "ordering": ["-created_at", "-id"],
             },
         ),
         migrations.CreateModel(
-            name='EngineResult',
+            name="EngineResult",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('engine', models.CharField(max_length=64)),
-                ('status', models.CharField(default='running', max_length=32)),
-                ('reason', models.CharField(blank=True, max_length=64, null=True)),
-                ('eligible_units', models.IntegerField(default=0)),
-                ('completed_units', models.IntegerField(default=0)),
-                ('failed_units', models.IntegerField(default=0)),
-                ('not_checked_units', models.IntegerField(default=0)),
-                ('required', models.BooleanField(default=True)),
-                ('run', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='engine_results', to='runs.qcrun')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("engine", models.CharField(max_length=64)),
+                ("status", models.CharField(default="running", max_length=32)),
+                ("reason", models.CharField(blank=True, max_length=64, null=True)),
+                ("eligible_units", models.IntegerField(default=0)),
+                ("completed_units", models.IntegerField(default=0)),
+                ("failed_units", models.IntegerField(default=0)),
+                ("not_checked_units", models.IntegerField(default=0)),
+                ("required", models.BooleanField(default=True)),
+                (
+                    "run",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="engine_results",
+                        to="runs.qcrun",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'engine_result',
-                'ordering': ['engine'],
+                "db_table": "engine_result",
+                "ordering": ["engine"],
             },
         ),
         migrations.CreateModel(
-            name='WorkUnit',
+            name="WorkUnit",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('engine', models.CharField(db_index=True, max_length=64)),
-                ('shard_key', models.CharField(max_length=128)),
-                ('shard_index', models.PositiveIntegerField(default=0)),
-                ('idempotency_key', models.CharField(db_index=True, max_length=64)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('running', 'Running'), ('completed', 'Completed'), ('failed', 'Failed'), ('cancelled', 'Cancelled')], db_index=True, default='pending', max_length=16)),
-                ('attempt', models.PositiveIntegerField(default=1)),
-                ('last_error', models.TextField(blank=True, default='')),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('finished_at', models.DateTimeField(blank=True, null=True)),
-                ('run', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='work_units', to='runs.qcrun')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("engine", models.CharField(db_index=True, max_length=64)),
+                ("shard_key", models.CharField(max_length=128)),
+                ("shard_index", models.PositiveIntegerField(default=0)),
+                ("idempotency_key", models.CharField(db_index=True, max_length=64)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("running", "Running"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        db_index=True,
+                        default="pending",
+                        max_length=16,
+                    ),
+                ),
+                ("attempt", models.PositiveIntegerField(default=1)),
+                ("last_error", models.TextField(blank=True, default="")),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("finished_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "run",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="work_units",
+                        to="runs.qcrun",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'work_unit',
-                'ordering': ['shard_index', 'id'],
+                "db_table": "work_unit",
+                "ordering": ["shard_index", "id"],
             },
         ),
         migrations.AddIndex(
-            model_name='qcrun',
-            index=models.Index(fields=['dataset_id', 'status'], name='qc_run_dataset_status_idx'),
+            model_name="qcrun",
+            index=models.Index(fields=["dataset_id", "status"], name="qc_run_dataset_status_idx"),
         ),
         migrations.AddIndex(
-            model_name='qcrun',
-            index=models.Index(fields=['snapshot', 'status'], name='qc_run_snapshot_status_idx'),
+            model_name="qcrun",
+            index=models.Index(fields=["snapshot", "status"], name="qc_run_snapshot_status_idx"),
         ),
         migrations.AddConstraint(
-            model_name='qcrun',
-            constraint=models.UniqueConstraint(condition=models.Q(('idempotency_key__isnull', False)), fields=('idempotency_key',), name='qc_run_unique_idempotency_key'),
+            model_name="qcrun",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("idempotency_key__isnull", False)),
+                fields=("idempotency_key",),
+                name="qc_run_unique_idempotency_key",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='qcrun',
-            constraint=models.UniqueConstraint(condition=models.Q(('is_final', True), ('status__in', ['queued', 'running'])), fields=('dataset_id', 'scope_hash'), name='qc_run_unique_active_final_scope'),
+            model_name="qcrun",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("is_final", True), ("status__in", ["queued", "running"])),
+                fields=("dataset_id", "scope_hash"),
+                name="qc_run_unique_active_final_scope",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='qcrun',
-            constraint=models.CheckConstraint(condition=models.Q(('id', models.F('origin_run_id')), _negated=True), name='qc_run_origin_not_self'),
+            model_name="qcrun",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("id", models.F("origin_run_id")), _negated=True),
+                name="qc_run_origin_not_self",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='engineresult',
-            constraint=models.UniqueConstraint(fields=('run', 'engine'), name='engine_result_unique_run_engine'),
+            model_name="engineresult",
+            constraint=models.UniqueConstraint(
+                fields=("run", "engine"), name="engine_result_unique_run_engine"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='workunit',
-            constraint=models.UniqueConstraint(fields=('run', 'idempotency_key'), name='work_unit_unique_run_idempotency'),
+            model_name="workunit",
+            constraint=models.UniqueConstraint(
+                fields=("run", "idempotency_key"), name="work_unit_unique_run_idempotency"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='workunit',
-            constraint=models.UniqueConstraint(fields=('run', 'engine', 'shard_key'), name='work_unit_unique_run_engine_shard'),
+            model_name="workunit",
+            constraint=models.UniqueConstraint(
+                fields=("run", "engine", "shard_key"), name="work_unit_unique_run_engine_shard"
+            ),
         ),
     ]

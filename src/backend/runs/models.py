@@ -55,7 +55,9 @@ class ConfigVersion(dj_models.Model):
             existing = ConfigVersion.objects.filter(pk=self.pk).values("status").first()
             if existing and existing["status"] == self.Status.PUBLISHED:
                 if self.status != self.Status.PUBLISHED:
-                    raise PublishedConfigImmutableError("Cannot unpublish a published configuration.")
+                    raise PublishedConfigImmutableError(
+                        "Cannot unpublish a published configuration."
+                    )
         super().save(*args, **kwargs)
 
 
@@ -74,7 +76,9 @@ class ModelArtifact(dj_models.Model):
         db_table = "model_artifact"
         ordering = ["name", "version"]
         constraints = [
-            dj_models.UniqueConstraint(fields=["name", "version"], name="model_artifact_unique_name_version"),
+            dj_models.UniqueConstraint(
+                fields=["name", "version"], name="model_artifact_unique_name_version"
+            ),
         ]
 
     def __str__(self) -> str:
@@ -127,7 +131,7 @@ class QCRun(dj_models.Model):
     )
     dataset_id = dj_models.PositiveBigIntegerField(db_index=True)
     scope_hash = dj_models.CharField(max_length=64, db_index=True)
-    score_version = dj_models.CharField(max_length=64, null=True, blank=True)
+    score_version = dj_models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
     cancel_requested_at = dj_models.DateTimeField(null=True, blank=True)
     next_step_enqueued_at = dj_models.DateTimeField(null=True, blank=True)
     claimed_at = dj_models.DateTimeField(null=True, blank=True)
@@ -141,7 +145,7 @@ class QCRun(dj_models.Model):
     finished_at = dj_models.DateTimeField(null=True, blank=True)
 
     # HTTP request idempotency
-    idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, db_index=True)
+    idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, db_index=True)  # noqa: DJ001
     request_sha256 = dj_models.CharField(max_length=64, blank=True)
 
     class Meta:
@@ -217,7 +221,9 @@ class WorkUnit(dj_models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"WorkUnit {self.pk} (run={self.run_id}, engine={self.engine}, shard={self.shard_key})"
+        return (
+            f"WorkUnit {self.pk} (run={self.run_id}, engine={self.engine}, shard={self.shard_key})"
+        )
 
 
 class EngineResult(dj_models.Model):
@@ -230,7 +236,7 @@ class EngineResult(dj_models.Model):
     )
     engine = dj_models.CharField(max_length=64)
     status = dj_models.CharField(max_length=32, default="running")
-    reason = dj_models.CharField(max_length=64, null=True, blank=True)
+    reason = dj_models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
     eligible_units = dj_models.IntegerField(default=0)
     completed_units = dj_models.IntegerField(default=0)
     failed_units = dj_models.IntegerField(default=0)
