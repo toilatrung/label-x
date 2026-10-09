@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-015 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-015-@duy12345-6789">
+<meta name="labelx:id" content="implementation-t-015">
 <meta name="labelx:title" content="T-015 Implementation Report">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -9,13 +9,13 @@
 <meta name="labelx:tags" content="[implementation, structured-logging, request-id, secret-redaction]">
 <meta name="labelx:priority" content="2">
 </head><body><main><article>
-<div class="meta"><b>id</b><span>T-015-@duy12345-6789</span><b>title</b><span>T-015 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>backend-logging</span><b>tags</b><span>[implementation, structured-logging, request-id, secret-redaction]</span><b>priority</b><span>2</span></div>
+<div class="meta"><b>id</b><span>implementation-t-015</span><b>title</b><span>T-015 Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>backend-logging</span><b>tags</b><span>[implementation, structured-logging, request-id, secret-redaction]</span><b>priority</b><span>2</span></div>
 <h1 id="implementation-report-template">T-015 — Log có cấu trúc kèm request_id, secret không vào log</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Bằng chứng triển khai và kiểm thử T-015 trên nhánh <code>feat/T-015-e02-structured-log</code>.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>T-015-@duy12345-6789</code></li>
+<li><strong>Report ID</strong>: <code>T-015</code></li>
 <li><strong>Title</strong>: <code>Structured backend logging and secret redaction</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
 <li><strong>Executor</strong>: <code>@duy12345-6789 với Codex</code></li>
@@ -84,5 +84,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Không ghi secret hoặc giá trị token thử nghiệm vào report.</li><li>Không tự nhận review approval hoặc chuyển task sang done.</li><li>Không sửa canonical .agent files.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Report lưu tại <code>.agent/reports/implementation/T-015-@duy12345-6789.html</code>.</li><li>Task chỉ chuyển <code>review</code> sau khi bằng chứng hoàn tất.</li><li>PR nhắm <code>develop</code> và chờ comment <code>Đã xem và duyệt</code>.</li></ul>
+<ul><li>Report lưu tại <code>.agent/reports/implementation/T-015.html</code>.</li><li>Task chỉ chuyển <code>review</code> sau khi bằng chứng hoàn tất.</li><li>PR nhắm <code>develop</code> và chờ comment <code>Đã xem và duyệt</code>.</li></ul>
 </article></main></body></html>
