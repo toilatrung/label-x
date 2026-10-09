@@ -1,35 +1,26 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Current Context — @duy12345-6789 — LabelX</title>
-<meta name="labelx:id" content="current-context-duy12345-6789">
-<meta name="labelx:title" content="Current Context — @duy12345-6789">
-<meta name="labelx:type" content="execution">
-<meta name="labelx:domain" content="governance">
-<meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[execution, per-user, t-013]">
-<meta name="labelx:priority" content="1">
+<meta name="labelx:id" content="current-context-duy12345-6789"><meta name="labelx:title" content="Current Context — @duy12345-6789">
+<meta name="labelx:type" content="execution"><meta name="labelx:domain" content="governance"><meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-019, e-04, bdd100k]"><meta name="labelx:priority" content="1">
 </head><body><main><article>
-<div class="meta"><b>id</b><span>current-context-duy12345-6789</span><b>title</b><span>Current Context — @duy12345-6789</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-013]</span><b>priority</b><span>1</span></div>
+<div class="meta"><b>id</b><span>current-context-duy12345-6789</span><b>title</b><span>Current Context — @duy12345-6789</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-019, e-04, bdd100k]</span><b>priority</b><span>1</span></div>
 <h1 id="current-context-duy12345-6789">Current Context — @duy12345-6789</h1>
-<h2 id="purpose">Purpose</h2>
-<p>File riêng theo CR-100 cho trạng thái triển khai T-013; integrator gộp vào current context chính.</p>
-<ul><li><strong>Base Commit</strong>: <code>22467d2</code></li><li><strong>Branch</strong>: <code>feat/T-013-e02-audit-log</code></li></ul>
-<h2 id="status-model">Status Model</h2>
-<ul><li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li><li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li></ul>
-<h2 id="current-state">Current State</h2>
-<ul><li><strong>Context Status</strong>: <code>current</code></li><li><strong>Last Updated</strong>: <code>2026-10-08</code></li><li><strong>Updated By</strong>: <code>duy12345-6789</code></li><li><strong>Active Epic IDs</strong>: <code>E-02</code></li><li><strong>Active Task IDs</strong>: <code>T-013</code></li><li><strong>Active Blocker IDs</strong>: <code>none</code></li><li><strong>Deadline</strong>: <code>2026-10-08 14:00 Asia/Ho_Chi_Minh</code></li></ul>
-<h2 id="required-context">Required Context</h2>
-<table><thead><tr><th>Path</th><th>Purpose</th><th>Authority</th><th>Required</th></tr></thead><tbody>
-<tr><td><code>.agent/execution/task-board.html#t-013</code></td><td>Scope và acceptance criteria T-013</td><td><code>task</code></td><td><code>yes</code></td></tr>
-<tr><td><code>src/backend/accounts/</code></td><td>Actor model supplied by T-011</td><td><code>source</code></td><td><code>yes</code></td></tr>
-<tr><td><code>.agent/governance/change-requests/CR-100.html</code></td><td>Quy tắc file riêng</td><td><code>governance</code></td><td><code>yes</code></td></tr>
+<h2 id="purpose">Purpose</h2><p>File riêng theo CR-100 ghi trạng thái triển khai T-019 và điều kiện dữ liệu đang chặn.</p>
+<ul><li><strong>Base Commit</strong>: <code>9f9b509</code></li><li><strong>Branch</strong>: <code>feat/T-019-e04-learner-annotation-bdd100k</code></li></ul>
+<h2 id="status-model">Status Model</h2><ul><li><strong>Valid Context Statuses</strong>: <code>current | stale | archived</code></li><li><strong>Valid Task Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li></ul>
+<h2 id="current-state">Current State</h2><ul><li><strong>Context Status</strong>: <code>current</code></li><li><strong>Last Updated</strong>: <code>2026-10-09</code></li><li><strong>Updated By</strong>: <code>duy12345-6789</code></li><li><strong>Active Epic IDs</strong>: <code>E-04</code></li><li><strong>Active Task IDs</strong>: <code>T-019</code></li><li><strong>Active Blocker IDs</strong>: <code>BLOCKER-024</code></li><li><strong>Deadline</strong>: <code>2026-10-09 10:00 Asia/Ho_Chi_Minh (missed because PO input is unavailable)</code></li></ul>
+<h2 id="required-context">Required Context</h2><table><thead><tr><th>Path</th><th>Purpose</th><th>Authority</th><th>Required</th></tr></thead><tbody>
+<tr><td><code>GitHub issue #61</code></td><td>Scope và acceptance criteria T-019</td><td><code>task</code></td><td><code>yes</code></td></tr>
+<tr><td><code>.agent/governance/blockers/BLOCKER-024.html</code></td><td>Điều kiện learner annotation phải thuộc BDD100K</td><td><code>governance</code></td><td><code>yes</code></td></tr>
+<tr><td><code>C:/Users/admin/Downloads/BDD100K/bdd100k/images/100k</code></td><td>Listing ảnh BDD100K chính thức trên máy dev</td><td><code>local input</code></td><td><code>yes</code></td></tr>
 </tbody></table>
-<h2 id="expected-outputs">Expected Outputs</h2>
-<table><thead><tr><th>Output</th><th>Required Path</th><th>Verification</th></tr></thead><tbody>
-<tr><td>Append-only audit model and service</td><td><code>src/backend/audit/</code></td><td><code>pytest tests/audit</code></td></tr>
-<tr><td>PostgreSQL grants and mutation guard</td><td><code>audit/migrations/</code>, <code>configure_audit_db_role</code></td><td><code>Postgres integration test</code></td></tr>
-<tr><td>Implementation report</td><td><code>.agent/reports/implementation/T-013-@duy12345-6789.html</code></td><td><code>make validate-kit</code></td></tr>
+<h2 id="expected-outputs">Expected Outputs</h2><table><thead><tr><th>Output</th><th>Required Path</th><th>Verification</th></tr></thead><tbody>
+<tr><td>Audit strict checksum/membership/bounds/taxonomy</td><td><code>scripts/development/learner_annotation_audit.py</code></td><td><code>pytest tests/test_cvat_dev_scripts.py</code></td></tr>
+<tr><td>Manifest chỉ tham chiếu ảnh BDD100K chính thức</td><td><code>.cache/cvat/t019-learner-bdd100k.json</code></td><td><code>make cvat-prepare-learner-bdd100k</code></td></tr>
+<tr><td>Import CVAT và evidence adapter hash</td><td><code>CVAT dev + implementation report</code></td><td><code>chờ learner annotation BDD100K từ PO</code></td></tr>
+<tr><td>Implementation report</td><td><code>.agent/reports/implementation/T-019-@duy12345-6789.html</code></td><td><code>make validate-kit</code></td></tr>
 </tbody></table>
-<h2 id="notes">Notes</h2>
-<ul><li>T-011 đã merge qua PR #31; dependency được thỏa mãn.</li><li>T-017 chưa merge khi T-013 bắt đầu, nên follow-up CR-107 chưa áp dụng.</li><li>Implementation commit <code>9ed81b5</code>; review fix <code>a2003e6</code> che <code>private_key</code>, <code>session_key</code> và password trong connection URL.</li><li>Backend 132 test và detector 10 test pass; <a href="https://github.com/toilatrung/label-x/pull/53">PR #53</a> đang chờ CI chạy lại và reviewer vòng hai.</li></ul>
+<h2 id="notes">Notes</h2><ul><li>Đã comment nhận task và blocker tại issue #61 và issue tổng #57.</li><li>Implementation commit: <code>297c6bb</code>.</li><li>Bốn ZIP GreenSM cũ bị strict audit từ chối: 252/252 ảnh ngoài BDD100K, 3 bbox vượt biên, taxonomy GreenSM không thuộc 10 lớp BDD100K.</li><li>Không chuyển BLOCKER-024 sang resolved và không nạp dữ liệu GreenSM thay thế.</li></ul>
 </article></main></body></html>
