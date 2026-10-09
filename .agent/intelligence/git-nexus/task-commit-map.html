@@ -64,6 +64,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>T-012</td><td><code>7a46665</code></td><td>2026-10-08</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>PR #56 squash: RBAC theo vai trò + scope dataset, tách người yêu cầu/duyệt, override Super Admin có lý do.</td><td><a href="../../reports/implementation/T-012.html">implementation</a></td></tr>
 <tr><td>T-017</td><td><code>3c5ab60</code></td><td>2026-10-09</td><td>Trịnh Quang Trung (@toilatrung)</td><td>PR #59 squash: kiểm hợp lệ mapping nhóm lỗi/lớp → rule ID và màn RulesThresholds chỉ xem.</td><td><a href="../../reports/implementation/T-017.html">implementation</a></td></tr>
 <tr><td>T-018</td><td><code>9f9b509</code></td><td>2026-10-09</td><td>Trịnh Quang Trung (@toilatrung)</td><td>PR #60 squash: GuidelineRuleLookup trên API thật, ModelsGuidelines, test hồi quy context Workspace chưa có rule/version.</td><td><a href="../../reports/implementation/T-018.html">implementation</a></td></tr>
+<tr><td>T-028</td><td><code>ec627bd</code></td><td>2026-10-09</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>PR #77 merge commit (không squash; head đã duyệt <code>7fc4007</code>): engine Duplicate/Overlap thuần, dùng matching T-023, EngineInput/EngineOutput, evidence DUP-01.</td><td><a href="../../reports/implementation/T-028.html">implementation</a>; <a href="../../reports/qa/T-028.html">qa</a></td></tr>
 </tbody></table>
 <h2 id="closeout-commits">Remediation Commits (chore/wave1-closeout)</h2>
 <p>Sửa sau review đợt 1 trên nhánh <code>chore/wave1-closeout</code>, PR base <code>develop</code>; hash có thể đổi nếu PR được squash.</p>
@@ -110,5 +111,9 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>T-013</td><td><code>a2003e6</code></td><td><code>@duy12345-6789</code></td><td>Sửa review: che private/session key và password trong connection URL, có test hồi quy.</td><td>squash vào <code>cc27674</code></td></tr>
 <tr><td>T-018</td><td><code>dbc03e3</code></td><td><code>@toilatrung</code></td><td>GuidelineRuleLookup tái sử dụng trên API thật, UI được duyệt, kiểm thử đầy đủ.</td><td>squash vào <code>9f9b509</code></td></tr>
 <tr><td>T-018</td><td><code>ab7edef</code></td><td><code>@toilatrung</code></td><td>Chuẩn hoá context Workspace chưa có rule/version, thêm test hồi quy.</td><td>squash vào <code>9f9b509</code></td></tr>
+<tr><td>T-028</td><td><code>cab3277</code></td><td><code>@vietanhhhhhh2003</code></td><td>Thêm engine duplicate overlap candidate.</td><td>merge vào <code>ec627bd</code></td></tr>
+<tr><td>T-028</td><td><code>a6c5632</code></td><td><code>@vietanhhhhhh2003</code></td><td>Tách môi trường uv WSL.</td><td>merge vào <code>ec627bd</code></td></tr>
+<tr><td>T-028</td><td><code>4a2537c</code></td><td><code>@vietanhhhhhh2003</code></td><td>Tích hợp matching T-023 và engine contract.</td><td>merge vào <code>ec627bd</code></td></tr>
+<tr><td>T-028</td><td><code>357b679</code></td><td><code>@vietanhhhhhh2003</code></td><td>Ghi quality gate cục bộ.</td><td>merge vào <code>ec627bd</code></td></tr>
 </tbody></table>
 </article></main></body></html>
