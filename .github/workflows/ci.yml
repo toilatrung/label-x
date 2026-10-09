@@ -140,6 +140,30 @@ jobs:
         # Chạy MỌI test trong src/backend/tests để test mới của collaborator không bị bỏ sót;
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
         run: uv run --frozen pytest -q --strict-markers
+      - name: S3 integration (SeaweedFS, F-10)
+        # Cùng image/cấu hình với infrastructure/docker-compose.dev.yml; services: không truyền được command nên dùng docker run.
+        env:
+          LABELX_RUN_S3_INTEGRATION: '1'
+          OBJECT_STORAGE_ENDPOINT_URL: http://localhost:9000
+          OBJECT_STORAGE_ACCESS_KEY: labelx
+          OBJECT_STORAGE_SECRET_KEY: labelx-secret
+          OBJECT_STORAGE_REGION: us-east-1
+        run: |
+          docker run -d --name seaweedfs -p 9000:9000 \
+            -v "$GITHUB_WORKSPACE/infrastructure/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro" \
+            chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a \
+            server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=1024
+          for i in $(seq 1 30); do
+            docker exec seaweedfs wget -q -O /dev/null http://127.0.0.1:9333/cluster/status && break
+            sleep 2
+          done
+          for b in labelx-snapshots labelx-evidence labelx-reports labelx-models; do
+            echo "s3.bucket.create -name $b" | docker exec -i seaweedfs weed shell -master=127.0.0.1:9333
+          done
+          uv run --frozen pytest tests/storage/test_seaweedfs_integration.py -q
+      - name: SeaweedFS logs on failure
+        if: failure()
+        run: docker logs seaweedfs || true
       - name: Execute registered scaffold tests
         working-directory: .
         run: |
