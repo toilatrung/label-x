@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo Triển khai T-023: Thư viện Matching một-một Tất định (Epic E-05)</title>
+<meta name="labelx:id" content="T-023-ducha180104">
+<meta name="labelx:title" content="T-023 — Thư viện Matching một-một Tất định (Epic E-05)">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="engines">
+<meta name="labelx:tags" content="[implementation, report, T-023, matching, bipartite, E-05]">
+<meta name="labelx:priority" content="2">
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #24292e; max-width: 960px; margin: 0 auto; padding: 24px; }
+h1, h2, h3, h4 { border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; margin-top: 24px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+th, td { border: 1px solid #dfe2e5; padding: 8px 12px; text-align: left; }
+th { background-color: #f6f8fa; }
+code { background-color: #f0f3f6; padding: 0.2em 0.4em; border-radius: 3px; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
+pre { background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
+pre code { background-color: transparent; padding: 0; }
+.badge { display: inline-block; padding: 2px 8px; font-size: 12px; font-weight: 600; border-radius: 12px; color: white; }
+.badge-review { background-color: #f59f00; }
+.badge-pass { background-color: #2da44e; }
+.badge-fix { background-color: #0969da; }
+.alert-note { background-color: #f1f8ff; border-left: 4px solid #0366d6; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+.alert-success { background-color: #f0fff4; border-left: 4px solid #2da44e; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+</style>
+</head>
+<body>
+<main><article>
+<div class="meta">
+<b>id</b><span>T-023-ducha180104</span>
+<b>title</b><span>T-023 — Thư viện Matching một-một Tất định (Epic E-05)</span>
+<b>type</b><span>report</span>
+<b>domain</b><span>development</span>
+<b>module</b><span>engines</span>
+<b>tags</b><span>[implementation, report, T-023, matching, bipartite, E-05]</span>
+<b>priority</b><span>2</span>
+</div>
+
+<h1 id="t-023-implementation-report">Báo cáo Triển khai T-023: Thư viện Matching một-một Tất định (Epic E-05)</h1>
+
+<ul>
+<li><strong>Report ID</strong>: <code>T-023-ducha180104</code></li>
+<li><strong>Title</strong>: <code>T-023 — Thư viện Matching một-một Tất định (Epic E-05)</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Executor</strong>: <code>Antigravity Agent</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-023</code></li>
+<li><strong>Epic ID</strong>: <code>E-05</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Branch</strong>: <code>feat/T-023-e05-one-to-one-matching</code></li>
+</ul>
+
+
+<div class="alert-note">
+<strong>Xác minh Sửa đổi Nền (Baseline Fix) ngoài phạm vi T-023:</strong>
+<ul>
+<li><strong>Tệp sửa đổi:</strong> <code>src/backend/guideline/management/commands/load_guideline.py</code></li>
+<li><strong>Lỗi Mypy:</strong> <code>"User" has no attribute "role_assignments"</code> (xuất phát từ commit <code>3c5ab60</code> trên <code>origin/develop</code> thuộc PR #59/T-017, không phải do T-023 sinh ra).</li>
+<li><strong>Bản chất kỹ thuật:</strong> Model <code>accounts.models.RoleAssignment</code> định nghĩa <code>user = models.ForeignKey(..., related_name="role_assignments")</code>. Django ORM inject động thuộc tính reverse relation <code>role_assignments</code> vào model <code>User</code> tại runtime. Kiểu tĩnh mặc định của mypy không nhận biết reverse relation động này. Việc sửa thành <code>getattr(actor, "role_assignments")</code> kèm <code># noqa: B009</code> là chuẩn xác cả về runtime và static typing, truy xuất đúng trường quan hệ và không che giấu bất kỳ lỗi logic nào.</li>
+<li><strong>Quản lý Lịch sử Git:</strong> Thay đổi này được tách thành commit riêng biệt: <code>fix(guideline): expose role assignments reverse relation to mypy</code>. Commit T-023 matching hoàn toàn độc lập, chỉ chứa core matching, bộ test 32 test case và báo cáo.</li>
+</ul>
+</div>
+
+<div class="alert-success">
+<strong>Tóm tắt Cập nhật sau Review Độc lập:</strong>
+Đã hoàn thành xử lý toàn bộ 4 lỗi chặn F1, F2, F3, F4. Thuật toán matching mặc định không phụ thuộc lớp theo SRS §3.4; cơ chế phá hoà canonical được tái cấu trúc bằng Dynamic Radix Encoding loại bỏ hoàn toàn va chạm separable sum; hệ số mục tiêu được chứng minh toán học bất đẳng thức nghiêm ngặt cho mọi kích thước N; toàn bộ test suite backend và frontend đã chạy qua thực tế với môi trường Docker/PostgreSQL 17.
+</div>
+
+<h2 id="review-resolution">Bảng Tổng hợp Xử lý Review Findings (F1–F4)</h2>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Phân loại</th>
+<th>Vấn đề gốc</th>
+<th>Giải pháp Triển khai</th>
+<th>Bằng chứng Kiểm thử</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F1</strong></td>
+<td>Quy tắc nghiệp vụ sai SRS §3.4</td>
+<td><code>require_same_class=True</code> làm mặc định khiến cặp khác lớp có IoU &gt;= tau_m bị loại, downstream E2 không suy ra được lỗi sai lớp.</td>
+<td>Chuyển <code>require_same_class=False</code> làm mặc định tuyệt đối theo SRS §3.4. Cặp khác lớp đủ IoU vẫn được ghép. Giữ <code>require_same_class=True</code> là opt-in có căn cứ (cho E-03 duplicate detection cùng lớp).</td>
+<td><code>test_wrong_class_matched_by_default_for_e2</code> (PASSED)<br><code>test_wrong_class_filtered_when_opt_in_require_same_class</code> (PASSED)</td>
+</tr>
+<tr>
+<td><strong>F2</strong></td>
+<td>Lỗi giải thuật Tie-break Canonical</td>
+<td>Bonus cũ (N-i)(N+1) + (N-j) phân rã thành tổng hàng + cột. Phản ví dụ N=3, 4 cạnh IoU 0.8: solver trả về [(0,1), (1,0)] thay vì canonical oracle [(0,0), (1,2)].</td>
+<td>Sử dụng mã hóa cơ số động (Dynamic Radix Encoding) theo vector hàng không phân rã: V(i, j) = iou_int * (N + 1) + (N - j), nhân cơ số R^(N - 1 - i).</td>
+<td><code>test_canonical_tie_break_f2_counterexample</code> (PASSED, trả đúng [(0,0), (1,2)]).<br><code>test_exhaustive_discrete_graphs_oracle_comparison</code> (PASSED, 100% khớp oracle trên 12,258 đồ thị rời rạc {0.5, 0.8}).</td>
+</tr>
+<tr>
+<td><strong>F3</strong></td>
+<td>Hệ số mục tiêu cố định magic constant</td>
+<td>10^16 và 10^8 là hằng số cứng, không có contract bảo đảm với mọi N. Báo cáo cũ giả định N &lt;= 100 không có căn cứ.</td>
+<td>Tính hệ số động theo N: R = 10^6(N+1) + N + 1, IOU_SCALE = R^N, CARD_BONUS = (N * 10^6 + 2) * IOU_SCALE. Chứng minh toán học bất đẳng thức cho mọi N &gt;= 1.</td>
+<td>Chứng minh bất đẳng thức tại mục dưới.<br><code>test_dynamic_scaling_large_n</code> (PASSED với N=50, 100, 150).</td>
+</tr>
+<tr>
+<td><strong>F4</strong></td>
+<td>Bằng chứng kiểm thử và hạ tầng</td>
+<td>Chưa chứng minh chạy hoàn chỉnh test backend do Docker/PostgreSQL chưa sẵn sàng trên Windows/WSL.</td>
+<td>Khởi chạy dịch vụ Docker daemon (Postgres 17, Redis 7, SeaweedFS) trong WSL/Hyper-V; cấu hình kết nối thông suốt; chạy toàn bộ 268 test backend Django thật sự với PostgreSQL.</td>
+<td>268 passed, 1 skipped trên pytest backend.<br>135 passed trên vitest frontend.<br>10 passed trên detector worker.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="mathematical-proofs">Chứng minh Toán học về Dynamic Radix Scaling (F3 & F2)</h2>
+<p>Cho đồ thị bipartite với N = max(|L|, |R|). Với mọi cạnh hợp lệ (i, j) trong E, giá trị IoU được rời rạc hóa với độ chính xác 10^-6: I_ij = round(IoU * 10^6) trong [0, 10^6]. Chỉ số hàng i trong [0, N-1], chỉ số cột j trong [0, N-1] (đã sắp xếp canonical theo ID chuỗi tăng dần).</p>
+
+<h3>1. Mã hóa Tie-break theo Hàng và Cơ số Radix R</h3>
+<p>Với mỗi cặp ghép ở hàng i nối với cột j, định nghĩa trọng số cơ sở của hàng:</p>
+<pre><code>V(i, j) = I_ij * (N + 1) + (N - j)</code></pre>
+<p>Do 0 &lt;= j &lt;= N - 1, ta có 1 &lt;= N - j &lt;= N. Do đó 0 &lt; V(i, j) &lt;= 10^6 * (N + 1) + N. Chọn cơ số:</p>
+<pre><code>R = 10^6 * (N + 1) + N + 1</code></pre>
+<p>Khi đó 0 &lt; V(i, j) &lt; R với mọi cạnh hợp lệ, và V = 0 khi hàng i không được ghép. Trọng số tie-break được định nghĩa là:</p>
+<pre><code>TIE_BONUS(i, j) = V(i, j) * R^(N - 1 - i)</code></pre>
+<p>Tổng tie-break của mọi bộ ghép M kích thước k &lt;= N thỏa mãn:</p>
+<pre><code>TieSum(M) = sum_{i=0}^{N-1} V(i, j) * R^(N - 1 - i) &lt;= sum_{i=0}^{N-1} (R - 1) * R^(N - 1 - i) = R^N - 1 = MAX_TIE_SUM</code></pre>
+
+<h3>2. Bất đẳng thức 1: Tổng IoU luôn Thắng Tuyệt đối Toàn bộ Tie-Break</h3>
+<p>Đặt <code>IOU_SCALE = R^N</code>. Xét hai bộ ghép M_A và M_B có cùng cardinality k, trong đó tổng IoU của M_A lớn hơn M_B ít nhất 10^-6 (chênh lệch delta_I &gt;= 1 đơn vị nguyên):</p>
+<pre><code>delta_IoU_Term = delta_I * IOU_SCALE &gt;= 1 * R^N = R^N</code></pre>
+<p>Chênh lệch bất lợi tối đa có thể có từ tie-break là TieSum(M_B) - TieSum(M_A) &lt;= MAX_TIE_SUM = R^N - 1. Do đó:</p>
+<pre><code>delta_Weight &gt;= R^N - (R^N - 1) = 1 &gt; 0</code></pre>
+<p><strong>Kết luận:</strong> Mọi chênh lệch tổng IoU nhỏ nhất luôn quan trọng hơn toàn bộ tie-break kết hợp, với mọi N &gt;= 1.</p>
+
+<h3>3. Bất đẳng thức 2: Thêm một Cặp ghép (+1 Cardinality) luôn Thắng Tuyệt đối Mọi Chênh lệch Tổng IoU và Tie-Break</h3>
+<p>Đặt <code>CARD_BONUS = (N * 10^6 + 2) * IOU_SCALE</code>. Xét hai bộ ghép M_1 và M_2 có |M_1| &gt;= |M_2| + 1 (chênh lệch &gt;= 1 cặp ghép):</p>
+<pre><code>delta_Card_Term &gt;= 1 * CARD_BONUS = (N * 10^6 + 2) * IOU_SCALE</code></pre>
+<p>Giá trị cực đại của tổng IoU kèm tie-break của nghiệm M_2 (trong trường hợp tối đa N cặp có IoU 1.0 và max tie-break) là:</p>
+<pre><code>TotalIoU(M_2) * IOU_SCALE + TieSum(M_2) &lt;= (N * 10^6) * IOU_SCALE + (R^N - 1) = (N * 10^6 + 1) * IOU_SCALE - 1</code></pre>
+<p>Do đó:</p>
+<pre><code>Weight(M_1) - Weight(M_2) &gt;= (N * 10^6 + 2) * IOU_SCALE - (N * 10^6 + 1) * IOU_SCALE + 1 = IOU_SCALE + 1 &gt; 0</code></pre>
+<p><strong>Kết luận:</strong> Thêm một cặp ghép luôn quan trọng hơn mọi chênh lệch tổng IoU và tie-break, với mọi N &gt;= 1.</p>
+
+<h3>4. Bất đẳng thức 3: Thứ tự Từ điển Canonical theo Từng Hàng (F2)</h3>
+<p>Khi hai nghiệm có cùng cardinality và cùng tổng IoU, tại hàng nhỏ nhất i* mà hai nghiệm khác nhau (V_A(i*) &gt; V_B(i*)):</p>
+<pre><code>(V_A(i*) - V_B(i*)) * R^(N - 1 - i*) &gt;= 1 * R^(N - 1 - i*) &gt; sum_{r=i*+1}^{N-1} (R - 1) R^(N - 1 - r) = R^(N - 1 - i*) - 1</code></pre>
+<p>Do đó, hàng có ID nhỏ hơn bên trái quyết định tuyệt đối. Tại hàng đó: cạnh có IoU lớn hơn thắng; nếu bằng IoU, cột j nhỏ hơn (ID nhỏ hơn bên phải) thắng vì N - j_A &gt; N - j_B. Không có va chạm phân rã hay giao hoán hàng-cột.</p>
+
+<h2 id="command-evidence">Bằng chứng Kiểm thử Thực tế (Command Evidence)</h2>
+
+<h3>1. Unit Tests & Regression Tests Thư viện Matching (32/32 tests)</h3>
+<pre><code>$ uv run pytest -v tests/engines/test_matching.py
+tests/engines/test_matching.py::test_two_empty_inputs PASSED             [  3%]
+tests/engines/test_matching.py::test_one_side_empty_left PASSED          [  6%]
+tests/engines/test_matching.py::test_one_side_empty_right PASSED         [  9%]
+tests/engines/test_matching.py::test_one_valid_pair PASSED               [ 12%]
+tests/engines/test_matching.py::test_iou_below_threshold PASSED          [ 15%]
+tests/engines/test_matching.py::test_iou_exactly_equal_threshold PASSED  [ 18%]
+tests/engines/test_matching.py::test_wrong_class_matched_by_default_for_e2 PASSED [ 21%]
+tests/engines/test_matching.py::test_wrong_class_filtered_when_opt_in_require_same_class PASSED [ 25%]
+tests/engines/test_matching.py::test_unmatched_items PASSED              [ 28%]
+tests/engines/test_matching.py::test_ignore_on_left PASSED               [ 31%]
+tests/engines/test_matching.py::test_ignore_on_right PASSED              [ 34%]
+tests/engines/test_matching.py::test_ignore_does_not_affect_ambiguous PASSED [ 37%]
+tests/engines/test_matching.py::test_duplicate_cluster_resolution PASSED [ 40%]
+tests/engines/test_matching.py::test_greedy_counterexample_maximizes_cardinality_first PASSED [ 43%]
+tests/engines/test_matching.py::test_same_cardinality_maximizes_total_iou PASSED [ 46%]
+tests/engines/test_matching.py::test_canonical_tie_break PASSED          [ 50%]
+tests/engines/test_matching.py::test_canonical_tie_break_f2_counterexample PASSED [ 53%]
+tests/engines/test_matching.py::test_ambiguous_true_case PASSED          [ 56%]
+tests/engines/test_matching.py::test_ambiguous_false_case PASSED         [ 59%]
+tests/engines/test_matching.py::test_repeatability_multiple_runs PASSED  [ 62%]
+tests/engines/test_matching.py::test_permutation_invariance_left PASSED  [ 65%]
+tests/engines/test_matching.py::test_permutation_invariance_right PASSED [ 68%]
+tests/engines/test_matching.py::test_permutation_invariance_both PASSED  [ 71%]
+tests/engines/test_matching.py::test_duplicate_id_in_left_raises_error PASSED [ 75%]
+tests/engines/test_matching.py::test_duplicate_id_in_right_raises_error PASSED [ 78%]
+tests/engines/test_matching.py::test_invalid_tau_thresholds_raise_error PASSED [ 81%]
+tests/engines/test_matching.py::test_invalid_bbox_coordinates_raise_error PASSED [ 84%]
+tests/engines/test_matching.py::test_invalid_bbox_id_or_label_raises_error PASSED [ 87%]
+tests/engines/test_matching.py::test_matching_result_serialization PASSED [ 90%]
+tests/engines/test_matching.py::test_adversarial_oracle_verification_on_random_graphs PASSED [ 93%]
+tests/engines/test_matching.py::test_exhaustive_discrete_graphs_oracle_comparison PASSED [ 96%]
+tests/engines/test_matching.py::test_dynamic_scaling_large_n PASSED      [100%]
+============================= 32 passed in 0.68s ==============================
+</code></pre>
+
+<h3>2. Toàn bộ Lệnh Tổng Dự án: <code>make check</code> (Exit code 0 — All Gates Passed)</h3>
+<p>Thực thi literal lệnh tổng <code>make check</code> trong môi trường Bash/WSL (Ubuntu Linux) với đầy đủ 6/6 target:</p>
+<pre><code>$ make check
+# Target 1: lint
+cd "src/backend" && uv run --frozen ruff check . && uv run --frozen ruff format --check .
+All checks passed!
+87 files already formatted
+cd "src/frontend" && npm run lint
+> labelx-frontend@0.1.0 lint
+> eslint (Clean exit 0)
+
+# Target 2: typecheck
+cd "src/backend" && uv run --frozen mypy config accounts audit engines guideline cvat_adapter storage
+Success: no issues found in 64 source files
+cd "src/frontend" && npm run typecheck
+> labelx-frontend@0.1.0 typecheck
+> next typegen && tsc --noEmit
+Generating route types...
+✓ Types generated successfully (Clean exit 0)
+
+# Target 3: test
+cd "src/backend" && uv run --frozen pytest -q
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+............................................................s........... [ 80%]
+.....................................................                    [100%]
+268 passed, 1 skipped in 111.17s (0:01:51)
+cd "src/frontend" && npm test
+> labelx-frontend@0.1.0 test
+> vitest run
+ Test Files  12 passed (12)
+      Tests  135 passed (135)
+   Duration  257.22s
+
+# Target 4: detector-lint
+cd "src/detector_worker" && uv run --frozen --extra dev ruff check . && uv run --frozen --extra dev ruff format --check .
+All checks passed!
+10 files already formatted
+
+# Target 5: detector-test
+cd "src/detector_worker" && uv run --frozen --extra dev pytest -q
+..........                                                               [100%]
+10 passed in 2.94s
+
+# Target 6: validate-kit
+cd "." && uv run --no-project --python 3.12 python scripts/validate-framework.py
+FRAMEWORK_VALIDATION_PASS
+</code></pre>
+
+<h2 id="conclusion">Kết luận</h2>
+<p><strong>READY TO PUSH</strong>. Toàn bộ 4 phát hiện F1, F2, F3, F4 đã được giải quyết triệt để, thuật toán matching đạt 32/32 tests, lỗi mypy baseline ở <code>load_guideline.py</code> đã được phân tích và tách thành commit riêng biệt, và lệnh tổng <code>make check</code> trên Bash/WSL hoàn tất thành công 100% với exit code 0.</p>
+</article></main></body></html>
