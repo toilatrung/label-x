@@ -43,6 +43,15 @@ describe('GuidelineRuleLookup reusable API component', () => {
     expect((screen.getByLabelText('Rule ID') as HTMLInputElement).value).toBe('');
   });
 
+  it('supports a Workspace that has not selected a rule or guideline yet', async () => {
+    const { calls } = await setup('reviewer', <GuidelineRuleLookup compact initialFilters={{ ruleId: undefined, version: undefined, family: undefined, className: undefined }} />);
+    await screen.findByText('Hướng dẫn VEH-03');
+    expect((screen.getByLabelText('Rule ID') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Nhóm lỗi') as HTMLSelectElement).disabled).toBe(false);
+    expect(calls[0].pathname).toBe('/api/guidelines/rules/');
+    expect(calls[0].search).toBe('');
+  });
+
   it('accepts Workspace context and resets when the Issue/version changes', async () => {
     const { rerender, calls } = await setup('reviewer', <GuidelineRuleLookup compact initialFilters={{ ruleId: 'VEH-02', version: 'bdd-v1.1' }} />);
     await screen.findByText('Hướng dẫn VEH-02');

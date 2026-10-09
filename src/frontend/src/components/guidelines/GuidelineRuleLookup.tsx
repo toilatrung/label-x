@@ -69,7 +69,12 @@ export interface GuidelineRuleLookupProps {
 
 /** Read-only rule lookup for ModelsGuidelines and Workspace evidence panels. */
 export function GuidelineRuleLookup({ initialFilters, compact = false }: GuidelineRuleLookupProps) {
-  const initial = { ...EMPTY_FILTERS, ...initialFilters };
+  const initial: GuidelineRuleFilters = {
+    ruleId: initialFilters?.ruleId?.trim() ?? "",
+    version: initialFilters?.version?.trim() ?? "",
+    family: initialFilters?.family ?? "",
+    className: initialFilters?.className?.trim() ?? "",
+  };
   return <RuleLookupPanel key={JSON.stringify(initial)} initial={initial} compact={compact} />;
 }
 
