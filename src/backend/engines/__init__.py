@@ -3,6 +3,11 @@
 Thư viện matching một-một tất định (T-023, E-05).
 """
 
+from engines.duplicate_overlap import (
+    DUPLICATE_OVERLAP_DESCRIPTOR,
+    Annotation,
+    run_duplicate_overlap_engine,
+)
 from engines.matching import (
     ALGORITHM_VERSION,
     DEFAULT_TAU_AMB,
@@ -25,4 +30,7 @@ __all__ = [
     "MatchingResult",
     "compute_iou",
     "match_one_to_one",
+    "Annotation",
+    "DUPLICATE_OVERLAP_DESCRIPTOR",
+    "run_duplicate_overlap_engine",
 ]

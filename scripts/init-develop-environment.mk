@@ -16,6 +16,14 @@ UV       := $(shell command -v uv 2>/dev/null || echo $(HOME)/.local/bin/uv)
 PYTHON_VERSION := 3.12
 NODE_MAJOR_MIN := 22
 
+# A Windows-created `.venv` cannot be safely managed by Linux uv through a
+# `/mnt/<drive>` mount.  Keep the two interpreters isolated while preserving
+# an explicit UV_PROJECT_ENVIRONMENT supplied by the developer or CI.
+ifneq ($(strip $(WSL_DISTRO_NAME)),)
+UV_PROJECT_ENVIRONMENT ?= .venv-wsl
+export UV_PROJECT_ENVIRONMENT
+endif
+
 .DEFAULT_GOAL := help
 .PHONY: db-runtime-role check-audit-grants help setup doctor tools env infra-up infra-down infra-logs infra-reset \
         cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
