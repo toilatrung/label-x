@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-025 — LabelX</title>
+<meta name="labelx:id" content="implementation-report-t-025">
+<meta name="labelx:title" content="Implementation Report T-025">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[implementation, report, t-025]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-025-@ducha180104</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-report-t-025</span><b>title</b><span>Implementation Report T-025</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, report, t-025]</span><b>priority</b><span>3</span></div>
+<h1 id="implementation-report-t-025">T-025 — Worker orchestration</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-025</code></li><li><strong>Title</strong>: Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</li><li><strong>Owner</strong>: Nguyễn Đức Hà (@ducha180104)</li><li><strong>Status</strong>: <code>draft</code></li><li><strong>Task ID</strong>: <code>T-025</code> (issue #67, tổng hợp #57)</li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: commit nguyên tử candidate/evidence/ledger (FR-AGG-06); idempotent theo idempotency_key; dedup_key + policy version; registry engine; retry/backoff 3 lần mũ (đề xuất DEC-012/TBD-14); metric run_metrics + log; ledger bất biến total/eligible/coverage.</li>
+<li><strong>Not Implemented</strong> (chờ T-024, #66 chưa merge): FK tới QCRun/Shard (hiện dùng run_id/shard_index số nguyên như EngineInput); việc tạo shard, dispatch task và seed_ledger từ run; đăng ký engine thật (T-027/T-028 cần loader annotation từ snapshot); not_checked kèm lý do (EngineUnitResult chưa có trường lý do); xuất metric ra Prometheus.</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/orchestration/models.py</code></td><td>ShardCommit (khoá idempotency_key), CandidateRecord (unique run_id+dedup_key), LedgerUnit (mẫu số theo đơn vị)</td><td>T-025</td></tr>
+<tr><td><code>src/backend/orchestration/services.py</code></td><td>commit_shard_output: ShardCommit + candidate + ledger trong một transaction; seed_ledger, mark_shard_failed, ledger_counts, run_metrics</td><td>T-025</td></tr>
+<tr><td><code>src/backend/orchestration/tasks.py</code></td><td>Celery task run_engine_shard (acks_late, reject_on_worker_lost), retry/backoff, đóng failed khi hết retry</td><td>T-025</td></tr>
+<tr><td><code>src/backend/orchestration/{registry,retry,dedup}.py</code></td><td>Registry theo EngineDescriptor; RetryPolicy 3 lần backoff mũ; dedup_key + policy version</td><td>T-025</td></tr>
+<tr><td><code>src/backend/orchestration/migrations/0001_initial.py</code></td><td>Migration ban đầu</td><td>T-025</td></tr>
+<tr><td><code>src/backend/tests/orchestration/test_orchestration.py</code></td><td>14 test: AC-02, worker chết, dedup, bất biến ledger, registry, backoff</td><td>T-025</td></tr>
+<tr><td><code>src/backend/config/settings.py, scripts/init-develop-environment.mk</code></td><td>Đăng ký app; thêm orchestration vào mypy</td><td>T-025</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Decisions</strong>: DEC-012, BLOCKER-014/BLOCKER-025</li><li><strong>Review Request</strong>: pending</li><li><strong>Commits</strong>: xem PR</li></ul>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>pytest tests/orchestration</code></td><td>passed</td><td>14 passed</td></tr>
+<tr><td><code>pytest -q</code> (backend, PostgreSQL)</td><td>passed</td><td>341 passed, 1 skipped</td></tr>
+<tr><td><code>ruff check</code>, <code>mypy orchestration</code></td><td>passed</td><td>All checks passed; no issues in 10 source files</td></tr>
+<tr><td><code>make check</code></td><td>passed</td><td>exit 0 (chạy trước khi thêm orchestration vào mypy; mypy/ruff/pytest chạy lại sau đó đều pass)</td></tr>
+<tr><td>AC-02 lỗi shard rồi retry</td><td>passed</td><td>test_ac02_forced_shard_failure_then_retry_keeps_counts, test_commit_is_idempotent_for_same_key</td></tr>
+<tr><td>Worker chết giữa shard</td><td>passed</td><td>test_crash_mid_commit_rolls_back_then_retry_writes_once</td></tr>
+<tr><td>Bất biến ledger</td><td>passed</td><td>test_ledger_total_invariant_and_failed_stays_in_denominator</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: model không FK tới QCRun vì T-024 chưa merge; nối thật sau khi T-024 vào develop.</li><li><strong>Approved By</strong>: not-applicable</li><li><strong>Known Limitations</strong>: ngưỡng retry là đề xuất, chờ chốt sau pilot (BLOCKER-025). Task chỉ merge được sau T-024 (phụ thuộc cứng).</li></ul>
+</article></main></body></html>
