@@ -12,6 +12,111 @@ from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
+
+
+@dataclass(frozen=True, order=True)
+class FrameKey:
+    """Stable frame identity from the public engine contract."""
+
+    cvat_task_id: int
+    frame_number: int
+
+
+@dataclass(frozen=True, order=True)
+class ObjectRef:
+    """Object identity in a source namespace (DEC-005)."""
+
+    namespace: str
+    id: str
+
+
+@dataclass(frozen=True)
+class Anchor:
+    """Candidate deduplication anchor (DEC-006)."""
+
+    kind: str
+    objects: tuple[ObjectRef, ...]
+    policy_version: str
+    rule_id: str
+
+
+@dataclass(frozen=True)
+class EngineDescriptor:
+    """Registration metadata consumed by the orchestrator."""
+
+    name: str
+    version: str
+    unit: str
+    required: bool
+    needs_model: bool
+    needs_reference: bool
+    applicability_version: str
+
+
+@dataclass(frozen=True)
+class EngineConfig:
+    """Versioned configuration supplied to an engine run."""
+
+    engine: str
+    version: str
+    enabled: bool
+    params: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class EngineUnitRef:
+    """A frame or shape unit in an engine shard."""
+
+    kind: str
+    frame: FrameKey
+
+
+@dataclass(frozen=True)
+class EngineInput:
+    """Pure-Python representation of the public ``EngineInput`` schema."""
+
+    idempotency_key: str
+    run_id: int
+    snapshot_id: int
+    engine: str
+    engine_version: str
+    config: EngineConfig
+    seed: int
+    shard_index: int
+    units: tuple[EngineUnitRef, ...]
+
+
+@dataclass(frozen=True)
+class Candidate:
+    """Immutable engine suspicion; it is not a confirmed Issue."""
+
+    engine: str
+    engine_version: str
+    family: str
+    frame: FrameKey
+    anchor: Anchor
+    evidence: Any
+
+
+@dataclass(frozen=True)
+class EngineUnitResult:
+    """Terminal result for one unit in a shard."""
+
+    unit: EngineUnitRef
+    outcome: str
+    attempts: int
+
+
+@dataclass(frozen=True)
+class EngineOutput:
+    """Pure-Python representation of the public ``EngineOutput`` schema."""
+
+    idempotency_key: str
+    engine: str
+    engine_version: str
+    candidates: tuple[Candidate, ...]
+    unit_results: tuple[EngineUnitResult, ...]
 
 
 class EngineStatus(StrEnum):
