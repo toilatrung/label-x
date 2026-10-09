@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-025: Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014) — LabelX</title>
+<meta name="labelx:id" content="blocker-025">
+<meta name="labelx:title" content="Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, decision, m13]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-025</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>blocker-025</span><b>title</b><span>Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014)</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, decision, m13]</span><b>priority</b><span>3</span></div>
+<h1 id="blocker-025">BLOCKER-025: Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014)</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Blocker ID</strong>: <code>BLOCKER-025</code></li>
+<li><strong>Title</strong>: <code>Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014)</code></li>
+<li><strong>Owner</strong>: <code>unassigned (vai trò chốt: Tech Lead Backend; Product Owner cho TBD-15)</code></li>
+<li><strong>Reporter</strong>: <code>claude-code (label-x-03), theo DEC-012</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Blocker Type</strong>: <code>decision</code></li>
+<li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Resolution Date</strong>: <code>not-set</code></li>
+</ul>
+<h2 id="blocking-condition">Blocking Condition</h2>
+<p>TBD-13, 14, 15, 17, 20 còn mở. Blocker này theo dõi theo cổng, không chặn <code>EPIC_READY</code> của E-02, E-08, E-10, E-23; chỉ chặn phần nghiệm thu NFR tương ứng.</p>
+<p>Bằng chứng: docs/label-x_system-requirement-specification/sections/11-traceability.tex; docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex; .agent/governance/decisions/DEC-012.html.</p>
+<h2 id="impact">Impact</h2>
+<ul>
+<li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (chỉ nghiệm thu NFR-01…03, NFR-05, NFR-06, NFR-08, NFR-16 và task GC/retention của E-02)</li>
+<li><strong>Blocked Deliverables</strong>: nghiệm thu các NFR nêu trên</li>
+<li><strong>Schedule or Quality Impact</strong>: NFR chưa pass/fail được tới khi chốt</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Records</strong>: <code>.agent/planning/epics.html</code></li>
+<li><strong>Issues</strong>: <code>none</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-012.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+</ul>
+<h2 id="resolution-plan">Resolution Plan</h2>
+<table><thead><tr><th>TBD</th><th>Nội dung</th><th>Đề xuất mặc định (chưa xác nhận)</th><th>Người chốt</th><th>Cổng</th></tr></thead><tbody>
+<tr><td>TBD-13</td><td>Mục tiêu UI và QC Run (NFR-01…03)</td><td>Mở frame p95 ≤ 1,5 s; lưu quyết định p95 ≤ 500 ms; NFR-03 theo số đo pilot</td><td>Tech Lead</td><td>Sau đo pilot</td></tr>
+<tr><td>TBD-14</td><td>Retry và backoff (NFR-05)</td><td>3 lần, backoff mũ</td><td>Tech Lead</td><td>Sau đo pilot</td></tr>
+<tr><td>TBD-15</td><td>Thời hạn lưu audit log (NFR-08)</td><td>Suốt vòng đời dataset, tối thiểu 1 năm</td><td>Product Owner</td><td>Trước triển khai</td></tr>
+<tr><td>TBD-17</td><td>RPO/RTO PostgreSQL và Object Storage (NFR-16)</td><td>RPO ≤ 24 giờ, RTO ≤ 8 giờ</td><td>Tech Lead</td><td>Trước triển khai</td></tr>
+<tr><td>TBD-20</td><td>t_gc, ε của score_v0, số chữ số làm tròn toạ độ khi hash</td><td>t_gc 24 giờ; hai tham số còn lại do đội mô hình đề xuất</td><td>Tech Lead, đội mô hình</td><td>Trước build tương ứng</td></tr>
+</tbody></table>
+<ul>
+<li><strong>Required Action</strong>: Người chốt xác nhận hoặc thay giá trị mặc định, ghi vào decision record hoặc SRS có version, liên kết vào đây. Cột “Đề xuất mặc định” không phải giá trị đã chốt.</li>
+<li><strong>Responsible Owner</strong>: <code>unassigned (vai trò: Tech Lead Backend)</code></li>
+<li><strong>Dependency or Approval</strong>: <code>Tech Lead Backend; Product Owner (TBD-15)</code></li>
+<li><strong>Workaround</strong>: <code>none</code></li>
+<li><strong>Verification Method</strong>: Decision record hoặc SRS có version ghi giá trị từng TBD, liên kết vào đây.</li>
+</ul>
+<h2 id="resolution-record">Resolution Record</h2>
+<ul>
+<li><strong>Resolved Date</strong>: <code>pending</code></li>
+<li><strong>Evidence</strong>: <code>.agent/governance/decisions/DEC-012.html</code> — quyết định tách blocker ngày 2026-10-09.</li>
+<li><strong>Note</strong>: Tách từ BLOCKER-014 (đã đóng). Chưa có giá trị nào được Tech Lead/Product Owner xác nhận.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
+<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not mark status <code>resolved</code> based only on a proposed action.</li>
+<li>Do not continue blocked work through an unauthorized workaround.</li>
+<li>Do not omit affected epic or task links.</li>
+<li>Do not fabricate resolution evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/blockers/BLOCKER-025.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

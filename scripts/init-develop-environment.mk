@@ -17,8 +17,8 @@ PYTHON_VERSION := 3.12
 NODE_MAJOR_MIN := 22
 
 .DEFAULT_GOAL := help
-.PHONY: help setup doctor tools env infra-up infra-down infra-logs infra-reset \
-        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-hash \
+.PHONY: db-runtime-role check-audit-grants help setup doctor tools env infra-up infra-down infra-logs infra-reset \
+        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
         check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
@@ -97,6 +97,16 @@ cvat-audit-learner: ## Audit YOLO learner ZIP; cần LEARNER_EXPORTS và BDD100K
 		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
 		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)"
 
+cvat-prepare-learner-bdd100k: ## Audit strict + tạo manifest T-019; cần LEARNER_EXPORTS và BDD100K_IMAGES_ROOT
+	@test -n "$(LEARNER_EXPORTS)" || (echo "Thiếu LEARNER_EXPORTS='/path/a.zip /path/b.zip'" >&2; exit 2)
+	@test -n "$(BDD100K_IMAGES_ROOT)" || (echo "Thiếu BDD100K_IMAGES_ROOT=/path/images/100k" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/learner_annotation_audit.py \
+		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
+		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)" --strict-bdd100k \
+		--output "$(or $(LEARNER_AUDIT_OUTPUT),.cache/cvat/t019-learner-audit.json)" \
+		--bdd100k-manifest-output "$(or $(LEARNER_MANIFEST_OUTPUT),.cache/cvat/t019-learner-bdd100k.json)"
+
 cvat-hash: ## Đọc/hash một job; cần JOB_ID và token trong backend .env
 	@test -n "$(JOB_ID)" || (echo "Thiếu JOB_ID=<id>" >&2; exit 2)
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py hash_cvat_job "$(JOB_ID)"
@@ -111,6 +121,13 @@ frontend-install: ## Cài dependency Node theo package-lock.json
 
 migrate: ## Chạy Django migrations
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py migrate
+
+db-runtime-role: ## Tạo role DB runtime (không owner, audit chỉ SELECT/INSERT); cần RUNTIME_ROLE
+	@test -n "$(RUNTIME_ROLE)" || { echo "Cần RUNTIME_ROLE=<tên role>"; exit 1; }
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py provision_runtime_db_role "$(RUNTIME_ROLE)" $(if $(RUNTIME_PASSWORD_ENV),--password-env "$(RUNTIME_PASSWORD_ENV)")
+
+check-audit-grants: ## Kiểm role DB hiện tại không sửa/xoá được audit (manage.py check --deploy)
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check --deploy --tag database
 
 superuser: ## Tạo tài khoản Django admin
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py createsuperuser
@@ -141,7 +158,7 @@ format: ## Tự format backend
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check --fix . && "$(UV)" run --frozen ruff format .
 
 typecheck: ## mypy + tsc
-	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit engines guideline cvat_adapter storage
+	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit engines guideline cvat_adapter snapshots storage
 	cd "$(FRONTEND)" && npm run typecheck
 
 test: ## pytest (cần infra-up) + npm test

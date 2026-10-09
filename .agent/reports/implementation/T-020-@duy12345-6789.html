@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-020 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-020-duy12345-6789">
+<meta name="labelx:title" content="T-020 Immutable Snapshot Implementation Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="snapshots">
+<meta name="labelx:tags" content="[implementation, snapshot, sha256, provenance, t-020]">
+<meta name="labelx:priority" content="1">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>T-020-duy12345-6789</span><b>title</b><span>T-020 Immutable Snapshot Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>snapshots</span><b>tags</b><span>[implementation, snapshot, sha256, provenance, t-020]</span><b>priority</b><span>1</span></div>
+<h1 id="implementation-report-template">T-020 — Model và service snapshot bất biến</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng triển khai normalized snapshot, SHA-256, provenance, parent lineage và bảo vệ bất biến theo issue #62.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-020-@duy12345-6789</code></li><li><strong>Title</strong>: <code>Model + service snapshot bất biến: normalized JSON, SHA-256, provenance, parent_snapshot</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-020</code></li><li><strong>Epic ID</strong>: <code>E-04</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>Snapshot/SnapshotJob/SnapshotFrame; canonical labelx.snapshot.v1 JSON; SHA-256 job/tổng; media checksum; frame/source mapping; CVAT và LabelX assignee; taxonomy/guideline version; provenance; parent_snapshot; bbox-only normalization; skipped counts theo shape type; service transaction; model và PostgreSQL trigger immutability; fixture dùng chung.</code></li><li><strong>Not Implemented</strong>: <code>API, drift re-read, CVAT deep link và object-storage upload thuộc T-021; T-020 chỉ lưu storage key và checksum của media đã export.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/snapshots/normalization.py</code></td><td>Định dạng <code>labelx.snapshot.v1</code>, canonical JSON, làm tròn 6 chữ số, hash SHA-256, sắp xếp job/frame/shape tất định và đếm shape bị bỏ theo loại.</td><td>T-020</td></tr>
+<tr><td><code>src/backend/fixtures/normalized-snapshot-v1.json</code></td><td>Fixture normalized snapshot dùng chung cho T-024/T-027/T-028/T-030; digest cố định <code>957b2efbf6e62f1a627e15e5a502871d46485a41a1b8eee28c21d506cafa9217</code>.</td><td>T-020</td></tr>
+<tr><td><code>src/backend/snapshots/models.py</code></td><td>Ba model lưu lineage, provenance, job/frame mapping, normalized JSON, hashes và media metadata.</td><td>T-020</td></tr>
+<tr><td><code>src/backend/snapshots/services.py</code></td><td>Tạo và khóa toàn aggregate trong một transaction; xác thực parent đã khóa và cùng dataset; service fail-closed khi snapshot đã khóa.</td><td>T-020</td></tr>
+<tr><td><code>src/backend/snapshots/migrations/0001_initial.py</code></td><td>Schema, constraints, indexes và PostgreSQL triggers chặn UPDATE/DELETE aggregate đã khóa, kể cả ORM bulk/queryset.</td><td>T-020</td></tr>
+<tr><td><code>src/backend/tests/snapshots/</code></td><td>Test deterministic hash, fixture contract, skipped type, checksum, lineage và immutability ở service/model/DB.</td><td>T-020</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>GitHub issue #62; Refs #57</code></li><li><strong>Context Packages</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@duy12345-6789.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context-@duy12345-6789.html</code></li><li><strong>Decisions</strong>: <code>none</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-103, CR-104, CR-106</code></li><li><strong>Risks or Blockers</strong>: <code>T-019/PR #74 là dependency mềm; không chặn fixture/mock T-020</code></li><li><strong>Review Request</strong>: <code>PR #76 — @toilatrung hoặc @DucHa180104</code></li><li><strong>Commits</strong>: <code>2668ed8, 3a4474b, d607bd7</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>pytest -q tests/snapshots cvat_adapter/tests/test_hashing.py</code></td><td><code>passed</code></td><td><code>14 passed</code></td></tr>
+<tr><td><code>pytest --create-db -q --junitxml=...</code></td><td><code>passed</code></td><td><code>246 tests; 0 failures; 0 errors; 1 skipped; 116.433s</code></td></tr>
+<tr><td><code>ruff check snapshots tests/snapshots; ruff format --check ...</code></td><td><code>passed</code></td><td><code>All checks passed; files formatted</code></td></tr>
+<tr><td><code>mypy snapshots</code></td><td><code>passed</code></td><td><code>Success: no issues found in 7 source files</code></td></tr>
+<tr><td><code>python manage.py check; makemigrations --check --dry-run</code></td><td><code>passed</code></td><td><code>0 system issues; No changes detected</code></td></tr>
+<tr><td><code>python scripts/validate-framework.py</code></td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code></td></tr>
+<tr><td><code>make check</code></td><td><code>not-run</code></td><td><code>Worktree host không có Node/npm; backend constituent checks chạy trực tiếp. GitHub CI sẽ chạy toàn bộ jobs.</code></td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Hai export không đổi cho cùng SHA-256</td><td><code>passed</code></td><td><code>Reorder shapes và đổi CVAT server version không đổi job/snapshot hash.</code></td></tr>
+<tr><td>Fixture normalized snapshot ổn định</td><td><code>passed</code></td><td><code>Payload khớp fixture và digest literal 957b2e…9217.</code></td></tr>
+<tr><td>Parent lineage</td><td><code>passed</code></td><td><code>Parent phải locked, cùng dataset; child giữ đúng parent và export không đổi giữ hash.</code></td></tr>
+<tr><td>Snapshot locked bất biến</td><td><code>passed</code></td><td><code>Service/model chặn; PostgreSQL triggers chặn QuerySet UPDATE/DELETE trên snapshot, job và frame.</code></td></tr>
+<tr><td>Skipped shapes theo loại</td><td><code>passed</code></td><td><code>polygon, points, ellipse và unknown được đếm riêng; rectangle độc lập/track được giữ.</code></td></tr>
+<tr><td>Media provenance</td><td><code>passed</code></td><td><code>Frame lưu source id/index, task/job, file, dimensions, storage key, size, MIME và SHA-256 bytes.</code></td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: <code>Không có thay đổi phạm vi. make check wrapper chưa chạy do host thiếu Node/npm; backend full suite, lint, migration, typecheck package và framework validation đã chạy riêng.</code></li><li><strong>Approved By</strong>: <code>not applicable; no scope change</code></li><li><strong>Known Limitations</strong>: <code>PostgreSQL trigger là bảo vệ DB production; backend khác PostgreSQL chỉ có service/model guard. API/drift/object upload được nối ở T-021 theo phân rã issue.</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li><li>[x] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[x] Git Nexus mappings are updated when commits exist.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>No work outside T-020 is claimed.</li><li>No independent approval or done status is claimed.</li><li>No credential, token or learner media bytes are stored in this report.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Stored at <code>.agent/reports/implementation/T-020-@duy12345-6789.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Implementation evidence is complete; task moves to review only after PR handoff.</li></ul>
+<h2 id="concurrency-remediation">Concurrency remediation — PO request 2026-10-09</h2>
+<p>Nguyên nhân F-1: trigger job/frame chỉ kiểm status bằng SELECT, không giữ khóa parent. Writer qua kiểm tra khi exporting có thể commit sau transaction khóa snapshot; finalizer còn có thể dùng aggregate đọc trước khi chờ. Bản sửa giữ parent row lock đến hết transaction và tính hash sau khi lấy khóa.</p>
+<ul><li>Migration <code>0002_serialize_snapshot_mutations</code> nâng cấp trigger trên DB đã có 0001: khóa OLD/NEW parents theo id tăng dần, kiểm trạng thái sau chờ; frame giữ job mapping bằng FOR SHARE. INSERT/UPDATE/DELETE và chuyển parent đều được bảo vệ.</li><li>Service <code>lock_snapshot()</code> dùng FOR NO KEY UPDATE, đọc job payload/hash đã commit rồi tạo aggregate và hash tổng; create_locked_snapshot dùng cùng đường finalization. Finalizer không lấy khóa/cập nhật child rows sau parent để tránh cycle với writer đã giữ child row.</li><li>Transition trigger từ chối aggregate/cache không khớp persisted jobs/frames và counts, kể cả raw UPDATE có aggregate đã đọc trước khi chờ.</li><li>Mutable writers phải cập nhật fields, normalized JSON, hash/counts liên quan trong cùng transaction; finalization từ chối cache/hashes stale, không âm thầm sửa dữ liệu không nhất quán.</li><li>Giữ nguyên schema <code>labelx.snapshot.v1</code> và fixture digest. Real-data acceptance vẫn ở BLOCKER-024, không đóng T-019.</li></ul>
+<table><thead><tr><th>Command / check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Snapshot + hashing tests trên PostgreSQL</td><td>passed</td><td>38 passed in 15.37s; gồm 24 test mới với hai connection, pg_blocking_pids, writer-first/finalizer-first, insert/update/delete, chuyển parent, stale aggregate/hash và migration upgrade/reverse.</td></tr>
+<tr><td>Luồng fixture #74 audit/import → snapshot mới</td><td>passed</td><td>1 passed in 3.09s; stub CVAT, không claim live annotation.</td></tr>
+<tr><td>make check sau tích hợp develop #74</td><td>passed (exit 0)</td><td>Backend PostgreSQL 307 passed, 1 skipped in 76.23s; frontend 138 passed; detector 10 passed; Ruff, format, mypy 74 files, frontend lint/typecheck và framework validation pass.</td></tr>
+<tr><td>Migration/system checks</td><td>passed</td><td>No changes detected; system check no issues. DB test riêng labelx_fix_pr76_qc; không thay schema/data DB dev.</td></tr>
+</tbody></table><p>CI phải kiểm đúng head sửa mới; request review không đồng nghĩa task done hay đã merge. Một storage integration test bị skip khi không bật SeaweedFS test endpoint.</p>
+<h2 id="deferred-fk-followup">Deferred-FK follow-up</h2><p>Regression test với SET CONSTRAINTS ALL DEFERRED xác nhận child reference chưa tồn tại có thể bỏ qua lookup/lock trong statement. Migration 0002 bổ sung kiểm mọi OLD/NEW parent/job đã tìm thấy, từ chối reference chưa hiện hữu ngay với SQLSTATE 23503; không để gắn child muộn vào snapshot đã khóa.</p><p>Kiểm chứng cuối: 40 focused tests passed in 9.02s (26 regression cases mới); full make check exit 0: backend PostgreSQL 309 passed, 1 skipped in 59.73s; frontend 138 passed; detector 10 passed; lint, typecheck, framework pass. CI 0cd3a15 trước bổ sung đã 5/5 pass; head bổ sung phải chạy CI mới trước khi duyệt.</p></article></main></body></html>

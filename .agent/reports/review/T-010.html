@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-010 — Independent Technical Review — LabelX</title>
-<meta name="labelx:id" content="T-010-review-tdt2112">
+<meta name="labelx:id" content="review-t-010">
 <meta name="labelx:title" content="T-010 — Independent Technical Review">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="quality">
@@ -44,14 +44,14 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / T-010</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>T-010-review-tdt2112</span><b>title</b><span>T-010 — Independent Technical Review</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>api-errors</span><b>tags</b><span>[T-010, review, error-code, frontend, backend, tdt2112]</span><b>priority</b><span>3</span></div>
+<div class="meta"><b>id</b><span>review-t-010</span><b>title</b><span>T-010 — Independent Technical Review</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>api-errors</span><b>tags</b><span>[T-010, review, error-code, frontend, backend, tdt2112]</span><b>priority</b><span>3</span></div>
 <h1 id="review-report-template">T-010 — Independent Technical Review</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Independent technical review of T-010 by a separate Codex agent. The reviewer read the final working diff and evidence artifacts; execution of automated suites and browser scenarios was performed by the parent Executor and is attributed accordingly.</p>
 <p><strong>Outcome:</strong> no unresolved technical finding in the reviewed scope. This report is technical evidence only. T-010 remains <code>review</code> pending human approval and merge under CR-102; this agent does not provide human approval or change task status.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>T-010-review-tdt2112</code></li>
+<li><strong>Report ID</strong>: <code>T-010</code></li>
 <li><strong>Title</strong>: <code>T-010 — Independent Technical Review</code></li>
 <li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
 <li><strong>Reviewer</strong>: <code>Codex independent_review (/root/independent_review)</code></li>
@@ -72,10 +72,10 @@ ul.dir{columns:2;font-size:14px}
 <p>Source inspection covered every currently emitted backend literal code in the handler, middleware and existing views. The AST guard is bounded: it does not prove arbitrary dynamically computed codes, aliased constructors or future views packaged in subdirectories.</p>
 <h2 id="related-files">Related Files</h2>
 <ul>
-<li><strong>Implementation Report</strong>: <a href="../implementation/T-010-@tdt2112.html">T-010 implementation report</a></li>
+<li><strong>Implementation Report</strong>: <a href="../implementation/T-010.html">T-010 implementation report</a></li>
 <li><strong>Task or Epic Records</strong>: <a href="../../execution/task-board.html#t-010">canonical T-010</a></li>
-<li><strong>Task Board</strong>: <a href="../../execution/task-board-@tdt2112.html">per-user task board</a></li>
-<li><strong>Current Context</strong>: <a href="../../execution/current-context-@tdt2112.html">per-user context</a></li>
+<li><strong>Task Board</strong>: <a href="../../execution/task-board.html">per-user task board</a></li>
+<li><strong>Current Context</strong>: <a href="../../execution/current-context.html">per-user context</a></li>
 <li><strong>Decisions</strong>: <code>DEC-001</code>; no architecture change.</li>
 <li><strong>Risks or Issues</strong>: none unresolved in technical scope.</li>
 <li><strong>Verification Evidence</strong>: <a href="../../../src/frontend/evidence/t010/login-400.png">login 400</a>, <a href="../../../src/frontend/evidence/t010/guideline-404.png">guideline 404</a>, <a href="../../../src/frontend/evidence/t010/guideline-403.png">guideline 403</a>, named tests below.</li>
@@ -150,7 +150,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="output-requirements">Output Requirements</h2>
 <ul>
-<li>Saved as <code>.agent/reports/review/T-010-@tdt2112.html</code> under CR-100/CR-103 per-user HTML rules.</li>
+<li>Saved as <code>.agent/reports/review/T-010.html</code> under CR-100/CR-103 per-user HTML rules.</li>
 <li>Every heading and required table column from the review-report template is preserved.</li>
 <li>Repository-relative links and exact review enums are used; technical approval is explicitly separate from human approval.</li>
 </ul>

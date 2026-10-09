@@ -52,7 +52,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Phần cứng, ngưỡng NFR, retry, retention/GC, RPO/RTO chưa chốt</code></li>
 <li><strong>Owner</strong>: <code>unassigned (vai trò chốt: Tech Lead Backend)</code></li>
 <li><strong>Reporter</strong>: <code>claude-code (planner), đồng thuận với codex</code></li>
-<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Status</strong>: <code>resolved</code></li>
 <li><strong>Blocker Type</strong>: <code>decision</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
@@ -71,7 +71,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Affected Records</strong>: <code>.agent/planning/epics.html</code></li>
 <li><strong>Issues</strong>: <code>none</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-012.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 </ul>
@@ -85,15 +85,15 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="resolution-record">Resolution Record</h2>
 <ul>
-<li><strong>Resolved Date</strong>: <code>pending</code></li>
-<li><strong>Evidence</strong>: <code>.agent/governance/decisions/DEC-002.html</code> — phiếu chốt của Product Owner ngày 2026-10-06.</li>
-<li><strong>Note</strong>: Phương án A đã chọn: chốt ngay phần cứng tối thiểu (TBD-02: app server, GPU server) trước M-02 và test runner frontend trong E-02; TBD-13, 14 chốt sau đo pilot; TBD-15, 17, 20 chốt trước triển khai. Blocker còn mở tới khi TBD-02 và test runner frontend được ghi nhận.</li>
+<li><strong>Resolved Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Evidence</strong>: <code>.agent/governance/decisions/DEC-002.html</code> — phiếu chốt của Product Owner ngày 2026-10-06; <code>.agent/governance/decisions/DEC-012.html</code> — quyết định đóng ngày 2026-10-09; T-002 <code>done</code> (vitest 5, <code>npm test</code> trong CI).</li>
+<li><strong>Note</strong>: Phương án A đã chọn: chốt ngay phần cứng tối thiểu (TBD-02: app server, GPU server) trước M-02 và test runner frontend trong E-02; TBD-13, 14 chốt sau đo pilot; TBD-15, 17, 20 chốt trước triển khai. Cập nhật 2026-10-09 (DEC-012): test runner frontend đã xong (T-002); TBD-02 chốt tạm, giá trị chính thức lấy từ số đo T-005. TBD-13, 14, 15, 17, 20 chuyển sang <code>.agent/governance/blockers/BLOCKER-025.html</code>.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] The blocking condition no longer prevents affected work.</li>
-<li>[ ] Resolution evidence is linked.</li>
-<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[x] The blocking condition no longer prevents affected work.</li>
+<li>[x] Resolution evidence is linked.</li>
+<li>[x] Affected epic and task statuses are updated. (2026-10-09: Blocked By của E-02, E-08, E-10, E-23 → none; Blockers của T-005, T-014 → BLOCKER-025; nhánh fix/M-01-RESOLVE)</li>
 <li>[ ] Workaround removal is tracked when applicable.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
