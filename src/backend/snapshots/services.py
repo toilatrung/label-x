@@ -137,6 +137,8 @@ def create_locked_snapshot(
     guideline_version: str,
     parent_snapshot: Snapshot | None = None,
     provenance: Mapping[str, object] | None = None,
+    idempotency_key: str | None = None,
+    request_sha256: str = "",
 ) -> Snapshot:
     """Normalize, persist, and lock one complete snapshot atomically.
 
@@ -160,6 +162,8 @@ def create_locked_snapshot(
         taxonomy_version=taxonomy_version,
         guideline_version=guideline_version,
         schema_version=SCHEMA_VERSION,
+        idempotency_key=idempotency_key,
+        request_sha256=request_sha256,
         normalized_json={},
         provenance=dict(provenance or {}),
         skipped_shape_counts={},

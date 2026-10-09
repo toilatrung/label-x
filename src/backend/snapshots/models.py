@@ -33,9 +33,12 @@ class Snapshot(models.Model):
     guideline_version = models.CharField(max_length=128)
     schema_version = models.CharField(max_length=64)
     revision_sha256 = models.CharField(max_length=64, blank=True, db_index=True)
+    idempotency_key = models.CharField(max_length=128, null=True, blank=True, unique=True)
+    request_sha256 = models.CharField(max_length=64, blank=True)
     normalized_json = models.JSONField(default=dict)
     provenance = models.JSONField(default=dict)
     skipped_shape_counts = models.JSONField(default=dict)
+    drift_jobs = models.JSONField(default=list)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
