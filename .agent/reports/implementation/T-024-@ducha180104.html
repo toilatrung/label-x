@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-024 — QC Run domain, shard idempotency và lifecycle</title>
+<meta name="labelx:id" content="implementation-t-024-ducha180104">
+<meta name="labelx:title" content="T-024 — QC Run domain, shard idempotency và lifecycle">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="runs">
+<meta name="labelx:tags" content="[implementation, report, t-024, runs, e-08]">
+<meta name="labelx:priority" content="2">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style>
+</head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-024-@ducha180104</span><span class="sp"></span></header>
+<main><article>
+
+<h1 id="t-024">T-024 — QC Run domain, shard idempotency và lifecycle (E-08)</h1>
+<h2 id="record-metadata">Record Metadata</h2><ul><li><strong>Report ID</strong>: <code>T-024-ducha180104</code></li><li><strong>Title</strong>: <code>QC Run domain, shard idempotency và lifecycle</code></li><li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li><li><strong>Executor</strong>: <code>claude-code</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-024</code></li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<h2 id="scope">Scope</h2><ul><li><strong>Implemented</strong>: <code>Model QCRun, WorkUnit (shard), EngineResult, ConfigVersion, ModelArtifact và migration 0001; chia shard tất định theo job/khoảng frame; idempotency_key = sha256(snapshot, engine, engine_version, config_version, model_checksum, shard_key); idempotency HTTP theo header Idempotency-Key + request hash; /api/runs/ (GET, POST), /api/runs/{id}/, cancel, retry-failed; state machine queued/running/completed/partial/failed/cancelled, transition sai trả 409 INVALID_TRANSITION; audit event cho create/cancel/retry-failed.</code></li><li><strong>Not Implemented</strong>: <code>Retry/backoff tự động theo BLOCKER-014 (PO chưa chốt tham số, tách thành BLOCKER-025); retry-failed hiện chỉ đưa work unit failed về pending và tăng attempt. Việc thực thi shard/worker thuộc T-025.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2><table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/runs/</code></td><td>models, migration 0001, services, serializers, views, urls cho QC Run</td><td><code>T-024</code></td></tr>
+<tr><td><code>src/backend/config/settings.py</code>, <code>config/urls.py</code></td><td>Đăng ký app runs và route /api/runs/</td><td><code>T-024</code></td></tr>
+<tr><td><code>scripts/init-develop-environment.mk</code></td><td>Thêm app runs vào mypy</td><td><code>T-024</code></td></tr>
+<tr><td><code>src/backend/tests/runs/test_runs.py</code></td><td>15 test: idempotency key, vòng đời, 409/404, RBAC/IDOR, tập shard key giống nhau khi tạo hai lần, contract test so response với schema Run/PaginatedRunList trong openapi.yaml. Fixture snapshot đi qua create_locked_snapshot (T-021) vì trigger DB chặn khoá snapshot tạo tay.</td><td><code>T-024</code></td></tr>
+<tr><td><code>.agent/execution/task-board-@ducha180104.html</code></td><td>T-024 → review</td><td><code>T-024</code></td></tr></tbody></table>
+<h2 id="acceptance">Acceptance Criteria</h2><table><thead><tr><th>Tiêu chí</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Tạo run hai lần cùng input cho cùng tập shard key</td><td><code>passed</code></td><td><code>test_same_input_twice_yields_same_shard_key_set</code></td></tr>
+<tr><td>Transition sai trả 409 theo bảng mã lỗi</td><td><code>passed</code></td><td><code>test_api_invalid_transitions_return_409</code>, <code>test_cancel_lifecycle</code>, <code>test_retry_failed_lifecycle</code></td></tr>
+<tr><td>Contract test khớp openapi.yaml</td><td><code>passed</code></td><td><code>test_run_responses_match_openapi</code> (POST, GET, list, cancel, retry-failed)</td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2><ul><li><strong>Task Records</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Context Packages</strong>: <code>none</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Decisions</strong>: <code>none</code></li><li><strong>Change Requests</strong>: <code>none</code></li><li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-025.html</code></li><li><strong>Review Request</strong>: <code>pending (@toilatrung)</code></li><li><strong>Commits</strong>: <code>4ab7bb1</code> và commit hoàn thiện trên PR #89</li></ul>
+<h2 id="verification-evidence">Verification Evidence</h2><table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>pytest (backend, Postgres)</code></td><td><code>passed</code></td><td>342 passed, 1 skipped; tests/runs: 15 passed</td></tr>
+<tr><td><code>ruff check / ruff format --check / mypy</code></td><td><code>passed</code></td><td>All checks passed; mypy 89 files no issues</td></tr>
+<tr><td><code>makemigrations --check</code></td><td><code>passed</code></td><td>No changes detected</td></tr></tbody></table>
+<h2 id="deviations">Deviations</h2><ul><li><strong>Plan Deviations</strong>: <code>none</code></li><li><strong>Approved By</strong>: <code>n/a</code></li><li><strong>Known Limitations</strong>: <code>Retry/backoff theo BLOCKER-014/025 chưa áp dụng; GET /api/runs/ chưa có contract test cho trang kế tiếp (cursor).</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul><li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded.</li><li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[ ] Git Nexus mappings are updated when commits exist.</li></ul>
+</article></main></body></html>
