@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 import zipfile
 from io import BytesIO
@@ -334,3 +335,73 @@ def test_annotations_only_export_uses_official_bdd100k_images(tmp_path: Path) ->
     assert cvat_module.validate_sample(official, manifest) == [
         official / "val" / "official-val.jpg"
     ]
+
+
+def test_bdd100k_learner_manifest_requires_root_and_receipts_membership(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    audit_module = load_script("learner_annotation_audit")
+    cvat_module = load_script("cvat_sample")
+    official = tmp_path / "bdd100k"
+    (official / "train").mkdir(parents=True)
+    (official / "val").mkdir()
+    Image.new("RGB", (20, 10)).save(official / "val" / "official-val.jpg")
+    export = tmp_path / "learner-annotations.zip"
+    write_annotations_only_yolo_export(
+        export,
+        ["official-val.jpg"],
+        {"official-val": "0 0.5 0.5 0.2 0.4\n"},
+    )
+    receipt = audit_module.build_receipt([export], official)
+    manifest_path = tmp_path / "manifest.json"
+    manifest = audit_module.materialize_bdd100k_manifest([export], receipt, official, manifest_path)
+    import_receipt = tmp_path / "import-receipt.json"
+
+    assert manifest["provenance"]["dataset"] == "bdd100k"
+    assert manifest["provenance"]["annotation_role"] == "learner"
+
+    def reject_cvat_call(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("CVAT must not be called before BDD100K root validation")
+
+    monkeypatch.setattr(cvat_module, "ProvisioningClient", reject_cvat_call)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "cvat_sample.py",
+            "--images",
+            str(official),
+            "--annotations",
+            str(manifest_path),
+            "--receipt",
+            str(import_receipt),
+        ],
+    )
+    with pytest.raises(ValueError, match="--bdd100k-images-root is required for BDD100K manifests"):
+        cvat_module.main()
+    assert not import_receipt.exists()
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "cvat_sample.py",
+            "--images",
+            str(official),
+            "--annotations",
+            str(manifest_path),
+            "--bdd100k-images-root",
+            str(official),
+            "--receipt",
+            str(import_receipt),
+            "--dry-run",
+        ],
+    )
+    assert cvat_module.main() == 0
+    imported = json.loads(import_receipt.read_text(encoding="utf-8"))
+    assert imported["source"]["bdd100k_membership"] == {
+        "train": 0,
+        "val": 1,
+        "not_bdd100k": 0,
+    }

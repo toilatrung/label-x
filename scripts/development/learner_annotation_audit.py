@@ -449,8 +449,9 @@ def materialize_bdd100k_manifest(
     manifest = {
         "schema_version": "labelx-cvat-sample-v1",
         "provenance": {
-            "dataset": "bdd100k-learner",
+            "dataset": "bdd100k",
             "split": next(iter(used_splits)) if len(used_splits) == 1 else "mixed",
+            "annotation_role": "learner",
             "source": "learner CVAT Ultralytics YOLO Detection 1.0 exports",
             "source_exports": [
                 {"file": item["file"], "sha256": item["sha256"]}
