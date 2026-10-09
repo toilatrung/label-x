@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Board — @vietanhhhhhh2003 — LabelX</title>
+<meta name="labelx:id" content="task-board-vietanhhhhhh2003">
+<meta name="labelx:title" content="Task Board — @vietanhhhhhh2003">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-014, t-030]">
+<meta name="labelx:priority" content="2">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030]</span><b>priority</b><span>2</span></div>
+<h1 id="task-board-vietanhhhhhh2003">Task Board — @vietanhhhhhh2003</h1>
+<h2 id="purpose">Purpose</h2>
+<p>File riêng của Nguyễn Xuân Việt Anh (@vietanhhhhhh2003) theo CR-100. Integrator gộp thay đổi này vào <code>.agent/execution/task-board.html</code>.</p>
+<ul><li><strong>Base Commit</strong>: <code>d2cf1ee</code> (<code>origin/develop</code> merged before final verification)</li></ul>
+<h2 id="status-model">Status Model</h2>
+<ul><li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li></ul>
+<h2 id="task-records">Task Records</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Blocker IDs</th><th>Evidence Links</th><th>Updated Date</th></tr></thead><tbody>
+<tr><td>T-014</td><td>E-02</td><td>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-001 (satisfied)</td><td>none</td><td><a href="../reports/implementation/T-014-@vietanhhhhhh2003.html">implementation report</a>; commit <code>78af2d2</code></td><td>2026-10-08</td></tr>
+<tr><td>T-030</td><td>E-11</td><td>score_v0 cho mọi frame, score version bất biến, tie-break hash tất định</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-027/T-028 contract (soft)</td><td>none</td><td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/72">#72</a>; <a href="../reports/implementation/T-030-@vietanhhhhhh2003.html">implementation report</a>; branch <code>feat/T-030-e11-score-v0</code></td><td>2026-10-09</td></tr>
+</tbody></table>
+<h2 id="acceptance-criteria">T-030 Acceptance Criteria</h2>
+<ul><li>[x] Mọi frame có score, kể cả frame không có candidate hoặc thiếu evidence; frame thiếu evidence có flag.</li><li>[x] Hai lần chạy cùng input, score version và seed cho cùng thứ tự và ranking hash.</li><li>[x] Mỗi kết quả lưu điểm nền, anchor counts và đóng góp <code>n_i * q_i</code>.</li><li>[x] Score version và kết quả trả về là bất biến.</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every acceptance criterion has automated evidence.</li><li>[x] Required implementation report is stored in <code>.agent/reports/implementation/</code>.</li><li>[x] Per-user task board is in <code>review</code>.</li><li>[ ] Independent review and PR approval remain pending.</li></ul>
+</article></main></body></html>
