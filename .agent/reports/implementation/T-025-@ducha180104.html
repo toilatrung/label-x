@@ -51,7 +51,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Implemented</strong>: commit nguyên tử candidate/evidence/ledger (FR-AGG-06); idempotent theo idempotency_key; dedup_key + policy version; registry engine; retry/backoff 3 lần mũ (đề xuất DEC-012/TBD-14); metric run_metrics + log; ledger bất biến total/eligible/coverage.</li>
-<li><strong>Not Implemented</strong> (chờ T-024, #66 chưa merge): FK tới QCRun/Shard (hiện dùng run_id/shard_index số nguyên như EngineInput); việc tạo shard, dispatch task và seed_ledger từ run; đăng ký engine thật (T-027/T-028 cần loader annotation từ snapshot); not_checked kèm lý do (EngineUnitResult chưa có trường lý do); xuất metric ra Prometheus.</li>
+<li><strong>Implemented (nối T-024)</strong>: <code>orchestration/dispatch.py</code> dựng EngineInput từ WorkUnit/shard_key, seed ledger, task run_work_unit (bỏ qua unit completed/run huỷ), dispatch_run; ShardCommit unique theo (run_id, idempotency_key) vì khoá engine không chứa run_id. <strong>Not Implemented</strong>: FK cứng tới QCRun (dùng run_id số nguyên); tự gọi dispatch_run khi tạo run (cần quyết định phía T-024/API); cập nhật EngineResult theo ledger (EngineResult của T-024 đếm theo shard, ledger đếm theo frame); đăng ký engine thật (T-027/T-028 cần loader annotation từ snapshot); not_checked kèm lý do (EngineUnitResult chưa có trường lý do); xuất metric ra Prometheus.</li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
@@ -67,7 +67,7 @@ ul.dir{columns:2;font-size:14px}
 <ul><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Decisions</strong>: DEC-012, BLOCKER-014/BLOCKER-025</li><li><strong>Review Request</strong>: pending</li><li><strong>Commits</strong>: xem PR</li></ul>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td><code>pytest tests/orchestration</code></td><td>passed</td><td>14 passed</td></tr>
+<tr><td><code>pytest tests/orchestration</code></td><td>passed</td><td>19 passed (14 unit + 5 tích hợp WorkUnit)</td></tr>
 <tr><td><code>pytest -q</code> (backend, PostgreSQL)</td><td>passed</td><td>341 passed, 1 skipped</td></tr>
 <tr><td><code>ruff check</code>, <code>mypy orchestration</code></td><td>passed</td><td>All checks passed; no issues in 10 source files</td></tr>
 <tr><td><code>make check</code></td><td>passed</td><td>exit 0 (chạy trước khi thêm orchestration vào mypy; mypy/ruff/pytest chạy lại sau đó đều pass)</td></tr>

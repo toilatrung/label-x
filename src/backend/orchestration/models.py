@@ -12,7 +12,7 @@ from django.db import models
 class ShardCommit(models.Model):
     """Một shard đã commit. Tồn tại = kết quả shard đã ghi, retry cùng khoá là no-op."""
 
-    idempotency_key = models.CharField(max_length=128, unique=True)
+    idempotency_key = models.CharField(max_length=128)
     run_id = models.PositiveBigIntegerField(db_index=True)
     snapshot_id = models.PositiveBigIntegerField()
     engine = models.CharField(max_length=64)
@@ -24,9 +24,13 @@ class ShardCommit(models.Model):
 
     class Meta:
         constraints = [
+            # Khoá engine không chứa run_id (FR-AGG-02): hai run cùng input phải commit riêng.
+            models.UniqueConstraint(
+                fields=["run_id", "idempotency_key"], name="uniq_shard_key_per_run"
+            ),
             models.UniqueConstraint(
                 fields=["run_id", "engine", "shard_index"], name="uniq_shard_per_run_engine"
-            )
+            ),
         ]
 
     def __str__(self) -> str:

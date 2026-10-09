@@ -141,7 +141,9 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
     """
     _validate(engine_input, output)
     run_id = engine_input.run_id
-    if ShardCommit.objects.filter(idempotency_key=engine_input.idempotency_key).exists():
+    if ShardCommit.objects.filter(
+        run_id=run_id, idempotency_key=engine_input.idempotency_key
+    ).exists():
         return False
     try:
         with transaction.atomic():
@@ -162,7 +164,9 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
             _apply_unit_results(engine_input, output)
     except IntegrityError:
         # Một worker khác commit cùng khoá/shard trước; transaction của ta đã rollback sạch.
-        if ShardCommit.objects.filter(idempotency_key=engine_input.idempotency_key).exists():
+        if ShardCommit.objects.filter(
+            run_id=run_id, idempotency_key=engine_input.idempotency_key
+        ).exists():
             return False
         raise
     logger.info(
