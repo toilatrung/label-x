@@ -153,12 +153,15 @@ def generate_shards_for_snapshot(
     shard_size = int(config_payload.get("shard_size", 100))
 
     enabled_engines: list[str] = []
+    disabled_engines: list[str] = []
     if config_engines:
         for eng_name, eng_cfg in config_engines.items():
             if isinstance(eng_cfg, dict) and eng_cfg.get("enabled", True):
                 enabled_engines.append(eng_name)
             elif eng_cfg is True:
                 enabled_engines.append(eng_name)
+            else:
+                disabled_engines.append(eng_name)
     else:
         # Default enabled engines if none specified
         enabled_engines = [DUPLICATE_OVERLAP_ENGINE_NAME, "schema", "geometry"]
@@ -166,6 +169,7 @@ def generate_shards_for_snapshot(
             enabled_engines.append("detector")
 
     enabled_engines.sort()
+    disabled_engines.sort()
 
     # Extract jobs and frames deterministically
     db_jobs = list(snapshot.jobs.order_by("cvat_job_id").prefetch_related("frames"))
@@ -211,6 +215,25 @@ def generate_shards_for_snapshot(
 
     model_checksum = model_artifact.checksum if model_artifact else None
 
+    for engine_name in disabled_engines:
+        descriptor = KNOWN_ENGINE_DESCRIPTORS.get(engine_name)
+        engine_results_data.append(
+            {
+                "engine": engine_name,
+                "status": EngineStatus.NOT_CHECKED,
+                "reason": NotCheckedReason.DISABLED,
+                "eligible_units": 0,
+                "completed_units": 0,
+                "failed_units": 0,
+                "not_checked_units": 0,
+                "required": descriptor.required if descriptor else True,
+                "unit": descriptor.unit if descriptor else "frame",
+                "applicability_version": (
+                    descriptor.applicability_version if descriptor else "1.0.0"
+                ),
+            }
+        )
+
     for engine_name in enabled_engines:
         descriptor = KNOWN_ENGINE_DESCRIPTORS.get(
             engine_name,
@@ -237,6 +260,8 @@ def generate_shards_for_snapshot(
                     "failed_units": 0,
                     "not_checked_units": 0,
                     "required": descriptor.required,
+                    "unit": descriptor.unit,
+                    "applicability_version": descriptor.applicability_version,
                 }
             )
             continue
@@ -272,6 +297,8 @@ def generate_shards_for_snapshot(
                 "failed_units": 0,
                 "not_checked_units": 0,
                 "required": descriptor.required,
+                "unit": descriptor.unit,
+                "applicability_version": descriptor.applicability_version,
             }
         )
 
