@@ -1,6 +1,8 @@
 {
   "schema_version": "labelx.m03.contract-fixture.v1",
   "fixture_id": "m03-review-workflow-v1",
+  "as_of": "2026-10-10T06:00:00Z",
+  "materializer": "fixtures.m03_review_workflow.materialize_scenario",
   "purpose": "Shared contract fixture for M-03 queue, review, escalation, rework and final-lineage tasks.",
   "baseline": {
     "git_sha": "b57626f735565ce0dafb0c219e25bc25da1f0163",
@@ -127,7 +129,7 @@
       "snapshot_assignee_user_id": 702,
       "rank": 1,
       "queue": "risk",
-      "review_state": "unreviewed",
+      "review_state": "in_review",
       "missing_evidence": false,
       "image_url": "https://object-storage.invalid/fixtures/frame-340.jpg",
       "width": 1280,
@@ -173,7 +175,7 @@
       "snapshot_assignee_user_id": 702,
       "rank": 29,
       "queue": "risk",
-      "review_state": "unreviewed",
+      "review_state": "awaiting_followup",
       "missing_evidence": true,
       "image_url": "https://object-storage.invalid/fixtures/frame-343.jpg",
       "width": 1280,
@@ -211,6 +213,44 @@
       "reason": "engine_error"
     }
   ],
+  "shard_commits": [
+    {
+      "id": 8901,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "de94e3e69bdc08d2d5ca032c99a98e152ab7e41f05679606cd71a047b2485017",
+      "engine": "duplicate",
+      "engine_version": "duplicate-v1",
+      "shard_index": 0,
+      "output_sha256": "cb113aab4955b098ad10130bf72240726bf7e7fcc7f3cba41d7fc7b8aa453aec",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    },
+    {
+      "id": 8902,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "7518e58fde98592700b60f866da16d960412866a447e3380e2e36e0786a4db39",
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "shard_index": 1,
+      "output_sha256": "6d2fa90f5ee535430b7ac174bd3f2c07dd8afe18de4b0899239d4170272f4690",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    },
+    {
+      "id": 8903,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "6365b32d7564a800b75aa54a5abdbf24940d5e0bccd3e86d0fb04ce5bbcf07a3",
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "shard_index": 2,
+      "output_sha256": "5c0bb32be8b07ffd474c86130c38d744a2eb69e4de6f4ce23864faa22f661614",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    }
+  ],
   "candidate_records": [
     {
       "id": 8801,
@@ -220,9 +260,41 @@
       "family": "E3",
       "cvat_task_id": 23,
       "frame_number": 5,
-      "dedup_key": "fixture-candidate-8801",
-      "evidence_sha256": "sha256:fixture-candidate-8801-evidence",
-      "evidence": [{"rule_id": "DUP-001", "engine": "duplicate", "iou": 0.91}]
+      "dedup_key": "3bebda0256a938888dab89c309c0e98f1afb05c5015f5d28ec48373fb962e661",
+      "evidence_sha256": "99e10425dc5fb212d306beb9286da7bb5b056288af1ed843d26624c5b19c375a",
+      "evidence": {
+        "engine": "duplicate",
+        "rule_id": "DUP-001",
+        "expected": "one annotation per object",
+        "actual": "two annotations overlap at IoU 0.91",
+        "prediction_bbox": null,
+        "prediction_class": null,
+        "confidence": null,
+        "iou": 0.91
+      },
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:501"
+          },
+          {
+            "namespace": "cvat_shape",
+            "id": "20:502"
+          }
+        ],
+        "rule_id": "DUP-001",
+        "bbox": {
+          "x1": 90.0,
+          "y1": 120.0,
+          "x2": 260.0,
+          "y2": 330.0
+        },
+        "policy_version": "duplicate-iou-0.85-v1"
+      },
+      "policy_version": "duplicate-iou-0.85-v1",
+      "shard_id": 8901
     },
     {
       "id": 8802,
@@ -232,9 +304,42 @@
       "family": "E2",
       "cvat_task_id": 23,
       "frame_number": 13,
-      "dedup_key": "fixture-candidate-8802",
-      "evidence_sha256": "sha256:fixture-candidate-8802-evidence",
-      "evidence": [{"rule_id": "CLS-002", "engine": "detector", "prediction_class": "car"}]
+      "dedup_key": "5258c86ae70a0dcd048704be474f939fecfc68695166603f68dea0d3ae7cbfb0",
+      "evidence_sha256": "bc34d76f2d9959c763d9e4b16f90d9c68d210a97c527c2ae2d785950e3ecadf2",
+      "evidence": {
+        "engine": "detector",
+        "rule_id": "CLS-002",
+        "expected": "car",
+        "actual": "truck",
+        "prediction_bbox": {
+          "x1": 420.0,
+          "y1": 180.0,
+          "x2": 590.0,
+          "y2": 410.0
+        },
+        "prediction_class": "car",
+        "confidence": 0.88,
+        "iou": 0.93
+      },
+      "anchor": {
+        "kind": "annotation",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:610"
+          }
+        ],
+        "rule_id": "CLS-002",
+        "bbox": {
+          "x1": 420.0,
+          "y1": 180.0,
+          "x2": 590.0,
+          "y2": 410.0
+        },
+        "policy_version": "class-matching-v1"
+      },
+      "policy_version": "class-matching-v1",
+      "shard_id": 8902
     },
     {
       "id": 8803,
@@ -244,9 +349,42 @@
       "family": "E2",
       "cvat_task_id": 23,
       "frame_number": 21,
-      "dedup_key": "fixture-candidate-8803",
-      "evidence_sha256": "sha256:fixture-candidate-8803-evidence",
-      "evidence": [{"rule_id": "CLS-002", "engine": "detector", "prediction_class": "car"}]
+      "dedup_key": "201d14dc58d554a4d37ee1a004dd8a41c8512492db16d1dcdc98e855e46e33af",
+      "evidence_sha256": "42b91055b182181c6fb1d8a15a094138d1f444715a7b97be68a2b900cc5a2742",
+      "evidence": {
+        "engine": "detector",
+        "rule_id": "CLS-002",
+        "expected": "car",
+        "actual": "truck",
+        "prediction_bbox": {
+          "x1": 310.0,
+          "y1": 140.0,
+          "x2": 470.0,
+          "y2": 390.0
+        },
+        "prediction_class": "car",
+        "confidence": 0.81,
+        "iou": 0.9
+      },
+      "anchor": {
+        "kind": "annotation",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:711"
+          }
+        ],
+        "rule_id": "CLS-002",
+        "bbox": {
+          "x1": 310.0,
+          "y1": 140.0,
+          "x2": 470.0,
+          "y2": 390.0
+        },
+        "policy_version": "class-matching-v1"
+      },
+      "policy_version": "class-matching-v1",
+      "shard_id": 8903
     }
   ],
   "issues": [
@@ -437,6 +575,7 @@
     },
     {
       "id": "queue-self-review-skipped",
+      "as_of": "2026-10-10T06:31:00Z",
       "category": "denial",
       "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
       "actor_user_id": 701,
@@ -447,6 +586,7 @@
     },
     {
       "id": "queue-missing-identity",
+      "as_of": "2026-10-10T06:31:00Z",
       "category": "denial",
       "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
       "actor_user_id": 705,
@@ -464,6 +604,7 @@
     },
     {
       "id": "lease-expired-renew",
+      "as_of": "2026-10-10T06:31:00Z",
       "category": "expiry",
       "operation": {"method": "post", "path": "/api/leases/{id}/renew/"},
       "actor_user_id": 701,
@@ -472,6 +613,7 @@
     },
     {
       "id": "frame-engine-failure-visible",
+      "as_of": "2026-10-10T06:31:00Z",
       "category": "engine_failure",
       "operation": {"method": "get", "path": "/api/frames/{id}/issues/"},
       "actor_user_id": 701,
@@ -480,6 +622,7 @@
     },
     {
       "id": "rework-revision-unchanged",
+      "as_of": "2026-10-10T06:31:00Z",
       "category": "revision",
       "operation": {"method": "post", "path": "/api/rework/{id}/submitted/"},
       "actor_user_id": 702,
@@ -488,6 +631,7 @@
     },
     {
       "id": "rework-same-person-verifier",
+      "as_of": "2026-10-10T07:01:00Z",
       "category": "denial",
       "operation": {"method": "post", "path": "/api/rework/{id}/verify/"},
       "actor_user_id": 706,

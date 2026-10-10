@@ -8,6 +8,11 @@ from typing import Any
 import pytest
 import yaml
 
+from fixtures.m03_review_workflow import materialize_scenario
+from orchestration.dedup import sha256_hex
+from orchestration.models import CandidateRecord
+from ranking.score_v0 import FrameInput, rank_frames
+
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = ROOT / "docs/04-api/openapi.yaml"
 MATRIX_PATH = ROOT / "docs/04-api/m03-contract-model-fixture-matrix.html"
@@ -42,9 +47,12 @@ def _as_datetime(value: str) -> datetime:
 
 def _claim_result(fixture: dict[str, Any], scenario: dict[str, Any]) -> dict[str, Any]:
     """Evaluate the fixture's claim/resume rules at the scenario clock."""
+    fixture = materialize_scenario(fixture, scenario)
     actor_id = scenario["actor_user_id"]
     identities = {item["user_id"]: item for item in fixture["identities"]}
     actor = identities[actor_id]
+    if not actor["mapped"]:
+        return {"status": 403, "error_code": "IDENTITY_MAPPING_MISSING"}
     as_of = _as_datetime(scenario["as_of"])
     queue = scenario["request"]["path_params"]["name"]
     run_id = scenario["request"]["body"]["run_id"]
@@ -68,6 +76,8 @@ def _claim_result(fixture: dict[str, Any], scenario: dict[str, Any]) -> dict[str
         if (
             frame["run_id"] == run_id
             and frame["queue"] == queue
+            and frame["review_state"] in {"unreviewed", "incomplete"}
+            and frame["id"] in scenario.get("fixture_scope_frame_ids", [frame["id"]])
             and frame["id"] not in leased_frame_ids
             and assignee["person_key"] != actor["person_key"]
         ):
@@ -248,7 +258,94 @@ def test_candidate_and_issue_have_one_declared_evidence_source(fixture: dict[str
         assert candidate["cvat_task_id"] == frame["frame_key"]["cvat_task_id"]
         assert candidate["frame_number"] == frame["frame_key"]["frame_number"]
         assert candidate["evidence"]
-        assert candidate["evidence_sha256"].startswith("sha256:")
+        assert candidate["evidence_sha256"] == sha256_hex(candidate["evidence"])
+        assert issue["evidence"] == [candidate["evidence"]]
+        assert issue["anchor"] == candidate["anchor"]
+
+
+def test_candidate_seeds_support_existing_model_and_ranking(fixture: dict[str, Any]) -> None:
+    shards = {item["id"]: item for item in fixture["shard_commits"]}
+    required_fields = {
+        field.attname
+        for field in CandidateRecord._meta.fields
+        if not field.primary_key and not field.null and not field.has_default()
+    }
+    for candidate in fixture["candidate_records"]:
+        assert required_fields <= candidate.keys()
+        shard = shards[candidate["shard_id"]]
+        assert shard["run_id"] == candidate["run_id"]
+        assert shard["snapshot_id"] == fixture["snapshot"]["id"]
+        assert shard["engine"] == candidate["engine"]
+        assert shard["engine_version"] == candidate["engine_version"]
+        assert candidate["policy_version"] == candidate["anchor"]["policy_version"]
+        shaped = {
+            **candidate,
+            "frame": {
+                "cvat_task_id": candidate["cvat_task_id"],
+                "frame_number": candidate["frame_number"],
+            },
+        }
+        ranked, _ = rank_frames(
+            [FrameInput(candidate["cvat_task_id"], candidate["frame_number"])],
+            [shaped],
+            seed=1,
+        )
+        assert len(ranked[0].contributions) == 1
+
+
+def test_scenario_clocks_materialize_coherent_frame_and_issue_states(
+    fixture: dict[str, Any],
+) -> None:
+    original = json.dumps(fixture, sort_keys=True)
+    for scenario in fixture["scenarios"]:
+        state = materialize_scenario(fixture, scenario)
+        active_frame_ids = {
+            lease["frame_id"]
+            for lease in state["leases"]
+            if _as_datetime(lease["expires_at"]) > _as_datetime(scenario["as_of"])
+        }
+        for frame in state["frames"]:
+            assert (frame["review_state"] == "in_review") == (frame["id"] in active_frame_ids)
+        for issue in state["issues"]:
+            if issue["state"] == "in_review":
+                assert issue["frame_id"] in active_frame_ids
+
+    resume = materialize_scenario(fixture, _scenario(fixture, "lease-second-tab-resume"))
+    fresh = materialize_scenario(fixture, _scenario(fixture, "queue-allowed-risk-claim"))
+    assert _by_id(resume["frames"], 340)["review_state"] == "in_review"
+    assert _by_id(fresh["frames"], 340)["review_state"] == "unreviewed"
+    assert _by_id(fresh["issues"], 360)["state"] == "pending_review"
+    assert _by_id(fresh["frames"], 342)["review_state"] == "incomplete"
+    assert (
+        _by_id(fresh["issues"], 361)["review_decisions"]
+        == _by_id(fixture["issues"], 361)["review_decisions"]
+    )
+    assert json.dumps(fixture, sort_keys=True) == original
+
+
+def test_queue_denial_scenarios_reach_their_expected_guards(fixture: dict[str, Any]) -> None:
+    self_review = _scenario(fixture, "queue-self-review-skipped")
+    assert _claim_result(fixture, self_review)["status"] == self_review["expected"]["status"]
+    missing_identity = _scenario(fixture, "queue-missing-identity")
+    assert _claim_result(fixture, missing_identity) == missing_identity["expected"]
+
+
+@pytest.mark.parametrize(
+    ("as_of", "frame_state", "issue_state"),
+    [
+        ("2026-10-10T06:29:59Z", "in_review", "in_review"),
+        ("2026-10-10T06:30:00Z", "unreviewed", "pending_review"),
+        ("2026-10-10T06:30:01Z", "unreviewed", "pending_review"),
+    ],
+)
+def test_materializer_observes_exact_lease_expiry_boundary(
+    fixture: dict[str, Any], as_of: str, frame_state: str, issue_state: str
+) -> None:
+    scenario = {"as_of": as_of}
+    state = materialize_scenario(fixture, scenario)
+    assert _by_id(state["frames"], 340)["review_state"] == frame_state
+    assert _by_id(state["issues"], 360)["state"] == issue_state
+    assert materialize_scenario(state, scenario) == state
 
 
 def test_matrix_lists_every_contract_decision_action(contract: dict[str, Any]) -> None:

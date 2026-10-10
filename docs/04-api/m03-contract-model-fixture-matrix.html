@@ -99,6 +99,8 @@ body{max-width:1180px;margin:0 auto;padding:32px;font:15px/1.55 system-ui,sans-s
 <tr><td>380–381/391</td><td>Rework/effort</td><td>revision unchanged; revision mới + re-check completed; same-person verifier; idempotent client event.</td></tr>
 </tbody></table>
 <p>Scenario bắt buộc: allowed claim, self-review denial/skip, missing identity, two-tab resume, lease expiry, engine failure, revision unchanged và same-person verifier. Test <code>test_m03_contract_fixture.py</code> giữ enum/path/relation khớp OpenAPI và ngăn proposal chưa duyệt lọt vào contract.</p>
+<p><strong>Cách seed theo scenario:</strong> dữ liệu gốc có clock <code>as_of=2026-10-10T06:00:00Z</code>. Consumer gọi <code>fixtures.m03_review_workflow.materialize_scenario(seed, scenario)</code> trước khi seed vào model hoặc dựng response; mỗi scenario có <code>as_of</code> riêng. Helper tạo bản sao, cập nhật frame/issue khi lease hết hạn, giữ nguyên decision đã lưu và không sửa seed gốc. Nếu scenario có <code>fixture_scope_frame_ids</code>, consumer chỉ đưa các frame đó vào queue thử nghiệm.</p>
+<p><strong>Candidate provenance/evidence:</strong> seed có <code>shard_commits</code>, FK <code>shard_id</code>, anchor, policy version và SHA-256 theo hàm canonical của orchestration. <code>CandidateRecord.evidence</code> là object; evidence array của Issue là projection <code>[candidate.evidence]</code>. Test kiểm equality, digest, field bắt buộc của model và chạy seed qua consumer <code>ranking.score_v0.rank_frames</code> hiện có.</p>
 
 <h2 id="handoff">9. Bàn giao theo task</h2>
 <table><thead><tr><th>Task nhận</th><th>Dùng phần nào</th><th>Cổng trước khi tích hợp</th></tr></thead><tbody>
