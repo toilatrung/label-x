@@ -47,12 +47,13 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>implementation-report-t-025</span><b>title</b><span>Implementation Report T-025</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, report, t-025]</span><b>priority</b><span>3</span></div>
 <h1 id="implementation-report-t-025">T-025 — Worker orchestration</h1>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-025</code></li><li><strong>Title</strong>: Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</li><li><strong>Owner</strong>: Nguyễn Đức Hà (@ducha180104)</li><li><strong>Status</strong>: <code>draft</code></li><li><strong>Task ID</strong>: <code>T-025</code> (issue #67, tổng hợp #57)</li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-025</code></li><li><strong>Title</strong>: Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</li><li><strong>Owner</strong>: Nguyễn Đức Hà (@ducha180104)</li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-025</code> (issue #67, tổng hợp #57)</li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul>
 <li><strong>Implemented</strong>: commit nguyên tử candidate/evidence/ledger (FR-AGG-06); idempotent theo idempotency_key (unique theo run); dedup_key + policy version; registry engine; retry/backoff 3 lần mũ (đề xuất DEC-012/TBD-14); run_metrics + log; ledger bất biến total/eligible/coverage.</li>
 <li><strong>Implemented (nối T-024, PR bổ sung)</strong>: FK thật tới <code>runs.QCRun</code> (cột <code>run_id</code>, attname không đổi; migration 0003 append-only); <code>dispatch_run</code> tự xếp shard sau commit khi tạo run và khi retry-failed (<code>ORCHESTRATION_AUTO_DISPATCH</code>, tắt trong test); <code>runsync.refresh_run</code> cập nhật EngineResult theo ledger (mẫu số theo frame) và chốt QCRun completed/partial/failed; engine <code>duplicate</code> (T-028) đăng ký trong <code>ready()</code> (idempotent), đọc annotation từ snapshot.</li>
-<li><strong>Not Implemented</strong>: engine schema/geometry/detector chưa có runner (T-027 và các task engine) nên shard của chúng đóng <code>failed</code> với lý do "chưa đăng ký"; <code>not_checked</code> kèm lý do (EngineUnitResult chưa có trường lý do); xuất metric ra Prometheus.</li>
+<li><strong>Metric queue/shard</strong>: mới có hàm <code>run_metrics(run_id)</code> và log có cấu trúc (<code>shard committed</code>, <code>run progress</code> với shards_open/failed/total). Chưa xuất endpoint/Prometheus: repo chưa có nền metrics và endpoint mới đổi openapi.yaml; đã báo PO ở issue #67 để chốt.</li>
+<li><strong>Not Implemented</strong>: engine schema/geometry/detector chưa có runner (T-027 và các task engine) nên shard của chúng đóng <code>failed</code> với lý do "chưa đăng ký"; <code>not_checked</code> kèm lý do (EngineUnitResult chưa có trường lý do); xuất metric ra endpoint/Prometheus (chờ PO chốt).</li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
@@ -77,5 +78,5 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>Bất biến ledger</td><td>passed</td><td>test_ledger_total_invariant_and_failed_stays_in_denominator</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
-<ul><li><strong>Plan Deviations</strong>: none (FK/dispatch đã nối ở PR bổ sung sau khi T-024 merge).</li><li><strong>Approved By</strong>: not-applicable</li><li><strong>Known Limitations</strong>: ngưỡng retry là đề xuất, chờ chốt sau pilot (BLOCKER-025). Mức retry là đề xuất chờ chốt.</li></ul>
+<ul><li><strong>Plan Deviations</strong>: none (FK/dispatch đã nối ở PR bổ sung sau khi T-024 merge).</li><li><strong>Approved By</strong>: not-applicable</li><li><strong>Known Limitations</strong>: run mặc định bật schema/geometry/detector chưa có runner nên kết thúc <code>partial</code> tới khi T-027 cắm vào; migration 0003 thêm FK nên lỗi trên DB dev có bản ghi orchestration với run_id không có trong qc_run (xoá các bản ghi mồ côi hoặc <code>TRUNCATE</code> 3 bảng orchestration_* rồi migrate); ngưỡng retry là đề xuất, chờ chốt sau pilot (BLOCKER-025). Mức retry là đề xuất chờ chốt.</li></ul>
 </article></main></body></html>

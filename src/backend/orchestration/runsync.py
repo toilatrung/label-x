@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -9,6 +11,7 @@ from engines.interface import public_status
 from orchestration.services import ledger_counts
 from runs.models import QCRun, WorkUnit
 
+logger = logging.getLogger("labelx.orchestration")
 _OPEN = (WorkUnit.Status.PENDING, WorkUnit.Status.RUNNING)
 
 
@@ -42,6 +45,15 @@ def refresh_run(run_id: int) -> None:
                     "not_checked_units",
                 ]
             )
+        logger.info(
+            "run progress",
+            extra={
+                "run_id": run_id,
+                "shards_open": sum(u.status in _OPEN for u in units),
+                "shards_failed": sum(u.status == WorkUnit.Status.FAILED for u in units),
+                "shards_total": len(units),
+            },
+        )
         if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
             return
         if run.cancel_requested_at or any(u.status in _OPEN for u in units):
