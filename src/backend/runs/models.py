@@ -26,6 +26,8 @@ class ConfigVersion(dj_models.Model):
     engines = dj_models.JSONField(default=dict)
     thresholds = dj_models.JSONField(default=dict)
     models = dj_models.JSONField(default=dict)
+    idempotency_key = dj_models.CharField(max_length=128, unique=True, null=True, blank=True)
+    request_sha256 = dj_models.CharField(max_length=64, blank=True, default="")
     created_by = dj_models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=dj_models.PROTECT,
@@ -242,6 +244,8 @@ class EngineResult(dj_models.Model):
     failed_units = dj_models.IntegerField(default=0)
     not_checked_units = dj_models.IntegerField(default=0)
     required = dj_models.BooleanField(default=True)
+    unit = dj_models.CharField(max_length=16, default="frame")
+    applicability_version = dj_models.CharField(max_length=64, default="1.0.0")
 
     class Meta:
         db_table = "engine_result"

@@ -76,3 +76,11 @@ body {
  .lx-guideline-col-section { width: 52px; }
  .lx-guideline-rule-content { overflow-wrap: anywhere; }
 }
+
+.lx-execution-nav, .lx-execution-actions, .lx-execution-summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.lx-execution-nav .lx-field { min-width: 180px; }
+.lx-execution-scroll { overflow-x: auto; }
+.lx-execution-scroll .lx-table { min-width: 700px; }
+.lx-execution-config pre { overflow-x: auto; padding: var(--space-4); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.lx-execution-warning { padding: var(--space-3); border-left: 3px solid var(--warning, #b7791f); background: var(--surface-sunken); }
+.lx-run-status--failed, .lx-run-status--partial, .lx-engine-status--failed, .lx-engine-status--partial, .lx-engine-status--not_checked { color: var(--danger, #a33); }

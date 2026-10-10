@@ -22,7 +22,7 @@
 <tr><td><code>src/backend/ranking/sampling.py</code></td><td>Pure immutable policies for seeded audit sampling, three source-separated control orderings, canonical SHA-256 hashes and score explanations.</td><td>T-031</td></tr>
 <tr><td><code>src/backend/ranking/__init__.py</code></td><td>Expose the T-031 ranking policy boundary to downstream runs/API integration.</td><td>T-031</td></tr>
 <tr><td><code>src/backend/tests/test_sampling.py</code></td><td>Reproducibility, source separation, heuristic order, JSON explanation, validation and BDD100K engine-to-ranking seam tests.</td><td>T-031</td></tr>
-<tr><td><code>src/backend/runs/models.py</code>, <code>runs/migrations/0002_run_ranking.py</code></td><td>Persist five source-separated orderings and frame entries with scores, explanations, hashes and uniqueness constraints.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/runs/models.py</code>, <code>runs/migrations/0004_run_ranking.py</code></td><td>Persist five source-separated orderings and frame entries with scores, explanations, hashes and uniqueness constraints.</td><td>T-031</td></tr>
 <tr><td><code>src/backend/runs/ranking.py</code></td><td>Transactional score/persist service; identical retry is idempotent and changed normalized content fails closed.</td><td>T-031</td></tr>
 <tr><td><code>src/backend/runs/views.py</code>, <code>serializers.py</code>, <code>urls.py</code></td><td>Serve the persisted risk/random-audit queues with authoritative run dataset scope, cursor pagination and response hashes.</td><td>T-031</td></tr>
 <tr><td><code>docs/04-api/openapi.yaml</code></td><td>Expose baseline, score version, source, explanation, content hash and ranking hash in the ranking response contract.</td><td>T-031</td></tr>
