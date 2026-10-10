@@ -8,5 +8,9 @@ class OrchestrationConfig(AppConfig):
 
     def ready(self) -> None:
         from engines.registration import register_structural_engines
+        from orchestration.builtin_engines import register_builtin_engines
+        from orchestration.registry import registry
 
-        register_structural_engines()
+        # Cả hai hàm idempotent: ready() có thể chạy nhiều lần trong tooling/test.
+        register_builtin_engines(registry)
+        register_structural_engines(registry)
