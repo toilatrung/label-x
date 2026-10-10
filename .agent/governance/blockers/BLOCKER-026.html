@@ -78,6 +78,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="resolution-plan">Resolution Plan</h2>
 <ul>
+<li><strong>Handling Task</strong>: <code>M-02-RESOLVE</code> — xử lý cuối giai đoạn M-02 (PO chốt 2026-10-10: để xử lý cuối giai đoạn, không làm trong T-025). Task M-02-RESOLVE phải ghi quyết định (a) hoãn hoặc (b) thêm endpoint trước khi đóng M-02.</li>
 <li><strong>Required Action</strong>: PO chọn một trong hai và ghi vào decision record hoặc CR: (a) hoãn sang task/CR riêng có mã và hạn rõ ràng; (b) cho phép thêm endpoint nội bộ hoặc exporter Prometheus (kèm CR đổi <code>openapi.yaml</code>, chạy <code>make gen-api</code>). Sau đó cập nhật task T-025 và issue #67.</li>
 <li><strong>Responsible Owner</strong>: <code>@toilatrung (quyết định); @ducha180104 (thực hiện)</code></li>
 <li><strong>Dependency or Approval</strong>: <code>PO chấp thuận; CR nếu đổi contract</code></li>
