@@ -331,6 +331,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{id}/frames/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * DEMO-ONLY - ranked frames and candidates of a run
+         * @description Computes rank on read with score_v0; no ranking table is persisted.
+         */
+        get: operations["demo_runs_frames_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/frames/{frame_id}/image/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * DEMO-ONLY - proxy snapshot frame image
+         * @description Returns image bytes without exposing a storage key or credential.
+         */
+        get: operations["demo_runs_frames_image"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{id}/ranking/": {
         parameters: {
             query?: never;
@@ -1063,6 +1103,55 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["RunShard"][];
+        };
+        DemoCvatLink: {
+            task_id: number;
+            job_id: number;
+            frame: number;
+            /** Format: uri */
+            deep_link: string;
+        };
+        DemoShape: {
+            id: string;
+            label: string;
+            bbox: number[];
+        };
+        DemoCandidate: {
+            id: string;
+            engine: string;
+            rule_id: string;
+            family: string;
+            severity: string;
+            shape_ids: string[];
+            message: string;
+            evidence: {
+                [key: string]: unknown;
+            };
+        };
+        DemoFrame: {
+            frame_id: number;
+            rank: number;
+            score: number;
+            file_name: string;
+            width: number;
+            height: number;
+            image_url: string;
+            cvat: components["schemas"]["DemoCvatLink"];
+            shapes: components["schemas"]["DemoShape"][];
+            candidates: components["schemas"]["DemoCandidate"][];
+        };
+        DemoEngine: {
+            engine: string;
+            /** @enum {string} */
+            status: "checked" | "failed" | "not_checked";
+        };
+        DemoFramePage: {
+            run_id: number;
+            snapshot_id: number;
+            score_version: string;
+            next: string | null;
+            items: components["schemas"]["DemoFrame"][];
+            engines: components["schemas"]["DemoEngine"][];
         };
         /**
          * @description Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
@@ -2285,6 +2374,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedRunShardList"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    demo_runs_frames_list: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Frames ordered by ascending rank */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoFramePage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    demo_runs_frames_image: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                frame_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Snapshot image bytes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
             403: components["responses"]["Forbidden"];
