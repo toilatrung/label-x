@@ -2,7 +2,7 @@ name: LabelX CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, integration/m03]
   workflow_dispatch:
 permissions:
   contents: read

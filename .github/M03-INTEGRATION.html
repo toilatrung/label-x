@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Nhánh tích hợp M-03</title></head><body>
+<h1>Nhánh tích hợp M-03 — integration/m03</h1>
+<p>PO chỉ định tại <a href="https://github.com/toilatrung/label-x/issues/97">issue #97</a>: Hà review và merge task PR trên nhánh tích hợp, PO review tổng sau. Phạm vi ngoại lệ: T-033…T-046; giữ phân công 4 người và task test riêng của Hà.</p>
+<p>Baseline: develop SHA <code>5c37d42ec26a181aeef0b437cea097646a94c8a3</code>, đã chứa T-032/PR #111. Không làm lại T-032.</p>
+<h2>Luồng triển khai</h2>
+<ol><li>Fetch origin; tạo nhánh hoặc worktree riêng từ <code>origin/integration/m03</code>.</li>
+<li>Mỗi task mở PR với base <code>integration/m03</code>, ghi task, Refs #97, SHA và evidence. Request reviewer <code>DucHa180104</code>.</li>
+<li>Hà review task PR của Thọ/Việt Anh/Nam. PR của Hà: Thọ review, Việt Anh QC; không tự duyệt. Reviewer ghi comment <code>Đã xem và duyệt</code> và GitHub Approve sau khi đủ điều kiện. QC khác tác giả và reviewer: Việt Anh hoặc Nam cho task của Thọ/Việt Anh/Nam, Việt Anh cho task của Hà; Hà vẫn chạy test cần môi trường/config.</li>
+<li>CI các job bootstrap-windows/framework/backend/detector/frontend phải đạt trên head hiện tại, PR cập nhật theo nhánh đích, mọi review conversation được giải quyết và đủ test evidence. Hà hoặc thành viên có quyền write merge PR đã được duyệt. Push commit mới làm mất approval cũ; phải review lại.</li>
+<li>Không push trực tiếp, force-push hoặc xóa nhánh tích hợp. Nhánh dùng PR và review bắt buộc; chỉ PO có quyền quản trị.</li>
+<li>Nam tổng hợp T-043, mở PR <code>integration/m03</code> → <code>develop</code>, request reviewer <code>toilatrung</code>. PO review toàn luồng và merge sau. Không tuyên bố M-03 được nghiệm thu chỉ vì task PR đã vào nhánh tích hợp.</li></ol>
+<h2>Lịch</h2><p>Bắt đầu 09:00 ngày 11/10/2026 (UTC+7), mục tiêu nhóm bàn giao PR tổng và evidence lúc 16:30, dự phòng đến 16:50, trước 17:00. Thời điểm PO review/merge tổng do PO quyết định sau bàn giao; không coi lịch này là đã nghiệm thu.</p>
+<p>Canonical .agent vẫn theo CR-100; không tự cấp quyền integrator. Policy/contract delta vẫn cần PO/CR theo baseline. Mọi thay đổi quy trình ở đây chỉ áp dụng nhánh M-03; luồng develop → main giữ nguyên.</p>
+</body></html>
