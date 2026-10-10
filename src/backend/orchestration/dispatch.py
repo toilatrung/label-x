@@ -11,6 +11,7 @@ from celery import shared_task
 from celery.exceptions import Retry
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
@@ -119,7 +120,7 @@ def run_work_unit(self: Any, work_unit_id: int) -> str:
         ):
             return unit.status
         unit.status = WorkUnit.Status.RUNNING
-        unit.started_at = unit.started_at or timezone.now()
+        unit.started_at = timezone.now()  # lease: mỗi lần nhận shard làm mới, sweeper dựa vào đây
         unit.save(update_fields=["status", "started_at"])
         mark_run_running(unit.run_id)
     policy = default_policy()
@@ -156,8 +157,11 @@ def run_work_unit(self: Any, work_unit_id: int) -> str:
     return unit.status
 
 
-def dispatch_run(run_id: int) -> int:
-    """Xếp mọi WorkUnit pending của run vào queue. Gọi lại an toàn (task idempotent).
+def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
+    """Xếp WorkUnit pending của run vào queue. Gọi lại an toàn (task idempotent).
+
+    `stale_after` (giây): chỉ gửi lại unit chưa từng gửi hoặc gửi đã quá hạn, tránh nhân message
+    khi queue đang backlog (sweeper). Không truyền thì gửi mọi unit pending (dispatch đầu tiên).
 
     Run đã huỷ/terminal thì bỏ qua. Lỗi gửi broker của một unit không làm hỏng unit khác:
     unit đó vẫn PENDING để `redispatch_pending` nhặt lại. Trả số unit đã xếp hàng được.
@@ -165,7 +169,11 @@ def dispatch_run(run_id: int) -> int:
     run = QCRun.objects.get(pk=run_id)
     if run.cancel_requested_at or run.status not in _ACTIVE_RUN:
         return 0
-    pending = list(run.work_units.filter(status=WorkUnit.Status.PENDING).select_related("run"))
+    pending_qs = run.work_units.filter(status=WorkUnit.Status.PENDING)
+    if stale_after is not None:
+        cutoff = timezone.now() - timedelta(seconds=stale_after)
+        pending_qs = pending_qs.filter(Q(dispatched_at__isnull=True) | Q(dispatched_at__lte=cutoff))
+    pending = list(pending_qs.select_related("run"))
     if not pending and not run.work_units.filter(status=WorkUnit.Status.RUNNING).exists():
         refresh_run(run_id)  # run không có shard (engine tắt/thiếu model) hoặc kẹt sau unit cuối
         return 0
@@ -181,31 +189,41 @@ def dispatch_run(run_id: int) -> int:
             )
         else:
             queued += 1
+            WorkUnit.objects.filter(pk=unit.pk).update(dispatched_at=timezone.now())
     return queued
 
 
-def dispatch_run_safely(run_id: int) -> int:
+def dispatch_run_safely(run_id: int, stale_after: float | None = None) -> int:
     """Dùng trong transaction.on_commit: không bao giờ ném lỗi sau khi run đã commit."""
     try:
-        return dispatch_run(run_id)
+        return dispatch_run(run_id, stale_after)
     except Exception:
         logger.exception("dispatch failed", extra={"qc_run_id": run_id})
         return 0
 
 
-def redispatch_pending(older_than_seconds: float | None = None) -> dict[str, int]:
+def redispatch_pending(
+    older_than_seconds: float | None = None, running_stale_seconds: float | None = None
+) -> dict[str, int]:
     """Xếp lại shard PENDING của run QUEUED/RUNNING đã quá tuổi (broker mất message/gửi lỗi).
 
     Không đụng run đã huỷ. Idempotent: ledger seed ignore_conflicts, ShardCommit chặn ghi đôi.
+    Unit PENDING chỉ được gửi lại nếu lần gửi trước đã quá `older_than_seconds` (không nhân
+    message khi backlog). Unit RUNNING chỉ bị thu hồi khi lease (`started_at`, làm mới mỗi lần
+    worker nhận) quá `running_stale_seconds` — phải lớn hơn thời gian chạy tối đa của một shard.
+    Lưu ý: message gửi lại bắt đầu với retries=0 nên ngân sách retry tính lại theo từng lần gửi.
     """
     if older_than_seconds is None:
         older_than_seconds = getattr(settings, "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", 300)
+    if running_stale_seconds is None:
+        running_stale_seconds = getattr(settings, "ORCHESTRATION_RUNNING_STALE_SECONDS", 1800)
     cutoff = timezone.now() - timedelta(seconds=older_than_seconds)
+    running_cutoff = timezone.now() - timedelta(seconds=running_stale_seconds)
     # Shard RUNNING bỏ rơi (worker chết/mất message): đưa về PENDING để xếp lại. An toàn vì task
     # idempotent (ShardCommit chặn ghi đôi); unit đang chạy thật chưa quá hạn nên không bị đụng.
     WorkUnit.objects.filter(
         status=WorkUnit.Status.RUNNING,
-        started_at__lte=cutoff,
+        started_at__lte=running_cutoff,
         run__status__in=_ACTIVE_RUN,
         run__cancel_requested_at__isnull=True,
     ).update(status=WorkUnit.Status.PENDING)
@@ -214,7 +232,10 @@ def redispatch_pending(older_than_seconds: float | None = None) -> dict[str, int
             status__in=_ACTIVE_RUN, cancel_requested_at__isnull=True, created_at__lte=cutoff
         ).values_list("pk", flat=True)
     )
-    return {"runs": len(run_ids), "queued": sum(dispatch_run_safely(pk) for pk in run_ids)}
+    return {
+        "runs": len(run_ids),
+        "queued": sum(dispatch_run_safely(pk, older_than_seconds) for pk in run_ids),
+    }
 
 
 @shared_task(name="orchestration.redispatch_pending")

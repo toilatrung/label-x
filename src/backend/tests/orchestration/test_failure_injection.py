@@ -243,11 +243,56 @@ def test_redispatch_recovers_stale_running_shards(run_setup, monkeypatch):
     WorkUnit.objects.filter(pk=fresh.pk).update(
         status=WorkUnit.Status.RUNNING, started_at=timezone.now()
     )
-    redispatch_pending(1800)  # chỉ shard RUNNING quá 30 phút bị thu hồi
+    redispatch_pending(1800, 1800)  # chỉ shard RUNNING có lease quá 30 phút bị thu hồi
     assert WorkUnit.objects.get(pk=stale.pk).status == WorkUnit.Status.PENDING
     assert WorkUnit.objects.get(pk=fresh.pk).status == WorkUnit.Status.RUNNING
-    redispatch_pending(0)  # run đủ tuổi: shard PENDING được xếp lại
-    assert stale.pk in seen
+    redispatch_pending(0, 1800)  # run đủ tuổi: shard PENDING được xếp lại
+    assert stale.pk in seen and fresh.pk not in seen
+
+
+def test_live_long_running_shard_is_not_reset_repeatedly(run_setup, monkeypatch):
+    """Shard sống lâu (lease được làm mới khi nhận) không bị sweeper thu hồi lặp lại."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    seen: list[int] = []
+    monkeypatch.setattr(run_work_unit, "delay", seen.append)
+    unit = run_setup.work_units.first()
+    # started_at cũ do lần nhận trước, nhưng worker nhận lại -> lease mới
+    WorkUnit.objects.filter(pk=unit.pk).update(
+        status=WorkUnit.Status.RUNNING, started_at=timezone.now() - timedelta(hours=3)
+    )
+    WorkUnit.objects.filter(pk=unit.pk).update(started_at=timezone.now())  # claim làm mới lease
+    for _ in range(3):  # nhiều lượt sweep liên tiếp
+        redispatch_pending(0, 1800)
+    assert WorkUnit.objects.get(pk=unit.pk).status == WorkUnit.Status.RUNNING
+    assert unit.pk not in seen
+
+
+def test_redispatch_does_not_amplify_backlogged_messages(run_setup, monkeypatch):
+    """Unit đã gửi gần đây (queue backlog) không bị gửi lại mỗi lượt sweep."""
+    seen: list[int] = []
+    monkeypatch.setattr(run_work_unit, "delay", seen.append)
+    assert dispatch_run(run_setup.pk) == 2  # lần gửi đầu: đánh dấu dispatched_at
+    assert redispatch_pending(300, 1800) == {"runs": 0, "queued": 0}  # run còn mới
+    assert dispatch_run(run_setup.pk, stale_after=300) == 0  # vừa gửi -> không nhân message
+    assert len(seen) == 2
+    WorkUnit.objects.filter(run=run_setup).update(dispatched_at=None)
+    assert dispatch_run(run_setup.pk, stale_after=300) == 2  # chưa từng gửi/quá hạn -> gửi lại
+
+
+def test_claim_refreshes_lease(run_setup, set_runner):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    set_runner(ok_output)
+    unit = run_setup.work_units.first()
+    old = timezone.now() - timedelta(hours=5)
+    WorkUnit.objects.filter(pk=unit.pk).update(started_at=old)
+    run_work_unit.apply(args=(unit.pk,))
+    assert WorkUnit.objects.get(pk=unit.pk).started_at > old
 
 
 def test_management_command_redispatches(run_setup, monkeypatch):
@@ -283,6 +328,9 @@ def test_cancel_during_run_is_not_overwritten_and_run_not_ranked(run_setup, set_
     run = QCRun.objects.get(pk=run_setup.pk)
     assert run.status == QCRun.Status.CANCELLED and run.finished_at is not None
     assert RunRanking.objects.filter(run=run).count() == 0
+    # Shard đang chạy lúc huỷ không được ghi ShardCommit/candidate cho run đã huỷ.
+    assert ShardCommit.objects.filter(run_id=run.pk).count() == 0
+    assert CandidateRecord.objects.filter(run_id=run.pk).count() == 0
     other = run.work_units.exclude(pk=unit.pk).get()
     run_work_unit.apply(args=[other.pk]).get()  # shard đến muộn: bị bỏ qua
     other.refresh_from_db()

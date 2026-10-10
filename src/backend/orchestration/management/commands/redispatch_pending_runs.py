@@ -19,7 +19,13 @@ class Command(BaseCommand):
             default=None,
             help="Chỉ run tạo quá N giây trước (mặc định ORCHESTRATION_REDISPATCH_AFTER_SECONDS).",
         )
+        parser.add_argument(
+            "--running-older-than",
+            type=float,
+            default=None,
+            help="Thu hồi RUNNING quá N giây (mặc định ORCHESTRATION_RUNNING_STALE_SECONDS).",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
-        result = redispatch_pending(options["older_than"])
+        result = redispatch_pending(options["older_than"], options["running_older_than"])
         self.stdout.write(f"runs={result['runs']} queued={result['queued']}")

@@ -143,6 +143,21 @@ def _candidate_record(run_id: int, shard: ShardCommit, candidate: Candidate) -> 
     )
 
 
+def _run_cancelled(run_id: int) -> bool:
+    """Khoá dòng run (cùng khoá với cancel_qc_run) rồi kiểm đã huỷ chưa; run không có -> False."""
+    from runs.models import QCRun
+
+    run = (
+        QCRun.objects.select_for_update()
+        .only("status", "cancel_requested_at")
+        .filter(pk=run_id)
+        .first()
+    )
+    return run is not None and (
+        run.cancel_requested_at is not None or run.status == QCRun.Status.CANCELLED
+    )
+
+
 def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool:
     """Ghi nguyên tử kết quả shard. Trả True nếu commit mới, False nếu đã commit (retry no-op).
 
@@ -157,6 +172,10 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
         return False
     try:
         with transaction.atomic():
+            if _run_cancelled(run_id):
+                # Huỷ thắng shard đang chạy: không ghi candidate/ledger cho run đã huỷ.
+                logger.info("shard commit skipped: run cancelled", extra={"qc_run_id": run_id})
+                return False
             shard = ShardCommit.objects.create(
                 idempotency_key=engine_input.idempotency_key,
                 run_id=run_id,
