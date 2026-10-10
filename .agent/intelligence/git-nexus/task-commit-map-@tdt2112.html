@@ -52,11 +52,12 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="closeout-commits">Remediation Commits (chore/wave1-closeout)</h2>
 <table><thead><tr><th>Task ID</th><th>Implementation Commit</th><th>Date</th><th>Author</th><th>Summary</th><th>Evidence</th></tr></thead><tbody></tbody></table>
 <h2 id="branch-commits">Branch Commits (historical, squashed)</h2>
-<p>Những commit sau đang thuộc nhánh <code>feat/T-029-e09-engine-config-ui</code>, chưa xác nhận merge/squash.</p>
+<p>Mã được chuyển lên GitHub bằng connector do Git HTTPS local chưa có credential. Commit local được giữ trên nhánh temp; nội dung tương ứng được gộp vào commit fd09fbe99aaceb7f4c3ece4b13343123ba9402fe. Chưa merge vào develop.</p>
 <table><thead><tr><th>Task ID</th><th>Branch Commit</th><th>Author</th><th>Summary</th><th>Squashed Into</th></tr></thead><tbody>
-<tr><td>T-029</td><td><code>38f2d2248caf1d072357e1052a3937e2fa85daf8</code></td><td>@tdt2112</td><td>PR #94: RulesThresholds và component candidate/evidence ban đầu.</td><td>Chưa merge</td></tr>
-<tr><td>T-029</td><td><code>bf5af73795bc47243a0d2267a91492f993241def</code></td><td>@tdt2112</td><td>Sửa F-2 params không có formatter và F-3 detector class/bbox.</td><td>Chưa merge</td></tr>
-<tr><td>T-026</td><td><code>88f60fb2e65e45785e8ac4f8aed312a4d4273697</code></td><td>@tdt2112</td><td>PR #91: config API, AnalysisConfig/ExecutionHistory; tích hợp qua merge <code>3d2e06e</code> vào #94.</td><td>Chưa merge</td></tr>
-<tr><td>T-029</td><td><code>b75969b6ee0a865d594f65c511322cb9b87e54ab</code></td><td>@tdt2112 / Codex</td><td>Tích hợp F-1; candidates API đọc DB, RBAC/cursor, Option 2 CR-108 proposed; regression tests. <a href="../../reports/implementation/T-029-@tdt2112.html">Implementation report</a>.</td><td>Chưa merge</td></tr>
+<tr><td>T-029</td><td><code>38f2d2248caf1d072357e1052a3937e2fa85daf8</code></td><td>@tdt2112</td><td>PR #94: RulesThresholds và component candidate/evidence ban đầu.</td><td>Chưa merge develop</td></tr>
+<tr><td>T-029</td><td><code>bf5af73795bc47243a0d2267a91492f993241def</code> (local)</td><td>@tdt2112</td><td>Sửa F-2 params không có formatter và F-3 detector class/bbox.</td><td>Chưa merge develop</td></tr>
+<tr><td>T-026</td><td><code>88f60fb2e65e45785e8ac4f8aed312a4d4273697</code></td><td>@tdt2112</td><td>PR #91: config API, AnalysisConfig/ExecutionHistory; tích hợp qua merge <code>3d2e06e</code> vào #94.</td><td>Chưa merge develop</td></tr>
+<tr><td>T-029</td><td><code>b75969b6ee0a865d594f65c511322cb9b87e54ab</code> (local)</td><td>@tdt2112 / Codex</td><td>Tích hợp F-1; candidates API đọc DB, RBAC/cursor, Option 2 CR-108 proposed; regression tests. <a href="../../reports/implementation/T-029-@tdt2112.html">Implementation report</a>.</td><td>Chưa merge develop</td></tr>
+<tr><td>T-029</td><td><code>fd09fbe99aaceb7f4c3ece4b13343123ba9402fe</code></td><td>@tdt2112</td><td>Commit GitHub chứa đúng tree đã kiểm tra, gộp bản sửa local với develop và T-026 làm parents; API/UI và evidence như báo cáo.</td><td>Nhánh PR #94; chưa merge develop</td></tr>
 </tbody></table>
 </article></main></body></html>

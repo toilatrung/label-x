@@ -88,7 +88,7 @@ figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 <li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-108-@tdt2112.html">CR-108-@tdt2112.html</a> giữ <code>proposed</code>; Option 2 được đưa ra để review, không tự ghi approved.</li>
 <li><strong>Risks or Blockers</strong>: <a href="https://github.com/toilatrung/label-x/issues/96">M-02-RESOLVE #96</a>; không thay AC của T-029.</li>
 <li><strong>Review Request</strong>: PR #94 chờ @toilatrung hoặc @DucHa180104 xem lại; không có duyệt trong báo cáo này.</li>
-<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map-@tdt2112.html">Task Commit Map</a>; lần sửa F-2/F-3 <code>bf5af73</code>, merge dependency <code>70446e5</code> và <code>3d2e06e</code>.</li>
+<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map-@tdt2112.html">Task Commit Map</a>; lần sửa F-2/F-3 <code>bf5af73</code>, merge dependency local <code>70446e5</code> và <code>3d2e06e</code>; commit GitHub chứa tree tương ứng: <code>fd09fbe99aaceb7f4c3ece4b13343123ba9402fe</code>.</li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -117,7 +117,7 @@ figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 </ul>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: Tích hợp dependency #91 trực tiếp vào nhánh #94 để reviewer kiểm tra bản sửa có đủ API; thực hiện Option 2 CR-108 để review.</li>
+<li><strong>Plan Deviations</strong>: Git HTTPS local thiếu credential; dùng GitHub connector tạo commit từ tree giống hệt bản đã kiểm tra, giữ lịch sử local trên nhánh temp.  Tích hợp dependency #91 trực tiếp vào nhánh #94 để reviewer kiểm tra bản sửa có đủ API; thực hiện Option 2 CR-108 để review.</li>
 <li><strong>Approved By</strong>: Người dùng yêu cầu hoàn thiện và push vào PR hiện có. Đây không phải bằng chứng PO chấp thuận CR-108.</li>
 <li><strong>Known Limitations</strong>: raw_count luôn null; severity null vì model không lưu. Chưa xác minh trạng thái GitHub mới/review mới trong lượt chốt; không thay đổi Draft hoặc đóng issue.</li>
 </ul>
