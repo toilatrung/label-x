@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "guideline",
     "snapshots.apps.SnapshotsConfig",
     "runs.apps.RunsConfig",
+    "orchestration.apps.OrchestrationConfig",
 ]
 
 MIDDLEWARE = [
@@ -207,3 +208,6 @@ LOGGING = {
         "labelx": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# T-025: tự xếp shard vào Celery sau khi tạo/retry run.
+ORCHESTRATION_AUTO_DISPATCH = env.bool("ORCHESTRATION_AUTO_DISPATCH", default=True)

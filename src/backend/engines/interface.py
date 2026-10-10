@@ -109,6 +109,13 @@ class EngineUnitResult:
 
 
 @dataclass(frozen=True)
+class NotCheckedEngineUnitResult(EngineUnitResult):
+    """A not-checked unit with its mandatory ledger reason."""
+
+    not_checked_reason: str
+
+
+@dataclass(frozen=True)
 class EngineOutput:
     """Pure-Python representation of the public ``EngineOutput`` schema."""
 

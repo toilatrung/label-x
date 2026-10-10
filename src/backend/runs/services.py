@@ -7,6 +7,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -16,7 +17,9 @@ from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
 )
+from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
+from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
 from snapshots.models import Snapshot
 
@@ -51,24 +54,8 @@ class ScopeBusyError(RunDomainError):
 
 KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     DUPLICATE_OVERLAP_ENGINE_NAME: DUPLICATE_OVERLAP_DESCRIPTOR,
-    "schema": EngineDescriptor(
-        name="schema",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=False,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
-    "geometry": EngineDescriptor(
-        name="geometry",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=False,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
+    SCHEMA_TAXONOMY_ENGINE_NAME: SCHEMA_TAXONOMY_DESCRIPTOR,
+    GEOMETRY_ENGINE_NAME: GEOMETRY_DESCRIPTOR,
     "detector": EngineDescriptor(
         name="detector",
         version="1.0.0",
@@ -97,6 +84,19 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
         applicability_version="1.0.0",
     ),
 }
+
+
+def _enqueue_run_after_commit(run_id: int) -> None:
+    """Xếp shard của run vào Celery sau commit (T-025); tắt bằng ORCHESTRATION_AUTO_DISPATCH."""
+    if not getattr(settings, "ORCHESTRATION_AUTO_DISPATCH", True):
+        return
+
+    def _dispatch() -> None:
+        from orchestration.dispatch import dispatch_run
+
+        dispatch_run(run_id)
+
+    transaction.on_commit(_dispatch)
 
 
 def compute_shard_idempotency_key(
@@ -407,6 +407,7 @@ def create_qc_run(
                 },
                 revision=str(run.pk),
             )
+            _enqueue_run_after_commit(run.pk)
             return run, True
 
     except IntegrityError as exc:
@@ -493,6 +494,7 @@ def retry_failed_qc_run(*, run_id: int, actor: User) -> QCRun:
 
         # Update engine results
         run.engine_results.filter(status=EngineStatus.PARTIAL).update(status=EngineStatus.RUNNING)
+        _enqueue_run_after_commit(run.pk)
 
         append_audit_event(
             actor=actor,
