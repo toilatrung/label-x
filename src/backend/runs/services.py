@@ -92,9 +92,9 @@ def _enqueue_run_after_commit(run_id: int) -> None:
         return
 
     def _dispatch() -> None:
-        from orchestration.dispatch import dispatch_run
+        from orchestration.dispatch import dispatch_run_safely
 
-        dispatch_run(run_id)
+        dispatch_run_safely(run_id)  # lỗi broker không làm API 500 sau commit; redispatch nhặt lại
 
     transaction.on_commit(_dispatch)
 
