@@ -42,6 +42,8 @@ tags:
     description: Reference, effort và đánh giá KPI (UC-08, UC-09, UC-10)
   - name: gate
     description: Điều kiện gate và waiver (UC-14)
+  - name: demo
+    description: DEMO-ONLY M-DEMO01; khong phai review domain M-03
   - name: reports
     description: Báo cáo hiệu quả có provenance (UC-11)
 
@@ -434,6 +436,53 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedRunShardList" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/frames/:
+    get:
+      operationId: demo_runs_frames_list
+      tags: [demo]
+      summary: DEMO-ONLY - ranked frames and candidates of a run
+      description: Computes rank on read with score_v0; no ranking table is persisted.
+      x-labelx-trace: [FR-RNK-01, FR-RNK-04, FR-RNK-05]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: page_size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: Frames ordered by ascending rank
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoFramePage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/frames/{frame_id}/image/:
+    get:
+      operationId: demo_runs_frames_image
+      tags: [demo]
+      summary: DEMO-ONLY - proxy snapshot frame image
+      description: Returns image bytes without exposing a storage key or credential.
+      x-labelx-trace: [FR-SNP-03, FR-SEC-05]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: frame_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Snapshot image bytes
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/ranking/:
@@ -1471,6 +1520,79 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/RunShard" }
+    DemoCvatLink:
+      type: object
+      required: [task_id, job_id, frame, deep_link]
+      properties:
+        task_id: { type: integer }
+        job_id: { type: integer }
+        frame: { type: integer, minimum: 0 }
+        deep_link: { type: string, format: uri }
+    DemoShape:
+      type: object
+      required: [id, label, bbox]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        bbox:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { type: number }
+    DemoCandidate:
+      type: object
+      required: [id, engine, rule_id, family, severity, shape_ids, message, evidence]
+      properties:
+        id: { type: string }
+        engine: { type: string }
+        rule_id: { type: string }
+        family: { type: string }
+        severity: { type: string }
+        shape_ids:
+          type: array
+          items: { type: string }
+        message: { type: string }
+        evidence:
+          type: object
+          additionalProperties: true
+    DemoFrame:
+      type: object
+      required: [frame_id, rank, score, file_name, width, height, image_url, cvat, shapes, candidates]
+      properties:
+        frame_id: { type: integer }
+        rank: { type: integer, minimum: 1 }
+        score: { type: number }
+        file_name: { type: string }
+        width: { type: integer, minimum: 1 }
+        height: { type: integer, minimum: 1 }
+        image_url: { type: string }
+        cvat: { $ref: "#/components/schemas/DemoCvatLink" }
+        shapes:
+          type: array
+          items: { $ref: "#/components/schemas/DemoShape" }
+        candidates:
+          type: array
+          items: { $ref: "#/components/schemas/DemoCandidate" }
+    DemoEngine:
+      type: object
+      required: [engine, status]
+      properties:
+        engine: { type: string }
+        status: { type: string, enum: [checked, failed, not_checked] }
+    DemoFramePage:
+      type: object
+      required: [run_id, snapshot_id, score_version, next, items, engines]
+      properties:
+        run_id: { type: integer }
+        snapshot_id: { type: integer }
+        score_version: { type: string }
+        next: { type: string, nullable: true }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DemoFrame" }
+        engines:
+          type: array
+          items: { $ref: "#/components/schemas/DemoEngine" }
     LedgerEntry:
       type: object
       description: |

@@ -17,6 +17,58 @@ class RunCreateSerializer(serializers.Serializer[Any]):
     seed = serializers.IntegerField()
 
 
+# DEMO-ONLY: response contract for M-DEMO01; not the M-03 review domain.
+class DemoCvatLinkSerializer(serializers.Serializer[dict[str, Any]]):
+    task_id = serializers.IntegerField()
+    job_id = serializers.IntegerField()
+    frame = serializers.IntegerField()
+    deep_link = serializers.URLField()
+
+
+class DemoShapeSerializer(serializers.Serializer[dict[str, Any]]):
+    id = serializers.CharField()
+    label = serializers.CharField()  # type: ignore[assignment]
+    bbox = serializers.ListField(child=serializers.FloatField(), min_length=4, max_length=4)
+
+
+class DemoCandidateSerializer(serializers.Serializer[dict[str, Any]]):
+    id = serializers.CharField()
+    engine = serializers.CharField()
+    rule_id = serializers.CharField()
+    family = serializers.CharField()
+    severity = serializers.CharField()
+    shape_ids = serializers.ListField(child=serializers.CharField())
+    message = serializers.CharField()
+    evidence = serializers.JSONField()
+
+
+class DemoFrameSerializer(serializers.Serializer[dict[str, Any]]):
+    frame_id = serializers.IntegerField()
+    rank = serializers.IntegerField(min_value=1)
+    score = serializers.FloatField()
+    file_name = serializers.CharField()
+    width = serializers.IntegerField(min_value=1)
+    height = serializers.IntegerField(min_value=1)
+    image_url = serializers.CharField()
+    cvat = DemoCvatLinkSerializer()
+    shapes = DemoShapeSerializer(many=True)
+    candidates = DemoCandidateSerializer(many=True)
+
+
+class DemoEngineSerializer(serializers.Serializer[dict[str, Any]]):
+    engine = serializers.CharField()
+    status = serializers.ChoiceField(choices=["checked", "failed", "not_checked"])
+
+
+class DemoFramePageSerializer(serializers.Serializer[dict[str, Any]]):
+    run_id = serializers.IntegerField()
+    snapshot_id = serializers.IntegerField()
+    score_version = serializers.CharField()
+    next = serializers.CharField(allow_null=True)
+    items = DemoFrameSerializer(many=True)
+    engines = DemoEngineSerializer(many=True)
+
+
 class ModelArtifactSerializer(serializers.ModelSerializer[Any]):
     """Schema for ModelArtifact."""
 
