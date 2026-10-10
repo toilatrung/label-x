@@ -208,11 +208,15 @@ def test_default_run_with_all_registered_engines_end_to_end(inline_queue):
     assert run.status == QCRun.Status.COMPLETED
     assert results["duplicate"].status == "checked"
     assert (results["duplicate"].eligible_units, results["duplicate"].completed_units) == (3, 3)
-    for name in ("schema", "geometry"):
+    expected = {"schema": "no_reference", "geometry": "not_applicable"}
+    for name, reason in expected.items():
         reasons = set(
             LedgerUnit.objects.filter(run_id=run.pk, engine=name).values_list(
                 "not_checked_reason", flat=True
             )
         )
-        assert reasons == {"not_applicable"}, (name, reasons)
-        assert results[name].status == "not_checked" and results[name].reason == "not_applicable"
+        assert reasons == {reason}, (name, reasons)
+        assert results[name].status == "not_checked" and results[name].reason == reason
+    # Schema thiếu taxonomy vẫn nằm trong mẫu số (không bị loại như not_applicable).
+    assert results["schema"].eligible_units == 3
+    assert results["geometry"].eligible_units == 0

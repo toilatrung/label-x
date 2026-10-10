@@ -360,8 +360,9 @@ def test_registered_t025_runners_load_locked_t020_snapshot() -> None:
     )
     not_checked_output = run_registered_schema_taxonomy_engine(schema_without_taxonomy)
     assert all(result.outcome == "not_checked" for result in not_checked_output.unit_results)
+    # Thiếu taxonomy = thiếu dữ liệu tham chiếu: giữ trong mẫu số, không được báo "sạch".
     assert all(
-        result.not_checked_reason == "not_applicable" for result in not_checked_output.unit_results
+        result.not_checked_reason == "no_reference" for result in not_checked_output.unit_results
     )
 
     taxonomy_payload = {

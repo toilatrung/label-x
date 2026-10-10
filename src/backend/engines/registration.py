@@ -47,7 +47,7 @@ def run_registered_schema_taxonomy_engine(engine_input: EngineInput) -> EngineOu
                     unit=unit,
                     outcome="not_checked",
                     attempts=1,
-                    not_checked_reason="not_applicable",
+                    not_checked_reason="no_reference",
                 )
                 for unit in ordered_frame_units(engine_input.units)
             ),
