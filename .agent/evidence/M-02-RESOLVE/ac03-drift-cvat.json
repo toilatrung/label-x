@@ -1,0 +1,36 @@
+{
+ "project_id": 3,
+ "task_id": 3,
+ "job_id": 3,
+ "drift": {
+  "status": "failed",
+  "drift_jobs": [
+   3
+  ],
+  "reason": "drift_detected",
+  "locked": false
+ },
+ "s1": {
+  "id": 38,
+  "status": "locked",
+  "revision_sha256": "8d4d1ed6b3a602902ece24c7a7b25629dae114b2ddc0a28090feeab71040ce4c",
+  "parent": null
+ },
+ "s1b": {
+  "id": 39,
+  "status": "locked",
+  "revision_sha256": "8d4d1ed6b3a602902ece24c7a7b25629dae114b2ddc0a28090feeab71040ce4c",
+  "parent": 38
+ },
+ "s1_after_cvat_edit": {
+  "revision_sha256": "8d4d1ed6b3a602902ece24c7a7b25629dae114b2ddc0a28090feeab71040ce4c",
+  "status": "locked"
+ },
+ "s2": {
+  "id": 40,
+  "status": "locked",
+  "revision_sha256": "b33892583f681e7d84c8062090c02220b39d914973fd8964c293727d7db7f26a",
+  "parent": 39
+ },
+ "ok": true
+}
