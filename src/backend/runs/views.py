@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
 from runs.models import QCRun, RunRanking
 from runs.serializers import (
     PaginatedRankedFrameListSerializer,
@@ -325,11 +326,29 @@ class RunRankingView(APIView):
         operation_id="runs_ranking",
         parameters=[
             OpenApiParameter("queue", str, required=False, enum=["risk", "random"]),
-            OpenApiParameter("family", str, required=False),
+            OpenApiParameter("family", str, required=False, enum=["E1", "E2", "E3", "structural"]),
             OpenApiParameter("origin", str, required=False, enum=["engine", "reviewer"]),
-            OpenApiParameter("review_state", str, required=False),
+            OpenApiParameter(
+                "review_state",
+                str,
+                required=False,
+                enum=[
+                    "unreviewed",
+                    "in_review",
+                    "incomplete",
+                    "reviewed",
+                    "awaiting_followup",
+                    "completed",
+                ],
+            ),
+            OpenApiParameter("cursor", str, required=False),
         ],
-        responses={200: PaginatedRankedFrameListSerializer},
+        responses={
+            200: PaginatedRankedFrameListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def get(self, request: Request, pk: int) -> Response:

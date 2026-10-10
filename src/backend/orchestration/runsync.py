@@ -10,6 +10,7 @@ from django.utils import timezone
 from engines.interface import public_status
 from orchestration.services import ledger_counts
 from runs.models import QCRun, WorkUnit
+from runs.ranking import persist_terminal_run_rankings
 
 logger = logging.getLogger("labelx.orchestration")
 _OPEN = (WorkUnit.Status.PENDING, WorkUnit.Status.RUNNING)
@@ -73,3 +74,7 @@ def refresh_run(run_id: int) -> None:
             run.status = QCRun.Status.PARTIAL
         run.finished_at = timezone.now()
         run.save(update_fields=["status", "finished_at"])
+        # Partial/failed runs can be retried and gain candidates, so publishing an
+        # immutable ranking there would make the successful retry conflict.
+        if run.status == QCRun.Status.COMPLETED:
+            persist_terminal_run_rankings(run_id)

@@ -10,7 +10,7 @@ from orchestration.dispatch import build_engine_input, dispatch_run, run_work_un
 from orchestration.models import CandidateRecord, ShardCommit
 from orchestration.registry import registry
 from orchestration.services import ledger_counts
-from runs.models import QCRun, WorkUnit
+from runs.models import QCRun, RunRanking, WorkUnit
 from runs.services import create_qc_run, retry_failed_qc_run
 from tests.orchestration.helpers import make_run
 
@@ -120,6 +120,7 @@ def test_run_completes_and_engine_result_follows_ledger(
     result = run.engine_results.get(engine=ENGINE)
     assert (result.eligible_units, result.completed_units, result.failed_units) == (3, 3, 0)
     assert result.status == "checked"
+    assert RunRanking.objects.filter(run=run).count() == len(RunRanking.Source.values)
 
 
 def test_partial_run_then_retry_failed_completes(run_setup: QCRun, monkeypatch, inline_queue):

@@ -134,7 +134,7 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     def get_review_state(self, _obj: RunRankingEntry) -> str:
         return "unreviewed"
 
-    def get_lease_holder_user_id(self, _obj: RunRankingEntry) -> None:
+    def get_lease_holder_user_id(self, _obj: RunRankingEntry) -> int | None:
         return None
 
 

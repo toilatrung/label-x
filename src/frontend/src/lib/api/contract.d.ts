@@ -2271,6 +2271,7 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedRankedFrameList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
