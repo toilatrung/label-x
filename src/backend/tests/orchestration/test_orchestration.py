@@ -14,6 +14,7 @@ from engines.interface import (
     EngineUnitRef,
     EngineUnitResult,
     FrameKey,
+    NotCheckedEngineUnitResult,
     ObjectRef,
 )
 from orchestration import services
@@ -156,6 +157,23 @@ def test_output_must_cover_exactly_shard_units():
     with pytest.raises(ShardOutputError):
         commit_shard_output(inp, make_output(inp, outcome="pending"))
     assert snapshot_state()[0] == 0
+
+
+def test_not_checked_unit_persists_reason_and_is_excluded_from_eligible():
+    inp = make_input(0, (0,))
+    seed_ledger(7, ENGINE, inp.units)
+    output = EngineOutput(
+        inp.idempotency_key,
+        ENGINE,
+        "1.0.0",
+        (),
+        (NotCheckedEngineUnitResult(inp.units[0], "not_checked", 1, "not_applicable"),),
+    )
+
+    assert commit_shard_output(inp, output) is True
+    counts = ledger_counts(7, ENGINE)
+    assert counts.not_checked == 1
+    assert counts.eligible == 0
 
 
 def test_unseeded_unit_rejected_and_rolled_back():

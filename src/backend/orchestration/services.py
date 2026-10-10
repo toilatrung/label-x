@@ -26,7 +26,11 @@ from orchestration.models import CandidateRecord, LedgerUnit, ShardCommit
 
 logger = logging.getLogger("labelx.orchestration")
 
-_TERMINAL_FROM_ENGINE = {EngineUnitOutcome.COMPLETED.value, EngineUnitOutcome.FAILED.value}
+_TERMINAL_FROM_ENGINE = {
+    EngineUnitOutcome.COMPLETED.value,
+    EngineUnitOutcome.FAILED.value,
+    EngineUnitOutcome.NOT_CHECKED.value,
+}
 
 
 class ShardOutputError(ValueError):
@@ -109,6 +113,12 @@ def _validate(engine_input: EngineInput, output: EngineOutput) -> None:
     for result in output.unit_results:
         if result.outcome not in _TERMINAL_FROM_ENGINE:
             raise ShardOutputError(f"outcome {result.outcome!r} không hợp lệ cho đơn vị đã xong")
+        reason = getattr(result, "not_checked_reason", None)
+        if result.outcome == EngineUnitOutcome.NOT_CHECKED.value:
+            if reason not in {item.value for item in NotCheckedReason}:
+                raise ShardOutputError("đơn vị not_checked phải có lý do hợp lệ")
+        elif reason is not None:
+            raise ShardOutputError("chỉ đơn vị not_checked mới được có lý do")
     for candidate in output.candidates:
         if (candidate.engine, candidate.engine_version) != (output.engine, output.engine_version):
             raise ShardOutputError("candidate không thuộc engine của shard")
@@ -193,8 +203,9 @@ def _apply_unit_results(engine_input: EngineInput, output: EngineOutput) -> None
         if row.outcome == EngineUnitOutcome.COMPLETED.value:
             continue  # completed không bị ghi đè: giữ tổng và coverage ổn định
         row.outcome = result.outcome
+        row.not_checked_reason = getattr(result, "not_checked_reason", "")
         row.attempts = max(row.attempts, result.attempts)
-        row.save(update_fields=["outcome", "attempts"])
+        row.save(update_fields=["outcome", "not_checked_reason", "attempts"])
 
 
 def mark_shard_failed(engine_input: EngineInput, attempts: int) -> None:
