@@ -314,6 +314,7 @@ def create_qc_run(
     idempotency_key: str | None = None,
     is_final: bool = False,
     origin_run_id: int | None = None,
+    enqueue_after_commit: bool = True,
 ) -> tuple[QCRun, bool]:
     """Create a QC Run with deterministic sharding and dual idempotency guards.
 
@@ -403,7 +404,7 @@ def create_qc_run(
                 origin_run=origin_run,
                 dataset_id=dataset_id,
                 scope_hash=scope_hash,
-                score_version="v1",
+                score_version="score_v0",
                 created_by=created_by,
                 idempotency_key=clean_key or None,
                 request_sha256=req_sha256,
@@ -434,7 +435,8 @@ def create_qc_run(
                 },
                 revision=str(run.pk),
             )
-            _enqueue_run_after_commit(run.pk)
+            if enqueue_after_commit:
+                _enqueue_run_after_commit(run.pk)
             return run, True
 
     except IntegrityError as exc:
