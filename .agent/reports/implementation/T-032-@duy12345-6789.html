@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-032 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-032-duy12345-6789">
+<meta name="labelx:title" content="T-032 M-03 Contract Model Fixture">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, contract, fixture, t-032]">
+<meta name="labelx:priority" content="1"></head><body><main><article>
+<div class="meta"><b>id</b><span>T-032-duy12345-6789</span><b>title</b><span>T-032 M-03 Contract Model Fixture</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[implementation, m03, contract, fixture, t-032]</span><b>priority</b><span>1</span></div>
+<h1>T-032 — Chốt contract, model và fixture dùng chung cho M-03</h1>
+
+<h2>Usage Purpose</h2>
+<p>Bằng chứng triển khai gói P01 của M-03: đối chiếu M-02 hiện có, khóa định danh/ownership dùng chung, lập ma trận contract → model/service → transition → RBAC → error → test, tạo fixture denial/expiry/revision/engine failure và tách rõ contract delta chờ PO/CR.</p>
+
+<h2>Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>T-032-@duy12345-6789</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task State</strong>: <code>review</code></li>
+<li><strong>Independent Review</strong>: <code>pending Hà/PO comparison</code></li>
+<li><strong>Task</strong>: <code>T-032 / M-03 P01 / GitHub #99</code></li>
+<li><strong>Baseline</strong>: <code>b57626f735565ce0dafb0c219e25bc25da1f0163</code></li>
+<li><strong>Branch</strong>: <code>feat/T-032-m03-contract-fixtures</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-10</code></li>
+</ul>
+
+<h2>Scope</h2><ul>
+<li>Đối chiếu Snapshot/QCRun/CandidateRecord thật trên baseline với OpenAPI, state machine, RBAC và decision records.</li>
+<li>Chốt định danh dataset/snapshot/run/frame/assignee/object và ownership cho Lease, FrameReview, Issue, ReviewDecision, DecisionCase, Rework, Effort.</li>
+<li>Lập mapping toàn bộ operation M-03 hiện có tới model/service, transition, guard, error và test bàn giao.</li>
+<li>Ghi sáu khoảng trống read/config contract M03-D01…M03-D06 với nguồn hiện có, implementation owner, decision owner và trạng thái chờ duyệt.</li>
+<li>Tạo fixture JSON dùng chung và test tự động ngăn proposal chưa duyệt lọt vào OpenAPI.</li>
+</ul>
+
+<h2>Changes Made</h2><table><thead><tr><th>File</th><th>Thay đổi</th><th>Trace</th></tr></thead><tbody>
+<tr><td><code>docs/04-api/m03-contract-model-fixture-matrix.html</code></td><td>Ma trận định danh, ownership, operation/guard/error/test, read API gaps, policy và handoff T-033…T-043.</td><td>Issue #99 AC 1–4; #97 contract gate.</td></tr>
+<tr><td><code>src/backend/fixtures/m03-review-workflow-v1.json</code></td><td>Fixture ID ổn định cho identities, snapshot/run/frame, lease, Issue/evidence/decision, rework, effort và tám scenario.</td><td>Denial, expiry, revision, engine failure; AC T-032.</td></tr>
+<tr><td><code>src/backend/tests/test_m03_contract_fixture.py</code></td><td>Kiểm nguồn baseline, enum/path/relation OpenAPI, scenario coverage, policy chưa duyệt để null, ownership Candidate/Issue và sáu delta chưa được implement.</td><td>Contract-first; không endpoint giả.</td></tr>
+<tr><td><code>.agent/execution/task-board-@duy12345-6789.html</code></td><td>Thêm T-032 ở trạng thái review và blocker contract delta.</td><td>CR-100.</td></tr>
+<tr><td><code>.agent/reports/implementation/T-032-@duy12345-6789.html</code></td><td>Ánh xạ AC, evidence, deviation và phần chờ review/PO.</td><td>CR-100/CR-103.</td></tr>
+</tbody></table>
+
+<h2>Contract Decisions Preserved</h2><ul>
+<li><code>CandidateRecord</code> và <code>CandidateRecord.evidence</code> là output engine bất biến; Issue engine tham chiếu nguồn này, không tạo candidate table thứ hai.</li>
+<li>ReviewDecision là append-only và không được suy lại từ Issue.state; audit ghi cùng transaction ở task triển khai.</li>
+<li>Self-review và separation of duties đối chiếu natural person/identity mapping, không chỉ user account.</li>
+<li>TBD-09 (lease TTL/reservation) và TBD-11 (<code>t_idle</code>) chưa có giá trị được duyệt; fixture giữ <code>null</code>, code sau phải đọc config có version.</li>
+<li>CR-108 trên PR #94 vẫn proposed; T-032 không sửa OpenAPI và không tuyên bố CR đã accepted.</li>
+</ul>
+
+<h2>Command Evidence</h2><table><thead><tr><th>Command/check</th><th>Kết quả</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Focused M-03 + baseline contract tests</td><td><code>passed</code></td><td><code>24 passed in 0.77s</code>.</td></tr>
+<tr><td>Backend Ruff check</td><td><code>passed</code></td><td><code>All checks passed!</code>.</td></tr>
+<tr><td>Backend Ruff format check</td><td><code>passed</code></td><td><code>151 files already formatted</code>.</td></tr>
+<tr><td>Agent framework validation</td><td><code>passed</code></td><td><code>FRAMEWORK_VALIDATION_PASS</code> trước khi thêm report; chạy lại khi bàn giao.</td></tr>
+<tr><td><code>make check</code></td><td><code>environment blocked / not yet verified</code></td><td>Docker engine/PostgreSQL không chạy; WSL không có Node/npm và Docker integration. Không ghi đây là lỗi code.</td></tr>
+</tbody></table>
+
+<h2>Verification Evidence</h2><ul>
+<li>Test duyệt mọi scenario operation và xác nhận path/method đang tồn tại trong OpenAPI.</li>
+<li>Test xác nhận M03-D01…M03-D06 đều <code>approved=false</code> và method đề xuất chưa xuất hiện trong OpenAPI.</li>
+<li>Test đối chiếu QueueName, FrameReviewState, IssueState, IssueFamily, EngineName và Role với enum contract thật.</li>
+<li>Test giữ quan hệ ID snapshot/run/frame/lease/issue/rework và alias cùng natural person cho denial.</li>
+<li>Test buộc TTL, reservation window và <code>t_idle</code> là null khi chưa có quyết định Product Owner.</li>
+</ul>
+
+<h2>Acceptance Criteria</h2><ul>
+<li>[x] Bảng mapping và fixture dùng chung được tạo, có nguồn contract/SRS/decision rõ.</li>
+<li>[x] Mỗi read API cần cho UI có nguồn hiện tại hoặc delta ID với owner và decision status.</li>
+<li>[x] Lease TTL/gia hạn/resume và <code>t_idle</code> có proposal/config source, không ghi giá trị thử thành chuẩn.</li>
+<li>[x] Không sửa OpenAPI khi delta chưa approved; một nguồn Candidate/Issue evidence.</li>
+<li>[ ] Hà xác nhận ownership Issue/Decision/Rework không cạnh tranh.</li>
+<li>[ ] PO quyết định hình dạng/ưu tiên M03-D01…M03-D06 hoặc ghi CR tương ứng.</li>
+<li>[ ] Independent review/QA và PR merge vào <code>develop</code>.</li>
+</ul>
+
+<h2>Deviations and Open Decisions</h2><ul>
+<li><strong>M03-D01…D06</strong>: cố ý chưa sửa OpenAPI; đây là đúng gate issue #99, không phải phần triển khai bị bỏ quên.</li>
+<li><strong>make check</strong>: chưa chạy trọn bộ vì local Docker/PostgreSQL/Node không khả dụng. Focused contract tests và backend static checks đã đạt; CI phải chạy bộ kiểm tra repository.</li>
+<li><strong>External comparison</strong>: Hà/PO chưa review tại thời điểm report; task giữ trạng thái <code>review</code>, không <code>done</code>.</li>
+</ul>
+
+<h2>Related Records</h2><ul>
+<li>Issue: <a href="https://github.com/toilatrung/label-x/issues/99">#99</a>; milestone plan: <a href="https://github.com/toilatrung/label-x/issues/97">#97</a>.</li>
+<li>M-02 integration gate: <a href="https://github.com/toilatrung/label-x/issues/96">#96</a>.</li>
+<li>PR: <code>pending creation</code>.</li>
+<li>Reviewer targets: <code>@DucHa180104</code> for ownership comparison and <code>@toilatrung</code> for contract decisions.</li>
+</ul>
+
+<h2>Forbidden Claims</h2><ul>
+<li>Không tuyên bố T-032 done/merged hoặc đã được Hà/PO duyệt.</li>
+<li>Không coi proposed operation là contract hiện hành.</li>
+<li>Không dùng fixture làm evidence CVAT/PostgreSQL E2E thật.</li>
+<li>Không tuyên bố full <code>make check</code> xanh khi môi trường chưa chạy được.</li>
+</ul>
+</article></main></body></html>

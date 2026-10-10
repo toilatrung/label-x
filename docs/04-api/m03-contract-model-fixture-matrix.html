@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M-03 Contract, Model và Fixture Matrix — LabelX</title>
+<meta name="labelx:id" content="m03-contract-model-fixture-matrix">
+<meta name="labelx:title" content="M-03 Contract, Model và Fixture Matrix">
+<meta name="labelx:type" content="specification"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[m03, contract, model, fixture, rbac, transition, t-032]">
+<meta name="labelx:priority" content="1">
+<style>
+body{max-width:1180px;margin:0 auto;padding:32px;font:15px/1.55 system-ui,sans-serif;color:#172033}h1,h2,h3{color:#173b57}table{width:100%;border-collapse:collapse;margin:12px 0 24px}th,td{border:1px solid #d8dee8;padding:9px;vertical-align:top;text-align:left}th{background:#edf3f7}code{background:#f1f4f8;padding:1px 4px;border-radius:4px}.ok,.wait,.gap,.stop{display:inline-block;padding:2px 7px;border-radius:999px;font-size:12px;font-weight:700}.ok{background:#e9f8ef;color:#13795b}.wait{background:#fff5db;color:#8a5300}.gap,.stop{background:#fff0ef;color:#b42318}.note{padding:12px 15px;border-left:4px solid #2563eb;background:#eff6ff;margin:14px 0}.warning{border-left-color:#f59e0b;background:#fff7e6}.meta{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;padding:12px;background:#f6f8fb}.small{color:#667085;font-size:13px}li{margin:5px 0}
+</style></head><body><main><article>
+<div class="meta"><b>id</b><span>m03-contract-model-fixture-matrix</span><b>title</b><span>M-03 Contract, Model và Fixture Matrix</span><b>type</b><span>specification</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[m03, contract, model, fixture, rbac, transition, t-032]</span><b>priority</b><span>1</span></div>
+
+<h1>T-032 — Contract, Model và Fixture dùng chung cho M-03</h1>
+
+<h2 id="purpose">1. Mục đích và trạng thái</h2>
+<p>Tài liệu này khóa cách hiểu chung trước khi T-033…T-043 triển khai. Nó đối chiếu contract hiện có với model/service, transition, RBAC, lỗi và test; xác định một nguồn Candidate/Issue evidence; đồng thời ghi rõ mọi khoảng trống cần Product Owner phê duyệt.</p>
+<div class="note"><strong>Baseline:</strong> <code>b57626f735565ce0dafb0c219e25bc25da1f0163</code> trên <code>develop</code>, ngày 10/10/2026. Fixture chuẩn: <a href="../../src/backend/fixtures/m03-review-workflow-v1.json"><code>src/backend/fixtures/m03-review-workflow-v1.json</code></a>.</div>
+<div class="note warning"><strong>Giới hạn T-032:</strong> không sửa OpenAPI, không thêm endpoint và không tạo model runtime. Các dòng <span class="gap">DELTA</span> chỉ là đề xuất; chỉ được triển khai sau khi có Change Request được PO chấp thuận. CR-108 được nhắc tại PR #94 nhưng không có record accepted trong baseline này, vì vậy không được xem là đã duyệt.</div>
+
+<h2 id="sources">2. Nguồn đã đối chiếu</h2>
+<table><thead><tr><th>Nguồn</th><th>Nội dung dùng</th><th>Quy tắc ưu tiên</th></tr></thead><tbody>
+<tr><td><a href="openapi.yaml"><code>openapi.yaml</code></a></td><td>Operation, request/response schema, role, error và trace ID.</td><td>Nguồn contract hiện hành; frontend không gọi operation ngoài đây.</td></tr>
+<tr><td><a href="state-machines.html"><code>state-machines.html</code></a></td><td>Issue, frame/lease, rework và QCRun transition/guard.</td><td>Backend từ chối transition không được liệt kê.</td></tr>
+<tr><td><a href="rbac-matrix.html"><code>rbac-matrix.html</code></a></td><td>Role, scope, self-review và separation of duties.</td><td>Kiểm ở backend, không dựa vào việc UI ẩn nút.</td></tr>
+<tr><td><a href="../01-business/requirements.html"><code>requirements.html</code></a></td><td>FR-REV, FR-RWK, FR-ESC, FR-EVL và TBD-09/TBD-11.</td><td>TBD chưa có quyết định thì không hard-code giá trị.</td></tr>
+<tr><td><code>snapshots.models</code>, <code>runs.models</code>, <code>orchestration.models</code></td><td>Model thật đã merge của M-02.</td><td>Không tạo aggregate cạnh tranh; M-03 tham chiếu bằng FK/ID và giữ provenance.</td></tr>
+<tr><td>DEC-002, DEC-005, DEC-006, DEC-009</td><td>Lease/incomplete, identity object, anchor và review decision/reference.</td><td>Decision accepted có hiệu lực; proposed CR không có hiệu lực.</td></tr>
+</tbody></table>
+
+<h2 id="identity">3. Định danh xuyên suốt snapshot → run → frame</h2>
+<table><thead><tr><th>Khái niệm</th><th>Khóa chuẩn</th><th>Không được làm</th><th>Consumer</th></tr></thead><tbody>
+<tr><td>Dataset scope</td><td><code>dataset_id</code> của Snapshot/QCRun</td><td>Không nhận dataset do client tự khai nếu có thể suy ra từ object.</td><td>Tất cả RBAC.</td></tr>
+<tr><td>Snapshot revision</td><td><code>Snapshot.id + revision_sha256</code>; snapshot locked là bất biến.</td><td>Không dùng revision hiện tại của CVAT thay cho revision đã review.</td><td>T-033, T-035, T-040.</td></tr>
+<tr><td>Run</td><td><code>QCRun.id</code>, FK tới snapshot; <code>origin_run_id</code> cho re-check/final lineage.</td><td>Không sửa run gốc khi có rework.</td><td>Tất cả queue, issue và final.</td></tr>
+<tr><td>Frame ổn định</td><td><code>FrameKey(cvat_task_id, frame_number)</code> trong snapshot/run; runtime record có ID riêng.</td><td>Không chỉ dùng <code>frame_number</code>; số frame có thể trùng giữa task.</td><td>T-033/T-034/T-035/T-037.</td></tr>
+<tr><td>Assignee chống self-review</td><td><code>SnapshotJob.assignee_user_id</code> tại thời điểm export, đối chiếu identity/person.</td><td>Không dùng assignee CVAT hiện tại; không chỉ so user account khi một người có nhiều account.</td><td>T-033/T-035/T-038/T-040.</td></tr>
+<tr><td>Engine object</td><td><code>ObjectRef(namespace,id)</code> và Anchor có <code>policy_version</code>.</td><td>Không ghép lại bằng IoU như định danh chính.</td><td>T-035/T-038/T-040.</td></tr>
+</tbody></table>
+
+<h2 id="ownership">4. Ownership model — tránh hai mô hình cạnh tranh</h2>
+<table><thead><tr><th>Aggregate/record</th><th>Owner duy nhất</th><th>Quan hệ</th><th>Task triển khai</th></tr></thead><tbody>
+<tr><td>Snapshot, SnapshotJob, SnapshotFrame</td><td><code>snapshots.models</code></td><td>Read-only sau locked; cung cấp revision, media và assignee.</td><td>Đã có từ T-020/T-021.</td></tr>
+<tr><td>QCRun</td><td><code>runs.models.QCRun</code></td><td>Run gốc/re-check/final nối bằng <code>origin_run</code>; không copy aggregate.</td><td>Đã có từ T-024/T-025; T-041 bổ sung lineage sau CR.</td></tr>
+<tr><td>Candidate engine</td><td><code>orchestration.models.CandidateRecord</code></td><td>Output engine bất biến, evidence nằm ở <code>CandidateRecord.evidence</code>.</td><td>Đã có từ T-025.</td></tr>
+<tr><td>FrameReview + Lease</td><td><code>review</code> module mới</td><td>FrameReview tham chiếu run + FrameKey/SnapshotFrame; Lease tham chiếu FrameReview.</td><td>T-033.</td></tr>
+<tr><td>Issue</td><td><code>review.models.Issue</code></td><td>Issue engine tham chiếu đúng một CandidateRecord; issue thủ công có evidence reviewer-origin. Không tạo Candidate thứ hai.</td><td>T-035, cần Hà đối chiếu.</td></tr>
+<tr><td>ReviewDecision</td><td><code>review.models.ReviewDecision</code></td><td>Append-only; không suy quyết định từ Issue.state; audit cùng transaction.</td><td>T-035.</td></tr>
+<tr><td>DecisionCase/Adjudication</td><td><code>review.models.DecisionCase</code></td><td>Versioned, tham chiếu Issue và decision; không sửa lịch sử.</td><td>T-038.</td></tr>
+<tr><td>ReworkRequest/Verification</td><td><code>rework</code> domain hoặc namespace trong review đã thống nhất</td><td>Tham chiếu Issue, annotator, snapshot/re-check run và audit.</td><td>T-040; tên app cần Hà/PO xác nhận, không tạo trước trong T-032.</td></tr>
+<tr><td>EffortEvent</td><td><code>review</code> activity domain</td><td><code>client_event_id</code> idempotent, tham chiếu frame/reviewer; policy idle là config.</td><td>T-036.</td></tr>
+</tbody></table>
+
+<h2 id="endpoint-matrix">5. Endpoint → model/service → transition → RBAC → lỗi → test</h2>
+<table><thead><tr><th>Operation hiện có</th><th>Model/service đích</th><th>Transition</th><th>RBAC/guard</th><th>Lỗi chính</th><th>Test bàn giao</th></tr></thead><tbody>
+<tr><td><code>GET /api/runs/{id}/ranking/</code></td><td>QCRun + ranking read model</td><td>Không đổi state</td><td>reviewer/QA/SA; scope; GT author bị chặn</td><td>403, 404</td><td>risk/random filter, pager, missing evidence, scope denial.</td></tr>
+<tr><td><code>POST /api/queues/{name}/next/</code></td><td>QueueClaimService + FrameReview + Lease</td><td><code>frame.claim</code></td><td>reviewer/QA/SA; mapped identity; no self-review; một lease/reviewer</td><td>204, 403, 404, 422</td><td>PostgreSQL barrier race, two-tab resume, self-review skip, empty queue.</td></tr>
+<tr><td><code>POST /api/leases/{id}/renew/</code></td><td>LeaseService</td><td><code>frame.renew</code></td><td>lease_holder; lease còn hạn</td><td>403, 404, 409 LEASE_CONFLICT</td><td>expired/wrong holder/concurrent renew.</td></tr>
+<tr><td><code>GET /api/frames/{id}/issues/</code></td><td>Frame workspace query + CandidateRecord/Issue</td><td>Không đổi state</td><td>reviewer/QA/SA; scope; GT author guard</td><td>403, 404</td><td>engine failed/missing evidence, rule/evidence ordering, scope denial.</td></tr>
+<tr><td><code>POST /api/frames/{id}/complete/</code></td><td>FrameReviewService + Effort stop</td><td><code>frame.complete</code></td><td>lease_holder; mọi issue đã quyết định hoặc escalated</td><td>403, 404, 409, 422</td><td>undecided IDs, retry idempotent, lease race.</td></tr>
+<tr><td><code>POST /api/issues/</code></td><td>IssueService + audit</td><td><code>issue.create_manual</code></td><td>reviewer/QA/SA; active lease; no self-review</td><td>400, 403, 409, 422</td><td>manual_object/manual_region, invalid anchor, transaction rollback.</td></tr>
+<tr><td><code>POST /api/issues/{id}/decisions/</code></td><td>ReviewDecision append + Issue projection + audit</td><td>confirm/reject/escalate/request_fix</td><td>active holder; no self-review; override reason for SA</td><td>400, 403, 404, 409, 422</td><td>all actions, same transaction audit, duplicate idempotency.</td></tr>
+<tr><td><code>GET /api/issues/{id}/</code></td><td>Issue query</td><td>Không đổi state</td><td>reviewer/QA/SA; scope</td><td>403, 404</td><td>append-only decision order and evidence source.</td></tr>
+<tr><td><code>GET /api/escalations/</code></td><td>Escalation query</td><td>Không đổi state</td><td>QA/SA; scope</td><td>403</td><td>oldest-first, decision history, pager/scope.</td></tr>
+<tr><td><code>POST /api/issues/{id}/adjudications/</code></td><td>Adjudication + DecisionCase version + audit</td><td><code>issue.adjudicate</code></td><td>QA/SA; different natural person from escalator</td><td>400, 403, 404, 409, 422</td><td>confirm/reject/guideline_gap, alias-account denial, version.</td></tr>
+<tr><td><code>POST /api/rework/</code></td><td>ReworkService + audit</td><td><code>issue.request_fix</code></td><td>reviewer/QA/SA; issue confirmed/reopened</td><td>400, 403, 404, 409</td><td>scope, duplicate request, invalid state.</td></tr>
+<tr><td><code>POST /api/rework/{id}/submitted/</code></td><td>ReworkService → Snapshot/QCRun adapter</td><td><code>issue.fix_submitted</code></td><td>assigned annotator/SA; new CVAT revision</td><td>400, 403, 404, 409</td><td>revision unchanged, read-only CVAT, retry/worker failure.</td></tr>
+<tr><td><code>POST /api/rework/{id}/verify/</code></td><td>VerificationService + audit</td><td>verify_pass/verify_fail</td><td>reviewer/SA; different natural person; re-check completed</td><td>400, 403, 404, 409</td><td>early verify, same-person denial, pass/fail state.</td></tr>
+<tr><td><code>POST /api/effort-events/</code></td><td>EffortEventService</td><td>Không đổi Issue state</td><td>reviewer/QA/SA; scope</td><td>400, 403, 409</td><td>client_event_id duplicate, focus/idle/complete.</td></tr>
+</tbody></table>
+
+<h2 id="read-gaps">6. Read API cần cho UI: nguồn hiện có và delta</h2>
+<p>Mỗi delta dưới đây có ID trùng với fixture. Trạng thái chung là <span class="wait">CHỜ PO/CR</span>; tên operation/path chỉ là đề xuất để review, không phải contract đã duyệt.</p>
+<table><thead><tr><th>ID</th><th>Nhu cầu UI</th><th>Nguồn hiện có</th><th>Khoảng trống/đề xuất</th><th>Owner</th><th>Quyết định</th></tr></thead><tbody>
+<tr><td>M03-D01</td><td>Queue list có holder/state/source/filter/pager</td><td><code>runs_ranking</code> có rank, queue filter, review_state, pager.</td><td><span class="gap">DELTA</span> đề xuất GET <code>/api/queues/{name}/</code> hoặc mở rộng response đã có.</td><td>T-033 backend; T-034 consumer</td><td>PO chọn reuse hay operation mới.</td></tr>
+<tr><td>M03-D02</td><td>Workspace media + toàn annotation/prediction đúng revision</td><td><code>frames_issues</code> có image URL, issue/evidence, engine state.</td><td><span class="gap">DELTA</span> thiếu overlay đầy đủ; đề xuất GET <code>/api/frames/{id}/workspace/</code> hoặc mở rộng FrameIssues.</td><td>T-035; T-037</td><td>PO chọn payload; không tự duyệt CR-108.</td></tr>
+<tr><td>M03-D03</td><td>Tra cứu Decision Case có version</td><td>Adjudication response chỉ có <code>case_version</code>.</td><td><span class="gap">DELTA</span> đề xuất GET <code>/api/decision-cases/{id}/</code>.</td><td>T-038; T-039</td><td>Cần CR approved.</td></tr>
+<tr><td>M03-D04</td><td>Annotator list/detail rework của mình; reviewer đọc để verify</td><td>Chỉ có POST create/submitted/verify.</td><td><span class="gap">DELTA</span> GET list/detail, scope theo annotator/reviewer.</td><td>T-040; T-042</td><td>Cần CR approved trước T-040 integration.</td></tr>
+<tr><td>M03-D05</td><td>Lịch sử verification và final source</td><td>QCRun có <code>is_final</code>, <code>origin_run_id</code>.</td><td><span class="gap">DELTA</span> thiếu verification lineage/source selection; đề xuất run lineage read.</td><td>T-041; T-042</td><td>Cần CR approved.</td></tr>
+<tr><td>M03-D06</td><td>Client đọc policy lease/effort đã duyệt</td><td>TBD-09/TBD-11 chưa chốt.</td><td><span class="gap">DELTA</span> read-only review policy config sau khi PO quyết định.</td><td>T-033; T-036</td><td>PO chốt giá trị và nguồn config trước.</td></tr>
+</tbody></table>
+
+<h2 id="policies">7. Policy lease và effort — không hard-code số chưa duyệt</h2>
+<table><thead><tr><th>Policy</th><th>Nguồn</th><th>Đã chốt</th><th>Proposal triển khai</th><th>Test không phụ thuộc số cụ thể</th></tr></thead><tbody>
+<tr><td>Lease TTL</td><td>TBD-09, FR-REV-04</td><td><span class="wait">CHƯA</span></td><td>Config runtime có version; server cấp <code>expires_at</code>. Fixture để <code>ttl_seconds=null</code>.</td><td>Dùng clock injection: trước expiry hợp lệ, đúng expiry/sau expiry trả conflict.</td></tr>
+<tr><td>Renew trigger</td><td>FR-REV-04: gia hạn khi có thao tác</td><td>Semantics đã có; danh sách activity cụ thể cần chốt</td><td>Renew idempotent theo holder; không cho client tự gửi expiry.</td><td>Holder/wrong holder/expired/concurrent renew.</td></tr>
+<tr><td>Incomplete reservation window</td><td>DEC-002, BLOCKER-008, TBD-09</td><td><span class="wait">CHƯA</span></td><td>Config riêng; reviewer cũ được ưu tiên, sau cửa sổ reviewer hợp lệ khác có thể claim.</td><td>Test hai phía boundary bằng clock injection.</td></tr>
+<tr><td><code>t_idle</code></td><td>TBD-11, FR-EVL-06</td><td><span class="wait">CHƯA</span></td><td>Config/version do server công bố; raw activity event vẫn idempotent.</td><td>Test classification theo policy fixture được inject, không nhúng “15 phút” hay số thử nghiệm.</td></tr>
+</tbody></table>
+
+<h2 id="fixture">8. Fixture dùng chung</h2>
+<p><code>m03-review-workflow-v1.json</code> dùng ID cố định theo dải để các task không tự tạo dữ liệu trái nhau:</p>
+<table><thead><tr><th>Dải</th><th>Đối tượng</th><th>Tình huống có sẵn</th></tr></thead><tbody>
+<tr><td>701–705</td><td>Identity</td><td>reviewer, annotator, cùng người khác account, QA Lead, thiếu mapping.</td></tr>
+<tr><td>320/330</td><td>Snapshot/QCRun</td><td>snapshot locked, run completed, risk/random source.</td></tr>
+<tr><td>340–343</td><td>Frame</td><td>claim được, self-review, incomplete/resume, engine failed/missing evidence.</td></tr>
+<tr><td>350–351</td><td>Lease</td><td>active, expired có quyết định đã lưu.</td></tr>
+<tr><td>360–361/370</td><td>Issue/decision</td><td>E3 engine evidence và E2 confirmed append-only decision.</td></tr>
+<tr><td>380/391</td><td>Rework/effort</td><td>revision unchanged, same-person verifier, idempotent client event.</td></tr>
+</tbody></table>
+<p>Scenario bắt buộc: allowed claim, self-review denial/skip, missing identity, two-tab resume, lease expiry, engine failure, revision unchanged và same-person verifier. Test <code>test_m03_contract_fixture.py</code> giữ enum/path/relation khớp OpenAPI và ngăn proposal chưa duyệt lọt vào contract.</p>
+
+<h2 id="handoff">9. Bàn giao theo task</h2>
+<table><thead><tr><th>Task nhận</th><th>Dùng phần nào</th><th>Cổng trước khi tích hợp</th></tr></thead><tbody>
+<tr><td>T-033</td><td>Frame identity, queue/lease scenario, policy proposal, M03-D01/D06.</td><td>PO chốt policy/contract cần thiết; PostgreSQL là nguồn chuẩn.</td></tr>
+<tr><td>T-034</td><td>Queue read proposal, risk/random frame, empty/denied states.</td><td>API read thật được approved và merge.</td></tr>
+<tr><td>T-035</td><td>Ownership Candidate→Issue, evidence và decision scenarios.</td><td>Hà xác nhận model ownership; M03-D02 được quyết định.</td></tr>
+<tr><td>T-036</td><td>Effort fixture và TBD-11 policy.</td><td>PO chốt <code>t_idle</code>/config source.</td></tr>
+<tr><td>T-037</td><td>Workspace scenario, engine failure/missing evidence.</td><td>M03-D02 API thật.</td></tr>
+<tr><td>T-038/T-039</td><td>Natural-person guard, Decision Case delta.</td><td>M03-D03 approved.</td></tr>
+<tr><td>T-040/T-042</td><td>Rework object, revision/denial scenario, GET delta.</td><td>T-035/T-038 merge; M03-D04 approved; M-02 gate đủ.</td></tr>
+<tr><td>T-041/T-043</td><td>QCRun identity/final lineage delta.</td><td>T-040 merge; M03-D05 approved; E2E dùng dữ liệu thật.</td></tr>
+</tbody></table>
+
+<h2 id="acceptance">10. Acceptance và phần cần review độc lập</h2>
+<ul>
+<li><span class="ok">ĐẠT TRÊN NHÁNH</span> Có ma trận endpoint → model/service → transition → RBAC → error → test.</li>
+<li><span class="ok">ĐẠT TRÊN NHÁNH</span> Có fixture chung gồm denial, expiry, revision và engine failure; có test contract.</li>
+<li><span class="ok">ĐẠT TRÊN NHÁNH</span> Mỗi read API cần cho UI có nguồn hiện tại hoặc delta ID, owner và decision status.</li>
+<li><span class="ok">ĐẠT TRÊN NHÁNH</span> Lease TTL/reservation và <code>t_idle</code> giữ null cho tới khi PO chốt; không đưa số thử nghiệm thành chuẩn.</li>
+<li><span class="ok">ĐẠT TRÊN NHÁNH</span> CandidateRecord là nguồn engine output; Issue chỉ tham chiếu/chiếu evidence.</li>
+<li><span class="wait">CHỜ REVIEW</span> Hà xác nhận ownership Issue/Decision/Rework không cạnh tranh.</li>
+<li><span class="wait">CHỜ PO/CR</span> PO chọn hình dạng contract cho M03-D01…D06. T-032 không tự phê duyệt CR-108.</li>
+</ul>
+
+<h2 id="forbidden">11. Forbidden claims</h2>
+<ul>
+<li>Không coi path đề xuất trong bảng/fixture là API hiện hành.</li>
+<li>Không dùng fixture này làm evidence E2E CVAT/PostgreSQL thật.</li>
+<li>Không hard-code TTL, reservation window hoặc <code>t_idle</code> trước quyết định PO.</li>
+<li>Không sửa CandidateRecord theo quyết định review và không tạo candidate table thứ hai.</li>
+<li>Không đánh dấu T-032 <code>done</code> trước review/QA và các xác nhận được yêu cầu trong issue #99.</li>
+</ul>
+
+<p class="small">Issue: <a href="https://github.com/toilatrung/label-x/issues/99">T-032 #99</a>. Epic: <a href="https://github.com/toilatrung/label-x/issues/97">M-03 #97</a>. Gate tích hợp: <a href="https://github.com/toilatrung/label-x/issues/96">M-02-RESOLVE #96</a>.</p>
+</article></main></body></html>
