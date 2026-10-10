@@ -47,23 +47,23 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>review-m-02-resolve</span><b>title</b><span>Review Report M-02-RESOLVE (placeholder, chờ reviewer độc lập)</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>review</span><b>tags</b><span>[review, m-02-resolve, placeholder]</span><b>priority</b><span>2</span></div>
 <h1 id="review-m-02-resolve">Review Report M-02-RESOLVE (placeholder, chờ reviewer độc lập)</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<blockquote>Review độc lập #1 đã chạy (tĩnh) trên SHA <code>3cb40b3</code>: verdict <strong>REQUEST CHANGES</strong>. <strong>Chưa có PASS/APPROVED.</strong> Re-review trên SHA mới (<code>bb73895</code> trở đi) đang pending.</blockquote>
+<blockquote>Review #1 (tĩnh, SHA <code>3cb40b3</code>): <strong>REQUEST CHANGES</strong>. Re-review của delta <code>3cb40b3..bb73895</code> bởi subagent độc lập: <strong>APPROVE cho delta</strong>. Reviewer là subagent, không phải duyệt của PO: CR-102 vẫn cần comment “Đã xem và duyệt” của @toilatrung hoặc @DucHa180104; chưa có ai comment.</blockquote>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>M-02-RESOLVE</code></li>
 <li><strong>Title</strong>: <code>Review M-02-RESOLVE (chờ reviewer độc lập)</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung</code></li>
-<li><strong>Reviewer</strong>: <code>subagent độc lập (review tĩnh #1); re-review: pending</code></li>
+<li><strong>Reviewer</strong>: <code>subagent độc lập (review tĩnh #1 và re-review delta)</code></li>
 <li><strong>Executor</strong>: <code>claude-code (Sonnet 5.5) cho @toilatrung</code></li>
 <li><strong>Status</strong>: <code>changes-required</code></li>
-<li><strong>Decision</strong>: <code>CHANGES_REQUESTED</code></li>
+<li><strong>Decision</strong>: <code>CHANGES_REQUESTED (review #1); APPROVED chỉ cho delta 3cb40b3..bb73895</code></li>
 <li><strong>Review Type</strong>: <code>code</code></li>
 <li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-10</code></li>
 </ul>
 <h2 id="review-scope">Review Scope</h2>
 <ul>
-<li><strong>Included Artifacts</strong>: <code>review #1: SHA 3cb40b3 (commit b189f76…1cb5a66 và hồ sơ); sửa sau review: bb73895 (chưa được review lại)</code></li>
+<li><strong>Included Artifacts</strong>: <code>review #1: SHA 3cb40b3 (commit b189f76…1cb5a66 và hồ sơ); delta 3cb40b3..bb73895 đã re-review; nit 35b7de1 sau re-review</code></li>
 <li><strong>Code Diff</strong>: <code>git diff cd13551..HEAD</code></li>
 <li><strong>Excluded Artifacts</strong>: <code>none</code></li>
 <li><strong>Review Standard</strong>: <code>.agent/skills/labelx-pr-review/SKILL.md; CR-102</code></li>
@@ -81,12 +81,13 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>pending</td><td><code>not-run</code></td><td>chưa thực hiện</td></tr></tbody></table>
 <h2 id="required-review-checks">Required Review Checks</h2>
-<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>Review tĩnh #1 trên 3cb40b3</td><td><code>failed</code></td><td>REQUEST CHANGES (3 major, 7 minor, bảng Findings)</td></tr><tr><td>Re-review trên SHA mới</td><td><code>not-run</code></td><td>pending</td></tr></tbody></table>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>Review tĩnh #1 trên 3cb40b3</td><td><code>failed</code></td><td>REQUEST CHANGES (3 major, 7 minor, bảng Findings)</td></tr><tr><td>Re-review delta 3cb40b3..bb73895</td><td><code>passed</code></td><td>APPROVE cho delta (M1, M2, m2 đã sửa); ghi chú thấp ở bảng Findings</td></tr></tbody></table>
 <h2 id="findings">Findings</h2>
 <table><thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Evidence</th><th>Action</th><th>Owner</th></tr></thead><tbody>
-<tr><td>M1</td><td>major</td><td>Sweeper chạy lại shard RUNNING còn sống</td><td>review #1 (tĩnh)</td><td>Đã sửa trong <code>bb73895</code>; chờ re-review</td><td>@toilatrung / executor</td></tr>
-<tr><td>M2</td><td>major</td><td>Sweeper nhân message hàng đợi</td><td>review #1</td><td>Đã sửa trong <code>bb73895</code>; chờ re-review</td><td>executor</td></tr>
-<tr><td>M3</td><td>major</td><td>Hồ sơ khai quá mức bằng chứng</td><td>review #1</td><td>Đã sửa trong hồ sơ (cập nhật sau <code>bb73895</code>); chờ re-review</td><td>executor</td></tr>
+<tr><td>M1</td><td>major</td><td>Sweeper chạy lại shard RUNNING còn sống</td><td>review #1 (tĩnh)</td><td>Đã sửa trong <code>bb73895</code>; re-review delta APPROVE</td><td>@toilatrung / executor</td></tr>
+<tr><td>M2</td><td>major</td><td>Sweeper nhân message hàng đợi</td><td>review #1</td><td>Đã sửa trong <code>bb73895</code>; re-review delta APPROVE</td><td>executor</td></tr>
+<tr><td>M3</td><td>major</td><td>Hồ sơ khai quá mức bằng chứng</td><td>review #1</td><td>Đã sửa trong hồ sơ (cập nhật sau <code>bb73895</code>); ghi nhận ở báo cáo triển khai</td><td>executor</td></tr>
+<tr><td>note</td><td>low</td><td>Lease chỉ làm mới khi claim, không heartbeat: shard chạy &gt; 1800 s có thể bị chạy lại (dữ liệu được ShardCommit bảo vệ); <code>dispatch_run</code> gọi <code>refresh_run</code> mỗi lượt sweep (vô hại); <code>test_live_long_running_shard</code> mô phỏng claim bằng <code>.update</code> (yếu, bổ sung bởi <code>test_claim_refreshes_lease</code>); <code>select_for_update</code> khoá cả hàng run (đã sửa ở <code>35b7de1</code>, <code>of=("self",)</code>); <code>test_frames_shard_without_frames</code> flaky một lần, qua 2 lần chạy lại, chưa rõ nguyên nhân</td><td>re-review delta</td><td>Ghi nhận; nit đã sửa ở <code>35b7de1</code></td><td>executor</td></tr>
 <tr><td>m1</td><td>minor</td><td>Ngữ nghĩa metric retries</td><td>review #1</td><td>Mở, đã ghi tài liệu (BLOCKER-026)</td><td>executor</td></tr>
 <tr><td>m2</td><td>minor</td><td>Race huỷ vs commit shard</td><td>review #1</td><td>Đã sửa trong <code>bb73895</code></td><td>executor</td></tr>
 <tr><td>m3</td><td>minor</td><td>Test settings yếu</td><td>review #1</td><td>Mở</td><td>executor</td></tr>
@@ -107,13 +108,14 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="approval-outcome">Approval Outcome</h2>
 <ul>
 <li><strong>Decision</strong>: <code>CHANGES_REQUESTED</code></li>
-<li><strong>Rationale</strong>: <code>Review tĩnh #1 trên 3cb40b3: 3 major (M1, M2, M3) cần sửa; đã sửa trong bb73895 nhưng chưa được reviewer xác nhận. Không có APPROVED.</code></li>
-<li><strong>Approved By</strong>: <code>none (chưa duyệt)</code></li>
+<li><strong>Rationale</strong>: <code>Review #1 trên 3cb40b3: REQUEST CHANGES (M1, M2, M3). Re-review delta 3cb40b3..bb73895: APPROVE (M1, M2, m2 đã sửa; M3 sửa trong hồ sơ). Minor còn mở: m1 (đã ghi tài liệu), m3, m4, m5, m6, m7. Reviewer là subagent độc lập, không thay duyệt của PO theo CR-102.</code></li>
+<li><strong>Approved By</strong>: <code>none (PO chưa comment “Đã xem và duyệt”)</code></li>
 <li><strong>Decision Date</strong>: <code>2026-10-10</code></li>
 <li><strong>Follow-up Tasks</strong>: <code>none</code></li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] Re-review trên SHA mới hoàn tất và độc lập.</li>
+<li>[x] Re-review delta 3cb40b3..bb73895 hoàn tất bởi subagent độc lập.</li>
+<li>[ ] Duyệt của PO (CR-102).</li>
 </ul>
 </article></main></body></html>

@@ -47,27 +47,27 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>qa-m-02-resolve</span><b>title</b><span>QA Report M-02-RESOLVE (placeholder, chờ QA độc lập)</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>qa</span><b>tags</b><span>[qa, m-02-resolve, placeholder]</span><b>priority</b><span>2</span></div>
 <h1 id="qa-m-02-resolve">QA Report M-02-RESOLVE (placeholder, chờ QA độc lập)</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<blockquote>Placeholder: <strong>pending independent QA</strong>. QA độc lập chưa diễn ra; tệp này chưa có kết quả pass/fail nào. Không dùng làm bằng chứng duyệt.</blockquote>
+<blockquote>QA độc lập (subagent) đã chạy trên SHA <code>3cb40b3</code> (worktree riêng, DB <code>labelx_qa</code>): <strong>passed kèm quan sát</strong>. QA chỉ phủ <code>3cb40b3</code>; delta <code>3cb40b3..35b7de1</code> (lease, dispatched_at, cancel guard, <code>of=self</code>) <strong>chưa được QA lại</strong>, chỉ có <code>make check</code> xanh của tác giả trên <code>35b7de1</code>. Delta QA: pending/tuỳ chọn. Không phải nghiệm thu M-02.</blockquote>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>M-02-RESOLVE</code></li>
 <li><strong>Title</strong>: <code>QA M-02-RESOLVE (chờ QA độc lập)</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung</code></li>
-<li><strong>Tester</strong>: <code>pending (chưa gán)</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Tester</strong>: <code>subagent QA độc lập</code></li>
+<li><strong>Status</strong>: <code>passed</code></li>
 <li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
-<li><strong>Review Decision</strong>: <code>pending (review chưa APPROVED; QA chưa được bắt đầu)</code></li>
-<li><strong>Test Date</strong>: <code>pending</code></li>
-<li><strong>Environment ID</strong>: <code>pending</code></li>
+<li><strong>Review Decision</strong>: <code>review #1 trên 3cb40b3: CHANGES_REQUESTED; delta sau đó APPROVE (không phải APPROVED toàn bộ). QA của 3cb40b3 chạy song song, không thay duyệt PO</code></li>
+<li><strong>Test Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Environment ID</strong>: <code>worktree riêng tại 3cb40b3, DB labelx_qa; dịch vụ live chỉ đọc (cổng 8000/8080)</code></li>
 </ul>
 <h2 id="test-scope">Test Scope</h2>
 <ul>
-<li><strong>Features or Requirements</strong>: <code>pending (M-02 AC-01, AC-02, AC-03; BLOCKER-024…029)</code></li>
-<li><strong>Included Test Levels</strong>: <code>pending</code></li>
-<li><strong>Behavior Checks</strong>: <code>pending</code></li>
-<li><strong>Edge Cases</strong>: <code>pending</code></li>
-<li><strong>Regression Checklist</strong>: <code>pending</code></li>
-<li><strong>Excluded Checks</strong>: <code>pending</code></li>
+<li><strong>Features or Requirements</strong>: <code>M-02 AC-01, AC-02, AC-03; BLOCKER-024…029 (kiểm tính nhất quán bằng chứng)</code></li>
+<li><strong>Included Test Levels</strong>: <code>unit | integration | contract | manual (đối chiếu evidence)</code></li>
+<li><strong>Behavior Checks</strong>: <code>hash AC-01 bằng nhau giữa run 35/39/40; số đếm AC-02; AC-03 drift; RBAC tính lại từ ma trận 13×7; không có secret trong evidence; ảnh chụp nhất quán</code></li>
+<li><strong>Edge Cases</strong>: <code>run 35 chạy trước F-1; endpoint internal_metrics chưa có trong ma trận; ảnh annotator trùng byte</code></li>
+<li><strong>Regression Checklist</strong>: <code>full pytest, vitest, ruff, mypy, migrate DB mới, contract regen, validate-framework</code></li>
+<li><strong>Excluded Checks</strong>: <code>CI trên SHA; chạy lại kịch bản E2E trên dịch vụ live; retry-failed trên broker thật; Prometheus scrape; detector/metric/vlm; thời gian 10.000 frame; npm run build; duyệt CR-109; tính xác thực của môi trường tạo evidence</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
@@ -77,44 +77,46 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
 <li><strong>Issues or Risks</strong>: <code>BLOCKER-024…029</code></li>
-<li><strong>Build or Commit</strong>: <code>pending</code></li>
+<li><strong>Build or Commit</strong>: <code>3cb40b3 (không phủ delta tới 35b7de1)</code></li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
-<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>pending</td><td><code>not-run</code></td><td>chưa thực hiện</td></tr></tbody></table>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>ruff check + format</td><td><code>passed</code></td><td>3cb40b3</td></tr><tr><td>mypy (123 file)</td><td><code>passed</code></td><td></td></tr><tr><td>pytest nhắm mục tiêu</td><td><code>passed</code></td><td>169 passed</td></tr><tr><td>pytest toàn bộ</td><td><code>passed</code></td><td>470 passed / 1 skipped</td></tr><tr><td>migrate DB mới + makemigrations --check</td><td><code>passed</code></td><td>không drift</td></tr><tr><td>contract regen (<code>git diff --exit-code contract.d.ts</code>)</td><td><code>passed</code></td><td>exit 0, đồng bộ</td></tr><tr><td>frontend typecheck</td><td><code>passed</code></td><td></td></tr><tr><td>vitest</td><td><code>passed</code></td><td>20 file / 188 test, 0 Unhandled (pool=forks, maxWorkers=2, 373 s)</td></tr><tr><td>validate-framework</td><td><code>passed</code></td><td>FRAMEWORK_VALIDATION_PASS</td></tr></tbody></table>
 <h2 id="test-results">Test Results</h2>
-<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>pending</td><td><code>not-run</code></td><td>chưa thực hiện</td></tr></tbody></table>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>ruff check + format</td><td><code>passed</code></td><td>3cb40b3</td></tr><tr><td>mypy (123 file)</td><td><code>passed</code></td><td></td></tr><tr><td>pytest nhắm mục tiêu</td><td><code>passed</code></td><td>169 passed</td></tr><tr><td>pytest toàn bộ</td><td><code>passed</code></td><td>470 passed / 1 skipped</td></tr><tr><td>migrate DB mới + makemigrations --check</td><td><code>passed</code></td><td>không drift</td></tr><tr><td>contract regen (<code>git diff --exit-code contract.d.ts</code>)</td><td><code>passed</code></td><td>exit 0, đồng bộ</td></tr><tr><td>frontend typecheck</td><td><code>passed</code></td><td></td></tr><tr><td>vitest</td><td><code>passed</code></td><td>20 file / 188 test, 0 Unhandled (pool=forks, maxWorkers=2, 373 s)</td></tr><tr><td>validate-framework</td><td><code>passed</code></td><td>FRAMEWORK_VALIDATION_PASS</td></tr><tr><td>Nhất quán evidence: AC-01 hash bằng nhau run 35/39/40; số đếm AC-02; AC-03 drift; RBAC tính lại 13×7 khớp; không secret; ảnh nhất quán</td><td><code>passed</code></td><td>.agent/evidence/M-02-RESOLVE/</td></tr><tr><td>Dịch vụ live chỉ đọc (8000/8080)</td><td><code>passed</code></td><td>phản hồi</td></tr><tr><td>CI trên SHA, chạy lại E2E live, retry-failed broker thật, Prometheus scrape, detector/metric/vlm, 10k frame, npm run build, CR-109, xác thực môi trường evidence</td><td><code>not-run</code></td><td>NOT verified bởi QA</td></tr></tbody></table>
+<p>Quan sát: <strong>O1</strong> ledger run 35 khác (chạy trước F-1, đã giải thích). <strong>O2</strong> <code>internal_metrics</code> chưa có trong <code>rbac-matrix.html</code> (CR-109 proposed) nên không đối chiếu được với ma trận. <strong>O3</strong> ảnh annotator config/history trùng từng byte (cùng trang 403).</p>
 <h2 id="result-summary">Result Summary</h2>
 <ul>
-<li><strong>Total</strong>: <code>pending</code></li>
-<li><strong>Passed</strong>: <code>pending</code></li>
-<li><strong>Failed</strong>: <code>pending</code></li>
-<li><strong>Blocked</strong>: <code>pending</code></li>
-<li><strong>Skipped</strong>: <code>pending</code></li>
+<li><strong>Total</strong>: <code>12 nhóm kiểm (không tính số pytest)</code></li>
+<li><strong>Passed</strong>: <code>11</code></li>
+<li><strong>Failed</strong>: <code>0</code></li>
+<li><strong>Blocked</strong>: <code>0</code></li>
+<li><strong>Skipped</strong>: <code>1 nhóm các kiểm ngoài phạm vi QA (not-run, xem trên); pytest có 1 test skipped sẵn có</code></li>
 </ul>
 <h2 id="defects-and-risks">Defects and Risks</h2>
 <ul>
-<li><strong>Open Defects</strong>: <code>pending</code></li>
-<li><strong>Residual Risks</strong>: <code>pending</code></li>
+<li><strong>Open Defects</strong>: <code>none ghi nhận bởi QA; minor của review còn mở (m1, m3, m4, m5, m6, m7)</code></li>
+<li><strong>Residual Risks</strong>: <code>delta 3cb40b3..35b7de1 chưa QA; kịch bản broker-down/SIGKILL/huỷ chưa chạy lại trên code mới</code></li>
 <li><strong>Blocking Conditions</strong>: <code>BLOCKER-024…029 (đang open)</code></li>
 </ul>
 <h2 id="acceptance-criteria">Acceptance Criteria</h2>
 <ul>
-<li>[ ] Review report records <code>APPROVED</code> before QA starts.</li>
-<li>[ ] Every required check has a result and evidence.</li>
-<li>[ ] Result totals reconcile with the results table.</li>
+<li>[ ] Review report records <code>APPROVED</code> before QA starts. (không đạt: QA chạy khi review #1 là CHANGES_REQUESTED)</li>
+<li>[x] Every required check has a result and evidence.</li>
+<li>[x] Result totals reconcile with the results table.</li>
 <li>[ ] Failed checks map to issue records.</li>
 <li>[ ] Skipped checks include an explicit approved reason.</li>
 <li>[ ] Behavior, edge cases, regression checklist, and manual verification are recorded when applicable.</li>
 </ul>
 <h2 id="release-recommendation">Release Recommendation</h2>
 <ul>
-<li><strong>Recommendation</strong>: <code>pending (không đưa ra go/no-go)</code></li>
-<li><strong>Conditions</strong>: <code>pending</code></li>
-<li><strong>Rationale</strong>: <code>pending independent QA</code></li>
-<li><strong>Authorized By</strong>: <code>pending</code></li>
+<li><strong>Recommendation</strong>: <code>conditional-go</code></li>
+<li><strong>Conditions</strong>: <code>Delta QA (tuỳ chọn) cho 3cb40b3..35b7de1; PO duyệt CR-109 và comment CR-102; CI trên SHA cuối; các mục NOT verified ở trên</code></li>
+<li><strong>Rationale</strong>: <code>QA của 3cb40b3 passed kèm quan sát; không tuyên bố nghiệm thu M-02</code></li>
+<li><strong>Authorized By</strong>: <code>none (chưa có PO)</code></li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] QA report is complete and independently authored.</li>
+<li>[x] QA report của 3cb40b3 do subagent độc lập thực hiện.</li>
+<li>[ ] Delta QA 3cb40b3..35b7de1.</li>
 </ul>
 </article></main></body></html>
