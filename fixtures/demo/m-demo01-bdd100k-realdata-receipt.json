@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelx-m-demo01-realdata-receipt-v1",
+  "verified_at": "2026-10-10T08:31:52Z",
+  "source": {
+    "dataset": "BDD100K",
+    "split": "val",
+    "cvat_project_id": 3,
+    "cvat_task_id": 21,
+    "cvat_job_id": 18,
+    "frame_count": 5,
+    "annotation_count": 106,
+    "deep_link": "http://localhost:8080/tasks/21/jobs/18"
+  },
+  "snapshot": {
+    "snapshot_id": 1,
+    "status": "locked",
+    "job_count": 1,
+    "frame_count": 5,
+    "revision_sha256": "b177c23a5763cad74d70498054e367b0336129fff5be28668713d43a29621916",
+    "replay_snapshot_id": 1
+  },
+  "run": {
+    "run_id": 1,
+    "config_version_id": 1,
+    "seed": 42,
+    "idempotency_key": "m-demo01-realdata-run-v1",
+    "status": "completed",
+    "executed_work_units": 3,
+    "failed_work_units": 0,
+    "candidate_count": 0,
+    "score_version": "score_v0",
+    "ranking_hash": "5bd4f118539f01978992d024456b2c54c200545ba7226e7e8f490f265f579669",
+    "replay": {
+      "run_id": 1,
+      "action": "reused",
+      "executed_work_units": 0,
+      "ranking_hash": "5bd4f118539f01978992d024456b2c54c200545ba7226e7e8f490f265f579669"
+    }
+  },
+  "api": {
+    "item_count": 5,
+    "ranks": [1, 2, 3, 4, 5],
+    "scores": [0.35, 0.34, 0.19, 0.14, 0.04],
+    "engines": [
+      { "engine": "duplicate", "status": "checked" },
+      { "engine": "geometry", "status": "checked" },
+      { "engine": "schema", "status": "checked" }
+    ],
+    "top_frame": {
+      "frame_number": 4,
+      "image_status": 200,
+      "image_bytes": 59696,
+      "cvat_deep_link": "http://localhost:8080/tasks/21/jobs/18?frame=4"
+    }
+  },
+  "repository_payload": {
+    "contains_source_images": false,
+    "contains_credentials": false,
+    "note": "Receipt and repeatable smoke test only; BDD100K images remain in local CVAT/object storage."
+  }
+}
