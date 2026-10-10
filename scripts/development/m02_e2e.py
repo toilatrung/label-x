@@ -73,17 +73,52 @@ def wait(api: Api, path: str, done: set[str], timeout: int = 600) -> dict:
     raise TimeoutError(path)
 
 
+def collect(api: Api, rid: int) -> dict:
+    run = wait(api, f"/api/runs/{rid}/", {"completed", "partial", "failed", "cancelled"}, 900)
+    cands = pages(api, f"/api/runs/{rid}/candidates/")
+    rank = api.get(f"/api/runs/{rid}/ranking/").json()
+    ledger = pages(api, f"/api/runs/{rid}/ledger/")
+    shards = pages(api, f"/api/runs/{rid}/shards/")
+    return {
+        "run_id": rid,
+        "status": run["status"],
+        "finished_at": run.get("finished_at"),
+        "candidates": len(cands),
+        "candidates_sha256": sha(sorted(canon(c) for c in cands)),
+        "content_hash": rank.get("content_hash"),
+        "ranking_hash": rank.get("ranking_hash"),
+        "ledger_sha256": sha(ledger),
+        "ledger": [(x["engine"], x["total"], x["eligible"], x["completed"], x["not_checked"]) for x in ledger],
+        "shards": {st: sum(1 for x in shards if x["status"] == st) for st in {x["status"] for x in shards}},
+    }
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
+    p.add_argument("--snapshot-id", type=int)
+    p.add_argument("--config-id", type=int)
+    p.add_argument("--create-only", action="store_true")
+    p.add_argument("--collect", type=int)
     p.add_argument("--base", default="http://localhost:8000")
     p.add_argument("--users", type=Path, required=True)
     p.add_argument("--dataset-id", type=int, required=True)
     p.add_argument("--seed", type=int, default=20261010)
     p.add_argument("--tag", default="a")
-    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--out", type=Path, default=Path("/dev/null"))
     a = p.parse_args()
     pw = json.loads(a.users.read_text())
     api = Api(a.base, "e2e_qa_lead", pw["qa_lead"])
+    if a.collect:
+        print(json.dumps(collect(api, a.collect)))
+        return 0
+    if a.create_only:
+        r = api.post(
+            "/api/runs/",
+            {"snapshot_id": a.snapshot_id, "config_version_id": a.config_id, "seed": a.seed},
+            key=f"e2e-run-{a.seed}-{a.tag}",
+        )
+        print(r.status_code, json.dumps(r.json())[:200])
+        return 0 if r.status_code < 300 else 1
     admin = Api(a.base, "e2e_qc_admin", pw["qc_admin"])
     t0 = time.time()
     r = api.post(

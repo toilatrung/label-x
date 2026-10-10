@@ -176,6 +176,19 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")
 CELERY_TASK_ACKS_LATE = True
+# Broker chết không được treo request API: publish thất bại nhanh, shard để PENDING và sweeper
+# (orchestration.redispatch_pending) xếp lại. Đo thực tế: tắt Redis làm POST /api/runs/ treo >120 s.
+# Kết quả task không được ai đọc (trạng thái nằm trong DB); result backend Redis còn làm
+# `.delay()` treo vô hạn khi Redis chết (retry subscribe), nên bỏ lưu kết quả.
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_BROKER_CONNECTION_TIMEOUT = 2
+CELERY_BROKER_TRANSPORT_OPTIONS = {"socket_connect_timeout": 2, "socket_timeout": 5}
+CELERY_TASK_PUBLISH_RETRY_POLICY = {
+    "max_retries": 1,
+    "interval_start": 0,
+    "interval_step": 0.2,
+    "interval_max": 0.5,
+}
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TIMEZONE = TIME_ZONE

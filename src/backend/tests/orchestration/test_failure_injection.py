@@ -441,3 +441,12 @@ def test_second_run_same_input_still_independent(run_setup, set_runner, inline_q
     dispatch_run(run_setup.pk)
     dispatch_run(other.pk)
     assert ShardCommit.objects.count() == 4
+
+
+def test_broker_down_publish_is_bounded_not_hanging():
+    """Redis chết làm `.delay()` treo vô hạn khi còn result backend; cấu hình phải chặn việc đó."""
+    from django.conf import settings
+
+    assert settings.CELERY_TASK_IGNORE_RESULT is True
+    assert settings.CELERY_TASK_PUBLISH_RETRY_POLICY["max_retries"] <= 3
+    assert settings.CELERY_BROKER_TRANSPORT_OPTIONS["socket_connect_timeout"] <= 5
