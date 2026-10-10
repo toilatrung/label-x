@@ -145,7 +145,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedDatasetList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "502": { $ref: "#/components/responses/BadGateway" }
   /api/datasets/{id}/tasks/:
     get:
       operationId: datasets_tasks
@@ -164,8 +166,10 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/CvatTask" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "502": { $ref: "#/components/responses/BadGateway" }
 
   # ------------------------------------------------------------- snapshots
   /api/snapshots/:
@@ -1129,6 +1133,11 @@ components:
       schema: { type: string }
 
   responses:
+    BadGateway:
+      description: Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     BadRequest:
       description: Dữ liệu không hợp lệ (VALIDATION_ERROR, INVALID_CREDENTIALS)
       content:
