@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow Review 2026-10-10 (M-02-RESOLVE) — LabelX</title>
+<meta name="labelx:id" content="flow-review-2026-10-10">
+<meta name="labelx:title" content="Flow Review 2026-10-10 (M-02-RESOLVE)">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="review">
+<meta name="labelx:tags" content="[review, flow, release, m-02-resolve]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / flow-2026-10-10</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>flow-review-2026-10-10</span><b>title</b><span>Flow Review 2026-10-10 (M-02-RESOLVE)</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>review</span><b>tags</b><span>[review, flow, release, m-02-resolve]</span><b>priority</b><span>2</span></div>
+<h1>Flow Review 2026-10-10: develop + PR #126 (M-02-RESOLVE)</h1>
+<h2>Record Metadata</h2>
+<ul>
+<li><strong>Status</strong>: <code>changes-required</code></li>
+<li><strong>Review Type</strong>: <code>release</code> (review luồng theo <code>labelx-flow-review</code>)</li>
+<li><strong>Reviewer</strong>: phiên QC <code>claude.qc@novaon.net</code> (Claude Sonnet 5.5). Không thay duyệt PO (CR-102)</li>
+<li><strong>Executor của PR #126</strong>: phiên claude-code của @toilatrung</li>
+<li><strong>Phạm vi</strong>: <code>origin/develop</code> (5c37d42, gồm #111) + merge local <code>origin/fix/M-02-RESOLVE</code> (a438b91, code 35b7de1) trên nhánh <code>qc/flow-review-M-02</code></li>
+<li><strong>Decision</strong>: <code>CHANGES_REQUESTED</code> cho việc merge <code>develop</code> → <code>main</code>. PR #126 → <code>develop</code>: không có finding chặn trong phạm vi đã kiểm</li>
+<li><strong>Report Date</strong>: 2026-10-10</li>
+</ul>
+<h2>Kết luận</h2>
+<p><strong>Chưa</strong> cho merge <code>develop</code> → <code>main</code>. Code ghép lại chạy đúng (mọi kiểm tự động đạt), nhưng hồ sơ quản trị chưa đóng (F-1, F-2, F-3).</p>
+<h2>Giới hạn của lần review này</h2>
+<ul>
+<li>Không chạy lại E2E trên CVAT thật và không tự đi từng vai trò trên UI. Mục RBAC, drift, hash lặp lại lấy từ evidence của PR #126 (<code>.agent/evidence/M-02-RESOLVE/</code>), chỉ đối chiếu chéo, chưa tái hiện.</li>
+<li>Không đo cổng thời gian 10.000 frame, không build <code>make detector-image</code>, không kiểm CI trên SHA của PR #126.</li>
+</ul>
+<h2>Command Evidence (merge local, worktree <code>/mnt/h/qc-flow-review</code>)</h2>
+<table><thead><tr><th>Lệnh</th><th>Kết quả</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td><code>git merge --no-ff origin/fix/M-02-RESOLVE</code></td><td><code>passed</code></td><td>không xung đột, 65 file, +3468/-40, có migration <code>runs.0005_workunit_dispatched_at</code></td></tr>
+<tr><td><code>make migrate</code> + <code>make check</code></td><td><code>passed</code></td><td>exit 0; ruff, mypy 124 file, pytest 491 passed / 1 skipped, vitest 188, detector 10, <code>FRAMEWORK_VALIDATION_PASS</code></td></tr>
+<tr><td><code>NODE_ENV=production npm run build</code></td><td><code>passed</code></td><td>không có <code>password123</code> trong <code>.next/static</code></td></tr>
+<tr><td><code>gen:api:contract</code> + <code>git diff --exit-code contract.d.ts</code></td><td><code>passed</code></td><td>openapi.yaml ↔ contract.d.ts khớp</td></tr>
+<tr><td><code>manage.py spectacular</code> so với <code>openapi.yaml</code></td><td><code>passed, có lưu ý</code></td><td>mọi operation backend đều có trong contract; xem F-4</td></tr>
+<tr><td><code>git merge-base --is-ancestor origin/main origin/develop</code>, <code>git merge-tree origin/main HEAD</code></td><td><code>passed</code></td><td>main là tổ tiên; không CONFLICT</td></tr>
+<tr><td>Quét secret (<code>/home/</code>, <code>C:\Users</code>, <code>password=</code>, <code>token=</code>)</td><td><code>passed</code></td><td>chỉ trùng ở mã hợp lệ (<code>accounts/views.py</code>, <code>client.ts</code>)</td></tr>
+<tr><td>Adapter CVAT chỉ đọc (grep POST/PUT/PATCH/DELETE trong adapter)</td><td><code>passed</code></td><td>không có lệnh ghi</td></tr>
+</tbody></table>
+<h2>Bảng PR → task (khoảng <code>origin/main..origin/develop</code>, 107 commit)</h2>
+<table><thead><tr><th>PR</th><th>Task</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>#74, #76, #86, #88</td><td>T-019, T-020, T-021, T-022</td><td>M-01-RESOLVE / snapshot</td></tr>
+<tr><td>#77, #79, #85, #89, #90, #91, #93, #94, #95</td><td>T-028, T-023, T-030, T-024, T-025, T-026, T-025, T-029, T-027</td><td>engine, orchestration, config</td></tr>
+<tr><td>#92</td><td>T-031</td><td>BLOCKER-029 dồn về M-02-RESOLVE</td></tr>
+<tr><td>#111</td><td>T-032</td><td>contract M-03</td></tr>
+<tr><td>#87, #98, #121</td><td>T-028 hồ sơ, BLOCKER-026, BLOCKER-029</td><td>chỉ hồ sơ</td></tr>
+<tr><td>#126 (chưa merge, merge local)</td><td>M-02-RESOLVE</td><td>retry/backoff, sweeper, metrics CR-109, lease, E2E</td></tr>
+</tbody></table>
+<h2>Luồng dữ liệu</h2>
+<table><thead><tr><th>Khâu</th><th>Trạng thái</th><th>Bằng chứng</th></tr></thead><tbody>
+<tr><td>CVAT (mẫu) → adapter chỉ đọc + hash → snapshot</td><td>thật</td><td>AC-03: drift phát hiện, snapshot khóa không đổi sau khi sửa CVAT (<code>ac03-drift-cvat.json</code>)</td></tr>
+<tr><td>QC run (duplicate, geometry) → candidate → ranking</td><td>thật</td><td>run 42 và 43 cùng snapshot/config/seed: <code>candidates_sha256</code>, <code>content_hash</code>, <code>ranking_hash</code>, <code>ledger_sha256</code> giống hệt (đã so lại)</td></tr>
+<tr><td>Engine schema/taxonomy</td><td>stub</td><td>ledger: <code>schema not_checked</code> (T-027 chưa nối vào run)</td></tr>
+<tr><td>Detector JSON / metric / VLM</td><td>stub</td><td>runner chưa chạy (Not Implemented trong báo cáo M-02-RESOLVE)</td></tr>
+<tr><td>Issue → review → rework → báo cáo</td><td>chưa có</td><td>thuộc milestone sau</td></tr>
+<tr><td>Fail-safe orchestration (broker chết, worker bị kill, huỷ)</td><td>thật</td><td>run 39, 40 trong evidence</td></tr>
+</tbody></table>
+<h2>Vai trò × màn (từ evidence PR #126)</h2>
+<p>7 vai trò đã được chạy qua API và trình duyệt: vai trò không có quyền bị chặn ở UI (403) và API; <code>qa_lead</code>, <code>qc_admin</code>, <code>super_admin</code> vào được màn analysis. Kết quả: <code>đạt</code> cho snapshots, config, history. Review, issue, report: <code>stub</code>. Đây là kết quả lấy lại, không phải tái hiện.</p>
+<h2>Findings</h2>
+<table><thead><tr><th>ID</th><th>Mức</th><th>Finding</th><th>Owner / hành động</th></tr></thead><tbody>
+<tr><td>F-1</td><td>major</td><td>Còn 22 file <code>-@user</code> chưa gộp (<code>find . -name '*-@*'</code>): 4 task-board, current-context, task-commit-map, BLOCKER-024, CR-108, report T-019…T-032. Vi phạm CR-100 và mục 4 của skill. Task board chính không liệt kê T-023…T-027, T-029…T-032</td><td>integrator chạy <code>labelx-qc-integrate</code> ở PR riêng trước khi đóng đợt</td></tr>
+<tr><td>F-2</td><td>major</td><td>QA độc lập chỉ phủ <code>3cb40b3</code>. Delta tới 35b7de1 (lease <code>started_at</code>, <code>dispatched_at</code>, cancel guard, <code>of=self</code>) chưa QA, chỉ có <code>make check</code> của tác giả (nay đã tái hiện xanh ở đây). Không có comment duyệt của PO (CR-102)</td><td>@toilatrung: QA delta hoặc ghi lý do chấp nhận</td></tr>
+<tr><td>F-3</td><td>major</td><td>BLOCKER-024 còn mở: provenance đối chiếu mirror, chưa theo official tree; CR-109 ở trạng thái đề xuất, chờ PO. Không blocker nào được đóng</td><td>PO xác nhận</td></tr>
+<tr><td>F-4</td><td>minor</td><td>3 view trong <code>runs/views.py</code> (<code>ConfigVersionPublishView</code> dòng 117, <code>RunCancelView</code> 350, <code>RunRetryFailedView</code> 379) không có serializer nên drf-spectacular bỏ qua: không so được với <code>openapi.yaml</code> cho cancel, retry-failed, publish config</td><td>@toilatrung: thêm <code>serializer_class</code>/<code>@extend_schema</code></td></tr>
+<tr><td>F-5</td><td>minor</td><td><code>/internal/metrics/</code> có trong <code>openapi.yaml</code> nhưng chưa có trong <code>rbac-matrix.html</code></td><td>@toilatrung</td></tr>
+<tr><td>F-6</td><td>minor</td><td><code>.agent/planning/</code> cập nhật lần cuối 09/10; chưa phản ánh M-02-RESOLVE và các PR M-02 đã merge</td><td>integrator</td></tr>
+<tr><td>F-7</td><td>info</td><td>RAM WSL giới hạn và DB <code>test_labelx</code> dùng chung: đã từng bị drop chéo khi hai phiên chạy pytest song song. Chạy tuần tự ở đây, không xung đột</td><td>ghi nhận</td></tr>
+</tbody></table>
+<h2>Việc chặn release</h2>
+<ul><li>F-1 (gộp file <code>-@user</code>)</li><li>F-2 (QA delta và duyệt PO)</li><li>F-3 (PO xác nhận BLOCKER-024, CR-109)</li></ul>
+</article></main></body></html>
