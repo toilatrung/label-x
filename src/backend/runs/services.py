@@ -17,7 +17,9 @@ from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
 )
+from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
+from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
 from snapshots.models import Snapshot
 
@@ -52,24 +54,8 @@ class ScopeBusyError(RunDomainError):
 
 KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     DUPLICATE_OVERLAP_ENGINE_NAME: DUPLICATE_OVERLAP_DESCRIPTOR,
-    "schema": EngineDescriptor(
-        name="schema",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=False,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
-    "geometry": EngineDescriptor(
-        name="geometry",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=False,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
+    SCHEMA_TAXONOMY_ENGINE_NAME: SCHEMA_TAXONOMY_DESCRIPTOR,
+    GEOMETRY_ENGINE_NAME: GEOMETRY_DESCRIPTOR,
     "detector": EngineDescriptor(
         name="detector",
         version="1.0.0",

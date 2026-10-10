@@ -186,3 +186,37 @@ def test_engine_result_reason_from_ledger_not_checked(run_setup: QCRun, inline_q
     refresh_run(run_setup.pk)
     result = run_setup.engine_results.get(engine=ENGINE)
     assert result.status == "not_checked" and result.reason == "no_reference"
+
+
+def test_default_run_with_all_registered_engines_end_to_end(inline_queue):
+    """Run mặc định: duplicate + schema + geometry chạy thật qua registry."""
+    from orchestration.models import LedgerUnit
+    from runs.models import ConfigVersion
+    from runs.services import create_qc_run
+
+    base = make_run(engine="duplicate")
+    cfg = ConfigVersion.objects.get(pk=base.config_version_id)
+    cfg.engines = {}
+    cfg.payload = {"shard_size": 2}
+    cfg.save()
+    run, _ = create_qc_run(
+        snapshot_id=base.snapshot_id, config_version_id=cfg.pk, seed=9, created_by=base.created_by
+    )
+    dispatch_run(run.pk)
+    run.refresh_from_db()
+    results = {r.engine: r for r in run.engine_results.all()}
+    assert run.status == QCRun.Status.COMPLETED
+    assert results["duplicate"].status == "checked"
+    assert (results["duplicate"].eligible_units, results["duplicate"].completed_units) == (3, 3)
+    expected = {"schema": "no_reference", "geometry": "not_applicable"}
+    for name, reason in expected.items():
+        reasons = set(
+            LedgerUnit.objects.filter(run_id=run.pk, engine=name).values_list(
+                "not_checked_reason", flat=True
+            )
+        )
+        assert reasons == {reason}, (name, reasons)
+        assert results[name].status == "not_checked" and results[name].reason == reason
+    # Schema thiếu taxonomy vẫn nằm trong mẫu số (không bị loại như not_applicable).
+    assert results["schema"].eligible_units == 3
+    assert results["geometry"].eligible_units == 0
