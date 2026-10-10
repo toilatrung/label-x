@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import cast
 
+from botocore.exceptions import ClientError
 from django.contrib.auth.models import User
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from django.http import HttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
 from rest_framework.request import Request
@@ -15,13 +18,16 @@ from rest_framework.views import APIView
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
 from engines.interface import EngineStatus, public_status
 from orchestration.services import ledger_counts
 from runs.config_versions import create_config_version, publish_config_version
+from runs.demo_frames import build_demo_frame_page, parse_page_size
 from runs.models import ConfigVersion, QCRun, WorkUnit
 from runs.serializers import (
     ConfigVersionCreateSerializer,
     ConfigVersionSerializer,
+    DemoFramePageSerializer,
     LedgerEntrySerializer,
     PaginatedConfigVersionSerializer,
     PaginatedRunListSerializer,
@@ -41,7 +47,8 @@ from runs.services import (
     create_qc_run,
     retry_failed_qc_run,
 )
-from snapshots.models import Snapshot
+from snapshots.models import Snapshot, SnapshotFrame
+from storage import ObjectStorage
 
 
 class RunCursorPagination(CursorPagination):
@@ -462,3 +469,86 @@ class RunShardView(RunScopedReadView):
         paginator = RunCursorPagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
         return paginator.get_paginated_response(WorkUnitSerializer(page, many=True).data)
+
+
+class DemoRunReadView(APIView):
+    """DEMO-ONLY authorization boundary shared by M-DEMO01 read endpoints."""
+
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
+    object_type = "run"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
+        )
+
+
+class RunFrameListView(DemoRunReadView):
+    """DEMO-ONLY ranked frame/candidate projection; no lease or review decisions."""
+
+    action_name = "demo.runs.frames.list"
+
+    @extend_schema(
+        operation_id="demo_runs_frames_list",
+        parameters=[
+            OpenApiParameter("cursor", str, required=False),
+            OpenApiParameter("page_size", int, required=False),
+        ],
+        responses={
+            200: DemoFramePageSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["demo"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        run = QCRun.objects.prefetch_related("engine_results").get(pk=pk)
+        try:
+            payload = build_demo_frame_page(
+                run,
+                cursor=request.query_params.get("cursor"),
+                page_size=parse_page_size(request.query_params.get("page_size")),
+            )
+        except ValueError as exc:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", str(exc)) from exc
+        return Response(DemoFramePageSerializer(payload).data)
+
+
+class RunFrameImageView(DemoRunReadView):
+    """DEMO-ONLY image proxy; storage keys and credentials never leave the API."""
+
+    action_name = "demo.runs.frames.image"
+
+    @extend_schema(
+        operation_id="demo_runs_frames_image",
+        responses={
+            (200, "image/jpeg"): OpenApiTypes.BINARY,
+            403: OpenApiResponse(description="Không có quyền hoặc ngoài scope."),
+            404: OpenApiResponse(description="Run/frame hoặc object ảnh không tồn tại."),
+        },
+        tags=["demo"],
+    )
+    def get(self, _request: Request, pk: int, frame_id: int) -> HttpResponse:
+        frame = (
+            SnapshotFrame.objects.filter(pk=frame_id, snapshot_job__snapshot__qc_runs__id=pk)
+            .only("media_storage_key", "media_mime_type")
+            .first()
+        )
+        if frame is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "NOT_FOUND",
+                "Frame không thuộc snapshot của run.",
+            )
+        try:
+            content = ObjectStorage.from_django_settings("snapshots").get(frame.media_storage_key)
+        except ClientError as exc:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "NOT_FOUND",
+                "Ảnh của frame không tồn tại.",
+            ) from exc
+        return HttpResponse(content, content_type=frame.media_mime_type)
