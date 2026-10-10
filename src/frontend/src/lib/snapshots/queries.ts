@@ -8,7 +8,7 @@ export function useDatasets(userId?: number) {
     queryKey: ['datasets', userId], enabled: userId !== undefined,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam, signal }) => getDatasets(pageParam, signal),
-    getNextPageParam: page => cursorFrom(page.next), retry: false,
+    getNextPageParam: page => page?.next ? cursorFrom(page.next) : undefined, retry: false,
   });
 }
 
@@ -34,6 +34,6 @@ export function useSnapshotHistory(userId: number | undefined, datasetId: number
     enabled: userId !== undefined && datasetId !== null,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam, signal }) => getSnapshots(datasetId!, pageParam, signal),
-    getNextPageParam: page => cursorFrom(page.next), retry: false,
+    getNextPageParam: page => page?.next ? cursorFrom(page.next) : undefined, retry: false,
   });
 }

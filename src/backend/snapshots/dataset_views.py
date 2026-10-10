@@ -8,7 +8,7 @@ from typing import Any, cast
 import httpx
 from django.conf import settings
 from django.contrib.auth.models import User
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -76,7 +76,25 @@ class DatasetListView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        operation_id="datasets_list", responses={200: PaginatedDatasetSerializer}, tags=["datasets"]
+        operation_id="datasets_list",
+        parameters=[
+            OpenApiParameter(
+                name="cursor",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description=(
+                    "Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50)"
+                ),
+            ),
+        ],
+        responses={
+            200: PaginatedDatasetSerializer,
+            400: OpenApiResponse(description="Cursor Dataset không hợp lệ."),
+            403: OpenApiResponse(description="Không có phạm vi Dataset."),
+            502: OpenApiResponse(description="Không đọc được project CVAT."),
+        },
+        tags=["datasets"],
     )
     def get(self, request: Request) -> Response:
         cursor_text = request.query_params.get("cursor")
@@ -143,28 +161,51 @@ class DatasetTasksView(APIView):
     object_type = "dataset"
     requires_dataset = True
 
+    def get_dataset_id(self, _request: Request) -> int | None:
+        raw = self.kwargs.get("id") or self.kwargs.get("dataset_id")
+        return int(raw) if raw is not None and str(raw).isdigit() else None
+
     @extend_schema(
         operation_id="datasets_tasks",
-        responses={200: CvatTaskSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="ID của dataset (CVAT project ID)",
+            ),
+        ],
+        responses={
+            200: CvatTaskSerializer(many=True),
+            400: OpenApiResponse(description="Yêu cầu không hợp lệ."),
+            403: OpenApiResponse(description="Không có quyền truy cập Dataset."),
+            404: OpenApiResponse(description="Dataset không tồn tại."),
+            502: OpenApiResponse(description="Không đọc được Task/Job CVAT."),
+        },
         tags=["datasets"],
     )
-    def get(self, _request: Request, dataset_id: int) -> Response:
+    def get(
+        self, _request: Request, id: int | None = None, dataset_id: int | None = None
+    ) -> Response:
+        target_id = id if id is not None else dataset_id
+        if target_id is None:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Thiếu ID Dataset.")
         try:
             with _client() as cvat:
                 try:
-                    cvat.get_project(dataset_id)
+                    cvat.get_project(target_id)
                 except httpx.HTTPStatusError as exc:
                     if exc.response.status_code == 404:
                         raise ApiError(
                             status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Dataset không tồn tại."
                         ) from exc
                     raise
-                tasks = cvat.list_tasks(project_id=dataset_id)
+                tasks = cvat.list_tasks(project_id=target_id)
                 output: list[dict[str, Any]] = []
                 for task in tasks:
                     task_id = _positive(task.get("id"), "task.id")
                     project_id = _related_id(task, "project")
-                    if _positive(project_id, "task.project_id") != dataset_id:
+                    if _positive(project_id, "task.project_id") != target_id:
                         raise ApiError(
                             status.HTTP_502_BAD_GATEWAY,
                             "BUSINESS_RULE_UNMET",

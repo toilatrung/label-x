@@ -1678,6 +1678,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
+        BadGateway: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Dữ liệu không hợp lệ (VALIDATION_ERROR, INVALID_CREDENTIALS) */
         BadRequest: {
             headers: {
@@ -1875,7 +1884,9 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedDatasetList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            502: components["responses"]["BadGateway"];
         };
     };
     datasets_tasks: {
@@ -1898,8 +1909,10 @@ export interface operations {
                     "application/json": components["schemas"]["CvatTask"][];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            502: components["responses"]["BadGateway"];
         };
     };
     snapshots_list: {

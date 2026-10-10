@@ -31,16 +31,68 @@ function SnapshotWorkspace() {
   const taskQuery = useTasks(userId, datasetId, canRead && !!selectedDataset && !id);
   const recent = useSnapshotHistory(userId, canRead ? datasetId : null);
   const recentLocked = recent.data?.pages.flatMap(page => page.results).find(item => item.status === 'locked');
+
+  const visitedCursorsRef = React.useRef<Set<string>>(new Set());
+  const prevDatasetIdRef = React.useRef<number | null>(datasetId);
+
+  React.useEffect(() => {
+    if (prevDatasetIdRef.current !== datasetId) {
+      prevDatasetIdRef.current = datasetId;
+      visitedCursorsRef.current.clear();
+    }
+  }, [datasetId]);
+
+  // F-2: Auto-fetch next pages of snapshot history until locked snapshot is found or all pages exhausted
+  React.useEffect(() => {
+    if (!canRead || datasetId === null || recentLocked || recent.isError || recent.isFetchingNextPage || !recent.hasNextPage) {
+      return;
+    }
+    const pageCount = recent.data?.pages.length ?? 0;
+    if (pageCount >= 20) return; // Safeguard against runaway pagination
+    const lastPage = recent.data?.pages[pageCount - 1];
+    const nextCursor = lastPage?.next;
+    if (nextCursor && visitedCursorsRef.current.has(nextCursor)) {
+      return; // Safeguard against cycle
+    }
+    if (nextCursor) {
+      visitedCursorsRef.current.add(nextCursor);
+    }
+    void recent.fetchNextPage();
+  }, [canRead, datasetId, recentLocked, recent.isError, recent.isFetchingNextPage, recent.hasNextPage, recent.data?.pages, recent]);
+
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
+
+  const item = detail.data && hasDatasetPermission(session, detail.data.dataset_id, canAccessAnalysis) ? detail.data : null;
+
+  // F-1: Resolve dataset context from Snapshot detail when deep-linked
+  const snapshotDataset = allDatasets.find(d => d.id === item?.dataset_id);
+
+  // If viewing a snapshot whose dataset is on a subsequent page, load next pages to resolve name
+  React.useEffect(() => {
+    if (item && !snapshotDataset && datasetQuery.hasNextPage && !datasetQuery.isFetchingNextPage) {
+      void datasetQuery.fetchNextPage();
+    }
+  }, [item, snapshotDataset, datasetQuery.hasNextPage, datasetQuery.isFetchingNextPage, datasetQuery]);
+
+  const displayDatasetName = item ? snapshotDataset?.name : selectedDataset?.name;
+  const displayGuideline = item ? (item.guideline_version ?? snapshotDataset?.guideline_version ?? undefined)
+    : (selectedDataset?.guideline_version ?? undefined);
+  const displayTaxonomy = item ? (item.taxonomy_version ?? snapshotDataset?.taxonomy_version ?? undefined)
+    : (selectedDataset?.taxonomy_version ?? undefined);
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
   if (!canEnter) return <ForbiddenView requiredPermission="QA Lead / QC Admin / Super Admin" />;
-  const item = detail.data && hasDatasetPermission(session, detail.data.dataset_id, canAccessAnalysis) ? detail.data : null;
+
+  const isSearchingLocked = !recentLocked && (recent.isPending || recent.isFetchingNextPage || (recent.hasNextPage && !recentLocked));
+
   return <AppShell activeKey="analysis" flowStep={1}
-    context={{ datasetName: selectedDataset?.name, datasetIdOverride: item?.dataset_id,
+    context={{
+      datasetName: displayDatasetName,
+      datasetIdOverride: item?.dataset_id,
       snapshotName: item ? `SNP-${item.id} · ${item.status}` : undefined,
-      guidelineVersion: item?.guideline_version ?? selectedDataset?.guideline_version ?? undefined,
-      taxonomyVersion: item?.taxonomy_version ?? selectedDataset?.taxonomy_version ?? undefined }}
+      guidelineVersion: displayGuideline,
+      taxonomyVersion: displayTaxonomy,
+    }}
     pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Snapshot</h1>
       <p className="lx-lead">Chốt phiên bản annotation để kiểm tra. Annotation thay đổi sẽ tạo Snapshot mới.</p></div>
       <div className="lx-actions"><Link className="lx-btn" href="/analysis/history">Lịch sử Snapshot</Link>
@@ -90,7 +142,11 @@ function SnapshotWorkspace() {
           <dt>Mã</dt><dd><Link href={`/analysis?snapshotId=${recentLocked.id}`}>SNP-{recentLocked.id}</Link></dd>
           <dt>Hash</dt><dd className="lx-mono" style={{ overflowWrap: 'anywhere' }}>{recentLocked.revision_hash || '—'}</dd>
           <dt>Shape bỏ qua</dt><dd>{recentLocked.out_of_scope_shapes ?? '—'}</dd>
-        </dl> : <p className="lx-muted">{recent.isPending && datasetId ? 'Đang tải…' : 'Chưa có Snapshot đã khóa.'}</p>}</div>
+        </dl> : isSearchingLocked && datasetId ? (
+          <p className="lx-muted" role="status">Đang tải…</p>
+        ) : (
+          <p className="lx-muted">{datasetId === null ? 'Vui lòng chọn một Dataset để tạo Snapshot.' : 'Chưa có Snapshot đã khóa.'}</p>
+        )}</div>
       </section>
     </div>}
   </AppShell>;

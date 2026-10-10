@@ -16,6 +16,27 @@ const item: Snapshot = { id: 5, dataset_id: 42, status: 'failed', failure_reason
     ] }],
 };
 
+const itemSingleFrame: Snapshot = {
+  ...item,
+  id: 6,
+  jobs: [{
+    ...item.jobs[0],
+    frames: [
+      { frame_index: 0, file_name: 'a.jpg', width: 10, height: 10,
+        cvat_url: 'https://cvat.example.test/tasks/9/jobs/17?frame=0' },
+    ],
+  }],
+};
+
+const itemEmptyFrames: Snapshot = {
+  ...item,
+  id: 7,
+  jobs: [{
+    ...item.jobs[0],
+    frames: [],
+  }],
+};
+
 describe('Snapshot detail', () => {
   it('shows drift, skipped shapes, parent and CVAT job/frame deep links', () => {
     render(<SnapshotDetail item={item} />);
@@ -25,5 +46,22 @@ describe('Snapshot detail', () => {
     expect(screen.getByRole('link', { name: 'Mở Job CVAT' }).getAttribute('href')).toContain('/tasks/9/jobs/17');
     fireEvent.change(screen.getByRole('combobox', { name: 'Frame Job 17' }), { target: { value: '1' } });
     expect(screen.getByRole('link', { name: 'Mở Frame' }).getAttribute('href')).toContain('frame=1');
+  });
+
+  it('resets/clamps frameIndex when switching snapshots or frame set shrinks (F-5)', () => {
+    const { rerender } = render(<SnapshotDetail item={item} />);
+    const select = screen.getByRole('combobox', { name: 'Frame Job 17' });
+    fireEvent.change(select, { target: { value: '1' } });
+    expect(screen.getByRole('link', { name: 'Mở Frame' }).getAttribute('href')).toContain('frame=1');
+
+    // Switch to Snapshot B with same Job but only 1 frame
+    rerender(<SnapshotDetail item={itemSingleFrame} />);
+    const link = screen.getByRole('link', { name: 'Mở Frame' });
+    expect(link).toBeDefined();
+    expect(link.getAttribute('href')).toContain('frame=0');
+
+    // Switch to Snapshot C with empty frames
+    rerender(<SnapshotDetail item={itemEmptyFrames} />);
+    expect(screen.queryByRole('link', { name: 'Mở Frame' })).toBeNull();
   });
 });

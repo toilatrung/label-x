@@ -6,9 +6,12 @@ import { safeCvatUrl, snapshotStatus, type Snapshot } from '@/lib/snapshots/api'
 
 function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean }) {
   const [frameIndex, setFrameIndex] = React.useState(0);
-  const frame = job.frames[frameIndex];
+  const safeIndex = job.frames.length > 0 ? Math.min(Math.max(0, frameIndex), job.frames.length - 1) : 0;
+  const frame = job.frames[safeIndex];
   const jobUrl = safeCvatUrl(job.cvat_url);
   const frameUrl = frame ? safeCvatUrl(frame.cvat_url) : null;
+
+
   return <tr>
     <td>Job #{job.cvat_job_id}{drift && <span className="lx-badge lx-badge--danger">Drift</span>}</td>
     <td>Task #{job.cvat_task_id}</td>
@@ -16,7 +19,7 @@ function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean 
     <td className="lx-mono" style={{ overflowWrap: 'anywhere' }}>{job.job_hash || 'Chưa có'}</td>
     <td>{jobUrl ? <a href={jobUrl} target="_blank" rel="noopener noreferrer">Mở Job CVAT</a> : 'Liên kết không hợp lệ'}</td>
     <td>{job.frames.length > 0 ? <div className="lx-row">
-      <select className="lx-select" aria-label={`Frame Job ${job.cvat_job_id}`} value={frameIndex}
+      <select className="lx-select" aria-label={`Frame Job ${job.cvat_job_id}`} value={safeIndex}
         onChange={event => setFrameIndex(Number(event.target.value))}>
         {job.frames.map((item, index) => <option key={item.frame_index} value={index}>
           Frame {item.frame_index} · {item.file_name}</option>)}
@@ -54,7 +57,7 @@ export function SnapshotDetail({ item }: { item: Snapshot }) {
           'Snapshot thất bại khi export.'}</div>}
       <div className="lx-scroll"><table className="lx-table"><caption>Job trong Snapshot</caption>
         <thead><tr><th>Job</th><th>Task</th><th>Người thực hiện</th><th>Hash</th><th>CVAT</th><th>Frame</th></tr></thead>
-        <tbody>{item.jobs.map(job => <JobRow key={job.cvat_job_id} job={job} drift={item.drift_jobs.includes(job.cvat_job_id)} />)}</tbody>
+        <tbody>{item.jobs.map(job => <JobRow key={`${item.id}:${job.cvat_job_id}`} job={job} drift={item.drift_jobs.includes(job.cvat_job_id)} />)}</tbody>
       </table></div>
       {!item.jobs.length && <p className="lx-muted">Chưa có Job trong Snapshot.</p>}
     </div>

@@ -266,3 +266,19 @@ def test_contract_declares_workflow_permissions(spec: dict[str, Any]) -> None:
         "product_owner",
         "data_model_owner",
     }
+
+
+def test_dataset_endpoints_contract_and_error_codes(spec):
+    datasets_list = spec["paths"]["/api/datasets/"]["get"]
+    assert {"200", "400", "403", "502"} <= set(datasets_list["responses"])
+    param_names = [p.get("name") or p.get("$ref") for p in datasets_list.get("parameters", [])]
+    assert any("Cursor" in str(p) or p == "cursor" for p in param_names)
+
+    datasets_tasks = spec["paths"]["/api/datasets/{id}/tasks/"]["get"]
+    assert {"200", "400", "403", "404", "502"} <= set(datasets_tasks["responses"])
+    path_param = [
+        p
+        for p in datasets_tasks.get("parameters", [])
+        if "Id" in str(p.get("$ref", "")) or p.get("name") == "id"
+    ]
+    assert path_param, "datasets_tasks must use id path parameter"
