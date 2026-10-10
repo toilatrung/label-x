@@ -84,3 +84,31 @@ body {
 .lx-execution-config pre { overflow-x: auto; padding: var(--space-4); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .lx-execution-warning { padding: var(--space-3); border-left: 3px solid var(--warning, #b7791f); background: var(--surface-sunken); }
 .lx-run-status--failed, .lx-run-status--partial, .lx-engine-status--failed, .lx-engine-status--partial, .lx-engine-status--not_checked { color: var(--danger, #a33); }
+
+/* DEMO-ONLY: M-DEMO01 ranked-frame review workspace. */
+.lx-review-run { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-2); }
+.lx-review-run .lx-input { width: 100px; }
+.lx-review-engines { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.lx-review-table { min-width: 760px; }
+.lx-review-workspace { grid-template-columns: minmax(0, 1fr) 380px; }
+.lx-review-workspace .lx-stage__view { min-height: 420px; padding: 0; background: #1f2329; overflow: hidden; }
+.lx-review-canvas { width: 100%; height: auto; max-height: 620px; display: block; }
+.lx-review-shape rect { fill: none; stroke: #c7ccd4; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.lx-review-shape text { fill: #fff; font: 600 16px/1 var(--font-sans); paint-order: stroke; stroke: #1f2329; stroke-width: 4px; stroke-linejoin: round; }
+.lx-review-shape.is-candidate rect { stroke: #f2c14e; stroke-width: 3; stroke-dasharray: 10 6; }
+.lx-review-shape.is-candidate text { fill: #f2c14e; }
+.lx-review-shape.is-candidate.is-high rect { stroke: #ff7b7b; }
+.lx-review-shape.is-candidate.is-high text { fill: #ff9a9a; }
+.lx-review-stage-spacer { flex: 1; }
+.lx-review-stage-footer { border-top: 1px solid #343a43; border-bottom: 0; }
+.lx-review-stage-footer .lx-ghostbtn:disabled { opacity: .4; cursor: not-allowed; }
+.lx-review-panel-heading { justify-content: space-between; }
+.lx-review-candidates { display: flex; flex-direction: column; gap: var(--space-3); }
+.lx-review-candidate { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-sunken); }
+.lx-review-candidate p { margin: var(--space-2) 0; }
+@media (max-width: 900px) { .lx-review-workspace { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .lx-review-run { width: 100%; }
+  .lx-review-run .lx-input { flex: 1; }
+  .lx-review-workspace .lx-stage__view { min-height: 260px; }
+}
