@@ -20,6 +20,7 @@ from engines.interface import (
     EngineOutput,
     EngineUnitResult,
     FrameKey,
+    NotCheckedEngineUnitResult,
     ObjectRef,
 )
 from engines.matching import BoundingBox, match_one_to_one
@@ -257,6 +258,18 @@ def run_duplicate_overlap_engine(
             annotations = tuple(annotations_by_frame[unit.frame])
         except KeyError as exc:
             raise ValueError(f"missing annotations for frame {unit.frame}") from exc
+
+        if not any(not annotation.ignored for annotation in annotations):
+            # Không có annotation nào để so: không được tính là đã kiểm (cùng quy ước Geometry).
+            unit_results.append(
+                NotCheckedEngineUnitResult(
+                    unit=unit,
+                    outcome="not_checked",
+                    attempts=1,
+                    not_checked_reason="not_applicable",
+                )
+            )
+            continue
 
         pairs = match_duplicate_overlap_pairs(annotations, threshold=threshold)
         candidates.extend(

@@ -55,7 +55,9 @@ def pages(api: Api, path: str, **params: object) -> list[dict]:
         r = api.get(url, **params) if url == path else api.c.get(url)
         r.raise_for_status()
         data = r.json()
-        out += data["results"]
+        if isinstance(data, list):
+            return data
+        out += data.get("results", data.get("items", []))
         url = data.get("next")
         params = {}
     return out
@@ -77,6 +79,7 @@ def main() -> int:
     p.add_argument("--users", type=Path, required=True)
     p.add_argument("--dataset-id", type=int, required=True)
     p.add_argument("--seed", type=int, default=20261010)
+    p.add_argument("--tag", default="a")
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
     pw = json.loads(a.users.read_text())
@@ -117,7 +120,7 @@ def main() -> int:
         r = api.post(
             "/api/runs/",
             {"snapshot_id": sid, "config_version_id": cid, "seed": a.seed},
-            key=f"e2e-run-{a.seed}-{n}",
+            key=f"e2e-run-{a.seed}-{a.tag}-{n}",
         )
         print("run create", r.status_code, r.text[:300])
         r.raise_for_status()

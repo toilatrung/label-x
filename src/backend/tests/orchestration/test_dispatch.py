@@ -207,9 +207,12 @@ def test_default_run_with_all_registered_engines_end_to_end(inline_queue):
     run.refresh_from_db()
     results = {r.engine: r for r in run.engine_results.all()}
     assert run.status == QCRun.Status.COMPLETED
-    assert results["duplicate"].status == "checked"
-    assert (results["duplicate"].eligible_units, results["duplicate"].completed_units) == (3, 3)
-    expected = {"schema": "no_reference", "geometry": "not_applicable"}
+    # Frame không có annotation: duplicate và geometry đều not_applicable (không coi là đã kiểm).
+    expected = {
+        "schema": "no_reference",
+        "geometry": "not_applicable",
+        "duplicate": "not_applicable",
+    }
     for name, reason in expected.items():
         reasons = set(
             LedgerUnit.objects.filter(run_id=run.pk, engine=name).values_list(
@@ -221,3 +224,4 @@ def test_default_run_with_all_registered_engines_end_to_end(inline_queue):
     # Schema thiếu taxonomy vẫn nằm trong mẫu số (không bị loại như not_applicable).
     assert results["schema"].eligible_units == 3
     assert results["geometry"].eligible_units == 0
+    assert results["duplicate"].eligible_units == 0
