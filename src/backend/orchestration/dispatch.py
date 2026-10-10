@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
 from orchestration.models import ShardCommit
+from orchestration.runsync import mark_run_running, refresh_run
 from orchestration.services import engine_input_to_payload, seed_ledger
 from orchestration.tasks import run_engine_shard
 from runs.models import QCRun, WorkUnit
@@ -81,6 +82,7 @@ def run_work_unit(work_unit_id: int) -> str:
         unit.status = WorkUnit.Status.RUNNING
         unit.started_at = unit.started_at or timezone.now()
         unit.save(update_fields=["status", "started_at"])
+        mark_run_running(unit.run_id)
     payload = prepare_work_unit(unit)
     try:
         run_engine_shard.apply(args=(payload,)).get(propagate=True)
@@ -88,20 +90,24 @@ def run_work_unit(work_unit_id: int) -> str:
         WorkUnit.objects.filter(pk=unit.pk).update(
             status=WorkUnit.Status.FAILED, last_error=str(exc)[:1000], finished_at=timezone.now()
         )
+        refresh_run(unit.run_id)
         raise
     WorkUnit.objects.filter(pk=unit.pk).update(
         status=WorkUnit.Status.COMPLETED, last_error="", finished_at=timezone.now()
     )
+    refresh_run(unit.run_id)
     return WorkUnit.Status.COMPLETED
 
 
 def dispatch_run(run_id: int) -> int:
     """Xếp mọi WorkUnit pending của run vào queue. Gọi lại an toàn (task idempotent)."""
     run = QCRun.objects.get(pk=run_id)
-    ids = list(run.work_units.filter(status=WorkUnit.Status.PENDING).values_list("pk", flat=True))
-    for pk in ids:
-        run_work_unit.delay(pk)
-    return len(ids)
+    pending = list(run.work_units.filter(status=WorkUnit.Status.PENDING).select_related("run"))
+    for unit in pending:  # chốt mẫu số ledger của cả run trước khi shard đầu tiên chạy
+        prepare_work_unit(unit)
+    for unit in pending:
+        run_work_unit.delay(unit.pk)
+    return len(pending)
 
 
 def committed_shards(run_id: int) -> int:

@@ -314,6 +314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{id}/shards/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trạng thái từng shard của QC Run */
+        get: operations["runs_shards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{id}/ranking/": {
         parameters: {
             query?: never;
@@ -1027,6 +1044,25 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             finished_at?: string | null;
+        };
+        RunShard: {
+            id: number;
+            engine: components["schemas"]["EngineName"];
+            shard_key: string;
+            shard_index: number;
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            attempt: number;
+            last_error: string;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            finished_at?: string | null;
+        };
+        PaginatedRunShardList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["RunShard"][];
         };
         /**
          * @description Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
@@ -2235,6 +2271,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerEntry"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_shards: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang shard, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRunShardList"];
                 };
             };
             403: components["responses"]["Forbidden"];

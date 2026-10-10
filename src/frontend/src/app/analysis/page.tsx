@@ -122,7 +122,9 @@ function SnapshotWorkspace() {
     }}
     pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Snapshot</h1>
       <p className="lx-lead">Chốt phiên bản annotation để kiểm tra. Annotation thay đổi sẽ tạo Snapshot mới.</p></div>
-      <div className="lx-actions"><Link className="lx-btn" href="/analysis/history">Lịch sử Snapshot</Link>
+      <div className="lx-actions"><Link className="lx-btn" href="/analysis/snapshots">Lịch sử Snapshot</Link>
+        <Link className="lx-btn" href="/analysis/config">Cấu hình và tạo QC run</Link>
+        <Link className="lx-btn" href="/analysis/history">Lịch sử thực thi</Link>
         {id && <Link className="lx-btn" href="/analysis">Tạo Snapshot mới</Link>}</div></div>}>
     {rawId && !id && <div className="lx-callout" role="alert">ID Snapshot không hợp lệ.</div>}
     {id ? <>
