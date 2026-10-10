@@ -112,6 +112,14 @@ export function CandidateEvidenceList({
                         {cand.anchor.rule_id && (
                           <div className="lx-cell__sub lx-mono">Rule: {cand.anchor.rule_id}</div>
                         )}
+                        {cand.anchor.objects.map((object, objectIndex) => (
+                          <div
+                            key={`${object.namespace}-${object.id}-${objectIndex}`}
+                            className="lx-cell__sub lx-mono"
+                          >
+                            {object.namespace}:{object.id}
+                          </div>
+                        ))}
                       </td>
                       <td>
                         <div className="lx-stack" style={{ gap: 4 }}>

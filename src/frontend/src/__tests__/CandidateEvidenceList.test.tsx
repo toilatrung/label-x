@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
 import type { Candidate } from '@/components/execution/CandidateEvidenceList';
 
@@ -80,6 +80,33 @@ describe('CandidateEvidenceList component (T-029)', () => {
     expect(screen.getByText('Frame #105')).toBeDefined();
     expect(screen.getByText('E1')).toBeDefined();
     expect(screen.getByText('G-014')).toBeDefined();
+  });
+
+  it('renders every object reference in an annotation cluster', () => {
+    render(<CandidateEvidenceList candidates={[sampleCandidates[0]]} />);
+
+    const row = screen.getByText('annotation_cluster').closest('tr')!;
+    expect(within(row).getByText('cvat_shape:shape-1')).toBeDefined();
+    expect(within(row).getByText('cvat_shape:shape-2')).toBeDefined();
+  });
+
+  it('distinguishes candidates with the same frame and rule but different annotation anchors', () => {
+    const first = sampleCandidates[1];
+    const second: Candidate = {
+      ...first,
+      anchor: {
+        ...first.anchor,
+        objects: [{ namespace: 'cvat_shape', id: 'shape-4' }],
+      },
+    };
+    render(<CandidateEvidenceList candidates={[first, second]} />);
+
+    const firstRow = screen.getByText('cvat_shape:shape-3').closest('tr')!;
+    const secondRow = screen.getByText('cvat_shape:shape-4').closest('tr')!;
+    expect(firstRow).not.toBe(secondRow);
+    expect(firstRow.textContent).not.toBe(secondRow.textContent);
+    expect(within(firstRow).queryByText('cvat_shape:shape-4')).toBeNull();
+    expect(within(secondRow).queryByText('cvat_shape:shape-3')).toBeNull();
   });
 
   it('does not render count callout when rawCount or dedupCount are omitted, and does not infer counts from candidates.length', () => {

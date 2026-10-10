@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
 import type { ConfigVersion } from '@/components/execution/EngineThresholdsTable';
 
@@ -90,6 +90,22 @@ describe('EngineThresholdsTable component (T-029)', () => {
     expect(screen.queryByText(/0\.85/)).toBeNull();
     expect(screen.queryByText(/Detector v2\.3/)).toBeNull();
     expect(screen.queryByText(/400/)).toBeNull();
+  });
+
+  it('shows nonempty params outside the formatter instead of claiming data is missing', () => {
+    const params = { required_attributes: { car: ['occluded'] }, custom_threshold: 0.42 };
+    render(
+      <EngineThresholdsTable
+        config={{
+          ...publishedConfig,
+          engines: { schema: { enabled: true, version: '1.0.0', params } },
+        }}
+      />
+    );
+
+    const row = screen.getByText('Schema / Taxonomy').closest('tr')!;
+    expect(within(row).getByText(JSON.stringify(params))).toBeDefined();
+    expect(within(row).queryByText('Chưa được cấu hình/không có dữ liệu từ API')).toBeNull();
   });
 
   it('renders loading state when isLoading is true', () => {
