@@ -132,7 +132,13 @@ def test_command_runs_fixture_scores_every_frame_and_is_idempotent() -> None:
         WorkUnit.objects.count(),
         CandidateRecord.objects.count(),
     )
-    candidate = CandidateRecord.objects.get()
+    # Fixture có hai box cùng nhãn IoU ~0.96 (shape 12/13) nên Duplicate/Overlap sinh E3,
+    # và shape 12 thiếu thuộc tính bắt buộc nên Schema sinh cảnh báo cấu trúc.
+    assert set(CandidateRecord.objects.values_list("engine", "family")) == {
+        ("duplicate", "E3"),
+        ("schema", "structural"),
+    }
+    candidate = CandidateRecord.objects.get(engine="schema")
     assert candidate.family == "structural"
     assert candidate.anchor["rule_id"] == "A-007"
     assert candidate.evidence["actual"] == "<missing>"

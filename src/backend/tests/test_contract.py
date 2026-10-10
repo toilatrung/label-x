@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 import yaml
+from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.validation import validate_schema
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -266,3 +267,67 @@ def test_contract_declares_workflow_permissions(spec: dict[str, Any]) -> None:
         "product_owner",
         "data_model_owner",
     }
+
+
+def test_dataset_endpoints_contract_and_error_codes(spec):
+    # 1. Kiểm tra OpenAPI contract tĩnh (docs/04-api/openapi.yaml)
+    datasets_list_static = spec["paths"]["/api/datasets/"]["get"]
+    assert {"200", "400", "403", "502"} <= set(datasets_list_static["responses"])
+    param_names = [
+        p.get("name") or p.get("$ref") for p in datasets_list_static.get("parameters", [])
+    ]
+    assert any("Cursor" in str(p) or p == "cursor" for p in param_names)
+
+    datasets_tasks_static = spec["paths"]["/api/datasets/{id}/tasks/"]["get"]
+    assert {"200", "400", "403", "404", "502"} <= set(datasets_tasks_static["responses"])
+    path_param = [
+        p
+        for p in datasets_tasks_static.get("parameters", [])
+        if "Id" in str(p.get("$ref", "")) or p.get("name") == "id"
+    ]
+    assert path_param, "datasets_tasks must use id path parameter"
+
+    # 2. Sinh schema thực tế từ DRF Spectacular và đối chiếu chính xác
+    generator = SchemaGenerator()
+    generated = generator.get_schema(request=None, public=True)
+    gen_paths = generated["paths"]
+
+    # Đối chiếu /api/datasets/
+    assert "/api/datasets/" in gen_paths
+    gen_list_op = gen_paths["/api/datasets/"]["get"]
+    assert gen_list_op["operationId"] == datasets_list_static["operationId"]
+
+    # Parameter: cursor
+    gen_list_params = {p["name"]: p for p in gen_list_op.get("parameters", [])}
+    assert "cursor" in gen_list_params
+    assert gen_list_params["cursor"]["in"] == "query"
+
+    # Responses: 200 và error codes 400, 403, 502
+    assert {"200", "400", "403", "502"} <= set(gen_list_op["responses"])
+    list_200 = gen_list_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert "PaginatedDatasetList" in list_200["$ref"]
+    for code in ("400", "403", "502"):
+        resp = gen_list_op["responses"][code]
+        err_schema = resp["content"]["application/json"]["schema"]
+        assert "Error" in err_schema["$ref"], f"Response {code} must reference Error schema"
+
+    # Đối chiếu /api/datasets/{id}/tasks/
+    assert "/api/datasets/{id}/tasks/" in gen_paths
+    gen_tasks_op = gen_paths["/api/datasets/{id}/tasks/"]["get"]
+    assert gen_tasks_op["operationId"] == datasets_tasks_static["operationId"]
+
+    # Parameter: id
+    gen_tasks_params = {p["name"]: p for p in gen_tasks_op.get("parameters", [])}
+    assert "id" in gen_tasks_params
+    assert gen_tasks_params["id"]["in"] == "path"
+    assert gen_tasks_params["id"]["required"] is True
+
+    # Responses: 200 và error codes 400, 403, 404, 502
+    assert {"200", "400", "403", "404", "502"} <= set(gen_tasks_op["responses"])
+    tasks_200 = gen_tasks_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert tasks_200["type"] == "array"
+    assert "CvatTask" in tasks_200["items"]["$ref"]
+    for code in ("400", "403", "404", "502"):
+        resp = gen_tasks_op["responses"][code]
+        err_schema = resp["content"]["application/json"]["schema"]
+        assert "Error" in err_schema["$ref"], f"Response {code} must reference Error schema"

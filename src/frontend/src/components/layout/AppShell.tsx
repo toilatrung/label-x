@@ -11,6 +11,7 @@ interface AppShellProps {
   activeKey?: string;
   flowStep?: number;
   showFlowNav?: boolean;
+  context?: React.ComponentProps<typeof ContextBar>;
 }
 
 export function AppShell({
@@ -19,11 +20,12 @@ export function AppShell({
   activeKey,
   flowStep = 1,
   showFlowNav = true,
+  context,
 }: AppShellProps) {
   return (
     <div className="lx" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--canvas)' }}>
       <TopBar activeKey={activeKey} />
-      <ContextBar />
+      <ContextBar {...context} />
       <main className="lx-app-content">
         {pageHeader}
         {showFlowNav && activeKey && ['analysis', 'review', 'reports'].includes(activeKey) &&

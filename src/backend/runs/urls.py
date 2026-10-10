@@ -4,11 +4,13 @@ from django.urls import path
 
 from runs.views import (
     RunCancelView,
+    RunCandidateListView,
     RunCollectionView,
     RunDetailView,
     RunFrameImageView,
     RunFrameListView,
     RunLedgerView,
+    RunRankingView,
     RunRetryFailedView,
     RunShardView,
 )
@@ -22,6 +24,8 @@ urlpatterns = [
     path("<int:pk>/retry-failed/", RunRetryFailedView.as_view(), name="runs-retry-failed"),
     path("<int:pk>/ledger/", RunLedgerView.as_view(), name="runs-ledger"),
     path("<int:pk>/shards/", RunShardView.as_view(), name="runs-shards"),
+    path("<int:pk>/candidates/", RunCandidateListView.as_view(), name="runs-candidates"),
+    path("<int:pk>/ranking/", RunRankingView.as_view(), name="runs-ranking"),
     path("<int:pk>/frames/", RunFrameListView.as_view(), name="runs-frames"),
     path(
         "<int:pk>/frames/<int:frame_id>/image/",

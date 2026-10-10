@@ -316,7 +316,8 @@ def test_migration_upgrades_existing_snapshot_data() -> None:
     try:
         MigrationExecutor(connection).migrate([("snapshots", "0003_snapshot_api_metadata")])
     finally:
-        MigrationExecutor(connection).migrate([("snapshots", "0003_snapshot_api_metadata")])
+        restore = MigrationExecutor(connection)
+        restore.migrate(restore.loader.graph.leaf_nodes())
     snapshot.refresh_from_db()
     assert snapshot.revision_sha256 == original_hash
     with pytest.raises(DatabaseError, match="immutable"), transaction.atomic():

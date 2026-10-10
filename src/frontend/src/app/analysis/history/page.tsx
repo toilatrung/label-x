@@ -10,7 +10,8 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
-import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
+import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
+import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
 
 function exclusionText(row: LedgerEntry) {
   return Object.entries(row.not_checked_reasons).filter(([reason, count]) => count > 0 && ['not_applicable', 'not_triggered'].includes(reason)).map(([reason, count]) => `${reason}: ${count}`).join(' · ');
@@ -24,6 +25,7 @@ function HistoryContent() {
   const [chosenId, setChosenId] = useState<number | null>(null);
   const [runCursor, setRunCursor] = useState<string | null>(null);
   const [shardCursor, setShardCursor] = useState<string | null>(null);
+  const [candidateCursor, setCandidateCursor] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
   const selectedId = chosenId ?? (Number.isInteger(queryRunId) && queryRunId > 0 ? queryRunId : null);
@@ -32,6 +34,7 @@ function HistoryContent() {
   const detail = useQuery({ queryKey: ['analysis-run', session?.user.id, selectedId], queryFn: ({ signal }) => getRun(selectedId!, signal), enabled: selectedId !== null && datasetId !== null, retry: false, refetchInterval: (q) => q.state.data && ['queued', 'running'].includes(q.state.data.status) ? 3000 : false });
   const ledger = useQuery({ queryKey: ['analysis-ledger', session?.user.id, selectedId], queryFn: ({ signal }) => getLedger(selectedId!, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const shards = useQuery({ queryKey: ['analysis-shards', session?.user.id, selectedId, shardCursor], queryFn: ({ signal }) => listShards(selectedId!, shardCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
+  const candidates = useQuery({ queryKey: ['analysis-candidates', session?.user.id, selectedId, candidateCursor], queryFn: ({ signal }) => listCandidates(selectedId!, candidateCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const selected = detail.data;
   async function act(kind: 'cancel' | 'retry') {
     if (!selectedId || !canManage || acting) return;
@@ -43,18 +46,19 @@ function HistoryContent() {
         client.invalidateQueries({ queryKey: ['analysis-run', session?.user.id, selectedId] }),
         client.invalidateQueries({ queryKey: ['analysis-ledger', session?.user.id, selectedId] }),
         client.invalidateQueries({ queryKey: ['analysis-shards', session?.user.id, selectedId] }),
+        client.invalidateQueries({ queryKey: ['analysis-candidates', session?.user.id, selectedId] }),
       ]);
     } catch (err) { setActionError(errorMessage(err)); }
     finally { setActing(false); }
   }
   return <AppShell activeKey="analysis" flowStep={3} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Lịch sử thực thi</h1><p className="lx-lead">Theo dõi QC run, coverage và trạng thái từng shard. Failed, Partial và Not checked không phải kết quả đạt.</p></div></div>}>
-    <div className="lx-execution-nav"><Link href="/analysis/config" className="lx-btn">Tạo QC run</Link><DatasetPicker onChange={() => { setChosenId(null); setRunCursor(null); setShardCursor(null); }} /></div>
+    <div className="lx-execution-nav"><Link href="/analysis/config" className="lx-btn">Tạo QC run</Link><DatasetPicker onChange={() => { setChosenId(null); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} /></div>
     <section className="lx-card" aria-label="Các lần chạy"><header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2></header>
       {!datasetId && <div className="lx-card__body">Chọn dataset để xem lịch sử.</div>}
       {runs.isError && <div role="alert" className="lx-card__body">{errorMessage(runs.error)}</div>}
       {runs.isLoading && datasetId && <div className="lx-card__body">Đang tải…</div>}
       {runs.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>QC run</th><th>Snapshot</th><th>Bắt đầu</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-        {runs.data.results.map((r) => <tr key={r.id}><td>QC-{r.id}</td><td>SNP-{r.snapshot_id}</td><td>{new Date(r.created_at).toLocaleString('vi-VN')}</td><td><span className={`lx-badge lx-run-status--${r.status}`}>{runStatusLabel[r.status]}</span></td><td><button type="button" className="lx-btn lx-btn--sm" onClick={() => { setChosenId(r.id); setShardCursor(null); }}>Chi tiết</button></td></tr>)}
+        {runs.data.results.map((r) => <tr key={r.id}><td>QC-{r.id}</td><td>SNP-{r.snapshot_id}</td><td>{new Date(r.created_at).toLocaleString('vi-VN')}</td><td><span className={`lx-badge lx-run-status--${r.status}`}>{runStatusLabel[r.status]}</span></td><td><button type="button" className="lx-btn lx-btn--sm" onClick={() => { setChosenId(r.id); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td></tr>)}
         {runs.data.results.length === 0 && <tr><td colSpan={5}>Chưa có run trong dataset này.</td></tr>}
       </tbody></table></div>}
       {runs.data?.next && <footer className="lx-card__foot"><button className="lx-btn lx-btn--sm" type="button" onClick={() => setRunCursor(cursorFrom(runs.data?.next))}>Trang tiếp</button></footer>}
@@ -77,6 +81,25 @@ function HistoryContent() {
         {shards.isError && <p role="alert">{errorMessage(shards.error)}</p>}
         {shards.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>Shard</th><th>Engine</th><th>Trạng thái</th><th>Lần thử</th><th>Lỗi cuối</th></tr></thead><tbody>{shards.data.results.map((s) => <tr key={s.id}><td>{s.shard_key}</td><td>{s.engine}</td><td>{s.status}</td><td>{s.attempt}</td><td>{s.last_error || '—'}</td></tr>)}{shards.data.results.length === 0 && <tr><td colSpan={5}>Chưa có shard.</td></tr>}</tbody></table></div>}
         {shards.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setShardCursor(cursorFrom(shards.data?.next))}>Trang shard tiếp</button>}
+        <h3>Danh sách candidate và evidence</h3>
+        <div className="lx-execution-candidates">
+          <CandidateEvidenceList
+            candidates={candidates.data?.results}
+            rawCount={candidates.data?.raw_count}
+            dedupCount={candidates.data?.dedup_count}
+            isLoading={candidates.isPending}
+            error={candidates.isError ? errorMessage(candidates.error) : null}
+          />
+          {candidates.data?.next && (
+            <button
+              type="button"
+              className="lx-btn lx-btn--sm"
+              onClick={() => setCandidateCursor(cursorFrom(candidates.data?.next))}
+            >
+              Trang candidate tiếp
+            </button>
+          )}
+        </div>
       </>}
     </section>}
   </AppShell>;

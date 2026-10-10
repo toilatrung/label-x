@@ -331,6 +331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{id}/candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách candidate và evidence chi tiết theo QC run (CR-108) */
+        get: operations["runs_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{id}/frames/": {
         parameters: {
             query?: never;
@@ -1104,6 +1121,14 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["RunShard"][];
         };
+        /** @description Danh sách candidate phân trang theo run */
+        PaginatedCandidateList: {
+            next?: string | null;
+            previous?: string | null;
+            raw_count?: number | null;
+            dedup_count: number;
+            results: components["schemas"]["Candidate"][];
+        };
         DemoCvatLink: {
             task_id: number;
             job_id: number;
@@ -1291,16 +1316,26 @@ export interface components {
         };
         RankedFrame: {
             frame_id: number;
-            frame_key?: components["schemas"]["FrameKey"];
+            frame_key: components["schemas"]["FrameKey"];
             rank: number;
             /** @description s(f) theo score_version của run */
             score: number;
-            queue?: components["schemas"]["QueueName"];
+            /** @description h(f), thành phần điểm nền của frame */
+            baseline_score: number;
+            /** @example score_v0 */
+            score_version: string;
+            queue: components["schemas"]["QueueName"];
+            /** @enum {string} */
+            source: "risk" | "random_audit";
             review_state: components["schemas"]["FrameReviewState"];
             missing_evidence: boolean;
             /** @description Số issue theo IssueFamily */
             issue_counts: {
                 [key: string]: number;
+            };
+            /** @description Điểm nền và từng đóng góp n_i q_i để giải thích thứ hạng */
+            explanation: {
+                [key: string]: unknown;
             };
             lease_holder_user_id?: number | null;
         };
@@ -1789,6 +1824,12 @@ export interface components {
         PaginatedRankedFrameList: {
             next?: string | null;
             previous?: string | null;
+            /** @enum {string} */
+            source: "risk" | "random_audit";
+            /** @description SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate */
+            content_hash: string;
+            /** @description SHA-256 của ordering đã lưu cho source */
+            ranking_hash: string;
             results: components["schemas"]["RankedFrame"][];
         };
         PaginatedGuidelineRuleList: {
@@ -1803,6 +1844,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
+        BadGateway: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Dữ liệu không hợp lệ (VALIDATION_ERROR, INVALID_CREDENTIALS) */
         BadRequest: {
             headers: {
@@ -2000,7 +2050,9 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedDatasetList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            502: components["responses"]["BadGateway"];
         };
     };
     datasets_tasks: {
@@ -2023,8 +2075,10 @@ export interface operations {
                     "application/json": components["schemas"]["CvatTask"][];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            502: components["responses"]["BadGateway"];
         };
     };
     snapshots_list: {
@@ -2380,6 +2434,37 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    runs_candidates: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+                page_size?: number;
+                engine?: string;
+                family?: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang candidate, có số dedup_count và raw_count nullable */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCandidateList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     demo_runs_frames_list: {
         parameters: {
             query?: {
@@ -2460,6 +2545,7 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedRankedFrameList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };

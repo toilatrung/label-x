@@ -8,6 +8,8 @@ export type Run = components['schemas']['Run'];
 export type LedgerEntry = components['schemas']['LedgerEntry'];
 export type RunShard = components['schemas']['RunShard'];
 export type RunCreate = components['schemas']['RunCreate'];
+export type Candidate = components['schemas']['Candidate'];
+export type PaginatedCandidateList = components['schemas']['PaginatedCandidateList'];
 
 function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (result.error || !result.data) throw new ApiRequestError(result.response.status, result.error, result.response.headers);
@@ -42,6 +44,10 @@ export async function getLedger(id: number, signal?: AbortSignal) {
 
 export async function listShards(id: number, cursor: string | null, signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/runs/{id}/shards/', { params: { path: { id }, query: cursor ? { cursor } : {} }, signal }));
+}
+
+export async function listCandidates(id: number, cursor: string | null, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/runs/{id}/candidates/', { params: { path: { id }, query: cursor ? { cursor } : {} }, signal }));
 }
 
 async function csrf() {

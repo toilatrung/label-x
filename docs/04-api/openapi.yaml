@@ -147,7 +147,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedDatasetList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "502": { $ref: "#/components/responses/BadGateway" }
   /api/datasets/{id}/tasks/:
     get:
       operationId: datasets_tasks
@@ -166,8 +168,10 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/CvatTask" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "502": { $ref: "#/components/responses/BadGateway" }
 
   # ------------------------------------------------------------- snapshots
   /api/snapshots/:
@@ -438,6 +442,34 @@ paths:
               schema: { $ref: "#/components/schemas/PaginatedRunShardList" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/candidates/:
+    get:
+      operationId: runs_candidates
+      tags: [runs]
+      summary: Danh sách candidate và evidence chi tiết theo QC run (CR-108)
+      x-labelx-trace: [FR-AGG-01, FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Cursor"
+        - name: page_size
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: engine
+          in: query
+          schema: { type: string }
+        - name: family
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trang candidate, có số dedup_count và raw_count nullable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedCandidateList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/frames/:
     get:
       operationId: demo_runs_frames_list
@@ -516,6 +548,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedRankedFrameList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
@@ -1150,6 +1183,11 @@ components:
       schema: { type: string }
 
   responses:
+    BadGateway:
+      description: Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     BadRequest:
       description: Dữ liệu không hợp lệ (VALIDATION_ERROR, INVALID_CREDENTIALS)
       content:
@@ -1520,6 +1558,18 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/RunShard" }
+    PaginatedCandidateList:
+      type: object
+      description: Danh sách candidate phân trang theo run
+      required: [results, dedup_count]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        raw_count: { type: integer, nullable: true }
+        dedup_count: { type: integer }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Candidate" }
     DemoCvatLink:
       type: object
       required: [task_id, job_id, frame, deep_link]
@@ -1861,7 +1911,7 @@ components:
           items: { $ref: "#/components/schemas/EngineUnitResult" }
     RankedFrame:
       type: object
-      required: [frame_id, rank, score, review_state, missing_evidence, issue_counts]
+      required: [frame_id, frame_key, rank, score, baseline_score, score_version, queue, source, review_state, missing_evidence, issue_counts, explanation]
       properties:
         frame_id: { type: integer }
         frame_key: { $ref: "#/components/schemas/FrameKey" }
@@ -1869,13 +1919,24 @@ components:
         score:
           type: number
           description: s(f) theo score_version của run
+        baseline_score:
+          type: number
+          description: h(f), thành phần điểm nền của frame
+        score_version: { type: string, example: score_v0 }
         queue: { $ref: "#/components/schemas/QueueName" }
+        source:
+          type: string
+          enum: [risk, random_audit]
         review_state: { $ref: "#/components/schemas/FrameReviewState" }
         missing_evidence: { type: boolean }
         issue_counts:
           type: object
           additionalProperties: { type: integer }
           description: Số issue theo IssueFamily
+        explanation:
+          type: object
+          additionalProperties: true
+          description: Điểm nền và từng đóng góp n_i q_i để giải thích thứ hạng
         lease_holder_user_id: { type: integer, nullable: true }
 
     # ------------------------------------------------------------ guidelines
@@ -2474,10 +2535,19 @@ components:
           items: { $ref: "#/components/schemas/Run" }
     PaginatedRankedFrameList:
       type: object
-      required: [results]
+      required: [source, content_hash, ranking_hash, results]
       properties:
         next: { type: string, nullable: true }
         previous: { type: string, nullable: true }
+        source:
+          type: string
+          enum: [risk, random_audit]
+        content_hash:
+          type: string
+          description: SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate
+        ranking_hash:
+          type: string
+          description: SHA-256 của ordering đã lưu cho source
         results:
           type: array
           items: { $ref: "#/components/schemas/RankedFrame" }

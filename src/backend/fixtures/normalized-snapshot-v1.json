@@ -29,6 +29,17 @@
               "rotation": 0.0,
               "source": {"id": 12, "kind": "shape"},
               "z_order": 1
+            },
+            {
+              "attributes": [{"spec_id": 8, "value": "moving"}],
+              "frame_index": 0,
+              "label_id": 4,
+              "occluded": false,
+              "outside": false,
+              "points": [11.0, 21.0, 111.0, 121.0],
+              "rotation": 0.0,
+              "source": {"id": 13, "kind": "shape"},
+              "z_order": 0
             }
           ],
           "source_frame_id": 1000,

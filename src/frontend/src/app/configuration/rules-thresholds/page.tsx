@@ -4,12 +4,15 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AppShell } from "@/components/layout/AppShell";
+import { EngineThresholdsTable } from "@/components/execution/EngineThresholdsTable";
 import { apiClient, ApiRequestError } from "@/lib/api/client";
 import { errorMessage } from "@/lib/api/errors";
+import { useAuth } from "@/lib/auth/auth-context";
+import { canAccessConfiguration, canAccessGuidelines } from "@/lib/auth/roles";
 import type { components } from "@/lib/api/contract";
-import { canAccessGuidelines } from "@/lib/auth/roles";
 
 type PaginatedMappingList = components["schemas"]["PaginatedRuleMappingList"];
+type ConfigVersion = components["schemas"]["ConfigVersion"];
 
 function cursorFrom(link: string | null | undefined): string | null {
   if (!link) return null;
@@ -30,19 +33,41 @@ async function fetchMappings(cursor: string | null): Promise<PaginatedMappingLis
   return data;
 }
 
+async function fetchPublishedConfig(): Promise<ConfigVersion | null> {
+  const { data, error, response } = await apiClient.GET("/api/config-versions/", {
+    params: { query: { status: "published" } },
+  });
+  if (error || !data) throw new ApiRequestError(response.status, error, response.headers);
+  const configs = data.results ?? [];
+  return configs.length > 0 ? configs[0] : null;
+}
+
 function RulesThresholds() {
+  const { hasPermission } = useAuth();
+  const canViewConfig = hasPermission(canAccessConfiguration);
+
   const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const pageIndex = cursors.length - 1;
   const cursor = cursors[pageIndex];
 
-  const query = useQuery({
+  const mappingQuery = useQuery({
     queryKey: ["guideline-mappings", cursor],
     queryFn: () => fetchMappings(cursor),
     retry: false,
   });
-  const failure = query.isError ? errorMessage(query.error) : null;
-  const mappings = query.data?.results ?? [];
-  const nextCursor = cursorFrom(query.data?.next);
+
+  const configQuery = useQuery({
+    queryKey: ["published-config-version"],
+    queryFn: fetchPublishedConfig,
+    enabled: canViewConfig,
+    retry: false,
+  });
+
+  const mappingFailure = mappingQuery.isError ? errorMessage(mappingQuery.error) : null;
+  const configFailure = configQuery.isError ? errorMessage(configQuery.error) : null;
+
+  const mappings = mappingQuery.data?.results ?? [];
+  const nextCursor = cursorFrom(mappingQuery.data?.next);
 
   return (
     <div className="lx-page">
@@ -50,16 +75,27 @@ function RulesThresholds() {
         <div className="lx-head__text">
           <h1 className="lx-h1">Rules và Thresholds</h1>
           <p className="lx-lead">
-            Mapping nhóm lỗi/lớp tới rule ID. Màn hình chỉ xem; nội dung được quản trị qua tệp guideline.
+            Quy tắc kiểm tra tự động, ngưỡng engine hiệu lực và mapping nhóm lỗi/lớp tới rule ID. Màn hình chỉ xem.
           </p>
         </div>
       </div>
-      {failure && (
+
+      {mappingFailure && (
         <div className="lx-callout" role="alert">
           <strong>Không tải được mapping</strong>
-          <div>{failure}</div>
+          <div>{mappingFailure}</div>
         </div>
       )}
+
+      {/* 1. Ngưỡng engine chỉ đọc từ API thật (T-029) */}
+      <EngineThresholdsTable
+        config={configQuery.data ?? null}
+        isLoading={configQuery.isLoading}
+        error={configFailure}
+        hasPermission={canViewConfig}
+      />
+
+      {/* 2. Mapping guideline tĩnh nạp theo CR-107 */}
       <section className="lx-card" aria-label="Mapping rule guideline">
         <header className="lx-card__head">
           <span className="lx-cell__main">Mapping guideline</span>
@@ -77,7 +113,7 @@ function RulesThresholds() {
               </tr>
             </thead>
             <tbody>
-              {query.isLoading ? (
+              {mappingQuery.isLoading ? (
                 <tr>
                   <td colSpan={5} className="c lx-subtle">
                     Đang tải…
@@ -117,7 +153,7 @@ function RulesThresholds() {
             <button
               type="button"
               className="lx-btn lx-btn--subtle"
-              disabled={pageIndex === 0 || query.isFetching}
+              disabled={pageIndex === 0 || mappingQuery.isFetching}
               onClick={() => setCursors(cursors.slice(0, -1))}
             >
               Trang trước
@@ -125,7 +161,7 @@ function RulesThresholds() {
             <button
               type="button"
               className="lx-btn lx-btn--subtle"
-              disabled={!nextCursor || query.isFetching || query.isError}
+              disabled={!nextCursor || mappingQuery.isFetching || mappingQuery.isError}
               onClick={() => nextCursor && setCursors([...cursors, nextCursor])}
             >
               Trang sau
