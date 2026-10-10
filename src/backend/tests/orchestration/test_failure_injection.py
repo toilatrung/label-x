@@ -229,6 +229,27 @@ def test_redispatch_respects_threshold_and_skips_cancelled(run_setup, monkeypatc
     assert dispatch_run(run_setup.pk) == 0 and seen == []
 
 
+def test_redispatch_recovers_stale_running_shards(run_setup, monkeypatch):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    seen: list[int] = []
+    monkeypatch.setattr(run_work_unit, "delay", seen.append)
+    stale, fresh = list(run_setup.work_units.all()[:2])
+    WorkUnit.objects.filter(pk=stale.pk).update(
+        status=WorkUnit.Status.RUNNING, started_at=timezone.now() - timedelta(hours=1)
+    )
+    WorkUnit.objects.filter(pk=fresh.pk).update(
+        status=WorkUnit.Status.RUNNING, started_at=timezone.now()
+    )
+    redispatch_pending(1800)  # chỉ shard RUNNING quá 30 phút bị thu hồi
+    assert WorkUnit.objects.get(pk=stale.pk).status == WorkUnit.Status.PENDING
+    assert WorkUnit.objects.get(pk=fresh.pk).status == WorkUnit.Status.RUNNING
+    redispatch_pending(0)  # run đủ tuổi: shard PENDING được xếp lại
+    assert stale.pk in seen
+
+
 def test_management_command_redispatches(run_setup, monkeypatch):
     seen: list[int] = []
     monkeypatch.setattr(run_work_unit, "delay", seen.append)

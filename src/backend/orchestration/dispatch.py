@@ -201,6 +201,14 @@ def redispatch_pending(older_than_seconds: float | None = None) -> dict[str, int
     if older_than_seconds is None:
         older_than_seconds = getattr(settings, "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", 300)
     cutoff = timezone.now() - timedelta(seconds=older_than_seconds)
+    # Shard RUNNING bỏ rơi (worker chết/mất message): đưa về PENDING để xếp lại. An toàn vì task
+    # idempotent (ShardCommit chặn ghi đôi); unit đang chạy thật chưa quá hạn nên không bị đụng.
+    WorkUnit.objects.filter(
+        status=WorkUnit.Status.RUNNING,
+        started_at__lte=cutoff,
+        run__status__in=_ACTIVE_RUN,
+        run__cancel_requested_at__isnull=True,
+    ).update(status=WorkUnit.Status.PENDING)
     run_ids = list(
         QCRun.objects.filter(
             status__in=_ACTIVE_RUN, cancel_requested_at__isnull=True, created_at__lte=cutoff
