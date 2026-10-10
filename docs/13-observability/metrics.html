@@ -58,6 +58,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="hien-trang">Hiện trạng</h2>
 <p>Repo <strong>chưa có</strong> hệ thống metric (không có exporter, Prometheus, StatsD hay dashboard). <strong>Đã chốt</strong> (NFR-12): phải có metric hàng đợi Celery, thời gian shard, tỉ lệ lỗi. Ràng buộc phía sau các metric "phải bằng 0" cũng đã chốt (NFR-15, B-10, B-18, FR-SEC-05). <strong>Đề xuất:</strong> tên metric, label và cách thu thập dưới đây. Chọn công cụ thu thập phụ thuộc hạ tầng (TBD-02) và cần decision nếu thêm thư viện mới (DEC-001).</p>
+<p><strong>Cập nhật 2026-10-10 (CR-109, <code>proposed</code>, chờ PO duyệt):</strong> đã có endpoint <code>GET /internal/metrics/</code> (Prometheus text) cho metric queue/shard của QC Run, tính từ DB; xem <code>docs/04-api/openapi.yaml</code> và <code>.agent/governance/change-requests/CR-109.html</code>. Chưa có live scrape Prometheus, chưa có metric Celery queue length và worker online; các danh mục đề xuất bên dưới vẫn là đề xuất.</p>
 <p>Hai loại số liệu cần tách bạch:</p>
 <ol>
 <li><strong>Metric vận hành</strong> (tài liệu này): sức khoẻ hệ thống, dùng cho cảnh báo.</li>

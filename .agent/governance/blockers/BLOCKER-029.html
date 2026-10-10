@@ -67,6 +67,14 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>V3</td><td>Quyền endpoint <code>/api/runs/{id}/ranking/</code></td><td>Một phần</td><td>Test hiện có kiểm 1 trường hợp bị từ chối (user không có vai trò ở dataset). Chưa có test lặp cho từng vai trò ngoài ma trận (annotator, qc_admin, productowner, modelowner…). Khớp ma trận RBAC: Reviewer, QA Lead, Super Admin.</td></tr>
 </tbody></table>
 <p>Đã kiểm trên nhánh sau merge (head <code>d14a6f9</code>): ruff đạt; pytest toàn bộ backend 428 passed, 1 skipped trên Postgres (database riêng); không có migration drift; <code>make validate-kit</code> đạt. Migration của PR đổi từ <code>0002_run_ranking</code> sang <code>0004_run_ranking</code> để nối sau <code>0003_config_version_idempotency</code> của develop.</p>
+<h3 id="cap-nhat-m-02-resolve">Cập nhật 2026-10-10 (M-02-RESOLVE): trạng thái V1–V3</h3>
+<p>Chi tiết và số liệu: <a href="../../reports/implementation/M-02-RESOLVE.html">báo cáo triển khai</a>, <code>.agent/evidence/M-02-RESOLVE/</code>.</p>
+<table><thead><tr><th>#</th><th>Trạng thái</th><th>Bằng chứng</th><th>Giới hạn</th></tr></thead><tbody>
+<tr><td>V1</td><td>Đã chạy trên dữ liệu thật (có giới hạn)</td><td>Tập BDD100K của T-019 trên CVAT thật (snapshot 3, 588 frame). Run 35, 36 (và 37, 39, 40 sau sự cố) cùng candidate 163, cùng <code>candidates_sha256</code> <code>3a13a88f…a1a</code>, <code>content_hash</code> <code>7c0c30ce…244a</code>, <code>ranking_hash</code> <code>889d939e…7dc</code>; ranking source=risk, 588 frame.</td><td>Thành viên BDD100K đối chiếu với mirror HuggingFace, chưa phải cây chính thức (BLOCKER-024). <code>output_sha256</code> từng shard: không ghi trong hồ sơ này, NOT VERIFIED. Run 35/36 chạy trước fix F-1 nên ledger khác bản cuối do thay đổi hành vi có chủ đích.</td></tr>
+<tr><td>V2</td><td>Một phần</td><td>vitest 188 passed (20 file) trên HEAD cuối; <code>make check</code> exit 0.</td><td><code>npm run build</code> và <code>tsc --noEmit</code>: kết quả riêng không có trong thư mục bằng chứng, NOT VERIFIED trong hồ sơ này.</td></tr>
+<tr><td>V3</td><td>Đã kiểm trên API thật bằng script; test từng vai trò trong bộ pytest chưa thêm</td><td><code>m02_rbac_check.py</code>: 7 vai trò × 13 endpoint (gồm <code>runs_ranking</code>) khớp ma trận, 0 mismatch; <code>runs_ranking</code> không cho qc_admin (đúng ma trận). Trình duyệt 7 vai trò khớp.</td><td>Yêu cầu “thêm test từ chối cho từng vai trò” chưa thành test pytest trong repo (NOT VERIFIED nếu có). Endpoint candidates không có dòng riêng trong ma trận.</td></tr>
+</tbody></table>
+<p>Blocker giữ <code>open</code>: V1 phụ thuộc xác nhận provenance (BLOCKER-024); T-031 chưa chuyển <code>done</code> khi chưa có review/QA độc lập.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>T-031</code></li>

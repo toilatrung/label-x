@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report M-02-RESOLVE: kiểm tích hợp M-02 trên dữ liệu thật — LabelX</title>
+<meta name="labelx:id" content="implementation-m-02-resolve">
+<meta name="labelx:title" content="Implementation Report M-02-RESOLVE: kiểm tích hợp M-02 trên dữ liệu thật">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="execution">
+<meta name="labelx:module" content="implementation">
+<meta name="labelx:tags" content="[implementation, m-02-resolve, m-02, e2e]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / M-02-RESOLVE</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-m-02-resolve</span><b>title</b><span>Implementation Report M-02-RESOLVE: kiểm tích hợp M-02 trên dữ liệu thật</span><b>type</b><span>report</span><b>domain</b><span>execution</span><b>module</b><span>implementation</span><b>tags</b><span>[implementation, m-02-resolve, m-02, e2e]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-m-02-resolve">Implementation Report M-02-RESOLVE: kiểm tích hợp M-02 trên dữ liệu thật</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng kiểm kỹ thuật cuối giai đoạn M-02 (M-02-RESOLVE): xử lý BLOCKER-024…029, chốt hồ sơ TBD (DEC-013), sửa lỗi phát hiện khi chạy thật. Báo cáo của executor; <strong>không</strong> thay review hay QA độc lập, chưa có review/QA nào.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M-02-RESOLVE</code></li>
+<li><strong>Title</strong>: <code>M-02-RESOLVE: kiểm tích hợp M-02 trên dữ liệu thật, xử lý BLOCKER-024…029</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung (Product Owner)</code></li>
+<li><strong>Executor</strong>: <code>claude-code (Sonnet 5.5) cho @toilatrung</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
+<li><strong>Epic ID</strong>: <code>E-04, E-05, E-08, E-09, E-11 (milestone M-02)</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-10</code></li>
+</ul>
+<p>Báo cáo viết trên SHA <code>3cb40b3</code> và cập nhật sau review độc lập #1 (code sửa <code>bb73895</code>; SHA code cuối <code>35b7de1</code>). Trạng thái <code>draft</code>: chưa có duyệt của PO; QA mới phủ <code>3cb40b3</code>; CI GitHub trên SHA cuối chưa chạy, CR-109 chờ PO.</p>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>Sửa orchestration (retry/backoff, redispatch, sweeper, huỷ, publish không treo); duplicate not_applicable cho frame không có annotation; endpoint /internal/metrics/ (CR-109 proposed); E2E, drift, RBAC, browser trên CVAT/Redis/worker thật; bộ script dev kiểm lại; DEC-013 và cập nhật BLOCKER-024…029.</code></li>
+<li><strong>Not Implemented</strong>: <code>Thời gian QC Run 10.000 frame; cấu hình server pilot; đo NFR; triển khai TBD-15, 17, 20; live scrape Prometheus; metric queue length/worker online; retry-failed trên broker thật; chạy runner detector/metric/vlm; filter “latest locked” ở backend; đồng bộ SRS có version; push, PR, CI.</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/orchestration/*</code>, <code>src/backend/config/*</code></td><td>Retry/backoff, redispatch, sweeper, huỷ, publish Celery, metrics (commit trong bảng bên dưới)</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td>engine duplicate (<code>2df357a</code>)</td><td>Frame không có annotation → not_applicable</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td><code>GET /internal/metrics/</code> (CR-109)</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>scripts/development/m02_e2e.py</code>, <code>m02_drift_probe.py</code>, <code>m02_rbac_check.py</code>, <code>m02_browser_check.cjs</code></td><td>Script kiểm lại E2E, drift, RBAC, trình duyệt</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>.agent/evidence/M-02-RESOLVE/</code></td><td>Evidence png + json (không sửa)</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>.agent/governance/decisions/DEC-013.html</code>, <code>.agent/governance/blockers/BLOCKER-024…029.html</code></td><td>Ghi quyết định TBD và cập nhật blocker (không đóng blocker nào)</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>.agent/reports/review/M-02-RESOLVE.html</code>, <code>.agent/reports/qa/M-02-RESOLVE.html</code></td><td>Placeholder chờ reviewer/QA độc lập</td><td><code>M-02-RESOLVE</code></td></tr>
+<tr><td><code>.agent/execution/task-board.html</code>, <code>.agent/intelligence/git-nexus/*</code>, <code>docs/13-observability/metrics.html</code></td><td>Đăng ký task review; map commit; ghi chú metrics</td><td><code>M-02-RESOLVE</code></td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/task-board.html#m-02-resolve</code>; issue #96</li>
+<li><strong>Context Packages</strong>: <code>AGENT.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không có mục M-02-RESOLVE, không sửa)</li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-013.html</code> (bổ sung <code>DEC-012.html</code>)</li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-109.html</code> (proposed, chờ PO)</li>
+<li><strong>Risks or Blockers</strong>: <code>BLOCKER-024, 025, 026, 027, 028, 029 (đều còn open)</code></li>
+<li><strong>Review Request</strong>: <code>pending — chưa gán reviewer độc lập</code></li>
+<li><strong>Commits</strong>: <code>b189f76, a58c9d9, 58aac77, 522f03b, d4987db, 2df357a, 663dfc1, 6a123e7, fa2ce9f, 1cb5a66, và commit hồ sơ</code></li>
+</ul>
+<h2 id="environment">Environment and SHA</h2>
+<ul>
+<li><strong>Base</strong>: nhánh <code>fix/M-02-RESOLVE</code> từ <code>origin/develop</code> <code>cd13551</code>. HEAD lúc đo: <code>1cb5a6657f2f24fa56cc91d4d69d8e3c1f70d43e</code> (<code>1cb5a66</code>).</li>
+<li><strong>Môi trường</strong>: WSL2 (9,7 GB RAM sau khi PO nâng), Docker 29.8.2, CVAT v2.77.0 (<code>7dac20c7</code>), PostgreSQL 17, Redis 7.2.11, SeaweedFS 3.80, Python 3.12 (uv), Node 22.23.3, Celery worker concurrency 3, Django runserver. Frontend dev <code>NEXT_PUBLIC_AUTH_MODE=backend</code>; Playwright Chromium.</li>
+<li><strong>Dữ liệu</strong>: CVAT local task 1/job 1 (project 1, Dataset 1), 588 frame, 4414 rectangle, hash job 1 = <code>sha256:5079fb8daa805bee28f3e0dc2e92bfead2d28f968dbabd4076deb7d9d81a4041</code> (ba lần đọc, kể cả sau restart WSL). Token read_only cho adapter; token ghi chỉ ở script dev (không ghi giá trị vào hồ sơ).</li>
+</ul>
+<h2 id="commit-map">Commit Map</h2>
+<table><thead><tr><th>Commit</th><th>Nội dung</th><th>Phân loại</th></tr></thead><tbody>
+<tr><td><code>b189f76</code></td><td>Retry/backoff thật (3 retry, 2/4/8 s, <code>self.retry</code>); redispatch PENDING (Celery beat 120 s + <code>manage.py redispatch_pending_runs</code>); huỷ không bị completion ghi đè; task <code>run_work_unit</code> đăng ký trong worker; run 0 work unit không kẹt QUEUED; shard frames rỗng → failed</td><td>Code + test (TBD-14)</td></tr>
+<tr><td><code>a58c9d9</code></td><td>Endpoint <code>GET /internal/metrics/</code> + CR-109 + <code>openapi.yaml</code> + 16 test (BLOCKER-026)</td><td>Code + contract</td></tr>
+<tr><td><code>58aac77</code></td><td>Merge metrics BLOCKER-026 vào <code>fix/M-02-RESOLVE</code></td><td>Merge</td></tr>
+<tr><td><code>522f03b</code></td><td>Regenerate <code>contract.d.ts</code> cho <code>/internal/metrics/</code></td><td>Contract</td></tr>
+<tr><td><code>d4987db</code></td><td>Sweeper thu hồi shard RUNNING bỏ rơi; script E2E <code>scripts/development/m02_e2e.py</code></td><td>Code + script</td></tr>
+<tr><td><code>2df357a</code></td><td>Duplicate: frame không có annotation → <code>not_checked</code>/<code>not_applicable</code> (cùng quy ước Geometry) + test</td><td>Code + test (F-1)</td></tr>
+<tr><td><code>663dfc1</code></td><td>Script AC-03 drift/immutability/lineage trên CVAT thật</td><td>Script</td></tr>
+<tr><td><code>6a123e7</code></td><td>Publish Celery không treo khi Redis chết (<code>CELERY_TASK_IGNORE_RESULT</code>, broker timeout 2 s, publish retry 1) + test; hồ sơ script E2E</td><td>Code + test (F-2)</td></tr>
+<tr><td><code>fa2ce9f</code></td><td>Script kiểm RBAC 7 vai trò trên API thật (<code>m02_rbac_check.py</code>)</td><td>Script</td></tr>
+<tr><td><code>1cb5a66</code></td><td>Script browser check 7 vai trò (<code>m02_browser_check.cjs</code>) — HEAD lúc đo</td><td>Script</td></tr>
+<tr><td><code>bb73895</code></td><td>Sửa theo review độc lập #1 (M1, M2, m2): migration <code>runs.0005_workunit_dispatched_at</code> (<code>WorkUnit.dispatched_at</code>); làm mới <code>started_at</code> mỗi lần claim (lease); <code>redispatch_pending(older_than, running_stale_seconds)</code> với <code>ORCHESTRATION_RUNNING_STALE_SECONDS=1800</code>; <code>dispatch_run(stale_after)</code> không nhân message; <code>commit_shard_output</code> bỏ qua commit khi run đã cancelled (F-4); thêm evidence <code>ac01-run36/37</code>, <code>ac01-final-runs-42-43</code>, <code>ac02-db-state-runs-35-41</code>; test failure-injection bổ sung</td><td>Code + test + migration + evidence</td></tr>
+<tr><td><code>35b7de1</code></td><td>Nit từ re-review: khoá claim WorkUnit với <code>select_for_update(of=("self",))</code> (không khoá luôn hàng run); chỉnh docstring <code>commit_shard_output</code>. SHA code cuối.</td><td>Code</td></tr>
+<tr><td>(commit hồ sơ)</td><td>DEC-013, BLOCKER-024…029, báo cáo này, placeholder review/QA, task-board, commit map, ghi chú metrics. Hash lấy từ <code>git log</code> sau commit.</td><td>Hồ sơ</td></tr>
+</tbody></table>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>agent task start M-02-RESOLVE</code></td><td><code>not-run</code></td><td>CLI agent không dùng trong phiên này</td></tr>
+<tr><td><code>agent task verify M-02-RESOLVE</code></td><td><code>not-run</code></td><td>thay bằng <code>make check</code> ở bảng dưới</td></tr>
+<tr><td><code>agent task report M-02-RESOLVE --executor claude-code</code></td><td><code>not-run</code></td><td>báo cáo viết tay theo template</td></tr>
+<tr><td><code>agent review request M-02-RESOLVE --reviewer &lt;pending&gt;</code></td><td><code>not-run</code></td><td>chưa có reviewer độc lập</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>make check</code> baseline develop <code>cd13551</code></td><td><code>passed</code></td><td>exit 0; backend 428 passed / 1 skipped; vitest 188; detector 10; validate-kit pass</td></tr>
+<tr><td><code>make check</code> HEAD <code>1cb5a66</code></td><td><code>passed</code></td><td>exit 0; backend 470 passed / 1 skipped; vitest 20 file / 188 test, không unhandled error; detector 10; <code>FRAMEWORK_VALIDATION_PASS</code></td></tr>
+<tr><td><code>makemigrations --check</code></td><td><code>passed</code></td><td>No changes detected; không migration mới</td></tr>
+<tr><td>E2E AC-01/AC-02 (Redis + Celery worker + CVAT thật)</td><td><code>passed</code></td><td><a href="../../evidence/M-02-RESOLVE/ac01-run35.json"><code>ac01-run35.json</code></a>, <a href="../../evidence/M-02-RESOLVE/ac02-broker-down-run39.json"><code>ac02-broker-down-run39.json</code></a>, <a href="../../evidence/M-02-RESOLVE/ac02-worker-kill-run40.json"><code>ac02-worker-kill-run40.json</code></a>; retry-failed trên broker thật: <code>not-run</code></td></tr>
+<tr><td>AC-03 drift trên CVAT thật</td><td><code>passed</code></td><td><a href="../../evidence/M-02-RESOLVE/ac03-drift-cvat.json"><code>ac03-drift-cvat.json</code></a></td></tr>
+<tr><td>RBAC 7 vai trò × 13 endpoint</td><td><code>passed</code></td><td><a href="../../evidence/M-02-RESOLVE/rbac-7-roles.json"><code>rbac-7-roles.json</code></a></td></tr>
+<tr><td>Trình duyệt 7 vai trò (Playwright Chromium)</td><td><code>passed</code></td><td><a href="../../evidence/M-02-RESOLVE/browser-result.json"><code>browser-result.json</code></a>; ảnh <code>topbar-*.png</code>, <code>qa_lead-analysis-*.png</code>, <code>qa_lead-run-detail-QC-35.png</code>, <code>qa_lead-run-detail-QC-39.png</code></td></tr>
+<tr><td>Live scrape Prometheus thật</td><td><code>not-run</code></td><td>NOT VERIFIED</td></tr>
+<tr><td><code>tsc --noEmit</code> riêng</td><td><code>not-run</code></td><td>chạy trong <code>make check</code> (typecheck frontend); không có artifact riêng trong evidence</td></tr>
+<tr><td><code>make check</code> trên SHA code cuối <code>35b7de1</code></td><td><code>passed</code></td><td>EXIT 0: backend 473 passed / 1 skipped; vitest 20 file / 188 test, không Unhandled; detector 10; <code>FRAMEWORK_VALIDATION_PASS</code>. Migration <code>runs.0005_workunit_dispatched_at</code> đã áp dụng; <code>makemigrations --check</code> không đổi.</td></tr>
+<tr><td><code>npm run build</code> (Next 16.3.8, trên <code>1cb5a66</code>; frontend không đổi từ đó)</td><td><code>passed</code></td><td>EXIT 0; kiểm bundle: không có <code>password123</code> hay mật khẩu e2e trong <code>.next/static</code></td></tr>
+<tr><td>CI GitHub trên SHA cuối</td><td><code>not-run</code></td><td>chưa push</td></tr>
+<tr><td><code>make validate-kit</code> sau sửa hồ sơ</td><td><code>not-run</code></td><td>kết quả lần chạy cuối ghi ở báo cáo bàn giao (<code>FRAMEWORK_VALIDATION_PASS</code> khi đạt)</td></tr>
+</tbody></table>
+<p><strong>Phân loại</strong>: kết quả pytest/vitest và 24 test failure-injection (mock/eager) là bằng chứng unit/mock. AC-01, AC-02 (a, b, c), AC-03, RBAC, trình duyệt là bằng chứng chạy thật (CVAT 2.77.0 thật, Redis và Celery worker thật, dữ liệu BDD100K 588 frame). Hai loại không thay thế nhau.</p>
+<h2 id="acceptance-criteria-results">Acceptance Criteria Results</h2>
+<table><thead><tr><th>AC (M-02)</th><th>Kết quả</th><th>Loại bằng chứng</th><th>Bằng chứng / giới hạn</th></tr></thead><tbody>
+<tr><td>AC-01: hai run cùng input → hash nội dung giống hệt</td><td>Đạt trên dữ liệu thật, chỉ cho engine duplicate</td><td>Dữ liệu thật (CVAT, BDD100K val, Redis, worker)</td><td><strong>Bằng chứng chính</strong>: hai run 42 và 43 trên code cuối (cùng snapshot 3, config 2, seed 20261010): <code>candidates_sha256</code>, <code>content_hash</code>, <code>ranking_hash</code> và <code>ledger_sha256</code> đều bằng nhau (<a href="../../evidence/M-02-RESOLVE/ac01-final-runs-42-43.json"><code>ac01-final-runs-42-43.json</code></a>); 163 candidate, 18 shard; ledger duplicate 576 eligible / 12 not_applicable, geometry tương tự, schema 588 not_checked (no_reference). Snapshot 3 <code>revision_sha256</code> <code>4c0f34ab43ca693857f9e89672136d9b96eac68997e37d6e065037ba105dfbcf</code> lấy từ <a href="../../evidence/M-02-RESOLVE/ac02-db-state-runs-35-41.json"><code>ac02-db-state-runs-35-41.json</code></a>. <strong>Ghi chú</strong>: run 42, 43 được chạy trên stack thật (worker khởi động lại sau migration) với code sau sửa, giống <code>bb73895</code> trừ commit nit <code>35b7de1</code>. <strong>Thông tin thêm</strong>: run 35, 36, 37 (<a href="../../evidence/M-02-RESOLVE/ac01-run35.json"><code>ac01-run35.json</code></a>, <a href="../../evidence/M-02-RESOLVE/ac01-run36.json"><code>ac01-run36.json</code></a>, <a href="../../evidence/M-02-RESOLVE/ac01-run37.json"><code>ac01-run37.json</code></a>) chạy trên code trước F-1 nên <code>ledger_sha256</code> khác có chủ đích; việc candidates/content/ranking vẫn bằng nhau qua thay đổi code là phụ, không phải luận điểm chính. <strong>Giới hạn</strong>: tập candidate chỉ gồm duplicate/E3 (163); geometry sinh 0 candidate và schema not_checked, nên tính ổn định ranking chỉ là bằng chứng cho engine duplicate. Nguồn nhãn learner/mirror (BLOCKER-024).</td></tr>
+<tr><td>AC-02: ép lỗi shard rồi retry → số issue không đổi</td><td>Đạt một phần</td><td>Dữ liệu thật cho số liệu DB cuối; quan sát thủ công cho diễn biến; mock/eager cho retry-failed</td><td>(a) Broker-down: <a href="../../evidence/M-02-RESOLVE/ac02-broker-down-run39.json"><code>ac02-broker-down-run39.json</code></a> chỉ chứa trạng thái cuối (run 39 completed, hash trùng). Các quan sát “POST trả 201, 18 shard PENDING, sweeper phục hồi” và “bản cũ treo 120 s (run 37/38)” là <strong>quan sát thủ công, không có artifact</strong>. (b) SIGKILL worker (run 40): <a href="../../evidence/M-02-RESOLVE/ac02-db-state-runs-35-41.json"><code>ac02-db-state-runs-35-41.json</code></a> giữ số đếm cuối: 18 shard_commits, 0 idempotency_key trùng, 163 candidate, 1764 dòng ledger (<a href="../../evidence/M-02-RESOLVE/ac02-worker-kill-run40.json"><code>ac02-worker-kill-run40.json</code></a> bổ sung); việc kill và timeline là <strong>quan sát thủ công, không có artifact</strong>. (c) Huỷ run 41: <a href="../../evidence/M-02-RESOLVE/ac02-db-state-runs-35-41.json"><code>ac02-db-state-runs-35-41.json</code></a> cho thấy run cancelled, có <code>cancel_requested_at</code>, và 14 shard_commit tồn tại trước khi có guard mới (F-4, nay đã sửa trong code, chưa chạy lại E2E huỷ, xem bên dưới). <strong>Retry-failed với engine lỗi thật trên broker thật: chỉ unit test (24 test failure-injection trước đợt sửa mới), NOT VERIFIED trên broker thật. Các kịch bản broker-down, SIGKILL worker và huỷ chưa được chạy lại trên code mới (<code>bb73895</code>/<code>35b7de1</code>).</strong> Blob upload/orphan: chỉ phạm vi test hiện có.</td></tr>
+<tr><td>AC-03: sửa annotation giữa lúc tạo snapshot → không khoá, báo job drift</td><td>Đạt trên CVAT thật</td><td>Dữ liệu thật (CVAT 2.77.0, project/task probe riêng)</td><td>Snapshot <code>failed</code> <code>drift_detected</code>, <code>drift_jobs</code> [3]; dữ liệu không đổi → locked, revision hash trùng (parent 38→39); sửa sau khoá → snapshot cũ giữ nguyên, snapshot mới hash khác (parent 39); ok=true. <a href="../../evidence/M-02-RESOLVE/ac03-drift-cvat.json"><code>ac03-drift-cvat.json</code></a></td></tr>
+<tr><td>Engine thiếu/hỏng hiển thị Not checked/Failed</td><td>Đạt (schema, duplicate, geometry)</td><td>Dữ liệu thật + unit</td><td>Ledger code cuối: duplicate 588/576 eligible/576 completed/12 not_checked (not_applicable); geometry 588/576/576/12 not_applicable; schema 588/588/0/588 not_checked (no_reference vì config không có taxonomy) → engine status schema = not_checked, không ngầm pass. Detector/metric/vlm: NOT VERIFIED.</td></tr>
+<tr><td>RBAC theo ma trận</td><td>Đạt</td><td>API thật + trình duyệt thật</td><td>7 vai trò × 13 endpoint khớp <code>rbac-matrix.html</code>, 0 mismatch (<a href="../../evidence/M-02-RESOLVE/rbac-7-roles.json"><code>rbac-7-roles.json</code></a>); 7 vai trò trên trình duyệt (<a href="../../evidence/M-02-RESOLVE/browser-result.json"><code>browser-result.json</code></a>, ảnh <code>topbar-*.png</code>, <code>qa_lead-*.png</code>), 0 pageerror.</td></tr>
+</tbody></table>
+<h2 id="findings">Findings F-1…F-6</h2>
+<table><thead><tr><th>#</th><th>Phát hiện</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>F-1</td><td>Duplicate coi frame không có annotation là đã kiểm (completed vô nghĩa)</td><td>Đã sửa (<code>2df357a</code>)</td><td>Run 35/36 chạy trước fix nên duplicate 588 completed; ledger_sha256 khác bản cuối là do thay đổi hành vi có chủ đích, không phải mất tất định.</td></tr>
+<tr><td>F-2</td><td>Publish Celery treo khi Redis chết</td><td>Đã sửa (<code>6a123e7</code>)</td><td>Đo: trước = ReadTimeout 120 s; sau = 201, shard PENDING, sweeper phục hồi.</td></tr>
+<tr><td>F-3</td><td>Shard RUNNING bỏ rơi (worker chết/mất message) không được thu hồi</td><td>Đã sửa (<code>d4987db</code>)</td><td>Sweeper thu hồi; xác nhận bằng run 40 (SIGKILL).</td></tr>
+<tr><td>F-4</td><td>Huỷ giữa chừng vẫn commit shard đang chạy</td><td>Đã sửa trong code (<code>bb73895</code>, có test); chưa chạy lại E2E thật</td><td>Bằng chứng lỗi cũ: run 41 có 14 ShardCommit (11 completed + 3 đang chạy lúc huỷ). <code>commit_shard_output</code> nay bỏ qua commit khi run đã cancelled.</td></tr>
+<tr><td>F-5</td><td>CR-109 cần PO duyệt</td><td>Mở</td><td>CR-109 <code>proposed</code>; chưa duyệt, chưa coi BLOCKER-026 đã xong.</td></tr>
+<tr><td>F-6</td><td>CI GitHub trên SHA cuối chưa chạy</td><td>Mở</td><td>Nhánh chưa push; CI trên SHA cuối NOT VERIFIED.</td></tr>
+</tbody></table>
+<h2 id="independent-review-1">Review độc lập #1 và xử lý</h2>
+<p>Review độc lập #1 (tĩnh, reviewer là subagent độc lập, SHA <code>3cb40b3</code>): verdict <strong>REQUEST CHANGES</strong>. Re-review của delta <code>3cb40b3..bb73895</code> (subagent độc lập): <strong>APPROVE cho delta</strong> (M1, M2, m2 đã sửa). Đây không phải duyệt của PO: CR-102 vẫn cần comment “Đã xem và duyệt” của PO trước khi merge, chưa có ai comment. QA độc lập đã chạy trên <code>3cb40b3</code> (passed kèm quan sát), xem <a href="../qa/M-02-RESOLVE.html">QA report</a>; delta sau đó chưa QA lại. Chi tiết: <a href="../review/M-02-RESOLVE.html">review report</a>.</p>
+<table><thead><tr><th>#</th><th>Nội dung</th><th>Trạng thái</th></tr></thead><tbody>
+<tr><td>M1</td><td>Sweeper chạy lại shard RUNNING còn sống</td><td>Đã sửa trong <code>bb73895</code> (lease <code>started_at</code>, ngưỡng stale 1800 s); re-review APPROVE. Còn ghi chú thấp: lease chỉ làm mới khi claim (không heartbeat), shard chạy &gt; 1800 s vẫn có thể bị chạy lại, dữ liệu được bảo vệ bởi ShardCommit</td></tr>
+<tr><td>M2</td><td>Sweeper nhân message hàng đợi</td><td>Đã sửa (<code>dispatched_at</code>, <code>dispatch_run(stale_after)</code>)</td></tr>
+<tr><td>M3</td><td>Bằng chứng khai quá mức</td><td>Đã sửa trong hồ sơ (bảng AC, BLOCKER-027); thêm file evidence</td></tr>
+<tr><td>m1</td><td>Ngữ nghĩa metric retries</td><td>Mở, đã ghi tài liệu (bên dưới và BLOCKER-026)</td></tr>
+<tr><td>m2</td><td>Race huỷ</td><td>Đã sửa (cùng F-4)</td></tr>
+<tr><td>m3</td><td>Test settings yếu</td><td>Mở</td></tr>
+<tr><td>m4</td><td><code>ignore_result</code> toàn cục</td><td>Mở; đã có comment trong code</td></tr>
+<tr><td>m5</td><td>Duplicate not_applicable: ngữ nghĩa; <code>applicability_version</code> vẫn 1.0.0 và chưa có DEC</td><td>Mở</td></tr>
+<tr><td>m6</td><td>Scrape metrics cần session auth, chưa có token</td><td>Mở</td></tr>
+<tr><td>m7</td><td>Hygiene</td><td>Mở</td></tr>
+</tbody></table>
+<p>Ghi chú re-review: <code>dispatch_run</code> gọi <code>refresh_run</code> mỗi lượt sweep khi mọi PENDING vừa dispatch (vô hại); <code>test_live_long_running_shard</code> mô phỏng claim bằng <code>.update</code> (yếu, được bổ sung bởi <code>test_claim_refreshes_lease</code>); khoá claim lỡ khoá cả hàng run, đã sửa ở <code>35b7de1</code>; một lần chạy đầu <code>test_frames_shard_without_frames</code> flaky (qua 2 lần chạy lại, chưa rõ nguyên nhân, nghi đụng DB dùng chung).</p>
+<p><strong>Hạn chế ghi nhận (code mới)</strong>: (1) message được redispatch khởi đầu lại <code>retries=0</code>, nên ngân sách retry tính theo từng lần dispatch; (2) các lần <code>self.retry</code> của Celery không được lưu, nên <code>labelx_shard_retries_total</code> chỉ đếm lần retry-failed; (3) do <code>started_at</code> được làm mới mỗi lần claim, <code>labelx_shard_duration_seconds</code> và <code>labelx_shard_queue_wait_seconds</code> đo lần claim gần nhất, không phải lần đầu.</p>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>Sửa code (F-1, F-2, F-3, retry/redispatch) ngoài việc chỉ kiểm, vì lỗi bộc lộ khi chạy thật. TBD-14 hiện thực trong code trước khi có review độc lập.</code></li>
+<li><strong>Approved By</strong>: <code>CR-109 chưa được duyệt (proposed); phần còn lại chưa có duyệt độc lập</code></li>
+<li><strong>Known Limitations</strong>: <code>Xem mục Giới hạn và NOT VERIFIED bên dưới.</code></li>
+</ul>
+<h2 id="limits">Giới hạn và NOT VERIFIED</h2>
+<ul>
+<li>Thành viên BDD100K chỉ đối chiếu mirror HuggingFace <code>Hanshiya/bdd100k</code> (split val), chưa phải cây ảnh chính thức; provenance nguồn learner chưa xác minh (BLOCKER-024, cần PO).</li>
+<li>12 ảnh không có tệp nhãn: ghi “thiếu annotation”, không suy diễn negative.</li>
+<li>Retry-failed với engine lỗi thật trên broker thật; blob upload/orphan ngoài phạm vi test hiện có; runner detector/metric/vlm.</li>
+<li>Live scrape Prometheus; queue length/worker online; CR-109 chờ PO.</li>
+<li>CI GitHub trên SHA cuối; review và QA độc lập.</li>
+<li>Thời gian QC Run 10.000 frame, cấu hình server pilot, đo NFR (BLOCKER-025). Máy đo là WSL2 dev, không đại diện server pilot.</li>
+<li>CSRF, Idempotency-Key, deep link Job/Frame, shape bị bỏ qua trên CVAT thật: không kiểm.</li>
+</ul>
+<h2 id="next-steps">Việc tiếp theo</h2>
+<ul>
+<li>PO duyệt hoặc từ chối CR-109; xác nhận provenance BLOCKER-024; thống nhất quyền <code>/api/datasets/</code> (BLOCKER-028 R4).</li>
+<li>Gán reviewer và QA độc lập; push, mở PR base <code>develop</code>, chạy CI trên SHA cuối.</li>
+<li><strong>SRS</strong>: DEC-012 yêu cầu “bản SRS có version” khi giá trị TBD được chốt. Việc này cần sửa <code>11-traceability.tex</code>/<code>08-nonfunctional.tex</code> và dựng lại bản HTML/zip của SRS; không chạy được trong phiên này nên chưa sửa. Đề xuất task riêng đồng bộ SRS với DEC-013.</li>
+<li>Ghi thêm filter backend “latest locked” (R1), metric Celery queue length/worker online, sửa F-4 nếu PO yêu cầu.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task. (M-02-RESOLVE, theo BLOCKER-026…029 và yêu cầu PO)</li>
+<li>[ ] Acceptance criteria results and evidence are linked. (AC-02 retry-failed trên broker thật chưa đạt)</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[ ] Build, lint, and test checks are recorded or explicitly marked not-run with rationale. (build/tsc riêng và CI: not-run)</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent. (pending)</li>
+<li>[ ] Git Nexus mappings are updated when commits exist. (đã thêm dòng; hash merge cập nhật sau)</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/M-02-RESOLVE.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

@@ -116,4 +116,14 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>T-028</td><td><code>4a2537c</code></td><td><code>@vietanhhhhhh2003</code></td><td>Tích hợp matching T-023 và engine contract.</td><td>merge vào <code>ec627bd</code></td></tr>
 <tr><td>T-028</td><td><code>357b679</code></td><td><code>@vietanhhhhhh2003</code></td><td>Ghi quality gate cục bộ.</td><td>merge vào <code>ec627bd</code></td></tr>
 </tbody></table>
+<h2 id="m-02-resolve-commits">M-02-RESOLVE (nhánh fix/M-02-RESOLVE, chưa push/merge)</h2>
+<p>Hash trên nhánh cục bộ; sẽ đổi nếu PR bị squash. CR-109 vẫn <code>proposed</code>.</p>
+<table><thead><tr><th>Task ID</th><th>Implementation Commit</th><th>Date</th><th>Author</th><th>Summary</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>M-02-RESOLVE</td><td><code>b189f76</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>Retry/backoff 2/4/8 s, redispatch PENDING, huỷ không bị ghi đè (TBD-14).</td><td><a href="../../reports/implementation/M-02-RESOLVE.html">implementation</a></td></tr>
+<tr><td>M-02-RESOLVE</td><td><code>a58c9d9</code>, <code>58aac77</code>, <code>522f03b</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>GET /internal/metrics/ (CR-109, BLOCKER-026), merge, regenerate contract.d.ts.</td><td><a href="../../governance/change-requests/CR-109.html">CR-109</a></td></tr>
+<tr><td>M-02-RESOLVE</td><td><code>d4987db</code>, <code>2df357a</code>, <code>6a123e7</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>Sweeper RUNNING bỏ rơi; duplicate not_applicable cho frame trống; publish Celery không treo.</td><td><a href="../../reports/implementation/M-02-RESOLVE.html">implementation</a></td></tr>
+<tr><td>M-02-RESOLVE</td><td><code>bb73895</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>Sửa theo review độc lập #1: migration runs.0005 (dispatched_at), lease started_at, sweeper không reset shard sống/không nhân message, bỏ commit cho run đã huỷ (F-4); thêm evidence AC-01/AC-02.</td><td><a href="../../reports/implementation/M-02-RESOLVE.html">implementation</a></td></tr>
+<tr><td>M-02-RESOLVE</td><td><code>35b7de1</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>Nit từ re-review: khoá claim WorkUnit <code>of=("self",)</code>, chỉnh docstring commit_shard_output. SHA code cuối; make check EXIT 0.</td><td><a href="../../reports/implementation/M-02-RESOLVE.html">implementation</a></td></tr>
+<tr><td>M-02-RESOLVE</td><td><code>663dfc1</code>, <code>fa2ce9f</code>, <code>1cb5a66</code></td><td>2026-10-10</td><td>claude-code cho @toilatrung</td><td>Script drift, RBAC, browser check.</td><td><a href="../../evidence/M-02-RESOLVE/rbac-7-roles.json">evidence</a></td></tr>
+</tbody></table>
 </article></main></body></html>

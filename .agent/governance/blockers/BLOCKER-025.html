@@ -61,6 +61,17 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="blocking-condition">Blocking Condition</h2>
 <p>TBD-13, 14, 15, 17, 20 còn mở. Blocker này theo dõi theo cổng, không chặn <code>EPIC_READY</code> của E-02, E-08, E-10, E-23; chỉ chặn phần nghiệm thu NFR tương ứng.</p>
 <p>Bằng chứng: docs/label-x_system-requirement-specification/sections/11-traceability.tex; docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex; .agent/governance/decisions/DEC-012.html.</p>
+<h3 id="cap-nhat-m-02-resolve">Cập nhật 2026-10-10 (M-02-RESOLVE)</h3>
+<p>PO đã chốt giá trị cho sáu tham số, ghi ở <a href="../decisions/DEC-013.html">DEC-013</a> (quyết định gốc 2026-10-09; xác nhận bổ sung 2026-10-10, không backdate). Cột “Đề xuất mặc định” ở bảng Resolution Plan là lịch sử; giá trị hiện hành lấy từ DEC-013. <strong>Blocker vẫn <code>open</code></strong> vì còn phần pending bên dưới.</p>
+<table><thead><tr><th>TBD</th><th>Giá trị đã chốt</th><th>Tham số</th><th>Triển khai / nghiệm thu</th></tr></thead><tbody>
+<tr><td>TBD-02</td><td>Dev: RAM 16 GB, GTX 1650 4 GB, Ryzen 7 5800</td><td>Đã chốt (máy dev)</td><td>Server pilot: PENDING, chưa có cấu hình</td></tr>
+<tr><td>TBD-13</td><td>Mở frame p95 ≤ 1,5 s; lưu quyết định p95 ≤ 500 ms</td><td>Đã chốt</td><td>Chưa đo. QC Run 10.000 frame: PENDING sau pilot</td></tr>
+<tr><td>TBD-14</td><td>3 retry ngoài lần đầu; backoff 2/4/8 s</td><td>Đã chốt</td><td>Đã triển khai trong code (<code>b189f76</code>), chỉ test mock/eager; retry-failed trên broker thật NOT VERIFIED; chưa đo pilot</td></tr>
+<tr><td>TBD-15</td><td>Audit log suốt vòng đời dataset, tối thiểu 1 năm</td><td>Đã chốt</td><td>Chưa triển khai</td></tr>
+<tr><td>TBD-17</td><td>RPO ≤ 24 giờ, RTO ≤ 8 giờ</td><td>Đã chốt</td><td>Chưa triển khai/diễn tập</td></tr>
+<tr><td>TBD-20</td><td>t_gc 24 giờ; ε score_v0 = 0,01; làm tròn 6 chữ số thập phân khi hash</td><td>Đã chốt</td><td>Chưa triển khai; khớp code hiện tại NOT VERIFIED</td></tr>
+</tbody></table>
+<p><strong>Còn pending (lý do blocker giữ <code>open</code>)</strong>: (1) thời gian QC Run 10.000 frame (NFR-03); (2) cấu hình server pilot (TBD-02); (3) đo NFR trên pilot (NFR-01…03, NFR-05, NFR-08, NFR-16); (4) đồng bộ bản SRS có version. Bằng chứng: <a href="../../reports/implementation/M-02-RESOLVE.html">báo cáo triển khai M-02-RESOLVE</a>.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (chỉ nghiệm thu NFR-01…03, NFR-05, NFR-06, NFR-08, NFR-16 và task GC/retention của E-02)</li>
@@ -71,7 +82,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Affected Records</strong>: <code>.agent/planning/epics.html</code></li>
 <li><strong>Issues</strong>: <code>none</code></li>
-<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-012.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-012.html, .agent/governance/decisions/DEC-013.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>none</code></li>
 </ul>
@@ -93,8 +104,8 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="resolution-record">Resolution Record</h2>
 <ul>
 <li><strong>Resolved Date</strong>: <code>pending</code></li>
-<li><strong>Evidence</strong>: <code>.agent/governance/decisions/DEC-012.html</code> — quyết định tách blocker ngày 2026-10-09.</li>
-<li><strong>Note</strong>: Tách từ BLOCKER-014 (đã đóng). Chưa có giá trị nào được Tech Lead/Product Owner xác nhận.</li>
+<li><strong>Evidence</strong>: <code>.agent/governance/decisions/DEC-012.html</code> — quyết định tách blocker ngày 2026-10-09; <code>.agent/governance/decisions/DEC-013.html</code> — giá trị PO chốt (một phần).</li>
+<li><strong>Note</strong>: Tách từ BLOCKER-014 (đã đóng). Cập nhật 2026-10-10: PO đã chốt giá trị sáu tham số (DEC-013); chưa đóng blocker vì thời gian QC Run 10.000 frame, cấu hình server pilot và đo NFR còn pending. Không có giá trị nào được đánh dấu đã nghiệm thu NFR.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>

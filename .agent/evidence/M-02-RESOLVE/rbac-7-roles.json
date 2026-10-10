@@ -1,0 +1,122 @@
+{
+ "table": {
+  "snapshots_create": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 400,
+   "qc_admin": 403,
+   "super_admin": 400,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "snapshots_list": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "snapshots_retrieve": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "config_versions_list": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "config_versions_create": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 403,
+   "qc_admin": 400,
+   "super_admin": 400,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_list": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_create": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 400,
+   "qc_admin": 403,
+   "super_admin": 400,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_retrieve": {
+   "annotator": 403,
+   "reviewer": 200,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_ledger": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_shards": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 200,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_ranking": {
+   "annotator": 403,
+   "reviewer": 200,
+   "qa_lead": 200,
+   "qc_admin": 403,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "runs_cancel(terminal)": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 409,
+   "qc_admin": 403,
+   "super_admin": 409,
+   "product_owner": 403,
+   "data_model_owner": 403
+  },
+  "internal_metrics": {
+   "annotator": 403,
+   "reviewer": 403,
+   "qa_lead": 403,
+   "qc_admin": 200,
+   "super_admin": 200,
+   "product_owner": 403,
+   "data_model_owner": 403
+  }
+ },
+ "mismatches": []
+}

@@ -62,6 +62,14 @@ ul.dir{columns:2;font-size:14px}
 <p>Phạm vi T-025 (issue #67) có hạng mục <em>Metric queue/shard</em>. PR #93 mới có hàm <code>run_metrics()</code> và log có cấu trúc (<code>shard committed</code>, <code>run progress</code>); chưa xuất endpoint hay Prometheus vì repo chưa có nền metrics và thêm endpoint sẽ đổi <code>docs/04-api/openapi.yaml</code> (cần change request). PO đã chấp nhận hoãn để merge T-025, với điều kiện hạng mục này được theo dõi tới cuối M-02.</p>
 <p><strong>Cảnh báo cuối M-02:</strong> không đóng M-02 (2026-10-14) hoặc đợt R-001 khi blocker này còn <code>open</code> mà chưa có quyết định ghi lại. Reviewer của <code>labelx-flow-review</code> phải kiểm blocker này trước khi merge <code>develop</code> → <code>main</code>.</p>
 <p>Bằng chứng: https://github.com/toilatrung/label-x/issues/67#issuecomment-6093054275; PR #93; <code>src/backend/orchestration/services.py</code> (<code>run_metrics</code>).</p>
+<h3 id="cap-nhat-m-02-resolve">Cập nhật 2026-10-10 (M-02-RESOLVE): tiến độ</h3>
+<p>Đã triển khai phương án (b): endpoint <code>GET /internal/metrics/</code> (Prometheus text, chỉ <code>qc_admin</code>/<code>super_admin</code> toàn hệ thống) cùng <a href="../change-requests/CR-109.html">CR-109</a> và <code>openapi.yaml</code> (commit <code>a58c9d9</code>, merge <code>58aac77</code>, <code>contract.d.ts</code> regenerate <code>522f03b</code>). Có 16 test; RBAC 7 vai trò × endpoint <code>internal_metrics</code> khớp ma trận (0 mismatch, <code>.agent/evidence/M-02-RESOLVE/rbac-7-roles.json</code>).</p>
+<ul>
+<li><strong>Chưa xong / NOT VERIFIED</strong>: <strong>CR-109 đang <code>proposed</code>, chờ PO duyệt</strong> (chưa được coi là đã duyệt); live scrape bằng Prometheus thật chưa chạy; metric queue length và worker online (Celery/Redis) chưa làm.</li>
+<li><strong>Hạn chế ngữ nghĩa metric (ghi nhận sau review độc lập #1)</strong>: các lần <code>self.retry</code> của Celery không được lưu, nên <code>labelx_shard_retries_total</code> chỉ đếm các lần retry-failed; message redispatch khởi đầu lại <code>retries=0</code> (ngân sách retry tính theo từng lần dispatch); vì <code>started_at</code> được làm mới mỗi lần claim (commit <code>bb73895</code>), <code>labelx_shard_duration_seconds</code> và <code>labelx_shard_queue_wait_seconds</code> đo lần claim gần nhất. Endpoint scrape cần session auth, chưa có service token (m6).</li>
+<li>Bằng chứng hiện có là test tự động và kiểm RBAC trên API thật, không phải scrape thật.</li>
+</ul>
+<p>Trạng thái giữ <code>open</code>: bảng trạng thái của template không có “đã triển khai, chờ review”, và <code>resolved</code> bị cấm khi chưa có duyệt/bằng chứng đủ. Chỉ chuyển <code>resolved</code> sau khi PO duyệt CR-109 và review độc lập.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (không chặn merge T-025, T-027; chỉ chặn việc coi hạng mục Metric của T-025 là hoàn tất và đóng M-02)</li>
@@ -74,7 +82,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Issues</strong>: <code>#67, #57</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-012.html</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>cần CR nếu thêm endpoint làm đổi docs/04-api/openapi.yaml</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-109.html (proposed, chờ PO duyệt)</code></li>
 </ul>
 <h2 id="resolution-plan">Resolution Plan</h2>
 <ul>
@@ -88,8 +96,8 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="resolution-record">Resolution Record</h2>
 <ul>
 <li><strong>Resolved Date</strong>: <code>pending</code></li>
-<li><strong>Evidence</strong>: <code>pending</code></li>
-<li><strong>Note</strong>: PO chấp nhận hoãn ngày 2026-10-10 để T-025 (PR #93) được merge; blocker này nhắc hoàn thiện trước cuối M-02.</li>
+<li><strong>Evidence</strong>: <code>commit a58c9d9, 58aac77, 522f03b; src/backend/tests/orchestration/test_metrics.py; .agent/evidence/M-02-RESOLVE/rbac-7-roles.json; .agent/reports/implementation/M-02-RESOLVE.html</code> (chưa có live scrape; CR-109 chờ PO)</li>
+<li><strong>Note</strong>: Cập nhật 2026-10-10: đã có endpoint và test, còn chờ PO duyệt CR-109 và review độc lập, nên giữ <code>open</code>. PO chấp nhận hoãn ngày 2026-10-10 để T-025 (PR #93) được merge; blocker này nhắc hoàn thiện trước cuối M-02.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>

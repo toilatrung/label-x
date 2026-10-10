@@ -34,6 +34,8 @@ tags:
     description: Tra rule guideline tĩnh (module GDL, CR-101)
   - name: config
     description: Config version engine, ngưỡng, model (FR-ENG-01)
+  - name: ops
+    description: Metric vận hành nội bộ, không thuộc API nghiệp vụ (NFR-12, CR-109)
   - name: review
     description: Hàng đợi, lease, frame (UC-04, UC-05, module REV)
   - name: rework
@@ -503,6 +505,31 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  # ------------------------------------------------------------------ ops
+  /internal/metrics/:
+    get:
+      operationId: internal_metrics
+      tags: [ops]
+      summary: Metric queue/shard của QC Run (Prometheus text)
+      description: |
+        Prometheus text exposition 0.0.4, tính từ trạng thái DB (QCRun, WorkUnit, ShardCommit,
+        LedgerUnit, CandidateRecord), không cache. Gộp mọi dataset nên chỉ `qc_admin`/`super_admin`
+        có RoleAssignment toàn hệ thống (dataset_id null) được đọc; vai trò gán theo dataset
+        trả 403 FORBIDDEN. Họ metric: `labelx_shard_units`, `labelx_shard_retries_total`,
+        `labelx_shard_error_ratio`, `labelx_shard_duration_seconds`,
+        `labelx_shard_queue_wait_seconds`, `labelx_runs`, `labelx_run_queue_latency_seconds`,
+        `labelx_run_duration_seconds`, `labelx_shard_commits`, `labelx_candidates`,
+        `labelx_ledger_units`. Label chỉ gồm `engine`, `status`, `outcome`, `le` (không có run_id).
+        Định nghĩa đếm: CR-109.
+      x-labelx-trace: [NFR-12]
+      x-labelx-roles: [qc_admin, super_admin]
+      responses:
+        "200":
+          description: Metric ở dạng text Prometheus
+          content:
+            text/plain:
+              schema: { type: string }
+        "403": { $ref: "#/components/responses/Forbidden" }
   # ------------------------------------------------------------ guidelines
   /api/guidelines/rules/:
     get:

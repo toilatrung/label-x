@@ -207,6 +207,8 @@ class WorkUnit(dj_models.Model):
     last_error = dj_models.TextField(blank=True, default="")
     started_at = dj_models.DateTimeField(null=True, blank=True)
     finished_at = dj_models.DateTimeField(null=True, blank=True)
+    # Lần gần nhất message shard được gửi vào broker; sweeper chỉ gửi lại khi đã quá hạn.
+    dispatched_at = dj_models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "work_unit"

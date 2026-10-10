@@ -61,6 +61,35 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="blocking-condition">Blocking Condition</h2>
 <p>Acceptance criterion “chạy trên API thật, đúng RBAC” của T-022 chưa có bằng chứng kiểm lại được. Backend test dùng fake CVAT và <code>force_authenticate</code>; review trên trình duyệt dùng fixture API chặn request; implementation report ghi <em>partial</em>. Review trên head <code>d11a932</code> (F-3, major) và review lại trên head <code>7259040</code> đều không thấy commit nào bổ sung bằng chứng. Máy review chưa chạy CVAT và chưa có service token.</p>
+<h3 id="hai-checklist">Hai danh mục kiểm trong blocker này</h3>
+<p>Blocker này gom hai danh mục độc lập; <strong>cả hai được giữ</strong> và đối chiếu chéo bên dưới, để không mất mục nào khi một danh mục đạt trước. Nguồn: <a href="../../reports/implementation/M-02-RESOLVE.html">báo cáo triển khai M-02-RESOLVE</a>, thư mục <code>.agent/evidence/M-02-RESOLVE/</code>. Đánh dấu <code>[x]</code> = có bằng chứng thật (CVAT 2.77.0, Redis và Celery worker thật, token read-only); <code>[ ]</code> = chưa/NOT VERIFIED.</p>
+<h4 id="checklist-a">A. Bằng chứng Snapshot / AC của T-022 (PR #88) trên CVAT thật</h4>
+<ul>
+<li>[x] Snapshot khoá trên CVAT thật: snapshot 3 từ CVAT job 1, <code>revision_sha256</code> <code>4c0f34ab43ca693857f9e89672136d9b96eac68997e37d6e065037ba105dfbcf</code> (<code>ac02-db-state-runs-35-41.json</code>). Các bước UI/API đi tới snapshot (Dataset → Task/Job → tạo) là quan sát thủ công, không có artifact: <strong>[ ] NOT in evidence</strong>.</li>
+<li>[x] Job drift (AC-03): sửa annotation giữa hai lần đọc → snapshot <code>failed</code> <code>drift_detected</code>, <code>drift_jobs</code> [3] đúng job, không khoá (<code>ac03-drift-cvat.json</code>, project/task probe riêng, không đụng dữ liệu learner).</li>
+<li>[x] Bất biến và lineage: dữ liệu không đổi → locked, revision hash trùng giữa hai snapshot (parent 38→39); sửa CVAT sau khoá → snapshot cũ giữ nguyên hash/status, snapshot mới hash khác, parent 39 (<code>ac03-drift-cvat.json</code>).</li>
+<li>[x] RBAC thật: 7 vai trò × 13 endpoint (gồm snapshots create/list/retrieve) khớp <code>docs/04-api/rbac-matrix.html</code>, 0 mismatch (<code>rbac-7-roles.json</code>); trình duyệt 7 vai trò: chỉ qa_lead/qc_admin/super_admin vào <code>/analysis/*</code>, các vai trò khác nhận 403 (<code>browser-result.json</code>, ảnh <code>topbar-*.png</code>, <code>*-analysis-*.png</code>).</li>
+<li>[ ] Shape bị bỏ qua trên CVAT thật: dữ liệu learner có ignored shapes/tracks = 0, nên trường hợp có shape bị bỏ qua chưa kiểm thật. NOT VERIFIED.</li>
+<li>[ ] CSRF, Idempotency-Key khi tạo Snapshot trên API thật; deep link Job/Frame: không có bằng chứng trong M-02-RESOLVE. NOT VERIFIED.</li>
+<li>[ ] Đẩy commit bằng chứng và review lại head của PR #88: chưa làm (nhánh chưa push); thuộc review độc lập.</li>
+</ul>
+<h4 id="checklist-b">B. Nghiệm thu tích hợp #96 (chạy thật end-to-end từ UI/API, T-026/T-029)</h4>
+<ul>
+<li>[x] Hai run trên code cuối (42 và 43; snapshot 3, config 2 gồm duplicate + geometry + schema, seed 20261010) cùng <code>candidates_sha256</code>, <code>content_hash</code>, <code>ranking_hash</code> và <code>ledger_sha256</code> (<code>ac01-final-runs-42-43.json</code>). Run 35, 36, 37 (<code>ac01-run35.json</code>, <code>ac01-run36.json</code>, <code>ac01-run37.json</code>) chạy trước F-1 nên ledger khác có chủ đích. Candidate chỉ là duplicate/E3 (163); geometry 0 candidate, schema not_checked: bằng chứng ranking chỉ cho engine duplicate. “Không dispatch thủ công, qua broker thật”: quan sát thủ công, <strong>[ ] NOT in evidence</strong>.</li>
+<li>[x] Số liệu cuối sau sự cố hạ tầng (AC-02): run 39 completed hash trùng (<code>ac02-broker-down-run39.json</code>); run 40: 18 shard_commits, 0 idempotency_key trùng, 163 candidate, 1764 dòng ledger (<code>ac02-db-state-runs-35-41.json</code>, <code>ac02-worker-kill-run40.json</code>); run 41 (huỷ) cancelled, 14 commit tồn tại trước guard mới (F-4, nay đã sửa trong code, chưa chạy lại E2E thật). <strong>[ ] NOT in evidence</strong>: việc dừng Redis, trả 201/18 shard PENDING, treo 120 s ở bản cũ, và SIGKILL worker cùng timeline là quan sát thủ công, không có artifact.</li>
+<li>[x] Màn Run detail (ledger, coverage, 18 shard, 163 candidate kèm evidence) hiển thị trên dữ liệu thật, 0 pageerror (<code>qa_lead-run-detail-QC-35.png</code>, <code>qa_lead-run-detail-QC-39.png</code>, <code>browser-result.json</code>).</li>
+<li>[ ] Runner detector, metric, vlm đã đăng ký và chạy trong E2E: E2E chỉ bật duplicate, geometry, schema; việc đăng ký/chạy ba runner kia không có bằng chứng. NOT VERIFIED.</li>
+<li>[ ] Retry-failed với engine lỗi thật trên broker thật: chỉ có 24 test failure-injection (mock/eager). NOT VERIFIED.</li>
+<li>[ ] Review độc lập và PO duyệt (CR-102): chưa có.</li>
+</ul>
+<p><strong>Đối chiếu chéo</strong>: AC-03 và RBAC phục vụ cả A và B; bảng bên dưới cho biết mục nào thuộc danh mục nào.</p>
+<table><thead><tr><th>Bằng chứng</th><th>Danh mục A (T-022)</th><th>Danh mục B (#96)</th></tr></thead><tbody>
+<tr><td>Snapshot khoá từ CVAT job 1, revision hash</td><td>Có</td><td>Dùng làm đầu vào run</td></tr>
+<tr><td>AC-03 drift, bất biến, lineage</td><td>Có</td><td>Không</td></tr>
+<tr><td>RBAC 7 vai trò × 13 endpoint</td><td>Có (snapshots)</td><td>Có (runs, config, metrics)</td></tr>
+<tr><td>Run thật broker+worker, hash tái lập, sự cố Redis/worker</td><td>Không</td><td>Có</td></tr>
+<tr><td>Màn UI theo vai trò và Run detail</td><td>Có (analysis/snapshots)</td><td>Có (config, history, run detail)</td></tr>
+</tbody></table>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>T-022</code></li>
