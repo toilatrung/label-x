@@ -146,6 +146,7 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     expect(screen.getByText(/Detector v2.3 · Ngưỡng tin cậy ≥ 0.6/)).toBeDefined();
 
     expect(configCalls()).toHaveLength(1);
+    expect(configCalls()[0].searchParams.get('status')).toBe('published');
   });
 
   it('shows empty state for engine configuration when no published config exists', async () => {

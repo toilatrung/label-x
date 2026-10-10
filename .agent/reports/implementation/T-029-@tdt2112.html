@@ -17,7 +17,7 @@ mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</
 <style>
 :root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
 --ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
---warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;--success:#107c41;--success-soft:#e6f4ea;
 --font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
 *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
 .top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
@@ -36,10 +36,13 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display
 th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
 th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
 blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+.lx-callout{margin:12px 0;padding:10px 14px;border-left:3px solid var(--info);background:var(--neutral-soft);font-size:13.5px}
+.lx-callout.success{border-left-color:var(--success);background:var(--success-soft)}
+.lx-callout.warn{border-left-color:var(--warn);background:var(--warn-soft)}
 pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
-.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
-.toc ul{margin:2px 0;padding-left:18px}
-ul.dir{columns:2;font-size:14px}
+figure{margin:16px 0;border:1px solid var(--border);padding:8px;background:var(--sunken);text-align:center}
+figure img{max-width:100%;height:auto;border:1px solid var(--border)}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-029-@tdt2112</span><span class="sp"></span></header>
@@ -47,194 +50,89 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>T-029-tdt2112</span><b>title</b><span>T-029 Engine Config and Candidate/Evidence Display Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>execution</span><b>tags</b><span>[implementation, config, threshold, candidate, evidence, t-029]</span><b>priority</b><span>2</span></div>
 <h1 id="t-029-implementation-report">T-029 — Hiển thị config/threshold engine chỉ đọc và candidate/evidence</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<p>Báo cáo kiểm chứng triển khai task T-029 (epic E-09, milestone M-02) theo issue #71 trên nhánh <code>feat/T-029-e09-engine-config-ui</code>.</p>
+<p>Bản sửa review PR <a href="https://github.com/toilatrung/label-x/pull/94">#94</a>, cập nhật trực tiếp nhánh <code>feat/T-029-e09-engine-config-ui</code>. Không tạo PR mới.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-  <li><strong>Report ID</strong>: <code>T-029-@tdt2112</code></li>
-  <li><strong>Title</strong>: <code>Hiển thị config/threshold engine chỉ đọc và candidate/evidence</code></li>
-  <li><strong>Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
-  <li><strong>Executor</strong>: <code>Codex</code></li>
-  <li><strong>Status</strong>: <code>draft</code></li>
-  <li><strong>Task ID</strong>: <code>T-029</code></li>
-  <li><strong>Epic ID</strong>: <code>E-09</code></li>
-  <li><strong>Report Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Report ID</strong>: <code>T-029-@tdt2112</code></li>
+<li><strong>Title</strong>: Hiển thị config/threshold engine chỉ đọc và candidate/evidence</li>
+<li><strong>Owner</strong>: Trần Đức Thọ (@tdt2112)</li>
+<li><strong>Executor</strong>: Worker local và Codex</li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status Note</strong>: Task giữ <code>in-progress</code>, chờ review độc lập, quyết định CR-108 và nghiệm thu tích hợp.</li>
+<li><strong>Task ID</strong>: <code>T-029</code></li>
+<li><strong>Epic ID</strong>: <code>E-09</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-10</code></li>
 </ul>
 <h2 id="scope">Scope</h2>
 <ul>
-  <li><strong>Implemented (Phần độc lập đã hoàn thành trên develop)</strong>:
-    <ul>
-      <li>Trang <code>RulesThresholds</code> (<code>src/frontend/src/app/configuration/rules-thresholds/page.tsx</code>) kết nối endpoint <code>/api/config-versions/?status=published</code> hiển thị cấu hình ngưỡng engine chỉ đọc.</li>
-      <li>Thành phần <code>EngineThresholdsTable</code> (<code>src/frontend/src/components/execution/EngineThresholdsTable.tsx</code>):
-        <ul>
-          <li>Xóa bỏ toàn bộ giá trị fallback giả định không được API trả về (không tự điền taxonomy version, tolerance, min area, IoU, detector confidence, model version, max candidates, hoặc enabled mặc định).</li>
-          <li>Nếu config thiếu engine hoặc params cần thiết, hiển thị rõ ràng: <code>Chưa được cấu hình/không có dữ liệu từ API</code>; tuyệt đối không tự suy ra engine đang bật.</li>
-          <li>Chỉ hiển thị cờ bật/tắt đã khai báo trong cấu hình khi API trả trường <code>enabled</code> kiểu boolean; nhãn không đại diện trạng thái runtime. Nếu thiếu trường, hiển thị <code>Chưa khai báo</code>.</li>
-          <li>Xử lý RBAC chuẩn xác: vai trò Reviewer có quyền xem guideline mappings nhưng không được xem cấu hình engine; giao diện hiển thị thông báo phân quyền rõ ràng, không gửi request trái quyền gây lỗi 403 âm thầm.</li>
-          <li>Xử lý lỗi API và trạng thái chưa có cấu hình phát hành bằng thông báo rằng không thể xác nhận ngưỡng từ dữ liệu hiện có; không suy luận trạng thái kiểm tra runtime từ việc thiếu config published.</li>
-          <li>Nhãn bật/tắt chỉ mô tả bản cấu hình published do API trả về; mỗi QC run gắn với config version riêng. <code>runs/services.py</code> lọc engine có <code>enabled=false</code> trước khi tạo WorkUnit.</li>
-        </ul>
-      </li>
-      <li>Thành phần độc lập <code>CandidateEvidenceList</code> (<code>src/frontend/src/components/execution/CandidateEvidenceList.tsx</code>):
-        <ul>
-          <li>Được chuẩn bị trước độc lập theo đúng schema <code>Candidate</code> và <code>Evidence</code> trong <code>contract.d.ts</code>.</li>
-          <li>Không suy ra <code>rawCount</code> / <code>dedupCount</code> từ <code>candidates.length</code>.</li>
-          <li>Chỉ hiển thị callout số lượng khi parent truyền số liệu thực có nguồn rõ ràng; nếu chưa có API trả số liệu, không dựng callout số lượng.</li>
-          <li>Xóa khẳng định candidate “đã đưa vào Review Center” (trừ khi dữ liệu/API xác nhận trạng thái đó).</li>
-          <li>Empty state trung tính cảnh báo rõ "(không tự động xem là đạt kết quả)".</li>
-          <li>Xác nhận rõ trong mã và tài liệu: component chưa được kết nối vào <code>ExecutionHistory</code> và là phần chuẩn bị trước, chưa phải acceptance đã hoàn thành.</li>
-        </ul>
-      </li>
-      <li>Bộ kiểm thử Vitest toàn diện: 15 test files (152 tests passed 100%), bổ sung test case chứng minh dữ liệu thiếu được biểu diễn là chưa biết/chưa cấu hình, không hiển thị giá trị mặc định giả và không phát sinh thông báo thành công giả; phân biệt rõ trạng thái chưa có dữ liệu/chưa kết nối với danh sách rỗng sau tải thành công.</li>
-    </ul>
-  </li>
-  <li><strong>Deferred / Blocked (Chưa hoàn thành & Đang bị chặn)</strong>:
-    <ul>
-      <li><strong>Chưa thể xác nhận chạy với backend develop cho <code>/api/config-versions/</code></strong>: Mặc dù endpoint đã có trong OpenAPI baseline (<code>docs/04-api/openapi.yaml</code>), trên nhánh <code>develop</code> hiện tại, route backend DRF tương ứng CHƯA ĐƯỢC ĐĂNG KÝ (nằm trong PR #91/T-026 đang ở trạng thái draft). Do đó, phần UI này chưa thể được xác nhận chạy với backend develop cho tới khi route có thật. Tiêu chí “API thật” KHÔNG được đánh dấu hoàn thành chỉ dựa trên frontend test mocks.</li>
-      <li><strong>Nối màn <code>AnalysisConfig</code> và <code>ExecutionHistory</code></strong>: Hai màn hình này nằm trong PR #91 (T-026, draft) chưa merge vào <code>develop</code>. Nhánh T-029 tuân thủ nguyên tắc không đưa code chưa duyệt từ PR #91 vào nhánh.</li>
-      <li><strong>Đọc danh sách Candidate/Evidence theo run</strong>: Xác minh OpenAPI hiện tại cho thấy <code>GET /api/runs/{id}/ranking/</code> chỉ trả về <code>RankedFrame</code> (chỉ chứa rank, score, <code>missing_evidence</code> và số lượng issue theo family, không có chi tiết candidate/evidence). Để đọc candidate thật theo run, cần endpoint bổ sung (ví dụ <code>GET /api/runs/{id}/candidates/</code>).</li>
-      <li><strong>Căn cứ governance cho thay đổi contract</strong>: Theo tài liệu <code>AGENT.html</code> điều khoản "Change Request Rule" (dòng 185–191), việc thay đổi contract bắt buộc phải có Change Request được approved. Chủ nhiệm task đã lập hồ sơ đề xuất <a href="../../governance/change-requests/CR-108-@tdt2112.html">CR-108</a> ở trạng thái <code>proposed</code> trình PO (@toilatrung) và QA/QC approver (@ducha180104) xem xét; giữ nguyên baseline OpenAPI và giữ tiêu chí này CHƯA HOÀN THÀNH khi CR chưa được duyệt.</li>
-    </ul>
-  </li>
+<li><strong>Implemented</strong>: Sửa F-2/F-3; tích hợp bảng engine vào AnalysisConfig và candidate/evidence vào ExecutionHistory; endpoint candidate đọc dữ liệu đã lưu và kiểm quyền theo dataset của run.</li>
+<li><strong>Not Implemented</strong>: Không lưu số candidate trước dedup; chưa nghiệm thu luồng QC thật từ tạo run đến candidate trên develop; không coi test fixture là kết quả engine thật.</li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
-<table>
-<thead>
-<tr>
-<th>File or Artifact</th>
-<th>Change Summary</th>
-<th>Task ID</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>src/frontend/src/app/configuration/rules-thresholds/page.tsx</code></td>
-<td>Tích hợp hiển thị ngưỡng engine chỉ đọc từ API contract, kiểm tra quyền <code>canAccessConfiguration</code>, xử lý thông báo lỗi và trạng thái chưa có cấu hình.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>src/frontend/src/components/execution/EngineThresholdsTable.tsx</code></td>
-<td>Component hiển thị bảng tham số cấu hình engine chỉ đọc; xóa bỏ mọi fallback giả; hiển thị "Chưa được cấu hình/không có dữ liệu từ API" khi thiếu params; hiển thị "Chưa khai báo" khi thiếu trường enabled.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>src/frontend/src/components/execution/CandidateEvidenceList.tsx</code></td>
-<td>Component độc lập chuẩn bị trước cho candidate/evidence; không mặc định candidates thành []; phân biệt rõ lỗi, đang tải, chưa kết nối API/chưa có dữ liệu, và danh sách rỗng; không suy diễn số lượng; không khẳng định Review Center.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>src/frontend/src/__tests__/RulesThresholds.test.tsx</code></td>
-<td>Test case: QA Lead xem tham số trong cấu hình published, Reviewer bị giới hạn quyền kèm thông báo rõ ràng, empty state không suy luận runtime, error alert.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>src/frontend/src/__tests__/EngineThresholdsTable.test.tsx</code></td>
-<td>Unit tests cho EngineThresholdsTable: 6 engine chuẩn, format params, badge bật/tắt/chưa xác định, thông báo chưa cấu hình, không hiển thị fallback giả.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>src/frontend/src/__tests__/CandidateEvidenceList.test.tsx</code></td>
-<td>Unit tests cho CandidateEvidenceList: kiểm thử trường hợp candidates chưa truyền, trường hợp [] sau tải thành công, trường hợp có lỗi, không suy diễn số lượng.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>.agent/governance/change-requests/CR-108-@tdt2112.html</code></td>
-<td>Hồ sơ Change Request đề xuất bổ sung endpoint OpenAPI GET /api/runs/{id}/candidates/ theo đúng Change Request Rule của AGENT.html.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>.agent/execution/task-board-@tdt2112.html</code></td>
-<td>Task board riêng của owner @tdt2112 ghi nhận trạng thái in-progress và liên kết CR-108 theo CR-100.</td>
-<td>T-029</td>
-</tr>
-<tr>
-<td><code>.agent/reports/implementation/T-029-@tdt2112.html</code></td>
-<td>Báo cáo triển khai T-029 chi tiết theo chuẩn CR-103; phản ánh đúng trạng thái in-progress và các phần đang chờ dependency.</td>
-<td>T-029</td>
-</tr>
-</tbody>
-</table>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>EngineThresholdsTable.tsx</code>, <code>RulesThresholds.test.tsx</code></td><td>F-2: params không rỗng vẫn có JSON khi không có formatter; test <code>tau_loc: 0.55</code>. RulesThresholds đọc config published, có guard frontend theo vai trò.</td><td>T-029</td></tr>
+<tr><td><code>CandidateEvidenceList.tsx</code>, tests</td><td>F-3: hiển thị prediction_class và bbox object theo contract; không ép raw_count null thành 0 hoặc tính dedup_count từ số dòng của trang.</td><td>T-029</td></tr>
+<tr><td><code>analysis/config/page.tsx</code></td><td>Bảng engine chỉ đọc, chỉ hiển thị config đã chọn, giữ lựa chọn khi phân trang; bảo toàn dữ liệu thresholds/models của T-026.</td><td>T-029</td></tr>
+<tr><td><code>analysis/history/page.tsx</code>, <code>lib/execution/api.ts</code></td><td>Gọi endpoint candidate sau khi tải run thành công; loading/error/empty, chuyển run, polling và phân trang cursor.</td><td>T-029</td></tr>
+<tr><td><code>runs/serializers.py</code>, <code>runs/views.py</code>, <code>runs/urls.py</code></td><td>Phương án 2 CR-108: đọc CandidateRecord, lọc engine/family, cursor 50 dòng (tối đa 100); raw_count null, dedup_count toàn run. Tái dùng RunScopedReadView; Reviewer/QA Lead/QC Admin/Super Admin đúng dataset; Annotator bị chặn. Không có severity đã lưu nên trả null.</td><td>T-029</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>, <code>contract.d.ts</code></td><td>Endpoint/pagination schema và generated types đồng bộ; lỗi 400/403/404 dùng Error. Fixture detector dùng bbox object, IssueFamily/Severity hợp lệ và Evidence.engine bắt buộc.</td><td>T-029</td></tr>
+<tr><td>Dependency T-026</td><td>Tích hợp commit <code>88f60fb2e65e45785e8ac4f8aed312a4d4273697</code> từ PR #91 để có config API và các trang thật; merge develop tại <code>b57626f735565ce0dafb0c219e25bc25da1f0163</code>. PR #94 chứa mã T-026 chưa có trên develop; integrator cần xét quan hệ với #91 trước merge.</td><td>T-026/T-029</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/71">#71</a>; review <a href="https://github.com/toilatrung/label-x/pull/94#issuecomment-6093436322">Trung F-1/F-2/F-3</a> do người dùng cung cấp.</li>
+<li><strong>Context Packages</strong>: <code>AGENT.html</code>, <code>docs/04-api/openapi.yaml</code>, PR #91.</li>
+<li><strong>Task Board</strong>: <a href="../../execution/task-board-@tdt2112.html">task-board-@tdt2112.html</a>.</li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (nguồn canonical).</li>
+<li><strong>Decisions</strong>: Chưa có bằng chứng PO duyệt CR-108.</li>
+<li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-108-@tdt2112.html">CR-108-@tdt2112.html</a> giữ <code>proposed</code>; Option 2 được đưa ra để review, không tự ghi approved.</li>
+<li><strong>Risks or Blockers</strong>: <a href="https://github.com/toilatrung/label-x/issues/96">M-02-RESOLVE #96</a>; không thay AC của T-029.</li>
+<li><strong>Review Request</strong>: PR #94 chờ @toilatrung hoặc @DucHa180104 xem lại; không có duyệt trong báo cáo này.</li>
+<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map-@tdt2112.html">Task Commit Map</a>; lần sửa F-2/F-3 <code>bf5af73</code>, merge dependency <code>70446e5</code> và <code>3d2e06e</code>.</li>
+</ul>
 <h2 id="command-evidence">Command Evidence</h2>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Result</th>
-<th>Evidence</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>./node_modules/.bin/vitest run</code> (Frontend)</td>
-<td><code>passed</code></td>
-<td><code>15 test files passed, 152 tests passed in 3.79s</code></td>
-</tr>
-<tr>
-<td><code>./node_modules/.bin/next typegen && ./node_modules/.bin/tsc --noEmit</code> (Frontend)</td>
-<td><code>passed</code></td>
-<td><code>Generating route types... Types generated successfully. Exit code 0 (no TypeScript errors)</code></td>
-</tr>
-<tr>
-<td><code>./node_modules/.bin/eslint src/</code> (Frontend)</td>
-<td><code>passed</code></td>
-<td><code>No ESLint errors or warnings in modified/added components and tests</code></td>
-</tr>
-<tr>
-<td><code>python scripts/validate-framework.py</code></td>
-<td><code>passed</code></td>
-<td><code>FRAMEWORK_VALIDATION_PASS</code></td>
-</tr>
-</tbody>
-</table>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>npm test</code></td><td>passed</td><td>171 tests, 16 files; pretest sinh lại contract.</td></tr>
+<tr><td><code>npm run lint</code>, <code>npm run typecheck</code>, <code>npm run build</code></td><td>passed</td><td>ESLint, Next typegen/tsc và Next.js 16.3.8 production build thành công.</td></tr>
+<tr><td>Backend: <code>uv run --frozen ruff check .</code>; <code>ruff format --check .</code>; <code>mypy config accounts audit engines guideline cvat_adapter orchestration ranking runs snapshots storage</code></td><td>passed</td><td>Ruff 154 files formatted; mypy 113 source files. Hai lỗi mypy của endpoint candidate đã được sửa, chạy lại đạt.</td></tr>
+<tr><td>Backend: <code>uv run --frozen pytest -q</code></td><td>passed</td><td>408 passed, 1 skipped (SeaweedFS integration opt-in chưa bật). Lượt đầu 407 passed/1 failed: assertion spoof dùng nhầm dataset thay vì dataset_id; đã sửa assertion theo permission hook và chạy lại toàn bộ suite đạt.</td></tr>
+<tr><td>Detector: <code>uv run --frozen --extra dev ruff check .</code>, <code>ruff format --check .</code>, <code>pytest -q</code></td><td>passed</td><td>10 files formatted, 10 tests passed.</td></tr>
+<tr><td><code>python scripts/validate-framework.py</code>; <code>git diff --check</code></td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; diff không có lỗi whitespace.</td></tr>
+<tr><td><code>make check</code></td><td>not-run</td><td>Không có make trong môi trường. Chạy trực tiếp các lệnh tương ứng lint/typecheck/test/detector/validate-kit; production build chạy bổ sung.</td></tr>
+</tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
-<table>
-<thead>
-<tr>
-<th>Check</th>
-<th>Result</th>
-<th>Evidence</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Ngưỡng engine không dùng fallback giả định</td>
-<td><code>passed</code></td>
-<td>Xóa bỏ toàn bộ fallback cho taxonomy, tolerance, min area, IoU, detector confidence, model version, max candidates; kiểm thử xác nhận không có fallback giả.</td>
-</tr>
-<tr>
-<td>Biểu diễn dữ liệu thiếu là chưa biết / chưa cấu hình</td>
-<td><code>passed</code></td>
-<td>Hiển thị "Chưa được cấu hình/không có dữ liệu từ API" khi thiếu params; hiển thị "Chưa khai báo" khi thiếu boolean enabled.</td>
-</tr>
-<tr>
-<td>Không suy diễn số lượng candidate / không khẳng định Review Center giả</td>
-<td><code>passed</code></td>
-<td>Không tính từ <code>candidates.length</code>; xóa bỏ câu khẳng định "đã đưa vào Review Center".</td>
-</tr>
-<tr>
-<td>Xác nhận chạy thông suốt với backend develop thật cho <code>/api/config-versions/</code></td>
-<td><code>blocked</code></td>
-<td>OpenAPI có schema nhưng route backend DRF trên develop chưa đăng ký (nằm trong PR #91 chưa merge); giữ tiêu chí chưa hoàn thành.</td>
-</tr>
-<tr>
-<td>Đọc Candidate/Evidence theo run</td>
-<td><code>blocked</code></td>
-<td>Endpoint <code>GET /api/runs/{id}/ranking/</code> không chứa candidate/evidence chi tiết; cần approved Change Request theo <code>AGENT.html</code> (L185-191) trước khi bổ sung contract.</td>
-</tr>
-<tr>
-<td>Tích hợp vào AnalysisConfig và ExecutionHistory</td>
-<td><code>blocked</code></td>
-<td>Hai trang này thuộc phạm vi PR #91 (T-026) chưa merge; không cherry-pick hoặc đưa code PR #91 vào nhánh.</td>
-</tr>
-</tbody>
-</table>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>F-2/F-3</td><td>passed (regression tests)</td><td>Params ngoài danh sách formatter không bị mất; detector class/bbox được render.</td></tr>
+<tr><td>F-1: kết nối giao diện và endpoint thật</td><td>implemented; acceptance pending</td><td>Config API từ T-026; candidate API đọc DB. Backend APIClient kiểm 404, 403 sai dataset/Annotator, 200 Reviewer/QA Lead, chống spoof dataset, filters và cursor. Các bản ghi trong test là fixture, không phải candidate từ worker QC thật.</td></tr>
+<tr><td>Frontend integration</td><td>passed (mock)</td><td>AnalysisConfig và ExecutionHistory gọi đúng route, giữ config khi phân trang, chuyển run, loading/error/empty, raw_count null. Vitest mock không chứng minh E2E thật.</td></tr>
+<tr><td>Ảnh trình duyệt local do worker cung cấp</td><td>evidence supplied</td><td>Worker báo cáo config API thật trả 200 QA Lead, 403 Reviewer/Annotator. Ảnh bên dưới ghi UI với cấu hình seed local; ảnh không tự chứng minh request HTTP hoặc luồng candidate QC thật. Lượt chốt này không chạy lại kiểm chứng browser/network.</td></tr>
+<tr><td>Full QC pipeline và nghiệm thu trên develop</td><td>not-run</td><td>Chưa có evidence mới từ tạo run → engine → candidate → browser trên develop. Không đóng task, không tuyên bố F-1 đã được leader nghiệm thu.</td></tr>
+</tbody></table>
+<ul>
+<li><a href="../../../src/frontend/evidence/t029/01_qalead_analysis_config_unselected.png">QA Lead: chưa chọn config</a></li>
+<li><a href="../../../src/frontend/evidence/t029/02_qalead_analysis_config_selected.png">QA Lead: đã chọn config</a></li>
+<li><a href="../../../src/frontend/evidence/t029/03_reviewer_analysis_config_blocked.png">Reviewer: AnalysisConfig bị chặn</a></li>
+<li><a href="../../../src/frontend/evidence/t029/04_reviewer_rules_thresholds_restricted.png">Reviewer: RulesThresholds giới hạn quyền</a></li>
+<li><a href="../../../src/frontend/evidence/t029/05_annotator_analysis_config_blocked.png">Annotator: AnalysisConfig bị chặn</a></li>
+</ul>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: Tích hợp dependency #91 trực tiếp vào nhánh #94 để reviewer kiểm tra bản sửa có đủ API; thực hiện Option 2 CR-108 để review.</li>
+<li><strong>Approved By</strong>: Người dùng yêu cầu hoàn thiện và push vào PR hiện có. Đây không phải bằng chứng PO chấp thuận CR-108.</li>
+<li><strong>Known Limitations</strong>: raw_count luôn null; severity null vì model không lưu. Chưa xác minh trạng thái GitHub mới/review mới trong lượt chốt; không thay đổi Draft hoặc đóng issue.</li>
+</ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-  <li>[x] Triển khai thành công phần hiển thị ngưỡng engine chỉ đọc trên RulesThresholds theo contract, không dùng fallback giả.</li>
-  <li>[x] Xử lý RBAC, lỗi và trạng thái chưa cấu hình/chưa khai báo; phân biệt config published với runtime chưa xác nhận.</li>
-  <li>[x] Chuẩn bị component độc lập CandidateEvidenceList theo contract schema, không khẳng định sai lệch.</li>
-  <li>[x] Bổ sung kiểm thử chứng minh dữ liệu thiếu được biểu diễn là chưa biết/chưa cấu hình, không hiển thị giá trị mặc định giả và không phát sinh thông báo thành công giả (152 tests pass).</li>
-  <li>[ ] Xác nhận chạy thông suốt với backend develop thật cho <code>/api/config-versions/</code> (chờ PR #91 merge route backend vào develop).</li>
-  <li>[ ] Tích hợp vào AnalysisConfig và ExecutionHistory (chờ PR #91 merge các trang tương ứng).</li>
-  <li>[ ] Tích hợp candidate/evidence theo run (chờ Change Request duyệt endpoint mới theo AGENT.html).</li>
+<li>[x] Mã sửa F-2/F-3 và tích hợp F-1 có kiểm thử, contract và giới hạn rõ ràng.</li>
+<li>[x] Giữ thông tin thresholds/models của T-026 khi thay phần hiển thị.</li>
+<li>[x] Kết quả kiểm tra và loại bằng chứng được phân biệt.</li>
+<li>[x] Git Nexus dùng file riêng của owner; không sửa canonical.</li>
+<li>[ ] PO quyết định CR-108.</li>
+<li>[ ] Leader review lại PR #94 và nghiệm thu AC API thật/RBAC của task.</li>
+<li>[ ] Kiểm chứng candidate/evidence từ pipeline thật trên develop; task chưa done.</li>
 </ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<p>Không dùng fixture/mock làm evidence engine thật; không tự duyệt PR/CR, đổi AC hoặc đóng T-029.</p>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Báo cáo HTML riêng của @tdt2112 và bằng chứng được commit cùng bản sửa; integrator quyết định merge/QA.</p>
 </article></main></body></html>

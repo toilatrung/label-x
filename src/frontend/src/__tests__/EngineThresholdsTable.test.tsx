@@ -119,4 +119,33 @@ describe('EngineThresholdsTable component (T-029)', () => {
     ).toBeDefined();
     expect(screen.queryByText(/Hệ thống chưa kích hoạt ngưỡng kiểm tra tự động/)).toBeNull();
   });
+
+  it('displays raw params value when params is not empty even if formatter returns null, without calling it unconfigured (F-2)', () => {
+    const configWithDetectorParams: ConfigVersion = {
+      id: 50,
+      name: 'detector-tau-config',
+      status: 'published',
+      engines: {
+        detector: {
+          enabled: true,
+          version: '2.4.0',
+          params: { tau_loc: 0.55 },
+        },
+      },
+      created_by: 1,
+      created_at: '2026-10-09T08:00:00Z',
+    };
+
+    render(<EngineThresholdsTable config={configWithDetectorParams} />);
+
+    // Raw params must be displayed
+    expect(screen.getByText('{"tau_loc":0.55}')).toBeDefined();
+
+    // Verify UI does NOT label this data as "Chưa được cấu hình"
+    const detectorTitle = screen.getByText('Mô hình độc lập (Detector)');
+    const row = detectorTitle.closest('tr');
+    expect(row).toBeDefined();
+    expect(row?.textContent).not.toContain('Chưa được cấu hình');
+    expect(row?.textContent).toContain('{"tau_loc":0.55}');
+  });
 });

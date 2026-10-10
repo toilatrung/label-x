@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-026 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-026-tdt2112">
+<meta name="labelx:title" content="T-026: AnalysisConfig + ExecutionHistory">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[implementation, report, t-026, e-08]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / T-026-@tdt2112</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-026-tdt2112</span><b>title</b><span>T-026: AnalysisConfig + ExecutionHistory</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>execution</span><b>tags</b><span>[implementation, report, t-026, e-08]</span><b>priority</b><span>2</span></div>
+<h1 id="t-026">T-026: AnalysisConfig + ExecutionHistory trên API thật</h1>
+<h2 id="usage-purpose">Usage Purpose</h2><p>Evidence for implementation and reviewer handoff of <a href="https://github.com/toilatrung/label-x/issues/68">issue #68</a>.</p>
+<h2 id="record-metadata">Record Metadata</h2><ul><li><strong>Report ID</strong>: T-026-tdt2112</li><li><strong>Title</strong>: AnalysisConfig + ExecutionHistory trên API thật</li><li><strong>Owner</strong>: @tdt2112</li><li><strong>Executor</strong>: Codex on @tdt2112 task branch</li><li><strong>Status</strong>: <code>blocked</code></li><li><strong>Task ID</strong>: T-026</li><li><strong>Epic ID</strong>: E-08</li><li><strong>Report Date</strong>: 2026-10-10</li></ul>
+<h2 id="scope">Scope</h2><ul><li><strong>Implemented</strong>: Real API config creation/publish, run creation/cancellation/retry, polling, per-shard status, ledger coverage with excluded reason and applicability version, truthful engine statuses, dataset RBAC, frontend tests.</li><li><strong>Not Implemented</strong>: End-to-end run execution cannot be confirmed on this base: run creation does not call dispatch_run, and the default engine registry has no runners. T-027/T-028 must register engines. No production data or sample config was fabricated.</li></ul>
+<h2 id="changes-made">Changes Made</h2><table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td>src/frontend/src/app/analysis/{config,history}/page.tsx; src/frontend/src/lib/execution/</td><td>Run actions, polling, shard/ledger display, excluded warnings and RBAC.</td><td>T-026</td></tr>
+<tr><td>src/backend/runs/{config_versions,models,serializers,services,views,urls}.py; migrations/0002 and 0003; src/backend/config/urls.py</td><td>Real config create/list/publish, ledger and shard APIs; preserve engine unit/applicability metadata; record disabled engine as not_checked.</td><td>T-026</td></tr>
+<tr><td>docs/04-api/openapi.yaml; src/frontend/src/lib/api/contract.d.ts</td><td>Document additive shard status endpoint and regenerate client types.</td><td>T-026</td></tr>
+<tr><td>src/backend/tests/runs/test_execution_read_api.py; src/frontend/src/__tests__/ExecutionScreens.test.tsx</td><td>Backend RBAC/ledger/shard integration and frontend behavior against contract-shaped API responses.</td><td>T-026</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2><ul><li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/68">#68</a>; <a href="../../execution/task-board-@tdt2112.html">per-user task board</a></li><li><strong>Context Packages</strong>: AGENT.html; docs/04-api/openapi.yaml; docs/design/screens/AnalysisConfig.dc.html; docs/design/screens/ExecutionHistory.dc.html</li><li><strong>Task Board</strong>: .agent/execution/task-board-@tdt2112.html</li><li><strong>Current Context</strong>: .agent/execution/current-context.html (read-only)</li><li><strong>Decisions</strong>: DEC-010</li><li><strong>Change Requests</strong>: CR-100, CR-103, CR-104; additive shard endpoint requires integrator contract governance review</li><li><strong>Risks or Blockers</strong>: Real QC execution remains blocked by missing create-to-dispatch wiring (T-024/T-025 boundary) and default engine registration (T-027/T-028). T-029 should not assume candidate/evidence exists until those are connected.</li><li><strong>Review Request</strong>: Independent reviewer @toilatrung or @DucHa180104 on PR; approval pending</li><li><strong>Commits</strong>: task branch feat/T-026-e08-execution-screens, base 5de07273f3e80ac8105282986630dbaf4cfbf67a; PR commit to be linked in PR</li></ul>
+<h2 id="command-evidence">Command Evidence</h2><table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>agent task start/verify/report/review request</td><td>not-run</td><td>Repository has no agent CLI; lifecycle recorded in per-user HTML and PR.</td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2><table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Backend pytest -q</td><td>passed</td><td>372 passed, 1 skipped on final full run; PostgreSQL integration includes config create/publish, RBAC, ledger and shard (PostgreSQL test database).</td></tr>
+<tr><td>Frontend vitest run</td><td>passed</td><td>142 passed across 14 files, including 4 new execution screen tests, including 2 new execution screen tests.</td></tr>
+<tr><td>Ruff, mypy, ESLint, TypeScript</td><td>passed</td><td>Backend 105 source files type-checked; frontend typecheck and lint clean.</td></tr>
+<tr><td>Next production build</td><td>passed</td><td>Compiled and generated /analysis/config and /analysis/history.</td></tr>
+<tr><td>Detector worker lint/test</td><td>passed</td><td>10 tests passed; Ruff clean.</td></tr>
+<tr><td>Framework validator; git diff --check; migration check; Django system check</td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; no model changes missing; no system issues.</td></tr>
+<tr><td>make check</td><td>not-run</td><td>make and uv unavailable in this environment; equivalent targets run directly with installed Python/Node dependencies.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2><p>During final verification, an import error in the new config API was detected and fixed before PR; the final full backend run passed. The remaining create-to-dispatch and engine-registry gap is unresolved and tracked as a blocker.</p><ul><li><strong>Plan Deviations</strong>: Added additive shard read endpoint because T-024/T-025 merged without a shard endpoint; supplied backend config create/list/publish and ledger endpoints to connect the UI to real API.</li><li><strong>Approved By</strong>: Issue #68 authorizes shard status UI; contract addition is flagged for integrator governance review, not claimed independently approved.</li><li><strong>Known Limitations</strong>: Local dev database was empty after migration (zero ConfigVersions); no sample configuration was inserted. Functional tests use an isolated PostgreSQL database. Create-to-dispatch is not wired and default engine registry is empty, so a newly created run may stay queued; this is an explicit release blocker, not a passed end-to-end check.</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul><li>[x] Changes map to T-026 issue #68.</li><li>[ ] End-to-end execution acceptance pending upstream dispatch and runner registration; API/UI behavior is tested.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint and tests are recorded.</li><li>[x] Independent human reviewer handoff identified; approval remains pending.</li><li>[ ] Git Nexus per-user mapping pending remote commit.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2><p>No review approval or task DONE state is claimed.</p>
+<h2 id="output-requirements">Output Requirements</h2><p>Saved as per-user HTML according to CR-100 and CR-103.</p>
+</article></main></body></html>

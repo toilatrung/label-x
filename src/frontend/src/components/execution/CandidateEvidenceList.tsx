@@ -5,19 +5,10 @@ import type { components } from '@/lib/api/contract';
 
 export type Candidate = components['schemas']['Candidate'];
 
-/**
- * CandidateEvidenceList
- *
- * GHI CHÚ QUẢN TRỊ & TÍCH HỢP (T-029):
- * - Component này là THÀNH PHẦN ĐỘC LẬP CHUẨN BỊ TRƯỚC, CHƯA ĐƯỢC KẾT NỐI VÀO ExecutionHistory (/analysis/history).
- * - Lý do: Trang ExecutionHistory thuộc phạm vi PR #91 (T-026) chưa được merge vào develop. Đồng thời, API/OpenAPI
- *   hiện tại trên develop chưa có endpoint trả về chi tiết candidate/evidence theo run_id (RankedFrame chỉ trả frame & score).
- * - Đây là phần chuẩn bị component và kiểm thử theo contract, CHƯA PHẢI TIÊU CHÍ NGHIỆM THU ĐÃ HOÀN THÀNH.
- */
 export interface CandidateEvidenceListProps {
   candidates?: Candidate[] | null;
-  rawCount?: number;
-  dedupCount?: number;
+  rawCount?: number | null;
+  dedupCount?: number | null;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -29,27 +20,25 @@ export function CandidateEvidenceList({
   isLoading = false,
   error = null,
 }: CandidateEvidenceListProps) {
-  // Chỉ hiển thị callout khi parent truyền số liệu thực có nguồn rõ ràng.
-  // Tuyệt đối không suy ra từ candidates.length khi chưa có API trả số liệu thống kê.
-  const hasCountStats = rawCount !== undefined && dedupCount !== undefined;
+  const hasDedup = dedupCount !== undefined && dedupCount !== null;
+  const hasRaw = rawCount !== undefined && rawCount !== null;
 
   return (
     <section className="lx-card" aria-label="Danh sách Candidate và Evidence">
       <header className="lx-card__head">
         <div>
           <span className="lx-cell__main">Candidate nghi vấn & Evidence</span>
-          <span className="lx-hint" style={{ marginLeft: 8 }}>
-            Thành phần chuẩn bị độc lập · Chưa kết nối vào ExecutionHistory
-          </span>
         </div>
         <span className="lx-subtle">Chỉ đọc · Lineage theo run</span>
       </header>
 
       <div className="lx-card__body lx-stack" style={{ gap: 12 }}>
-        {hasCountStats && (
+        {hasDedup && (
           <div className="lx-callout lx-callout--info">
             <span className="lx-callout__text" style={{ fontSize: '13px' }}>
-              Candidate: {rawCount} bản ghi thô → {dedupCount} sau khi gộp trùng.
+              {hasRaw
+                ? `Candidate: ${rawCount} bản ghi thô → ${dedupCount} sau khi gộp trùng.`
+                : `Candidate: ${dedupCount} sau khi gộp trùng.`}
             </span>
           </div>
         )}
@@ -75,7 +64,7 @@ export function CandidateEvidenceList({
           <div className="lx-callout lx-callout--neutral" role="status">
             <strong>Chưa có dữ liệu candidate</strong>
             <div>
-              Chưa kết nối API danh sách candidate theo run hoặc chưa có dữ liệu từ backend (chưa có endpoint hoặc chưa kích hoạt kiểm tra).
+              Chưa có dữ liệu candidate từ backend cho lần chạy này.
             </div>
           </div>
         ) : candidates.length === 0 ? (
@@ -130,6 +119,21 @@ export function CandidateEvidenceList({
                             <div>
                               <strong>Quy tắc: </strong>
                               <span className="lx-mono">{ev.rule_id}</span>
+                            </div>
+                          )}
+                          {ev.prediction_class && (
+                            <div>
+                              <strong>Lớp dự đoán: </strong>
+                              <span className="lx-mono">{ev.prediction_class}</span>
+                            </div>
+                          )}
+
+                          {ev.prediction_bbox && (
+                            <div>
+                              <strong>BBox dự đoán: </strong>
+                              <span className="lx-mono">
+                                [{ev.prediction_bbox.x1}, {ev.prediction_bbox.y1}, {ev.prediction_bbox.x2}, {ev.prediction_bbox.y2}]
+                              </span>
                             </div>
                           )}
                           {ev.iou !== undefined && ev.iou !== null && (

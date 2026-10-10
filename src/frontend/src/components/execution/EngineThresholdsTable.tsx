@@ -10,6 +10,8 @@ export interface EngineThresholdsTableProps {
   isLoading?: boolean;
   error?: string | null;
   hasPermission?: boolean;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 interface EngineMeta {
@@ -119,6 +121,8 @@ export function EngineThresholdsTable({
   isLoading = false,
   error = null,
   hasPermission = true,
+  emptyTitle,
+  emptyDescription,
 }: EngineThresholdsTableProps) {
   if (!hasPermission) {
     return (
@@ -187,9 +191,10 @@ export function EngineThresholdsTable({
         </header>
         <div className="lx-card__body">
           <div className="lx-callout" role="status">
-            <strong>Chưa có cấu hình đã phát hành</strong>
+            <strong>{emptyTitle ?? 'Chưa có cấu hình đã phát hành'}</strong>
             <div>
-              API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.
+              {emptyDescription ??
+                'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'}
             </div>
           </div>
         </div>
@@ -251,6 +256,7 @@ export function EngineThresholdsTable({
                   : {};
 
               const effectiveThreshold = meta.formatParams(params);
+              const hasParams = Object.keys(params).length > 0;
 
               return (
                 <tr key={meta.key}>
@@ -274,12 +280,16 @@ export function EngineThresholdsTable({
                     {effectiveThreshold ? (
                       <>
                         <div className="lx-cell__main">{effectiveThreshold}</div>
-                        {Object.keys(params).length > 0 && (
+                        {hasParams && (
                           <div className="lx-cell__sub lx-mono">
                             {JSON.stringify(params)}
                           </div>
                         )}
                       </>
+                    ) : hasParams ? (
+                      <div className="lx-cell__main lx-mono">
+                        {JSON.stringify(params)}
+                      </div>
                     ) : (
                       <span className="lx-subtle">Chưa được cấu hình/không có dữ liệu từ API</span>
                     )}

@@ -100,7 +100,7 @@ describe('CandidateEvidenceList component (T-029)', () => {
     // Should indicate API is not connected or no candidate data received
     expect(screen.getByText('Chưa có dữ liệu candidate')).toBeDefined();
     expect(
-      screen.getByText(/Chưa kết nối API danh sách candidate theo run hoặc chưa có dữ liệu từ backend/)
+      screen.getByText(/Chưa có dữ liệu candidate từ backend cho lần chạy này/)
     ).toBeDefined();
 
     // Must NOT show "Chưa có candidate nghi vấn" which is reserved for empty list []
@@ -136,5 +136,46 @@ describe('CandidateEvidenceList component (T-029)', () => {
     // Must NOT show empty state or table
     expect(screen.queryByText('Chưa có candidate nghi vấn')).toBeNull();
     expect(screen.queryByText('Chưa có dữ liệu candidate')).toBeNull();
+  });
+
+  it('renders prediction_class and prediction_bbox when detector evidence provides them (F-3)', () => {
+    const detectorCandidate: Candidate = {
+      engine: 'detector',
+      engine_version: '2.4.0',
+      family: 'E2',
+      severity: 'critical',
+      frame: { cvat_task_id: 15, frame_number: 42 },
+      anchor: {
+        kind: 'prediction_region',
+        policy_version: '1.0.0',
+        objects: [{ namespace: 'detector', id: '15:42' }],
+      },
+      evidence: {
+        engine: 'detector',
+        prediction_class: 'truck',
+        prediction_bbox: { x1: 10, y1: 20, x2: 30, y2: 40 },
+        confidence: 0.88,
+      },
+    };
+
+    render(<CandidateEvidenceList candidates={[detectorCandidate]} />);
+
+    expect(screen.getByText('truck')).toBeDefined();
+    expect(screen.getByText('Lớp dự đoán:')).toBeDefined();
+    expect(screen.getByText('[10, 20, 30, 40]')).toBeDefined();
+    expect(screen.getByText('BBox dự đoán:')).toBeDefined();
+    expect(screen.getByText('0.88')).toBeDefined();
+  });
+
+  it('renders dedupCount callout when rawCount is null without displaying 0 raw count (CR-108 Option 2)', () => {
+    render(
+      <CandidateEvidenceList
+        candidates={sampleCandidates}
+        rawCount={null}
+        dedupCount={384}
+      />
+    );
+    expect(screen.getByText('Candidate: 384 sau khi gộp trùng.')).toBeDefined();
+    expect(screen.queryByText(/0 bản ghi thô/)).toBeNull();
   });
 });

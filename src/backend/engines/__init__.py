@@ -8,6 +8,7 @@ from engines.duplicate_overlap import (
     Annotation,
     run_duplicate_overlap_engine,
 )
+from engines.geometry import GEOMETRY_DESCRIPTOR, run_geometry_engine
 from engines.matching import (
     ALGORITHM_VERSION,
     DEFAULT_TAU_AMB,
@@ -18,6 +19,12 @@ from engines.matching import (
     MatchPair,
     compute_iou,
     match_one_to_one,
+)
+from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, run_schema_taxonomy_engine
+from engines.structural import (
+    StructuralAnnotation,
+    StructuralFrame,
+    structural_frames_from_snapshot,
 )
 
 __all__ = [
@@ -33,4 +40,11 @@ __all__ = [
     "Annotation",
     "DUPLICATE_OVERLAP_DESCRIPTOR",
     "run_duplicate_overlap_engine",
+    "GEOMETRY_DESCRIPTOR",
+    "run_geometry_engine",
+    "SCHEMA_TAXONOMY_DESCRIPTOR",
+    "run_schema_taxonomy_engine",
+    "StructuralAnnotation",
+    "StructuralFrame",
+    "structural_frames_from_snapshot",
 ]

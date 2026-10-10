@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Task Board — @tdt2112 — LabelX</title>
-<meta name="labelx:id" content="task-board-tdt2112">
-<meta name="labelx:title" content="Task Board — @tdt2112">
-<meta name="labelx:type" content="execution">
+<title>Git Nexus Task Commit Map — @tdt2112 — LabelX</title>
+<meta name="labelx:id" content="git-nexus-task-commit-map-tdt2112">
+<meta name="labelx:title" content="Git Nexus Task Commit Map — @tdt2112">
+<meta name="labelx:type" content="intelligence">
 <meta name="labelx:domain" content="governance">
-<meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[execution, per-user, t-026, t-029]">
-<meta name="labelx:priority" content="2">
+<meta name="labelx:module" content="git-nexus">
+<meta name="labelx:tags" content="[git-nexus, tasks, commits]">
+<meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -42,57 +42,21 @@ pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--b
 ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / execution / task-board-@tdt2112</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / intelligence / git-nexus / task-commit-map</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>task-board-tdt2112</span><b>title</b><span>Task Board — @tdt2112</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-026, t-029]</span><b>priority</b><span>2</span></div>
-<h1 id="task-board-tdt2112">Task Board — @tdt2112</h1>
-<h2 id="purpose">Purpose</h2>
-<p>File riêng của Trần Đức Thọ (@tdt2112) theo CR-100: ghi nhận tiến độ và kiểm chứng cho các task T-026 và T-029. Integrator gộp vào <code>.agent/execution/task-board.html</code>.</p>
-<ul>
-  <li><strong>Base Commit</strong>: <code>5de072782ef2b9d214eb1f07fbc1f56a6b5790c6</code> (T-026 ban đầu); T-029 tích hợp develop tại <code>b57626f735565ce0dafb0c219e25bc25da1f0163</code>.</li>
-</ul>
-<h2 id="status-model">Status Model</h2>
-<ul>
-  <li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li>
-</ul>
-<h2 id="task-records">Task Records</h2>
-<table>
-<thead>
-<tr>
-<th>Task ID</th>
-<th>Epic ID</th>
-<th>Title</th>
-<th>Owner</th>
-<th>Status</th>
-<th>Dependencies</th>
-<th>Blocker IDs</th>
-<th>Evidence Links</th>
-<th>Updated Date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>T-026</td>
-<td>E-08</td>
-<td>AnalysisConfig + ExecutionHistory trên API thật</td>
-<td>Trần Đức Thọ (@tdt2112)</td>
-<td>blocked</td>
-<td>T-024, T-025 merged</td>
-<td>create-to-dispatch and engine registration pending; T-029 relies on real evidence</td>
-<td><a href="../reports/implementation/T-026-@tdt2112.html">T-026-@tdt2112.html</a>; Refs #68</td>
-<td>2026-10-10</td>
-</tr>
-<tr>
-<td>T-029</td>
-<td>E-09</td>
-<td>Hiển thị config/threshold engine chỉ đọc và candidate/evidence</td>
-<td>Trần Đức Thọ (@tdt2112)</td>
-<td>in-progress</td>
-<td>T-026 (#68), T-027 (#69), T-028 (#70)</td>
-<td>Nhánh PR #94 tích hợp mã API/UI T-026 từ #91 và develop b57626f; endpoint candidates theo Phương án 2 <a href="../governance/change-requests/CR-108-@tdt2112.html">CR-108</a> (proposed), raw_count null, dedup_count từ DB. Chờ PO quyết định CR-108, leader review lại và nghiệm thu candidate/evidence từ pipeline thật; không đánh dấu done.</td>
-<td><a href="../reports/implementation/T-029-@tdt2112.html">T-029-@tdt2112.html</a>; Refs #57, #71; sửa F-2/F-3 và tích hợp mã F-1 vào nhánh PR hiện có. Frontend 171 tests; backend 408 passed, 1 skipped; detector 10 tests; lint/typecheck/build đạt. Báo cáo tách APIClient fixture, frontend mock và ảnh config local; F-1 chưa được leader nghiệm thu.</td>
-<td>2026-10-10</td>
-</tr>
-</tbody>
-</table>
+<div class="meta"><b>id</b><span>git-nexus-task-commit-map-tdt2112</span><b>title</b><span>Git Nexus Task Commit Map — @tdt2112</span><b>type</b><span>intelligence</span><b>domain</b><span>governance</span><b>module</b><span>git-nexus</span><b>tags</b><span>[git-nexus, tasks, commits]</span><b>priority</b><span>3</span></div>
+<h1 id="task-commit-map">Task Commit Map</h1>
+<p>File riêng @tdt2112 theo CR-100. Base commit: <code>b57626f735565ce0dafb0c219e25bc25da1f0163</code>. Chỉ bổ sung lịch sử nhánh PR #94; không ghi commit nhánh thành commit đã merge vào develop.</p>
+<h2 id="develop-commits">Implementation Commits on develop</h2>
+<table><thead><tr><th>Task ID</th><th>Implementation Commit</th><th>Date</th><th>Author</th><th>Summary</th><th>Evidence</th></tr></thead><tbody></tbody></table>
+<h2 id="closeout-commits">Remediation Commits (chore/wave1-closeout)</h2>
+<table><thead><tr><th>Task ID</th><th>Implementation Commit</th><th>Date</th><th>Author</th><th>Summary</th><th>Evidence</th></tr></thead><tbody></tbody></table>
+<h2 id="branch-commits">Branch Commits (historical, squashed)</h2>
+<p>Những commit sau đang thuộc nhánh <code>feat/T-029-e09-engine-config-ui</code>, chưa xác nhận merge/squash.</p>
+<table><thead><tr><th>Task ID</th><th>Branch Commit</th><th>Author</th><th>Summary</th><th>Squashed Into</th></tr></thead><tbody>
+<tr><td>T-029</td><td><code>38f2d2248caf1d072357e1052a3937e2fa85daf8</code></td><td>@tdt2112</td><td>PR #94: RulesThresholds và component candidate/evidence ban đầu.</td><td>Chưa merge</td></tr>
+<tr><td>T-029</td><td><code>bf5af73795bc47243a0d2267a91492f993241def</code></td><td>@tdt2112</td><td>Sửa F-2 params không có formatter và F-3 detector class/bbox.</td><td>Chưa merge</td></tr>
+<tr><td>T-026</td><td><code>88f60fb2e65e45785e8ac4f8aed312a4d4273697</code></td><td>@tdt2112</td><td>PR #91: config API, AnalysisConfig/ExecutionHistory; tích hợp qua merge <code>3d2e06e</code> vào #94.</td><td>Chưa merge</td></tr>
+<tr><td>T-029</td><td><code>b75969b6ee0a865d594f65c511322cb9b87e54ab</code></td><td>@tdt2112 / Codex</td><td>Tích hợp F-1; candidates API đọc DB, RBAC/cursor, Option 2 CR-108 proposed; regression tests. <a href="../../reports/implementation/T-029-@tdt2112.html">Implementation report</a>.</td><td>Chưa merge</td></tr>
+</tbody></table>
 </article></main></body></html>
