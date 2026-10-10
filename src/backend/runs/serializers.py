@@ -6,6 +6,7 @@ from typing import Any
 
 from rest_framework import serializers
 
+from orchestration.models import CandidateRecord
 from runs.models import ConfigVersion, ModelArtifact, QCRun, WorkUnit
 
 
@@ -167,3 +168,42 @@ class LedgerEntrySerializer(serializers.Serializer[Any]):
     not_checked = serializers.IntegerField()
     not_checked_reasons = serializers.DictField(child=serializers.IntegerField())
     coverage = serializers.FloatField(allow_null=True)
+
+
+class CandidateSerializer(serializers.ModelSerializer[Any]):
+    """Schema for Candidate matching OpenAPI components.schemas.Candidate."""
+
+    frame = serializers.SerializerMethodField()
+    severity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CandidateRecord
+        fields = [
+            "engine",
+            "engine_version",
+            "family",
+            "severity",
+            "frame",
+            "anchor",
+            "evidence",
+        ]
+        read_only_fields = fields
+
+    def get_frame(self, obj: CandidateRecord) -> dict[str, int]:
+        return {
+            "cvat_task_id": obj.cvat_task_id,
+            "frame_number": obj.frame_number,
+        }
+
+    def get_severity(self, obj: CandidateRecord) -> str | None:
+        return getattr(obj, "severity", None)
+
+
+class PaginatedCandidateListSerializer(serializers.Serializer[Any]):
+    """Schema for PaginatedCandidateList."""
+
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    raw_count = serializers.IntegerField(allow_null=True)
+    dedup_count = serializers.IntegerField()
+    results = CandidateSerializer(many=True)

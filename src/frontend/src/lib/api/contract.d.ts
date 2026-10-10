@@ -331,6 +331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{id}/candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách candidate và evidence chi tiết theo QC run (CR-108) */
+        get: operations["runs_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{id}/ranking/": {
         parameters: {
             query?: never;
@@ -1063,6 +1080,14 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["RunShard"][];
+        };
+        /** @description Danh sách candidate phân trang theo run */
+        PaginatedCandidateList: {
+            next?: string | null;
+            previous?: string | null;
+            raw_count?: number | null;
+            dedup_count: number;
+            results: components["schemas"]["Candidate"][];
         };
         /**
          * @description Coverage ledger của một engine trong một run (FR-AGG-04, T-006). Bất biến:
@@ -2300,6 +2325,37 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedRunShardList"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_candidates: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+                page_size?: number;
+                engine?: string;
+                family?: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang candidate, có số dedup_count và raw_count nullable */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCandidateList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };

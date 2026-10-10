@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-108: Bổ sung contract endpoint đọc danh sách Candidate và Evidence chi tiết theo QC run (E-09 / T-029) — LabelX</title>
+<meta name="labelx:id" content="CR-108-tdt2112">
+<meta name="labelx:title" content="Bổ sung contract endpoint đọc danh sách Candidate và Evidence chi tiết theo QC run (E-09 / T-029)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="change-requests">
+<meta name="labelx:tags" content="[change-request, contract, openapi, candidate, evidence, e-09, t-029]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / change-requests / CR-108-@tdt2112</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>CR-108-tdt2112</span><b>title</b><span>Bổ sung contract endpoint đọc danh sách Candidate và Evidence chi tiết theo QC run (E-09 / T-029)</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>change-requests</span><b>tags</b><span>[change-request, contract, openapi, candidate, evidence, e-09, t-029]</span><b>priority</b><span>2</span></div>
+<h1 id="cr-108">CR-108: Bổ sung contract endpoint đọc danh sách Candidate và Evidence chi tiết theo QC run (E-09 / T-029)</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Đề xuất bổ sung endpoint đọc danh sách Candidate và Evidence chi tiết theo run ID vào OpenAPI contract để phục vụ nghiệm thu hiển thị lineage/candidate của task T-029 (issue #71, epic E-09) trên màn hình ExecutionHistory.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Change Request ID</strong>: <code>CR-108</code></li>
+<li><strong>Title</strong>: <code>Bổ sung contract endpoint đọc danh sách Candidate và Evidence chi tiết theo QC run (E-09 / T-029)</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Proposer</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
+<li><strong>Status</strong>: <code>proposed</code></li>
+<li><strong>Change Type</strong>: <code>contract</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-11</code></li>
+</ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<p><strong>Hiện trạng (Before-state)</strong>:</p>
+<ul>
+<li>Tài liệu OpenAPI baseline (<code>docs/04-api/openapi.yaml</code>) chỉ cung cấp endpoint <code>GET /api/runs/{id}/ranking/</code> trả về <code>PaginatedRankedFrameList</code>. Mỗi phần tử <code>RankedFrame</code> chỉ bao gồm các trường: <code>frame_id</code>, <code>frame_key</code>, <code>rank</code>, <code>score</code>, <code>queue</code>, <code>review_state</code>, <code>missing_evidence</code>, <code>issue_counts</code> (Record&lt;string, number&gt;), và <code>lease_holder_user_id</code>. Endpoint này hoàn toàn không chứa chi tiết candidate nghi vấn (engine, anchor, rule ID, IoU, expected, actual, confidence).</li>
+<li>Mặc dù schema components cho <code>Candidate</code> (dòng 1633) và <code>Evidence</code> (dòng 1873) đã được định nghĩa sẵn trong <code>openapi.yaml</code>, contract hiện tại chưa khai báo bất kỳ path/operation nào cho phép client truy vấn danh sách Candidate theo <code>run_id</code>.</li>
+<li>Ở tầng backend, model <code>CandidateRecord</code> (<code>src/backend/orchestration/models.py</code>) lưu các trường: <code>run_id</code> (indexed), <code>dedup_key</code>, <code>shard_id</code>, <code>engine</code>, <code>engine_version</code>, <code>family</code>, <code>cvat_task_id</code>, <code>frame_number</code>, <code>anchor</code> (JSON), <code>policy_version</code>, <code>evidence</code> (JSON), <code>evidence_sha256</code>. Chưa có view/serializer hay route DRF nào được đăng ký để đọc dữ liệu này theo run.</li>
+<li><strong>Hiện trạng lưu trữ số đếm (raw_count vs dedup_count) và rủi ro dữ liệu lịch sử</strong>:
+  <ul>
+    <li>Trong luồng <code>commit_shard_output</code> (<code>src/backend/orchestration/services.py</code>, dòng 136–181), đối tượng <code>output.candidates</code> chứa toàn bộ candidate thô của shard. Tuy nhiên, số lượng thô này hiện <strong>chỉ được ghi vào log</strong> (<code>logger.info("shard committed", extra={"candidates": len(output.candidates), ...})</code>).</li>
+    <li>Bảng <code>CandidateRecord</code> lưu dữ liệu bằng <code>bulk_create(..., ignore_conflicts=True)</code> với ràng buộc <code>UniqueConstraint(fields=["run_id", "dedup_key"])</code>, do đó <strong>chỉ lưu các bản ghi đã gộp trùng (dedup)</strong>.</li>
+    <li>Model <code>ShardCommit</code> hiện tại không có trường lưu số lượng candidate thô của shard.</li>
+    <li><strong>Rủi ro thể hiện sai lệch dữ liệu nếu dùng <code>default=0</code></strong>: Nếu thêm trường vào <code>ShardCommit</code> với <code>default=0</code>, toàn bộ các shard và run trong quá khứ sẽ mang số liệu <code>raw_candidate_count = 0</code> và <code>raw_count = 0</code>. Điều này thể hiện sai bản chất thực tế: khiến người dùng, auditor hoặc QA đánh giá nhầm rằng các shard lịch sử không phát hiện ra candidate nào, trong khi thực tế số liệu thô chỉ là <em>chưa từng được ghi nhận</em> vào database. Một run có <code>raw_count = 0</code> nhưng <code>dedup_count = 15</code> là trạng thái mâu thuẫn phi lý. Tương tự, việc sử dụng các toán tử fallback như <code>or 0</code> hay <code>Coalesce(..., 0)</code> cũng sẽ biến dữ liệu chưa biết thành số 0 sai lệch.</li>
+    <li>Do đó, <strong>không thể cam kết trả <code>raw_count</code> như dữ liệu sẵn có</strong> trong database nếu không có giải pháp schema và định nghĩa dữ liệu chặt chẽ.</li>
+  </ul>
+</li>
+</ul>
+<p><strong>Đề xuất sau thay đổi (Requested after-state)</strong>:</p>
+<ul>
+<li><strong>Phương án cung cấp số đếm theo run</strong>:
+  <ul>
+    <li><em>Lựa chọn 1 (Khuyến nghị nếu cần cả raw_count và dedup_count)</em>:
+      <ul>
+        <li><strong>Không dùng <code>default=0</code> cho các ShardCommit hiện có</strong>: Bổ sung trường <code>raw_candidate_count = models.PositiveIntegerField(null=True, blank=True)</code> vào model <code>ShardCommit</code> (<code>src/backend/orchestration/models.py</code>), kèm Django migration tương ứng. Tuyệt đối không gán <code>default=0</code> hay backfill giá trị 0 vào cơ sở dữ liệu.</li>
+        <li><strong>Shard cũ là unknown; shard mới ghi nhận khi commit</strong>:
+          <ul>
+            <li>Các shard lịch sử (đã commit trước thời điểm migration) sẽ mang giá trị <code>NULL</code> trong DB (<code>None</code> trong Python), thể hiện đúng trạng thái <em>chưa biết / unknown</em>.</li>
+            <li>Các shard mới: trong hàm <code>commit_shard_output</code> (<code>src/backend/orchestration/services.py</code>), khi tạo <code>ShardCommit</code>, ghi nhận trực tiếp <code>raw_candidate_count = len(output.candidates)</code>.</li>
+          </ul>
+        </li>
+        <li><strong>Định nghĩa rõ ràng raw_count của một run</strong>:
+          <ul>
+            <li>Một run có tập hợp các shard đã commit: <code>shards = ShardCommit.objects.filter(run_id=run_id)</code>.</li>
+            <li><strong>Chỉ trả về số nguyên khi và chỉ khi MỌI shard liên quan đều có <code>raw_candidate_count</code> đã biết</strong> (not null), và run có ít nhất một shard đã commit:
+              <pre><code># Điều kiện trả số:
+shards.exists() and not shards.filter(raw_candidate_count__isnull=True).exists()
+# Giá trị trả về:
+raw_count = shards.aggregate(total=models.Sum('raw_candidate_count'))['total']</code></pre>
+            </li>
+            <li><strong>Nếu có bất kỳ shard lịch sử nào chưa biết (<code>raw_candidate_count is None</code>) hoặc run chưa có shard commit</strong>: <code>raw_count</code> của run <strong>bắt buộc phải trả về <code>null</code></strong> (<code>None</code> trong Python).</li>
+            <li><strong>Tuyệt đối không dùng <code>or 0</code> hay <code>Coalesce(..., 0)</code></strong>: Cấm mọi hình thức biến dữ liệu thiếu/chưa biết thành 0 (như <code>raw_count = total or 0</code> hay <code>Coalesce(Sum(...), Value(0))</code>). Khi dữ liệu chưa đầy đủ, API JSON phải trả về <code>"raw_count": null</code>.</li>
+          </ul>
+        </li>
+        <li><strong>Định nghĩa dedup_count của một run</strong>:
+          <ul>
+            <li><code>dedup_count</code> được tính trực tiếp từ số lượng bản ghi <code>CandidateRecord</code> đã lưu theo run:
+              <pre><code>dedup_count = CandidateRecord.objects.filter(run_id=run_id).count()</code></pre>
+            </li>
+            <li>Do <code>CandidateRecord</code> được lưu qua <code>bulk_create(..., ignore_conflicts=True)</code> với ràng buộc duy nhất <code>UniqueConstraint(fields=["run_id", "dedup_key"])</code>, số bản ghi này phản ánh chính xác số candidate duy nhất sau khi gộp trùng. Trường <code>dedup_count</code> luôn trả về số nguyên không âm (&ge; 0).</li>
+          </ul>
+        </li>
+        <li><strong>Đảm bảo giữ nguyên tính Idempotency của commit/retry hiện tại</strong>:
+          <ul>
+            <li>Kiến trúc <code>commit_shard_output</code> hiện tại đảm bảo tính nguyên tử và idempotent thông qua:
+              <ol>
+                <li>Pre-check: <code>if ShardCommit.objects.filter(run_id=run_id, idempotency_key=engine_input.idempotency_key).exists(): return False</code>.</li>
+                <li>Ràng buộc toàn vẹn cơ sở dữ liệu: <code>UniqueConstraint(fields=["run_id", "idempotency_key"])</code> và <code>UniqueConstraint(fields=["run_id", "engine", "shard_index"])</code>.</li>
+                <li>Khối transaction nguyên tử: <code>with transaction.atomic(): ShardCommit.objects.create(...)</code>.</li>
+                <li>Xử lý race condition: Bắt <code>IntegrityError</code>; nếu shard đã được worker khác commit thành công thì trả về <code>False</code> (retry no-op), ngược lại raise lỗi.</li>
+              </ol>
+            </li>
+            <li>Khi bổ sung trường <code>raw_candidate_count</code> vào <code>ShardCommit</code>, giá trị <code>len(output.candidates)</code> chỉ được ghi đúng một lần lúc tạo record ban đầu. Khi có retry hoặc worker chạy trùng lặp, request bị chặn hoàn toàn và trả về <code>False</code> mà không cập nhật lại hay tạo thêm bản ghi <code>ShardCommit</code>. Do đó, <code>raw_candidate_count</code> hoàn toàn không bị cộng trùng hay thay đổi, giữ trọn vẹn 100% tính idempotent và retry semantics hiện tại của orchestrator.</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><em>Lựa chọn 2 (Không migration - giữ nguyên schema DB hiện tại)</em>:
+      <ul>
+        <li>Contract không cam kết trả <code>raw_count</code> cố định, mà đặt <code>raw_count</code> là trường tùy chọn nullable (<code>raw_count: { type: integer, nullable: true }</code>) và luôn trả <code>null</code> cho mọi run. Chỉ trả về <code>dedup_count</code> được tính từ <code>CandidateRecord.objects.filter(run_id=run_id).count()</code>. Giao diện người dùng sẽ chỉ hiển thị số lượng dedup khi <code>raw_count</code> là null.</li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li>Bổ sung operation mới vào <code>docs/04-api/openapi.yaml</code>:
+<pre><code>/api/runs/{id}/candidates/:
+  get:
+    operationId: runs_candidates_list
+    summary: Danh sách candidate và evidence chi tiết theo QC run
+    tags: [runs]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: cursor
+        in: query
+        schema: { type: string }
+      - name: page_size
+        in: query
+        schema: { type: integer, default: 50 }
+      - name: engine
+        in: query
+        schema: { type: string }
+      - name: family
+        in: query
+        schema: { type: string }
+    responses:
+      '200':
+        description: Danh sách candidate phân trang theo run
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [results, dedup_count]
+              properties:
+                next: { type: string, nullable: true }
+                previous: { type: string, nullable: true }
+                raw_count: { type: integer, nullable: true }
+                dedup_count: { type: integer }
+                results:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Candidate'
+      '401': { $ref: '#/components/responses/401' }
+      '403': { $ref: '#/components/responses/403' }
+      '404': { $ref: '#/components/responses/404' }</code></pre>
+</li>
+<li><strong>Cơ chế bảo vệ và thực thi Dataset Scope (Enforcement)</strong>:
+  <ul>
+    <li>Kiểm tra thực tế mã nguồn: <code>CandidateRecord.run_id</code> là trường số nguyên độc lập (<code>PositiveBigIntegerField(db_index=True)</code>), <strong>không có Foreign Key</strong> sang model <code>QCRun</code> hay <code>Dataset</code> (tài liệu mã nguồn xác nhận: <em>"Khoá theo run_id số nguyên để không phụ thuộc model QCRun của T-024; T-024 gắn FK/nối thật khi merge"</em>).</li>
+    <li>Quy trình thực thi quyền đã xác minh (không giả định có quan hệ trực tiếp):
+      <ol>
+        <li>View endpoint <code>runs_candidates_list</code> nhận <code>run_id</code> từ URL path, trước tiên thực hiện truy vấn đối tượng <code>QCRun.objects.filter(pk=run_id).first()</code> (từ app <code>runs</code>). Nếu không tìm thấy, trả về lỗi 404 <code>RUN_NOT_FOUND</code>.</li>
+        <li>Trích xuất trường <code>dataset_id = qc_run.dataset_id</code> từ <code>QCRun</code>.</li>
+        <li>Thực hiện kiểm tra quyền truy cập của người dùng đối với <code>dataset_id</code> theo cơ chế RBAC (FR-SEC-01, FR-SEC-03). Nếu người dùng không có quyền trên dataset này, trả về lỗi 403 <code>PERMISSION_DENIED</code>.</li>
+        <li>Chỉ sau khi quyền dataset scope được xác nhận hợp lệ, view mới thực hiện truy vấn <code>CandidateRecord.objects.filter(run_id=run_id)</code>.</li>
+      </ol>
+    </li>
+  </ul>
+</li>
+<li>Sau khi CR được phê duyệt: sinh lại <code>contract.d.ts</code> và triển khai view DRF tuân thủ quy trình trên.</li>
+</ul>
+<h2 id="justification">Justification</h2>
+<p>Theo tiêu chí nghiệm thu của Issue #71 (Task T-029, Epic E-09) và thiết kế màn hình <code>docs/design/screens/ExecutionHistory.dc.html</code>, hệ thống cần hiển thị danh sách candidate nghi vấn và bằng chứng (evidence) kèm số liệu theo từng run. Khảo sát kỹ thuật đã xác nhận <code>GET /api/runs/{id}/ranking/</code> không chứa đối tượng Candidate/Evidence chi tiết. Đồng thời, việc khảo sát luồng <code>commit_shard_output</code> cho thấy số lượng thô hiện chỉ nằm trong log chứ chưa được lưu vào DB, đòi hỏi phải làm rõ phương án kỹ thuật trước khi cam kết contract. Tuân thủ nguyên tắc quản trị tại <code>AGENT.html</code> (Change Request Rule, L185–191), việc thay đổi contract baseline bắt buộc phải có Change Request được approved trước khi sửa đổi <code>openapi.yaml</code> và sinh code. Hồ sơ này được lập ở trạng thái <code>proposed</code> để trình PO (@toilatrung) và QA/QC approver (@ducha180104) xem xét.</p>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul>
+<li><strong>Affected Baselines</strong>: <code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code>, <code>src/backend/runs/urls.py</code>, <code>src/backend/orchestration/models.py</code> (nếu chọn Lựa chọn 1), <code>docs/design/screens/ExecutionHistory.dc.html</code></li>
+<li><strong>Affected Epics or Tasks</strong>: <code>E-09 (T-029)</code>, <code>E-08 (T-026)</code>, <code>T-024</code>, <code>T-027</code>, <code>T-028</code></li>
+<li><strong>Schedule Impact</strong>: Phụ thuộc vào quyết định của PO và Tech Lead Backend về việc có chấp thuận migration <code>ShardCommit</code> hay chỉ trả <code>dedup_count</code>; không đưa ra ước lượng chủ quan khi chưa có quyết định kỹ thuật.</li>
+<li><strong>Cost or Resource Impact</strong>: none</li>
+<li><strong>Security or Compliance Impact</strong>: Đọc dữ liệu chỉ đọc (read-only), kiểm tra quyền dataset scope và RBAC thông qua quan hệ <code>QCRun.dataset_id</code> theo FR-SEC-01 và FR-SEC-03.</li>
+<li><strong>Compatibility or Migration Impact</strong>: Nếu áp dụng Lựa chọn 1, cần tạo Django migration cho app <code>orchestration</code> để thêm cột nullable <code>raw_candidate_count = models.PositiveIntegerField(null=True, blank=True)</code> vào bảng <code>ShardCommit</code> (không dùng <code>default=0</code>).
+  <ul>
+    <li><em>Đặc tính migration trên PostgreSQL</em>: Việc thêm cột nullable không có default value (<code>ALTER TABLE orchestration_shardcommit ADD COLUMN raw_candidate_count integer NULL;</code>) là thao tác chỉ cập nhật metadata catalog của CSDL, thời gian thực thi diễn ra tức thì ($O(1)$), không quét lại toàn bộ bảng (no full table rewrite) và không giữ exclusive lock kéo dài.</li>
+    <li><em>Trật tự triển khai (Deployment sequence)</em>: Áp dụng migration CSDL trước khi deploy worker Celery mới. Trong giai đoạn chuyển tiếp, worker cũ không ghi trường này sẽ để giá trị <code>NULL</code> (hợp lệ); worker mới sẽ bắt đầu ghi nhận <code>len(output.candidates)</code>.</li>
+    <li><em>Tính tương thích dữ liệu lịch sử</em>: Các run lịch sử có shard cũ mang giá trị <code>NULL</code> sẽ được backend chuyển đổi chính xác thành <code>raw_count: null</code> trên API JSON, đảm bảo giao diện hiển thị đúng trạng thái chưa có số liệu thô thay vì hiểu lầm là 0.</li>
+  </ul>
+  Nếu áp dụng Lựa chọn 2, không phát sinh migration schema DB.</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml</code>, <code>docs/04-api/rest-api.html</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html</code>, <code>.agent/governance/decisions/DEC-005.html</code></li>
+<li><strong>Risks</strong>:
+  <ul>
+    <li><em>Rủi ro hiểu nhầm dữ liệu lịch sử</em>: Đã được phòng ngừa triệt để bằng cách không dùng <code>default=0</code> và quy định chặt chẽ logic trả <code>null</code> khi có bất kỳ shard nào chưa biết số thô.</li>
+    <li><em>Rủi ro lập trình viên vô tình dùng <code>or 0</code> hoặc <code>Coalesce(..., 0)</code></em>: Cần đưa điều kiện kiểm tra shard null và cấm fallback 0 vào contract docstring, serializer logic và viết unit test backend khẳng định run chứa shard lịch sử bắt buộc phải có <code>raw_count is None</code>.</li>
+    <li><em>Rủi ro migration khi hệ thống worker Celery đang hoạt động</em>: Thao tác thêm cột nullable không có default là an toàn trên PostgreSQL; tuy nhiên cần tuân thủ trật tự apply migration trước khi deploy worker mới.</li>
+    <li><em>Rủi ro hiệu năng truy vấn aggregate <code>Sum('raw_candidate_count')</code></em>: Bảng <code>ShardCommit</code> đã có index trên <code>run_id</code> (<code>db_index=True</code>). Khi truy vấn theo run, database tận dụng index scan trên <code>run_id</code> thay vì full table scan; tuy nhiên cần tiếp tục theo dõi qua benchmark thực tế khi có dữ liệu tải lớn thay vì giả định trước giới hạn shard.</li>
+  </ul>
+</li>
+<li><strong>Issues or Blockers</strong>: <code>GitHub Issue #71 (T-029)</code>, <code>GitHub Issue #68 (T-026)</code></li>
+</ul>
+<h2 id="approval">Approval</h2>
+<ul>
+<li><strong>Decision</strong>: <code>pending</code></li>
+<li><strong>Approver</strong>: <code>Trịnh Quang Trung (@toilatrung), Product Owner</code></li>
+<li><strong>Decision Date</strong>: <code>pending</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>Hồ sơ đề xuất đang chờ PO và QA/QC approver xem xét lựa chọn phương án lưu trữ raw_count và phê duyệt phạm vi contract</code></li>
+</ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul>
+<li><strong>Responsible Owner</strong>: <code>Trần Đức Thọ (@tdt2112)</code></li>
+<li><strong>Tasks</strong>: <code>T-029</code></li>
+<li><strong>Validation Method</strong>: <code>pytest src/backend/tests/test_contract.py && cd src/frontend && ./node_modules/.bin/vitest run</code></li>
+<li><strong>Rollback Method</strong>: <code>Nếu không được duyệt, giữ nguyên baseline openapi.yaml; CandidateEvidenceList duy trì thông báo trung tính 'Chưa kết nối API danh sách candidate hoặc chưa có dữ liệu'</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] Approval is recorded before baseline modification.</li>
+<li>[ ] Approved changes are implemented and verified.</li>
+<li>[ ] All affected baselines and traceability links are updated.</li>
+<li>[ ] Status is implemented, rejected, withdrawn, or superseded.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is pending or rejected.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+</article></main></body></html>
