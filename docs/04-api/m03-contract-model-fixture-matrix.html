@@ -59,7 +59,7 @@ body{max-width:1180px;margin:0 auto;padding:32px;font:15px/1.55 system-ui,sans-s
 <tr><td><code>GET /api/frames/{id}/issues/</code></td><td>Frame workspace query + CandidateRecord/Issue</td><td>Không đổi state</td><td>reviewer/QA/SA; scope; GT author guard</td><td>403, 404</td><td>engine failed/missing evidence, rule/evidence ordering, scope denial.</td></tr>
 <tr><td><code>POST /api/frames/{id}/complete/</code></td><td>FrameReviewService + Effort stop</td><td><code>frame.complete</code></td><td>lease_holder; mọi issue đã quyết định hoặc escalated</td><td>403, 404, 409, 422</td><td>undecided IDs, retry idempotent, lease race.</td></tr>
 <tr><td><code>POST /api/issues/</code></td><td>IssueService + audit</td><td><code>issue.create_manual</code></td><td>reviewer/QA/SA; active lease; no self-review</td><td>400, 403, 409, 422</td><td>manual_object/manual_region, invalid anchor, transaction rollback.</td></tr>
-<tr><td><code>POST /api/issues/{id}/decisions/</code></td><td>ReviewDecision append + Issue projection + audit</td><td>confirm/reject/escalate/request_fix</td><td>active holder; no self-review; override reason for SA</td><td>400, 403, 404, 409, 422</td><td>all actions, same transaction audit, duplicate idempotency.</td></tr>
+<tr><td><code>POST /api/issues/{id}/decisions/</code></td><td>ReviewDecision append + Issue projection + audit</td><td><code>confirm</code> / <code>reject</code> / <code>uncertain</code> / <code>escalate</code> / <code>request_fix</code></td><td>active holder; no self-review; override reason for SA</td><td>400, 403, 404, 409, 422</td><td>all five actions, same transaction audit, duplicate idempotency.</td></tr>
 <tr><td><code>GET /api/issues/{id}/</code></td><td>Issue query</td><td>Không đổi state</td><td>reviewer/QA/SA; scope</td><td>403, 404</td><td>append-only decision order and evidence source.</td></tr>
 <tr><td><code>GET /api/escalations/</code></td><td>Escalation query</td><td>Không đổi state</td><td>QA/SA; scope</td><td>403</td><td>oldest-first, decision history, pager/scope.</td></tr>
 <tr><td><code>POST /api/issues/{id}/adjudications/</code></td><td>Adjudication + DecisionCase version + audit</td><td><code>issue.adjudicate</code></td><td>QA/SA; different natural person from escalator</td><td>400, 403, 404, 409, 422</td><td>confirm/reject/guideline_gap, alias-account denial, version.</td></tr>
@@ -91,12 +91,12 @@ body{max-width:1180px;margin:0 auto;padding:32px;font:15px/1.55 system-ui,sans-s
 <h2 id="fixture">8. Fixture dùng chung</h2>
 <p><code>m03-review-workflow-v1.json</code> dùng ID cố định theo dải để các task không tự tạo dữ liệu trái nhau:</p>
 <table><thead><tr><th>Dải</th><th>Đối tượng</th><th>Tình huống có sẵn</th></tr></thead><tbody>
-<tr><td>701–705</td><td>Identity</td><td>reviewer, annotator, cùng người khác account, QA Lead, thiếu mapping.</td></tr>
+<tr><td>701–706</td><td>Identity</td><td>reviewer, annotator, alias reviewer/annotator cùng thể nhân, QA Lead, thiếu mapping.</td></tr>
 <tr><td>320/330</td><td>Snapshot/QCRun</td><td>snapshot locked, run completed, risk/random source.</td></tr>
 <tr><td>340–343</td><td>Frame</td><td>claim được, self-review, incomplete/resume, engine failed/missing evidence.</td></tr>
 <tr><td>350–351</td><td>Lease</td><td>active, expired có quyết định đã lưu.</td></tr>
-<tr><td>360–361/370</td><td>Issue/decision</td><td>E3 engine evidence và E2 confirmed append-only decision.</td></tr>
-<tr><td>380/391</td><td>Rework/effort</td><td>revision unchanged, same-person verifier, idempotent client event.</td></tr>
+<tr><td>360–362/370–371</td><td>Issue/decision</td><td>E3 engine evidence; E2 fix pending và re-check pending với append-only decision.</td></tr>
+<tr><td>380–381/391</td><td>Rework/effort</td><td>revision unchanged; revision mới + re-check completed; same-person verifier; idempotent client event.</td></tr>
 </tbody></table>
 <p>Scenario bắt buộc: allowed claim, self-review denial/skip, missing identity, two-tab resume, lease expiry, engine failure, revision unchanged và same-person verifier. Test <code>test_m03_contract_fixture.py</code> giữ enum/path/relation khớp OpenAPI và ngăn proposal chưa duyệt lọt vào contract.</p>
 

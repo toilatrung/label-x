@@ -1,6 +1,7 @@
 """Contract guard for the shared M-03 review/rework fixture (T-032)."""
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,53 @@ def fixture() -> dict[str, Any]:
 
 def _enum(contract: dict[str, Any], schema: str) -> set[str]:
     return set(contract["components"]["schemas"][schema]["enum"])
+
+
+def _by_id(items: list[dict[str, Any]], item_id: int) -> dict[str, Any]:
+    return next(item for item in items if item["id"] == item_id)
+
+
+def _scenario(fixture: dict[str, Any], scenario_id: str) -> dict[str, Any]:
+    return next(item for item in fixture["scenarios"] if item["id"] == scenario_id)
+
+
+def _as_datetime(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _claim_result(fixture: dict[str, Any], scenario: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate the fixture's claim/resume rules at the scenario clock."""
+    actor_id = scenario["actor_user_id"]
+    identities = {item["user_id"]: item for item in fixture["identities"]}
+    actor = identities[actor_id]
+    as_of = _as_datetime(scenario["as_of"])
+    queue = scenario["request"]["path_params"]["name"]
+    run_id = scenario["request"]["body"]["run_id"]
+
+    active_leases = [
+        lease for lease in fixture["leases"] if _as_datetime(lease["expires_at"]) > as_of
+    ]
+    held = next((lease for lease in active_leases if lease["holder_user_id"] == actor_id), None)
+    if held is not None:
+        return {
+            "status": 200,
+            "lease_id": held["id"],
+            "frame_id": held["frame_id"],
+            "resumed": True,
+        }
+
+    leased_frame_ids = {lease["frame_id"] for lease in active_leases}
+    candidates = sorted(fixture["frames"], key=lambda frame: frame["rank"])
+    for frame in candidates:
+        assignee = identities[frame["snapshot_assignee_user_id"]]
+        if (
+            frame["run_id"] == run_id
+            and frame["queue"] == queue
+            and frame["id"] not in leased_frame_ids
+            and assignee["person_key"] != actor["person_key"]
+        ):
+            return {"status": 200, "frame_id": frame["id"], "resumed": False}
+    return {"status": 204}
 
 
 def test_fixture_declares_reviewed_baseline_and_sources(fixture: dict[str, Any]) -> None:
@@ -74,6 +122,50 @@ def test_fixture_relationships_are_stable_and_complete(fixture: dict[str, Any]) 
         if identity["person_key"] == "person-reviewer-a"
     ]
     assert {identity["user_id"] for identity in aliases} == {701, 703}
+    annotator_aliases = [
+        identity
+        for identity in fixture["identities"]
+        if identity["person_key"] == "person-annotator-a"
+    ]
+    assert {identity["user_id"] for identity in annotator_aliases} == {702, 706}
+
+
+def test_claim_and_resume_scenarios_are_distinguished_by_clock(
+    fixture: dict[str, Any],
+) -> None:
+    fresh_claim = _scenario(fixture, "queue-allowed-risk-claim")
+    second_tab = _scenario(fixture, "lease-second-tab-resume")
+
+    assert _as_datetime(second_tab["as_of"]) < _as_datetime(
+        _by_id(fixture["leases"], 350)["expires_at"]
+    )
+    assert _as_datetime(fresh_claim["as_of"]) > _as_datetime(
+        _by_id(fixture["leases"], 350)["expires_at"]
+    )
+    assert _claim_result(fixture, second_tab) == second_tab["expected"]
+    assert _claim_result(fixture, fresh_claim) == fresh_claim["expected"]
+
+
+def test_same_person_verifier_reaches_separation_guard_after_recheck(
+    fixture: dict[str, Any],
+) -> None:
+    scenario = _scenario(fixture, "rework-same-person-verifier")
+    rework = _by_id(fixture["rework_requests"], scenario["request"]["path_params"]["id"])
+    recheck = _by_id(fixture["recheck_runs"], rework["recheck_run_id"])
+    identities = {item["user_id"]: item for item in fixture["identities"]}
+
+    assert rework["status"] == "recheck_pending"
+    assert rework["submitted_revision"] != rework["original_revision"]
+    assert recheck["status"] == "completed"
+    assert recheck["snapshot_revision"] == rework["submitted_revision"]
+    assert scenario["request"]["body"]["revision"] == rework["submitted_revision"]
+
+    verifier = identities[scenario["actor_user_id"]]
+    annotator = identities[rework["annotator_user_id"]]
+    error_code = (
+        "SAME_REQUESTER_APPROVER" if verifier["person_key"] == annotator["person_key"] else None
+    )
+    assert error_code == scenario["expected"]["error_code"]
 
 
 def test_fixture_covers_required_m03_failure_and_resume_cases(fixture: dict[str, Any]) -> None:
@@ -142,9 +234,28 @@ def test_candidate_and_issue_have_one_declared_evidence_source(fixture: dict[str
     assert "must not create a second candidate table" in ownership["rule"]
 
     engine_issues = [issue for issue in fixture["issues"] if issue["origin"] == "engine"]
+    candidates = {item["id"]: item for item in fixture["candidate_records"]}
+    frames = {item["id"]: item for item in fixture["frames"]}
     assert engine_issues
-    assert all(issue["candidate_record_id"] for issue in engine_issues)
+    assert len(candidates) == len(fixture["candidate_records"])
+    assert all(issue["candidate_record_id"] in candidates for issue in engine_issues)
     assert all(issue["evidence"] for issue in engine_issues)
+    for issue in engine_issues:
+        candidate = candidates[issue["candidate_record_id"]]
+        frame = frames[issue["frame_id"]]
+        assert candidate["run_id"] == fixture["run"]["id"]
+        assert candidate["family"] == issue["family"]
+        assert candidate["cvat_task_id"] == frame["frame_key"]["cvat_task_id"]
+        assert candidate["frame_number"] == frame["frame_key"]["frame_number"]
+        assert candidate["evidence"]
+        assert candidate["evidence_sha256"].startswith("sha256:")
+
+
+def test_matrix_lists_every_contract_decision_action(contract: dict[str, Any]) -> None:
+    matrix = MATRIX_PATH.read_text(encoding="utf-8")
+    actions = _enum(contract, "IssueDecisionAction")
+    assert actions == {"confirm", "reject", "uncertain", "escalate", "request_fix"}
+    assert all(f"<code>{action}</code>" in matrix for action in actions)
 
 
 def test_matrix_contains_every_delta_and_handoff_guard(fixture: dict[str, Any]) -> None:

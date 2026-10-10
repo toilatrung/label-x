@@ -75,6 +75,15 @@
       "dataset_id": 42,
       "cvat_user_id": null,
       "mapped": false
+    },
+    {
+      "user_id": 706,
+      "person_key": "person-annotator-a",
+      "role": "reviewer",
+      "dataset_id": 42,
+      "cvat_user_id": 1706,
+      "mapped": true,
+      "note": "Reviewer account owned by the same natural person as annotator 702; used only to prove verify separation-of-duties denial."
     }
   ],
   "snapshot": {
@@ -202,6 +211,44 @@
       "reason": "engine_error"
     }
   ],
+  "candidate_records": [
+    {
+      "id": 8801,
+      "run_id": 330,
+      "engine": "duplicate",
+      "engine_version": "duplicate-v1",
+      "family": "E3",
+      "cvat_task_id": 23,
+      "frame_number": 5,
+      "dedup_key": "fixture-candidate-8801",
+      "evidence_sha256": "sha256:fixture-candidate-8801-evidence",
+      "evidence": [{"rule_id": "DUP-001", "engine": "duplicate", "iou": 0.91}]
+    },
+    {
+      "id": 8802,
+      "run_id": 330,
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "family": "E2",
+      "cvat_task_id": 23,
+      "frame_number": 13,
+      "dedup_key": "fixture-candidate-8802",
+      "evidence_sha256": "sha256:fixture-candidate-8802-evidence",
+      "evidence": [{"rule_id": "CLS-002", "engine": "detector", "prediction_class": "car"}]
+    },
+    {
+      "id": 8803,
+      "run_id": 330,
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "family": "E2",
+      "cvat_task_id": 23,
+      "frame_number": 21,
+      "dedup_key": "fixture-candidate-8803",
+      "evidence_sha256": "sha256:fixture-candidate-8803-evidence",
+      "evidence": [{"rule_id": "CLS-002", "engine": "detector", "prediction_class": "car"}]
+    }
+  ],
   "issues": [
     {
       "id": 360,
@@ -245,7 +292,7 @@
       "candidate_record_id": 8802,
       "family": "E2",
       "origin": "engine",
-      "state": "confirmed",
+      "state": "fix_pending",
       "anchor": {
         "kind": "annotation",
         "objects": [{"namespace": "cvat_shape", "id": "20:610"}],
@@ -286,6 +333,63 @@
           "recorded_at": "2026-10-10T05:20:00Z"
         }
       ]
+    },
+    {
+      "id": 362,
+      "frame_id": 343,
+      "candidate_record_id": 8803,
+      "family": "E2",
+      "origin": "engine",
+      "state": "recheck_pending",
+      "anchor": {
+        "kind": "annotation",
+        "objects": [{"namespace": "cvat_shape", "id": "20:711"}],
+        "rule_id": "CLS-002",
+        "bbox": {"x1": 310.0, "y1": 140.0, "x2": 470.0, "y2": 390.0},
+        "policy_version": "class-matching-v1"
+      },
+      "n_i": 1,
+      "q_i": 0.79,
+      "severity": "medium",
+      "rule_ids": ["CLS-002"],
+      "evidence": [
+        {
+          "engine": "detector",
+          "rule_id": "CLS-002",
+          "expected": "car",
+          "actual": "truck",
+          "prediction_bbox": {"x1": 310.0, "y1": 140.0, "x2": 470.0, "y2": 390.0},
+          "prediction_class": "car",
+          "confidence": 0.81,
+          "iou": 0.9
+        }
+      ],
+      "links": [],
+      "review_decisions": [
+        {
+          "id": 371,
+          "issue_id": 362,
+          "actor_user_id": 701,
+          "actor_role": "reviewer",
+          "decision": "confirm",
+          "revision": "sha256:fixture-snapshot-revision-v1",
+          "reason": "Wrong class confirmed against rule CLS-002.",
+          "rule_ids": ["CLS-002"],
+          "reference_version": null,
+          "reference_match_status": "not_evaluated",
+          "reference_error_ids": [],
+          "recorded_at": "2026-10-10T05:25:00Z"
+        }
+      ]
+    }
+  ],
+  "recheck_runs": [
+    {
+      "id": 331,
+      "origin_run_id": 330,
+      "snapshot_revision": "sha256:fixture-snapshot-revision-v2",
+      "status": "completed",
+      "completed_at": "2026-10-10T07:00:00Z"
     }
   ],
   "rework_requests": [
@@ -299,6 +403,17 @@
       "recheck_run_id": null,
       "due_at": "2026-10-11T10:00:00Z",
       "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=13"
+    },
+    {
+      "id": 381,
+      "issue_id": 362,
+      "annotator_user_id": 702,
+      "status": "recheck_pending",
+      "original_revision": "sha256:fixture-snapshot-revision-v1",
+      "submitted_revision": "sha256:fixture-snapshot-revision-v2",
+      "recheck_run_id": 331,
+      "due_at": "2026-10-11T10:00:00Z",
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=21"
     }
   ],
   "effort_events": [
@@ -316,6 +431,7 @@
       "category": "allowed",
       "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
       "actor_user_id": 701,
+      "as_of": "2026-10-10T06:31:00Z",
       "request": {"path_params": {"name": "risk"}, "body": {"run_id": 330}},
       "expected": {"status": 200, "frame_id": 340, "resumed": false}
     },
@@ -342,6 +458,7 @@
       "category": "resume",
       "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
       "actor_user_id": 701,
+      "as_of": "2026-10-10T06:00:00Z",
       "request": {"path_params": {"name": "risk"}, "body": {"run_id": 330}},
       "expected": {"status": 200, "lease_id": 350, "frame_id": 340, "resumed": true}
     },
@@ -373,8 +490,8 @@
       "id": "rework-same-person-verifier",
       "category": "denial",
       "operation": {"method": "post", "path": "/api/rework/{id}/verify/"},
-      "actor_user_id": 703,
-      "request": {"path_params": {"id": 380}, "body": {"passed": true, "revision": "sha256:fixture-snapshot-revision-v2"}},
+      "actor_user_id": 706,
+      "request": {"path_params": {"id": 381}, "body": {"passed": true, "revision": "sha256:fixture-snapshot-revision-v2"}},
       "expected": {"status": 403, "error_code": "SAME_REQUESTER_APPROVER"}
     }
   ],

@@ -88,6 +88,15 @@
 <li>Reviewer targets: <code>@DucHa180104</code> for ownership comparison and <code>@toilatrung</code> for contract decisions.</li>
 </ul>
 
+<h2>Review remediation — 2026-10-10</h2>
+<table><thead><tr><th>Finding</th><th>Correction</th><th>Regression evidence</th></tr></thead><tbody>
+<tr><td>P1 claim/resume shared-state contradiction</td><td>Added an explicit <code>as_of</code> clock to both scenarios: the second tab resumes lease 350 before expiry; a new risk claim occurs only after that lease expires. A behavioral evaluator now applies lease, rank and natural-person self-review rules.</td><td><code>test_claim_and_resume_scenarios_are_distinguished_by_clock</code></td></tr>
+<tr><td>P1 verifier scenario hit the wrong guard</td><td>Split revision-unchanged rework 380 from verification-ready rework 381. Rework 381 has a new submitted revision and completed re-check run 331. Reviewer 706 is the same natural person as annotator 702, so the evaluated denial is exactly <code>SAME_REQUESTER_APPROVER</code>.</td><td><code>test_same_person_verifier_reaches_separation_guard_after_recheck</code></td></tr>
+<tr><td>P2 decision matrix omitted uncertain</td><td>The matrix now lists the exact five OpenAPI actions: confirm, reject, uncertain, escalate and request_fix.</td><td><code>test_matrix_lists_every_contract_decision_action</code></td></tr>
+<tr><td>P2 CandidateRecord IDs were dangling</td><td>Added minimal immutable CandidateRecord seeds 8801–8803 with run/frame identity, engine/family, dedup key and evidence digest/payload. Every engine issue is checked against an existing compatible record.</td><td><code>test_candidate_and_issue_have_one_declared_evidence_source</code></td></tr>
+</tbody></table>
+<p>Verification after remediation: fixture-only suite <code>12 passed</code>; combined M-03/baseline contract suite <code>27 passed</code>; Ruff check and format passed; framework validator returned <code>FRAMEWORK_VALIDATION_PASS</code>. The task remains in review until the independent reviewer approves the new PR head.</p>
+
 <h2>Forbidden Claims</h2><ul>
 <li>Không tuyên bố T-032 done/merged hoặc đã được Hà/PO duyệt.</li>
 <li>Không coi proposed operation là contract hiện hành.</li>
