@@ -30,8 +30,11 @@ function SnapshotWorkspace() {
   const detail = useSnapshot(canEnter ? userId : undefined, id);
   const taskQuery = useTasks(userId, datasetId, canRead && !!selectedDataset && !id);
   const recent = useSnapshotHistory(userId, canRead ? datasetId : null);
-  const recentLocked = recent.data?.pages.flatMap(page => page.results).find(item => item.status === 'locked');
+  const recentLocked = recent.data?.pages
+    .flatMap(page => page.results)
+    .find(item => item.dataset_id === datasetId && item.status === 'locked');
 
+  const [paginationError, setPaginationError] = React.useState<string | null>(null);
   const visitedCursorsRef = React.useRef<Set<string>>(new Set());
   const prevDatasetIdRef = React.useRef<number | null>(datasetId);
 
@@ -39,26 +42,46 @@ function SnapshotWorkspace() {
     if (prevDatasetIdRef.current !== datasetId) {
       prevDatasetIdRef.current = datasetId;
       visitedCursorsRef.current.clear();
+      setPaginationError(null);
     }
   }, [datasetId]);
 
-  // F-2: Auto-fetch next pages of snapshot history until locked snapshot is found or all pages exhausted
+  // R-1 / F-2: Auto-fetch next pages of snapshot history until locked snapshot is found or all pages exhausted
   React.useEffect(() => {
-    if (!canRead || datasetId === null || recentLocked || recent.isError || recent.isFetchingNextPage || !recent.hasNextPage) {
+    if (
+      !canRead ||
+      datasetId === null ||
+      recentLocked ||
+      recent.isError ||
+      recent.isFetchingNextPage ||
+      !recent.hasNextPage ||
+      paginationError
+    ) {
       return;
     }
-    const pageCount = recent.data?.pages.length ?? 0;
-    if (pageCount >= 20) return; // Safeguard against runaway pagination
-    const lastPage = recent.data?.pages[pageCount - 1];
+    const pages = recent.data?.pages;
+    if (!pages || pages.length === 0) return;
+    const lastPage = pages[pages.length - 1];
     const nextCursor = lastPage?.next;
-    if (nextCursor && visitedCursorsRef.current.has(nextCursor)) {
-      return; // Safeguard against cycle
+    if (!nextCursor) return;
+
+    if (visitedCursorsRef.current.has(nextCursor)) {
+      setPaginationError('Phát hiện vòng lặp cursor từ máy chủ.');
+      return;
     }
-    if (nextCursor) {
-      visitedCursorsRef.current.add(nextCursor);
-    }
+    visitedCursorsRef.current.add(nextCursor);
     void recent.fetchNextPage();
-  }, [canRead, datasetId, recentLocked, recent.isError, recent.isFetchingNextPage, recent.hasNextPage, recent.data?.pages, recent]);
+  }, [
+    canRead,
+    datasetId,
+    recentLocked,
+    recent.isError,
+    recent.isFetchingNextPage,
+    recent.hasNextPage,
+    recent.data?.pages,
+    paginationError,
+    recent,
+  ]);
 
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
 
@@ -83,7 +106,11 @@ function SnapshotWorkspace() {
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
   if (!canEnter) return <ForbiddenView requiredPermission="QA Lead / QC Admin / Super Admin" />;
 
-  const isSearchingLocked = !recentLocked && (recent.isPending || recent.isFetchingNextPage || (recent.hasNextPage && !recentLocked));
+  const isSearchingLocked =
+    !recentLocked &&
+    !paginationError &&
+    !recent.isError &&
+    (recent.isPending || recent.isFetchingNextPage || recent.hasNextPage);
 
   return <AppShell activeKey="analysis" flowStep={1}
     context={{
@@ -138,6 +165,7 @@ function SnapshotWorkspace() {
       <section className="lx-card lx-side"><div className="lx-card__head"><h2 className="lx-h2">Snapshot gần nhất đã khóa</h2></div>
         <div className="lx-card__body">{recent.isError ? <div className="lx-callout" role="alert">{errorMessage(recent.error)}
           <button className="lx-btn" type="button" onClick={() => void recent.refetch()}>Thử lại</button></div>
+        : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
         : recentLocked ? <dl className="lx-kv">
           <dt>Mã</dt><dd><Link href={`/analysis?snapshotId=${recentLocked.id}`}>SNP-{recentLocked.id}</Link></dd>
           <dt>Hash</dt><dd className="lx-mono" style={{ overflowWrap: 'anywhere' }}>{recentLocked.revision_hash || '—'}</dd>

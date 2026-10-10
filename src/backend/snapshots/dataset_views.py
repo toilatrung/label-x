@@ -8,7 +8,12 @@ from typing import Any, cast
 import httpx
 from django.conf import settings
 from django.contrib.auth.models import User
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_serializer,
+)
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -18,7 +23,12 @@ from rest_framework.views import APIView
 from accounts.models import SYSTEM_WIDE_ROLES, Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
 from cvat_adapter.client import CvatReadClient
+
+
+def _error(description: str) -> OpenApiResponse:
+    return OpenApiResponse(response=ErrorSerializer, description=description)
 
 
 class DatasetSerializer(serializers.Serializer[dict[str, Any]]):
@@ -29,6 +39,7 @@ class DatasetSerializer(serializers.Serializer[dict[str, Any]]):
     guideline_version = serializers.CharField(allow_null=True, required=False, default=None)
 
 
+@extend_schema_serializer(component_name="PaginatedDatasetList")
 class PaginatedDatasetSerializer(serializers.Serializer[dict[str, Any]]):
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
@@ -90,9 +101,9 @@ class DatasetListView(APIView):
         ],
         responses={
             200: PaginatedDatasetSerializer,
-            400: OpenApiResponse(description="Cursor Dataset không hợp lệ."),
-            403: OpenApiResponse(description="Không có phạm vi Dataset."),
-            502: OpenApiResponse(description="Không đọc được project CVAT."),
+            400: _error("Cursor Dataset không hợp lệ."),
+            403: _error("Không có phạm vi Dataset."),
+            502: _error("Không đọc được project CVAT."),
         },
         tags=["datasets"],
     )
@@ -173,14 +184,15 @@ class DatasetTasksView(APIView):
                 type=int,
                 location=OpenApiParameter.PATH,
                 description="ID của dataset (CVAT project ID)",
+                required=True,
             ),
         ],
         responses={
             200: CvatTaskSerializer(many=True),
-            400: OpenApiResponse(description="Yêu cầu không hợp lệ."),
-            403: OpenApiResponse(description="Không có quyền truy cập Dataset."),
-            404: OpenApiResponse(description="Dataset không tồn tại."),
-            502: OpenApiResponse(description="Không đọc được Task/Job CVAT."),
+            400: _error("Yêu cầu không hợp lệ."),
+            403: _error("Không có quyền truy cập Dataset."),
+            404: _error("Dataset không tồn tại."),
+            502: _error("Không đọc được Task/Job CVAT."),
         },
         tags=["datasets"],
     )

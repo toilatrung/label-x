@@ -1,20 +1,21 @@
 import React from 'react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AnalysisPage from '@/app/analysis/page';
 import * as api from '@/lib/snapshots/api';
 
 const mockSearchParams = vi.fn();
-const mockRouterReplace = vi.fn();
-const mockSetDatasetId = vi.fn();
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/analysis',
-  useRouter: () => ({ replace: mockRouterReplace, push: vi.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, back: vi.fn(), forward: vi.fn() }),
   useSearchParams: () => mockSearchParams(),
+  usePathname: () => '/analysis',
 }));
 
+const mockSetDatasetId = vi.fn();
 let mockAuthContext = {
   user: { id: 1, username: 'tester', role: 'qa_lead' as const, fullName: 'QA Lead' },
   session: {
@@ -47,8 +48,8 @@ vi.mock('@/lib/snapshots/api', async importOriginal => {
   };
 });
 
-function renderWithClient() {
-  const client = new QueryClient({
+function renderWithClient(queryClient?: QueryClient) {
+  const client = queryClient ?? new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
     },
@@ -60,7 +61,7 @@ function renderWithClient() {
   );
 }
 
-describe('AnalysisPage regression tests (F-1 & F-2)', () => {
+describe('AnalysisPage regression tests (R-1, F-1, F-2)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuthContext = {
@@ -85,7 +86,6 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
     it('resolves and displays Dataset name from snapshot (e.g. #99 "Private") even when session had #42 "Urban"', async () => {
       mockSearchParams.mockReturnValue(new URLSearchParams('snapshotId=99'));
 
-      // Dataset page 1 has Urban (#42), page 2 has Private (#99)
       vi.mocked(api.getDatasets).mockImplementation(async (cursor) => {
         if (!cursor) {
           return {
@@ -119,12 +119,10 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
 
       renderWithClient();
 
-      // Chip Dataset in ContextBar must resolve to "Private", NOT "Urban"
       await waitFor(() => {
         expect(screen.getByText('Private')).toBeDefined();
       });
 
-      // Does not silently overwrite session datasetId
       expect(mockSetDatasetId).not.toHaveBeenCalled();
     });
 
@@ -155,7 +153,6 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
 
       renderWithClient();
 
-      // Must display Dataset #99, NOT "Urban"
       await waitFor(() => {
         expect(screen.getByText(/Dataset.*#99/)).toBeDefined();
       });
@@ -163,8 +160,8 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
     });
   });
 
-  describe('F-2: Latest locked snapshot pagination', () => {
-    it('fetches subsequent pages until locked snapshot is found when page 1 has 50 non-locked snapshots', async () => {
+  describe('R-1 / F-2: Latest locked snapshot pagination and boundary handling', () => {
+    it('fetches subsequent pages until locked snapshot is found on page 21 without stopping at page 20', async () => {
       mockSearchParams.mockReturnValue(new URLSearchParams(''));
 
       vi.mocked(api.getDatasets).mockResolvedValue({
@@ -173,41 +170,40 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
         previous: null,
       });
 
-      // Page 1: 50 failed snapshots with next cursor
-      const fiftyFailed = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        dataset_id: 42,
-        status: 'failed' as const,
-        failure_reason: 'drift_detected' as const,
-        revision_hash: null,
-        parent_snapshot_id: null,
-        drift_jobs: [],
-        out_of_scope_shapes: 0,
-        taxonomy_version: 'v1',
-        guideline_version: 'v1',
-        created_by: 1,
-        created_at: '2026-10-09T08:00:00Z',
-        jobs: [],
-      }));
-
       vi.mocked(api.getSnapshots).mockImplementation(async (_datasetId, cursor) => {
-        if (!cursor) {
+        const pageNum = cursor ? Number(cursor) : 1;
+        if (pageNum < 21) {
           return {
-            results: fiftyFailed,
-            next: 'http://localhost/api/snapshots/?dataset_id=42&cursor=50',
+            results: [{
+              id: pageNum,
+              dataset_id: 42,
+              status: 'failed' as const,
+              failure_reason: 'drift_detected' as const,
+              revision_hash: null,
+              parent_snapshot_id: null,
+              drift_jobs: [],
+              out_of_scope_shapes: 0,
+              taxonomy_version: 'v1',
+              guideline_version: 'v1',
+              created_by: 1,
+              created_at: '2026-10-09T08:00:00Z',
+              jobs: [],
+            }],
+            next: `http://localhost/api/snapshots/?dataset_id=42&cursor=${pageNum + 1}`,
             previous: null,
           };
         }
+        // Page 21 has the locked snapshot!
         return {
           results: [{
-            id: 100,
+            id: 2100,
             dataset_id: 42,
             status: 'locked' as const,
             failure_reason: null,
-            revision_hash: 'locked-hash-100',
+            revision_hash: 'hash-page-21',
             parent_snapshot_id: null,
             drift_jobs: [],
-            out_of_scope_shapes: 2,
+            out_of_scope_shapes: 0,
             taxonomy_version: 'v1',
             guideline_version: 'v1',
             created_by: 1,
@@ -221,11 +217,56 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
 
       renderWithClient();
 
-      // Automatically finds SNP-100 from page 2
       await waitFor(() => {
-        expect(screen.getByText('SNP-100')).toBeDefined();
-        expect(screen.getByText('locked-hash-100')).toBeDefined();
+        expect(screen.getByText('SNP-2100')).toBeDefined();
+        expect(screen.getByText('hash-page-21')).toBeDefined();
+      }, { timeout: 3000 });
+    });
+
+    it('safely handles repeating cursor loop without infinite requests and does not stay stuck in loading', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+
+      vi.mocked(api.getDatasets).mockResolvedValue({
+        results: [{ id: 42, cvat_project_id: 42, name: 'Urban', taxonomy_version: 'v1', guideline_version: 'v1' }],
+        next: null,
+        previous: null,
       });
+
+      let callCount = 0;
+      vi.mocked(api.getSnapshots).mockImplementation(async () => {
+        callCount++;
+        return {
+          results: [{
+            id: 1,
+            dataset_id: 42,
+            status: 'failed' as const,
+            failure_reason: 'drift_detected' as const,
+            revision_hash: null,
+            parent_snapshot_id: null,
+            drift_jobs: [],
+            out_of_scope_shapes: 0,
+            taxonomy_version: 'v1',
+            guideline_version: 'v1',
+            created_by: 1,
+            created_at: '2026-10-09T08:00:00Z',
+            jobs: [],
+          }],
+          next: 'http://localhost/api/snapshots/?dataset_id=42&cursor=infinite-loop',
+          previous: null,
+        };
+      });
+
+      renderWithClient();
+
+      // Detects loop and shows clear error message
+      await waitFor(() => {
+        expect(screen.getByText('Phát hiện vòng lặp cursor từ máy chủ.')).toBeDefined();
+      });
+
+      // Does not get stuck indefinitely loading
+      expect(screen.queryByText('Đang tải…')).toBeNull();
+      // Should stop after identifying the loop
+      expect(callCount).toBeLessThanOrEqual(3);
     });
 
     it('displays "Chưa có Snapshot đã khóa." only after all pages are exhausted without finding locked snapshot', async () => {
@@ -285,6 +326,76 @@ describe('AnalysisPage regression tests (F-1 & F-2)', () => {
       await waitFor(() => {
         expect(screen.getByText('Chưa có Snapshot đã khóa.')).toBeDefined();
       });
+    });
+
+    it('does not display locked snapshot from previous dataset when switching dataset', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+
+      vi.mocked(api.getDatasets).mockResolvedValue({
+        results: [
+          { id: 42, cvat_project_id: 42, name: 'Urban', taxonomy_version: 'v1', guideline_version: 'v1' },
+          { id: 99, cvat_project_id: 99, name: 'Private', taxonomy_version: 'v2', guideline_version: 'v2' },
+        ],
+        next: null,
+        previous: null,
+      });
+
+      vi.mocked(api.getSnapshots).mockImplementation(async (targetDatasetId) => {
+        if (targetDatasetId === 42) {
+          return {
+            results: [{
+              id: 420,
+              dataset_id: 42,
+              status: 'locked' as const,
+              failure_reason: null,
+              revision_hash: 'hash-dataset-42',
+              parent_snapshot_id: null,
+              drift_jobs: [],
+              out_of_scope_shapes: 0,
+              taxonomy_version: 'v1',
+              guideline_version: 'v1',
+              created_by: 1,
+              created_at: '2026-10-09T08:00:00Z',
+              jobs: [],
+            }],
+            next: null,
+            previous: null,
+          };
+        }
+        // Dataset 99 has no locked snapshots
+        return {
+          results: [{
+            id: 990,
+            dataset_id: 99,
+            status: 'pending' as const,
+            failure_reason: null,
+            revision_hash: null,
+            parent_snapshot_id: null,
+            drift_jobs: [],
+            out_of_scope_shapes: 0,
+            taxonomy_version: 'v2',
+            guideline_version: 'v2',
+            created_by: 1,
+            created_at: '2026-10-09T08:30:00Z',
+            jobs: [],
+          }],
+          next: null,
+          previous: null,
+        };
+      });
+
+      // Switch auth context to dataset 99
+      mockAuthContext.datasetId = 99;
+
+      renderWithClient();
+
+      await waitFor(() => {
+        expect(screen.getByText('Chưa có Snapshot đã khóa.')).toBeDefined();
+      });
+
+      // Must never display locked snapshot from dataset 42
+      expect(screen.queryByText('SNP-420')).toBeNull();
+      expect(screen.queryByText('hash-dataset-42')).toBeNull();
     });
   });
 });
