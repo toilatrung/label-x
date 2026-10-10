@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-109: BLOCKER-026: endpoint metric vận hành queue/shard QC Run (GET /internal/metrics/, Prometheus text) — LabelX</title>
+<meta name="labelx:id" content="CR-109">
+<meta name="labelx:title" content="BLOCKER-026: endpoint metric vận hành queue/shard QC Run (GET /internal/metrics/, Prometheus text)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="change-requests">
+<meta name="labelx:tags" content="[change-request, blocker-026, m-02, t-025, metrics, nfr-12, contract]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / change-requests / CR-107</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>CR-109</span><b>title</b><span>BLOCKER-026: endpoint metric vận hành queue/shard QC Run (GET /internal/metrics/, Prometheus text)</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>change-requests</span><b>tags</b><span>[change-request, blocker-026, m-02, t-025, metrics, nfr-12, contract]</span><b>priority</b><span>3</span></div>
+<h1 id="cr-109">CR-109: BLOCKER-026: endpoint metric vận hành queue/shard QC Run (GET /internal/metrics/, Prometheus text)</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Thêm một endpoint nội bộ xuất metric queue/shard của QC Run ra ngoài (NFR-12), làm đổi <code>docs/04-api/openapi.yaml</code>, để đóng hạng mục Metric của T-025 theo BLOCKER-026 phương án (b).</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Change Request ID</strong>: <code>CR-109</code></li>
+<li><strong>Title</strong>: <code>BLOCKER-026: endpoint metric vận hành queue/shard QC Run (GET /internal/metrics/, Prometheus text)</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Proposer</strong>: <code>claude-code (task M-02-RESOLVE, nhánh fix/M-02-RESOLVE-metrics)</code></li>
+<li><strong>Status</strong>: <code>proposed</code></li>
+<li><strong>Change Type</strong>: <code>contract</code></li>
+<li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-14</code></li>
+</ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<p>Trước: <code>run_metrics()</code> trong <code>src/backend/orchestration/services.py</code> và log có cấu trúc, không có đầu ra quan sát được từ ngoài; <a href="../blockers/BLOCKER-026.html">BLOCKER-026</a> mở.</p>
+<p>Sau: thêm <code>GET /internal/metrics/</code> (operationId <code>internal_metrics</code>, tag <code>ops</code>, trace <code>NFR-12</code>) trả Prometheus text exposition 0.0.4. <code>run_metrics()</code> giữ nguyên. Không có migration.</p>
+<h3>Ghi chú thiết kế</h3>
+<p><strong>Endpoint.</strong> <code>/internal/metrics/</code> nằm ngoài tiền tố <code>/api/</code> vì là điểm scrape vận hành, không thuộc API nghiệp vụ; dấu <code>/</code> cuối theo quy ước DRF của contract. Mã: <code>src/backend/orchestration/metrics.py</code> (tính và render), <code>metrics_view.py</code> (view, quyền), nối URL ở <code>config/urls.py</code>. Phản hồi <code>Cache-Control: no-store</code>, <code>Content-Type: text/plain; version=0.0.4</code>. Metric tính trực tiếp từ DB mỗi lần gọi bằng aggregate; không cần exporter, thư viện mới hay migration (DEC-001 không đổi).</p>
+<p><strong>Quyền.</strong> Theo <a href="../../../docs/04-api/rbac-matrix.html">rbac-matrix.html</a>, chỉ <code>qc_admin</code> và <code>super_admin</code> có RoleAssignment toàn hệ thống (<code>dataset_id</code> null); metric gộp mọi dataset nên vai trò gán theo dataset không đủ quyền. Năm vai trò còn lại (annotator, reviewer, qa_lead, product_owner, data_model_owner), người dùng không có vai trò và qc_admin chỉ gán theo dataset trả 403 <code>FORBIDDEN</code>; chưa đăng nhập trả 403 <code>NOT_AUTHENTICATED</code>. Xác thực bằng session hiện có. Chưa có service token nên scraper dùng một tài khoản vận hành; token riêng cho Prometheus là việc sau (cần change request riêng). Triển khai thật nên chặn thêm <code>/internal/</code> ở reverse proxy.</p>
+<p><strong>Định nghĩa đếm.</strong> Mọi số tính từ trạng thái hiện tại của bản ghi, nên retry-failed không đếm đôi một shard.</p>
+<table><thead><tr><th>Metric</th><th>Kiểu</th><th>Label</th><th>Định nghĩa</th></tr></thead><tbody>
+<tr><td><code>labelx_shard_units</code></td><td>gauge</td><td>engine, status</td><td>Số WorkUnit theo trạng thái hiện tại.</td></tr>
+<tr><td><code>labelx_shard_retries_total</code></td><td>counter</td><td>engine</td><td>Tổng <code>attempt - 1</code> của WorkUnit; tách riêng khỏi số shard.</td></tr>
+<tr><td><code>labelx_shard_error_ratio</code></td><td>gauge</td><td>engine</td><td>failed / (completed + failed). Pending, running, cancelled không vào mẫu số; không phát series khi chưa có shard ở trạng thái cuối.</td></tr>
+<tr><td><code>labelx_shard_duration_seconds</code></td><td>histogram</td><td>engine</td><td><code>finished_at - started_at</code> của WorkUnit ở trạng thái cuối (completed, failed) có đủ hai mốc, tức lần thử gần nhất. retry-failed xoá hai mốc này nên lần thử lỗi trước không cộng dồn; mỗi shard tối đa một mẫu.</td></tr>
+<tr><td><code>labelx_shard_queue_wait_seconds</code></td><td>histogram</td><td>engine</td><td><code>started_at - run.created_at</code> chỉ cho WorkUnit có <code>attempt = 1</code> (lần chạy đầu). WorkUnit chưa có created_at riêng nên dùng thời điểm tạo run.</td></tr>
+<tr><td><code>labelx_runs</code></td><td>gauge</td><td>status</td><td>Số QCRun theo trạng thái.</td></tr>
+<tr><td><code>labelx_run_queue_latency_seconds</code></td><td>histogram</td><td>status</td><td><code>run.started_at - run.created_at</code>; started_at chỉ đặt một lần nên retry-failed không đổi mẫu.</td></tr>
+<tr><td><code>labelx_run_duration_seconds</code></td><td>histogram</td><td>status</td><td><code>finished_at - started_at</code> của run ở trạng thái completed, partial, failed.</td></tr>
+<tr><td><code>labelx_shard_commits</code>, <code>labelx_candidates</code></td><td>gauge</td><td>engine</td><td>Số ShardCommit, CandidateRecord.</td></tr>
+<tr><td><code>labelx_ledger_units</code></td><td>gauge</td><td>engine, outcome</td><td>Số LedgerUnit theo outcome.</td></tr>
+</tbody></table>
+<p>Histogram dùng bucket cố định 0.1, 0.5, 1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600 giây và <code>+Inf</code>. Label chỉ gồm <code>engine</code>, <code>status</code>, <code>outcome</code>, <code>le</code>; không có <code>run_id</code> theo quy ước low-cardinality của <a href="../../../docs/13-observability/metrics.html">metrics.html</a>.</p>
+<p><strong>Giới hạn đã biết.</strong> Metric dựng từ DB nên gauge/counter có thể giảm nếu dữ liệu bị xoá (không có xoá run trong luồng hiện tại, FK PROTECT). Thời lượng lần thử lỗi đã bị retry-failed ghi đè không còn. Chưa có metric hàng đợi Celery/Redis (queue length, worker online); thuộc <a href="../../../docs/13-observability/metrics.html">metrics.html</a> và chưa làm ở CR này.</p>
+<h2 id="justification">Justification</h2>
+<p>NFR-12 yêu cầu metric hàng đợi, thời gian shard, tỉ lệ lỗi; BLOCKER-026 ghi PO chốt làm endpoint thay vì chỉ log. Tính từ DB tránh thêm hạ tầng trong M-02 và bám kiến trúc Django + Celery + Redis hiện có.</p>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul>
+<li><strong>Affected Baselines</strong>: <code>docs/04-api/openapi.yaml</code> (thêm path <code>/internal/metrics/</code>, tag <code>ops</code>)</li>
+<li><strong>Affected Epics or Tasks</strong>: <code>T-025 (hạng mục Metric, issue #67), M-02-RESOLVE</code></li>
+<li><strong>Schedule Impact</strong>: <code>none</code></li>
+<li><strong>Cost or Resource Impact</strong>: <code>none</code></li>
+<li><strong>Security or Compliance Impact</strong>: <code>Endpoint chỉ đọc, giới hạn qc_admin/super_admin toàn hệ thống; không lộ run_id hay dữ liệu annotation; chặn ở proxy khi triển khai</code></li>
+<li><strong>Compatibility or Migration Impact</strong>: <code>Thêm mới, không migration; frontend contract.d.ts cần sinh lại nếu pipeline gen-api bao gồm path này</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-012.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Issues or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-026.html; https://github.com/toilatrung/label-x/issues/67; https://github.com/toilatrung/label-x/issues/96</code></li>
+</ul>
+<h2 id="approval">Approval</h2>
+<ul>
+<li><strong>Decision</strong>: <code>pending</code></li>
+<li><strong>Approver</strong>: <code>Trịnh Quang Trung (@toilatrung), Product Owner</code></li>
+<li><strong>Decision Date</strong>: <code>YYYY-MM-DD</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>PO đã chọn phương án (b) cho BLOCKER-026 theo yêu cầu giao việc; chờ PO ghi duyệt CR này trước khi merge</code></li>
+</ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul>
+<li><strong>Responsible Owner</strong>: <code>claude-code cho integrator @toilatrung</code></li>
+<li><strong>Tasks</strong>: <code>M-02-RESOLVE</code></li>
+<li><strong>Validation Method</strong>: <code>make validate-kit; pytest tests/orchestration/test_metrics.py tests/test_contract.py; ruff; mypy</code></li>
+<li><strong>Rollback Method</strong>: <code>Gỡ path khỏi openapi.yaml, gỡ route trong config/urls.py và hai module metrics; không có dữ liệu cần hoàn tác; đặt CR-109 thành withdrawn</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] Approval is recorded before baseline modification.</li>
+<li>[ ] Approved changes are implemented and verified.</li>
+<li>[ ] All affected baselines and traceability links are updated.</li>
+<li>[ ] Status is <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code>, or <code>superseded</code>.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is <code>pending</code> or <code>rejected</code>.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/change-requests/CR-109.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>
