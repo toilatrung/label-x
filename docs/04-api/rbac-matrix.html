@@ -76,7 +76,9 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>datasets_tasks</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>Đọc CVAT qua adapter chỉ đọc</td><td>UC-01; FR-SNP-01</td></tr>
 <tr><td><code>snapshots_create</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Không trùng phạm vi đang xuất (409 SCOPE_BUSY)</td><td>UC-01; tab:rbac "Chạy"</td></tr>
 <tr><td><code>snapshots_retrieve</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-SNP-03, FR-SNP-04</td></tr>
-<tr><td><code>runs_list</code>, <code>runs_ledger</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-AGG-04; FR-RPT-04</td></tr>
+<tr><td><code>runs_list</code>, <code>runs_ledger</code>, <code>runs_shards</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-AGG-04; FR-RPT-04</td></tr>
+<tr><td><code>config_versions_list</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-ENG-01</td></tr>
+<tr><td><code>config_versions_create</code>, <code>config_versions_publish</code></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td></td><td></td><td>Config đã publish không sửa được; create idempotent theo Idempotency-Key</td><td>FR-ENG-01; FR-SEC-05</td></tr>
 <tr><td><code>runs_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>RV chỉ xem</td><td>FR-AGG-05</td></tr>
 <tr><td><code>runs_create</code>, <code>runs_cancel</code>, <code>runs_retry_failed</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Theo bảng transition QC Run</td><td>UC-02; tab:rbac "Chạy"</td></tr>
 <tr><td><code>runs_ranking</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn (403 FORBIDDEN)</td><td>FR-REV-01; FR-EVL-02; BR-10</td></tr>
