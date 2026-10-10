@@ -109,7 +109,9 @@ def run_work_unit(self: Any, work_unit_id: int) -> str:
     """
     with transaction.atomic():
         unit = (
-            WorkUnit.objects.select_for_update()
+            WorkUnit.objects.select_for_update(
+                of=("self",)
+            )  # không khoá run: tránh đảo thứ tự với cancel
             .select_related("run", "run__config_version")
             .get(pk=work_unit_id)
         )

@@ -159,7 +159,9 @@ def _run_cancelled(run_id: int) -> bool:
 
 
 def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool:
-    """Ghi nguyên tử kết quả shard. Trả True nếu commit mới, False nếu đã commit (retry no-op).
+    """Ghi nguyên tử kết quả shard.
+
+    True nếu commit mới; False nếu đã commit (retry no-op) hoặc run đã huỷ.
 
     Hoặc toàn bộ (ShardCommit + candidate + ledger) được ghi, hoặc không gì cả: worker chết
     giữa chừng rollback, lần chạy lại ghi đúng một lần.
