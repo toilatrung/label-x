@@ -6,7 +6,9 @@ from runs.views import (
     RunCancelView,
     RunCollectionView,
     RunDetailView,
+    RunLedgerView,
     RunRetryFailedView,
+    RunShardView,
 )
 
 app_name = "runs"
@@ -16,4 +18,6 @@ urlpatterns = [
     path("<int:pk>/", RunDetailView.as_view(), name="runs-detail"),
     path("<int:pk>/cancel/", RunCancelView.as_view(), name="runs-cancel"),
     path("<int:pk>/retry-failed/", RunRetryFailedView.as_view(), name="runs-retry-failed"),
+    path("<int:pk>/ledger/", RunLedgerView.as_view(), name="runs-ledger"),
+    path("<int:pk>/shards/", RunShardView.as_view(), name="runs-shards"),
 ]
