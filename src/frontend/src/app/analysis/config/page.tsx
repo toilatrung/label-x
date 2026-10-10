@@ -11,7 +11,8 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
-import { createConfig, createRun, cursorFrom, listConfigs, listSnapshots, publishConfig, type ConfigVersionCreate, type RunCreate } from '@/lib/execution/api';
+import { createConfig, createRun, cursorFrom, listConfigs, listSnapshots, publishConfig, type ConfigVersion, type ConfigVersionCreate, type RunCreate } from '@/lib/execution/api';
+import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
 
 const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm'] as const;
 
@@ -25,6 +26,7 @@ function ConfigContent() {
   const [configCursor, setConfigCursor] = useState<string | null>(null);
   const [snapshotId, setSnapshotId] = useState<number | null>(null);
   const [configId, setConfigId] = useState<number | null>(null);
+  const [selectedConfigRecord, setSelectedConfigRecord] = useState<ConfigVersion | null>(null);
   const [seed, setSeed] = useState(42);
   const [pending, setPending] = useState<{ body: RunCreate; key: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +42,10 @@ function ConfigContent() {
   const snapshots = useQuery({ queryKey: ['analysis-snapshots', session?.user.id, datasetId, snapshotCursor], queryFn: ({ signal }) => listSnapshots(datasetId!, snapshotCursor, signal), enabled: datasetId !== null, retry: false });
   const configs = useQuery({ queryKey: ['analysis-configs', session?.user.id, configCursor], queryFn: ({ signal }) => listConfigs(configCursor, signal), enabled: !!session, retry: false });
   const locked = snapshots.data?.results.filter((s) => s.status === 'locked') ?? [];
-  const selectedConfig = configs.data?.results.find((c) => c.id === configId);
+  const activeConfig = selectedConfigRecord?.id === configId
+    ? selectedConfigRecord
+    : (configs.data?.results.find((c) => c.id === configId) ?? null);
+  const selectedConfig = activeConfig;
   const selectedSnapshot = locked.find((s) => s.id === snapshotId);
 
   async function submit(event: React.FormEvent) {
@@ -85,6 +90,7 @@ function ConfigContent() {
       setConfigCursor(null);
       await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
       setConfigId(published.id);
+      setSelectedConfigRecord(published);
     } catch (err) {
       setConfigError(errorMessage(err));
     } finally { setConfigBusy(false); }
@@ -99,6 +105,7 @@ function ConfigContent() {
       setDraftId(null); setConfigPending(null); setConfigCursor(null);
       await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
       setConfigId(published.id);
+      setSelectedConfigRecord(published);
     } catch (err) { setConfigError(errorMessage(err)); }
     finally { setConfigBusy(false); }
   }
@@ -114,13 +121,28 @@ function ConfigContent() {
         {snapshots.isError && <p role="alert">{errorMessage(snapshots.error)}</p>}
         {datasetId && snapshots.data && locked.length === 0 && <p className="lx-muted">Dataset này chưa có snapshot đã khóa.</p>}
         {snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang snapshot tiếp</button>}
-        <div className="lx-field"><label htmlFor="analysis-config">Phiên bản cấu hình</label><select id="analysis-config" value={configId ?? ''} onChange={(e) => { setConfigId(e.target.value ? Number(e.target.value) : null); setPending(null); }} disabled={configs.isPending}>
-          <option value="">Chọn config đã publish</option>{configs.data?.results.map((c) => <option key={c.id} value={c.id}>{c.name} · v{c.id}</option>)}
+        <div className="lx-field"><label htmlFor="analysis-config">Phiên bản cấu hình</label><select id="analysis-config" value={configId ?? ''} onChange={(e) => { const nextId = e.target.value ? Number(e.target.value) : null; setConfigId(nextId); setSelectedConfigRecord(configs.data?.results.find((c) => c.id === nextId) ?? (selectedConfigRecord?.id === nextId ? selectedConfigRecord : null)); setPending(null); }} disabled={configs.isPending}>
+          <option value="">Chọn config đã publish</option>
+          {selectedConfigRecord && !configs.data?.results.some((c) => c.id === selectedConfigRecord.id) && (
+            <option key={selectedConfigRecord.id} value={selectedConfigRecord.id}>{selectedConfigRecord.name} · v{selectedConfigRecord.id} (đang chọn)</option>
+          )}
+          {configs.data?.results.map((c) => <option key={c.id} value={c.id}>{c.name} · v{c.id}</option>)}
         </select></div>
         {configs.isError && <p role="alert">{errorMessage(configs.error)}</p>}
         {configs.data?.results.length === 0 && <p role="alert" className="lx-callout">Chưa có config version đã publish. QC Admin hoặc Super Admin cần tạo và publish một phiên bản trước khi tạo run.</p>}
         {configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang config tiếp</button>}
-        {selectedConfig && <div className="lx-execution-config"><h2 className="lx-h2">Cấu hình đã phát hành: {selectedConfig.name}</h2><p className="lx-muted">Engine, ngưỡng và model của phiên bản này chỉ đọc.</p><pre>{JSON.stringify({ engines: selectedConfig.engines, thresholds: selectedConfig.thresholds, models: selectedConfig.models }, null, 2)}</pre></div>}
+        <div className="lx-execution-config">
+          <EngineThresholdsTable
+            config={activeConfig}
+            isLoading={configs.isPending}
+            error={configs.isError ? errorMessage(configs.error) : null}
+            emptyTitle={configs.data?.results.length === 0 ? 'Chưa có cấu hình đã phát hành' : 'Chưa chọn phiên bản cấu hình'}
+            emptyDescription={configs.data?.results.length === 0
+              ? 'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'
+              : 'Vui lòng chọn một phiên bản cấu hình đã phát hành từ danh sách phía trên để xem chi tiết ngưỡng kiểm tra engine.'}
+          />
+          {activeConfig && <pre className="lx-code" aria-label="Ngưỡng và model tham chiếu">{JSON.stringify({ thresholds: activeConfig.thresholds, models: activeConfig.models }, null, 2)}</pre>}
+        </div>
         {selectedSnapshot && <p>Snapshot SNP-{selectedSnapshot.id}: <strong>{selectedSnapshot.status}</strong></p>}
         <div className="lx-field"><label htmlFor="analysis-seed">Seed</label><input id="analysis-seed" type="number" value={seed} onChange={(e) => { setSeed(Number(e.target.value)); setPending(null); }} /></div>
         {!canCreate && <p className="lx-muted">Vai trò hiện tại chỉ được xem cấu hình và lịch sử; QA Lead hoặc Super Admin mới được tạo run.</p>}

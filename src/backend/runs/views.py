@@ -15,14 +15,18 @@ from rest_framework.views import APIView
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
 from engines.interface import EngineStatus, public_status
+from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
 from runs.config_versions import create_config_version, publish_config_version
 from runs.models import ConfigVersion, QCRun, WorkUnit
 from runs.serializers import (
+    CandidateSerializer,
     ConfigVersionCreateSerializer,
     ConfigVersionSerializer,
     LedgerEntrySerializer,
+    PaginatedCandidateListSerializer,
     PaginatedConfigVersionSerializer,
     PaginatedRunListSerializer,
     PaginatedWorkUnitSerializer,
@@ -401,7 +405,7 @@ class RunRetryFailedView(APIView):
 
 class RunScopedReadView(APIView):
     permission_classes = [HasRoleAndDatasetScope]
-    allowed_roles = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
+    allowed_roles: tuple[Role, ...] = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
     object_type = "run"
     requires_dataset = True
 
@@ -462,3 +466,51 @@ class RunShardView(RunScopedReadView):
         paginator = RunCursorPagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
         return paginator.get_paginated_response(WorkUnitSerializer(page, many=True).data)
+
+
+class CandidateCursorPagination(CursorPagination):
+    page_size = 50
+    page_size_query_param = "page_size"
+    max_page_size = 100
+    ordering = "id"
+
+
+class RunCandidateListView(RunScopedReadView):
+    """List candidates for a QC run: GET /api/runs/{id}/candidates/ (CR-108 Option 2)."""
+
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
+    action_name = "runs.candidates"
+
+    @extend_schema(
+        operation_id="runs_candidates",
+        parameters=[
+            OpenApiParameter("cursor", str, required=False),
+            OpenApiParameter("page_size", int, required=False),
+            OpenApiParameter("engine", str, required=False),
+            OpenApiParameter("family", str, required=False),
+        ],
+        responses={
+            200: PaginatedCandidateListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        queryset = CandidateRecord.objects.filter(run_id=pk).order_by("id")
+        engine_filter = request.query_params.get("engine")
+        if engine_filter:
+            queryset = queryset.filter(engine=engine_filter)
+        family_filter = request.query_params.get("family")
+        if family_filter:
+            queryset = queryset.filter(family=family_filter)
+
+        dedup_count = CandidateRecord.objects.filter(run_id=pk).count()
+
+        paginator = CandidateCursorPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = CandidateSerializer(page, many=True)
+        response = paginator.get_paginated_response(serializer.data)
+        response.data.update(raw_count=None, dedup_count=dedup_count)
+        return response

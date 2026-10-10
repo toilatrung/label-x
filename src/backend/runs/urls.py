@@ -4,6 +4,7 @@ from django.urls import path
 
 from runs.views import (
     RunCancelView,
+    RunCandidateListView,
     RunCollectionView,
     RunDetailView,
     RunLedgerView,
@@ -20,4 +21,5 @@ urlpatterns = [
     path("<int:pk>/retry-failed/", RunRetryFailedView.as_view(), name="runs-retry-failed"),
     path("<int:pk>/ledger/", RunLedgerView.as_view(), name="runs-ledger"),
     path("<int:pk>/shards/", RunShardView.as_view(), name="runs-shards"),
+    path("<int:pk>/candidates/", RunCandidateListView.as_view(), name="runs-candidates"),
 ]

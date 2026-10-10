@@ -436,6 +436,34 @@ paths:
               schema: { $ref: "#/components/schemas/PaginatedRunShardList" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /api/runs/{id}/candidates/:
+    get:
+      operationId: runs_candidates
+      tags: [runs]
+      summary: Danh sách candidate và evidence chi tiết theo QC run (CR-108)
+      x-labelx-trace: [FR-AGG-01, FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Cursor"
+        - name: page_size
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: engine
+          in: query
+          schema: { type: string }
+        - name: family
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trang candidate, có số dedup_count và raw_count nullable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedCandidateList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/ranking/:
     get:
       operationId: runs_ranking
@@ -1471,6 +1499,18 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/RunShard" }
+    PaginatedCandidateList:
+      type: object
+      description: Danh sách candidate phân trang theo run
+      required: [results, dedup_count]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        raw_count: { type: integer, nullable: true }
+        dedup_count: { type: integer }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Candidate" }
     LedgerEntry:
       type: object
       description: |
