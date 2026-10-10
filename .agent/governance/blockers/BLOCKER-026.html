@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-026: Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02 — LabelX</title>
+<meta name="labelx:id" content="blocker-026">
+<meta name="labelx:title" content="Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, t-025, m-02, metrics]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-026</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>blocker-026</span><b>title</b><span>Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, t-025, m-02, metrics]</span><b>priority</b><span>3</span></div>
+<h1 id="blocker-026">BLOCKER-026: Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Blocker ID</strong>: <code>BLOCKER-026</code></li>
+<li><strong>Title</strong>: <code>Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung (Product Owner chốt hoãn hay thêm endpoint); thực hiện: @ducha180104</code></li>
+<li><strong>Reporter</strong>: <code>claude-code (label-x-f5), theo yêu cầu của PO</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Blocker Type</strong>: <code>decision</code></li>
+<li><strong>Priority</strong>: <code>3</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Target Resolution Date</strong>: <code>2026-10-14</code> (hết M-02)</li>
+</ul>
+<h2 id="blocking-condition">Blocking Condition</h2>
+<p>Phạm vi T-025 (issue #67) có hạng mục <em>Metric queue/shard</em>. PR #93 mới có hàm <code>run_metrics()</code> và log có cấu trúc (<code>shard committed</code>, <code>run progress</code>); chưa xuất endpoint hay Prometheus vì repo chưa có nền metrics và thêm endpoint sẽ đổi <code>docs/04-api/openapi.yaml</code> (cần change request). PO đã chấp nhận hoãn để merge T-025, với điều kiện hạng mục này được theo dõi tới cuối M-02.</p>
+<p><strong>Cảnh báo cuối M-02:</strong> không đóng M-02 (2026-10-14) hoặc đợt R-001 khi blocker này còn <code>open</code> mà chưa có quyết định ghi lại. Reviewer của <code>labelx-flow-review</code> phải kiểm blocker này trước khi merge <code>develop</code> → <code>main</code>.</p>
+<p>Bằng chứng: https://github.com/toilatrung/label-x/issues/67#issuecomment-6093054275; PR #93; <code>src/backend/orchestration/services.py</code> (<code>run_metrics</code>).</p>
+<h2 id="impact">Impact</h2>
+<ul>
+<li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (không chặn merge T-025, T-027; chỉ chặn việc coi hạng mục Metric của T-025 là hoàn tất và đóng M-02)</li>
+<li><strong>Blocked Deliverables</strong>: quan sát queue/shard của QC Run ngoài log</li>
+<li><strong>Schedule or Quality Impact</strong>: vận hành chưa theo dõi được độ trễ queue và shard lỗi bằng số liệu; log có cấu trúc là biện pháp tạm</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Records</strong>: <code>.agent/execution/task-board.html</code>, <code>.agent/planning/milestones.html</code>, <code>.agent/reports/implementation/T-025-@ducha180104.html</code></li>
+<li><strong>Issues</strong>: <code>#67, #57</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-012.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>cần CR nếu thêm endpoint làm đổi docs/04-api/openapi.yaml</code></li>
+</ul>
+<h2 id="resolution-plan">Resolution Plan</h2>
+<ul>
+<li><strong>Required Action</strong>: PO chọn một trong hai và ghi vào decision record hoặc CR: (a) hoãn sang task/CR riêng có mã và hạn rõ ràng; (b) cho phép thêm endpoint nội bộ hoặc exporter Prometheus (kèm CR đổi <code>openapi.yaml</code>, chạy <code>make gen-api</code>). Sau đó cập nhật task T-025 và issue #67.</li>
+<li><strong>Responsible Owner</strong>: <code>@toilatrung (quyết định); @ducha180104 (thực hiện)</code></li>
+<li><strong>Dependency or Approval</strong>: <code>PO chấp thuận; CR nếu đổi contract</code></li>
+<li><strong>Workaround</strong>: <code>log có cấu trúc và run_metrics() gọi trong code; không dùng làm bằng chứng nghiệm thu metric</code></li>
+<li><strong>Verification Method</strong>: Decision/CR được liên kết vào đây; nếu chọn (b), có test và <code>git diff --exit-code src/frontend/src/lib/api/contract.d.ts</code> sau <code>make gen-api</code>.</li>
+</ul>
+<h2 id="resolution-record">Resolution Record</h2>
+<ul>
+<li><strong>Resolved Date</strong>: <code>pending</code></li>
+<li><strong>Evidence</strong>: <code>pending</code></li>
+<li><strong>Note</strong>: PO chấp nhận hoãn ngày 2026-10-10 để T-025 (PR #93) được merge; blocker này nhắc hoàn thiện trước cuối M-02.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
+<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not mark status <code>resolved</code> based only on a proposed action.</li>
+<li>Do not continue blocked work through an unauthorized workaround.</li>
+<li>Do not omit affected epic or task links.</li>
+<li>Do not fabricate resolution evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/blockers/BLOCKER-026.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

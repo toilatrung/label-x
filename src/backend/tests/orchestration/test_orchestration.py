@@ -32,17 +32,26 @@ from orchestration.services import (
     seed_ledger,
 )
 from orchestration.tasks import execute_shard, run_engine_shard
+from tests.orchestration.helpers import make_run
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
 ENGINE = "fake"
+RUN = 0  # id QCRun thật, gán bởi fixture autouse
+
+
+@pytest.fixture(autouse=True)
+def _real_run(db):
+    global RUN
+    RUN = make_run().pk
 
 
 def units(*frames: int) -> tuple[EngineUnitRef, ...]:
     return tuple(EngineUnitRef("frame", FrameKey(1, f)) for f in frames)
 
 
-def make_input(shard: int, frames: tuple[int, ...], run_id: int = 7) -> EngineInput:
+def make_input(shard: int, frames: tuple[int, ...], run_id: int | None = None) -> EngineInput:
+    run_id = run_id or RUN
     return EngineInput(
         idempotency_key=f"key-{run_id}-{shard}",
         run_id=run_id,
@@ -77,7 +86,8 @@ def make_output(inp: EngineInput, candidates=(), outcome="completed") -> EngineO
     )
 
 
-def snapshot_state(run_id: int = 7) -> tuple[int, int, int, list]:
+def snapshot_state(run_id: int | None = None) -> tuple[int, int, int, list]:
+    run_id = run_id or RUN
     return (
         ShardCommit.objects.filter(run_id=run_id).count(),
         CandidateRecord.objects.filter(run_id=run_id).count(),
@@ -88,7 +98,7 @@ def snapshot_state(run_id: int = 7) -> tuple[int, int, int, list]:
 
 def test_commit_is_idempotent_for_same_key():
     inp = make_input(0, (0, 1))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     out = make_output(inp, [candidate(0)])
     assert commit_shard_output(inp, out) is True
     before = snapshot_state()
@@ -98,25 +108,25 @@ def test_commit_is_idempotent_for_same_key():
 
 def test_crash_mid_commit_rolls_back_then_retry_writes_once():
     inp = make_input(0, (0, 1))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     out = make_output(inp, [candidate(0)])
     with mock.patch.object(services, "_apply_unit_results", side_effect=RuntimeError("boom")):
         with pytest.raises(RuntimeError):
             commit_shard_output(inp, out)
     assert snapshot_state()[:2] == (0, 0)
-    assert ledger_counts(7, ENGINE).pending == 2
+    assert ledger_counts(RUN, ENGINE).pending == 2
     assert commit_shard_output(inp, out) is True
     assert snapshot_state()[:2] == (1, 1)
-    assert ledger_counts(7, ENGINE).completed == 2
+    assert ledger_counts(RUN, ENGINE).completed == 2
 
 
 def test_dedup_across_shards_keeps_one_candidate_regardless_of_object_order():
     a, b = make_input(0, (0,)), make_input(1, (1,))
-    seed_ledger(7, ENGINE, a.units + b.units)
+    seed_ledger(RUN, ENGINE, a.units + b.units)
     assert dedup_key(candidate(0, ("a", "b"))) == dedup_key(candidate(0, ("b", "a")))
     commit_shard_output(a, make_output(a, [candidate(0), candidate(0, ("b", "a"))]))
     commit_shard_output(b, make_output(b, [candidate(1)]))
-    assert CandidateRecord.objects.filter(run_id=7).count() == 2
+    assert CandidateRecord.objects.filter(run_id=RUN).count() == 2
 
 
 def test_policy_version_changes_dedup_key():
@@ -127,28 +137,28 @@ def test_policy_version_changes_dedup_key():
 
 def test_ledger_total_invariant_and_failed_stays_in_denominator():
     a, b = make_input(0, (0, 1)), make_input(1, (2,))
-    seed_ledger(7, ENGINE, a.units + b.units)
-    assert ledger_counts(7, ENGINE).total == 3
+    seed_ledger(RUN, ENGINE, a.units + b.units)
+    assert ledger_counts(RUN, ENGINE).total == 3
     commit_shard_output(a, make_output(a))
     mark_shard_failed(b, attempts=4)
-    counts = ledger_counts(7, ENGINE)
+    counts = ledger_counts(RUN, ENGINE)
     assert (counts.total, counts.eligible, counts.completed, counts.failed) == (3, 3, 2, 1)
     assert counts.coverage == pytest.approx(2 / 3)
     # retry-failed: cùng key chạy lại được và không đổi tổng
     assert commit_shard_output(b, make_output(b)) is True
-    counts = ledger_counts(7, ENGINE)
+    counts = ledger_counts(RUN, ENGINE)
     assert (counts.total, counts.completed, counts.failed) == (3, 3, 0)
 
 
 def test_seed_is_idempotent():
     inp = make_input(0, (0, 1))
-    assert seed_ledger(7, ENGINE, inp.units) == 2
-    assert seed_ledger(7, ENGINE, inp.units) == 0
+    assert seed_ledger(RUN, ENGINE, inp.units) == 2
+    assert seed_ledger(RUN, ENGINE, inp.units) == 0
 
 
 def test_output_must_cover_exactly_shard_units():
     inp = make_input(0, (0, 1))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     short = make_output(make_input(0, (0,)))
     short = EngineOutput(inp.idempotency_key, ENGINE, "1.0.0", (), short.unit_results)
     with pytest.raises(ShardOutputError):
@@ -205,32 +215,59 @@ def test_ac02_forced_shard_failure_then_retry_keeps_counts(settings):
 
     reg.register(desc, flaky)
     inp = make_input(0, (0, 1))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     with pytest.raises(ConnectionError):
         execute_shard(inp, engines=reg)
     assert snapshot_state()[:2] == (0, 0)
     assert execute_shard(inp, engines=reg) is True
     assert execute_shard(inp, engines=reg) is False  # worker chạy lại sau ack muộn
     assert snapshot_state()[:2] == (1, 1)
-    metrics = run_metrics(7)
+    metrics = run_metrics(RUN)
     assert metrics["shards_committed"] == 1 and metrics["ledger"][ENGINE]["completed"] == 2
 
 
 def test_task_marks_failed_on_permanent_error():
     inp = make_input(0, (0,))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     with pytest.raises(LookupError):  # engine chưa đăng ký
         run_engine_shard.apply(args=[engine_input_to_payload(inp)]).get()
-    assert ledger_counts(7, ENGINE).failed == 1
+    assert ledger_counts(RUN, ENGINE).failed == 1
 
 
 def test_task_retries_with_backoff_then_fails_when_exhausted():
     inp = make_input(0, (0,))
-    seed_ledger(7, ENGINE, inp.units)
+    seed_ledger(RUN, ENGINE, inp.units)
     with (
         mock.patch("orchestration.tasks.execute_shard", side_effect=ConnectionError("x")),
         mock.patch("orchestration.tasks.default_policy", return_value=RetryPolicy(max_retries=0)),
     ):
         with pytest.raises(ConnectionError):
             run_engine_shard.apply(args=[engine_input_to_payload(inp)]).get()
-    assert ledger_counts(7, ENGINE).failed == 1
+    assert ledger_counts(RUN, ENGINE).failed == 1
+
+
+def test_run_id_attname_compat_for_readers_and_writers():
+    """T-027/T-030 đọc/ghi bằng `run_id=`: FK không được phá cách dùng cũ."""
+    inp = make_input(0, (0,))
+    seed_ledger(RUN, ENGINE, inp.units)
+    commit_shard_output(inp, make_output(inp, [candidate(0)]))
+    assert CandidateRecord.objects.filter(run_id=RUN).get().run_id == RUN
+    assert LedgerUnit.objects.filter(run_id=RUN, engine=ENGINE).count() == 1
+    shard = ShardCommit.objects.get(run_id=RUN)
+    row = LedgerUnit.objects.create(
+        run_id=RUN, engine="other", kind="frame", cvat_task_id=1, frame_number=0
+    )
+    assert row.run_id == shard.run_id == RUN
+
+
+def test_builtin_registration_is_idempotent():
+    from orchestration.builtin_engines import register_builtin_engines
+    from orchestration.registry import registry
+
+    register_builtin_engines(registry)
+    register_builtin_engines(registry)
+    assert [d.name for d in registry.descriptors()].count("duplicate") == 1
+
+
+def test_auto_dispatch_disabled_in_tests(settings):
+    assert settings.ORCHESTRATION_AUTO_DISPATCH is False

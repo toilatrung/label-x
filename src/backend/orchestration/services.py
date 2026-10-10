@@ -172,7 +172,7 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
     logger.info(
         "shard committed",
         extra={
-            "run_id": run_id,
+            "qc_run_id": run_id,
             "engine": engine_input.engine,
             "shard_index": engine_input.shard_index,
             "candidates": len(output.candidates),
