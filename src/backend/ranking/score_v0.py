@@ -168,8 +168,8 @@ def _contribution(candidate: Mapping[str, object]) -> IssueContribution:
     family = _required_string(candidate, "family")
     anchor = _required_mapping(candidate, "anchor")
     objects = anchor.get("objects")
-    if not isinstance(objects, list):
-        raise ValueError("candidate.anchor.objects must be a list")
+    if not isinstance(objects, Sequence) or isinstance(objects, (str, bytes)):
+        raise ValueError("candidate.anchor.objects must be an array")
     anchor_count = len(objects)
     if family in {"E1", "E2"}:
         n_i, q_i = 1, _confidence(candidate)

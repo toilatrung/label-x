@@ -38,6 +38,14 @@ def annotations() -> dict[str, Any]:
                 "occluded": True,
                 "z_order": 1,
             },
+            {
+                "id": 13,
+                "type": "rectangle",
+                "frame": 0,
+                "label_id": 4,
+                "points": [11, 21, 111, 121],
+                "attributes": [{"spec_id": 8, "value": "moving"}],
+            },
         ],
         "tracks": [],
     }
@@ -83,7 +91,7 @@ def test_normalized_snapshot_matches_shared_v1_fixture() -> None:
     )
 
     assert payload == json.loads(FIXTURE.read_text(encoding="utf-8"))
-    assert digest == "957b2efbf6e62f1a627e15e5a502871d46485a41a1b8eee28c21d506cafa9217"
+    assert digest == "c612367cd6b4ac81d0fb8b27fca80d79291fa6d0fc827849b67a8802de1ab278"
 
 
 def test_two_unchanged_exports_have_identical_job_and_snapshot_sha256() -> None:
@@ -132,7 +140,7 @@ def test_non_bbox_shapes_are_skipped_and_counted_by_type_including_tracks() -> N
 
     result = normalize_job(job_export(payload))
 
-    assert result.rectangle_count == 3
+    assert result.rectangle_count == 4
     assert result.skipped_shape_counts == {
         "ellipse": 1,
         "points": 1,

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-031: random audit and control ranking — LabelX</title>
+<meta name="labelx:id" content="implementation-t-031-vietanhhhhhh2003">
+<meta name="labelx:title" content="Implementation Report T-031: random audit and control ranking">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="ranking">
+<meta name="labelx:tags" content="[implementation, report, t-031, e-11, ranking, m-02]">
+<meta name="labelx:priority" content="1">
+<style>body{max-width:1000px;margin:24px auto;padding:0 24px;font:15px/1.55 system-ui;color:#1a1d23;background:#f6f7f9}article{padding:8px 32px 28px;background:#fff;border:1px solid #e3e6ea}code{background:#f3f4f6;padding:1px 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e3e6ea;padding:6px;text-align:left;vertical-align:top}th{background:#f3f4f6}</style></head><body><article>
+<div><b>id</b> implementation-t-031-vietanhhhhhh2003 · <b>type</b> report · <b>priority</b> 1</div>
+<h1 id="t-031">Implementation Report T-031: random audit and control ranking</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi nhận bằng chứng triển khai backend T-031 (E-11, issue #73): random audit slice, control ranking, giải thích điểm, persistence/API runs và E2E M-02 trên fixture BDD100K.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-031-@vietanhhhhhh2003</code></li><li><strong>Title</strong>: <code>Random audit slice, separate control rankings, score explanation and M-02 seam</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-031</code></li><li><strong>Epic ID</strong>: <code>E-11</code></li><li><strong>Report Date</strong>: <code>2026-10-10</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>deterministic ceil(r% × N) audit sampling; random, annotation-count and max-confidence controls with separate sources and canonical hashes; JSON-safe score explanation; immutable idempotent database persistence; GET /api/runs/{id}/ranking/ with risk/random queues, filters and dataset RBAC; OpenAPI response metadata; BDD100K snapshot → real duplicate engine → score/control reproducibility test.</code></li><li><strong>Not Implemented</strong>: <code>frontend AuditSampling, owned separately by @tdt2112.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/backend/ranking/sampling.py</code></td><td>Pure immutable policies for seeded audit sampling, three source-separated control orderings, canonical SHA-256 hashes and score explanations.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/ranking/__init__.py</code></td><td>Expose the T-031 ranking policy boundary to downstream runs/API integration.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/tests/test_sampling.py</code></td><td>Reproducibility, source separation, heuristic order, JSON explanation, validation and BDD100K engine-to-ranking seam tests.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/runs/models.py</code>, <code>runs/migrations/0004_run_ranking.py</code></td><td>Persist five source-separated orderings and frame entries with scores, explanations, hashes and uniqueness constraints.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/runs/ranking.py</code></td><td>Transactional score/persist service; identical retry is idempotent and changed normalized content fails closed.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/runs/views.py</code>, <code>serializers.py</code>, <code>urls.py</code></td><td>Serve the persisted risk/random-audit queues with authoritative run dataset scope, cursor pagination and response hashes.</td><td>T-031</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>Expose baseline, score version, source, explanation, content hash and ranking hash in the ranking response contract.</td><td>T-031</td></tr>
+<tr><td><code>src/backend/tests/runs/test_ranking.py</code></td><td>PostgreSQL-backed idempotency, cross-run reproducibility, conflict, endpoint, queue, filter, 404 and IDOR tests.</td><td>T-031</td></tr>
+<tr><td><code>.agent/execution/task-board-@vietanhhhhhh2003.html</code></td><td>CR-100 status, acceptance evidence, dependency and report link.</td><td>T-031</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>GitHub issue #73; .agent/execution/task-board-@vietanhhhhhh2003.html</code></li><li><strong>Context Packages</strong>: <code>none</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@vietanhhhhhh2003.html</code></li><li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li><li><strong>Decisions</strong>: <code>FR-RNK-03, FR-RNK-05, FR-RNK-07, FR-RNK-08 in docs/01-business/requirements.html</code></li><li><strong>Change Requests</strong>: <code>CR-100, CR-103, CR-104 as referenced by issue #73</code></li><li><strong>Risks or Blockers</strong>: <code>none; T-024 merged at cc5ac12 before real API integration</code></li><li><strong>Review Request</strong>: <code>PR #92 open; pending independent reviewer and approval</code></li><li><strong>Commits</strong>: <code>5ba9a5f — feat(ranking): implement random audit and control ranking (T-031, Refs #73)</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>git fetch origin --prune; git merge origin/develop</code></td><td>passed</td><td><code>Fast-forward to cc5ac12, including merged T-024 / PR #89.</code></td></tr>
+<tr><td><code>pytest -q tests/runs/test_ranking.py tests/test_sampling.py tests/test_score_v0.py tests/runs/test_runs.py</code></td><td>passed</td><td><code>33 passed in 17.09s</code></td></tr>
+<tr><td><code>ruff check; ruff format --check; mypy runs ranking</code></td><td>passed</td><td><code>All checks passed; 16 files formatted; no issues in 14 source files.</code></td></tr>
+<tr><td><code>python manage.py makemigrations --check --dry-run</code></td><td>passed</td><td><code>No changes detected.</code></td></tr>
+<tr><td><code>make infra-up &amp;&amp; DATABASE_URL=postgres://labelx:***@localhost:5432/labelx make check</code></td><td>passed</td><td><code>Backend 360 passed, 1 skipped; frontend 138 passed; detector 10 passed; FRAMEWORK_VALIDATION_PASS.</code></td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Seeded random audit slice is independent of risk/input order</td><td>passed</td><td><code>test_random_audit_slice_is_repeatable_and_independent_from_risk_order</code></td></tr>
+<tr><td>Control rankings retain separate source and content hash</td><td>passed</td><td><code>test_control_rankings_have_separate_sources_and_reproducible_hashes</code></td></tr>
+<tr><td>Score explanation is JSON-safe and retains contribution details</td><td>passed</td><td><code>test_score_explanation_is_json_safe_and_preserves_contributions</code></td></tr>
+<tr><td>Same normalized content produces identical engine output, content hash and ranking hash</td><td>passed</td><td><code>test_bdd100k_snapshot_fixture_to_score_and_controls_is_reproducible</code></td></tr>
+<tr><td>Two persisted runs with identical snapshot/config/seed/version reproduce all five source hashes</td><td>passed</td><td><code>test_persistence_is_idempotent_and_reproducible_across_runs</code></td></tr>
+<tr><td>Risk/random endpoint returns persisted explanation and rejects cross-dataset access</td><td>passed</td><td><code>test_ranking_endpoint_serves_risk_and_random_with_scope_protection</code></td></tr>
+<tr><td>Whole repository quality gate on PostgreSQL port 5432</td><td>passed</td><td><code>Ruff/format, mypy (94 files), frontend lint/typecheck, backend/frontend/detector tests and framework validation all passed.</code></td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: <code>none; implementation was rebased by fast-forward onto merged T-024 before adding persistence/API.</code></li><li><strong>Approved By</strong>: <code>not applicable</code></li><li><strong>Known Limitations</strong>: <code>frontend AuditSampling is owned separately by @tdt2112; review_state/origin filters currently expose engine-created, unreviewed ranking rows until the review aggregate lands; the BDD100K fixture executes the real duplicate engine but contains no duplicate pair.</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every reported change maps to T-031.</li><li>[x] Acceptance results and automated evidence are linked.</li><li>[x] Deviations and limitations are explicit.</li><li>[x] Full build, lint, typecheck and tests are recorded.</li><li>[x] Independent reviewer handoff is identified as pending.</li><li>[x] Git Nexus update is deferred until a commit exists.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Do not treat this implementation report as independent review approval.</li><li>Do not mutate a persisted ranking when normalized content or ordering hashes differ.</li><li>Do not mix random/control sources into the risk ordering.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Saved at <code>.agent/reports/implementation/T-031-@vietanhhhhhh2003.html</code>.</li><li>All required template sections and table columns are preserved.</li><li>HTML only, per CR-103.</li></ul>
+</article></body></html>
