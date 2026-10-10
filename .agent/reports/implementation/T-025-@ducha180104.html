@@ -66,7 +66,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>src/backend/config/settings.py, scripts/init-develop-environment.mk</code></td><td>Đăng ký app; thêm orchestration vào mypy</td><td>T-025</td></tr>
 </tbody></table>
 <h2 id="related-files">Related Files</h2>
-<ul><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Decisions</strong>: DEC-012, BLOCKER-014/BLOCKER-025</li><li><strong>Review Request</strong>: pending</li><li><strong>Commits</strong>: xem PR</li></ul>
+<ul><li><strong>Task Board</strong>: <code>.agent/execution/task-board-@ducha180104.html</code></li><li><strong>Decisions</strong>: DEC-012, BLOCKER-014/BLOCKER-025</li><li><strong>Risks or Blockers</strong>: <a href="../../governance/blockers/BLOCKER-026.html">BLOCKER-026</a> (metric queue/shard chờ PO chốt, hạn 2026-10-14)</li><li><strong>Review Request</strong>: pending</li><li><strong>Commits</strong>: xem PR</li></ul>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>pytest tests/orchestration</code></td><td>passed</td><td>26 passed (unit + tích hợp WorkUnit/QCRun, tương thích run_id, đăng ký idempotent)</td></tr>
