@@ -32,6 +32,10 @@ def refresh_run(run_id: int) -> None:
                 continue
             finished = not any(u.engine == result.engine and u.status in _OPEN for u in units)
             result.status = public_status(ledger, finished=finished).value
+            reasons = ledger.not_checked_reasons
+            result.reason = (
+                max(sorted(reasons), key=lambda r: reasons[r]).value if reasons else None
+            )
             result.eligible_units = ledger.eligible
             result.completed_units = ledger.completed
             result.failed_units = ledger.failed
@@ -39,6 +43,7 @@ def refresh_run(run_id: int) -> None:
             result.save(
                 update_fields=[
                     "status",
+                    "reason",
                     "eligible_units",
                     "completed_units",
                     "failed_units",
@@ -48,7 +53,7 @@ def refresh_run(run_id: int) -> None:
         logger.info(
             "run progress",
             extra={
-                "run_id": run_id,
+                "qc_run_id": run_id,
                 "shards_open": sum(u.status in _OPEN for u in units),
                 "shards_failed": sum(u.status == WorkUnit.Status.FAILED for u in units),
                 "shards_total": len(units),

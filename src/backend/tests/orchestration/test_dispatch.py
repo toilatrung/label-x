@@ -172,3 +172,17 @@ def test_duplicate_engine_registered_and_runs_on_snapshot(inline_queue):
     assert run.status == QCRun.Status.COMPLETED
     candidates = CandidateRecord.objects.filter(run_id=run.pk)
     assert candidates.count() == 1 and candidates.get().family
+
+
+def test_engine_result_reason_from_ledger_not_checked(run_setup: QCRun, inline_queue):
+    # Ledger not_checked do engine ghi (T-027): kiểm refresh_run gán lý do vào EngineResult.
+    from orchestration.models import LedgerUnit
+    from orchestration.runsync import refresh_run
+
+    dispatch_run(run_setup.pk)  # seed ledger, chạy fake_engine không đăng ký -> failed
+    LedgerUnit.objects.filter(run_id=run_setup.pk, engine=ENGINE).update(
+        outcome="not_checked", not_checked_reason="no_reference"
+    )
+    refresh_run(run_setup.pk)
+    result = run_setup.engine_results.get(engine=ENGINE)
+    assert result.status == "not_checked" and result.reason == "no_reference"
