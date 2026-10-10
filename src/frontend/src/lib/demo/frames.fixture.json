@@ -1,0 +1,147 @@
+{
+  "run_id": 1,
+  "snapshot_id": 1,
+  "score_version": "score_v0",
+  "next": null,
+  "items": [
+    {
+      "frame_id": 101,
+      "rank": 1,
+      "score": 0.87,
+      "file_name": "0001.jpg",
+      "width": 1280,
+      "height": 720,
+      "image_url": "/api/runs/1/frames/101/image/",
+      "cvat": {
+        "task_id": 23,
+        "job_id": 20,
+        "frame": 0,
+        "deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=0"
+      },
+      "shapes": [
+        {
+          "id": "s1",
+          "label": "car",
+          "bbox": [
+            100,
+            200,
+            400,
+            420
+          ]
+        },
+        {
+          "id": "s2",
+          "label": "car",
+          "bbox": [
+            110,
+            205,
+            405,
+            425
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "id": "c1",
+          "engine": "duplicate_overlap",
+          "rule_id": "DUP-01",
+          "family": "E3",
+          "severity": "high",
+          "shape_ids": [
+            "s1",
+            "s2"
+          ],
+          "message": "IoU 0.93 giữa hai box cùng lớp",
+          "evidence": {
+            "iou": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "frame_id": 102,
+      "rank": 2,
+      "score": 0.41,
+      "file_name": "0002.jpg",
+      "width": 1280,
+      "height": 720,
+      "image_url": "/api/runs/1/frames/102/image/",
+      "cvat": {
+        "task_id": 23,
+        "job_id": 20,
+        "frame": 1,
+        "deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=1"
+      },
+      "shapes": [
+        {
+          "id": "s3",
+          "label": "person",
+          "bbox": [
+            1270,
+            10,
+            1300,
+            60
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "id": "c2",
+          "engine": "geometry",
+          "rule_id": "GEO-01",
+          "family": "structural",
+          "severity": "medium",
+          "shape_ids": [
+            "s3"
+          ],
+          "message": "Box vượt ngoài ảnh",
+          "evidence": {
+            "overflow_px": 20
+          }
+        }
+      ]
+    },
+    {
+      "frame_id": 103,
+      "rank": 3,
+      "score": 0.0,
+      "file_name": "0003.jpg",
+      "width": 1280,
+      "height": 720,
+      "image_url": "/api/runs/1/frames/103/image/",
+      "cvat": {
+        "task_id": 23,
+        "job_id": 20,
+        "frame": 2,
+        "deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=2"
+      },
+      "shapes": [
+        {
+          "id": "s4",
+          "label": "traffic light",
+          "bbox": [
+            50,
+            50,
+            80,
+            120
+          ]
+        }
+      ],
+      "candidates": []
+    }
+  ],
+  "engines": [
+    {
+      "engine": "duplicate_overlap",
+      "status": "checked"
+    },
+    {
+      "engine": "geometry",
+      "status": "checked"
+    },
+    {
+      "engine": "schema_taxonomy",
+      "status": "not_checked"
+    }
+  ]
+}

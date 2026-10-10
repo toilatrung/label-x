@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-DEMO01 — Demo lát cắt dọc nạp dữ liệu → review workspace — LabelX</title>
+<meta name="labelx:id" content="M-DEMO01">
+<meta name="labelx:title" content="M-DEMO01 — Demo lát cắt dọc nạp dữ liệu đến review workspace">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="planning">
+<meta name="labelx:module" content="demo">
+<meta name="labelx:tags" content="[milestone, demo]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / M-DEMO01</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>M-DEMO01</span><b>title</b><span>Demo lát cắt dọc</span><b>type</b><span>planning</span><b>branch</b><span>develop-demo (từ develop)</span><b>owner</b><span>Trịnh Quang Trung (@toilatrung)</span></div>
+<h1 id="m-demo01">M-DEMO01 — Demo lát cắt dọc: nạp dữ liệu thật → QC → review workspace</h1>
+<blockquote>Milestone <strong>demo tạm thời</strong>, ngoài lộ trình R-001. Không thay thế M-02/M-03. Code nằm trên nhánh <code>develop-demo</code>; không merge vào <code>develop</code>/<code>main</code> nếu chưa có change request và review đầy đủ. Mọi code demo phải đánh dấu <code>DEMO-ONLY</code>.</blockquote>
+<h2 id="outcome">Outcome</h2>
+<p>Trong khoảng 1h30 dựng được luồng: nạp dữ liệu thật từ CVAT → snapshot bất biến → chạy các engine có sẵn và engine tạm → <code>score_v0</code> xếp hạng frame → màn <code>/review</code> xem frame theo hạng, thấy candidate lỗi trên ảnh, mở CVAT bằng deep link.</p>
+<table><thead><tr><th>Milestone ID</th><th>Status</th><th>Target</th><th>Phụ thuộc</th><th>Acceptance Evidence</th></tr></thead><tbody>
+<tr><td><code>M-DEMO01</code></td><td><code>in-progress</code></td><td><code>2026-10-10</code> (timebox 90 phút)</td><td>T-019 (dữ liệu CVAT), T-020/T-021 (snapshot), T-023, T-028, T-030</td><td>Chạy từ đầu trên máy local theo <code>scripts/development/run-local.sh</code>: tạo snapshot từ CVAT thật, tạo run, mở <code>/review</code> thấy danh sách frame theo hạng và candidate trên ảnh.</td></tr>
+</tbody></table>
+<h2 id="tasks">Tasks</h2>
+<table><thead><tr><th>Task ID</th><th>Title</th><th>Status</th><th>Phạm vi</th></tr></thead><tbody>
+<tr><td><code>D-01</code></td><td>Dữ liệu thật: bật CVAT, nạp mẫu, tạo snapshot qua API</td><td><code>pending</code></td><td>Dùng <code>make cvat-up</code>, <code>cvat-import-sample</code>, <code>POST /api/snapshots/</code>. Không sửa adapter (chỉ đọc).</td></tr>
+<tr><td><code>D-02</code></td><td>Runner demo: chạy engine trên snapshot, chấm score_v0</td><td><code>pending</code></td><td>Management command; Duplicate/Overlap có sẵn + engine tạm Geometry, Schema/Taxonomy; idempotent; ghi <code>EngineResult</code>.</td></tr>
+<tr><td><code>D-03</code></td><td>API đọc: hạng frame, candidate, URL ảnh</td><td><code>pending</code></td><td><code>GET</code> theo run; kiểm quyền project/job ở API.</td></tr>
+<tr><td><code>D-04</code></td><td>Màn <code>/review</code>: danh sách theo hạng, ảnh có box, deep link CVAT</td><td><code>pending</code></td><td>Class <code>lx-*</code>; không lease/quyết định review.</td></tr>
+<tr><td><code>D-05</code></td><td>Chạy thử end-to-end và ghi bản ghi</td><td><code>pending</code></td><td><code>run-local.sh</code>, ghi report vào <code>.agent/reports/</code>.</td></tr>
+</tbody></table>
+<h2 id="out-of-scope">Out of scope</h2>
+<ul><li>Lease, hàng đợi nhiều reviewer, quyết định xác nhận/bác lỗi, phân xử, rework (M-03).</li>
+<li>Detector E1/E2, reference, hiệu chỉnh (M-04); KPI và Quality Gate (M-05).</li>
+<li>Ghi annotation sang CVAT (ranh giới cứng: adapter chỉ đọc).</li></ul>
+<h2 id="rules">Quy tắc</h2>
+<ul><li>Nhánh <code>develop-demo</code> tạo từ <code>develop</code>; không dùng làm base cho PR vào <code>develop</code>.</li>
+<li>Celery/runner phải idempotent; quyền kiểm ở API.</li>
+<li>Engine tạm ghi rõ <code>DEMO-ONLY</code> và không được coi là engine chính thức của E-09.</li></ul>
+<h2 id="progress">Progress Notes</h2>
+<ul><li>2026-10-10: tạo M-DEMO01 theo yêu cầu của người dùng; nhánh <code>develop-demo</code>.</li></ul>
+</article></main></body></html>

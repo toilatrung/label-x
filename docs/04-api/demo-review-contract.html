@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hợp đồng demo review — LabelX</title>
+<meta name="labelx:id" content="demo-review-contract">
+<meta name="labelx:title" content="Hợp đồng demo review — GET /api/runs/{id}/frames">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="planning">
+<meta name="labelx:module" content="demo">
+<meta name="labelx:tags" content="[demo, api, contract]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / planning / demo-review-contract</span><span class="sp"></span></header>
+<main><article>
+<h1>Hợp đồng demo review (M-DEMO01)</h1>
+<blockquote>DEMO-ONLY. Chốt một lần để Nam (D-01, D-03) và Việt Anh (D-02, D-04) làm song song. Đổi hợp đồng phải báo cả hai và ghi vào Progress Notes của M-DEMO01.</blockquote>
+<h2>Nguyên tắc để không chờ nhau</h2>
+<ul><li><strong>Không có bảng mới để lưu hạng.</strong> API (D-03) tính hạng khi đọc: lấy <code>CandidateRecord</code> của run, gọi <code>ranking.score_v0.rank_frames</code> trên mọi frame của snapshot. Nhờ đó D-03 không phụ thuộc cách D-02 lưu dữ liệu.</li>
+<li><strong>Nguồn dữ liệu có sẵn trên develop</strong>: <code>SnapshotFrame.shapes</code> (shape + ảnh), <code>orchestration.CandidateRecord</code> (candidate, evidence), <code>runs.EngineResult</code> (trạng thái engine). Orchestrator (T-025) và engine Schema/Geometry (T-027) đã có.</li>
+<li><strong>Fixture dùng chung</strong>: <code>src/frontend/src/lib/demo/frames.fixture.json</code>. D-04 làm UI hoàn toàn trên fixture; D-03 trả đúng hình dạng fixture.</li></ul>
+<h2>GET /api/runs/{run_id}/frames</h2>
+<p>Query: <code>cursor</code>, <code>page_size</code> (mặc định 50). Quyền: Reviewer / QA Lead / Super Admin có scope dataset của run; vai trò khác 403. Chưa đăng nhập 401.</p>
+<table><thead><tr><th>Trường</th><th>Kiểu</th><th>Nguồn</th></tr></thead><tbody>
+<tr><td><code>items[].frame_id</code></td><td>int</td><td><code>SnapshotFrame.id</code></td></tr>
+<tr><td><code>items[].rank</code>, <code>score</code></td><td>int, number</td><td><code>rank_frames</code> (score_v0), thứ tự rank tăng dần</td></tr>
+<tr><td><code>items[].file_name/width/height</code></td><td>string/int</td><td><code>SnapshotFrame</code></td></tr>
+<tr><td><code>items[].image_url</code></td><td>string</td><td><code>/api/runs/{id}/frames/{frame_id}/image/</code> (API phát ảnh từ storage; không lộ storage key)</td></tr>
+<tr><td><code>items[].cvat</code></td><td>{task_id, job_id, frame, deep_link}</td><td><code>SnapshotJob</code> + cấu hình URL CVAT</td></tr>
+<tr><td><code>items[].shapes[]</code></td><td>{id, label, bbox:[x1,y1,x2,y2]} (px ảnh)</td><td><code>SnapshotFrame.shapes</code></td></tr>
+<tr><td><code>items[].candidates[]</code></td><td>{id, engine, rule_id, family, severity, shape_ids[], message, evidence}</td><td><code>CandidateRecord</code></td></tr>
+<tr><td><code>engines[]</code></td><td>{engine, status: checked|failed|not_checked}</td><td><code>EngineResult</code></td></tr>
+<tr><td><code>score_version</code>, <code>next</code></td><td>string, cursor|null</td><td>—</td></tr>
+</tbody></table>
+<h2>GET /api/runs/{run_id}/frames/{frame_id}/image/</h2>
+<p>Trả bytes ảnh (<code>Content-Type</code> theo <code>media_mime_type</code>), cùng quyền như trên; 404 nếu frame không thuộc snapshot của run.</p>
+<h2>Phân công theo hợp đồng</h2>
+<table><thead><tr><th>Task</th><th>Làm gì</th><th>Kiểm bằng</th></tr></thead><tbody>
+<tr><td>D-01 (Nam)</td><td>Dữ liệu CVAT → snapshot thật</td><td>Snapshot locked; ghi snapshot_id</td></tr>
+<tr><td>D-03 (Nam)</td><td>Hai endpoint trên</td><td>Test API với factory (snapshot + CandidateRecord) — không cần D-02</td></tr>
+<tr><td>D-02 (Việt Anh)</td><td>Đăng ký engine Geometry + Schema/Taxonomy vào registry; lệnh tạo run và chạy đồng bộ trên snapshot</td><td>Test có sẵn; chạy trên snapshot fixture <code>fixtures/normalized-snapshot-v1.json</code> — không cần D-01</td></tr>
+<tr><td>D-04 (Việt Anh)</td><td>Màn <code>/review</code></td><td>Chạy trên <code>frames.fixture.json</code> — không cần D-03</td></tr>
+<tr><td>D-05 (cả hai)</td><td>Ghép thật và chạy thử</td><td>Sau khi các task trên xong</td></tr>
+</tbody></table>
+</article></main></body></html>
