@@ -1,0 +1,705 @@
+{
+  "schema_version": "labelx.m03.contract-fixture.v1",
+  "fixture_id": "m03-review-workflow-v1",
+  "as_of": "2026-10-10T06:00:00Z",
+  "materializer": "fixtures.m03_review_workflow.materialize_scenario",
+  "purpose": "Shared contract fixture for M-03 queue, review, escalation, rework and final-lineage tasks.",
+  "baseline": {
+    "git_sha": "b57626f735565ce0dafb0c219e25bc25da1f0163",
+    "openapi": "docs/04-api/openapi.yaml",
+    "state_machines": "docs/04-api/state-machines.html",
+    "rbac_matrix": "docs/04-api/rbac-matrix.html",
+    "contract_matrix": "docs/04-api/m03-contract-model-fixture-matrix.html",
+    "unapproved_contract_deltas_implemented": false
+  },
+  "policy_proposals": {
+    "lease": {
+      "source": ["TBD-09", "DEC-002", "BLOCKER-008", "FR-REV-04"],
+      "decision_status": "requires_product_owner_decision",
+      "ttl_seconds": null,
+      "renewal_trigger": "activity",
+      "incomplete_reservation_seconds": null,
+      "note": "Trial values must be configuration, not hard-coded contract defaults."
+    },
+    "effort_idle": {
+      "source": ["TBD-11", "FR-EVL-06"],
+      "decision_status": "requires_product_owner_decision",
+      "t_idle_seconds": null,
+      "note": "The collector records activity; the approved policy decides excluded idle time."
+    }
+  },
+  "domain_ownership": {
+    "candidate_record": "orchestration.models.CandidateRecord",
+    "candidate_evidence": "orchestration.models.CandidateRecord.evidence",
+    "review_issue": "review.models.Issue (owned by T-035; not implemented by T-032)",
+    "review_decision": "review.models.ReviewDecision (owned by T-035; append-only)",
+    "decision_case": "review.models.DecisionCase (owned by T-038; versioned)",
+    "rule": "CandidateRecord is the immutable engine output. Issue references one candidate/evidence source or stores reviewer-origin evidence; it must not create a second candidate table."
+  },
+  "identities": [
+    {
+      "user_id": 701,
+      "person_key": "person-reviewer-a",
+      "role": "reviewer",
+      "dataset_id": 42,
+      "cvat_user_id": 1701,
+      "mapped": true
+    },
+    {
+      "user_id": 702,
+      "person_key": "person-annotator-a",
+      "role": "annotator",
+      "dataset_id": 42,
+      "cvat_user_id": 1702,
+      "mapped": true
+    },
+    {
+      "user_id": 703,
+      "person_key": "person-reviewer-a",
+      "role": "reviewer",
+      "dataset_id": 42,
+      "cvat_user_id": 1703,
+      "mapped": true,
+      "note": "Second account for the same natural person; used by separation-of-duties tests."
+    },
+    {
+      "user_id": 704,
+      "person_key": "person-qa-lead-a",
+      "role": "qa_lead",
+      "dataset_id": 42,
+      "cvat_user_id": 1704,
+      "mapped": true
+    },
+    {
+      "user_id": 705,
+      "person_key": "person-reviewer-b",
+      "role": "reviewer",
+      "dataset_id": 42,
+      "cvat_user_id": null,
+      "mapped": false
+    },
+    {
+      "user_id": 706,
+      "person_key": "person-annotator-a",
+      "role": "reviewer",
+      "dataset_id": 42,
+      "cvat_user_id": 1706,
+      "mapped": true,
+      "note": "Reviewer account owned by the same natural person as annotator 702; used only to prove verify separation-of-duties denial."
+    }
+  ],
+  "snapshot": {
+    "id": 320,
+    "dataset_id": 42,
+    "status": "locked",
+    "revision_sha256": "sha256:fixture-snapshot-revision-v1",
+    "taxonomy_version": "bdd100k-labelx-v1",
+    "guideline_version": "bdd100k-guideline-v1",
+    "jobs": [
+      {
+        "cvat_job_id": 20,
+        "cvat_task_id": 23,
+        "assignee_user_id": 702,
+        "job_hash": "sha256:fixture-job-20-v1"
+      },
+      {
+        "cvat_job_id": 21,
+        "cvat_task_id": 24,
+        "assignee_user_id": 701,
+        "job_hash": "sha256:fixture-job-21-v1"
+      }
+    ]
+  },
+  "run": {
+    "id": 330,
+    "snapshot_id": 320,
+    "dataset_id": 42,
+    "status": "completed",
+    "is_final": false,
+    "origin_run_id": null,
+    "score_version": "score_v0",
+    "scope_hash": "sha256:fixture-scope-42-v1"
+  },
+  "frames": [
+    {
+      "id": 340,
+      "run_id": 330,
+      "frame_key": {"cvat_task_id": 23, "frame_number": 5},
+      "cvat_job_id": 20,
+      "snapshot_assignee_user_id": 702,
+      "rank": 1,
+      "queue": "risk",
+      "review_state": "in_review",
+      "missing_evidence": false,
+      "image_url": "https://object-storage.invalid/fixtures/frame-340.jpg",
+      "width": 1280,
+      "height": 720,
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=5"
+    },
+    {
+      "id": 341,
+      "run_id": 330,
+      "frame_key": {"cvat_task_id": 24, "frame_number": 8},
+      "cvat_job_id": 21,
+      "snapshot_assignee_user_id": 701,
+      "rank": 2,
+      "queue": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "image_url": "https://object-storage.invalid/fixtures/frame-341.jpg",
+      "width": 1280,
+      "height": 720,
+      "cvat_deep_link": "http://localhost:8080/tasks/24/jobs/21?frame=8"
+    },
+    {
+      "id": 342,
+      "run_id": 330,
+      "frame_key": {"cvat_task_id": 23, "frame_number": 13},
+      "cvat_job_id": 20,
+      "snapshot_assignee_user_id": 702,
+      "rank": 17,
+      "queue": "random",
+      "review_state": "incomplete",
+      "missing_evidence": false,
+      "previous_reviewer_user_id": 701,
+      "image_url": "https://object-storage.invalid/fixtures/frame-342.jpg",
+      "width": 1280,
+      "height": 720,
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=13"
+    },
+    {
+      "id": 343,
+      "run_id": 330,
+      "frame_key": {"cvat_task_id": 23, "frame_number": 21},
+      "cvat_job_id": 20,
+      "snapshot_assignee_user_id": 702,
+      "rank": 29,
+      "queue": "risk",
+      "review_state": "awaiting_followup",
+      "missing_evidence": true,
+      "image_url": "https://object-storage.invalid/fixtures/frame-343.jpg",
+      "width": 1280,
+      "height": 720,
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=21"
+    }
+  ],
+  "leases": [
+    {
+      "id": 350,
+      "frame_id": 340,
+      "holder_user_id": 701,
+      "expires_at": "2026-10-10T06:30:00Z",
+      "fixture_state": "active"
+    },
+    {
+      "id": 351,
+      "frame_id": 342,
+      "holder_user_id": 701,
+      "expires_at": "2026-10-10T05:30:00Z",
+      "fixture_state": "expired_with_saved_decision"
+    }
+  ],
+  "engine_statuses": [
+    {
+      "frame_id": 340,
+      "engine": "duplicate",
+      "status": "completed",
+      "reason": null
+    },
+    {
+      "frame_id": 343,
+      "engine": "detector",
+      "status": "failed",
+      "reason": "engine_error"
+    }
+  ],
+  "shard_commits": [
+    {
+      "id": 8901,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "de94e3e69bdc08d2d5ca032c99a98e152ab7e41f05679606cd71a047b2485017",
+      "engine": "duplicate",
+      "engine_version": "duplicate-v1",
+      "shard_index": 0,
+      "output_sha256": "cb113aab4955b098ad10130bf72240726bf7e7fcc7f3cba41d7fc7b8aa453aec",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    },
+    {
+      "id": 8902,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "7518e58fde98592700b60f866da16d960412866a447e3380e2e36e0786a4db39",
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "shard_index": 1,
+      "output_sha256": "6d2fa90f5ee535430b7ac174bd3f2c07dd8afe18de4b0899239d4170272f4690",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    },
+    {
+      "id": 8903,
+      "run_id": 330,
+      "snapshot_id": 320,
+      "idempotency_key": "6365b32d7564a800b75aa54a5abdbf24940d5e0bccd3e86d0fb04ce5bbcf07a3",
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "shard_index": 2,
+      "output_sha256": "5c0bb32be8b07ffd474c86130c38d744a2eb69e4de6f4ce23864faa22f661614",
+      "attempts": 1,
+      "committed_at": "2026-10-10T04:00:00Z"
+    }
+  ],
+  "candidate_records": [
+    {
+      "id": 8801,
+      "run_id": 330,
+      "engine": "duplicate",
+      "engine_version": "duplicate-v1",
+      "family": "E3",
+      "cvat_task_id": 23,
+      "frame_number": 5,
+      "dedup_key": "3bebda0256a938888dab89c309c0e98f1afb05c5015f5d28ec48373fb962e661",
+      "evidence_sha256": "99e10425dc5fb212d306beb9286da7bb5b056288af1ed843d26624c5b19c375a",
+      "evidence": {
+        "engine": "duplicate",
+        "rule_id": "DUP-001",
+        "expected": "one annotation per object",
+        "actual": "two annotations overlap at IoU 0.91",
+        "prediction_bbox": null,
+        "prediction_class": null,
+        "confidence": null,
+        "iou": 0.91
+      },
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:501"
+          },
+          {
+            "namespace": "cvat_shape",
+            "id": "20:502"
+          }
+        ],
+        "rule_id": "DUP-001",
+        "bbox": {
+          "x1": 90.0,
+          "y1": 120.0,
+          "x2": 260.0,
+          "y2": 330.0
+        },
+        "policy_version": "duplicate-iou-0.85-v1"
+      },
+      "policy_version": "duplicate-iou-0.85-v1",
+      "shard_id": 8901
+    },
+    {
+      "id": 8802,
+      "run_id": 330,
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "family": "E2",
+      "cvat_task_id": 23,
+      "frame_number": 13,
+      "dedup_key": "5258c86ae70a0dcd048704be474f939fecfc68695166603f68dea0d3ae7cbfb0",
+      "evidence_sha256": "bc34d76f2d9959c763d9e4b16f90d9c68d210a97c527c2ae2d785950e3ecadf2",
+      "evidence": {
+        "engine": "detector",
+        "rule_id": "CLS-002",
+        "expected": "car",
+        "actual": "truck",
+        "prediction_bbox": {
+          "x1": 420.0,
+          "y1": 180.0,
+          "x2": 590.0,
+          "y2": 410.0
+        },
+        "prediction_class": "car",
+        "confidence": 0.88,
+        "iou": 0.93
+      },
+      "anchor": {
+        "kind": "annotation",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:610"
+          }
+        ],
+        "rule_id": "CLS-002",
+        "bbox": {
+          "x1": 420.0,
+          "y1": 180.0,
+          "x2": 590.0,
+          "y2": 410.0
+        },
+        "policy_version": "class-matching-v1"
+      },
+      "policy_version": "class-matching-v1",
+      "shard_id": 8902
+    },
+    {
+      "id": 8803,
+      "run_id": 330,
+      "engine": "detector",
+      "engine_version": "detector-v1",
+      "family": "E2",
+      "cvat_task_id": 23,
+      "frame_number": 21,
+      "dedup_key": "201d14dc58d554a4d37ee1a004dd8a41c8512492db16d1dcdc98e855e46e33af",
+      "evidence_sha256": "42b91055b182181c6fb1d8a15a094138d1f444715a7b97be68a2b900cc5a2742",
+      "evidence": {
+        "engine": "detector",
+        "rule_id": "CLS-002",
+        "expected": "car",
+        "actual": "truck",
+        "prediction_bbox": {
+          "x1": 310.0,
+          "y1": 140.0,
+          "x2": 470.0,
+          "y2": 390.0
+        },
+        "prediction_class": "car",
+        "confidence": 0.81,
+        "iou": 0.9
+      },
+      "anchor": {
+        "kind": "annotation",
+        "objects": [
+          {
+            "namespace": "cvat_shape",
+            "id": "20:711"
+          }
+        ],
+        "rule_id": "CLS-002",
+        "bbox": {
+          "x1": 310.0,
+          "y1": 140.0,
+          "x2": 470.0,
+          "y2": 390.0
+        },
+        "policy_version": "class-matching-v1"
+      },
+      "policy_version": "class-matching-v1",
+      "shard_id": 8903
+    }
+  ],
+  "issues": [
+    {
+      "id": 360,
+      "frame_id": 340,
+      "candidate_record_id": 8801,
+      "family": "E3",
+      "origin": "engine",
+      "state": "in_review",
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {"namespace": "cvat_shape", "id": "20:501"},
+          {"namespace": "cvat_shape", "id": "20:502"}
+        ],
+        "rule_id": "DUP-001",
+        "bbox": {"x1": 90.0, "y1": 120.0, "x2": 260.0, "y2": 330.0},
+        "policy_version": "duplicate-iou-0.85-v1"
+      },
+      "n_i": 1,
+      "q_i": 0.91,
+      "severity": null,
+      "rule_ids": ["DUP-001"],
+      "evidence": [
+        {
+          "engine": "duplicate",
+          "rule_id": "DUP-001",
+          "expected": "one annotation per object",
+          "actual": "two annotations overlap at IoU 0.91",
+          "prediction_bbox": null,
+          "prediction_class": null,
+          "confidence": null,
+          "iou": 0.91
+        }
+      ],
+      "links": [],
+      "review_decisions": []
+    },
+    {
+      "id": 361,
+      "frame_id": 342,
+      "candidate_record_id": 8802,
+      "family": "E2",
+      "origin": "engine",
+      "state": "fix_pending",
+      "anchor": {
+        "kind": "annotation",
+        "objects": [{"namespace": "cvat_shape", "id": "20:610"}],
+        "rule_id": "CLS-002",
+        "bbox": {"x1": 420.0, "y1": 180.0, "x2": 590.0, "y2": 410.0},
+        "policy_version": "class-matching-v1"
+      },
+      "n_i": 1,
+      "q_i": 0.84,
+      "severity": "medium",
+      "rule_ids": ["CLS-002"],
+      "evidence": [
+        {
+          "engine": "detector",
+          "rule_id": "CLS-002",
+          "expected": "car",
+          "actual": "truck",
+          "prediction_bbox": {"x1": 420.0, "y1": 180.0, "x2": 590.0, "y2": 410.0},
+          "prediction_class": "car",
+          "confidence": 0.88,
+          "iou": 0.93
+        }
+      ],
+      "links": [],
+      "review_decisions": [
+        {
+          "id": 370,
+          "issue_id": 361,
+          "actor_user_id": 701,
+          "actor_role": "reviewer",
+          "decision": "confirm",
+          "revision": "sha256:fixture-snapshot-revision-v1",
+          "reason": "Wrong class confirmed against rule CLS-002.",
+          "rule_ids": ["CLS-002"],
+          "reference_version": null,
+          "reference_match_status": "not_evaluated",
+          "reference_error_ids": [],
+          "recorded_at": "2026-10-10T05:20:00Z"
+        }
+      ]
+    },
+    {
+      "id": 362,
+      "frame_id": 343,
+      "candidate_record_id": 8803,
+      "family": "E2",
+      "origin": "engine",
+      "state": "recheck_pending",
+      "anchor": {
+        "kind": "annotation",
+        "objects": [{"namespace": "cvat_shape", "id": "20:711"}],
+        "rule_id": "CLS-002",
+        "bbox": {"x1": 310.0, "y1": 140.0, "x2": 470.0, "y2": 390.0},
+        "policy_version": "class-matching-v1"
+      },
+      "n_i": 1,
+      "q_i": 0.79,
+      "severity": "medium",
+      "rule_ids": ["CLS-002"],
+      "evidence": [
+        {
+          "engine": "detector",
+          "rule_id": "CLS-002",
+          "expected": "car",
+          "actual": "truck",
+          "prediction_bbox": {"x1": 310.0, "y1": 140.0, "x2": 470.0, "y2": 390.0},
+          "prediction_class": "car",
+          "confidence": 0.81,
+          "iou": 0.9
+        }
+      ],
+      "links": [],
+      "review_decisions": [
+        {
+          "id": 371,
+          "issue_id": 362,
+          "actor_user_id": 701,
+          "actor_role": "reviewer",
+          "decision": "confirm",
+          "revision": "sha256:fixture-snapshot-revision-v1",
+          "reason": "Wrong class confirmed against rule CLS-002.",
+          "rule_ids": ["CLS-002"],
+          "reference_version": null,
+          "reference_match_status": "not_evaluated",
+          "reference_error_ids": [],
+          "recorded_at": "2026-10-10T05:25:00Z"
+        }
+      ]
+    }
+  ],
+  "recheck_runs": [
+    {
+      "id": 331,
+      "origin_run_id": 330,
+      "snapshot_revision": "sha256:fixture-snapshot-revision-v2",
+      "status": "completed",
+      "completed_at": "2026-10-10T07:00:00Z"
+    }
+  ],
+  "rework_requests": [
+    {
+      "id": 380,
+      "issue_id": 361,
+      "annotator_user_id": 702,
+      "status": "fix_pending",
+      "original_revision": "sha256:fixture-snapshot-revision-v1",
+      "submitted_revision": null,
+      "recheck_run_id": null,
+      "due_at": "2026-10-11T10:00:00Z",
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=13"
+    },
+    {
+      "id": 381,
+      "issue_id": 362,
+      "annotator_user_id": 702,
+      "status": "recheck_pending",
+      "original_revision": "sha256:fixture-snapshot-revision-v1",
+      "submitted_revision": "sha256:fixture-snapshot-revision-v2",
+      "recheck_run_id": 331,
+      "due_at": "2026-10-11T10:00:00Z",
+      "cvat_deep_link": "http://localhost:8080/tasks/23/jobs/20?frame=21"
+    }
+  ],
+  "effort_events": [
+    {
+      "client_event_id": "00000000-0000-4000-8000-000000000391",
+      "frame_id": 340,
+      "activity": "review_issue",
+      "started_at": "2026-10-10T05:10:00Z",
+      "ended_at": "2026-10-10T05:12:00Z"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "queue-allowed-risk-claim",
+      "category": "allowed",
+      "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
+      "actor_user_id": 701,
+      "as_of": "2026-10-10T06:31:00Z",
+      "request": {"path_params": {"name": "risk"}, "body": {"run_id": 330}},
+      "expected": {"status": 200, "frame_id": 340, "resumed": false}
+    },
+    {
+      "id": "queue-self-review-skipped",
+      "as_of": "2026-10-10T06:31:00Z",
+      "category": "denial",
+      "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
+      "actor_user_id": 701,
+      "request": {"path_params": {"name": "risk"}, "body": {"run_id": 330}},
+      "fixture_scope_frame_ids": [341],
+      "fixture_frame_id": 341,
+      "expected": {"status": 204, "reason": "self_review_frame_is_not_claimable"}
+    },
+    {
+      "id": "queue-missing-identity",
+      "as_of": "2026-10-10T06:31:00Z",
+      "category": "denial",
+      "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
+      "actor_user_id": 705,
+      "request": {"path_params": {"name": "random"}, "body": {"run_id": 330}},
+      "expected": {"status": 403, "error_code": "IDENTITY_MAPPING_MISSING"}
+    },
+    {
+      "id": "lease-second-tab-resume",
+      "category": "resume",
+      "operation": {"method": "post", "path": "/api/queues/{name}/next/"},
+      "actor_user_id": 701,
+      "as_of": "2026-10-10T06:00:00Z",
+      "request": {"path_params": {"name": "risk"}, "body": {"run_id": 330}},
+      "expected": {"status": 200, "lease_id": 350, "frame_id": 340, "resumed": true}
+    },
+    {
+      "id": "lease-expired-renew",
+      "as_of": "2026-10-10T06:31:00Z",
+      "category": "expiry",
+      "operation": {"method": "post", "path": "/api/leases/{id}/renew/"},
+      "actor_user_id": 701,
+      "request": {"path_params": {"id": 351}},
+      "expected": {"status": 409, "error_code": "LEASE_CONFLICT", "frame_state": "incomplete", "saved_decisions_preserved": true}
+    },
+    {
+      "id": "frame-engine-failure-visible",
+      "as_of": "2026-10-10T06:31:00Z",
+      "category": "engine_failure",
+      "operation": {"method": "get", "path": "/api/frames/{id}/issues/"},
+      "actor_user_id": 701,
+      "request": {"path_params": {"id": 343}},
+      "expected": {"status": 200, "missing_evidence": true, "engine": "detector", "engine_status": "failed"}
+    },
+    {
+      "id": "rework-revision-unchanged",
+      "as_of": "2026-10-10T06:31:00Z",
+      "category": "revision",
+      "operation": {"method": "post", "path": "/api/rework/{id}/submitted/"},
+      "actor_user_id": 702,
+      "request": {"path_params": {"id": 380}, "body": {"cvat_revision": "sha256:fixture-snapshot-revision-v1"}},
+      "expected": {"status": 409, "error_code": "REVISION_UNCHANGED", "rework_status": "fix_pending"}
+    },
+    {
+      "id": "rework-same-person-verifier",
+      "as_of": "2026-10-10T07:01:00Z",
+      "category": "denial",
+      "operation": {"method": "post", "path": "/api/rework/{id}/verify/"},
+      "actor_user_id": 706,
+      "request": {"path_params": {"id": 381}, "body": {"passed": true, "revision": "sha256:fixture-snapshot-revision-v2"}},
+      "expected": {"status": 403, "error_code": "SAME_REQUESTER_APPROVER"}
+    }
+  ],
+  "contract_gaps": [
+    {
+      "id": "M03-D01",
+      "capability": "Queue list with holder, review state, source, filters and cursor pagination",
+      "current_source": "GET /api/runs/{id}/ranking/ provides rank, queue filter and review_state only",
+      "proposed_operation": {"method": "get", "path": "/api/queues/{name}/"},
+      "implementation_owner": "T-033 backend; T-034 consumer",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_approved_change_request",
+      "approved": false
+    },
+    {
+      "id": "M03-D02",
+      "capability": "Workspace media plus complete annotation and prediction overlays for the snapshot revision",
+      "current_source": "GET /api/frames/{id}/issues/ provides image_url and issue evidence but not complete overlays",
+      "proposed_operation": {"method": "get", "path": "/api/frames/{id}/workspace/"},
+      "implementation_owner": "T-035 backend; T-037 consumer",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_approved_change_request",
+      "approved": false
+    },
+    {
+      "id": "M03-D03",
+      "capability": "Versioned Decision Case lookup",
+      "current_source": "POST adjudication returns case_version; no Decision Case read operation exists",
+      "proposed_operation": {"method": "get", "path": "/api/decision-cases/{id}/"},
+      "implementation_owner": "T-038 backend; T-039 consumer",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_approved_change_request",
+      "approved": false
+    },
+    {
+      "id": "M03-D04",
+      "capability": "Scoped rework list and detail for annotator and verifier",
+      "current_source": "POST create/submitted/verify exist; no GET list or detail exists",
+      "proposed_operation": {"method": "get", "path": "/api/rework/"},
+      "additional_proposed_operation": {"method": "get", "path": "/api/rework/{id}/"},
+      "implementation_owner": "T-040 backend; T-042 consumer",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_approved_change_request",
+      "approved": false
+    },
+    {
+      "id": "M03-D05",
+      "capability": "Verification lineage and selected final source for history screens",
+      "current_source": "QCRun exposes is_final and origin_run_id but no verification lineage or selected final source",
+      "proposed_operation": {"method": "get", "path": "/api/runs/{id}/lineage/"},
+      "implementation_owner": "T-041 backend; T-042 consumer",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_approved_change_request",
+      "approved": false
+    },
+    {
+      "id": "M03-D06",
+      "capability": "Read-only approved lease and effort policy values",
+      "current_source": "TBD-09 and TBD-11 are unresolved; no approved configuration response exists",
+      "proposed_operation": {"method": "get", "path": "/api/config/review-policies/"},
+      "implementation_owner": "T-033 lease policy; T-036 effort policy",
+      "decision_owner": "Product Owner",
+      "decision_status": "requires_product_owner_decision_then_change_request",
+      "approved": false
+    }
+  ]
+}

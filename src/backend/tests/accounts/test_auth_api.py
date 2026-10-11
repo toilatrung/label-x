@@ -259,3 +259,28 @@ def test_error_codes_match_contract() -> None:
     from config.serializers import ERROR_CODES
 
     assert ERROR_CODES == CONTRACT["components"]["schemas"]["ErrorCode"]["enum"]
+
+
+# ---------------------------------------------------------------------------- CSRF phân biệt được
+
+
+def test_login_csrf_failure_is_marked_csrf(client: APIClient, reviewer: User) -> None:
+    response = login(client, "reviewer1")
+    assert_error(response, 403, "FORBIDDEN")
+    assert response.json()["details"] == {"reason": "csrf"}
+
+
+def test_authenticated_write_csrf_failure_is_marked_csrf(client: APIClient, reviewer: User) -> None:
+    assert login(client, "reviewer1", token=csrf(client)).status_code == 200
+    response = client.post("/api/snapshots/", {}, format="json")
+    assert_error(response, 403, "FORBIDDEN")
+    assert response.json()["details"] == {"reason": "csrf"}
+
+
+def test_permission_denied_is_not_marked_csrf(client: APIClient, reviewer: User) -> None:
+    token = csrf(client)
+    assert login(client, "reviewer1", token=token).status_code == 200
+    token = str(client.cookies["csrftoken"].value)
+    response = client.post("/api/snapshots/", {}, format="json", HTTP_X_CSRFTOKEN=token)
+    assert response.status_code in (400, 403)
+    assert "reason" not in response.json()["details"]

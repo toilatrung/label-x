@@ -50,11 +50,14 @@ function preflight(root = ROOT, platform = process.platform, environment = proce
     }
   }
   const frontendFile = path.join(root, 'src/frontend/.env.local');
-  if (fs.existsSync(frontendFile)) {
-    const current = values(fs.readFileSync(frontendFile, 'utf8'));
-    if (current.NEXT_PUBLIC_API_BASE_URL !== 'http://localhost:8000/api') {
-      throw Error('Frontend API URL differs from bundled local setup. Review it manually; the file was preserved.');
-    }
+  const current = fs.existsSync(frontendFile) ? values(fs.readFileSync(frontendFile, 'utf8')) : {};
+  // Next prefers process.env over .env.local, so check the effective values.
+  // Default is the Next proxy (same origin). Direct calls and proxy targets must stay on the bundled local API.
+  const direct = environment.NEXT_PUBLIC_API_BASE_URL ?? current.NEXT_PUBLIC_API_BASE_URL;
+  const target = environment.LABELX_API_PROXY_TARGET ?? current.LABELX_API_PROXY_TARGET;
+  if ((direct !== undefined && !/^http:\/\/(localhost|127\.0\.0\.1):8000\/api$/.test(direct)) ||
+    (target !== undefined && !/^http:\/\/(localhost|127\.0\.0\.1):8000$/.test(target))) {
+    throw Error('Frontend API URL differs from bundled local setup. Review it manually; the file was preserved.');
   }
   if (environment.COMPOSE_FILE || environment.COMPOSE_PROJECT_NAME || environment.DOCKER_HOST || environment.DOCKER_CONTEXT) {
     throw Error('Unset custom Compose/Docker environment overrides before bundled local setup.');
