@@ -1,0 +1,54 @@
+{
+  "issue": "FE-01 (#147)",
+  "title": "Quality Control Home and Quality Summary",
+  "branch": "feat/feat/FE-01-home-quality-summary",
+  "base": "develop-fe",
+  "baseline_sha": "9a214fb8e0d3409d4c3e52e548fa3fdb7ea02e61",
+  "browser_run": {
+    "timestamp": "2026-10-11T22:47:08.420Z",
+    "duration_seconds": 36,
+    "unintended_writes_count": 0,
+    "accounts_tested": [
+      "fe01_qalead",
+      "fe01_no_dataset"
+    ],
+    "viewports": [
+      1440,
+      390
+    ],
+    "total_actions": 47,
+    "total_network_requests": 649,
+    "error_findings_count": 0
+  },
+  "data_context": {
+    "dataset_id": 2,
+    "dataset_name": "BDD100K 100-frame validation subset",
+    "project_id": 2,
+    "task_id": 1,
+    "job_id": 1,
+    "frames": 100,
+    "annotations": 2006,
+    "user_account": "fe01_qalead",
+    "user_role": "qa_lead"
+  },
+  "verification_suite": {
+    "make_check": "exit 0",
+    "backend_tests": "603 passed, 1 skipped",
+    "frontend_tests": "355 passed across 34 files",
+    "detector_tests": "10 passed",
+    "framework_status": "FRAMEWORK_VALIDATION_PASS",
+    "production_build": "BUILD_ID=FZ6rgrLJq52_4Vl4-MCJL"
+  },
+  "review_artifacts": [
+    "ref-home-1440.png",
+    "ref-home-390.png",
+    "ref-summary-1440.png",
+    "ref-summary-390.png",
+    "live-home-1440.png",
+    "live-home-390.png",
+    "live-summary-1440.png",
+    "live-summary-390.png",
+    "menu-proof-1440.png",
+    "menu-proof-390.png"
+  ]
+}

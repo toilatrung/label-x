@@ -53,6 +53,7 @@ body {
 
 .lx-app-content { flex: 1; width: 100%; max-width: 1440px; margin: 0 auto; padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); }
 .lx-app-content > .lx-page { padding: 0; width: 100%; }
+main.lx-page { width: 100%; box-sizing: border-box; }
 .lx-flow__label { display: inline-flex; align-items: center; gap: var(--space-3); background: var(--surface); padding-right: var(--space-4); position: relative; z-index: 1; color: var(--ink-muted); }
 .lx-flow__step.is-active .lx-flow__label { color: var(--ink); font-weight: 600; }
 .lx-rule-lookup { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
