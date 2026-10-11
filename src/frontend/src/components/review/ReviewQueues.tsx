@@ -30,20 +30,18 @@ export function ReviewQueues() {
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
-  // Run ID selection: URL is the single source of truth for activeRunId
+  // Run ID selection: URL is the source of truth, bound to the dataset context
   const runParam = searchParams.get('run');
-  const activeRunId =
+  const parsedRunId =
     runParam && /^\d+$/.test(runParam.trim()) && Number(runParam) > 0
       ? Number(runParam)
       : null;
 
-  // Local form input state; synced with runParam without setState inside useEffect
-  const [runInput, setRunInput] = useState<string>(activeRunId ? String(activeRunId) : '');
+  // Track dataset binding and selected run
+  const [boundDatasetId, setBoundDatasetId] = useState<number | null>(datasetId);
+  const [selectedRunId, setSelectedRunId] = useState<number | null>(parsedRunId);
+  const [runInput, setRunInput] = useState<string>(parsedRunId ? String(parsedRunId) : '');
   const [prevRunParam, setPrevRunParam] = useState(runParam);
-  if (runParam !== prevRunParam) {
-    setPrevRunParam(runParam);
-    setRunInput(activeRunId ? String(activeRunId) : '');
-  }
 
   // Queue tab selection: 'risk' vs 'random'
   const [activeQueue, setActiveQueue] = useState<QueueName>('risk');
@@ -61,24 +59,66 @@ export function ReviewQueues() {
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
   const [isLeaseConflict, setIsLeaseConflict] = useState<boolean>(false);
 
-  // Clear lease and claim context whenever effective dataset or run changes
-  const currentContext = `${datasetId}:${activeRunId}`;
-  const [contextKey, setContextKey] = useState(currentContext);
-  if (currentContext !== contextKey) {
-    setContextKey(currentContext);
+  // Track whether initial page-load dataset binding has completed
+  const [hasInitializedDataset, setHasInitializedDataset] = useState(Boolean(datasetId));
+
+  // Synchronous state adjustment during render when datasetId or URL run changes
+  // Follows official React pattern: "Adjusting some state when a prop changes"
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  const isGenuineDatasetChange = boundDatasetId !== null && datasetId !== boundDatasetId;
+  if (isGenuineDatasetChange) {
+    setBoundDatasetId(datasetId);
+    setSelectedRunId(null);
+    setRunInput('');
     setActiveGrant(null);
     setClaimStatus204(false);
     setClaimError(null);
     setRenewMessage(null);
     setIsLeaseConflict(false);
     setCursor(null);
+  } else if (!hasInitializedDataset && datasetId !== null) {
+    // Initial dataset resolution at page load: bind initial dataset and deep-linked run
+    setHasInitializedDataset(true);
+    setBoundDatasetId(datasetId);
+    if (parsedRunId) {
+      setSelectedRunId(parsedRunId);
+      setRunInput(String(parsedRunId));
+    }
+  } else if (boundDatasetId === null && datasetId !== null) {
+    // Dataset chosen after being unselected: do NOT resurrect old run from stale URL param
+    setBoundDatasetId(datasetId);
+    setSelectedRunId(null);
+    setRunInput('');
+  } else if (runParam !== prevRunParam) {
+    setPrevRunParam(runParam);
+    if (boundDatasetId === datasetId && datasetId !== null) {
+      if (parsedRunId) {
+        setSelectedRunId(parsedRunId);
+        setRunInput(String(parsedRunId));
+      } else {
+        setSelectedRunId(null);
+        setRunInput('');
+      }
+    }
   }
 
-  // Ref tracking latest context for mutation guards, updated during commit phase
-  const contextRef = useRef({ datasetId, activeRunId });
+  // Effective run ID: immediately null on dataset change until a run is chosen for the new dataset
+  const effectiveRunId = isGenuineDatasetChange ? null : selectedRunId;
+
+  // Safe side effect: clean up URL ?run parameter when dataset has changed or run is unselected
   useEffect(() => {
-    contextRef.current = { datasetId, activeRunId };
-  }, [datasetId, activeRunId]);
+    if (selectedRunId === null && runParam) {
+      startTransition(() => {
+        router.replace('/review');
+      });
+    }
+  }, [selectedRunId, runParam, router]);
+
+  // Ref tracking latest context for mutation guards, updated during commit phase
+  const contextRef = useRef({ datasetId, activeRunId: effectiveRunId });
+  useEffect(() => {
+    contextRef.current = { datasetId, activeRunId: effectiveRunId };
+  }, [datasetId, effectiveRunId]);
 
   // Reset pagination cursor when queue or filters change
   const handleQueueChange = (queue: QueueName) => {
@@ -103,6 +143,8 @@ export function ReviewQueues() {
       const parsed = Number(trimmed);
       if (parsed > 0) {
         setCursor(null);
+        setSelectedRunId(parsed);
+        setBoundDatasetId(datasetId);
         startTransition(() => {
           router.push(`/review?run=${parsed}`);
         });
@@ -116,9 +158,9 @@ export function ReviewQueues() {
   // that the run belongs to the currently selected dataset; backend RBAC (HasRoleAndDatasetScope)
   // remains the sole authority for scoping and access control.
   const runQuery = useQuery({
-    queryKey: ['review', 'run', activeRunId],
-    queryFn: ({ signal }) => getRunDetails(activeRunId!, signal),
-    enabled: Boolean(activeRunId && activeRunId > 0 && datasetId),
+    queryKey: ['review', 'run', datasetId, effectiveRunId],
+    queryFn: ({ signal }) => getRunDetails(effectiveRunId!, signal),
+    enabled: Boolean(effectiveRunId && effectiveRunId > 0 && datasetId),
   });
 
   // 2. Fetch Ranking data for active queue & filters.
@@ -128,7 +170,7 @@ export function ReviewQueues() {
       'review',
       'ranking',
       datasetId,
-      activeRunId,
+      effectiveRunId,
       activeQueue,
       filters.family,
       filters.origin,
@@ -136,7 +178,7 @@ export function ReviewQueues() {
       cursor,
     ],
     queryFn: ({ signal }) =>
-      getRunRanking(activeRunId!, {
+      getRunRanking(effectiveRunId!, {
         queue: activeQueue,
         family: filters.family,
         origin: filters.origin,
@@ -146,8 +188,8 @@ export function ReviewQueues() {
       }),
     enabled: Boolean(
       datasetId &&
-        activeRunId &&
-        activeRunId > 0 &&
+        effectiveRunId &&
+        effectiveRunId > 0 &&
         runQuery.isSuccess &&
         session?.identity_mapping.status === 'mapped'
     ),
@@ -162,11 +204,11 @@ export function ReviewQueues() {
       setIsLeaseConflict(false);
       return {
         targetDatasetId: datasetId,
-        targetRunId: activeRunId,
+        targetRunId: effectiveRunId,
       };
     },
     mutationFn: async () => {
-      return claimNextFrame(activeQueue, activeRunId!);
+      return claimNextFrame(activeQueue, effectiveRunId!);
     },
     onSuccess: (result, _variables, context) => {
       // Discard if context switched while mutation was pending
@@ -214,7 +256,7 @@ export function ReviewQueues() {
     onMutate: () => {
       return {
         targetDatasetId: datasetId,
-        targetRunId: activeRunId,
+        targetRunId: effectiveRunId,
       };
     },
     mutationFn: async (leaseId: number) => {
@@ -263,8 +305,8 @@ export function ReviewQueues() {
     setClaimError(null);
     setRenewMessage(null);
     setClaimStatus204(false);
-    queryClient.invalidateQueries({ queryKey: ['review', 'run', activeRunId] });
-    queryClient.invalidateQueries({ queryKey: ['review', 'ranking', datasetId, activeRunId] });
+    queryClient.invalidateQueries({ queryKey: ['review', 'run', datasetId, effectiveRunId] });
+    queryClient.invalidateQueries({ queryKey: ['review', 'ranking', datasetId, effectiveRunId] });
   };
 
   const nextCursor = cursorFrom(rankingQuery.data?.next);
@@ -320,17 +362,25 @@ export function ReviewQueues() {
           </div>
         )}
 
-        {runQuery.isError && (
+        {datasetId && !effectiveRunId && (
+          <div role="status" className="lx-callout lx-callout--info">
+            <div className="lx-callout__text">
+              Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra.
+            </div>
+          </div>
+        )}
+
+        {runQuery.isError && effectiveRunId && (
           <div role="alert" className="lx-callout">
             <div className="lx-callout__text">
-              Không thể tải thông tin Run #{activeRunId}: {errorMessage(runQuery.error)}
+              Không thể tải thông tin Run #{effectiveRunId}: {errorMessage(runQuery.error)}
             </div>
           </div>
         )}
       </div>
 
       {/* Claim / Active Lease Context Banner */}
-      {activeGrant && (
+      {activeGrant && effectiveRunId && (
         <section
           className="lx-card"
           style={{ borderColor: isLeaseConflict ? 'var(--danger)' : 'var(--primary)' }}
@@ -466,7 +516,7 @@ export function ReviewQueues() {
       )}
 
       {/* Review Queues Panel: Only shown when runQuery succeeds */}
-      {datasetId && activeRunId && runQuery.isSuccess && (
+      {datasetId && effectiveRunId && runQuery.isSuccess && (
         <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
           {/* Queue Selection Tabs */}
           <div className="lx-tabs" role="tablist" aria-label="Các hàng đợi kiểm tra">

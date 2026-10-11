@@ -8,11 +8,20 @@ import { installMockAuthApi } from './helpers/mock-api';
 import { toMockSession, MOCK_USERS } from '@/lib/auth/mock-users';
 import type { RankedFrame, LeaseGrant, Run } from '@/lib/review/types';
 
-const { push, replace, searchParamsState } = vi.hoisted(() => ({
-  push: vi.fn(),
-  replace: vi.fn(),
-  searchParamsState: { current: 'run=12' },
-}));
+const { push, replace, searchParamsState } = vi.hoisted(() => {
+  const state = { current: 'run=12' };
+  return {
+    push: vi.fn((url: string) => {
+      const q = url.includes('?') ? url.split('?')[1] : '';
+      state.current = q;
+    }),
+    replace: vi.fn((url: string) => {
+      const q = url.includes('?') ? url.split('?')[1] : '';
+      state.current = q;
+    }),
+    searchParamsState: state,
+  };
+});
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace }),
@@ -613,6 +622,113 @@ describe('ReviewQueues Frontend (T-034)', () => {
         expect(screen.queryByText(/Thao tác với lease cũ đã bị khóa/i)).toBeNull();
         expect(screen.queryByText(/Không thể nhận frame/i)).toBeNull();
       });
+    });
+
+    it('immediately hides old run ranking when switching dataset and loads new run upon explicit selection', async () => {
+      const reviewerUser = MOCK_USERS.find((u) => u.role === 'reviewer')!;
+      const api = installMockAuthApi();
+      await api.signIn('reviewer');
+      const originalFetch = api.fetchSpy.getMockImplementation()!;
+      const calls: Request[] = [];
+
+      const mockRiskFrame99: RankedFrame = {
+        frame_id: 990,
+        frame_key: { cvat_task_id: 99, frame_number: 200 },
+        rank: 1,
+        score: 0.95,
+        baseline_score: 0.1,
+        score_version: 'score_v0',
+        queue: 'risk',
+        source: 'risk',
+        review_state: 'unreviewed',
+        missing_evidence: false,
+        issue_counts: {},
+        explanation: { baseline: 0.1 },
+        lease_holder_user_id: null,
+      };
+
+      api.fetchSpy.mockImplementation(async (request: Request) => {
+        calls.push(request);
+        const url = new URL(request.url);
+        const path = url.pathname;
+        if (path === '/api/auth/session/') {
+          return Response.json({
+            ...toMockSession(reviewerUser),
+            roles: [
+              { role: 'reviewer', dataset_id: 1 },
+              { role: 'reviewer', dataset_id: 2 },
+            ],
+          });
+        }
+        if (path.startsWith('/api/auth/')) return originalFetch(request);
+        if (path === '/api/runs/12/') return Response.json(mockRun12);
+        if (path === '/api/runs/99/') return Response.json(mockRun99);
+        if (path === '/api/runs/12/ranking/') {
+          return Response.json({
+            next: null,
+            previous: null,
+            source: 'risk',
+            content_hash: 'c1',
+            ranking_hash: 'r1',
+            results: [mockRiskFrame1],
+          });
+        }
+        if (path === '/api/runs/99/ranking/') {
+          return Response.json({
+            next: null,
+            previous: null,
+            source: 'risk',
+            content_hash: 'c2',
+            ranking_hash: 'r2',
+            results: [mockRiskFrame99],
+          });
+        }
+        return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
+      });
+
+      const queryClient = createTestQueryClient();
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ReviewPage />
+          </AuthProvider>
+        </QueryClientProvider>
+      );
+
+      // 1. Initial load with Dataset 1 & Run 12
+      await screen.findByText('Task #10 • Frame #100');
+      expect(screen.getByText('Task #10 • Frame #100')).toBeDefined();
+
+      const callsBeforeSwitch = calls.length;
+
+      // 2. Switch dataset selector from 1 to 2
+      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      fireEvent.change(datasetSelect, { target: { value: '2' } });
+      expect((datasetSelect as HTMLSelectElement).value).toBe('2');
+
+      // 3. Old ranking/table/lease context must be immediately absent
+      expect(screen.queryByText('Task #10 • Frame #100')).toBeNull();
+      expect(screen.queryByRole('table', { name: /Bảng danh sách frame xếp hạng/i })).toBeNull();
+      expect(screen.queryByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeNull();
+      expect(
+        screen.getByText(/Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra/i)
+      ).toBeDefined();
+
+      // No new ranking or claim requests for run 12 sent under dataset 2
+      const newCallsForRun12 = calls.slice(callsBeforeSwitch).filter((c) =>
+        c.url.includes('/api/runs/12/')
+      );
+      expect(newCallsForRun12).toHaveLength(0);
+
+      // 4. Select a new run explicitly for dataset 2 (Run 99)
+      const runInput = screen.getByLabelText(/Mã QC Run/i);
+      fireEvent.change(runInput, { target: { value: '99' } });
+      const submitBtn = screen.getByRole('button', { name: /Tải hàng đợi/i });
+      fireEvent.click(submitBtn);
+
+      // 5. Assert loading and rendering new run 99 works under dataset 2
+      await screen.findByText('Task #99 • Frame #200');
+      expect(screen.getByText('Task #99 • Frame #200')).toBeDefined();
     });
   });
 
