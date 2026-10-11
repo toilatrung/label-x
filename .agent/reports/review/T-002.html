@@ -107,7 +107,7 @@ ul.dir{columns:2;font-size:14px}
 <thead><tr><th>Finding ID</th><th>Severity</th><th>Artifact</th><th>Finding</th><th>Required Action</th><th>Owner</th></tr></thead>
 <tbody>
 <tr><td><code>F-1</code></td><td><code>major</code></td><td><code>src/frontend/src/app/login/page.tsx</code></td><td>Import MOCK_USERS ở mức module làm tài khoản mẫu và mật khẩu password123 nằm trong bundle production (.next/static/chunks).</td><td>Resolved trong c86d836: route server /api/auth/mock-users (404 khi mock tắt), login chỉ fetch khi dev + mock; test Login.test.tsx, auth-config.test.ts; bước CI grep bundle.</td><td><code>@tdt2112</code></td></tr>
-<tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>.agent/intelligence/git-nexus/task-commit-map.html (task-commit-map.html đã gộp)</code></td><td>Commit map ghi "chưa push" và không có squash 2dc6fda.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
+<tr><td><code>F-2</code></td><td><code>minor</code></td><td><code>.agent/intelligence/git-nexus/task-commit-map.html (task-commit-map-@tdt2112.html đã gộp)</code></td><td>Commit map ghi "chưa push" và không có squash 2dc6fda.</td><td>Resolved trong commit integrator.</td><td><code>@toilatrung (integrator)</code></td></tr>
 <tr><td><code>F-3</code></td><td><code>observation</code></td><td><code>src/frontend/node_modules</code></td><td>node_modules cục bộ cũ (thiếu vitest) nên typecheck/test lỗi nếu không chạy npm ci.</td><td>Chạy npm ci sau khi pull; không cần đổi code.</td><td><code>mọi thành viên</code></td></tr>
 </tbody>
 </table>
