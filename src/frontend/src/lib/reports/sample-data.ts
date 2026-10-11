@@ -1,5 +1,6 @@
 // Dữ liệu minh họa lấy từ docs/design/screens/{QualityReport,QualityGate,ReleaseHistory}.dc.html (bộ số liệu chuẩn của labelx-design).
 // TODO(backend): thay toàn bộ bằng API khi có endpoint; chưa có trong contract: GET /api/runs/{id}/report/, GET /api/releases/, GET /api/releases/{id}/manifest/, POST /api/runs/{id}/report/export/, POST /api/releases/{id}/approve/.
+// TODO(backend): rbac-matrix chỉ cho Annotator xem báo cáo ở mức giới hạn; khi nối API, backend phải lọc phần dữ liệu theo vai trò (giao diện minh họa hiện hiển thị đầy đủ cho mọi vai trò).
 // Đã có trong contract nhưng chưa nối: GET /api/runs/{id}/gate/ (runs_gate), POST /api/waivers/ (waivers_create).
 
 export type BadgeTone = 'success' | 'danger' | 'warning' | 'info' | '';

@@ -56,7 +56,10 @@ export function canAccessGuidelines(role: UserRole): boolean {
   return ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
 }
 
-// Calibration & Audit: chưa có dòng riêng trong rbac-matrix; TopBar đang hiển thị cho mọi vai trò. Backend phải kiểm quyền khi nối API.
-export function canAccessCalibration(): boolean {
-  return true;
+// Calibration & Audit: rbac-matrix chưa có dòng riêng; theo cột "Calibration và Audit" của WorkflowPermissions.dc.html
+// (Annotator, Reviewer, QA Lead, QC Admin, Super Admin). Product Owner và Data/Model Owner không có cột này.
+// TODO(backend): bổ sung dòng Calibration/Audit vào rbac-matrix.html (cần change request); backend kiểm quyền và lọc dữ liệu
+// theo vai trò (Annotator chỉ thấy phần "Tham gia" của chính mình, không thấy hiệu chỉnh của reviewer khác hay frame bẫy).
+export function canAccessCalibration(role: UserRole): boolean {
+  return ['annotator', 'reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
 }
