@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { DemoRegionNotice } from './DemoRegionNotice';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { GATE_CONDITIONS, GATE_SUMMARY, WAIVER_CONDITIONS } from '@/lib/reports/sample-data';
 
 export function QualityGateBody() {
   const [condition, setCondition] = useState<string>(WAIVER_CONDITIONS[0]);
   const [reason, setReason] = useState('');
+  const [blocked, setBlocked] = useState(false);
   return (
     <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Điều kiện phát hành">
@@ -15,14 +17,14 @@ export function QualityGateBody() {
         {/* TODO(backend): GET /api/runs/{id}/gate/ (runs_gate đã có trong contract, chưa nối) */}
         <div className="lx-card__body"><DemoRegionNotice /></div>
         <div className="lx-scroll">
-          <table className="lx-table" style={{ minWidth: 720 }}>
+          <table className="lx-table lx-table--min-720">
             <thead><tr><th>Điều kiện</th><th>Kết quả</th><th>Trạng thái</th><th>Cần làm</th></tr></thead>
             <tbody>
               {GATE_CONDITIONS.map((g) => (
                 <tr key={g.name}>
                   <td className="lx-cell__main">{g.name}</td>
                   <td className="lx-muted">
-                    {g.resultStrong ? <><span className={g.resultTone} style={{ fontWeight: 600 }}>{g.resultStrong}</span>{g.resultTail}</> : g.result}
+                    {g.resultStrong ? <><span className={`${g.resultTone} lx-strong`}>{g.resultStrong}</span>{g.resultTail}</> : g.result}
                   </td>
                   <td><span className={`lx-badge${g.badge.tone ? ` lx-badge--${g.badge.tone}` : ''}`}>{g.badge.label}</span></td>
                   <td className={g.action || g.link ? undefined : 'lx-subtle'}>
@@ -39,10 +41,10 @@ export function QualityGateBody() {
         <div className="lx-card__head"><h2 className="lx-h2">Phê duyệt phát hành</h2></div>
         <div className="lx-card__body lx-stack">
           <DemoRegionNotice />
-          <p className="lx-muted" style={{ margin: 0, fontSize: 13 }}>Chưa thể phát hành vì còn 3 điều kiện chưa đạt. Hệ thống không tự quyết định phát hành.</p>
+          <p className="lx-muted lx-m-0 lx-text-13">Chưa thể phát hành vì còn 3 điều kiện chưa đạt. Hệ thống không tự quyết định phát hành.</p>
           {/* TODO(backend): POST /api/releases/{id}/approve/ */}
-          <button type="button" className="lx-btn lx-btn--primary" disabled style={{ justifyContent: 'center' }}>Phê duyệt phát hành</button>
-          <div className="lx-stack" style={{ gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+          <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled>Phê duyệt phát hành</button>
+          <div className="lx-stack lx-stack--2 lx-stack--divided">
             <span className="lx-label">Hoặc xin waiver cho điều kiện chưa đạt</span>
             <div className="lx-field">
               <label className="lx-label" htmlFor="waiver-condition">Điều kiện</label>
@@ -56,7 +58,8 @@ export function QualityGateBody() {
                 placeholder="Nêu rõ người chịu trách nhiệm và căn cứ. Mọi waiver đều được ghi vào nhật ký kiểm toán." />
             </div>
             {/* TODO(backend): POST /api/waivers/ (waivers_create đã có trong contract; chưa gọi vì chưa nối) */}
-            <button type="button" className="lx-btn" onClick={(e) => e.preventDefault()}>Gửi xin waiver</button>
+            <button type="button" className="lx-btn" onClick={() => setBlocked(true)}>Gửi xin waiver</button>
+            {blocked && <NotConnectedNotice />}
           </div>
         </div>
       </aside>

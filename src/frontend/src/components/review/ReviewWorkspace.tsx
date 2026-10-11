@@ -1153,7 +1153,7 @@ export function ReviewWorkspace({
           <div className="lx-ws__foot">
             <button
               type="button"
-              className="lx-btn lx-btn--primary lx-btn--block"
+              className="lx-btn lx-btn--primary lx-btn--fill"
               disabled={isCompleting || isMutationBlocked}
               onClick={handleCompleteFrame}
             >

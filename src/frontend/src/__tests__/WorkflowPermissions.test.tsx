@@ -64,4 +64,9 @@ describe('WorkflowPermissions (T-016, FE-09)', () => {
     await screen.findAllByText(/quyền/i);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(false);
   });
+
+  it('shows an empty row when the API returns no matrix rows', async () => {
+    await setup('qalead', () => json({ matrix: [], rules: [], user_roles: [] }));
+    expect(await screen.findByText('Chưa có ma trận phân quyền.')).toBeDefined();
+  });
 });

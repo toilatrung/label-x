@@ -232,18 +232,39 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
 });
 
 describe('Rules & Thresholds design regions (FE-09)', () => {
-  it('renders the three design tabs with sample data and a blocked save button', async () => {
+  it('renders the three design tabs with locked sample controls and a blocked save button', async () => {
     const { api } = await setup('qalead', () => json({ next: null, previous: null, results: [] }));
     expect(await screen.findByText('S-001')).toBeDefined();
     expect(screen.getByText('Cấu hình hiện tại v7')).toBeDefined();
     expect(screen.getAllByText('Dữ liệu minh họa').length).toBeGreaterThan(0);
     expect(screen.getAllByRole('status')[0].textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    // Công tắc bị khoá: không đổi trạng thái khi bấm
+    const toggle = screen.getByRole('checkbox', { name: 'A-003' }) as HTMLInputElement;
+    expect(toggle.disabled).toBe(true);
+    expect(toggle.checked).toBe(false);
     const before = api.fetchSpy.mock.calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Lưu thành v8' }));
     expect(api.fetchSpy.mock.calls.length).toBe(before);
+    expect(screen.getAllByRole('status')[0].textContent).toContain('Thao tác "Lưu thành v8" chưa được thực hiện');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh quy tắc' })[0]);
+    expect(screen.getAllByRole('status')[0].textContent).toContain('Thao tác "Chỉnh quy tắc" chưa được thực hiện');
     fireEvent.click(screen.getByRole('tab', { name: 'Ngưỡng phát hành' }));
-    expect(screen.getByLabelText('Coverage tối thiểu để phát hành')).toBeDefined();
+    const coverage = screen.getByLabelText('Coverage tối thiểu để phát hành') as HTMLInputElement;
+    expect(coverage.readOnly).toBe(true);
+    expect(coverage.value).toBe('95%');
     fireEvent.click(screen.getByRole('tab', { name: 'Chính sách lấy mẫu' }));
-    expect(screen.getByLabelText('Cách chọn seed')).toBeDefined();
+    expect((screen.getByLabelText('Cách chọn seed') as HTMLSelectElement).disabled).toBe(true);
+  });
+
+  it('disables write controls for roles without Configuration access', async () => {
+    await setup('reviewer', () => json({ next: null, previous: null, results: [] }));
+    expect(await screen.findByText('S-001')).toBeDefined();
+    expect((screen.getByRole('button', { name: 'Lưu thành v8' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('hides the empty-mapping row when the mapping request failed', async () => {
+    await setup('reviewer', () => json({ code: 'SERVER_ERROR', message: 'x' }, 500));
+    await screen.findByText('Không tải được mapping');
+    expect(screen.queryByText('Chưa có mapping guideline.')).toBeNull();
   });
 });

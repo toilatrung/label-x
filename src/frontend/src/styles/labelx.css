@@ -460,6 +460,11 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-row--between { justify-content: space-between; }
 .lx-actions--end { justify-content: flex-end; }
 .lx-stack--tight { gap: 6px; }
+.lx-table--min-680 { min-width: 680px; }
+.lx-table--min-760 { min-width: 760px; }
+.lx-th--toggle { width: 64px; }
+.lx-stack--rows { gap: 14px; }
+.lx-row--nowrap { flex-wrap: nowrap; }
 .lx-mt-1 { margin-top: 4px; }
 .lx-text-13 { font-size: 13px; }
 
@@ -471,7 +476,6 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-mt-2 { margin-top: var(--space-2); }
 .lx-mt-3 { margin-top: var(--space-3); }
 .lx-ml-3 { margin-left: var(--space-3); }
-.lx-m-0 { margin: 0; }
 .lx-items-center { align-items: center; }
 .lx-text-11 { font-size: 11px; }
 .lx-text-12 { font-size: 12px; }
@@ -491,7 +495,7 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-card--compact { padding: var(--space-2) var(--space-3); background: var(--surface); }
 .lx-card--receipt { padding: var(--space-3); font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--info); }
 .lx-btn--xs { padding: 2px 6px; font-size: 11px; }
-.lx-btn--block { width: 100%; justify-content: center; }
+.lx-btn--fill { width: 100%; justify-content: center; }
 .lx-link--plain { text-decoration: none; }
 .lx-stage__zoom { font-size: 11px; min-width: 36px; text-align: center; }
 .lx-stage__muted { color: #a1a8b3; }
@@ -500,3 +504,23 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-ws__note--tight { margin: var(--space-1) 0; font-size: 13px; }
 .lx-field--divider { border-top: 1px dashed var(--border); padding-top: var(--space-2); }
 .lx-stack--divider { border-top: 1px solid var(--border); padding-top: var(--space-2); }
+
+/* Layout modifiers used by Reports & Releases (replace inline styles) */
+.lx-table--min-640 { min-width: 640px; }
+.lx-table--min-700 { min-width: 700px; }
+.lx-table--min-720 { min-width: 720px; }
+.lx-stack--3 { gap: var(--space-3); }
+.lx-stack--2 { gap: var(--space-2); }
+.lx-stack--divided { padding-top: var(--space-3); border-top: 1px solid var(--border); }
+.lx-actions--rel { position: relative; }
+.lx-menu--right { left: auto; right: 0; min-width: 160px; }
+.lx-btn--block { justify-content: center; }
+.lx-m-0 { margin: 0; }
+.lx-strong { font-weight: 600; }
+.lx-side--wide { flex-basis: 420px; }
+
+/* Layout modifiers used by Calibration & Audit (replace inline styles) */
+.lx-table--min-520 { min-width: 520px; }
+.lx-table--min-760 { min-width: 760px; }
+.lx-callout--flush { border-radius: 0; }
+.lx-mt-6 { margin-top: 6px; }
