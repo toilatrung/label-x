@@ -99,6 +99,20 @@ async function renderWorkspace(
       });
     }
 
+    if (url.pathname === '/api/decision-cases/') {
+      return Response.json([{
+        id: 301,
+        issue_id: 101,
+        outcome: 'confirm',
+        actor_user_id: 2,
+        rule_id: 'VEH-03',
+        correct_label: 'truck',
+        reason: 'Workspace shared Decision Case lookup',
+        case_version: 'v2',
+        created_at: '2026-10-11T02:00:00Z',
+      }]);
+    }
+
     return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
   });
 
@@ -123,6 +137,16 @@ async function renderWorkspace(
 describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('reuses the T-039 Decision Case lookup for the active issue', async () => {
+    const { api } = await renderWorkspace();
+
+    expect(await screen.findByText('Workspace shared Decision Case lookup')).toBeDefined();
+    expect(api.fetchSpy.mock.calls.some(([request]) => {
+      const url = new URL((request as Request).url);
+      return url.pathname === '/api/decision-cases/' && url.searchParams.get('issue') === '101';
+    })).toBe(true);
   });
 
   it('blocks decision submission when snapshotRevision is missing without inventing fallbacks', async () => {

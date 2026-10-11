@@ -42,6 +42,12 @@ describe('TopBar permissions', () => {
     await waitFor(() => expect(screen.getByText('Khách')).toBeDefined());
     expect(api.jar.has('sessionid')).toBe(false);
   });
+  it('links QA Lead to the Escalations route', async () => {
+    const api = installMockAuthApi(); await api.signIn('qalead');
+    render(<AuthProvider><TopBar /></AuthProvider>);
+    const link = await screen.findByRole('link', { name: 'Escalations' });
+    expect(link.getAttribute('href')).toBe('/escalations');
+  });
   it('keeps reviewer guideline access in Configuration without exposing workflow permissions', async () => {
     const api = installMockAuthApi(); await api.signIn('reviewer');
     render(<AuthProvider><TopBar /></AuthProvider>);

@@ -6,6 +6,10 @@ def test_csrf_trusts_frontend_origins():
         assert origin in settings.CSRF_TRUSTED_ORIGINS
 
 
+def test_cors_allows_idempotency_key_for_browser_writes():
+    assert "idempotency-key" in settings.CORS_ALLOW_HEADERS
+
+
 def test_content_addressed_buckets_overwrite_instead_of_renaming():
     storages = settings.STORAGES
     assert storages["snapshots"]["OPTIONS"]["file_overwrite"] is True

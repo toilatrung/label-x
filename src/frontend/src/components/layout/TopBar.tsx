@@ -39,14 +39,14 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
       { label: 'Quality Summary', icon: 'chart' }] },
     ...(hasPermission(canAccessAnalysis) ? [{ key: 'analysis', label: 'Quality Analysis', href: '/analysis' }] : []),
     ...(hasPermission(canAccessReview, true) ? [{ key: 'review', label: 'Review Center', href: '/review' }] : []),
-    ...(hasPermission(canAccessEscalations, true) ? [{ key: 'escalations', label: 'Escalations' }] : []),
+    ...(hasPermission(canAccessEscalations, true) ? [{ key: 'escalations', label: 'Escalations', href: '/escalations' }] : []),
     { key: 'calibration', label: 'Calibration & Audit', items: [
       { label: 'Performance Evaluation', icon: 'chart' }, { label: 'Ground Truth Benchmark', icon: 'target' },
       { label: 'Audit Sampling', icon: 'check' }, { label: 'Calibration', icon: 'scale' }] },
     ...(hasPermission(canAccessReports) ? [{ key: 'reports', label: 'Reports & Releases' }] : []),
     ...(configItems.length ? [{ key: 'configuration', label: 'Configuration', items: configItems }] : []),
   ];
-  const active = pathname.startsWith('/configuration') ? 'configuration' : pathname.startsWith('/review') ? 'review'
+  const active = pathname.startsWith('/configuration') ? 'configuration' : pathname.startsWith('/escalations') ? 'escalations' : pathname.startsWith('/review') ? 'review'
     : pathname.startsWith('/analysis') ? 'analysis' : activeKey || 'overview';
   function toggle(key: string, event: React.MouseEvent<HTMLButtonElement>) {
     trigger.current = event.currentTarget;
