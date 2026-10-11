@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.files.storage import storages
 from django.db import DatabaseError, connection, connections, transaction
 from django.utils import timezone
 
@@ -27,6 +28,15 @@ pytest_plugins = ["tests.review.test_queue_lease"]
 def policy(settings):
     settings.REVIEW_LEASE_TTL_SECONDS = 60
     settings.REVIEW_INCOMPLETE_RESERVATION_SECONDS = 120
+
+
+@pytest.fixture(autouse=True)
+def snapshot_storage_mock(monkeypatch):
+    monkeypatch.setattr(
+        storages["snapshots"],
+        "url",
+        lambda name: f"https://storage.test/{name}",
+    )
 
 
 def claim(world, user="reviewer"):
@@ -242,6 +252,7 @@ def test_engine_candidate_materializes_one_issue_without_mutating_candidate(worl
     assert Issue.objects.filter(candidate=candidate, frame_review_id=frame_id).count() == 1
     read = client(world["reviewer"]).get(f"/api/frames/{frame_id}/issues/")
     assert read.status_code == 200, read.data
+    assert read.data["frame"]["image_url"] == "https://storage.test/0.jpg"
     assert read.data["issues"][0]["evidence"] == [evidence]
     assert read.data["issues"][0]["state"] == Issue.State.IN_REVIEW
     assert read.data["frame"]["frame_key"] == {"cvat_task_id": 200, "frame_number": 0}
@@ -285,8 +296,10 @@ def test_complete_undecided_then_idempotent_and_request_fix_not_accepted(world):
     assert ReviewDecision.objects.filter(issue_id=issue_id).count() == 1
     first = api.post(f"/api/frames/{frame_id}/complete/", {"lease_id": lease_id}, format="json")
     assert first.status_code == 200, first.data
+    assert first.data["image_url"] == "https://storage.test/0.jpg"
     retry = api.post(f"/api/frames/{frame_id}/complete/", {"lease_id": lease_id}, format="json")
     assert retry.status_code == 200
+    assert retry.data["image_url"] == "https://storage.test/0.jpg"
     assert Lease.objects.get(pk=lease_id).closed_at is not None
     assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.REVIEWED
     assert AuditEvent.objects.filter(action="frame.complete", object_id=str(frame_id)).count() == 1
