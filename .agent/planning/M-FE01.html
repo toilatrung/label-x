@@ -50,7 +50,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="outcome">Outcome</h2>
 <p>Toàn bộ 24 màn hình và component trong <code>docs/design/screens/</code> có route và giao diện hoàn thiện, khớp thiết kế (skill <code>labelx-design-fidelity</code>), dựng song song với backend. Chức năng chưa có API vẫn hiển thị đủ giao diện, kèm cảnh báo <q>Chức năng vẫn chưa được kết nối với server</q>. Sau đó nối từng route vào API thật khi backend sẵn sàng (Phase 2).</p>
 <table><thead><tr><th>Milestone ID</th><th>Roadmap ID</th><th>Status</th><th>Target Window</th><th>Epic IDs (phần frontend)</th><th>Acceptance Evidence</th></tr></thead><tbody>
-<tr><td><code>M-FE01</code></td><td><code>R-001</code></td><td><code>proposed</code></td><td>Phase 1: 2026-10-11 → 2026-10-14 (hạn chót hoàn tất); <strong>nộp PR trước 12:00 thứ Ba 2026-10-13</strong> để review chiều cùng ngày; Phase 2: 2026-10-15 → 2026-10-20</td><td>E-02, E-03, E-04, E-05, E-06, E-08, E-09, E-10, E-13, E-14, E-15, E-16, E-19…E-22</td><td>Phase 1 (gồm cả nối API cho M-02, M-03): báo cáo kiểm toán <code>.agent/reports/implementation/design-fidelity-audit-2026-10-11.html</code> cập nhật đạt mức A cho 20/20 dòng; ảnh chụp 1440 px và 390 px đối chiếu <code>preview.html</code>; <code>make check</code> xanh. Phase 2: các route còn lại đã nối API thật, bỏ cảnh báo chưa kết nối, test frontend trong CI.</td></tr>
+<tr><td><code>M-FE01</code></td><td><code>R-001</code></td><td><code>proposed</code></td><td>Phase 1: 2026-10-11 → 2026-10-14 (hạn chót); Phase 2: 2026-10-15 → 2026-10-20</td><td>E-02, E-03, E-04, E-05, E-06, E-08, E-09, E-10, E-13, E-14, E-15, E-16, E-19…E-22</td><td>Phase 1 (gồm cả nối API cho M-02, M-03): báo cáo kiểm toán <code>.agent/reports/implementation/design-fidelity-audit-2026-10-11.html</code> cập nhật đạt mức A cho 20/20 dòng; ảnh chụp 1440 px và 390 px đối chiếu <code>preview.html</code>; <code>make check</code> xanh. Phase 2: các route còn lại đã nối API thật, bỏ cảnh báo chưa kết nối, test frontend trong CI.</td></tr>
 </tbody></table>
 <h2 id="branching">Nhánh và cách làm</h2>
 <ul>
@@ -59,7 +59,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Chỉ sửa <code>src/frontend</code>, <code>docs/design</code> khi cần thêm class vào Design System; không sửa backend, không đổi framework (DEC-001). Mọi PR phải qua skill <code>labelx-design-fidelity</code> và <code>labelx-design</code>.</li>
 <li>Dữ liệu minh họa đặt trong lớp mock riêng (fixture lấy từ thiết kế, nhất quán 12,500 frame…), có nhãn <q>Dữ liệu minh họa</q>; thao tác ghi bị chặn, không gọi API giả.</li>
 </ul>
-<h2 id="tasks-phase-1">Phase 1 — Hoàn thiện giao diện và nối API đã có (nộp PR trước 12:00 thứ Ba 2026-10-13; hạn chót hoàn tất 2026-10-14)</h2>
+<h2 id="tasks-phase-1">Phase 1 — Hoàn thiện giao diện và nối API đã có (hạn chót 2026-10-14)</h2>
 <table><thead><tr><th>Task ID</th><th>Title</th><th>Status</th><th>Phụ thuộc</th><th>Phạm vi (mức hiện tại theo kiểm toán)</th></tr></thead><tbody>
 <tr><td><code>FE-00</code></td><td>Nền: <code>NotConnectedNotice</code>, badge <q>Dữ liệu minh họa</q>, lớp mock/fixture, khung route cho cả 24 màn</td><td><code>pending</code></td><td>CR-111 duyệt</td><td>Làm trước; mở khoá FE-01…FE-09 (TD-0).</td></tr>
 <tr><td><code>FE-01</code></td><td>Quality Control Home và Quality Summary (<code>/</code>)</td><td><code>pending</code></td><td>FE-00</td><td>C. Chưa có API tổng hợp (TD-1).</td></tr>
@@ -97,6 +97,5 @@ ul.dir{columns:2;font-size:14px}
 <li>2026-10-11: tạo M-FE01 theo yêu cầu của PO sau kiểm toán độ khớp thiết kế (0 màn mức A, 7 mức B, 13 mức C). Chờ CR-111.</li>
 <li>2026-10-11: PO cho biết backend M-02 và M-03 đã làm xong, chỉ chờ test để vào <code>develop</code>; FE-11 và FE-12 chỉ phụ thuộc việc merge đó. Chưa đối chiếu trực tiếp với code trên <code>develop</code>.</li>
 <li>2026-10-11: PO yêu cầu đưa FE-11 và FE-12 vào Phase 1 (backend M-02/M-03 đã xong, chờ merge <code>develop</code>); toàn bộ Phase 1 xong chậm nhất 2026-10-14. Phase 2 còn FE-13, FE-14, 2026-10-15 → 2026-10-20. FE-11/FE-12 chỉ bắt đầu khi backend vào <code>develop</code>; nếu chưa vào, báo blocker thay vì nối vào nhánh chưa merge.</li>
-<li>2026-10-11: PO đặt hạn nộp PR cho toàn bộ Phase 1 là <strong>trước 12:00 thứ Ba 2026-10-13</strong> để review chiều cùng ngày; hạn chót hoàn tất sau review giữ 2026-10-14. Phase 2 không đổi. Issue FE-00…FE-06 (#146…#152) và issue theo dõi #153 đã cập nhật hạn.</li>
 </ul>
 </article></main></body></html>
