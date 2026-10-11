@@ -55,3 +55,8 @@ export function canAccessConfiguration(role: UserRole): boolean {
 export function canAccessGuidelines(role: UserRole): boolean {
   return ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
 }
+
+// Calibration & Audit: chưa có dòng riêng trong rbac-matrix; TopBar đang hiển thị cho mọi vai trò. Backend phải kiểm quyền khi nối API.
+export function canAccessCalibration(): boolean {
+  return true;
+}
