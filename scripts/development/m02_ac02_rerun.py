@@ -64,6 +64,7 @@ def main() -> int:
     p.add_argument("--baseline", type=Path, required=True, help="JSON collect() của run chuẩn")
     p.add_argument("--worker-start", required=True)
     p.add_argument("--worker-kill", required=True)
+    p.add_argument("--fillers", type=int, default=6)
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
     base = json.loads(a.baseline.read_text())
@@ -83,7 +84,9 @@ def main() -> int:
     c = collect(api, rid)
     res["A_broker_down"] = {"run_id": rid, "api_http": code, "api_seconds": secs, "db_after_create_redis_back": before,
                             "sweeper": sweep, "final": db_state(rid), "hash_equal_baseline": same(c)}
-    # B. SIGKILL worker giữa chừng
+    # B. SIGKILL worker giữa chừng (sau khi dispatch nhanh, run xong trong ~vài giây: tạo run nền
+    # trước để hàng đợi sâu rồi nhắm vào run cuối)
+    fillers = [create(api, a.snapshot_id, a.config_id, a.seed, f"fill-kill-{i}")[0] for i in range(a.fillers)]
     rid, secs, code = create(api, a.snapshot_id, a.config_id, a.seed, "kill")
     mid = wait_units(rid, "running", 1)
     subprocess.run(a.worker_kill, shell=True, check=False)
@@ -95,12 +98,16 @@ def main() -> int:
     c = collect(api, rid)
     res["B_sigkill_worker"] = {"run_id": rid, "db_at_kill": mid, "db_after_kill": killed, "sweeper": sweep,
                                "final": db_state(rid), "hash_equal_baseline": same(c)}
+    for f in fillers:
+        collect(api, f)
     # C. Huỷ giữa chừng
+    fillers = [create(api, a.snapshot_id, a.config_id, a.seed, f"fill-cancel-{i}")[0] for i in range(a.fillers)]
     rid, secs, code = create(api, a.snapshot_id, a.config_id, a.seed, "cancel")
-    mid = wait_units(rid, "completed", 2)
+    mid = wait_units(rid, "running", 1)
     cr = api.post(f"/api/runs/{rid}/cancel/")
     time.sleep(60)
     res["C_cancel"] = {"run_id": rid, "db_at_cancel": mid, "cancel_http": cr.status_code, "final": db_state(rid)}
+    res["fillers"] = a.fillers
     a.out.write_text(json.dumps(res, indent=1))
     print(json.dumps(res)[:3000])
     return 0
