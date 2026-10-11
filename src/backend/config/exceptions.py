@@ -19,7 +19,6 @@ from rest_framework.exceptions import (
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-
 CSRF_REASON = "csrf"
 
 
