@@ -115,7 +115,6 @@ class ConfigVersionListView(APIView):
 
 
 class ConfigVersionPublishView(APIView):
-    serializer_class = ConfigVersionSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QC_ADMIN, Role.SUPER_ADMIN)
     action_name = "config_versions.publish"
@@ -124,7 +123,13 @@ class ConfigVersionPublishView(APIView):
 
     @extend_schema(
         operation_id="config_versions_publish",
-        responses={200: ConfigVersionSerializer},
+        request=None,
+        responses={
+            200: ConfigVersionSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["config"],
     )
     def post(self, request: Request, pk: int) -> Response:
@@ -351,7 +356,6 @@ class RunDetailView(APIView):
 class RunCancelView(APIView):
     """Cancel run: POST /api/runs/{id}/cancel/."""
 
-    serializer_class = RunSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
     action_name = "runs.cancel"
@@ -365,7 +369,13 @@ class RunCancelView(APIView):
 
     @extend_schema(
         operation_id="runs_cancel",
-        responses={200: RunSerializer, 403: RunSerializer, 404: RunSerializer, 409: RunSerializer},
+        request=None,
+        responses={
+            200: RunSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def post(self, request: Request, pk: int) -> Response:
@@ -381,7 +391,6 @@ class RunCancelView(APIView):
 class RunRetryFailedView(APIView):
     """Retry failed work units: POST /api/runs/{id}/retry-failed/."""
 
-    serializer_class = RunSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
     action_name = "runs.retry_failed"
@@ -395,7 +404,13 @@ class RunRetryFailedView(APIView):
 
     @extend_schema(
         operation_id="runs_retry_failed",
-        responses={202: RunSerializer, 403: RunSerializer, 404: RunSerializer, 409: RunSerializer},
+        request=None,
+        responses={
+            202: RunSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def post(self, request: Request, pk: int) -> Response:

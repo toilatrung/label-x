@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from accounts.models import SYSTEM_WIDE_ROLES, RoleAssignment
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
 from orchestration.metrics import render_metrics
 
 CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
@@ -64,7 +65,7 @@ class MetricsView(APIView):
 
     @extend_schema(
         operation_id="internal_metrics",
-        responses={(200, "text/plain"): str},
+        responses={(200, "text/plain"): str, 403: ErrorSerializer},
         tags=["ops"],
     )
     def get(self, request: Request) -> HttpResponse:
