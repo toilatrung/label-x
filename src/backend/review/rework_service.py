@@ -339,6 +339,26 @@ def _build_recheck_artifacts(
     return snapshot, run
 
 
+def _replay_submitted_rework(
+    *,
+    rework: ReworkRequest,
+    claimed_revision: str,
+    key: str | None,
+    request_hash: str,
+) -> ReworkRequest:
+    if rework.submitted_revision != claimed_revision or (
+        key is not None and rework.submission_idempotency_key != key
+    ):
+        raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
+    if key is not None and rework.submission_request_hash != request_hash:
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            "IDEMPOTENCY_KEY_REUSED",
+            "Idempotency-Key đã dùng với body khác.",
+        )
+    return rework
+
+
 def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     body = _body(request)
     user = _actor(request)
@@ -366,11 +386,12 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
             status.HTTP_409_CONFLICT, "REVISION_UNCHANGED", "Revision CVAT chưa thay đổi."
         )
     if lookup.status == ReworkRequest.Status.RECHECK_PENDING:
-        if lookup.submitted_revision == claimed_revision and (
-            key is None or lookup.submission_idempotency_key == key
-        ):
-            return lookup
-        raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
+        return _replay_submitted_rework(
+            rework=lookup,
+            claimed_revision=claimed_revision,
+            key=key,
+            request_hash=request_hash,
+        )
     if lookup.status != ReworkRequest.Status.FIX_PENDING:
         raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework không chờ sửa.")
     effective_key = key or str(
@@ -385,9 +406,12 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         QCRun.objects.select_for_update().get(pk=lookup.issue.frame_review.run_id)
         rework = ReworkRequest.objects.select_for_update().select_related("issue").get(pk=rework_id)
         if rework.status == ReworkRequest.Status.RECHECK_PENDING:
-            if rework.submitted_revision == claimed_revision:
-                return rework
-            raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
+            return _replay_submitted_rework(
+                rework=rework,
+                claimed_revision=claimed_revision,
+                key=key,
+                request_hash=request_hash,
+            )
         if rework.status != ReworkRequest.Status.FIX_PENDING:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework không chờ sửa.")
         before = {"status": rework.status, "issue_state": rework.issue.state}

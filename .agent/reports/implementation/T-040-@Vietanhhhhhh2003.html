@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-040 Takeover Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-040-vietanhhhhhh2003">
+<meta name="labelx:title" content="T-040 Takeover: Rework Re-check Verify">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, rework, t-040, idempotency]">
+<meta name="labelx:priority" content="1"></head><body><main><article>
+<div class="meta"><b>id</b><span>T-040-vietanhhhhhh2003</span><b>title</b><span>T-040 Takeover: Rework Re-check Verify</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[implementation, m03, rework, t-040, idempotency]</span><b>priority</b><span>1</span></div>
+<h1>T-040 — Tiếp quản rework API, snapshot revision mới, re-check và verify</h1>
+<h2>Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>T-040-@Vietanhhhhhh2003</code></li>
+<li><strong>Owner</strong>: Nguyễn Xuân Việt Anh (<code>@Vietanhhhhhh2003</code>)</li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task</strong>: <a href="https://github.com/toilatrung/label-x/issues/107">T-040 / issue #107</a></li>
+<li><strong>Base</strong>: <code>origin/integration/m03@4b01024</code></li>
+<li><strong>Branch</strong>: <code>feat/T-040-e16-rework-recheck-verify-vietanh</code></li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/142">#142</a>, base <code>integration/m03</code></li>
+</ul>
+<h2>Phạm vi tiếp quản</h2><p>Implementation gốc và evidence của Lê Duy Nam trong PR #136 đã merge vào nhánh tích hợp; report này không thay đổi tác giả cũ. Phần tiếp quản audit code trên integration mới nhất và sửa lỗ hổng idempotency của submit replay.</p>
+<h2>Thay đổi</h2><ul>
+<li><code>review/rework_service.py</code>: xác thực revision, key và request hash khi replay <code>submitted</code>, kể cả nhánh race sau khi khóa row.</li>
+<li><code>tests/review/test_rework.py</code>: thêm regression assertion; cùng key và revision nhưng body khác phải trả <code>409 IDEMPOTENCY_KEY_REUSED</code>.</li>
+<li>Không thêm GET list/detail vì M03-D04 vẫn được contract matrix ghi <code>CHỜ PO/CR</code>.</li>
+</ul>
+<h2>Evidence</h2><table><thead><tr><th>Kiểm tra</th><th>Kết quả</th></tr></thead><tbody>
+<tr><td>Focused PostgreSQL <code>tests/review/test_rework.py</code></td><td><code>5 passed</code></td></tr>
+<tr><td>Toàn bộ PostgreSQL <code>tests/review</code></td><td><code>62 passed</code></td></tr>
+<tr><td><code>manage.py check</code></td><td><code>0 issues</code></td></tr>
+<tr><td><code>makemigrations --check --dry-run</code></td><td><code>No changes detected</code></td></tr>
+<tr><td>Ruff lint + format check</td><td><code>PASS</code></td></tr>
+</tbody></table>
+<h2>Gate còn lại</h2><ul>
+<li>Independent review/QC và CI trên PR head.</li>
+<li>M03-D04 GET list/detail chỉ triển khai sau khi PO/CR phê duyệt contract.</li>
+</ul>
+</article></main></body></html>

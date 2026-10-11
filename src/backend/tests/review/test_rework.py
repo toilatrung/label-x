@@ -195,6 +195,15 @@ def test_submission_requires_new_revision_and_is_idempotent(confirmed, world, mo
     assert replay.status_code == 202 and replay.data["recheck_run_id"] == run.pk
     assert ReworkRecheck.objects.count() == 1
 
+    changed_replay = client(world["author"]).post(
+        f"/api/rework/{rework.pk}/submitted/",
+        {"cvat_revision": snapshot.revision_sha256, "retry_context": "changed"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    )
+    assert changed_replay.status_code == 409
+    assert changed_replay.data["code"] == "IDEMPOTENCY_KEY_REUSED"
+
 
 @pytest.mark.django_db
 def test_verify_requires_completed_recheck_and_separate_person(confirmed, world, monkeypatch):
