@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-013: Ghi quyết định PO cho TBD-02, 13, 14, 15, 17, 20 (bổ sung DEC-012, BLOCKER-025) — LabelX</title>
+<meta name="labelx:id" content="dec-013">
+<meta name="labelx:title" content="DEC-013: Ghi quyết định PO cho TBD-02, 13, 14, 15, 17, 20 (bổ sung DEC-012, BLOCKER-025)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, blocker, m02, nfr, tbd]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-013</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-013</span><b>title</b><span>DEC-013: Ghi quyết định PO cho TBD-02, 13, 14, 15, 17, 20 (bổ sung DEC-012, BLOCKER-025)</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, blocker, m02, nfr, tbd]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-013">DEC-013: Ghi quyết định PO cho TBD-02, 13, 14, 15, 17, 20 (bổ sung DEC-012, BLOCKER-025)</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi lại giá trị cuối cùng PO đã chốt cho TBD-02, 13, 14, 15, 17, 20 mà <a href="DEC-012.html">DEC-012</a> chuyển sang <a href="../blockers/BLOCKER-025.html">BLOCKER-025</a> với “đề xuất mặc định chưa xác nhận”. Bản ghi này <strong>bổ sung một phần</strong> mục “Chuyển sang BLOCKER-025” của DEC-012; DEC-012 giữ nguyên, không bị sửa.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-013</code></li>
+<li><strong>Title</strong>: <code>Ghi quyết định PO cho TBD-02, 13, 14, 15, 17, 20 (bổ sung DEC-012, BLOCKER-025)</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>Product Owner (Trịnh Quang Trung, @toilatrung). Việc Tech Lead Backend và đội mô hình có xác nhận riêng các tham số mà DEC-012 giao cho họ (TBD-13, 14, 17, 20): NOT VERIFIED, không có bằng chứng trong hồ sơ này.</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-09</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p><a href="DEC-012.html">DEC-012</a> (2026-10-09) đóng BLOCKER-014 và chuyển TBD-13, 14, 15, 17, 20 sang BLOCKER-025 với giá trị “đề xuất của planner”, ghi rõ chưa được xác nhận; TBD-02 chỉ chốt tạm. Trong task M-02-RESOLVE, PO ghi lại các giá trị đã chốt dưới đây.</p>
+<ul>
+<li><strong>Ngày quyết định gốc</strong>: 2026-10-09 (theo PO).</li>
+<li><strong>Xác nhận bổ sung</strong>: 2026-10-10, ghi riêng ở mục “Lịch sử xác nhận” bên dưới. Ngày này <strong>không</strong> được dùng để đổi ngày quyết định gốc.</li>
+</ul>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>BLOCKER-025 cần giá trị đã chốt để nghiệm thu NFR-01…03, NFR-05, NFR-08, NFR-16 và TBD-20.</li>
+<li>Không bịa số đo: ngưỡng đã chốt không đồng nghĩa đã đạt (DEC-002).</li>
+<li>Tách bạch “đã chốt tham số” với “đã triển khai/nghiệm thu” để review độc lập không hiểu nhầm.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>A. Ghi quyết định PO bằng decision mới (DEC-013), bổ sung DEC-012, BLOCKER-025 giữ mở cho phần chưa chốt</td><td>Không sửa lịch sử DEC-012; mỗi tham số có trạng thái chốt/triển khai riêng</td><td>Cần bản SRS có version để đồng bộ bảng TBD (việc sau)</td><td>meets</td></tr>
+<tr><td>B. Sửa trực tiếp DEC-012</td><td>Một chỗ duy nhất</td><td>Viết lại lịch sử một decision đã accepted, trái “không sửa im lặng”</td><td>does-not-meet</td></tr>
+<tr><td>C. Đóng toàn bộ BLOCKER-025</td><td>Gọn hồ sơ</td><td>Còn thời gian QC Run 10.000 frame, cấu hình server pilot, NFR chưa đo</td><td>does-not-meet</td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>A</code></li>
+<li><strong>Rationale</strong>: Giữ nguyên DEC-012 (đã accepted); ghi giá trị PO chốt ở bản ghi mới và tách riêng trạng thái “đã chốt tham số” với “đã triển khai/nghiệm thu”.</li>
+<li><strong>Effective Date</strong>: <code>2026-10-09</code></li>
+</ul>
+<table><thead><tr><th>TBD</th><th>Giá trị đã chốt</th><th>Đã chốt tham số</th><th>Đã triển khai / nghiệm thu</th></tr></thead><tbody>
+<tr><td>TBD-02</td><td>Máy dev: RAM 16 GB, GPU GTX 1650 4 GB, CPU Ryzen 7 5800. Server pilot: <strong>chưa có cấu hình</strong>, chờ.</td><td>Có (phần máy dev). Server pilot: chưa chốt.</td><td>Không áp dụng triển khai. Môi trường đo thực tế của M-02-RESOLVE là WSL2 (9,7 GB RAM sau khi PO nâng), ghi ở báo cáo triển khai; không phải cấu hình server pilot.</td></tr>
+<tr><td>TBD-13</td><td>Mở frame p95 ≤ 1,5 s; lưu quyết định p95 ≤ 500 ms. Thời gian QC Run 10.000 frame (NFR-03): <strong>pending</strong>, chốt sau pilot.</td><td>Có (hai ngưỡng UI). NFR-03: chưa.</td><td>Chưa đo, chưa nghiệm thu. NOT VERIFIED.</td></tr>
+<tr><td>TBD-14</td><td>3 lần retry ngoài lần chạy đầu; backoff 2 s, 4 s, 8 s.</td><td>Có.</td><td>Đã triển khai trong code (commit <code>b189f76</code>: <code>self.retry</code>, 3 retry, 2/4/8 s). Kiểm bằng test mock/eager (24 test failure-injection); retry-failed trên broker thật chưa chạy; chưa đo trên pilot. Chưa nghiệm thu NFR-05.</td></tr>
+<tr><td>TBD-15</td><td>Audit log lưu suốt vòng đời dataset, tối thiểu 1 năm.</td><td>Có.</td><td>Chỉ chốt tham số; không có triển khai hay nghiệm thu trong M-02-RESOLVE.</td></tr>
+<tr><td>TBD-17</td><td>RPO ≤ 24 giờ, RTO ≤ 8 giờ (PostgreSQL và Object Storage).</td><td>Có.</td><td>Chỉ chốt tham số; chưa có sao lưu/khôi phục được diễn tập. NOT VERIFIED.</td></tr>
+<tr><td>TBD-20</td><td>t_gc = 24 giờ; ε của <code>score_v0</code> = 0,01; hash toạ độ làm tròn 6 chữ số thập phân.</td><td>Có.</td><td>Chỉ chốt tham số. Việc code hiện tại đã khớp ε và số chữ số làm tròn hay chưa: NOT VERIFIED (không kiểm trong M-02-RESOLVE). GC theo t_gc chưa triển khai.</td></tr>
+</tbody></table>
+<p><strong>Phần còn pending (không thuộc quyết định này)</strong>: thời gian QC Run 10.000 frame (NFR-03, TBD-13), cấu hình server pilot (TBD-02), đo NFR trên pilot. Chúng giữ <a href="../blockers/BLOCKER-025.html">BLOCKER-025</a> ở trạng thái <code>open</code>.</p>
+<h2 id="confirmation-history">Lịch sử xác nhận</h2>
+<table><thead><tr><th>Ngày</th><th>Sự kiện</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>2026-10-09</td><td>Quyết định gốc của PO cho sáu tham số trên</td><td>Ngày có hiệu lực của decision này.</td></tr>
+<tr><td>2026-10-10</td><td>Xác nhận bổ sung của PO khi ghi vào hồ sơ M-02-RESOLVE</td><td>Ghi riêng, không backdate về 2026-10-09.</td></tr>
+</tbody></table>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Positive</strong>: <code>BLOCKER-025 có giá trị đã chốt cho TBD-02 (máy dev), 13 (hai ngưỡng UI), 14, 15, 17, 20; TBD-14 đã có hiện thực trong code.</code></li>
+<li><strong>Negative</strong>: <code>NFR-03 và cấu hình server pilot vẫn pending; TBD-15, 17, 20 chưa triển khai; bảng TBD của SRS (11-traceability.tex) chưa cập nhật.</code></li>
+<li><strong>Follow-up Work</strong>: <code>Bản SRS có version đồng bộ giá trị TBD (cần quy trình dựng lại TeX/HTML; xem báo cáo M-02-RESOLVE, mục việc tiếp theo); đo thời gian QC Run 10.000 frame và NFR trên server pilot; triển khai TBD-15, 17, 20 theo task riêng.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Documents</strong>: <code>docs/label-x_system-requirement-specification/sections/11-traceability.tex, docs/label-x_system-requirement-specification/sections/08-nonfunctional.tex (chưa sửa)</code></li>
+<li><strong>Epics or Tasks</strong>: <code>M-02-RESOLVE; E-02, E-08, E-10, E-23</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>RISK-011</code></li>
+<li><strong>Supersedes</strong>: <code>none (bổ sung một phần mục “Chuyển sang BLOCKER-025” của .agent/governance/decisions/DEC-012.html; DEC-012 vẫn accepted)</code></li>
+<li><strong>Superseded By</strong>: <code>none</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Context, drivers, and viable options are documented.</li>
+<li>[x] Decision makers and rationale are recorded.</li>
+<li>[x] Follow-up work and affected documents are linked.</li>
+<li>[ ] Accepted decisions are mapped in <code>.agent/intelligence/git-nexus/decision-commit-map.html</code> when implemented. (chỉ TBD-14 có commit <code>b189f76</code>; các TBD khác chưa triển khai)</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not record a decision as <code>accepted</code> without identified decision makers.</li>
+<li>Do not erase rejected options or consequences after acceptance.</li>
+<li>Do not silently modify an accepted decision; supersede it with a new record.</li>
+<li>Do not claim implementation without commit or report evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/decisions/DEC-013.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

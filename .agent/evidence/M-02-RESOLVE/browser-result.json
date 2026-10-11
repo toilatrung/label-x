@@ -1,0 +1,416 @@
+{
+ "roles": {
+  "annotator": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "E\ne2e_annotator\nAnnotator"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có đủ quyền để truy cập trang này. Vai trò hiện tại: Annotator Yêu cầu: QA Lead / QC Admin / Super Admin Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/config": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Annotator Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/history": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Annotator Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   }
+  },
+  "reviewer": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "Configuration",
+    "E\ne2e_reviewer\nReviewer"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có đủ quyền để truy cập trang này. Vai trò hiện tại: Reviewer Yêu cầu: QA Lead / QC Admin / Super Admin Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/config": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Reviewer Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/history": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Reviewer Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   }
+  },
+  "qa_lead": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Quality Analysis",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "Configuration",
+    "E\ne2e_qa_lead\nQuality Assurance Lead"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qa_lead Quality Assurance Lead Dataset: labelx-dev Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Assurance Lead Lịch sử Snapshot Các Snapshot đã tạo theo Datase"
+   },
+   "/analysis/config": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qa_lead Quality Assurance Lead Dataset: Dataset #1 Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Assurance Lead Cấu hình phân tích Chọn snapshot đã khóa và phiê"
+   },
+   "/analysis/history": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qa_lead Quality Assurance Lead Dataset: Dataset #1 Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Assurance Lead Lịch sử thực thi Theo dõi QC run, coverage và tr"
+   }
+  },
+  "qc_admin": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Quality Analysis",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "Configuration",
+    "E\ne2e_qc_admin\nQuality Control Admin"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qc_admin Quality Control Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Control Admin Lịch sử Snapshot Các Snapshot đã tạo theo Dataset,"
+   },
+   "/analysis/config": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qc_admin Quality Control Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Control Admin Cấu hình phân tích Chọn snapshot đã khóa và phiên "
+   },
+   "/analysis/history": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_qc_admin Quality Control Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Quality Control Admin Lịch sử thực thi Theo dõi QC run, coverage và trạn"
+   }
+  },
+  "super_admin": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Quality Analysis",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "Configuration",
+    "E\ne2e_super_admin\nSuper Admin"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_super_admin Super Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Super Admin Lịch sử Snapshot Các Snapshot đã tạo theo Dataset, hash, drift và t"
+   },
+   "/analysis/config": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_super_admin Super Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Super Admin Cấu hình phân tích Chọn snapshot đã khóa và phiên bản cấu hình đã p"
+   },
+   "/analysis/history": {
+    "forbidden": false,
+    "text": "LabelX Overview Quality Analysis Calibration & Audit Reports & Releases Configuration E e2e_super_admin Super Admin Dataset: Chưa chọn Quality Control Run: Chưa chọn Snapshot: Chưa chọn Guideline: — Taxonomy: — Vai trò: Super Admin Lịch sử thực thi Theo dõi QC run, coverage và trạng thái từng shard"
+   }
+  },
+  "product_owner": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "E\ne2e_product_owner\nProduct Owner"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có đủ quyền để truy cập trang này. Vai trò hiện tại: Product Owner Yêu cầu: QA Lead / QC Admin / Super Admin Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/config": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Product Owner Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/history": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Product Owner Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   }
+  },
+  "data_model_owner": {
+   "topbar": [
+    "LabelX",
+    "Overview",
+    "Calibration & Audit",
+    "Reports & Releases",
+    "E\ne2e_data_model_owner\nData/Model Owner"
+   ],
+   "/analysis/snapshots": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có đủ quyền để truy cập trang này. Vai trò hiện tại: Data/Model Owner Yêu cầu: QA Lead / QC Admin / Super Admin Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/config": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Data/Model Owner Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   },
+   "/analysis/history": {
+    "forbidden": true,
+    "text": "403 - Quyền truy cập bị từ chối Bạn không có quyền mở chức năng này trong bộ dữ liệu đang chọn. Vai trò hiện tại: Data/Model Owner Yêu cầu: Quyền Phân tích Chất lượng Mã lỗi: FORBIDDEN Quay về Trang chủ"
+   }
+  }
+ },
+ "api": [
+  {
+   "role": "annotator",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "annotator",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "annotator",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "annotator",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "annotator",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "annotator",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "reviewer",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/snapshots/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/datasets/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/config-versions/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/snapshots/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qa_lead",
+   "path": "/api/runs/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/datasets/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/config-versions/",
+   "status": 200
+  },
+  {
+   "role": "qc_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/datasets/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/config-versions/",
+   "status": 200
+  },
+  {
+   "role": "super_admin",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "product_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/session/",
+   "status": 403
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/csrf/",
+   "status": 204
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/login/",
+   "status": 200
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  },
+  {
+   "role": "data_model_owner",
+   "path": "/api/auth/session/",
+   "status": 200
+  }
+ ],
+ "errors": []
+}

@@ -8,6 +8,7 @@ from typing import Any
 from celery import shared_task
 
 from engines.interface import EngineInput
+from orchestration.models import ShardCommit
 from orchestration.registry import EngineRegistry, registry
 from orchestration.retry import RetryPolicy, default_policy
 from orchestration.services import (
@@ -20,10 +21,19 @@ from orchestration.services import (
 logger = logging.getLogger("labelx.orchestration")
 
 
-def execute_shard(engine_input: EngineInput, *, engines: EngineRegistry = registry) -> bool:
+def execute_shard(
+    engine_input: EngineInput,
+    *,
+    engines: EngineRegistry = registry,
+    fence: tuple[int, str] | None = None,
+) -> bool:
     """Chạy engine rồi commit. Trả True nếu commit mới; ném lỗi để task retry."""
+    if ShardCommit.objects.filter(
+        run_id=engine_input.run_id, idempotency_key=engine_input.idempotency_key
+    ).exists():
+        return False  # giao lại sau khi worker chết sau commit: không chạy lại engine
     runner = engines.runner(engine_input.engine, engine_input.engine_version)
-    return commit_shard_output(engine_input, runner(engine_input))
+    return commit_shard_output(engine_input, runner(engine_input), fence=fence)
 
 
 @shared_task(
@@ -47,5 +57,7 @@ def run_engine_shard(self: Any, payload: dict[str, Any]) -> bool:
             mark_shard_failed(engine_input, attempts=self.request.retries + 1)
             raise
         raise self.retry(
-            exc=exc, countdown=policy.backoff(self.request.retries + 1), max_retries=None
+            exc=exc,
+            countdown=policy.backoff(self.request.retries + 1),
+            max_retries=policy.max_retries,
         ) from exc

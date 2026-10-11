@@ -81,3 +81,21 @@ test('Windows native command failure propagates nonzero exit', {skip: process.pl
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /exit 7/);
 });
+test('frontend default (same-origin proxy) and local proxy target are accepted', t => {
+  const dir = fixture(t); initEnv(dir);
+  const file = path.join(dir, 'src/frontend/.env.local');
+  assert.doesNotThrow(() => preflight(dir, 'linux', {}));
+  fs.appendFileSync(file, '\nLABELX_API_PROXY_TARGET=http://127.0.0.1:8000\n');
+  assert.doesNotThrow(() => preflight(dir, 'linux', {}));
+});
+test('frontend external proxy target is preserved and rejected', t => {
+  const dir = fixture(t); initEnv(dir);
+  fs.appendFileSync(path.join(dir, 'src/frontend/.env.local'), '\nLABELX_API_PROXY_TARGET=https://external\n');
+  assert.throws(() => preflight(dir, 'linux', {}), /Frontend API/);
+});
+test('process env API overrides are checked, not only .env.local', t => {
+  const dir = fixture(t); initEnv(dir);
+  assert.throws(() => preflight(dir, 'linux', {LABELX_API_PROXY_TARGET: 'https://external.invalid'}), /Frontend API/);
+  assert.throws(() => preflight(dir, 'linux', {NEXT_PUBLIC_API_BASE_URL: 'https://external/api'}), /Frontend API/);
+  assert.doesNotThrow(() => preflight(dir, 'linux', {LABELX_API_PROXY_TARGET: 'http://127.0.0.1:8000'}));
+});

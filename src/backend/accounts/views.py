@@ -27,7 +27,7 @@ from accounts.serializers import (
     WorkflowPermissionsSerializer,
     build_session,
 )
-from config.exceptions import ApiError
+from config.exceptions import CSRF_REASON, ApiError
 from config.serializers import ErrorSerializer
 
 CSRF_FAILED_MESSAGE = "Yêu cầu thiếu hoặc sai mã bảo vệ. Vui lòng tải lại trang và thử lại."
@@ -43,7 +43,9 @@ def enforce_csrf(request: Request) -> None:
     check.process_request(request._request)
     reason = check.process_view(request._request, None, (), {})  # type: ignore[arg-type]
     if reason:
-        raise ApiError(status.HTTP_403_FORBIDDEN, "FORBIDDEN", CSRF_FAILED_MESSAGE)
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN, "FORBIDDEN", CSRF_FAILED_MESSAGE, {"reason": CSRF_REASON}
+        )
 
 
 def _error(description: str) -> OpenApiResponse:

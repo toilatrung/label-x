@@ -42,7 +42,12 @@ export async function getSnapshot(id: number, signal?: AbortSignal): Promise<Sna
 }
 
 export async function postSnapshot(body: SnapshotCreate, key: string): Promise<SnapshotAccepted> {
-  requireData(await apiClient.GET('/api/auth/csrf/', { cache: 'no-store' }));
+  // /api/auth/csrf/ trả 204 không có body: chỉ kiểm HTTP ok (requireData sẽ ném vì data === undefined
+  // và POST không bao giờ được gửi — lỗi thấy khi chạy trình duyệt với backend thật).
+  const csrf = await apiClient.GET('/api/auth/csrf/', { cache: 'no-store' });
+  if (csrf.error || !csrf.response.ok) {
+    throw new ApiRequestError(csrf.response.status, csrf.error, csrf.response.headers);
+  }
   const reply = await apiClient.POST('/api/snapshots/', {
     body, params: { header: { 'Idempotency-Key': key } },
   });

@@ -14,3 +14,6 @@ class OrchestrationConfig(AppConfig):
         # Cả hai hàm idempotent: ready() có thể chạy nhiều lần trong tooling/test.
         register_builtin_engines(registry)
         register_structural_engines(registry)
+        # Worker Celery chỉ autodiscover `orchestration.tasks`: nạp dispatch để đăng ký
+        # run_work_unit/redispatch_pending.
+        import orchestration.dispatch  # noqa: F401

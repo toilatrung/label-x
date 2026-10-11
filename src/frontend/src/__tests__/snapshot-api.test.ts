@@ -24,6 +24,16 @@ describe('Snapshot API wiring', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  it('sends the POST when the CSRF endpoint answers 204 with no body (real backend)', async () => {
+    const fetch = vi.fn(async (request: Request) => {
+      if (new URL(request.url).pathname === '/api/auth/csrf/') return new Response(null, { status: 204 });
+      return Response.json({ id: 102, status: 'locked', drift_jobs: [] }, { status: 202 });
+    });
+    vi.stubGlobal('fetch', fetch);
+    expect((await postSnapshot({ dataset_id: 42, scope: { cvat_job_ids: [17] } }, 'request-2')).id).toBe(102);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   it('rejects unsafe CVAT URLs from a server response', () => {
     expect(safeCvatUrl('javascript:alert(1)')).toBeNull();
     expect(safeCvatUrl('https://cvat.example.test/tasks/1/jobs/2')).toContain('cvat.example.test');

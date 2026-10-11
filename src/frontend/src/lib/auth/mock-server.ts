@@ -30,7 +30,8 @@ export function checkCsrf(request: Request) {
   const expectedOrigin = `${url.protocol}//${request.headers.get('host') ?? url.host}`;
   if (!token || request.headers.get('X-CSRFToken') !== token ||
     (origin !== null && origin !== expectedOrigin)) {
-    return mockError('FORBIDDEN', 'Yêu cầu thiếu hoặc sai mã bảo vệ. Vui lòng thử lại.', 403);
+    return mockError('FORBIDDEN', 'Yêu cầu thiếu hoặc sai mã bảo vệ. Vui lòng thử lại.', 403,
+      { reason: 'csrf' });
   }
   return null;
 }

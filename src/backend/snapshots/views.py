@@ -161,6 +161,7 @@ class SnapshotDetailView(APIView):
         operation_id="snapshots_retrieve",
         responses={
             200: SnapshotSerializer,
+            400: SnapshotErrorResponseSerializer,
             403: SnapshotErrorResponseSerializer,
             404: SnapshotErrorResponseSerializer,
         },
