@@ -44,3 +44,21 @@ describe('Mock auth deployment boundary', () => {
     expect((await import('@/lib/auth/config')).isMockAuth).toBe(false);
   });
 });
+
+describe('API base URL', () => {
+  it('defaults to the UI origin so the Next proxy keeps cookies first-party', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_AUTH_MODE', 'backend');
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
+    vi.resetModules();
+    expect((await import('@/lib/auth/config')).apiBaseUrl()).toBe(window.location.origin);
+  });
+
+  it('calls the backend directly only when the variable is set', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_AUTH_MODE', 'backend');
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'http://127.0.0.1:8000/api');
+    vi.resetModules();
+    expect((await import('@/lib/auth/config')).apiBaseUrl()).toBe('http://127.0.0.1:8000');
+  });
+});
