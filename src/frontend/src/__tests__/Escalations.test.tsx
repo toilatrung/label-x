@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import EscalationsPage from '@/app/escalations/page';
@@ -119,12 +119,14 @@ describe('Escalations UI (T-039)', () => {
         <AuthProvider><EscalationsPage /></AuthProvider>
       </QueryClientProvider>,
     );
+    const adjudication = await screen.findByRole('tab', { name: /Adjudication/ }).catch(() => null);
+    if (adjudication) fireEvent.click(adjudication);
     return { api, calls };
   }
 
   it('renders API evidence and reviewer decisions, then loads beyond the first page', async () => {
     const { calls } = await renderPage();
-    expect(await screen.findByText('Escalations & Decision Cases')).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Escalations' })).toBeDefined();
     expect(await screen.findByText('#42')).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
@@ -143,7 +145,7 @@ describe('Escalations UI (T-039)', () => {
     await screen.findByText('#42');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
 
-    fireEvent.change(screen.getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
+    fireEvent.change(within(screen.getByRole('region', { name: 'Phân xử theo dữ liệu thật' })).getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
     fireEvent.change(screen.getByLabelText('Lý do *'), {
       target: { value: 'Evidence và guideline thống nhất.' },
     });
@@ -234,7 +236,7 @@ describe('Escalations UI (T-039)', () => {
   it('enforces the page role matrix without issuing data requests', async () => {
     const { calls } = await renderPage('reviewer');
     expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
-    expect(screen.queryByText('Escalations & Decision Cases')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Escalations' })).toBeNull();
     expect(calls).toHaveLength(0);
   });
 
@@ -257,5 +259,18 @@ describe('Escalations UI (T-039)', () => {
     await screen.findByText('#42');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByLabelText('Lý do override *')).toBeDefined();
+  });
+
+  it('shows the three design tabs, sample rows and the not-connected notice (FE-06)', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
+    expect(screen.getByText('GAP-012')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
+    expect(screen.getByText('CASE-040')).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Decision Cases/ })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Adjudication/ })).toBeDefined();
   });
 });
