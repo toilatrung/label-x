@@ -516,3 +516,18 @@ def test_broker_down_publish_is_bounded_not_hanging():
     assert settings.CELERY_TASK_IGNORE_RESULT is True
     assert settings.CELERY_TASK_PUBLISH_RETRY_POLICY["max_retries"] <= 3
     assert settings.CELERY_BROKER_TRANSPORT_OPTIONS["socket_connect_timeout"] <= 5
+
+
+def test_redelivery_of_completed_unit_finalises_run_after_worker_died_post_commit(inline_queue):
+    """R-8: chết sau commit, trước refresh_run -> run kẹt RUNNING; giao lại phải chốt run."""
+    run = make_run(engine="duplicate", shapes=SHAPES)
+    first, second = list(run.work_units.order_by("shard_index"))
+    assert run_work_unit.apply(args=[first.pk]).get() == WorkUnit.Status.COMPLETED
+    with mock.patch.object(dispatch_module, "refresh_run", side_effect=WorkerKilled()):
+        with pytest.raises(WorkerKilled):
+            run_work_unit.run(second.pk)
+    assert WorkUnit.objects.get(pk=second.pk).status == WorkUnit.Status.COMPLETED
+    assert QCRun.objects.get(pk=run.pk).status == QCRun.Status.RUNNING  # chưa ai chốt run
+    assert run_work_unit.apply(args=[second.pk]).get() == WorkUnit.Status.COMPLETED
+    final = QCRun.objects.get(pk=run.pk)
+    assert final.status == QCRun.Status.COMPLETED and final.finished_at is not None
