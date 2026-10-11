@@ -82,6 +82,7 @@ ul.dir{columns:2;font-size:14px}
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>pending</td><td><code>not-run</code></td><td>chưa thực hiện</td></tr></tbody></table>
 <h2 id="required-review-checks">Required Review Checks</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>Review tĩnh #1 trên 3cb40b3</td><td><code>failed</code></td><td>REQUEST CHANGES (3 major, 7 minor, bảng Findings)</td></tr><tr><td>Re-review delta 3cb40b3..bb73895</td><td><code>passed</code></td><td>APPROVE cho delta (M1, M2, m2 đã sửa); ghi chú thấp ở bảng Findings</td></tr></tbody></table>
+<p><strong>Delta mới chưa review</strong>: tác giả phát hiện F-9 (perf <code>shard_units</code>, sửa <code>e433292</code>), F-10 (CORS <code>Idempotency-Key</code>, sửa <code>c8c8826</code>), F-11 (dispatch chờ timeout từng shard, sửa <code>9f29b50</code>) khi test thật trên stack sau re-review. Delta <code>e433292..c8c8826</code> và <code>9f29b50</code> cần <strong>re-review độc lập: pending</strong>. Verdict APPROVE trước đó không phủ các commit này.</p>
 <h2 id="findings">Findings</h2>
 <table><thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Evidence</th><th>Action</th><th>Owner</th></tr></thead><tbody>
 <tr><td>M1</td><td>major</td><td>Sweeper chạy lại shard RUNNING còn sống</td><td>review #1 (tĩnh)</td><td>Đã sửa trong <code>bb73895</code>; re-review delta APPROVE</td><td>@toilatrung / executor</td></tr>
@@ -116,6 +117,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Re-review delta 3cb40b3..bb73895 hoàn tất bởi subagent độc lập.</li>
+<li>[ ] Re-review delta <code>9f29b50</code>, <code>e433292</code>..<code>c8c8826</code> (pending).</li>
 <li>[ ] Duyệt của PO (CR-102).</li>
 </ul>
 </article></main></body></html>
