@@ -9,8 +9,9 @@ LabelX is an enterprise Quality Control module that runs around CVAT. Users are 
 
 ## Sources of truth
 
-- Design System document: `docs/design/design-system.md` (principles, content rules, layout, states, every component).
+- Design System document: `docs/design/design-system.html` (principles, content rules, layout, states, every component).
 - Design System "LabelX" in `docs/design/design-system/` (tokens in `tokens.json`, classes `lx-*` in `components/bundle.css`, one README per component). The frontend copy lives in `src/frontend/src/styles/tokens.css` and `labelx.css`.
+- Quy trình bắt buộc và tiêu chí chặn PR: skill `labelx-design-fidelity` (`.agent/skills/labelx-design-fidelity/SKILL.md`).
 - Design canvas "LabelX Quality Control Screens" in `docs/design/screens/` (one `.dc.html` per screen, shared `TopBar` and `FlowNav` components, `canvas.json` for the board layout).
 - Always reuse tokens and `lx-*` classes. Never hard-code a colour, radius or spacing that a token already covers.
 
