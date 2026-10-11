@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-044 — LabelX</title>
+<meta name="labelx:id" content="implementation-report-t-044">
+<meta name="labelx:title" content="Implementation Report T-044">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[implementation, report, t-044, m-03, environment]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-044-@DucHa180104</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-report-t-044</span><b>title</b><span>Implementation Report T-044</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, report, t-044, m-03, environment]</span><b>priority</b><span>3</span></div>
+<h1 id="implementation-report-t-044">T-044 — Chuẩn bị môi trường, cấu hình và dữ liệu kiểm thử M-03</h1>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-044</code></li>
+<li><strong>Title</strong>: <code>Chuẩn bị môi trường, cấu hình và dữ liệu kiểm thử M-03</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Executor</strong>: <code>Antigravity CLI (T-044 environment/test preparation agent)</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>T-044</code> (Issue #123, Milestone M-03 #97, Refs #96)</li>
+<li><strong>Epic ID</strong>: <code>E-13</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Timezone</strong>: <code>Asia/Bangkok (UTC+7)</code></li>
+</ul>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo kiểm kê toàn diện và xác minh trạng thái sẵn sàng của môi trường, hạ tầng dịch vụ (Docker, PostgreSQL, Redis, SeaweedFS, CVAT), venv Python/uv, frontend Node/npm, phân tách cơ sở dữ liệu và dữ liệu kiểm thử phục vụ vòng review–rework khép kín Milestone M-03 theo yêu cầu tại Issue #123 và #97.</p>
+
+<h2 id="worktree-git-context">Worktree &amp; Git Context</h2>
+<ul>
+<li><strong>Worktree Directory</strong>: <code>C:\Dev\Worktrees\T-044\label-x</code> (WSL: <code>/mnt/c/Dev/Worktrees/T-044/label-x</code>)</li>
+<li><strong>Branch</strong>: <code>feat/T-044-m03-test-environment</code></li>
+<li><strong>Base SHA</strong>: <code>257148f5870ad9687b4819da92ca905cb060a657</code> (latest <code>origin/integration/m03</code>)</li>
+<li><strong>Remote URL</strong>: <code>https://github.com/toilatrung/label-x.git</code></li>
+<li><strong>Quy trình tích hợp</strong>: Tuân thủ <code>.github/M03-INTEGRATION.html</code>.</li>
+</ul>
+
+<h2 id="services-inventory">Kiểm kê hạ tầng và dịch vụ</h2>
+<table>
+<thead>
+<tr>
+<th>Dịch vụ</th>
+<th>Phiên bản</th>
+<th>Port / Host</th>
+<th>Trạng thái Container</th>
+<th>Health Check / Verification</th>
+<th>Đánh giá</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Docker Engine</strong></td>
+<td>29.9.0 (build f415da8)</td>
+<td>Local socket unix:///var/run/docker.sock</td>
+<td>Up (Linux containers)</td>
+<td><code>docker info</code> OK, Desktop WSL integration hoạt động</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Docker Compose</strong></td>
+<td>v5.6.0</td>
+<td>Local CLI</td>
+<td>Available</td>
+<td><code>docker compose version</code> OK</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>17.0 (Debian)</td>
+<td><code>localhost:5432</code></td>
+<td><code>labelx-dev-postgres-1</code> (Up 21+ hours)</td>
+<td>Container healthy; kết nối <code>SELECT 1</code> thành công</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>7.2.11 (Alpine)</td>
+<td><code>localhost:6379</code></td>
+<td><code>labelx-dev-redis-1</code> (Up 21+ hours)</td>
+<td>Container healthy; Celery broker &amp; backend PING OK</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>SeaweedFS (S3)</strong></td>
+<td>3.80</td>
+<td><code>localhost:9000</code></td>
+<td><code>labelx-dev-seaweedfs-1</code> (Up 21+ hours)</td>
+<td>Container healthy; 3 buckets <code>labelx-snapshots</code>, <code>labelx-evidence</code>, <code>labelx-reports</code> phản hồi <code>head_bucket</code> 200 OK</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Backend Python / uv</strong></td>
+<td>Python 3.12.15, uv 0.12.24</td>
+<td>Local environment</td>
+<td>Venv <code>.venv</code> đã đồng bộ 71 packages</td>
+<td><code>verify-services.py</code>: PostgreSQL, Redis and three S3 buckets reachable</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Frontend Node / npm</strong></td>
+<td>Node v22.22.1, npm 9.2.0</td>
+<td><code>localhost:3000</code></td>
+<td><code>node_modules</code> đã cài đặt qua <code>npm ci</code></td>
+<td>Dependencies Next.js 16/React 19 sẵn sàng</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Detector / Worker</strong></td>
+<td>SysCV BDD100K Faster R-CNN R-50-FPN 3x</td>
+<td>N/A (module / worker)</td>
+<td>Mã nguồn tại <code>src/detector_worker</code>; Dockerfile sẵn sàng</td>
+<td>Configs và model-manifest đã freeze SHA-256; test batch chạy được</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><strong>Browser Runner</strong></td>
+<td>Playwright / Chromium</td>
+<td>Local CLI</td>
+<td>Chưa có trong local <code>node_modules</code>; không có Chromium binary</td>
+<td><code>require('playwright')</code> ném lỗi Cannot find module</td>
+<td>BLOCKED</td>
+</tr>
+<tr>
+<td><strong>CVAT Community</strong></td>
+<td>v2.77.0 (commit 7dac20c)</td>
+<td><code>localhost:8081</code> (Traefik reverse proxy)</td>
+<td>18 containers cụm CVAT (Up 21+ hours)</td>
+<td><code>/api/server/about</code> trả về HTTP 200 JSON phiên bản 2.77.0</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="database-separation">Xác minh tách biệt Cơ sở dữ liệu</h2>
+<ul>
+<li><strong>Database phát triển</strong>: Tên database <code>labelx</code>. Chỉ dùng cho lưu trữ dữ liệu phát triển cục bộ. Không chạy test trực tiếp trên database này; không sửa hay xóa dữ liệu.</li>
+<li><strong>Database kiểm thử</strong>: Tên database <code>test_labelx</code>. Được khởi tạo và cô lập tự động bởi <code>pytest-django</code> test runner, hoàn toàn tách biệt khỏi database <code>labelx</code>.</li>
+</ul>
+
+<h2 id="identity-scope-verification">Xác minh Danh tính, Tài khoản và Scope Test</h2>
+<h3>1. Fixture Scenarios (M-03 Contract Matrix)</h3>
+<p>Hợp đồng fixture tại <code>src/backend/fixtures/m03-review-workflow-v1.json</code> đã định nghĩa đầy đủ các trường hợp danh tính phục vụ kiểm thử đơn vị và tích hợp hợp đồng:</p>
+<ul>
+<li><strong>Vai trò được phép</strong>: <code>user_id: 701</code> (<code>person_key: person-reviewer-a</code>, role <code>reviewer</code>).</li>
+<li><strong>Vai trò bị từ chối</strong>: <code>user_id: 702</code> (<code>person_key: person-annotator-a</code>, role <code>annotator</code>).</li>
+<li><strong>Self-review / Cùng thể nhân</strong>:
+  <ul>
+    <li><code>user_id: 703</code>: Cùng <code>person_key: person-reviewer-a</code> với reviewer 701; dùng kiểm thử separation-of-duties.</li>
+    <li><code>user_id: 706</code>: Role <code>reviewer</code> nhưng cùng thể nhân với annotator 702 (<code>person-annotator-a</code>); kiểm tra từ chối quyền verify khi cùng người chỉnh sửa/gán nhãn.</li>
+  </ul>
+</li>
+<li><strong>Thiếu identity / Unmapped</strong>: <code>user_id: 705</code> (<code>person_key: person-reviewer-b</code>, <code>cvat_user_id: null</code>, <code>mapped: false</code>).</li>
+</ul>
+
+<h3>2. Tài khoản Runtime phát triển</h3>
+<ul>
+<li>Database phát triển hiện tại chỉ có 2 tài khoản: <code>labelx_local_qa</code> và <code>admin</code>.</li>
+<li>Chưa có tài khoản runtime với các vai trò RBAC cụ thể (reviewer, annotator, qa_lead) để thực hiện E2E qua giao diện trình duyệt hoặc gọi API với token thật.</li>
+<li><strong>Trạng thái</strong>: <code>BLOCKED</code> (Owner: @DucHa180104 / PO @toilatrung). Không tự tạo tài khoản tùy tiện vi phạm quy tắc dữ liệu chuẩn.</li>
+</ul>
+
+<h2 id="cvat-m02-verification">Xác minh CVAT và Dữ liệu M-02 (#96)</h2>
+<ul>
+<li><strong>CVAT Health &amp; Endpoint</strong>: CVAT chạy tại <code>http://localhost:8081</code>, trạng thái Healthy (v2.77.0).</li>
+<li><strong>Chế độ kết nối</strong>: Bắt buộc Read-only. Không tạo hay sửa annotation/task/job trên CVAT.</li>
+<li><strong>CVAT Service Token</strong>: Hiện <code>src/backend/.env</code> chưa cấu hình <code>CVAT_SERVICE_TOKEN</code> có quyền chỉ đọc; trong database CVAT hiện chỉ có tài khoản <code>labelx_local_admin</code>.</li>
+<li><strong>Dữ liệu chạy thật M-02 (#96)</strong>:
+  <ul>
+    <li>Bảng <code>qc_run</code>: 0 records.</li>
+    <li>Bảng <code>orchestration_ledgerunit</code>: 0 records.</li>
+    <li>Bảng <code>orchestration_candidaterecord</code>: 0 records.</li>
+    <li>Snapshot ID 1 là smoke test snapshot (job 1) từ 2026-10-10, chưa phải snapshot/run kết quả thật của toàn bộ pipeline M-02.</li>
+    <li>Task M-02-RESOLVE #96 vẫn đang ở trạng thái OPEN (BLOCKER-024, BLOCKER-026, BLOCKER-027 chưa đóng).</li>
+  </ul>
+</li>
+<li><strong>Trạng thái</strong>: <code>BLOCKED</code> (Owner: PO @toilatrung). Không tự tạo dữ liệu giả thay thế cho kết quả E2E thật từ M-02.</li>
+</ul>
+
+<h2 id="policy-tbd-09">Chính sách Policy TBD-09 (Lease Policy)</h2>
+<ul>
+<li>Policy TTL, renewal trigger và incomplete reservation seconds đang ở trạng thái <code>requires_product_owner_decision</code>.</li>
+<li>Tuân thủ chỉ dẫn: <strong>Không tự đặt giá trị policy TBD-09</strong>.</li>
+<li><strong>Trạng thái</strong>: <code>BLOCKED</code> (Owner: PO @toilatrung).</li>
+</ul>
+
+<h2 id="classification-table">Bảng phân loại yêu cầu T-044</h2>
+<table>
+<thead>
+<tr>
+<th>Hạng mục</th>
+<th>Phân loại</th>
+<th>Bằng chứng</th>
+<th>Owner &amp; Bước tiếp theo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hạ tầng Docker (Postgres 17, Redis 7, SeaweedFS S3)</td>
+<td><strong>PASS</strong></td>
+<td>Containers up &amp; healthy; <code>verify-services.py</code> kết nối thành công</td>
+<td>Đã sẵn sàng</td>
+</tr>
+<tr>
+<td>Môi trường Backend (Python 3.12 / uv)</td>
+<td><strong>PASS</strong></td>
+<td>Venv <code>.venv</code> đã đồng bộ 71 packages qua <code>uv sync</code>; Django check OK</td>
+<td>Đã sẵn sàng</td>
+</tr>
+<tr>
+<td>Môi trường Frontend (Node 22 / npm)</td>
+<td><strong>PASS</strong></td>
+<td>Dependencies cài đặt đầy đủ qua <code>npm ci</code></td>
+<td>Đã sẵn sàng</td>
+</tr>
+<tr>
+<td>Phân tách Database (dev: <code>labelx</code> vs test: <code>test_labelx</code>)</td>
+<td><strong>PASS</strong></td>
+<td>Cấu hình Django DATABASES và pytest-django test runner cô lập rõ ràng</td>
+<td>Đã sẵn sàng</td>
+</tr>
+<tr>
+<td>Hợp đồng Fixture danh tính/scope (M-03 Contract)</td>
+<td><strong>PASS</strong></td>
+<td>Fixture JSON <code>m03-review-workflow-v1.json</code> có đủ 6 case danh tính (701-706)</td>
+<td>Đã sẵn sàng cho test hợp đồng</td>
+</tr>
+<tr>
+<td>Trạng thái CVAT Server (v2.77.0)</td>
+<td><strong>PASS</strong></td>
+<td><code>http://localhost:8081/api/server/about</code> trả về HTTP 200, healthy</td>
+<td>Đã sẵn sàng</td>
+</tr>
+<tr>
+<td>Trình chạy kiểm thử trình duyệt (Browser Runner)</td>
+<td><strong>BLOCKED</strong></td>
+<td>Playwright chưa được cài đặt trong môi trường; thiếu headless browser</td>
+<td>Owner: @DucHa180104 / QA. Cài đặt Playwright module và browser binary khi cần chạy E2E UI.</td>
+</tr>
+<tr>
+<td>Tài khoản Runtime RBAC thật trong DB</td>
+<td><strong>BLOCKED</strong></td>
+<td>DB <code>labelx</code> chỉ có user dev local; chưa có user mapping vai trò M-03</td>
+<td>Owner: @DucHa180104 / PO @toilatrung. Cung cấp script tạo tài khoản thử nghiệm theo chuẩn.</td>
+</tr>
+<tr>
+<td>Cấu hình CVAT Read-only Service Token</td>
+<td><strong>BLOCKED</strong></td>
+<td><code>CVAT_SERVICE_TOKEN</code> trong <code>src/backend/.env</code> còn trống; chưa có token read-only</td>
+<td>Owner: @DucHa180104 / PO. Khởi tạo PAT read-only từ CVAT server và cập nhật .env.</td>
+</tr>
+<tr>
+<td>Dữ liệu thật M-02 (snapshot/run/ledger)</td>
+<td><strong>BLOCKED</strong></td>
+<td>DB chưa có QC run hay ledger từ pipeline thật; M-02 #96 còn OPEN</td>
+<td>Owner: PO @toilatrung. Chờ bàn giao pipeline M-02 theo #96 trước khi E2E M-03.</td>
+</tr>
+<tr>
+<td>Quyết định Policy TBD-09 (Lease TTL)</td>
+<td><strong>BLOCKED</strong></td>
+<td>TBD-09 chưa có quyết định chính thức từ PO</td>
+<td>Owner: PO @toilatrung. Phê duyệt giá trị cấu hình lease TTL.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="m03-resolution-backlog">M-03 Resolution Backlog</h2>
+<p>Theo chỉ đạo của PO @toilatrung, các mục BLOCKED chưa xử lý ngay trong lượt T-044 hiện tại mà được lưu giữ đầy đủ để cuối giai đoạn tổng hợp vào Issue <code>M-03-RESOLVE</code>. <em>Lưu ý: Không tự tạo Issue M-03-RESOLVE lúc này; chỉ chuẩn bị nội dung để cuối giai đoạn tạo.</em></p>
+<p><strong>Disposition chung cho tất cả các mục dưới đây</strong>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</p>
+<ul>
+<li><strong>Playwright / Chromium (Browser Runner)</strong>:
+  <ul>
+    <li><em>Bằng chứng</em>: <code>require('playwright')</code> ném lỗi <code>MODULE_NOT_FOUND</code>; chưa có binary Chromium headless trong môi trường.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>Tài khoản Runtime RBAC thật trong DB</strong>:
+  <ul>
+    <li><em>Bằng chứng</em>: Database phát triển <code>labelx</code> hiện chỉ có 2 tài khoản cục bộ (<code>admin</code>, <code>labelx_local_qa</code>); chưa có tài khoản tương ứng với các vai trò M-03 (reviewer, annotator, qa_lead) để test runtime E2E.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>CVAT Service Token Read-only</strong>:
+  <ul>
+    <li><em>Bằng chứng</em>: Biến <code>CVAT_SERVICE_TOKEN</code> trong <code>src/backend/.env</code> để trống; chưa khởi tạo PAT quyền read-only từ CVAT server.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>Dữ liệu thật Pipeline M-02 (#96)</strong>:
+  <ul>
+    <li><em>Bằng chứng</em>: Các bảng <code>qc_run</code>, <code>orchestration_ledgerunit</code>, <code>orchestration_candidaterecord</code> đều có 0 bản ghi; Milestone M-02 (#96) vẫn ở trạng thái OPEN với các BLOCKER-024, BLOCKER-026, BLOCKER-027 chưa giải quyết.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>Chính sách Lease Policy TBD-09</strong>:
+  <ul>
+    <li><em>Bằng chứng</em>: TTL, renewal trigger và incomplete reservation seconds đang ở trạng thái <code>requires_product_owner_decision</code>. Tuyệt đối không tự đặt giá trị tạm.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+</ul>
+
+<h2 id="conclusion">Kết luận</h2>
+<ul>
+<li><strong>T-044 Deliverable</strong>: <code>READY FOR REVIEW</code> — Báo cáo kiểm kê hạ tầng, phân tách DB, xác minh ma trận fixture contract và hồ sơ backlog đã hoàn thành đầy đủ, sẵn sàng cho bước review theo quy trình.</li>
+<li><strong>Fixture-based Environment</strong>: <code>READY</code> — Môi trường phát triển cục bộ và các bộ test fixture (PostgreSQL 17, Redis 7, SeaweedFS S3, CVAT server v2.77.0, Python 3.12 / uv, Node 22 / npm) đã sẵn sàng để nhóm triển khai các task logic backend (T-033, T-034, T-035).</li>
+<li><strong>Full Browser / Data E2E</strong>: <code>NOT VERIFIED</code> — Kiểm thử E2E toàn diện trên trình duyệt và dữ liệu pipeline thật chưa được xác minh; các blocker liên quan (Playwright/Chromium, tài khoản runtime RBAC, CVAT service token read-only, dữ liệu thật M-02 #96, policy TBD-09) được <code>deferred sang M-03-RESOLVE theo chỉ đạo PO</code>.</li>
+</ul>
+</article></main></body></html>
