@@ -189,6 +189,24 @@ def test_review_decision_schema_preserves_audit_and_reference_links(spec):
         assert ref in srs, f"ReviewDecision: {ref} không có trong SRS"
 
 
+def test_request_fix_is_output_only_for_decisions_endpoint(spec):
+    schemas = spec["components"]["schemas"]
+    input_actions = set(schemas["IssueDecisionAction"]["enum"])
+    persisted_actions = set(schemas["PersistedIssueDecisionAction"]["enum"])
+    assert input_actions == {"confirm", "reject", "uncertain", "escalate"}
+    assert persisted_actions == input_actions | {"request_fix"}
+    assert schemas["IssueDecisionCreate"]["properties"]["action"]["$ref"] == (
+        "#/components/schemas/IssueDecisionAction"
+    )
+    assert schemas["IssueDecision"]["properties"]["action"]["$ref"] == (
+        "#/components/schemas/PersistedIssueDecisionAction"
+    )
+    assert "request_fix" in schemas["ReviewDecision"]["properties"]["decision"]["enum"]
+    rework = spec["paths"]["/api/rework/"]["post"]
+    assert rework["x-labelx-transition"] == "issue.request_fix"
+    assert "ReviewDecision(request_fix)" in rework["description"]
+
+
 def test_every_operation_declares_known_roles(spec):
     roles = set(spec["components"]["schemas"]["Role"]["enum"]) | PSEUDO_ROLES
     for path, method, op in operations(spec):

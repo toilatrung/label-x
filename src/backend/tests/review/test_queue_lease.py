@@ -54,7 +54,18 @@ def world(db):
                 assignee_cvat_user_id=702,
                 assignee_user_id=author.pk,
                 source_updated_at="2026-10-11T00:00:00Z",
-                annotations={"shapes": [], "tracks": []},
+                annotations={
+                    "shapes": [
+                        {
+                            "id": 91,
+                            "type": "rectangle",
+                            "frame": 0,
+                            "label_id": 1,
+                            "points": [1, 1, 10, 10],
+                        }
+                    ],
+                    "tracks": [],
+                },
                 frames=[
                     FrameExport(
                         frame_index=0,
@@ -126,8 +137,43 @@ def next_url(queue="risk"):
     return f"/api/queues/{queue}/next/"
 
 
+def persist_manual_decision(world, lease_id):
+    """Real API writer: no mocked persisted-decision projection."""
+    api = client(world["reviewer"])
+    frame_id = Lease.objects.get(pk=lease_id).frame_review_id
+    created = api.post(
+        "/api/issues/",
+        {
+            "frame_id": frame_id,
+            "lease_id": lease_id,
+            "family": "E1",
+            "anchor": {
+                "kind": "manual_region",
+                "objects": [],
+                "bbox": {"x1": 1, "y1": 1, "x2": 10, "y2": 10},
+                "policy_version": "anchor-v1",
+            },
+        },
+        format="json",
+    )
+    assert created.status_code == 201, created.data
+    decided = api.post(
+        f"/api/issues/{created.data['id']}/decisions/",
+        {
+            "lease_id": lease_id,
+            "action": "confirm",
+            "revision": world["run"].snapshot.revision_sha256,
+            "family": "E1",
+            "severity": "medium",
+        },
+        format="json",
+    )
+    assert decided.status_code == 201, decided.data
+    return created.data["id"]
+
+
 @pytest.mark.django_db
-def test_claim_two_tab_renew_expiry_resume_and_204(world, monkeypatch):
+def test_claim_two_tab_renew_expiry_resume_and_204(world):
     user = world["reviewer"]
     run_id = world["run"].pk
     api = client(user)
@@ -152,8 +198,7 @@ def test_claim_two_tab_renew_expiry_resume_and_204(world, monkeypatch):
         action="leases.renew.rejected", object_id=str(lease_id)
     ).exists()
 
-    # T-035 integration is absent: this is a transition harness, NOT persisted-decision proof.
-    monkeypatch.setattr("review.decision_source.has_persisted_decision", lambda _frame: True)
+    persist_manual_decision(world, lease_id)
     Lease.objects.filter(pk=lease_id).update(expires_at=timezone.now() - timedelta(seconds=1))
     assert api.post(f"/api/leases/{lease_id}/renew/", {}).status_code == 409
     resumed = api.post(next_url(), {"run_id": run_id}, format="json")
@@ -231,7 +276,7 @@ def test_exact_expiry_materializes_and_reservation_boundary(world, monkeypatch):
     assert claim.status_code == 200
     lease = Lease.objects.get(pk=claim.data["lease"]["id"])
     clock[0] = lease.expires_at  # exact equality is expired
-    monkeypatch.setattr("review.decision_source.has_persisted_decision", lambda _frame: True)
+    persist_manual_decision(world, lease.pk)
     response = reviewer_api.post(f"/api/leases/{lease.pk}/renew/", {}, format="json")
     assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
     lease.refresh_from_db()
@@ -268,7 +313,7 @@ def test_expiry_without_decisions_requeues_and_old_reviewer_resumes_incomplete(w
     again = api.post(next_url(), {"run_id": run_id}, format="json")
     assert again.status_code == 200 and again.data["resumed"] is False
     new_lease = Lease.objects.get(pk=again.data["lease"]["id"])
-    monkeypatch.setattr("review.decision_source.has_persisted_decision", lambda _frame: True)
+    persist_manual_decision(world, new_lease.pk)
     clock[0] = new_lease.expires_at
     assert api.post(f"/api/leases/{new_lease.pk}/renew/", {}).status_code == 409
     clock[0] += timedelta(seconds=1)
@@ -315,8 +360,10 @@ def test_migration_upgrade_from_baseline_schema():
     executor.migrate([("review", None)])
     assert "review_lease" not in connection.introspection.table_names()
     executor = MigrationExecutor(connection)
-    executor.migrate([("review", "0001_initial")])
-    assert {"frame_review", "review_lease"} <= set(connection.introspection.table_names())
+    executor.migrate([("review", "0002_issue_reviewdecision_and_more")])
+    assert {"frame_review", "review_lease", "review_issue", "review_decision"} <= set(
+        connection.introspection.table_names()
+    )
 
 
 @pytest.mark.django_db(transaction=True)

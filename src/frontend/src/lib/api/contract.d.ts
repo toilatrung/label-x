@@ -539,6 +539,8 @@ export interface paths {
          * @description Lease còn hạn và đúng người giữ; kiểm lại assignee tại snapshot để chặn self-review.
          *     confirm yêu cầu family và severity; reject/uncertain/escalate yêu cầu reason.
          *     Super Admin ghi đè cần override_reason và vẫn chịu kiểm self-review.
+         *     Không nhận request_fix: /api/rework/ thực hiện nguyên tử tạo rework,
+         *     append ReviewDecision(request_fix), chuyển fix_pending và ghi audit (T-040).
          */
         post: operations["issues_decide"];
         delete?: never;
@@ -617,7 +619,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tạo yêu cầu sửa cho issue confirmed */
+        /**
+         * Tạo yêu cầu sửa cho issue confirmed
+         * @description Một transaction tạo rework, append ReviewDecision(request_fix),
+         *     chuyển issue sang fix_pending và ghi audit. Nghiệp vụ endpoint thuộc T-040.
+         */
         post: operations["rework_create"];
         delete?: never;
         options?: never;
@@ -1442,11 +1448,19 @@ export interface components {
             anchor: components["schemas"]["Anchor"];
             description?: string;
         };
-        /** @enum {string} */
-        IssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix";
+        /**
+         * @description Chỉ các action được nhận tại POST /api/issues/{id}/decisions/.
+         * @enum {string}
+         */
+        IssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate";
+        /**
+         * @description Action được lưu/trả về; request_fix do POST /api/rework/ tạo nguyên tử.
+         * @enum {string}
+         */
+        PersistedIssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix";
         /**
          * @description confirm bắt buộc family và severity. reject/uncertain/escalate bắt buộc reason.
-         *     request_fix chỉ sau confirmed; chi tiết yêu cầu sửa gửi tới /api/rework/.
+         *     request_fix không được nhận ở endpoint decisions; gửi chi tiết yêu cầu sửa tới /api/rework/.
          *     override_reason bắt buộc nếu Super Admin dùng quyền ghi đè.
          */
         IssueDecisionCreate: {
@@ -1463,7 +1477,7 @@ export interface components {
         IssueDecision: {
             id: number;
             issue_id: number;
-            action: components["schemas"]["IssueDecisionAction"];
+            action: components["schemas"]["PersistedIssueDecisionAction"];
             actor_user_id: number;
             revision: string;
             family?: components["schemas"]["IssueFamily"];
