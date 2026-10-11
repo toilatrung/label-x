@@ -19,6 +19,12 @@ export function installMockAuthApi() {
     else if (path === '/api/auth/session/' && request.method === 'GET') response = await session(request);
     else if (path === '/api/auth/logout/' && request.method === 'POST') response = await logout(request);
     else if (path === '/api/auth/mock-users/' && request.method === 'GET') response = await mockUsers();
+    else if (path === '/api/effort-events/' && request.method === 'POST') {
+      const cloned = request.clone();
+      const body = await cloned.json().catch(() => ({ events: [] }));
+      const batchLength = Array.isArray(body?.events) ? body.events.length : 0;
+      response = Response.json({ accepted: batchLength, duplicates: 0 }, { status: 202 });
+    }
     else throw new Error('Unexpected API path: ' + path);
     for (const cookie of response.headers.getSetCookie()) {
       const [pair] = cookie.split(';');
