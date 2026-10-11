@@ -195,7 +195,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><code>c8c8826</code> — CORS cho phép <code>Idempotency-Key</code> (F-10); có test <code>test_cors_preflight_allows_idempotency_key</code>.</li>
 <li><code>1bed0b1</code> — <code>postSnapshot</code> không ném khi <code>/api/auth/csrf/</code> trả 204 (F-12); có ca vitest 204 trong <code>snapshot-api</code>.</li>
-<li>Thay đổi dev <code>src/frontend/next.config.ts</code> (<code>allowedDevOrigins</code> <code>127.0.0.1</code>, workaround F-13): <strong>không có trong commit nào của nhánh này</strong> (<code>git status</code> sạch, <code>next.config.ts</code> không bị sửa/không có diff); <strong>không có test</strong>; chưa được quyết định.</li>
+<li>Thay đổi dev <code>src/frontend/next.config.ts</code> (<code>allowedDevOrigins</code> <code>127.0.0.1</code>, workaround F-13): <strong>đã nằm trong commit <code>973de62</code></strong> (lẫn trong commit R-3, không phải commit riêng; <code>git status</code> sạch, không còn thay đổi chưa commit); <strong>không có test</strong>; việc giữ thay đổi này trong PR chưa được quyết định.</li>
 </ul>
 <p><strong>Rủi ro xung đột merge (R-6)</strong>: <code>src/frontend/next.config.ts</code> có thể xung đột giữa PR #126 và PR #134. QC dự kiến merge #134 trước; khi gộp phải giữ cả hai khối <code>allowedDevOrigins</code>, <code>rewrites</code> và <code>experimental.proxyTimeout</code>.</p>
 <h2 id="deviations">Deviations</h2>
