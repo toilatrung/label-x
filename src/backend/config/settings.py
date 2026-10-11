@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "snapshots.apps.SnapshotsConfig",
     "runs.apps.RunsConfig",
     "orchestration.apps.OrchestrationConfig",
+    "review.apps.ReviewConfig",
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
+
+# TBD-09: no business defaults; deployment must supply approved policy values.
+REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=None)
+REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
+    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=None
+)
+# T-035 owns the adapter backed by append-only ReviewDecision records.
+REVIEW_PERSISTED_DECISION_CHECK = env("REVIEW_PERSISTED_DECISION_CHECK", default=None)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

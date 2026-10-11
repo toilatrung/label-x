@@ -107,7 +107,7 @@ class AuditRejectionMiddleware:
     @staticmethod
     def _flush_pending(request: HttpRequest, status_code: int) -> None:
         pending = getattr(request, "_pending_rejection_audit", None)
-        if pending and status_code in (400, 403, 404, 422, 500):
+        if pending and status_code in (400, 403, 404, 409, 422, 500):
             actor = pending.get("actor")
             if actor and isinstance(actor, User) and actor.is_authenticated:
                 with transaction.atomic():
