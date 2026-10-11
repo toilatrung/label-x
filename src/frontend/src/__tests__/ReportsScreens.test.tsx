@@ -29,6 +29,25 @@ describe('Quality Report', () => {
     expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toHaveLength(3);
     expect(screen.queryByText(/thành công/i)).toBeNull();
   });
+  it('shows the not-connected notice when an export format is chosen', () => {
+    render(<QualityReportHeader />);
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Xuất báo cáo/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /PDF/ }));
+    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+  it('closes the export menu on Escape and on an outside click', () => {
+    render(<><QualityReportHeader /><p>Bên ngoài</p></>);
+    const trigger = screen.getByRole('button', { name: /Xuất báo cáo/ });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('menu')).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    fireEvent.click(trigger);
+    fireEvent.mouseDown(screen.getByText('Bên ngoài'));
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
 });
 
 describe('Quality Gate', () => {
@@ -44,7 +63,7 @@ describe('Quality Gate', () => {
     fireEvent.change(screen.getByLabelText('Lý do (bắt buộc)'), { target: { value: 'x' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gửi xin waiver' }));
     expect(screen.queryByText(/đã gửi|thành công/i)).toBeNull();
-    expect(screen.getAllByText(NOTICE).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(NOTICE)).toHaveLength(3);
   });
 });
 
@@ -55,5 +74,7 @@ describe('Release History', () => {
     expect(screen.getByText('Manifest · v1.3')).toBeTruthy();
     expect(screen.getByText('SNP-011')).toBeTruthy();
     expect(screen.getAllByRole('status').length).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Tải manifest (JSON)' }));
+    expect(screen.getAllByRole('status').length).toBe(3);
   });
 });

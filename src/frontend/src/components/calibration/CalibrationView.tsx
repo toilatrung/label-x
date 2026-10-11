@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DemoRegionNotice } from './DemoRegionNotice';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { MODEL_ROWS, REVIEWER_ROWS } from '@/lib/calibration/sample-data';
 
 type Tab = 'reviewer' | 'model';
@@ -9,15 +10,17 @@ const TABS: ReadonlyArray<[Tab, string]> = [['reviewer', 'Hiệu chỉnh reviewe
 const DASH = <span className="lx-subtle">—</span>;
 
 export function CalibrationHeader() {
+  const [blocked, setBlocked] = useState(false);
   return (
     <div className="lx-head">
       <div className="lx-head__text">
         <h1 className="lx-h1">Calibration</h1>
         <p className="lx-lead">Hiệu chỉnh reviewer và hiệu chỉnh mô hình là hai việc riêng, có tập dữ liệu, metric và cách điều chỉnh khác nhau. Không trộn hai loại này.</p>
+        {blocked && <NotConnectedNotice />}
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/calibration/assignments/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn lx-btn--primary">Giao bài hiệu chỉnh</button>
+        <button type="button" className="lx-btn lx-btn--primary" onClick={() => setBlocked(true)}>Giao bài hiệu chỉnh</button>
       </div>
     </div>
   );
@@ -30,13 +33,13 @@ export function CalibrationBody() {
       {/* TODO(backend): GET /api/calibration/reviewers/ ; GET /api/calibration/models/ */}
       <DemoRegionNotice />
       <section className="lx-card" aria-label="Hiệu chỉnh">
-        <div className="lx-tabs" role="tablist" style={{ padding: '0 var(--space-3)' }}>
+        <div className="lx-tabs lx-tabs--inset" role="tablist">
           {TABS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={`lx-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>{label}</button>)}
         </div>
         {tab === 'reviewer' && (
           <>
             <div className="lx-scroll">
-              <table className="lx-table" style={{ minWidth: 760 }}>
+              <table className="lx-table lx-table--min-760">
                 <thead><tr><th>Reviewer</th><th className="r">Thống nhất với adjudicator</th><th className="r">Bỏ sót lỗi nghiêm trọng</th><th className="r">Cảnh báo sai</th><th>Bài hiệu chỉnh gần nhất</th></tr></thead>
                 <tbody>{REVIEWER_ROWS.map((r) => <tr key={r.name}><td className="lx-cell__main">{r.name}</td><td className="r">{r.agree}</td><td className={r.missedWarn ? 'r is-warn' : 'r'}>{r.missed}</td><td className="r">{r.falseAlarm}</td><td className="lx-muted">{r.last}</td></tr>)}</tbody>
               </table>
@@ -47,7 +50,7 @@ export function CalibrationBody() {
         {tab === 'model' && (
           <>
             <div className="lx-scroll">
-              <table className="lx-table" style={{ minWidth: 760 }}>
+              <table className="lx-table lx-table--min-760">
                 <thead><tr><th>Lớp</th><th className="r">Ngưỡng tin cậy</th><th className="r">Precision</th><th className="r">Recall</th><th>Trạng thái đánh giá</th></tr></thead>
                 <tbody>
                   {MODEL_ROWS.map((m) => (
