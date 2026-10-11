@@ -127,6 +127,16 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-23, E-24</code></td>
 <td>NFR có ngưỡng đã duyệt được kiểm; diễn tập restore nhất quán (NFR-16); mọi Must + Should có evidence; blocker bắt buộc đóng.</td>
 </tr>
+<tr>
+<td><code>M-FE01</code></td>
+<td><code>R-001</code></td>
+<td><strong>Hoàn thiện Frontend theo thiết kế</strong> — Song song với M-02…M-05 trên nhánh <code>develop-fe</code>. Phase 1: dựng đủ 24 màn theo <code>docs/design/screens</code>, chức năng chưa có API hiển thị "Chức năng vẫn chưa được kết nối với server". Phase 2: nối route vào API thật. Chi tiết: <a href="M-FE01.html">M-FE01</a>.</td>
+<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
+<td><code>2026-10-11 → 2026-10-20</code></td>
+<td><code>proposed</code></td>
+<td><code>phần frontend của E-02…E-22</code></td>
+<td>Phase 1: kiểm toán độ khớp thiết kế đạt mức A 20/20, ảnh chụp đối chiếu, <code>make check</code> xanh. Phase 2: route nối API thật, test frontend trong CI. Chờ <a href="../governance/change-requests/CR-111.html">CR-111</a>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="progress-notes">Progress Notes</h2>
@@ -136,5 +146,6 @@ ul.dir{columns:2;font-size:14px}
 <li>2026-10-08: <code>M-02</code> chuyển <code>in-progress</code> — E-04 đã bắt đầu nhưng <code>EPIC_BLOCKED</code> theo <code>BLOCKER-024</code>; AC-01…AC-03 chưa đo được trên dữ liệu BDD100K thật cho tới khi PO cung cấp bộ annotation người học.</li>
 <li>2026-10-08: <code>M-04</code> chuyển <code>in-progress</code> — E-10 làm sớm theo phiếu giao đợt 1 (T-005, PR #22, <code>DEC-008</code>); E-06, E-07 phụ thuộc <code>BLOCKER-022</code>.</li>
 <li>2026-10-11: <code>M-02</code> vẫn <code>in-progress</code>. Trên develop đã merge T-019…T-032 (PR #74…#111); trạng thái theo task board: T-019, T-020, T-023 <code>done</code> (PO chốt theo QC cấp M-02), T-026 <code>blocked</code>, T-029 <code>in-progress</code>, còn lại <code>review</code>. Task <code>M-02-RESOLVE</code> (độc lập với milestone, dọn tồn đọng M-02) đã <code>done</code> (PR #126 merge 975f960, #139 e074fbc, PO chốt 2026-10-11); BLOCKER-024 <code>accepted</code>, BLOCKER-025…029 còn <code>open</code>. E-05, E-08, E-09, E-11: PO ký bổ sung 2026-10-11 (DEC-002), chuyển <code>EPIC_IN_PROGRESS</code>; chưa epic nào <code>EPIC_DONE</code>. CR-109 được PO duyệt 2026-10-11. BLOCKER-024: PO chấp nhận ngày 2026-10-11 (<code>accepted</code>, DEC-014) với giới hạn mirror và lời khai nguồn nhãn; E-04 chuyển <code>EPIC_IN_PROGRESS</code>. BLOCKER-026 đóng khi PR #126 merge và review APPROVE; BLOCKER-025 giữ open (lease 1800 giây chỉnh sau pilot). Mã task M-01-RESOLVE <code>T-020</code>…<code>T-022</code> đã đổi sang <code>T-047</code>…<code>T-049</code> do trùng mã với snapshot M-02.</li>
+<li>2026-10-11: đề xuất <code>M-FE01</code> (CR-111, <code>proposed</code>): tách phần frontend của M-02…M-05 sang nhánh <code>develop-fe</code> để làm song song; M-02…M-05 đo acceptance phần backend/API, epic <code>EPIC_DONE</code> khi cả Phase 2 xong.</li>
 </ul>
 </article></main></body></html>
