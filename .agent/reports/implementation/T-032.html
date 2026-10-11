@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>T-032 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-032-duy12345-6789">
+<meta name="labelx:id" content="implementation-t-032">
 <meta name="labelx:title" content="T-032 M-03 Contract Model Fixture">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
 <meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, contract, fixture, t-032]">
@@ -13,7 +13,7 @@
 <p>Bằng chứng triển khai gói P01 của M-03: đối chiếu M-02 hiện có, khóa định danh/ownership dùng chung, lập ma trận contract → model/service → transition → RBAC → error → test, tạo fixture denial/expiry/revision/engine failure và tách rõ contract delta chờ PO/CR.</p>
 
 <h2>Record Metadata</h2><ul>
-<li><strong>Report ID</strong>: <code>T-032-@duy12345-6789</code></li>
+<li><strong>Report ID</strong>: <code>T-032</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
 <li><strong>Executor</strong>: <code>Codex</code></li>
 <li><strong>Status</strong>: <code>complete</code></li>
@@ -38,7 +38,7 @@
 <tr><td><code>src/backend/fixtures/m03-review-workflow-v1.json</code></td><td>Fixture ID ổn định cho identities, snapshot/run/frame, lease, Issue/evidence/decision, rework, effort và tám scenario.</td><td>Denial, expiry, revision, engine failure; AC T-032.</td></tr>
 <tr><td><code>src/backend/tests/test_m03_contract_fixture.py</code></td><td>Kiểm nguồn baseline, enum/path/relation OpenAPI, scenario coverage, policy chưa duyệt để null, ownership Candidate/Issue và sáu delta chưa được implement.</td><td>Contract-first; không endpoint giả.</td></tr>
 <tr><td><code>.agent/execution/task-board-@duy12345-6789.html</code></td><td>Thêm T-032 ở trạng thái review và blocker contract delta.</td><td>CR-100.</td></tr>
-<tr><td><code>.agent/reports/implementation/T-032-@duy12345-6789.html</code></td><td>Ánh xạ AC, evidence, deviation và phần chờ review/PO.</td><td>CR-100/CR-103.</td></tr>
+<tr><td><code>.agent/reports/implementation/T-032.html</code></td><td>Ánh xạ AC, evidence, deviation và phần chờ review/PO.</td><td>CR-100/CR-103.</td></tr>
 </tbody></table>
 
 <h2>Contract Decisions Preserved</h2><ul>

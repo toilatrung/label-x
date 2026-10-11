@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-024 — QC Run domain, shard idempotency và lifecycle</title>
-<meta name="labelx:id" content="implementation-t-024-ducha180104">
+<meta name="labelx:id" content="implementation-t-024">
 <meta name="labelx:title" content="T-024 — QC Run domain, shard idempotency và lifecycle">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -37,11 +37,11 @@ ul.dir{columns:2;font-size:14px}
 @media print{.top{display:none}article{border:0}}
 </style>
 </head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-024-@ducha180104</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-024</span><span class="sp"></span></header>
 <main><article>
 
 <h1 id="t-024">T-024 — QC Run domain, shard idempotency và lifecycle (E-08)</h1>
-<h2 id="record-metadata">Record Metadata</h2><ul><li><strong>Report ID</strong>: <code>T-024-ducha180104</code></li><li><strong>Title</strong>: <code>QC Run domain, shard idempotency và lifecycle</code></li><li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li><li><strong>Executor</strong>: <code>claude-code</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-024</code></li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<h2 id="record-metadata">Record Metadata</h2><ul><li><strong>Report ID</strong>: <code>T-024</code></li><li><strong>Title</strong>: <code>QC Run domain, shard idempotency và lifecycle</code></li><li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li><li><strong>Executor</strong>: <code>claude-code</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-024</code></li><li><strong>Epic ID</strong>: <code>E-08</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
 <h2 id="scope">Scope</h2><ul><li><strong>Implemented</strong>: <code>Model QCRun, WorkUnit (shard), EngineResult, ConfigVersion, ModelArtifact và migration 0001; chia shard tất định theo job/khoảng frame; idempotency_key = sha256(snapshot, engine, engine_version, config_version, model_checksum, shard_key); idempotency HTTP theo header Idempotency-Key + request hash; /api/runs/ (GET, POST), /api/runs/{id}/, cancel, retry-failed; state machine queued/running/completed/partial/failed/cancelled, transition sai trả 409 INVALID_TRANSITION; audit event cho create/cancel/retry-failed.</code></li><li><strong>Not Implemented</strong>: <code>Retry/backoff tự động theo BLOCKER-014 (PO chưa chốt tham số, tách thành BLOCKER-025); retry-failed hiện chỉ đưa work unit failed về pending và tăng attempt. Việc thực thi shard/worker thuộc T-025.</code></li></ul>
 <h2 id="changes-made">Changes Made</h2><table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td><code>src/backend/runs/</code></td><td>models, migration 0001, services, serializers, views, urls cho QC Run</td><td><code>T-024</code></td></tr>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-020 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-020-duy12345-6789">
+<meta name="labelx:id" content="implementation-t-020">
 <meta name="labelx:title" content="T-020 Immutable Snapshot Implementation Report">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -14,7 +14,7 @@
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Bằng chứng triển khai normalized snapshot, SHA-256, provenance, parent lineage và bảo vệ bất biến theo issue #62.</p>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-020-@duy12345-6789</code></li><li><strong>Title</strong>: <code>Model + service snapshot bất biến: normalized JSON, SHA-256, provenance, parent_snapshot</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-020</code></li><li><strong>Epic ID</strong>: <code>E-04</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-020</code></li><li><strong>Title</strong>: <code>Model + service snapshot bất biến: normalized JSON, SHA-256, provenance, parent_snapshot</code></li><li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-020</code></li><li><strong>Epic ID</strong>: <code>E-04</code></li><li><strong>Report Date</strong>: <code>2026-10-09</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: <code>Snapshot/SnapshotJob/SnapshotFrame; canonical labelx.snapshot.v1 JSON; SHA-256 job/tổng; media checksum; frame/source mapping; CVAT và LabelX assignee; taxonomy/guideline version; provenance; parent_snapshot; bbox-only normalization; skipped counts theo shape type; service transaction; model và PostgreSQL trigger immutability; fixture dùng chung.</code></li><li><strong>Not Implemented</strong>: <code>API, drift re-read, CVAT deep link và object-storage upload thuộc T-021; T-020 chỉ lưu storage key và checksum của media đã export.</code></li></ul>
 <h2 id="changes-made">Changes Made</h2>
@@ -54,7 +54,7 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>No work outside T-020 is claimed.</li><li>No independent approval or done status is claimed.</li><li>No credential, token or learner media bytes are stored in this report.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Stored at <code>.agent/reports/implementation/T-020-@duy12345-6789.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Implementation evidence is complete; task moves to review only after PR handoff.</li></ul>
+<ul><li>Stored at <code>.agent/reports/implementation/T-020.html</code> under CR-100.</li><li>Template headings and evidence columns are preserved.</li><li>Implementation evidence is complete; task moves to review only after PR handoff.</li></ul>
 <h2 id="concurrency-remediation">Concurrency remediation — PO request 2026-10-09</h2>
 <p>Nguyên nhân F-1: trigger job/frame chỉ kiểm status bằng SELECT, không giữ khóa parent. Writer qua kiểm tra khi exporting có thể commit sau transaction khóa snapshot; finalizer còn có thể dùng aggregate đọc trước khi chờ. Bản sửa giữ parent row lock đến hết transaction và tính hash sau khi lấy khóa.</p>
 <ul><li>Migration <code>0002_serialize_snapshot_mutations</code> nâng cấp trigger trên DB đã có 0001: khóa OLD/NEW parents theo id tăng dần, kiểm trạng thái sau chờ; frame giữ job mapping bằng FOR SHARE. INSERT/UPDATE/DELETE và chuyển parent đều được bảo vệ.</li><li>Service <code>lock_snapshot()</code> dùng FOR NO KEY UPDATE, đọc job payload/hash đã commit rồi tạo aggregate và hash tổng; create_locked_snapshot dùng cùng đường finalization. Finalizer không lấy khóa/cập nhật child rows sau parent để tránh cycle với writer đã giữ child row.</li><li>Transition trigger từ chối aggregate/cache không khớp persisted jobs/frames và counts, kể cả raw UPDATE có aggregate đã đọc trước khi chờ.</li><li>Mutable writers phải cập nhật fields, normalized JSON, hash/counts liên quan trong cùng transaction; finalization từ chối cache/hashes stale, không âm thầm sửa dữ liệu không nhất quán.</li><li>Giữ nguyên schema <code>labelx.snapshot.v1</code> và fixture digest. Real-data acceptance vẫn ở BLOCKER-024, không đóng T-019.</li></ul>

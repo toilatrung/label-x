@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Implementation Report T-031: random audit and control ranking — LabelX</title>
-<meta name="labelx:id" content="implementation-t-031-vietanhhhhhh2003">
+<meta name="labelx:id" content="implementation-t-031">
 <meta name="labelx:title" content="Implementation Report T-031: random audit and control ranking">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -14,7 +14,7 @@
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Ghi nhận bằng chứng triển khai backend T-031 (E-11, issue #73): random audit slice, control ranking, giải thích điểm, persistence/API runs và E2E M-02 trên fixture BDD100K.</p>
 <h2 id="record-metadata">Record Metadata</h2>
-<ul><li><strong>Report ID</strong>: <code>T-031-@vietanhhhhhh2003</code></li><li><strong>Title</strong>: <code>Random audit slice, separate control rankings, score explanation and M-02 seam</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-031</code></li><li><strong>Epic ID</strong>: <code>E-11</code></li><li><strong>Report Date</strong>: <code>2026-10-10</code></li></ul>
+<ul><li><strong>Report ID</strong>: <code>T-031</code></li><li><strong>Title</strong>: <code>Random audit slice, separate control rankings, score explanation and M-02 seam</code></li><li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task ID</strong>: <code>T-031</code></li><li><strong>Epic ID</strong>: <code>E-11</code></li><li><strong>Report Date</strong>: <code>2026-10-10</code></li></ul>
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: <code>deterministic ceil(r% × N) audit sampling; random, annotation-count and max-confidence controls with separate sources and canonical hashes; JSON-safe score explanation; immutable idempotent database persistence; GET /api/runs/{id}/ranking/ with risk/random queues, filters and dataset RBAC; OpenAPI response metadata; BDD100K snapshot → real duplicate engine → score/control reproducibility test.</code></li><li><strong>Not Implemented</strong>: <code>frontend AuditSampling, owned separately by @tdt2112.</code></li></ul>
 <h2 id="changes-made">Changes Made</h2>
@@ -56,5 +56,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Do not treat this implementation report as independent review approval.</li><li>Do not mutate a persisted ranking when normalized content or ordering hashes differ.</li><li>Do not mix random/control sources into the risk ordering.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Saved at <code>.agent/reports/implementation/T-031-@vietanhhhhhh2003.html</code>.</li><li>All required template sections and table columns are preserved.</li><li>HTML only, per CR-103.</li></ul>
+<ul><li>Saved at <code>.agent/reports/implementation/T-031.html</code>.</li><li>All required template sections and table columns are preserved.</li><li>HTML only, per CR-103.</li></ul>
 </article></body></html>
