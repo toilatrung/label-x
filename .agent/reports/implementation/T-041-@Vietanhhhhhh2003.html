@@ -17,6 +17,7 @@
 <li><strong>Task</strong>: <a href="https://github.com/toilatrung/label-x/issues/108">T-041 / issue #108</a></li>
 <li><strong>Base</strong>: <code>origin/integration/m03@0aa8b25</code></li>
 <li><strong>Branch</strong>: <code>feat/T-041-e16-final-run-lineage</code></li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/159">#159</a>, base <code>integration/m03</code></li>
 </ul>
 <h2>Thay đổi</h2><ul>
 <li><code>review/finalization_service.py</code>: khóa run gốc, fail closed khi issue/rework còn mở, snapshot toàn CVAT scope, đối chiếu job hash đã verify, tạo final run và chọn operational source theo ledger.</li>
@@ -39,7 +40,7 @@
 <tr><td>Ruff + mypy</td><td><code>PASS</code></td></tr>
 </tbody></table>
 <h2>Gate còn lại</h2><ul>
-<li>Independent review/QC, CI trên PR head và E2E CVAT/browser từ T-045/T-046.</li>
+<li>Independent review/QC và CI trên PR head vẫn pending; real CVAT revision/browser E2E vẫn thuộc gate T-045/T-046 của issue #108.</li>
 <li>M03-D05 cần PO/CR phê duyệt trước khi mở lineage read endpoint cho UI.</li>
 </ul>
 </article></main></body></html>
