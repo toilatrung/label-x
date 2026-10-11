@@ -22,13 +22,21 @@ type Outcome = AdjudicationInput['outcome'];
 
 const OUTCOMES: { value: Outcome; label: string; note: string }[] = [
   { value: 'confirm', label: 'Xác nhận lỗi', note: 'Issue chuyển sang confirmed.' },
-  { value: 'reject', label: 'Bác bỏ lỗi', note: 'Issue chuyển sang rejected.' },
+  { value: 'reject', label: 'Bác bỏ', note: 'Issue chuyển sang rejected.' },
   {
     value: 'guideline_gap',
-    label: 'Thiếu guideline',
+    label: 'Guideline còn thiếu',
     note: 'Issue tiếp tục ở trạng thái escalated để chờ guideline mới.',
   },
 ];
+
+const FAMILY_LABELS: Record<string, string> = { E1: 'Thiếu box', E2: 'Sai nhãn', E3: 'Trùng box', structural: 'Cảnh báo cấu trúc' };
+const DECISION_LABELS: Record<string, string> = {
+  confirm: 'Xác nhận lỗi', reject: 'Bác bỏ', uncertain: 'Chưa chắc chắn', escalate: 'Chuyển cấp trên', request_fix: 'Yêu cầu sửa',
+  adjudicate_confirm: 'Phân xử: xác nhận lỗi', adjudicate_reject: 'Phân xử: bác bỏ', adjudicate_guideline_gap: 'Phân xử: guideline còn thiếu',
+};
+const issueCode = (id: number) => `QC-${String(id).padStart(5, '0')}`;
+const familyLabel = (family: string) => FAMILY_LABELS[family] ?? family;
 
 function makeRequestKey(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -37,6 +45,41 @@ function makeRequestKey(): string {
 
 function formatValue(value: string | number | null | undefined): string {
   return value === null || value === undefined || value === '' ? '—' : String(value);
+}
+
+/** Hàng 3 cột của thiết kế: Quyết định của reviewer, Bằng chứng, Hướng dẫn liên quan (dữ liệu thật từ issue). */
+function EscalationSummary({ issue }: { issue: EscalationIssue }) {
+  const ruleIds = [...new Set([...(issue.rule_ids ?? []), ...issue.evidence.flatMap((item) => (item.rule_id ? [item.rule_id] : []))])];
+  return (
+    <div className="lx-grid lx-grid--3">
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Quyết định của reviewer</span>
+        {issue.review_decisions.length === 0 ? <div className="lx-muted lx-text-13">Chưa có quyết định.</div> : (
+          <table className="lx-table lx-table--sm"><tbody>
+            {issue.review_decisions.map((decision) => (
+              <tr key={decision.id}><td>User #{decision.actor_user_id}</td><td><span className="lx-badge">{DECISION_LABELS[decision.decision] ?? decision.decision}</span></td></tr>
+            ))}
+          </tbody></table>
+        )}
+      </div>
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Bằng chứng</span>
+        {issue.evidence.length === 0 ? <div className="lx-muted lx-text-13">Issue chưa có bằng chứng.</div> : (
+          <div className="lx-muted lx-text-13">
+            {issue.evidence.map((item, index) => (
+              <div key={`${item.engine}:${item.rule_id ?? index}`}>
+                {item.engine}: {formatValue(item.prediction_class ?? item.actual)}{item.confidence != null ? ` · ${item.confidence}` : ''}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Hướng dẫn liên quan</span>
+        <div className="lx-muted lx-text-13">
+          {ruleIds.length === 0 ? 'Issue chưa gắn quy tắc.' : <>Quy tắc: <span className="lx-mono">{ruleIds.join(', ')}</span></>}
+          <br /><Link className="lx-link" href="/configuration/guidelines">Tra cứu Models và Guidelines</Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function EscalationDetail({ issue }: { issue: EscalationIssue }) {
@@ -60,7 +103,7 @@ function EscalationDetail({ issue }: { issue: EscalationIssue }) {
                   <th>Engine / Rule</th>
                   <th>Expected / Actual</th>
                   <th>Prediction</th>
-                  <th>Confidence / IoU</th>
+                  <th>Confidence / Intersection over Union</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,7 +125,7 @@ function EscalationDetail({ issue }: { issue: EscalationIssue }) {
                     </td>
                     <td className="lx-num">
                       {formatValue(item.confidence)}
-                      <div className="lx-cell__sub">IoU: {formatValue(item.iou)}</div>
+                      <div className="lx-cell__sub">Intersection over Union: {formatValue(item.iou)}</div>
                     </td>
                   </tr>
                 ))}
@@ -253,7 +296,7 @@ export function EscalationsWorkspace() {
         <section className="lx-card lx-side--list" aria-label="Danh sách escalation" aria-busy={listQuery.isFetching}>
           <div className="lx-card__head">
             <h2 className="lx-h2">Chờ phân xử</h2>
-            <span className="lx-hint">Trang {cursors.length}</span>
+            <span className="lx-hint">{issues.length} case</span>
           </div>
           <form className="lx-toolbar" onSubmit={applyRunFilter}>
             <div className="lx-field lx-escalation-run-filter">
@@ -312,12 +355,12 @@ export function EscalationsWorkspace() {
                 return (
                   <li key={issue.id} aria-current={selected?.id === issue.id ? 'true' : undefined}>
                     <div className="lx-row lx-row--between">
-                      <b className="lx-mono">#{issue.id}</b>
+                      <b className="lx-mono">{issueCode(issue.id)}</b>
                       <span className="lx-badge lx-badge--warning">
                         {lastEscalation?.decision === 'uncertain' ? 'Chưa chắc chắn' : 'Chuyển cấp trên'}
                       </span>
                     </div>
-                    <div className="lx-cell__main lx-mt-1">{issue.family} · {issue.severity || 'Chưa xếp mức'}</div>
+                    <div className="lx-cell__main lx-mt-1">{familyLabel(issue.family)} · {issue.severity || 'Chưa xếp mức'}</div>
                     <div className="lx-cell__sub">
                       {issue.origin} · {issue.state} · Rule {issue.rule_ids?.join(', ') || '—'} · {issue.evidence.length} bằng chứng · {issue.review_decisions.length} quyết định
                     </div>
@@ -330,7 +373,7 @@ export function EscalationsWorkspace() {
             </ul>
           )}
           <footer className="lx-card__foot">
-            <span>{issues.length} issue trên trang hiện tại.</span>
+            <span>Hiển thị {issues.length} case · Trang {cursors.length}</span>
             <nav className="lx-pager" aria-label="Phân trang escalation">
               <button
                 className="lx-btn lx-btn--sm"
@@ -378,10 +421,11 @@ export function EscalationsWorkspace() {
             <>
               <section className="lx-card" aria-label={`Form phân xử issue ${selected.id}`}>
                 <div className="lx-card__head">
-                  <h2 className="lx-h2"><span className="lx-mono">#{selected.id}</span> · Phân xử Issue #{selected.id}</h2>
+                  <h2 className="lx-h2"><span className="lx-mono">{issueCode(selected.id)}</span> · {familyLabel(selected.family)}</h2>
                   <Link className="lx-link lx-text-13" href="/review/workspace">Mở trong Review Workspace</Link>
                 </div>
                 <form className="lx-card__body lx-stack" onSubmit={submitAdjudication}>
+                  <EscalationSummary issue={selected} />
                   <div className="lx-hint">Backend kiểm tra role, scope, định danh và separation of duties.</div>
                   {isOwnEscalation && (
                     <div className="lx-callout" role="alert">
@@ -389,7 +433,7 @@ export function EscalationsWorkspace() {
                     </div>
                   )}
                   <fieldset className="lx-fieldset">
-                    <legend className="lx-label">Kết luận</legend>
+                    <legend className="lx-label">Kết luận phân xử</legend>
                     <div className="lx-choices">
                       {OUTCOMES.map((option) => (
                         <label className="lx-choice" key={option.value} title={option.note}>
@@ -408,14 +452,19 @@ export function EscalationsWorkspace() {
                   </fieldset>
                   <div className="lx-grid lx-grid--3">
                     <div className="lx-field">
-                      <label className="lx-label" htmlFor="adjudication-rule">Rule ID *</label>
+                      <label className="lx-label" htmlFor="adjudication-rule">Quy tắc áp dụng *</label>
+                      {/* TODO(backend): danh sách quy tắc để dùng dropdown như thiết kế; hiện nhập tay kèm gợi ý từ issue */}
                       <input
                         id="adjudication-rule"
                         className="lx-input lx-mono"
+                        list="adjudication-rule-options"
                         value={ruleId}
                         onChange={(event) => setRuleId(event.target.value)}
                         required
                       />
+                      <datalist id="adjudication-rule-options">
+                        {[...new Set([...(selected.rule_ids ?? []), ...selected.evidence.flatMap((item) => (item.rule_id ? [item.rule_id] : []))])].map((id) => <option key={id} value={id} />)}
+                      </datalist>
                     </div>
                     <div className="lx-field">
                       <label className="lx-label" htmlFor="adjudication-label">Nhãn đúng</label>
@@ -424,13 +473,25 @@ export function EscalationsWorkspace() {
                         className="lx-input"
                         value={correctLabel}
                         onChange={(event) => setCorrectLabel(event.target.value)}
+                        list="adjudication-label-options"
                         maxLength={64}
                         placeholder="Để trống nếu không đổi nhãn"
                       />
+                      <datalist id="adjudication-label-options">
+                        {[...new Set(selected.evidence.flatMap((item) => (item.prediction_class ? [item.prediction_class] : [])))].map((label) => <option key={label} value={label} />)}
+                      </datalist>
+                    </div>
+                    <div className="lx-field">
+                      <label className="lx-label" htmlFor="adjudication-after">Sau khi phân xử</label>
+                      {/* TODO(backend): POST /api/rework/ (tạo yêu cầu sửa cho annotator sau phân xử, BLOCKER-030); trường khoá, không gọi API */}
+                      <select id="adjudication-after" className="lx-select" disabled value="rework" onChange={() => undefined}>
+                        <option value="rework">Tạo yêu cầu sửa cho annotator</option>
+                        <option value="record">Chỉ ghi nhận quyết định</option>
+                      </select>
                     </div>
                   </div>
                   <div className="lx-field">
-                    <label className="lx-label" htmlFor="adjudication-reason">Lý do *</label>
+                    <label className="lx-label" htmlFor="adjudication-reason">Lý do phân xử *</label>
                     <textarea
                       id="adjudication-reason"
                       className="lx-textarea"
@@ -442,7 +503,7 @@ export function EscalationsWorkspace() {
                   </div>
                   {requiresOverride && (
                     <div className="lx-field">
-                      <label className="lx-label" htmlFor="adjudication-override">Lý do override *</label>
+                      <label className="lx-label" htmlFor="adjudication-override">Lý do ghi đè *</label>
                       <textarea
                         id="adjudication-override"
                         className="lx-textarea"
@@ -461,7 +522,7 @@ export function EscalationsWorkspace() {
                       </div>
                     </div>
                   )}
-                  {gapBlocked && <NotConnectedNotice detail="Tạo Guideline Gap chờ endpoint POST /api/guideline-gaps/ (BLOCKER-030)" />}
+                  <NotConnectedNotice detail={gapBlocked ? 'Thao tác "Tạo Guideline Gap" chưa được thực hiện' : 'Trường Sau khi phân xử và nút Tạo Guideline Gap chờ endpoint POST /api/rework/ và POST /api/guideline-gaps/ (BLOCKER-030)'} />
                   <div className="lx-actions lx-actions--end">
                     {/* TODO(backend): POST /api/guideline-gaps/ (BLOCKER-030); nút chặn, không gọi API giả */}
                     <button className="lx-btn" type="button" onClick={() => setGapBlocked(true)}>Tạo Guideline Gap</button>
@@ -470,7 +531,7 @@ export function EscalationsWorkspace() {
                       type="submit"
                       disabled={mutation.isPending || isOwnEscalation}
                     >
-                      {mutation.isPending ? 'Đang lưu…' : 'Lưu kết luận phân xử'}
+                      {mutation.isPending ? 'Đang lưu…' : 'Lưu phân xử'}
                     </button>
                   </div>
                 </form>

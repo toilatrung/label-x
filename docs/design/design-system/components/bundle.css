@@ -452,3 +452,8 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-text-13 { font-size: 13px; }
 
 .lx-list > li[aria-current="true"] { background: var(--surface-selected); }
+
+/* Escalations adjudication workspace */
+.lx-escalation-run-filter { flex: 1 1 240px; min-width: 0; }
+.lx-decision { border: 1px solid var(--border); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.lx-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }

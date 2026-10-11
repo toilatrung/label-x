@@ -127,7 +127,7 @@ describe('Escalations UI (T-039)', () => {
   it('renders API evidence and reviewer decisions, then loads beyond the first page', async () => {
     const { calls } = await renderPage();
     expect(await screen.findByRole('heading', { name: 'Escalations' })).toBeDefined();
-    expect(await screen.findByText('#42')).toBeDefined();
+    expect(await screen.findByText('QC-00042')).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByText('detector')).toBeDefined();
@@ -136,20 +136,20 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.getByText(/sha-review-1/)).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }));
-    expect(await screen.findByText('#84')).toBeDefined();
+    expect(await screen.findByText('QC-00084')).toBeDefined();
     expect(calls.some((call) => new URL(call.url).searchParams.get('cursor') === '42')).toBe(true);
   });
 
   it('validates and posts the adjudication contract with an idempotency key', async () => {
     const { calls } = await renderPage();
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
 
     fireEvent.change(screen.getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
-    fireEvent.change(screen.getByLabelText('Lý do *'), {
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), {
       target: { value: 'Evidence và guideline thống nhất.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
 
     expect(await screen.findByText(/Đã lưu Decision Case #91/)).toBeDefined();
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
@@ -175,10 +175,10 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByText(/không được tự phân xử/i)).toBeDefined();
-    expect((screen.getByRole('button', { name: 'Lưu kết luận phân xử' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Lưu phân xử' }) as HTMLButtonElement).disabled).toBe(true);
     expect(calls.some((call) => call.method === 'POST')).toBe(false);
   });
 
@@ -194,10 +194,10 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    fireEvent.change(screen.getByLabelText('Lý do *'), { target: { value: 'Đủ bằng chứng.' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), { target: { value: 'Đủ bằng chứng.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
     expect(await screen.findByText(/SAME_REQUESTER_APPROVER/)).toBeDefined();
     expect(screen.getByText(/Người duyệt phải khác người yêu cầu/)).toBeDefined();
   });
@@ -220,13 +220,13 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    fireEvent.click(screen.getByLabelText('Thiếu guideline'));
-    fireEvent.change(screen.getByLabelText('Lý do *'), {
+    fireEvent.click(screen.getByLabelText('Guideline còn thiếu'));
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), {
       target: { value: 'Guideline chưa bao phủ tình huống này.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
     expect(await screen.findByText(/Đã lưu Decision Case #92/)).toBeDefined();
 
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
@@ -242,7 +242,7 @@ describe('Escalations UI (T-039)', () => {
 
   it('queries Decision Cases by the requested case version', async () => {
     const { calls } = await renderPage();
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     await waitFor(() => expect(calls.some((call) => new URL(call.url).pathname === '/api/decision-cases/')).toBe(true));
 
@@ -256,14 +256,27 @@ describe('Escalations UI (T-039)', () => {
 
   it('requires an override reason for a global Super Admin', async () => {
     await renderPage('admin');
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    expect(screen.getByLabelText('Lý do override *')).toBeDefined();
+    expect(screen.getByLabelText('Lý do ghi đè *')).toBeDefined();
+  });
+
+  it('renders the three-column summary and the locked Sau khi phân xử field (FE-12)', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('QC-00042');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(screen.getByText('Quyết định của reviewer')).toBeDefined();
+    expect(screen.getByText('Hướng dẫn liên quan')).toBeDefined();
+    expect(screen.getAllByText('Bằng chứng').length).toBeGreaterThan(0);
+    const after = screen.getByLabelText('Sau khi phân xử') as HTMLSelectElement;
+    expect(after.disabled).toBe(true);
+    expect(calls.some((call) => new URL(call.url).pathname.startsWith('/api/rework'))).toBe(false);
+    expect(screen.queryByText(/IoU/)).toBeNull();
   });
 
   it('lists real issues in the design layout and blocks Tạo Guideline Gap with the notice (FE-12)', async () => {
     const { calls } = await renderPage();
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     expect(screen.queryByText('QC-00098')).toBeNull();
     expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
