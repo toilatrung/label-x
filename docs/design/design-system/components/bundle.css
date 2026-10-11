@@ -439,6 +439,18 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-notice__ico { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke: currentColor; fill: none; }
 .lx-notice--warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
 
+/* Workspace helpers (FE-05): thay style inline trong Review Workspace. */
+.lx-grow { flex: 1; }
+.lx-grid--2 { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.lx-h2--sm { font-size: 13px; }
+.lx-stage__bar--foot { border-top: 1px solid #343a43; border-bottom: 0; }
+.lx-ws__summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.lx-ws__note { margin: var(--space-2) 0 0; font-size: 13px; }
+.lx-ws__empty { max-width: 640px; margin: 48px auto; text-align: center; }
+.lx-stage__view--flush { padding: 0; }
+.lx-choice--disabled { opacity: .5; cursor: not-allowed; }
+.lx-choice--disabled input { cursor: not-allowed; }
+
 /* Layout modifiers used by Escalations and Rework Tracking (replace inline styles) */
 .lx-tabs--inset { padding: 0 var(--space-3); }
 .lx-table--min-880 { min-width: 880px; }
