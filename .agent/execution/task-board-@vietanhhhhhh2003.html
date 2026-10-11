@@ -6,10 +6,10 @@
 <meta name="labelx:type" content="execution">
 <meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[execution, per-user, t-014, t-030, t-031, t-036, t-039]">
+<meta name="labelx:tags" content="[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040]">
 <meta name="labelx:priority" content="2">
 </head><body><main><article>
-<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030, t-031, t-036, t-039]</span><b>priority</b><span>2</span></div>
+<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040]</span><b>priority</b><span>2</span></div>
 <h1 id="task-board-vietanhhhhhh2003">Task Board — @vietanhhhhhh2003</h1>
 <h2 id="purpose">Purpose</h2>
 <p>File riêng của Nguyễn Xuân Việt Anh (@vietanhhhhhh2003) theo CR-100. Integrator gộp thay đổi này vào <code>.agent/execution/task-board.html</code>.</p>
@@ -54,5 +54,16 @@
 <li>[x] Frontend full suite <code>29 files / 307 tests</code>, lint, typecheck và production build đạt.</li>
 <li>[x] Browser role matrix/API environment: Edge + Next.js + Django + PostgreSQL cô lập trong Docker/WSL, 11 checks/58 API calls/0 page error; gồm Decision Case lookup trong Review Workspace; evidence tại <code>src/frontend/evidence/t039/</code>.</li>
 <li>[ ] Independent review/QA và GitHub Actions trên PR head còn chờ trước khi done.</li>
+</ul>
+<h2 id="t-040-task-record">T-040 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-040</td><td>E-16</td><td>Rework API, snapshot revision mới, re-check và verify</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-035/T-038 satisfied; implementation gốc PR #136 integrated; T-045 PostgreSQL evidence integrated</td><td><a href="../reports/implementation/T-040-@Vietanhhhhhh2003.html">takeover implementation report</a>; <a href="../reports/implementation/T-040-@duy12345-6789.html">original implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/107">issue #107</a>; branch <code>feat/T-040-e16-rework-recheck-verify-vietanh</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-040-acceptance-criteria">T-040 Acceptance Criteria</h2><ul>
+<li>[x] Tiếp quản implementation đã merge từ PR #136, giữ nguyên tác giả và evidence cũ.</li>
+<li>[x] Retry submit cùng <code>Idempotency-Key</code> và cùng body trả lại kết quả; cùng key nhưng body khác trả <code>409 IDEMPOTENCY_KEY_REUSED</code>.</li>
+<li>[x] PostgreSQL focused test <code>5 passed</code>; toàn bộ review regression <code>62 passed</code>; Django check, migration check và Ruff đều đạt.</li>
+<li>[ ] M03-D04 GET list/detail vẫn chờ PO/CR; không tự mở rộng contract.</li>
+<li>[ ] Independent review/QC và GitHub Actions trên PR head cần hoàn tất trước khi done.</li>
 </ul>
 </article></main></body></html>
