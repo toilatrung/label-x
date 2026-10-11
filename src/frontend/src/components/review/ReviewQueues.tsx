@@ -21,9 +21,20 @@ import type {
   ReviewQueueFilters,
 } from '@/lib/review/types';
 import { ReviewDatasetPicker } from './ReviewDatasetPicker';
+import { ReviewWorkspace } from './ReviewWorkspace';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
-export function ReviewQueues() {
+export interface ReviewQueuesProps {
+  onWorkspaceStateChange?: (state: {
+    isOpen: boolean;
+    frameId?: number;
+    runId?: number | null;
+    leaseId?: number;
+    taskCvatId?: number;
+  }) => void;
+}
+
+export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {}) {
   const { datasetId, session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,6 +69,23 @@ export function ReviewQueues() {
   const [claimError, setClaimError] = useState<{ message: string; code?: string } | null>(null);
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
   const [isLeaseConflict, setIsLeaseConflict] = useState<boolean>(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState<boolean>(false);
+
+  // Pure tick state for lease countdown to avoid impure Date.now() during render
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // User context tracking: reset workspace and active lease if reviewer changes
+  const currentUserId = session?.user?.id ?? null;
+  const [boundUserId, setBoundUserId] = useState<number | null>(currentUserId);
+  if (boundUserId !== currentUserId) {
+    setBoundUserId(currentUserId);
+    setIsWorkspaceOpen(false);
+    setActiveGrant(null);
+  }
 
   // Track whether initial page-load dataset binding has completed
   const [hasInitializedDataset, setHasInitializedDataset] = useState(Boolean(datasetId));
@@ -76,6 +104,7 @@ export function ReviewQueues() {
     setRenewMessage(null);
     setIsLeaseConflict(false);
     setCursor(null);
+    setIsWorkspaceOpen(false);
   } else if (!hasInitializedDataset && datasetId !== null) {
     // Initial dataset resolution at page load: bind initial dataset and deep-linked run
     setHasInitializedDataset(true);
@@ -89,8 +118,11 @@ export function ReviewQueues() {
     setBoundDatasetId(datasetId);
     setSelectedRunId(null);
     setRunInput('');
+    setIsWorkspaceOpen(false);
   } else if (runParam !== prevRunParam) {
     setPrevRunParam(runParam);
+    setIsWorkspaceOpen(false);
+    setActiveGrant(null);
     if (boundDatasetId === datasetId && datasetId !== null) {
       if (parsedRunId) {
         setSelectedRunId(parsedRunId);
@@ -115,10 +147,20 @@ export function ReviewQueues() {
   }, [selectedRunId, runParam, router]);
 
   // Ref tracking latest context for mutation guards, updated during commit phase
-  const contextRef = useRef({ datasetId, activeRunId: effectiveRunId });
+  const contextRef = useRef({ datasetId, activeRunId: effectiveRunId, currentUserId });
   useEffect(() => {
-    contextRef.current = { datasetId, activeRunId: effectiveRunId };
-  }, [datasetId, effectiveRunId]);
+    contextRef.current = { datasetId, activeRunId: effectiveRunId, currentUserId };
+  }, [datasetId, effectiveRunId, currentUserId]);
+
+  useEffect(() => {
+    onWorkspaceStateChange?.({
+      isOpen: isWorkspaceOpen && Boolean(activeGrant && effectiveRunId),
+      frameId: activeGrant?.frame.id,
+      runId: effectiveRunId,
+      leaseId: activeGrant?.lease.id,
+      taskCvatId: activeGrant?.frame.frame_key.cvat_task_id,
+    });
+  }, [isWorkspaceOpen, activeGrant, effectiveRunId, onWorkspaceStateChange]);
 
   // Reset pagination cursor when queue or filters change
   const handleQueueChange = (queue: QueueName) => {
@@ -145,6 +187,8 @@ export function ReviewQueues() {
         setCursor(null);
         setSelectedRunId(parsed);
         setBoundDatasetId(datasetId);
+        setActiveGrant(null);
+        setIsWorkspaceOpen(false);
         startTransition(() => {
           router.push(`/review?run=${parsed}`);
         });
@@ -205,6 +249,7 @@ export function ReviewQueues() {
       return {
         targetDatasetId: datasetId,
         targetRunId: effectiveRunId,
+        targetUserId: currentUserId,
       };
     },
     mutationFn: async () => {
@@ -214,7 +259,8 @@ export function ReviewQueues() {
       // Discard if context switched while mutation was pending
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
-        contextRef.current.datasetId !== context?.targetDatasetId
+        contextRef.current.datasetId !== context?.targetDatasetId ||
+        contextRef.current.currentUserId !== context?.targetUserId
       ) {
         return;
       }
@@ -231,7 +277,8 @@ export function ReviewQueues() {
       // Discard if context switched while mutation was pending
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
-        contextRef.current.datasetId !== context?.targetDatasetId
+        contextRef.current.datasetId !== context?.targetDatasetId ||
+        contextRef.current.currentUserId !== context?.targetUserId
       ) {
         return;
       }
@@ -257,6 +304,7 @@ export function ReviewQueues() {
       return {
         targetDatasetId: datasetId,
         targetRunId: effectiveRunId,
+        targetUserId: currentUserId,
       };
     },
     mutationFn: async (leaseId: number) => {
@@ -266,7 +314,8 @@ export function ReviewQueues() {
       // Discard if context switched while mutation was pending
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
-        contextRef.current.datasetId !== context?.targetDatasetId
+        contextRef.current.datasetId !== context?.targetDatasetId ||
+        contextRef.current.currentUserId !== context?.targetUserId
       ) {
         return;
       }
@@ -279,7 +328,8 @@ export function ReviewQueues() {
       // Discard if context switched while mutation was pending
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
-        contextRef.current.datasetId !== context?.targetDatasetId
+        contextRef.current.datasetId !== context?.targetDatasetId ||
+        contextRef.current.currentUserId !== context?.targetUserId
       ) {
         return;
       }
@@ -300,6 +350,7 @@ export function ReviewQueues() {
   });
 
   const handleReloadServerState = () => {
+    setIsWorkspaceOpen(false);
     setIsLeaseConflict(false);
     setActiveGrant(null);
     setClaimError(null);
@@ -308,6 +359,29 @@ export function ReviewQueues() {
     queryClient.invalidateQueries({ queryKey: ['review', 'run', datasetId, effectiveRunId] });
     queryClient.invalidateQueries({ queryKey: ['review', 'ranking', datasetId, effectiveRunId] });
   };
+
+  const isMatchingHolder = Boolean(
+    activeGrant && currentUserId !== null && activeGrant.lease.holder_user_id === currentUserId
+  );
+  const leaseExpiresAtMs = activeGrant ? new Date(activeGrant.lease.expires_at).getTime() : NaN;
+  const isLeaseExpiryFinite = Number.isFinite(leaseExpiresAtMs);
+  const isLeaseExpired = !isLeaseExpiryFinite || leaseExpiresAtMs <= now;
+  const isFrameRunMatching = Boolean(
+    activeGrant && effectiveRunId !== null && activeGrant.frame.run_id === effectiveRunId
+  );
+  const isLeaseFrameMatching = Boolean(
+    activeGrant && activeGrant.lease.frame_id === activeGrant.frame.id
+  );
+  const canOpenWorkspace = Boolean(
+    activeGrant &&
+      effectiveRunId &&
+      isMatchingHolder &&
+      isFrameRunMatching &&
+      isLeaseFrameMatching &&
+      isLeaseExpiryFinite &&
+      !isLeaseExpired &&
+      !isLeaseConflict
+  );
 
   const nextCursor = cursorFrom(rankingQuery.data?.next);
   const prevCursor = cursorFrom(rankingQuery.data?.previous);
@@ -456,10 +530,20 @@ export function ReviewQueues() {
                   type="button"
                   className="lx-btn lx-btn--sm"
                   onClick={() => renewMutation.mutate(activeGrant.lease.id)}
-                  disabled={renewMutation.isPending || isLeaseConflict}
+                  disabled={renewMutation.isPending || isLeaseConflict || isWorkspaceOpen}
+                  title={isWorkspaceOpen ? 'Workspace đang tự động quản lý vòng đời lease' : undefined}
                 >
                   {renewMutation.isPending ? 'Đang gia hạn...' : 'Gia hạn lease (Renew)'}
                 </button>
+                {canOpenWorkspace && !isWorkspaceOpen && (
+                  <button
+                    type="button"
+                    className="lx-btn lx-btn--sm lx-btn--primary"
+                    onClick={() => setIsWorkspaceOpen(true)}
+                  >
+                    Vào kiểm tra frame (Workspace)
+                  </button>
+                )}
                 {isLeaseConflict && (
                   <button
                     type="button"
@@ -515,9 +599,81 @@ export function ReviewQueues() {
         </div>
       )}
 
-      {/* Review Queues Panel: Only shown when runQuery succeeds */}
-      {datasetId && effectiveRunId && runQuery.isSuccess && (
-        <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
+      {/* Review Workspace inline view or Review Queues Panel */}
+      {isWorkspaceOpen && activeGrant && effectiveRunId ? (
+        <section className="lx-stack" aria-label="Không gian kiểm tra Review Workspace" style={{ gap: '16px' }}>
+          <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="lx-btn"
+              onClick={() => setIsWorkspaceOpen(false)}
+            >
+              ← Quay lại danh sách hàng đợi
+            </button>
+            <div className="lx-row" style={{ gap: '8px', alignItems: 'center' }}>
+              <span className="lx-badge lx-badge--info">
+                Frame #{activeGrant.frame.id}
+              </span>
+              <span className="lx-mono lx-subtle">
+                Lease #{activeGrant.lease.id}
+              </span>
+            </div>
+          </div>
+          <ReviewWorkspace
+            frameId={activeGrant.frame.id}
+            initialLease={activeGrant.lease}
+            grant={activeGrant}
+            runId={effectiveRunId}
+            datasetId={datasetId}
+            onBackToQueue={() => setIsWorkspaceOpen(false)}
+            onLeaseUpdated={(updatedLease) => {
+              if (
+                contextRef.current.datasetId !== datasetId ||
+                contextRef.current.activeRunId !== effectiveRunId ||
+                contextRef.current.currentUserId !== currentUserId
+              ) {
+                return;
+              }
+              setActiveGrant((prev) => {
+                if (
+                  !prev ||
+                  prev.frame.id !== activeGrant.frame.id ||
+                  prev.lease.id !== updatedLease.id
+                ) {
+                  return prev;
+                }
+                return { ...prev, lease: updatedLease };
+              });
+            }}
+            onLeaseConflict={() => {
+              if (
+                contextRef.current.datasetId !== datasetId ||
+                contextRef.current.activeRunId !== effectiveRunId ||
+                contextRef.current.currentUserId !== currentUserId
+              ) {
+                return;
+              }
+              setIsLeaseConflict(true);
+            }}
+            onFrameCompleted={() => {
+              if (
+                contextRef.current.datasetId !== datasetId ||
+                contextRef.current.activeRunId !== effectiveRunId ||
+                contextRef.current.currentUserId !== currentUserId
+              ) {
+                return;
+              }
+              setIsWorkspaceOpen(false);
+              setActiveGrant(null);
+              queryClient.invalidateQueries({
+                queryKey: ['review', 'ranking', datasetId, effectiveRunId],
+              });
+            }}
+          />
+        </section>
+      ) : (
+        datasetId && effectiveRunId && runQuery.isSuccess && (
+          <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
           {/* Queue Selection Tabs */}
           <div className="lx-tabs" role="tablist" aria-label="Các hàng đợi kiểm tra">
             <button
@@ -825,7 +981,7 @@ export function ReviewQueues() {
             </>
           )}
         </section>
-      )}
+      ))}
     </div>
   );
 }

@@ -279,3 +279,143 @@ class DecisionCase(models.Model):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise ValueError("DecisionCase is append-only")
+
+
+class ReworkRequest(models.Model):
+    """Mutable rework projection; immutable decisions and verifications keep its history."""
+
+    class Status(models.TextChoices):
+        FIX_PENDING = "fix_pending", "Fix pending"
+        RECHECK_PENDING = "recheck_pending", "Recheck pending"
+        RESOLVED = "resolved", "Resolved"
+        REOPENED = "reopened", "Reopened"
+
+    issue = models.ForeignKey(Issue, on_delete=models.PROTECT, related_name="rework_requests")
+    annotator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="assigned_reworks"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="created_reworks"
+    )
+    status = models.CharField(
+        max_length=24, choices=Status.choices, default=Status.FIX_PENDING, db_index=True
+    )
+    instruction = models.TextField()
+    severity = models.CharField(max_length=16, choices=Issue.Severity.choices)
+    cvat_deep_link = models.URLField(max_length=1024)
+    original_revision = models.CharField(max_length=64)
+    submitted_revision = models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
+    recheck_snapshot = models.ForeignKey(
+        "snapshots.Snapshot",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="rework_requests",
+    )
+    recheck_run = models.ForeignKey(
+        "runs.QCRun",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="rework_requests",
+    )
+    due_at = models.DateTimeField()
+    create_idempotency_key = models.CharField(max_length=36, null=True, blank=True)  # noqa: DJ001
+    create_request_hash = models.CharField(max_length=64, blank=True)
+    submission_idempotency_key = models.CharField(max_length=36, null=True, blank=True)  # noqa: DJ001
+    submission_request_hash = models.CharField(max_length=64, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "rework_request"
+        ordering = ["created_at", "pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issue"],
+                condition=Q(status__in=["fix_pending", "recheck_pending"]),
+                name="rework_one_active_per_issue",
+            ),
+            models.UniqueConstraint(
+                fields=["created_by", "create_idempotency_key"],
+                condition=Q(create_idempotency_key__isnull=False),
+                name="rework_create_idempotency",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"ReworkRequest {self.pk} (issue={self.issue_id}, status={self.status})"
+
+
+class ReworkRecheck(models.Model):
+    """Immutable link from one submission to its new snapshot and re-check run."""
+
+    rework = models.OneToOneField(ReworkRequest, on_delete=models.PROTECT, related_name="recheck")
+    snapshot = models.ForeignKey("snapshots.Snapshot", on_delete=models.PROTECT)
+    run = models.ForeignKey("runs.QCRun", on_delete=models.PROTECT)
+    revision = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "rework_recheck"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rework", "snapshot"], name="rework_recheck_unique_snapshot"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"ReworkRecheck {self.pk} (rework={self.rework_id}, run={self.run_id})"
+
+
+class ReworkVerificationQuerySet(models.QuerySet["ReworkVerification"]):
+    def update(self, **kwargs: Any) -> int:
+        raise ValueError("ReworkVerification is append-only")
+
+    def delete(self) -> tuple[int, dict[str, int]]:
+        raise ValueError("ReworkVerification is append-only")
+
+
+class ReworkVerification(models.Model):
+    class Outcome(models.TextChoices):
+        PASS = "pass", "Pass"
+        FAIL = "fail", "Fail"
+
+    rework = models.ForeignKey(
+        ReworkRequest, on_delete=models.PROTECT, related_name="verifications"
+    )
+    verifier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    recheck_run = models.ForeignKey("runs.QCRun", on_delete=models.PROTECT)
+    outcome = models.CharField(max_length=8, choices=Outcome.choices)
+    revision = models.CharField(max_length=64)
+    reason = models.TextField(blank=True)
+    audit_event = models.OneToOneField("audit.AuditEvent", on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=36, null=True, blank=True)  # noqa: DJ001
+    request_hash = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = ReworkVerificationQuerySet.as_manager()
+
+    class Meta:
+        db_table = "rework_verification"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rework", "verifier", "idempotency_key"],
+                condition=Q(idempotency_key__isnull=False),
+                name="rework_verify_idempotency",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"ReworkVerification {self.pk} ({self.outcome}, rework={self.rework_id})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk is not None:
+            raise ValueError("ReworkVerification is append-only")
+        kwargs["force_insert"] = True
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise ValueError("ReworkVerification is append-only")
