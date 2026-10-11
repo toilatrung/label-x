@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-038 — Escalation, Adjudication và Decision Case có version</title>
+<meta name="labelx:id" content="implementation-t-038-ducha180104">
+<meta name="labelx:title" content="T-038 — Escalation, Adjudication và Decision Case có version">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review">
+<meta name="labelx:tags" content="[implementation, report, t-038, review, e-15]">
+<meta name="labelx:priority" content="2">
+<style>
+body{font:15px/1.55 system-ui,-apple-system,sans-serif;color:#1a1d23;background:#f6f7f9;margin:0}
+main{max-width:1050px;margin:24px auto;padding:24px;background:white;border:1px solid #ddd;border-radius:4px}
+.meta{background:#f3f4f6;padding:10px;display:grid;grid-template-columns:110px 1fr;gap:3px 10px;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;margin-top:0}
+h2{border-bottom:1px solid #ddd;padding-bottom:5px;margin-top:28px;font-size:18px}
+table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;margin:12px 0}
+th,td{border:1px solid #ddd;padding:8px 10px;vertical-align:top;font-size:14px}
+th{background:#f3f4f6;text-align:left}
+code{background:#f3f4f6;padding:2px 5px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;border-radius:3px}
+li{margin:6px 0}
+.badge-pass{background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-weight:600;font-size:12px}
+.badge-draft{background:#fef9c3;color:#854d0e;padding:2px 6px;border-radius:4px;font-weight:600;font-size:12px}
+</style></head>
+<body><main><article>
+<div class="meta"><b>id</b><span>implementation-t-038-ducha180104</span><b>title</b><span>T-038 — Escalation, Adjudication và Decision Case có version</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[implementation, report, t-038, review, e-15]</span><b>priority</b><span>2</span></div>
+<h1 id="t-038">T-038 — Escalation, Adjudication và Decision Case có version (E-15)</h1>
+
+<h2 id="record-metadata">Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>T-038-@DucHa180104</code></li>
+<li><strong>Title</strong>: Escalation, Adjudication và Decision Case có version</li>
+<li><strong>Owner</strong>: Nguyễn Đức Hà (@DucHa180104)</li>
+<li><strong>Executor</strong>: Antigravity Desktop, implementation agent T-038</li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Review readiness</strong>: <span class="badge-pass">ready for independent review</span></li>
+<li><strong>Task ID</strong>: <code>T-038</code></li>
+<li><strong>Epic ID</strong>: <code>E-15</code></li>
+<li><strong>Task State</strong>: <code>review</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-11</code> (Asia/Bangkok)</li></ul>
+
+<h2 id="scope">Scope & Context</h2><ul>
+<li><strong>Base SHA</strong>: <code>7effc8ed4ef1dbe644b177a21051e855405f8c95</code> (latest <code>origin/integration/m03</code> sau khi PR #133/T-036 đã merge).</li>
+<li><strong>Branch & Worktree</strong>: <code>feat/T-038-e15-escalation-cases</code> tại <code>C:\Dev\Worktrees\T-038\label-x</code>.</li>
+<li><strong>Contract References</strong>:
+  <ul>
+    <li>Issue #105: Escalation, Adjudication và Decision Case có version (E-15).</li>
+    <li>Issue #97: Quản trị Epic E-15: Review Workflow, Escalation & Adjudication.</li>
+    <li>OpenAPI baseline: <code>docs/04-api/openapi.yaml</code> (dòng 785–835, 2023–2046, 2125–2150).</li>
+    <li>State machine M-03: <code>docs/02-architecture/state-machines.html</code>.</li>
+    <li>Matrix contract & fixtures: <code>docs/04-api/m03-contract-model-fixture-matrix.html</code>.</li>
+  </ul>
+</li>
+<li><strong>Implemented</strong>:
+  <ul>
+    <li>GET <code>/api/escalations/</code>: Liệt kê issue escalated cũ nhất trước, cursor pagination, lọc theo run/dataset scope.</li>
+    <li>POST <code>/api/issues/{id}/adjudications/</code>: Phân xử issue escalated bởi QA Lead / Super Admin; hỗ trợ 3 outcome: <code>confirm</code>, <code>reject</code>, <code>guideline_missing</code>.</li>
+    <li>Separation of duties & natural person guard: Chặn người chuyển cấp tự phân xử (403 <code>SAME_REQUESTER_APPROVER</code>), chặn 2 account khác nhau thuộc cùng EmployeeIdentity / thể nhân (403 <code>SAME_NATURAL_PERSON_ALIAS</code>), chặn sai role (chỉ QA Lead / Super Admin), chặn ngoài dataset scope.</li>
+    <li>Model <code>DecisionCase</code> có version (<code>v1</code>, <code>v2</code>...), quan hệ với Issue và ReviewDecision, append-only bất biến được bảo vệ cả tầng PostgreSQL Trigger và Django ORM.</li>
+    <li>GET <code>/api/decision-cases/</code> và <code>/api/decision-cases/{id}/</code>: Tra cứu Decision Case theo UC-12.</li>
+    <li>Same-transaction atomicity: Khóa hàng theo thứ tự <code>User -> Run -> Issue</code>, cập nhật Issue state, tạo DecisionCase, tạo AuditEvent trong 1 transaction; rollback toàn bộ nếu audit fail.</li>
+    <li>DEC-009: Adjudication không tính vào reviewer confirm hay KPI-2b.</li>
+  </ul>
+</li>
+<li><strong>Out of Scope / Postponed / Limits</strong>:
+  <ul>
+    <li>Guideline Gap workflow (FR-ESC-05 hoãn theo CR-101; outcome sử dụng <code>guideline_missing</code>).</li>
+    <li>Không sửa CandidateRecord theo quyết định của người (DEC-006).</li>
+    <li>Không có write path vào CVAT.</li>
+    <li>Rework endpoints (thuộc T-040).</li>
+  </ul>
+</li>
+</ul>
+
+<h2 id="contract-mapping">Contract & Schema Mapping (Finding 3)</h2>
+<table><thead><tr><th>Trường / Thành phần</th><th>Kiểu / Ràng buộc</th><th>Nguồn Contract / Specification</th><th>Ghi chú & Nghiệp vụ M-03</th></tr></thead><tbody>
+<tr><td><code>issue</code></td><td>ForeignKey(<code>Issue</code>, on_delete=PROTECT)</td><td><code>docs/04-api/m03-contract-model-fixture-matrix.html</code>, Issue #105</td><td>Issue được phân xử (bắt buộc state <code>ESCALATED</code>).</td></tr>
+<tr><td><code>review_decision</code></td><td>ForeignKey(<code>ReviewDecision</code>, null=True, on_delete=PROTECT)</td><td><code>docs/04-api/m03-contract-model-fixture-matrix.html</code></td><td>Decision chuyển cấp tương ứng nếu có.</td></tr>
+<tr><td><code>case_version</code></td><td>CharField(16)</td><td><code>docs/04-api/openapi.yaml</code> line 2146, Issue #105</td><td>Format chuỗi <code>v1</code>, <code>v2</code>, v.v.; unique per issue.</td></tr>
+<tr><td><code>outcome</code></td><td>CharField(24, choices=Outcome.choices)</td><td>Issue #105: <code>confirm</code>, <code>reject</code>, <code>guideline_missing</code></td><td>Chỉ 3 outcome hợp lệ. Không dùng <code>guideline_gap</code> (hoãn theo CR-101).</td></tr>
+<tr><td><code>rule_id</code></td><td>CharField(32)</td><td><code>docs/04-api/openapi.yaml</code> line 2133, Issue #105</td><td>Quy tắc vi phạm; phải thuộc snapshot guideline version của run.</td></tr>
+<tr><td><code>correct_label</code></td><td>CharField(64, null=True, blank=True)</td><td><code>docs/04-api/openapi.yaml</code> line 2134, Issue #105</td><td>Nhãn đúng; nullable (noqa: DJ001 theo chuẩn contract API).</td></tr>
+<tr><td><code>reason</code></td><td>TextField()</td><td><code>docs/04-api/openapi.yaml</code> line 2135, Issue #105</td><td>Lý do phân xử; bắt buộc không được rỗng.</td></tr>
+<tr><td><code>override_reason</code></td><td>TextField(blank=True)</td><td><code>docs/04-api/openapi.yaml</code> line 2136, <code>state-machines.html</code></td><td>Bắt buộc đối với Super Admin phân xử vượt cấp.</td></tr>
+<tr><td><code>actor</code></td><td>ForeignKey(User, on_delete=PROTECT)</td><td><code>docs/04-api/openapi.yaml</code> line 2143, Issue #105</td><td>Người thực hiện phân xử (QA Lead / Super Admin).</td></tr>
+<tr><td><code>idempotency_key</code></td><td>CharField(36, null=True, blank=True)</td><td>Issue #105: Idempotency-Key header</td><td>Unique per <code>(issue, actor, idempotency_key)</code>.</td></tr>
+<tr><td><code>request_hash</code></td><td>CharField(64)</td><td>Issue #105</td><td>SHA-256 hash payload phân xử để so khớp idempotency.</td></tr>
+<tr><td><code>created_at</code></td><td>DateTimeField(auto_now_add=True)</td><td><code>docs/04-api/openapi.yaml</code> line 2147</td><td>Thời điểm phân xử; append-only không chỉnh sửa.</td></tr>
+<tr><td>Trigger DB</td><td>PostgreSQL Trigger <code>review_decision_case_append_only</code></td><td>Issue #105, <code>state-machines.html</code></td><td>Chặn toàn bộ lệnh UPDATE và DELETE ở tầng cơ sở dữ liệu.</td></tr>
+<tr><td><code>ReviewDecision.Action</code></td><td>TextChoices (5 actions gốc)</td><td><code>src/backend/review/models.py</code> (PR #128, #130 đã merge)</td><td>Giữ nguyên 5 actions: <code>CONFIRM</code>, <code>REJECT</code>, <code>UNCERTAIN</code>, <code>ESCALATE</code>, <code>REQUEST_FIX</code>. Không tự thêm <code>adjudicate_*</code>.</td></tr>
+</tbody></table>
+
+<h2 id="db-safety">Database Safety & Isolation (Finding 2)</h2><ul>
+<li><strong>Phát triển DB <code>labelx</code></strong>: Được bảo vệ nguyên vẹn. Đã kiểm tra xác nhận chưa từng có bất kỳ câu lệnh migrate hay ghi dữ liệu nào từ T-038 vào database này.</li>
+<li><strong>Database cô lập <code>test_t038_labelx</code></strong>: Đã khởi tạo riêng trên PostgreSQL local (port 5432), cập nhật <code>src/backend/.env</code> trỏ đến <code>test_t038_labelx</code>.</li>
+<li><strong>Quy trình thực thi DB</strong>: Mọi lệnh migrate và test luôn in rõ ràng mục tiêu <code>TARGET DATABASE: test_t038_labelx</code> trước khi chạy. Pytest tự động tạo database cô lập <code>test_test_t038_labelx</code>, không bao giờ chạm vào database phát triển.</li>
+</ul>
+
+<h2 id="migration-verification">Migration Verification (Finding 1)</h2><ul>
+<li><strong>Migration sạch</strong>: File `src/backend/review/migrations/0003_decisioncase.py` được tạo lại sạch từ model:
+  <ul>
+    <li>Dependencies: Chỉ phụ thuộc duy nhất vào <code>('review', '0002_issue_reviewdecision_and_more')</code> và <code>settings.AUTH_USER_MODEL</code>.</li>
+    <li>Operations: Gồm <code>CreateModel(DecisionCase)</code> và đúng 1 <code>RunSQL</code> cài đặt trigger append-only đặt ngay sau CreateModel.</li>
+  </ul>
+</li>
+<li><strong>Kiểm tra Dry-Run</strong>: <code>uv run --frozen python manage.py makemigrations --check --dry-run</code> trả về: <code>No changes detected in apps 'review'</code>.</li>
+<li><strong>Kiểm tra Fresh Migration</strong>: Chạy migrate fresh thành công 100% trên database <code>test_t038_labelx</code>.</li>
+</ul>
+
+<h2 id="governance">Task Board & Governance (Finding 4)</h2><ul>
+<li><strong>Dependencies chuẩn</strong>: <code>T-035 (#102), chuẩn bị mềm T-032 (#99), task hiện tại #105, Refs #97</code>.</li>
+<li><strong>Bảo toàn T-035</strong>: Trạng thái của T-035 được giữ nguyên là <code>in-progress</code> trong <code>task-board-@ducha180104.html</code>, không can thiệp trạng thái governance ngoài phạm vi.</li>
+<li><strong>T-038 State</strong>: Cập nhật dòng T-038 trong task board sang <code>review</code> với đầy đủ metadata và dependency.</li>
+</ul>
+
+<h2 id="acceptance">Acceptance Criteria & Test Matrix (Issue #105)</h2>
+<table><thead><tr><th>AC / Requirement</th><th>Trạng thái</th><th>File triển khai</th><th>Test / Evidence</th></tr></thead><tbody>
+<tr><td>Người chuyển cấp tự phân xử hoặc cùng thể nhân bị 403; sai role/scope bị chặn</td><td><span class="badge-pass">PASS</span></td><td><code>review/adjudication_service.py</code>, <code>review/adjudication_views.py</code></td><td><code>test_escalator_cannot_self_adjudicate</code>, <code>test_same_employee_identity_alias_cannot_adjudicate</code>, <code>test_wrong_role_adjudication_forbidden</code>, <code>test_out_of_scope_adjudication_forbidden</code>, <code>test_unverified_employee_identity_rejected</code></td></tr>
+<tr><td>Kết luận validate rule/reason/label; transition sai không được lưu</td><td><span class="badge-pass">PASS</span></td><td><code>review/adjudication_service.py</code></td><td><code>test_adjudication_outcomes_valid</code>, <code>test_adjudication_validation_rules</code>, <code>test_invalid_transition_rejected</code>, <code>test_superadmin_override_reason_required</code></td></tr>
+<tr><td>Decision Case tra cứu đúng version theo UC-12; history không bị ghi đè</td><td><span class="badge-pass">PASS</span></td><td><code>review/models.py</code>, <code>review/adjudication_service.py</code>, <code>review/adjudication_views.py</code></td><td><code>test_decision_case_versioning_and_lookup</code>, <code>test_decision_case_history_append_only</code></td></tr>
+<tr><td>Audit đủ actor/object/before/after/reason, rollback cùng quyết định</td><td><span class="badge-pass">PASS</span></td><td><code>review/adjudication_service.py</code></td><td><code>test_audit_trail_recorded_properly</code>, <code>test_audit_failure_rolls_back_transaction</code></td></tr>
+<tr><td>Adjudication không được tính thành reviewer confirm/KPI-2b; Guideline Gap hoãn không bị tự triển khai</td><td><span class="badge-pass">PASS</span></td><td><code>review/adjudication_service.py</code>, <code>review/models.py</code></td><td><code>test_adjudication_does_not_affect_kpi2b</code>, outcome chỉ dùng <code>confirm</code>, <code>reject</code>, <code>guideline_missing</code></td></tr>
+</tbody></table>
+
+<h2 id="evidence">Quality Gates & Verification Evidence</h2>
+<ul>
+  <li><strong>T-038 Suite</strong>: 20/20 PASSED (<code>tests/review/test_escalation_adjudication.py</code>)</li>
+  <li><strong>Review Module Suite</strong>: 49/49 PASSED (<code>tests/review/</code>)</li>
+  <li><strong>Django Check</strong>: <code>System check identified no issues (0 silenced).</code></li>
+  <li><strong>Mypy Type Checking</strong>: <code>Success: no issues found in 20 source files</code></li>
+  <li><strong>Ruff Linter & Formatter</strong>: <code>All checks passed!</code>, format check 0 issues.</li>
+  <li><strong>Framework Validation Kit</strong>: <code>make validate-kit</code> -> <code>FRAMEWORK_VALIDATION_PASS</code>.</li>
+  <li><strong>Git Diff Check</strong>: <code>git diff --check</code> -> Clean (0 errors).</li>
+</ul>
+</article></main></body></html>
