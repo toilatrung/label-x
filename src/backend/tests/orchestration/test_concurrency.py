@@ -191,3 +191,113 @@ def test_claim_and_cancel_do_not_deadlock(gate, round_no):
         WorkUnit.Status.CANCELLED,
         WorkUnit.Status.COMPLETED,
     )
+
+
+def _set_retry_ticket(unit: WorkUnit, ticket: str) -> None:
+    """Trạng thái sau khi owner lên lịch retry: RUNNING + token = vé retry dùng một lần."""
+    WorkUnit.objects.filter(pk=unit.pk).update(
+        status=WorkUnit.Status.RUNNING, lease_token=ticket, started_at=timezone.now()
+    )
+
+
+def test_two_copies_of_same_retry_ticket_run_the_engine_once(gate):
+    """RV2-1: bản sao thứ hai của cùng một retry không được chạy cùng lúc với bản đầu."""
+    run = make_run(engine=ENGINE)
+    unit = _unit(run)
+    _set_retry_ticket(unit, "ticket-1")
+    gate.thread("copy1")
+    gate.fail["copy1"] = ValueError("lỗi cố định của lần thử")
+    results: dict = {}
+    first = _spawn("copy1", lambda: run_work_unit.run(unit.pk, lease_token="ticket-1"), results)
+    assert gate.entered["copy1"].wait(30)  # bản 1 đã nhận retry (token đã đổi)
+    assert run_work_unit.run(unit.pk, lease_token="ticket-1") == "running"  # bản sao: bị bỏ qua
+    assert gate.calls == ["copy1"]
+    gate.release["copy1"].set()
+    first.join(30)
+    assert isinstance(results["copy1"], ValueError)
+    assert WorkUnit.objects.get(pk=unit.pk).status == WorkUnit.Status.FAILED  # chỉ một owner chốt
+    assert ShardCommit.objects.filter(run_id=run.pk).count() == 0
+
+
+def test_two_copies_of_same_retry_ticket_interleaved_success_and_failure(gate):
+    """Bản 1 lỗi rồi bản sao thành công: bản sao không được chạy nên không có commit lẻ."""
+    run = make_run(engine=ENGINE)
+    unit = _unit(run)
+    _set_retry_ticket(unit, "ticket-2")
+    gate.thread("copy1")
+    results: dict = {}
+    first = _spawn("copy1", lambda: run_work_unit.run(unit.pk, lease_token="ticket-2"), results)
+    assert gate.entered["copy1"].wait(30)
+    second = _spawn("copy2", lambda: run_work_unit.run(unit.pk, lease_token="ticket-2"), results)
+    second.join(30)
+    assert results["copy2"] == "running"
+    gate.release["copy1"].set()
+    first.join(30)
+    assert results["copy1"] == WorkUnit.Status.COMPLETED
+    assert gate.calls == ["copy1"]
+    assert ShardCommit.objects.filter(run_id=run.pk).count() == 1
+
+
+def test_stale_worker_success_after_new_owner_failed_cannot_commit(gate):
+    """RV2-2: A hết lease, B nhận lại và FAILED; A trả output thành công nhưng không ghi được."""
+    run = make_run(engine=ENGINE)
+    unit = _unit(run)
+    gate.thread("A")
+    gate.fail["B"] = ValueError("owner mới lỗi cố định")
+    results: dict = {}
+    a = _spawn("A", lambda: run_work_unit.run(unit.pk), results)
+    assert gate.entered["A"].wait(30)
+    _age_lease(unit)
+    b = _spawn("B", lambda: run_work_unit.run(unit.pk), results)
+    b.join(30)
+    assert isinstance(results["B"], ValueError)
+    assert WorkUnit.objects.get(pk=unit.pk).status == WorkUnit.Status.FAILED
+    gate.release["A"].set()  # A trả output thành công SAU khi B chốt FAILED
+    a.join(30)
+    assert results["A"] == "stale"
+    assert WorkUnit.objects.get(pk=unit.pk).status == WorkUnit.Status.FAILED  # A không đảo ngược
+    assert ShardCommit.objects.filter(run_id=run.pk).count() == 0
+    assert not LedgerUnit.objects.filter(run_id=run.pk, outcome="completed").exists()
+
+
+def test_stale_worker_output_cannot_overwrite_current_owner_output(gate):
+    """Hai output khác nội dung: chỉ output của owner hiện hành được lưu (hash + attempts)."""
+    run = make_run(engine=ENGINE)
+    unit = _unit(run)
+    stale_marker = 7
+
+    def runner(inp: EngineInput) -> EngineOutput:
+        name = threading.current_thread().name
+        if name == "A":
+            gate.entered["A"].set()
+            assert gate.release["A"].wait(30)
+            attempts = stale_marker
+        else:
+            attempts = 1
+        return EngineOutput(
+            inp.idempotency_key,
+            inp.engine,
+            inp.engine_version,
+            (),
+            tuple(EngineUnitResult(u, "completed", attempts) for u in inp.units),
+        )
+
+    registry_runner = registry.runner
+    registry.runner = lambda name, version: runner  # type: ignore[method-assign]
+    try:
+        gate.thread("A")
+        results: dict = {}
+        a = _spawn("A", lambda: run_work_unit.run(unit.pk), results)
+        assert gate.entered["A"].wait(30)
+        _age_lease(unit)
+        b = _spawn("B", lambda: run_work_unit.run(unit.pk), results)
+        b.join(30)
+        assert results["B"] == WorkUnit.Status.COMPLETED
+        gate.release["A"].set()
+        a.join(30)
+    finally:
+        registry.runner = registry_runner  # type: ignore[method-assign]
+    assert results["A"] in ("stale", WorkUnit.Status.COMPLETED)
+    commit = ShardCommit.objects.get(run_id=run.pk, idempotency_key=unit.idempotency_key)
+    assert commit.attempts == 1  # output của owner hiện hành (B), không phải của A (attempts=7)
+    assert not LedgerUnit.objects.filter(run_id=run.pk, attempts=stale_marker).exists()

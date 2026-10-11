@@ -383,26 +383,28 @@ def test_worker_killed_before_commit_redelivery_completes_once(inline_queue):
 
 
 def test_worker_killed_after_commit_redelivery_completes_once_without_rerun(inline_queue):
+    """Commit + chốt unit cùng transaction; chết trước khi chốt run -> giao lại chốt nốt."""
     run = make_run(engine="duplicate", shapes=SHAPES)
     unit = first_unit(run)
-    real_finish = dispatch_module._finish_unit
-    with mock.patch.object(dispatch_module, "_finish_unit", side_effect=WorkerKilled()):
+    with mock.patch.object(dispatch_module, "refresh_run", side_effect=WorkerKilled()):
         with pytest.raises(WorkerKilled):
             run_work_unit.run(unit.pk)
     unit.refresh_from_db()
-    assert unit.status == WorkUnit.Status.RUNNING
+    assert (
+        unit.status == WorkUnit.Status.COMPLETED
+    )  # không còn cửa sổ commit xong mà unit chưa chốt
     assert ShardCommit.objects.filter(run_id=run.pk).count() == 1
     candidates = CandidateRecord.objects.filter(run_id=run.pk).count()
     ledger = list(LedgerUnit.objects.filter(run_id=run.pk).values_list("pk", "outcome"))
-    expire_lease(unit)
     with mock.patch(
         "orchestration.tasks.registry.runner", side_effect=AssertionError("không chạy lại")
     ):
         assert run_work_unit.apply(args=[unit.pk]).get() == WorkUnit.Status.COMPLETED
-    assert real_finish is dispatch_module._finish_unit
+        other = run.work_units.exclude(pk=unit.pk).get()
     assert ShardCommit.objects.filter(run_id=run.pk).count() == 1
     assert CandidateRecord.objects.filter(run_id=run.pk).count() == candidates
     assert list(LedgerUnit.objects.filter(run_id=run.pk).values_list("pk", "outcome")) == ledger
+    assert other.status == WorkUnit.Status.PENDING
 
 
 def test_repeated_dispatch_and_duplicate_messages_do_not_duplicate(inline_queue):

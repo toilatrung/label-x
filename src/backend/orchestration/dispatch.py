@@ -21,6 +21,7 @@ from orchestration.retry import default_policy
 from orchestration.runsync import refresh_run
 from orchestration.services import (
     ShardOutputError,
+    StaleLeaseError,
     engine_input_to_payload,
     mark_shard_failed,
     seed_ledger,
@@ -125,16 +126,14 @@ def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | N
         ):
             return None, "", unit.status
         now = timezone.now()
-        token = uuid.uuid4().hex
+        token = uuid.uuid4().hex  # mỗi lần nhận: token mới; token cũ (kể cả của retry) hết hiệu lực
         if unit.status == WorkUnit.Status.RUNNING:
             fresh = unit.started_at is not None and unit.started_at > now - timedelta(
                 seconds=_running_stale_seconds()
             )
-            own_retry = bool(presented_token) and presented_token == unit.lease_token
-            if fresh and not own_retry:
+            retry_ticket = bool(presented_token) and presented_token == unit.lease_token
+            if fresh and not retry_ticket:
                 return None, "", "running"  # delivery trùng: đã có owner đang chạy
-            if own_retry:
-                token = unit.lease_token
         unit.status = WorkUnit.Status.RUNNING
         unit.started_at = now  # lease: làm mới mỗi lần nhận, sweeper dựa vào đây
         unit.lease_token = token
@@ -158,7 +157,13 @@ def _settle(
     claim/cancel/commit). Chỉ chủ lease mới chốt được; không phải chủ thì không đụng gì."""
     with transaction.atomic():
         QCRun.objects.select_for_update().only("id").get(pk=unit.run_id)
-        if not _finish_unit(unit.pk, token, status, error):
+        finished = _finish_unit(unit.pk, token, status, error)
+        if not finished and status == WorkUnit.Status.COMPLETED:
+            # commit_shard_output (fencing) đã chốt COMPLETED trong cùng transaction ghi kết quả.
+            finished = WorkUnit.objects.filter(
+                pk=unit.pk, status=WorkUnit.Status.COMPLETED, lease_token=token
+            ).exists()
+        if not finished:
             return False
         if status == WorkUnit.Status.FAILED and engine_input is not None:
             mark_shard_failed(engine_input, attempts=attempts)
@@ -173,22 +178,31 @@ def _settle(
     reject_on_worker_lost=True,
 )
 def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) -> str:
-    """Chạy một WorkUnit; idempotent: unit đã commit/huỷ/đang có owner thì không làm gì.
+    """Chạy một WorkUnit; idempotent: unit đã commit/huỷ/đang có owner thì bỏ qua.
 
-    Một owner duy nhất thực thi shard (lease). Lỗi tạm thời -> `self.retry` thật (countdown
-    2/4/8s, tối đa `max_retries`) mang theo `lease_token` để nhận ra retry hợp lệ của chính mình;
-    lỗi cố định hoặc hết retry -> unit FAILED (chỉ chủ lease chốt được). Worker chết giữa chừng:
-    broker giao lại (acks_late), sweeper thu hồi lease quá hạn; ShardCommit đảm bảo ghi một lần.
+    - Một owner duy nhất chạy shard (lease). Lỗi tạm thời -> `self.retry` thật (2/4/8s, tối đa
+      `max_retries`) kèm vé `lease_token` dùng một lần: nhận retry đổi token nên bản sao của
+      cùng retry bị bỏ qua.
+    - Lỗi cố định hoặc hết retry -> unit FAILED (chỉ chủ lease chốt được).
+    - Worker chết: broker giao lại (acks_late) hoặc sweeper thu hồi lease quá hạn.
+    - Ghi kết quả có fencing token trong chính transaction ghi (worker cũ bị thu hồi không ghi
+      được); ShardCommit unique chặn ghi trùng.
     """
     unit, token, current = _claim(work_unit_id, lease_token)
     if unit is None:
+        if current in (WorkUnit.Status.COMPLETED, WorkUnit.Status.FAILED):
+            # Worker có thể chết sau khi commit nhưng trước khi chốt run: giao lại thì chốt nốt.
+            run_id = WorkUnit.objects.filter(pk=work_unit_id).values_list("run_id", flat=True)[0]
+            refresh_run(run_id)
         return current
     policy = default_policy()
     engine_input: EngineInput | None = None
     try:
         engine_input = build_engine_input(unit)
         seed_ledger(engine_input.run_id, engine_input.engine, engine_input.units)
-        execute_shard(engine_input)
+        execute_shard(engine_input, fence=(unit.pk, token))
+    except StaleLeaseError:
+        return "stale"  # đã bị thu hồi: không ghi gì, không chốt, không retry
     except Exception as exc:
         permanent = isinstance(exc, _PERMANENT_ERRORS)
         if permanent or policy.exhausted(self.request.retries):
@@ -201,10 +215,15 @@ def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) 
                 attempts=self.request.retries + 1,
             )
             raise
+        ticket = uuid.uuid4().hex  # vé retry dùng một lần: nhận retry sẽ đổi token (xem _claim)
+        if not WorkUnit.objects.filter(
+            pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=token
+        ).update(lease_token=ticket):
+            raise  # không còn là chủ lease: không lên lịch retry
         try:
             self.retry(
                 exc=exc,
-                kwargs={"lease_token": token},
+                kwargs={"lease_token": ticket},
                 countdown=policy.backoff(self.request.retries + 1),
                 max_retries=policy.max_retries,
             )
@@ -214,7 +233,7 @@ def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) 
             # Không gửi được message retry: trả unit về PENDING (chỉ khi còn là chủ lease) để
             # lệnh/task redispatch nhặt lại.
             WorkUnit.objects.filter(
-                pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=token
+                pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=ticket
             ).update(status=WorkUnit.Status.PENDING)
             raise
     _settle(unit, token, WorkUnit.Status.COMPLETED)
