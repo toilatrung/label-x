@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AppShell } from "@/components/layout/AppShell";
+import { RulesPolicyCard } from "@/components/configuration/RulesPolicyCard";
+import { SampleDataBadge } from "@/components/ui/SampleDataBadge";
 import { EngineThresholdsTable } from "@/components/execution/EngineThresholdsTable";
 import { apiClient, ApiRequestError } from "@/lib/api/client";
 import { errorMessage } from "@/lib/api/errors";
@@ -75,10 +77,18 @@ function RulesThresholds() {
         <div className="lx-head__text">
           <h1 className="lx-h1">Rules và Thresholds</h1>
           <p className="lx-lead">
-            Quy tắc kiểm tra tự động, ngưỡng engine hiệu lực và mapping nhóm lỗi/lớp tới rule ID. Màn hình chỉ xem.
+            Quy tắc kiểm tra tự động, ngưỡng và chính sách lấy mẫu áp dụng cho các lần chạy phân tích mới. Thay đổi được lưu thành phiên bản cấu hình mới, không ảnh hưởng snapshot đã khoá.
           </p>
         </div>
+        <div className="lx-actions">
+          <SampleDataBadge />
+          <span className="lx-hint">Cấu hình hiện tại v7</span>
+          {/* TODO(backend): POST /api/config-versions/ (lưu thành phiên bản mới); nút chặn, không gọi API giả */}
+          <button type="button" className="lx-btn lx-btn--primary">Lưu thành v8</button>
+        </div>
       </div>
+
+      <RulesPolicyCard />
 
       {mappingFailure && (
         <div className="lx-callout" role="alert">
