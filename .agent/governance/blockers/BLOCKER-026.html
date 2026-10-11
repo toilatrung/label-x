@@ -72,6 +72,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Trạng thái giữ <code>open</code>: bảng trạng thái của template không có “đã triển khai, chờ review”, và <code>resolved</code> bị cấm khi chưa có duyệt/bằng chứng đủ. Chỉ chuyển <code>resolved</code> sau khi PO duyệt CR-109 và review độc lập.</p>
 <h3 id="quyet-dinh-po-2026-10-11">Quyết định PO 2026-10-11</h3>
 <p>Quyết định PO 2026-10-11 (<a href="../decisions/DEC-014.html">DEC-014</a>): phương án A. Đóng khi PR #126 đã merge và review độc lập APPROVE; chấp nhận scrape HTTP thật và test thay Prometheus server. Hoãn sang task/CR riêng: metric độ dài hàng đợi, worker online, service token, Prometheus server. Mã và hạn của task/CR chưa được PO điền: cần chỉ định trước khi đóng. Giữ <code>open</code> tới khi đủ điều kiện.</p>
+<p>Cập nhật 2026-10-11 (phiên QC): reviewer độc lập đã APPROVE PR #126 tại d3a6c33 (ghi nhận R-8 minor; NOT VERIFIED: SIGKILL/broker thật, tự phục hồi với lease mặc định 1800 s, tính lại hash từ dữ liệu nguồn, SeaweedFS). PR #126 chưa merge vào develop và PO chưa đưa mã task/CR và hạn cho phần metrics hoãn lại, nên blocker giữ <code>open</code>; chỉ đóng khi cả hai điều kiện đủ.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (không chặn merge T-025, T-027; chỉ chặn việc coi hạng mục Metric của T-025 là hoàn tất và đóng M-02)</li>
