@@ -8,6 +8,7 @@
 - Ranh giới cứng: adapter CVAT **chỉ đọc**; sửa annotation bằng deep link sang CVAT. Celery task phải idempotent. Quyền project/job kiểm ở API.
 - Backend: `src/backend` (uv). Frontend: `src/frontend` — đọc `src/frontend/AGENTS.md` trước khi viết code Next.js 16.
 - UI theo Design System `docs/design/` (class `lx-*`, Inter, bảng-trước) — dùng skill `labelx-design` (`.agent/skills/labelx-design/SKILL.md`).
+- Mọi màn hình frontend phải khớp 1:1 với `docs/design/screens/*.dc.html`; chức năng chưa có backend vẫn dựng đủ giao diện kèm cảnh báo "Chức năng vẫn chưa được kết nối với server": skill `labelx-design-fidelity` (`.agent/skills/labelx-design-fidelity/SKILL.md`), bắt buộc.
 - Review PR trước khi comment duyệt: skill `labelx-pr-review` (`.agent/skills/labelx-pr-review/SKILL.md`). Review toàn luồng trước khi merge `develop` → `main` hoặc đóng đợt: skill `labelx-flow-review` (`.agent/skills/labelx-flow-review/SKILL.md`).
 - QC sau review, kèm gộp file `-@user` của dev vào file chính rồi xoá chúng (CR-100): skill `labelx-qc-integrate` (`.agent/skills/labelx-qc-integrate/SKILL.md`); chỉ integrator.
 - Kiểm tra trước khi báo xong: `make check` (cần `make infra-up`).

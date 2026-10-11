@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementation Report T-046 — LabelX</title>
+<meta name="labelx:id" content="implementation-report-t-046">
+<meta name="labelx:title" content="Implementation Report T-046">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[implementation, report, t-046, m-03, e2e, playwright, production-build]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;--success:#137333;--success-soft:#e6f4ea;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+.badge-pass{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;color:var(--success);background:var(--success-soft);border-radius:4px}
+.badge-blocked{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:4px}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-046-@DucHa180104</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-report-t-046</span><b>title</b><span>Implementation Report T-046</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, report, t-046, m-03, e2e, playwright, production-build]</span><b>priority</b><span>3</span></div>
+<h1 id="implementation-report-t-046">T-046 — Chạy Browser E2E, Kiểm thử Dữ liệu Thật và Production Build M-03 (Cuốn chiếu)</h1>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-046</code></li>
+<li><strong>Title</strong>: <code>Browser E2E, Real Data & Production Build Verification cho Milestone M-03 theo phương thức cuốn chiếu</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (@ducha180104)</code></li>
+<li><strong>Executor</strong>: <code>Antigravity Agent (T-046 implementation/test agent)</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-046</code> (Issue #125, Milestone M-03 #97)</li>
+<li><strong>Epic ID</strong>: <code>E-17</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Timezone</strong>: <code>Asia/Bangkok (UTC+7)</code></li>
+</ul>
+
+<h2 id="usage-purpose">Usage Purpose & Phạm vi Thực hiện</h2>
+<p>Báo cáo kiểm thử tích hợp thực tế toàn diện cho Milestone M-03 theo phương thức cuốn chiếu (rolling-wave):</p>
+<ol>
+<li>Thực hiện production build hoàn chỉnh cho Next.js frontend, bắt buộc không có lỗi biên dịch tĩnh, TypeScript hay prerender (20 route được prerender sạch sẽ).</li>
+<li>Khởi động môi trường production stack thực tế (Next.js production server cổng 3000, Django backend server cổng 8000, PostgreSQL 17, Redis 7, SeaweedFS S3, CVAT v2.77.0).</li>
+<li>Cô lập hoàn toàn database kiểm thử vào database riêng biệt <code>labelx_t046_browser</code>, tuyệt đối không ghi dữ liệu vào database phát triển <code>labelx</code>.</li>
+<li>Chạy test suite tự động Browser E2E (Playwright trên Microsoft Edge headless) bao phủ toàn bộ 17 scenarios cốt lõi của M-03: RBAC phân quyền 4 vai trò, ReviewQueues, ReviewWorkspace canvas & layers, Leases & Decisions, Escalations & DecisionCaseLookup, Separation of Duties (chặn tự phân xử cùng tài khoản và chặn alias cùng định danh tự nhiên), Super Admin override validation, Unmapped identity fail-closed, Out-of-scope dataset boundary, Atomic Rework API contract.</li>
+<li>Đánh giá trung thực hiện trạng dữ liệu thật và các chính sách chưa có quyết định PO (Policy TBD-09, CVAT Service Token, Pipeline M-02 #96) là <span class="badge-blocked">BLOCKED / NOT VERIFIED</span> và chuyển vào <code>M-03 Resolution Backlog</code> theo đúng chỉ đạo PO.</li>
+<li>Cung cấp checklist kiểm thử thủ công chi tiết từ 15–30 phút cho Nguyễn Đức Hà tự thao tác xác thực trực quan trước khi đóng Milestone.</li>
+</ol>
+
+<h2 id="worktree-git-context">Worktree & Git Context</h2>
+<ul>
+<li><strong>Worktree Directory</strong>: <code>C:\Dev\Worktrees\T-046\label-x</code></li>
+<li><strong>Branch</strong>: <code>test/T-046-m03-browser-e2e</code></li>
+<li><strong>Base Commit</strong>: <code>c973bf781b8043c958156c8c5bdfcf02afb2b174</code> (latest <code>origin/integration/m03</code>)</li>
+<li><strong>Remote URL</strong>: <code>https://github.com/toilatrung/label-x.git</code></li>
+<li><strong>Quy tắc cô lập</strong>: Worktree độc lập riêng biệt cho T-046; không đụng vào worktree T-038 hay T-045, không sửa checkout develop.</li>
+</ul>
+
+<h2 id="production-build">1. Production Build Verification</h2>
+<p>Frontend Next.js được build sản xuất bằng lệnh chính quy của repository <code>npm run build</code> tại <code>src/frontend</code>:</p>
+<ul>
+<li><strong>TypeScript Typecheck</strong>: <code>npm run typecheck</code> pass 100% không có lỗi type.</li>
+<li><strong>Next.js Production Build</strong>: Thành công biên dịch toàn bộ source code (Next.js 16.3.8 / React 19 / Turbopack).</li>
+<li><strong>Static Route Prerendering</strong>: 20 route được prerender hoàn chỉnh (bao gồm <code>/login</code>, <code>/review</code>, <code>/review/workspace</code>, <code>/escalations</code>, <code>/runs</code>, <code>/datasets</code>, v.v.).</li>
+<li><strong>Output Log</strong>: Lưu trữ tại <code>src/frontend/evidence/t046/production-build.log</code>.</li>
+<li><strong>Static Asset & Console Check</strong>: 0 runtime console errors không mong muốn; tài nguyên tĩnh bundle nạp chuẩn xác.</li>
+</ul>
+
+<h2 id="automated-e2e">2. Automated Browser E2E Results (Playwright on MS Edge)</h2>
+<p>Browser E2E runner (<code>scripts/development/t046-browser-check.cjs</code>) sử dụng runtime Microsoft Edge headless thực hiện toàn bộ 17 checks với 56 API calls thực tế:</p>
+<table>
+<thead>
+<tr>
+<th>STT</th>
+<th>Scenario / Luồng Kiểm Thử</th>
+<th>Role</th>
+<th>Kỳ Vọng (Expected)</th>
+<th>Thực Tế (Actual)</th>
+<th>Kết Quả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Truy cập trang hàng đợi <code>/review</code></td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Giao diện danh sách queues render đầy đủ</td>
+<td>200 OK, card và header bảng hàng đợi hiển thị</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Claim frame từ queue theo Policy TBD-09</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Fail-closed 500 nếu thiếu <code>REVIEW_LEASE_TTL_SECONDS</code></td>
+<td>API trả 500 ImproperlyConfigured chuẩn contract</td>
+<td><span class="badge-blocked">BLOCKED</span> (PO policy)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Nạp ReviewWorkspace canvas & layers</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Canvas mount, zoom/pan controls, layer toggles hiển thị</td>
+<td>Canvas view nạp đầy đủ; ảnh chụp lưu tại bằng chứng</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Gắn kết DecisionCaseLookup trong ReviewWorkspace</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Component tra cứu tiền lệ mount cho active issue</td>
+<td>DecisionCaseLookup component mounted thành công</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Reviewer gửi quyết định Reject có Lease & Revision</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Backend trả về 201 Created, tạo AuditEvent & Decision</td>
+<td>201 Created, Decision #4 tạo thành công với lease #1</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Kiểm tra persisted state sau khi reload trang</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>State quyết định đã lưu được giữ nguyên sau F5</td>
+<td>Reload trang thành công, workspace duy trì trạng thái</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Hiển thị deep link CVAT trong ReviewWorkspace</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Deep link sinh đúng định dạng URL job/task CVAT</td>
+<td>Deep link hiển thị chính xác: <code>/tasks/46002/jobs/46001?frame=0</code></td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Chặn Reviewer truy cập <code>/escalations</code></td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>AuthGuard chặn và hiển thị màn hình từ chối 403</td>
+<td>Bị chặn bởi AuthGuard; không đọc được dữ liệu phân xử</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Chặn Annotator truy cập <code>/escalations</code></td>
+<td>Annotator (<code>t046_annotator</code>)</td>
+<td>AuthGuard chặn và hiển thị màn hình từ chối 403</td>
+<td>Bị chặn bởi AuthGuard; không đọc được dữ liệu phân xử</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>10</td>
+<td>QA Lead nạp danh sách escalation thực tế</td>
+<td>QA Lead (<code>t046_qalead</code>)</td>
+<td>Trả về danh sách escalation từ API thực tế</td>
+<td>200 OK, danh sách 3 escalation hiển thị trên bảng</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>11</td>
+<td>QA Lead lưu kết luận phân xử guideline_missing</td>
+<td>QA Lead (<code>t046_qalead</code>)</td>
+<td>Backend trả về 201 Created, sinh DecisionCase</td>
+<td>201 Created, outcome <code>guideline_missing</code> lưu thành công</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Client guard chặn cùng tài khoản tự phân xử</td>
+<td>Self QA (<code>t046_self_qa</code>)</td>
+<td>Form cảnh báo và nút Lưu kết luận phân xử bị disabled</td>
+<td>Alert hiển thị, button submit disabled hoàn toàn</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>13</td>
+<td>Backend chặn alias cùng định danh tự nhiên</td>
+<td>Alias QA (<code>t046_alias_qa</code>)</td>
+<td>Backend trả về 403 SAME_REQUESTER_APPROVER</td>
+<td>403 Forbidden với code SAME_REQUESTER_APPROVER</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>14</td>
+<td>Bắt buộc lý do override khi Super Admin phân xử</td>
+<td>Super Admin (<code>t046_superadmin</code>)</td>
+<td>Trường Lý do override có thuộc tính <code>required</code></td>
+<td>Form đánh dấu required cho override_reason</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Tài khoản QA chưa map danh tính CVAT fail-closed</td>
+<td>Unmapped QA (<code>t046_unmapped_qa</code>)</td>
+<td>Hiển thị lỗi IDENTITY_MAPPING_MISSING trước khi fetch</td>
+<td>AuthGuard chặn ngay với mã IDENTITY_MAPPING_MISSING</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>16</td>
+<td>QA Lead ngoài scope dataset không thấy dữ liệu</td>
+<td>Out-of-scope QA (<code>t046_outscope_qa</code>)</td>
+<td>Danh sách rỗng; POST trực tiếp bị 403 OUT_OF_SCOPE</td>
+<td>Không thấy issue ngoại lai; POST bị chặn 403 OUT_OF_SCOPE</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+<tr>
+<td>17</td>
+<td>Xác minh contract API Atomic Rework</td>
+<td>Reviewer (<code>t046_reviewer</code>)</td>
+<td>Endpoint <code>/api/rework/</code> hoạt động, kiểm tra state machine</td>
+<td>API phản hồi 409 Conflict chuẩn xác do issue chưa confirmed</td>
+<td><span class="badge-pass">PASS</span></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="evidence-artifacts">3. Danh mục Bằng chứng Artifacts</h2>
+<p>Toàn bộ bằng chứng kiểm thử được ghi nhận tự động vào <code>src/frontend/evidence/t046/</code>:</p>
+<ul>
+<li><code>production-build.log</code>: Log hoàn chỉnh của quá trình build Next.js (prerender 20 route, 0 errors).</li>
+<li><code>browser-api-evidence.json</code>: Báo cáo JSON cấu trúc ghi nhận 17 checks, 56 API calls, 0 page errors, 0 console errors.</li>
+<li><code>reviewer-workspace.png</code>: Ảnh chụp toàn trang ReviewWorkspace nạp canvas, frame số 00000, bảng issue và panel điều khiển.</li>
+<li><code>qalead-adjudication-saved.png</code>: Ảnh chụp lưu thành công kết luận phân xử với outcome <code>guideline_missing</code>.</li>
+<li><code>reviewer-escalations-denied.png</code>: Ảnh chụp Reviewer bị chặn truy cập màn hình <code>/escalations</code>.</li>
+<li><code>annotator-escalations-denied.png</code>: Ảnh chụp Annotator bị chặn truy cập màn hình <code>/escalations</code>.</li>
+<li><code>unmapped-qa-blocked.png</code>: Ảnh chụp Unmapped QA Lead bị chặn fail-closed bởi lỗi <code>IDENTITY_MAPPING_MISSING</code>.</li>
+</ul>
+
+<h2 id="real-data-cvat">4. Trạng thái Dữ liệu Thật & Tích hợp CVAT</h2>
+<p>Tuân thủ nghiêm ngặt nguyên tắc của Issue #125: <em>Tuyệt đối không giả lập dữ liệu rồi tuyên bố là dữ liệu thật.</em></p>
+<ul>
+<li><strong>Dữ liệu thật Pipeline M-02 (#96)</strong>: <span class="badge-blocked">NOT VERIFIED / BLOCKED</span> — Hiện tại Milestone M-02 (#96) vẫn còn các blocker mở (BLOCKER-024, BLOCKER-026, BLOCKER-027). Dữ liệu thật pipeline chưa chảy sang M-03.</li>
+<li><strong>CVAT Service Token Read-only</strong>: <span class="badge-blocked">BLOCKED</span> — Chưa có CVAT token read-only môi trường thực tế; được ghi nhận vào backlog chờ cấp phát token từ quản trị viên hạ tầng.</li>
+<li><strong>Policy TBD-09 (Lease TTL Seconds)</strong>: <span class="badge-blocked">BLOCKED</span> — Backend fail-closed khi thiếu biến môi trường được PO phê duyệt. Không tự ý đặt giá trị giả định.</li>
+<li><strong>Xử lý các mục Blocked</strong>: Tất cả được ghi nhận minh bạch vào <code>M-03 Resolution Backlog</code> dưới thẩm quyền xử lý của PO @toilatrung.</li>
+</ul>
+
+<h2 id="manual-checklist">5. Checklist Kiểm thử Thủ công cho Nguyễn Đức Hà (15–30 Phút)</h2>
+<blockquote>
+<p><strong>Lưu ý cho Hà</strong>: Bảng checklist dưới đây dành riêng để Hà tự thực hiện bằng tay trên trình duyệt. Antigravity KHÔNG tự tuyên bố mục kiểm thử thủ công này PASS; mục này chỉ được tính là PASS sau khi Hà chạy trực tiếp và ghi nhận kết quả.</p>
+</blockquote>
+
+<table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>URL</th>
+<th>Vai trò / Tài khoản</th>
+<th>Hành động cần làm</th>
+<th>Kết quả kỳ vọng</th>
+<th>Kết quả thực tế của Hà</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>http://localhost:3000/login</code></td>
+<td>Reviewer</td>
+<td>Đăng nhập bằng tài khoản Reviewer</td>
+<td>Chuyển hướng về trang chủ <code>/</code>, thanh điều hướng hiển thị tên và vai trò Reviewer</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>http://localhost:3000/review</code></td>
+<td>Reviewer</td>
+<td>Bấm vào menu "Review Queues"</td>
+<td>Bảng hàng đợi hiển thị, các tab Risk Queue và Random Audit Queue có mặt</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>http://localhost:3000/review/workspace?frame_id=1</code></td>
+<td>Reviewer</td>
+<td>Mở trang workspace kiểm tra frame #1</td>
+<td>Canvas hiển thị hình ảnh, thanh điều khiển zoom/pan hoạt động; banner "Read-only" cảnh báo hợp lệ</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>http://localhost:3000/review/workspace?frame_id=1</code></td>
+<td>Reviewer</td>
+<td>Bấm phóng to (+) và thu nhỏ (-) trên thanh công cụ</td>
+<td>Tỷ lệ phần trăm zoom thay đổi tương ứng, canvas co giãn mượt mà</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>http://localhost:3000/review/workspace?frame_id=1</code></td>
+<td>Reviewer</td>
+<td>Bấm vào tab "Tiền lệ" (DecisionCaseLookup)</td>
+<td>Form tra cứu tiền lệ mở ra, hiển thị các trường Rule ID, nhãn đúng và lý do</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>http://localhost:3000/review/workspace?frame_id=1</code></td>
+<td>Reviewer</td>
+<td>Kiểm tra liên kết "Mở CVAT" trên đầu trang</td>
+<td>Liên kết trỏ đúng đường dẫn <code>/tasks/46002/jobs/46001?frame=0</code></td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>http://localhost:3000/escalations</code></td>
+<td>Reviewer</td>
+<td>Nhập trực tiếp URL <code>/escalations</code> trên thanh địa chỉ</td>
+<td>Màn hình 403 Forbidden hiển thị cảnh báo từ chối quyền truy cập</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>http://localhost:3000/login</code></td>
+<td>QA Lead</td>
+<td>Đăng xuất Reviewer, đăng nhập tài khoản QA Lead</td>
+<td>Chuyển hướng thành công, vai trò hiển thị là QA Lead</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>http://localhost:3000/escalations</code></td>
+<td>QA Lead</td>
+<td>Truy cập trang Escalations & Decision Cases</td>
+<td>Bảng danh sách issue chờ phân xử hiển thị, có ít nhất một issue chờ xử lý</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>http://localhost:3000/escalations</code></td>
+<td>QA Lead</td>
+<td>Bấm nút "Mở phân xử" tại một dòng issue</td>
+<td>Panel phân xử mở ra bên phải với các lựa chọn Kết luận, Rule ID, Lý do</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>http://localhost:3000/escalations</code></td>
+<td>QA Lead</td>
+<td>Chọn radio "Thiếu guideline", nhập Lý do và bấm "Lưu kết luận phân xử"</td>
+<td>Banner thông báo "Đã lưu Decision Case" màu xanh xuất hiện, danh sách cập nhật</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>http://localhost:3000/escalations</code></td>
+<td>QA Lead</td>
+<td>Nhấn F5 (reload trang)</td>
+<td>Trạng thái issue vừa phân xử được duy trì nhất quán từ cơ sở dữ liệu</td>
+<td>[Chờ Hà chạy]</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="m03-resolution-backlog">6. M-03 Resolution Backlog</h2>
+<p>Theo chỉ đạo của PO @toilatrung và kết quả từ T-044/T-046, các mục dưới đây được bảo lưu trung thực và chuyển tiếp sang Issue tổng hợp <code>M-03-RESOLVE</code>:</p>
+<ul>
+<li><strong>Policy TBD-09 (Lease TTL Configuration)</strong>:
+  <ul>
+    <li><em>Trạng thái</em>: <span class="badge-blocked">BLOCKED</span></li>
+    <li><em>Owner</em>: PO @toilatrung</li>
+    <li><em>Bằng chứng</em>: Endpoint <code>POST /api/queues/risk/next/</code> fail-closed 500 với <code>ImproperlyConfigured: REVIEW_LEASE_TTL_SECONDS requires an approved positive integer policy</code>.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>CVAT Service Token Read-only</strong>:
+  <ul>
+    <li><em>Trạng thái</em>: <span class="badge-blocked">BLOCKED</span></li>
+    <li><em>Owner</em>: Hạ tầng / PO @toilatrung</li>
+    <li><em>Bằng chứng</em>: Chưa có token service cấp quyền đọc read-only kết nối CVAT backend.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+<li><strong>Dữ liệu thật Pipeline M-02 (#96)</strong>:
+  <ul>
+    <li><em>Trạng thái</em>: <span class="badge-blocked">NOT VERIFIED</span></li>
+    <li><em>Owner</em>: Nhóm Pipeline M-02</li>
+    <li><em>Bằng chứng</em>: M-02 (#96) chưa đóng; dữ liệu production chưa có sẵn trong DB.</li>
+    <li><em>Disposition</em>: <code>deferred by PO to end-of-milestone M-03-RESOLVE</code>.</li>
+  </ul>
+</li>
+</ul>
+
+<h2 id="quality-gates">7. Quality Gates & Validation</h2>
+<ul>
+<li><strong>git diff --check</strong>: Sạch sẽ, không có trailing whitespace hay conflict markers.</li>
+<li><strong>Framework Validation</strong>: Chạy <code>uv run python scripts/validate-framework.py</code> đạt <code>FRAMEWORK_VALIDATION_PASS</code>.</li>
+<li><strong>Frontend Typecheck</strong>: <code>npm run typecheck</code> pass 100%.</li>
+<li><strong>Frontend Build</strong>: <code>npm run build</code> pass 100%, 20 routes prerendered.</li>
+<li><strong>Automated E2E Tests</strong>: 17 checks hoàn thành, 16 PASS, 1 BLOCKED (TBD-09 theo thiết kế fail-closed), 0 FAIL, 0 page errors, 0 unexpected console errors.</li>
+<li><strong>Secret Scanning</strong>: Không có mật khẩu, token thật hay PAT lưu trữ trong git; toàn bộ password kiểm thử cấu hình qua biến môi trường.</li>
+</ul>
+
+<h2 id="conclusion">8. Kết Luận</h2>
+<ul>
+<li><strong>T-046 Deliverable</strong>: <code>READY FOR REVIEW</code> — Đã hoàn thành toàn bộ phạm vi kiểm thử tự động Browser E2E, xác thực production build và thiết lập checklist thủ công theo phương thức cuốn chiếu cho Milestone M-03.</li>
+<li><strong>PR Target</strong>: Mở PR vào nhánh <code>integration/m03</code> (tuyệt đối không vào develop).</li>
+<li><strong>Reviewer Chỉ định</strong>: Assign reviewer @tdt2112, QC @Vietanhhhhhh2003. Tuyệt đối không tự approve hay merge.</li>
+</ul>
+</article></main></body></html>
