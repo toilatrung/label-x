@@ -103,9 +103,9 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>CVAT adapter chỉ đọc và snapshot bất biến</strong> — Tạo snapshot bất biến, có hash, phát hiện drift, từ CVAT thật mà không có đường ghi annotation.</td>
 <td><code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_BLOCKED</code></td>
-<td><code>T-004</code></td>
+<td><code>T-004, T-019, T-020, T-021, T-022, M-02-RESOLVE</code></td>
 <td>Xem <a href="#e-04">chi tiết</a></td>
-<td><code>BLOCKER-004, BLOCKER-020, BLOCKER-023, BLOCKER-024, DEC-002, DEC-003, DEC-007</code></td>
+<td><code>BLOCKER-004, BLOCKER-020, BLOCKER-023, BLOCKER-024, DEC-002, DEC-003, DEC-007, BLOCKER-027, BLOCKER-028</code></td>
 </tr>
 <tr>
 <td><code>E-05</code></td>
@@ -113,7 +113,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Matching dùng chung, tất định</strong> — Một thư viện matching một-một không phụ thuộc lớp dùng chung cho Detector–annotation, GT–annotation và GT–GT.</td>
 <td><code>Lê Duy Nam</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-023, M-02-RESOLVE</code></td>
 <td>Xem <a href="#e-05">chi tiết</a></td>
 <td><code>BLOCKER-015, DEC-002, DEC-003</code></td>
 </tr>
@@ -143,7 +143,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>QC Orchestrator, shard, aggregation và coverage ledger</strong> — QC Run chạy theo shard, chịu được retry/worker chết, gộp candidate thành issue và ghi coverage đúng mẫu số.</td>
 <td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-024, T-025, T-026, M-02-RESOLVE</code></td>
 <td>Xem <a href="#e-08">chi tiết</a></td>
 <td><code>BLOCKER-003, BLOCKER-007, BLOCKER-025, DEC-002, DEC-003, DEC-005, DEC-006</code></td>
 </tr>
@@ -153,7 +153,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Engine Schema/Taxonomy, Geometry, Duplicate/Overlap</strong> — Ba engine xác định sinh cảnh báo cấu trúc và candidate E3 có evidence.</td>
 <td><code>Nguyễn Xuân Việt Anh</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-027, T-028, T-029, M-02-RESOLVE</code></td>
 <td>Xem <a href="#e-09">chi tiết</a></td>
 <td><code>DEC-002, DEC-003, DEC-006</code></td>
 </tr>
@@ -173,9 +173,9 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Ranking, score_v0, giải thích, random slice và đối chứng</strong> — Mọi frame có điểm và hạng tái lập, giải thích được, kèm lát ngẫu nhiên và ranking đối chứng.</td>
 <td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-030, T-031, M-02-RESOLVE</code></td>
 <td>Xem <a href="#e-11">chi tiết</a></td>
-<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010, DEC-002, DEC-003, DEC-005</code></td>
+<td><code>BLOCKER-006, BLOCKER-007, BLOCKER-010, DEC-002, DEC-003, DEC-005, BLOCKER-029</code></td>
 </tr>
 <tr>
 <td><code>E-12</code></td>
@@ -193,7 +193,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Review Queues và lease nguyên tử</strong> — Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</td>
 <td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-032</code></td>
 <td>Xem <a href="#e-13">chi tiết</a></td>
 <td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003, DEC-006</code></td>
 </tr>
@@ -203,7 +203,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Review Workspace, quyết định và effort log</strong> — Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</td>
 <td><code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-032</code></td>
 <td>Xem <a href="#e-14">chi tiết</a></td>
 <td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101, DEC-006</code></td>
 </tr>
@@ -213,7 +213,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Escalation, phân xử, Decision Case và Guideline Gap</strong> — Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</td>
 <td><code>Nguyễn Đức Hà</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-032</code></td>
 <td>Xem <a href="#e-15">chi tiết</a></td>
 <td><code>DEC-002, DEC-003, CR-101</code></td>
 </tr>
@@ -223,7 +223,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Rework, re-check, verify và QC run cuối</strong> — Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</td>
 <td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>T-032</code></td>
 <td>Xem <a href="#e-16">chi tiết</a></td>
 <td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101, DEC-005</code></td>
 </tr>
