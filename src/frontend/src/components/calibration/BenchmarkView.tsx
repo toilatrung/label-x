@@ -1,24 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { DemoRegionNotice } from './DemoRegionNotice';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { BENCHMARKS, BENCHMARK_DETAIL } from '@/lib/calibration/sample-data';
 
 export function BenchmarkHeader() {
-  const [blocked, setBlocked] = useState(false);
   return (
     <div className="lx-head">
       <div className="lx-head__text">
         <h1 className="lx-h1">Ground Truth Benchmark</h1>
         <p className="lx-lead">Tập chuẩn do chuyên gia duyệt và khoá đáp án. Metric về độ chính xác chỉ tính khi có Ground Truth đúng phạm vi và taxonomy.</p>
-        {blocked && <NotConnectedNotice />}
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/benchmarks/import-cvat/ ; POST /api/benchmarks/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn" onClick={() => setBlocked(true)}>Nhập từ CVAT</button>
-        <button type="button" className="lx-btn lx-btn--primary" onClick={() => setBlocked(true)}>Tạo benchmark</button>
+        <button type="button" className="lx-btn" onClick={signalNoticeAttention}>Nhập từ CVAT</button>
+        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Tạo benchmark</button>
       </div>
     </div>
   );
@@ -28,7 +25,7 @@ export function BenchmarkBody() {
   return (
     <>
       {/* TODO(backend): GET /api/benchmarks/ */}
-      <DemoRegionNotice />
+      <DemoRegionNotice listenGlobal />
       <div className="lx-cols">
         <section className="lx-card lx-main" aria-label="Các phiên bản benchmark">
           <div className="lx-card__head"><h2 className="lx-h2">Các phiên bản benchmark</h2></div>

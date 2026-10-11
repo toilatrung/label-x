@@ -438,6 +438,7 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
   border: 1px solid var(--border); background: var(--neutral-soft); color: var(--ink-muted); font: 500 13px/20px var(--font-sans); }
 .lx-notice__ico { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke: currentColor; fill: none; }
 .lx-notice--warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
+.lx-attn { outline: 2px solid var(--warning); outline-offset: 2px; }
 
 /* Workspace helpers (FE-05): thay style inline trong Review Workspace. */
 .lx-grow { flex: 1; }

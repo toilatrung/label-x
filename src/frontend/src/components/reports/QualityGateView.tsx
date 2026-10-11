@@ -3,13 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { DemoRegionNotice } from './DemoRegionNotice';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { GATE_CONDITIONS, GATE_SUMMARY, WAIVER_CONDITIONS } from '@/lib/reports/sample-data';
 
 export function QualityGateBody() {
   const [condition, setCondition] = useState<string>(WAIVER_CONDITIONS[0]);
   const [reason, setReason] = useState('');
-  const [blocked, setBlocked] = useState(false);
+  const [pulse, setPulse] = useState(0);
   return (
     <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Điều kiện phát hành">
@@ -40,7 +39,7 @@ export function QualityGateBody() {
       <aside className="lx-card lx-side" aria-label="Phê duyệt phát hành">
         <div className="lx-card__head"><h2 className="lx-h2">Phê duyệt phát hành</h2></div>
         <div className="lx-card__body lx-stack">
-          <DemoRegionNotice />
+          <DemoRegionNotice pulse={pulse} />
           <p className="lx-muted lx-m-0 lx-text-13">Chưa thể phát hành vì còn 3 điều kiện chưa đạt. Hệ thống không tự quyết định phát hành.</p>
           {/* TODO(backend): POST /api/releases/{id}/approve/ */}
           <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled>Phê duyệt phát hành</button>
@@ -58,8 +57,7 @@ export function QualityGateBody() {
                 placeholder="Nêu rõ người chịu trách nhiệm và căn cứ. Mọi waiver đều được ghi vào nhật ký kiểm toán." />
             </div>
             {/* TODO(backend): POST /api/waivers/ (waivers_create đã có trong contract; chưa gọi vì chưa nối) */}
-            <button type="button" className="lx-btn" onClick={() => setBlocked(true)}>Gửi xin waiver</button>
-            {blocked && <NotConnectedNotice />}
+            <button type="button" className="lx-btn" onClick={() => setPulse((n) => n + 1)}>Gửi xin waiver</button>
           </div>
         </div>
       </aside>

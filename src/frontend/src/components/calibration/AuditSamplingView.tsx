@@ -1,25 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DemoRegionNotice } from './DemoRegionNotice';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { RANDOM_AUDIT_FIELDS, RANDOM_AUDIT_ROWS, RISK_ROWS } from '@/lib/calibration/sample-data';
 
 type Tab = 'random' | 'risk';
 const TABS: ReadonlyArray<[Tab, string]> = [['random', 'Kiểm tra ngẫu nhiên'], ['risk', 'Lấy mẫu theo rủi ro']];
 
 export function AuditSamplingHeader() {
-  const [blocked, setBlocked] = useState(false);
   return (
     <div className="lx-head">
       <div className="lx-head__text">
         <h1 className="lx-h1">Audit Sampling</h1>
         <p className="lx-lead">Hai luồng lấy mẫu độc lập: kiểm tra ngẫu nhiên để ước lượng chất lượng, lấy mẫu theo rủi ro để tìm lỗi. Không suy ra tỷ lệ lỗi toàn dataset từ mẫu theo rủi ro.</p>
-        {blocked && <NotConnectedNotice />}
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/audit-samples/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn lx-btn--primary" onClick={() => setBlocked(true)}>Tạo mẫu mới</button>
+        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Tạo mẫu mới</button>
       </div>
     </div>
   );
@@ -30,7 +27,7 @@ export function AuditSamplingBody() {
   return (
     <>
       {/* TODO(backend): GET /api/audit-samples/?stream=random|risk */}
-      <DemoRegionNotice />
+      <DemoRegionNotice listenGlobal />
       <section className="lx-card" aria-label="Lấy mẫu kiểm toán">
         <div className="lx-tabs lx-tabs--inset" role="tablist">
           {TABS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={`lx-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>{label}</button>)}
