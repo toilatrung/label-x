@@ -72,6 +72,8 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>TBD-20</td><td>t_gc 24 giờ; ε score_v0 = 0,01; làm tròn 6 chữ số thập phân khi hash</td><td>Đã chốt</td><td>Chưa triển khai; khớp code hiện tại NOT VERIFIED</td></tr>
 </tbody></table>
 <p><strong>Còn pending (lý do blocker giữ <code>open</code>)</strong>: (1) thời gian QC Run 10.000 frame (NFR-03); (2) cấu hình server pilot (TBD-02); (3) đo NFR trên pilot (NFR-01…03, NFR-05, NFR-08, NFR-16); (4) đồng bộ bản SRS có version. Bằng chứng: <a href="../../reports/implementation/M-02-RESOLVE.html">báo cáo triển khai M-02-RESOLVE</a>.</p>
+<h3 id="quyet-dinh-po-2026-10-11">Quyết định PO 2026-10-11</h3>
+<p>Quyết định PO 2026-10-11 (<a href="../decisions/DEC-014.html">DEC-014</a>), TBD-14: <code>ORCHESTRATION_RUNNING_STALE_SECONDS</code> giữ 1800 giây cho M-02; tham số chỉnh sau pilot, Tech Lead chốt; không giao task beat/sweeper trong compose/CI. Giữ <code>open</code> (còn đo NFR, cấu hình server pilot).</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>none</code> (chỉ nghiệm thu NFR-01…03, NFR-05, NFR-06, NFR-08, NFR-16 và task GC/retention của E-02)</li>
