@@ -894,6 +894,8 @@ export interface components {
              * @description VALIDATION_ERROR: {"fields": {"<tên trường>": ["<lỗi>"]}}.
              *     INVALID_TRANSITION: {"from": "...", "event": "..."} và có thể drift_jobs.
              *     BUSINESS_RULE_UNMET ở frames_complete: {"undecided_issue_ids": [..]}.
+             *     FORBIDDEN do thiếu hoặc sai CSRF (mọi request ghi, gồm auth_login/auth_logout): {"reason": "csrf"};
+             *     client dùng khóa này để phân biệt với thiếu quyền và lấy lại csrftoken.
              */
             details?: {
                 [key: string]: unknown;
