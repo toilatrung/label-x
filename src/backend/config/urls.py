@@ -13,6 +13,8 @@ urlpatterns = [
     path("api/snapshots/", include("snapshots.urls")),
     path("api/datasets/", include("snapshots.dataset_urls")),
     path("api/runs/", include("runs.urls")),
+    path("api/queues/", include("review.queue_urls")),
+    path("api/leases/", include("review.lease_urls")),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",
