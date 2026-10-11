@@ -24,7 +24,7 @@ export function ReworkTracking() {
           <span className="lx-metric__n">{rework.closed} / {rework.total} yêu cầu đã đóng</span></div>
       </div>
       <section className="lx-card" aria-label="Yêu cầu sửa">
-        <div className="lx-tabs" role="tablist" aria-label="Trạng thái yêu cầu sửa" style={{ padding: '0 var(--space-3)' }}>
+        <div className="lx-tabs lx-tabs--inset" role="tablist" aria-label="Trạng thái yêu cầu sửa">
           {REWORK_TABS.map(item => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key}
               className={`lx-tab${tab === item.key ? ' is-active' : ''}`} onClick={() => setTab(item.key)}>
@@ -33,7 +33,7 @@ export function ReworkTracking() {
           ))}
         </div>
         <div className="lx-scroll">
-          <table className="lx-table" style={{ minWidth: 900 }}>
+          <table className="lx-table lx-table--min-900">
             <thead><tr><th>Mã yêu cầu</th><th>Issue</th><th>Frame · Object</th><th>Việc cần sửa</th><th>Annotator</th><th>Hạn</th><th>Mức độ</th><th></th></tr></thead>
             <tbody>
               {REWORK_ROWS[tab].map(item => (

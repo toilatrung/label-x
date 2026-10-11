@@ -14,13 +14,13 @@ const SvgArrow = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8
 function AdjudicationSample() {
   return (
     <div className="lx-cols">
-      <section className="lx-card" aria-label="Chờ phân xử" style={{ flex: '1 1 380px', maxWidth: 460 }}>
+      <section className="lx-card lx-side--list" aria-label="Chờ phân xử">
         <div className="lx-card__head"><h2 className="lx-h2">Chờ phân xử</h2><span className="lx-hint">18 case</span></div>
         <ul className="lx-list" role="listbox" aria-label="Case chờ phân xử">
           {PENDING.map((item, index) => (
             <li key={item.id} role="option" aria-selected={index === 0}>
-              <div className="lx-row" style={{ justifyContent: 'space-between' }}><b className="lx-mono">{item.id}</b><span className="lx-badge lx-badge--warning">{item.badge}</span></div>
-              <div className="lx-cell__main" style={{ marginTop: 4 }}>{item.title}</div>
+              <div className="lx-row lx-row--between"><b className="lx-mono">{item.id}</b><span className="lx-badge lx-badge--warning">{item.badge}</span></div>
+              <div className="lx-cell__main lx-mt-1">{item.title}</div>
               <div className="lx-cell__sub">{item.sub}</div>
             </li>
           ))}
@@ -31,19 +31,19 @@ function AdjudicationSample() {
       <section className="lx-card lx-main" aria-label="Chi tiết phân xử mẫu">
         <div className="lx-card__head">
           <h2 className="lx-h2"><span className="lx-mono">QC-00098</span> · Sai nhãn: bus hay truck</h2>
-          <Link className="lx-link" href="/review/workspace" style={{ fontSize: 13 }}>Mở trong Review Workspace</Link>
+          <Link className="lx-link lx-text-13" href="/review/workspace">Mở trong Review Workspace</Link>
         </div>
         <div className="lx-card__body lx-stack">
           <div className="lx-grid lx-grid--3">
-            <div className="lx-stack" style={{ gap: 6 }}><span className="lx-label">Quyết định của reviewer</span>
-              <table className="lx-table" style={{ fontSize: 12 }}><tbody>
+            <div className="lx-stack lx-stack--tight"><span className="lx-label">Quyết định của reviewer</span>
+              <table className="lx-table lx-table--sm"><tbody>
                 <tr><td>Bình Hồ</td><td><span className="lx-badge lx-badge--success">Xác nhận lỗi</span></td></tr>
                 <tr><td>An Nguyễn</td><td><span className="lx-badge">Bác bỏ</span></td></tr>
               </tbody></table></div>
-            <div className="lx-stack" style={{ gap: 6 }}><span className="lx-label">Bằng chứng</span>
-              <div className="lx-muted" style={{ fontSize: 13 }}>Annotation: bus<br />Mô hình độc lập: truck · 0.77<br />Mô hình thị giác – ngôn ngữ: không chắc chắn</div></div>
-            <div className="lx-stack" style={{ gap: 6 }}><span className="lx-label">Hướng dẫn liên quan</span>
-              <div className="lx-muted" style={{ fontSize: 13 }}>VEH-03 · Guideline v1.2<br />Chưa nêu rõ xe buýt mini chở hàng.</div></div>
+            <div className="lx-stack lx-stack--tight"><span className="lx-label">Bằng chứng</span>
+              <div className="lx-muted lx-text-13">Annotation: bus<br />Mô hình độc lập: truck · 0.77<br />Mô hình thị giác – ngôn ngữ: không chắc chắn</div></div>
+            <div className="lx-stack lx-stack--tight"><span className="lx-label">Hướng dẫn liên quan</span>
+              <div className="lx-muted lx-text-13">VEH-03 · Guideline v1.2<br />Chưa nêu rõ xe buýt mini chở hàng.</div></div>
           </div>
           <div className="lx-field"><span className="lx-label">Kết luận phân xử</span>
             <div className="lx-choices">
@@ -58,7 +58,7 @@ function AdjudicationSample() {
           </div>
           <div className="lx-field"><label className="lx-label" htmlFor="g4">Lý do phân xử</label><textarea id="g4" className="lx-textarea" placeholder="Nêu căn cứ để các case tương tự có thể tham chiếu." /></div>
           {/* TODO(backend): POST /api/issues/{id}/adjudications/ và POST /api/guideline-gaps/; nút chặn, không gọi API giả */}
-          <div className="lx-actions" style={{ justifyContent: 'flex-end' }}>
+          <div className="lx-actions lx-actions--end">
             <button type="button" className="lx-btn">Tạo Guideline Gap</button>
             <button type="button" className="lx-btn lx-btn--primary">Lưu phân xử</button>
           </div>
@@ -88,7 +88,7 @@ export function EscalationsDesign() {
       </div>
 
       <section className="lx-card" aria-label="Escalations">
-        <div className="lx-tabs" role="tablist" aria-label="Escalations" style={{ padding: '0 var(--space-3)' }}>
+        <div className="lx-tabs lx-tabs--inset" role="tablist" aria-label="Escalations">
           {ESCALATION_TABS.map(item => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key}
               className={`lx-tab${tab === item.key ? ' is-active' : ''}`} onClick={() => setTab(item.key)}>
@@ -99,7 +99,7 @@ export function EscalationsDesign() {
         <div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice /></div>
         {list && (
           <div className="lx-scroll">
-            <table className="lx-table" style={{ minWidth: 880 }}>
+            <table className="lx-table lx-table--min-880">
               <thead><tr>{list.cols.map(col => <th key={col}>{col}</th>)}<th></th></tr></thead>
               <tbody>
                 {list.rows.map(row => (
