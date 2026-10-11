@@ -234,6 +234,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Snapshot" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
@@ -363,6 +364,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Run" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/cancel/:
@@ -382,6 +384,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Run" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
@@ -402,6 +405,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Run" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
@@ -422,6 +426,7 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/LedgerEntry" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/shards/:
@@ -440,6 +445,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedRunShardList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/candidates/:

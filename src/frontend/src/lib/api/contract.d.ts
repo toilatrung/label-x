@@ -2099,6 +2099,7 @@ export interface operations {
                     "application/json": components["schemas"]["Snapshot"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2268,6 +2269,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2292,6 +2294,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
@@ -2317,6 +2320,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
@@ -2342,6 +2346,7 @@ export interface operations {
                     "application/json": components["schemas"]["LedgerEntry"][];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2369,6 +2374,7 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedRunShardList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
