@@ -52,10 +52,11 @@ function WorkflowPermissionsView() {
         <section className="lx-card lx-main" aria-label="Quyền theo vai trò">
           <div className="lx-card__head"><h2 className="lx-h2">Quyền theo vai trò</h2></div>
           <div className="lx-scroll">
-            <table className="lx-table lx-matrix" style={{ minWidth: 760 }}>
+            <table className="lx-table lx-matrix lx-table--min-760">
               <thead><tr><th>Chức năng</th>{ROLE_ORDER.map(role => <th key={role} className="c">{ROLE_LABELS[role]}</th>)}</tr></thead>
               <tbody>
                 {query.isLoading && <tr><td colSpan={ROLE_ORDER.length + 1}>Đang tải…</td></tr>}
+                {data && data.matrix.length === 0 && <tr><td colSpan={ROLE_ORDER.length + 1} className="lx-subtle">Chưa có ma trận phân quyền.</td></tr>}
                 {data?.matrix.map(row => <tr key={row.function}>
                   <td className="lx-cell__main">{functionLabel(row.function)}</td>
                   {ROLE_ORDER.map(role => {
@@ -69,10 +70,10 @@ function WorkflowPermissionsView() {
         </section>
         <aside className="lx-card lx-side" aria-label="Quy tắc quy trình">
           <div className="lx-card__head"><h2 className="lx-h2">Quy tắc quy trình</h2></div>
-          <div className="lx-card__body lx-stack" style={{ gap: 14 }}>
+          <div className="lx-card__body lx-stack lx-stack--rows">
             {/* TODO(backend): PATCH /api/auth/workflow-permissions/rules/{rule}/ (bật/tắt quy tắc); công tắc chỉ phản ánh `enforced`, không ghi */}
             <NotConnectedNotice detail="Công tắc quy tắc chỉ hiển thị trạng thái áp dụng hiện tại" />
-            {data?.rules.map(rule => <div key={rule.rule} className="lx-row" style={{ justifyContent: 'space-between', flexWrap: 'nowrap' }}>
+            {data?.rules.map(rule => <div key={rule.rule} className="lx-row lx-row--between lx-row--nowrap">
               <div>
                 <div className="lx-cell__main">{rule.name}</div>
                 <div className="lx-hint">{rule.description}</div>
