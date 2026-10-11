@@ -115,6 +115,7 @@ class ConfigVersionListView(APIView):
 
 
 class ConfigVersionPublishView(APIView):
+    serializer_class = ConfigVersionSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QC_ADMIN, Role.SUPER_ADMIN)
     action_name = "config_versions.publish"
@@ -350,6 +351,7 @@ class RunDetailView(APIView):
 class RunCancelView(APIView):
     """Cancel run: POST /api/runs/{id}/cancel/."""
 
+    serializer_class = RunSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
     action_name = "runs.cancel"
@@ -379,6 +381,7 @@ class RunCancelView(APIView):
 class RunRetryFailedView(APIView):
     """Retry failed work units: POST /api/runs/{id}/retry-failed/."""
 
+    serializer_class = RunSerializer  # để drf-spectacular đưa endpoint vào schema
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
     action_name = "runs.retry_failed"
