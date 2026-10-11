@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from orchestration.metrics_view import MetricsView
 from runs.views import ConfigVersionListView, ConfigVersionPublishView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("internal/metrics/", MetricsView.as_view(), name="internal-metrics"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="api-docs"),
     path("api/auth/", include("accounts.urls")),

@@ -68,6 +68,16 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>R4</td><td>minor</td><td>Contract Dataset: đã khai báo 400/502 trong <code>openapi.yaml</code>, nhưng chưa chạy <code>make gen-api</code> để so <code>contract.d.ts</code> với schema sinh từ backend. Quyền <code>/api/datasets/</code> (mọi vai trò đã đăng nhập) lệch với màn Snapshot (chỉ qa_lead/qc_admin/super_admin), chưa thống nhất.</td><td>Review F-3 (minor) đợt trước, chưa có phản hồi</td></tr>
 <tr><td>R5</td><td>minor</td><td>Backend chưa được chạy lại trong lượt review này (không chạy <code>make check</code>, pytest trên Postgres); số liệu backend lấy từ báo cáo của tác giả và reviewer trước.</td><td>NOT VERIFIED trong lượt QC này</td></tr>
 </tbody></table>
+<h3 id="cap-nhat-m-02-resolve">Cập nhật 2026-10-10 (M-02-RESOLVE): trạng thái R1–R5</h3>
+<p>Kiểm trên HEAD <code>1cb5a66</code> (nhánh <code>fix/M-02-RESOLVE</code>, từ <code>develop</code> <code>cd13551</code>); chưa push nên CI GitHub chưa chạy. Chi tiết: <a href="../../reports/implementation/M-02-RESOLVE.html">báo cáo triển khai</a>.</p>
+<table><thead><tr><th>#</th><th>Trạng thái thực tế</th><th>Bằng chứng / còn lại</th></tr></thead><tbody>
+<tr><td>R1</td><td>Đã xử lý một phần trong develop</td><td>Code tự tải trang tiếp tới khi gặp snapshot khoá, có chống vòng cursor (không còn giới hạn 20 trang). Còn chi phí O(số trang); chưa thêm filter “latest locked” ở backend. Không được coi là đóng hẳn.</td></tr>
+<tr><td>R2</td><td>Không tái hiện</td><td>vitest 20 file / 188 test passed, không có unhandled error, trên develop <code>cd13551</code> và HEAD cuối.</td></tr>
+<tr><td>R3</td><td>Đã xử lý (dependency); CI NOT VERIFIED</td><td>PR #91, #93, #94, #95, #98 là ancestor của HEAD. CI GitHub trên SHA cuối chưa có vì chưa push.</td></tr>
+<tr><td>R4</td><td>Đã xử lý phần contract; phần quyền chưa thống nhất</td><td><code>contract.d.ts</code> regenerate đồng bộ (<code>522f03b</code>). Chênh lệch quyền <code>/api/datasets/</code> so với màn Snapshot: không có quyết định trong M-02-RESOLVE, vẫn cần PO.</td></tr>
+<tr><td>R5</td><td>Đã chạy lại</td><td><code>make check</code> exit 0: backend 470 passed / 1 skipped, vitest 188, detector 10, <code>FRAMEWORK_VALIDATION_PASS</code>; <code>makemigrations --check</code> không đổi. Baseline develop <code>cd13551</code>: backend 428 passed / 1 skipped.</td></tr>
+</tbody></table>
+<p>Blocker giữ <code>open</code>: R1 còn lại chi phí, R3/R4 cần CI trên SHA cuối và quyết định quyền của PO; chưa có review độc lập.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>T-022</code></li>

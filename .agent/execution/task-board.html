@@ -316,6 +316,17 @@ ul.dir{columns:2;font-size:14px}
 <td>implementation report; QA report passed (ec627bd); PR #77 (ec627bd); chờ review report dạng file (F-1)</td>
 <td>2026-10-09</td>
 </tr>
+<tr>
+<td>M-02-RESOLVE</td>
+<td>E-04, E-05, E-08, E-09, E-11</td>
+<td>Kiểm tích hợp M-02 trên dữ liệu thật và xử lý BLOCKER-024…029 (retry/backoff, sweeper, metrics CR-109, E2E/RBAC/browser, DEC-013)</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>review</td>
+<td>T-022, T-025, T-029, T-031</td>
+<td>BLOCKER-024, 025, 026, 027, 028, 029 (đều còn open)</td>
+<td>implementation report; review/QA placeholder chờ độc lập; CR-109 chờ PO; CI chưa chạy (chưa push)</td>
+<td>2026-10-10</td>
+</tr>
 </tbody>
 </table>
 <h2 id="task-details">Task Details</h2>
@@ -1505,5 +1516,34 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>. (còn thiếu review report dạng file, QA report F-1)</li>
 <li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status. (chuyển <code>done</code> sau khi có review report và xác nhận QC độc lập)</li>
+</ul>
+<h3 id="m-02-resolve">M-02-RESOLVE</h3>
+<h4 id="record-metadata_m02r">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
+<li><strong>Epic ID</strong>: <code>E-04, E-05, E-08, E-09, E-11</code></li>
+<li><strong>Title</strong>: <code>Kiểm tích hợp M-02 trên dữ liệu thật và xử lý BLOCKER-024…029</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_m02r">Objective</h4>
+<p>Đóng giai đoạn M-02 bằng bằng chứng chạy thật (CVAT, Redis, Celery worker) cho AC-01…AC-03, xử lý các blocker gom về task này, ghi quyết định TBD (DEC-013).</p>
+<h4 id="related-files_m02r">Related Files</h4>
+<ul>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/M-02-RESOLVE.html</code></li>
+<li><strong>Review / QA</strong>: <code>.agent/reports/review/M-02-RESOLVE.html</code>, <code>.agent/reports/qa/M-02-RESOLVE.html</code> (placeholder, chờ độc lập)</li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-013.html</code></li>
+<li><strong>Blockers</strong>: <code>BLOCKER-024…029 (đều còn open)</code></li>
+<li><strong>Change Requests</strong>: <code>CR-109 (proposed, chờ PO)</code></li>
+</ul>
+<h4 id="completion-criteria_m02r">Completion Criteria</h4>
+<ul>
+<li>[ ] Every acceptance criterion passes. (AC-02 retry-failed trên broker thật chưa kiểm)</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>. (review và QA độc lập chưa có)</li>
+<li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>. (đã ghi, chờ hash merge)</li>
+<li>[ ] Current context and task board reflect the final status. (chưa <code>done</code>)</li>
 </ul>
 </article></main></body></html>

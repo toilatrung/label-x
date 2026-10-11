@@ -176,6 +176,17 @@ def test_real_engine_output_validates_against_contract_and_covers_empty_frame() 
     _validate_contract_schema("EngineOutput", payload)
 
 
+def test_frame_without_annotations_is_not_applicable_not_checked() -> None:
+    empty = FrameKey(cvat_task_id=1, frame_number=1)
+    output = run_duplicate_overlap_engine(_engine_input(empty), {empty: []})
+
+    assert output.candidates == ()
+    assert [(r.outcome, r.not_checked_reason) for r in output.unit_results] == [
+        ("not_checked", "not_applicable")
+    ]
+    _validate_contract_schema("EngineOutput", _json_value(output))
+
+
 def test_descriptor_matches_engine_contract() -> None:
     payload = _json_value(DUPLICATE_OVERLAP_DESCRIPTOR)
     _validate_contract_schema("EngineDescriptor", payload)

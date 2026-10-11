@@ -1,0 +1,117 @@
+{
+ "snapshot": {
+  "id": 3,
+  "status": "locked",
+  "revision_sha256": "4c0f34ab43ca693857f9e89672136d9b96eac68997e37d6e065037ba105dfbcf",
+  "locked_at": "2026-10-10 18:43:32.434031+00:00",
+  "taxonomy_version": "cvat-labels:b511c5022ff705e3269e6ca19e4cb12ec984e7a5a2a1cda99e37b7fcdc3b6514"
+ },
+ "runs": {
+  "35": {
+   "status": "completed",
+   "created_at": "2026-10-10 19:39:11.012608+00:00",
+   "started_at": "2026-10-10 19:40:01.960405+00:00",
+   "finished_at": "2026-10-10 19:40:28.809791+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "36": {
+   "status": "completed",
+   "created_at": "2026-10-10 19:40:57.708104+00:00",
+   "started_at": "2026-10-10 19:41:54.941587+00:00",
+   "finished_at": "2026-10-10 19:42:29.148125+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "37": {
+   "status": "completed",
+   "created_at": "2026-10-10 19:50:15.195036+00:00",
+   "started_at": "2026-10-10 19:52:26.311840+00:00",
+   "finished_at": "2026-10-10 19:53:05.986472+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "38": {
+   "status": "completed",
+   "created_at": "2026-10-10 19:54:30.488066+00:00",
+   "started_at": "2026-10-10 19:56:41.671491+00:00",
+   "finished_at": "2026-10-10 20:01:52.153165+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "39": {
+   "status": "completed",
+   "created_at": "2026-10-10 19:58:41.550415+00:00",
+   "started_at": "2026-10-10 20:00:51.128629+00:00",
+   "finished_at": "2026-10-10 20:01:20.566711+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "40": {
+   "status": "completed",
+   "created_at": "2026-10-10 20:02:01.604331+00:00",
+   "started_at": "2026-10-10 20:03:20.197994+00:00",
+   "finished_at": "2026-10-10 20:04:44.990785+00:00",
+   "cancel_requested_at": "None",
+   "work_units": {
+    "completed": 18
+   },
+   "shard_commits": 18,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 163,
+   "ledger_rows": 1764,
+   "rankings": 5
+  },
+  "41": {
+   "status": "cancelled",
+   "created_at": "2026-10-10 20:05:26.573996+00:00",
+   "started_at": "2026-10-10 20:06:19.470517+00:00",
+   "finished_at": "2026-10-10 20:06:40.161699+00:00",
+   "cancel_requested_at": "2026-10-10 20:06:40.161699+00:00",
+   "work_units": {
+    "completed": 11,
+    "cancelled": 7
+   },
+   "shard_commits": 14,
+   "duplicate_idempotency_keys": 0,
+   "candidates": 144,
+   "ledger_rows": 1764,
+   "rankings": 0
+  }
+ }
+}

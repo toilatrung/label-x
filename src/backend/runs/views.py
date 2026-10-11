@@ -123,7 +123,13 @@ class ConfigVersionPublishView(APIView):
 
     @extend_schema(
         operation_id="config_versions_publish",
-        responses={200: ConfigVersionSerializer},
+        request=None,
+        responses={
+            200: ConfigVersionSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["config"],
     )
     def post(self, request: Request, pk: int) -> Response:
@@ -332,7 +338,12 @@ class RunDetailView(APIView):
 
     @extend_schema(
         operation_id="runs_retrieve",
-        responses={200: RunSerializer, 403: RunSerializer, 404: RunSerializer},
+        responses={
+            200: RunSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def get(self, _request: Request, pk: int) -> Response:
@@ -363,7 +374,14 @@ class RunCancelView(APIView):
 
     @extend_schema(
         operation_id="runs_cancel",
-        responses={200: RunSerializer, 403: RunSerializer, 404: RunSerializer, 409: RunSerializer},
+        request=None,
+        responses={
+            200: RunSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def post(self, request: Request, pk: int) -> Response:
@@ -392,7 +410,14 @@ class RunRetryFailedView(APIView):
 
     @extend_schema(
         operation_id="runs_retry_failed",
-        responses={202: RunSerializer, 403: RunSerializer, 404: RunSerializer, 409: RunSerializer},
+        request=None,
+        responses={
+            202: RunSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
         tags=["runs"],
     )
     def post(self, request: Request, pk: int) -> Response:
@@ -421,7 +446,14 @@ class RunLedgerView(RunScopedReadView):
     action_name = "runs.ledger"
 
     @extend_schema(
-        operation_id="runs_ledger", responses={200: LedgerEntrySerializer(many=True)}, tags=["runs"]
+        operation_id="runs_ledger",
+        responses={
+            200: LedgerEntrySerializer(many=True),
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
     )
     def get(self, _request: Request, pk: int) -> Response:
         run = QCRun.objects.prefetch_related("engine_results").get(pk=pk)
@@ -461,7 +493,14 @@ class RunShardView(RunScopedReadView):
     action_name = "runs.shards"
 
     @extend_schema(
-        operation_id="runs_shards", responses={200: PaginatedWorkUnitSerializer}, tags=["runs"]
+        operation_id="runs_shards",
+        responses={
+            200: PaginatedWorkUnitSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
     )
     def get(self, request: Request, pk: int) -> Response:
         queryset = WorkUnit.objects.filter(run_id=pk).order_by("-id")

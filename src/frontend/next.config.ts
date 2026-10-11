@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   experimental: { proxyTimeout },
   // Contract paths end in a slash; POST requests must not redirect.
   skipTrailingSlashRedirect: true,
+  // Dev: mở LabelX qua 127.0.0.1 để cookie phiên tách khỏi CVAT (localhost:8080 dùng cùng tên
+  // cookie sessionid/csrftoken; cookie không phân biệt cổng nên CVAT ghi đè phiên LabelX).
+  allowedDevOrigins: ['127.0.0.1'],
   // The mock auth route handlers own /api/auth/* only in mock mode; elsewhere they answer 404,
   // so the proxy must run before the filesystem.
   rewrites: async () => (mockAuth ? [] : {
