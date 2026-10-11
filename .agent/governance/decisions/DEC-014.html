@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-014: Quyết định PO 2026-10-11 cho BLOCKER-024, BLOCKER-026 và thời gian lease shard — LabelX</title>
+<meta name="labelx:id" content="dec-014">
+<meta name="labelx:title" content="DEC-014: Quyết định PO 2026-10-11 cho BLOCKER-024, BLOCKER-026 và thời gian lease shard">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, blocker, m02, lease, learner-annotation, metrics]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-014</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-014</span><b>title</b><span>DEC-014: Quyết định PO 2026-10-11 cho BLOCKER-024, BLOCKER-026 và thời gian lease shard</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, blocker, m02, lease, learner-annotation, metrics]</span><b>priority</b><span>1</span></div>
+<h1 id="dec-014">DEC-014: Quyết định PO 2026-10-11 cho BLOCKER-024, BLOCKER-026 và thời gian lease shard</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi lại ba quyết định PO ghi trong phiếu chốt M-02 lần 2 (<code>H:\labelx-docs\M-02-phieu-chot-2-BLOCKER-024-026-lease.html</code>, ngày 2026-10-11) cho task M-02-RESOLVE. Bổ sung <a href="DEC-013.html">DEC-013</a>; DEC-013 giữ nguyên.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-014</code></li>
+<li><strong>Title</strong>: <code>DEC-014: Quyết định PO 2026-10-11 cho BLOCKER-024, BLOCKER-026 và thời gian lease shard</code></li>
+<li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
+<li><strong>Decision Makers</strong>: <code>Product Owner (Trịnh Quang Trung, @toilatrung). Việc Tech Lead Backend xác nhận riêng giá trị lease: NOT VERIFIED, không có bằng chứng trong hồ sơ này.</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-11</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Sau review độc lập và QC M-02, ba điểm còn cần PO chốt: nguồn dữ liệu người học (<a href="../blockers/BLOCKER-024.html">BLOCKER-024</a>), phạm vi đóng metric vận hành (<a href="../blockers/BLOCKER-026.html">BLOCKER-026</a>, CR-109 đã duyệt cùng ngày) và thời gian coi shard <code>RUNNING</code> là bỏ rơi (<code>ORCHESTRATION_RUNNING_STALE_SECONDS</code>, liên quan <a href="../blockers/BLOCKER-025.html">BLOCKER-025</a>, TBD-14).</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul>
+<li>Không đóng blocker khi chưa có quyết định ghi lại; không bịa bằng chứng (DEC-002).</li>
+<li>Tách “PO chấp nhận” với “đã xác minh độc lập”: các giới hạn còn lại phải ghi rõ.</li>
+</ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>1-A. BLOCKER-024: giữ open, yêu cầu bổ sung</td><td>Giữ yêu cầu xác minh nguồn</td><td>Chặn T-004, E-04, EDGE-009</td><td>partially-meets</td></tr>
+<tr><td>1-B. Giữ open nhưng không chặn nghiệm thu</td><td>Vẫn nghiệm thu được M-02</td><td>Blocker kéo dài</td><td>partially-meets</td></tr>
+<tr><td>1-C. Chấp nhận và đóng (PO chọn)</td><td>Gỡ chặn E-04, T-004, EDGE-009</td><td>Nguồn nhãn là lời khai PO, đối chiếu ảnh chỉ theo mirror</td><td>meets (PO chấp nhận rủi ro)</td></tr>
+<tr><td>2-A. BLOCKER-026: đóng sau khi #126 merge và review độc lập APPROVE (PO chọn)</td><td>Đóng đúng hạng mục T-025 với bằng chứng scrape HTTP và test</td><td>Chưa có Prometheus server, metric hàng đợi/worker, service token</td><td>meets</td></tr>
+<tr><td>2-B. Giữ open tới khi có Prometheus thật</td><td>Phủ đầy đủ NFR-12</td><td>Trễ M-02</td><td>partially-meets</td></tr>
+<tr><td>3-A. Giữ lease 1800 giây (PO chọn)</td><td>Không thu hồi nhầm shard đang sống; chỉ ảnh hưởng thời gian phục hồi</td><td>Phục hồi worker chết khoảng 32 phút, chưa đo; beat/sweeper chưa có trong compose/CI</td><td>meets</td></tr>
+<tr><td>3-B. Đổi giá trị; 3-C. Lease có heartbeat</td><td>Phục hồi nhanh hơn</td><td>Cần đo lại hoặc task mới</td><td>deferred</td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul>
+<li><strong>Selected Option</strong>: <code>1-C, 2-A, 3-A</code></li>
+<li><strong>Rationale</strong>: PO ghi trong phiếu: “Đã có tệp annotation do nhóm đánh xong còn gì” (BLOCKER-024); chấp nhận scrape HTTP thật và test thay Prometheus server, phần còn lại hoãn sang task/CR riêng (BLOCKER-026); giữ 1800 giây, chỉnh sau pilot do Tech Lead chốt, không giao task beat/sweeper (lease).</li>
+<li><strong>Effective Date</strong>: <code>2026-10-11</code></li>
+</ul>
+<table><thead><tr><th>Hạng mục</th><th>Quyết định</th><th>Điều kiện và giới hạn còn lại</th></tr></thead><tbody>
+<tr><td>BLOCKER-024</td><td>Chấp nhận, trạng thái <code>accepted</code>. Cập nhật T-004, E-04, EDGE-009.</td><td>Nguồn nhãn do PO khai: bộ do cả team học viên T-011 - Replacer gán theo hướng dẫn và guideline của nhóm. Đối chiếu 588 ảnh chỉ với mirror HuggingFace (chưa với cây ảnh chính thức); chưa có tài liệu guideline hay danh sách người gán trong repo. Không đồng nghĩa đã xác minh độc lập.</td></tr>
+<tr><td>BLOCKER-026</td><td>Đóng khi PR #126 merge và review độc lập APPROVE.</td><td>Hoãn sang task/CR riêng: metric độ dài hàng đợi, worker online, service token, Prometheus server. Mã và hạn của task/CR chưa được PO điền trong phiếu: cần chỉ định trước khi đóng (blocker yêu cầu hoãn phải có mã và hạn). Hiện vẫn <code>open</code>.</td></tr>
+<tr><td>Lease (TBD-14, BLOCKER-025)</td><td><code>ORCHESTRATION_RUNNING_STALE_SECONDS</code> giữ 1800 giây cho M-02; là tham số chỉnh sau pilot, Tech Lead chốt.</td><td>Không giao task beat/sweeper trong compose/CI: không triển khai thì shard RUNNING mồ côi không tự được thu hồi. BLOCKER-025 vẫn <code>open</code> (còn đo NFR, cấu hình server pilot).</td></tr>
+</tbody></table>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>BLOCKER-024 <code>accepted</code>; T-004 <code>in-progress</code> (cần cập nhật báo cáo T-004 với audit learner mới và QA bổ sung, báo cáo review/QA cũ của T-004 giữ nguyên); E-04 <code>EPIC_IN_PROGRESS</code>; EDGE-009 <code>active</code>.</li>
+<li>BLOCKER-026 và BLOCKER-025 giữ <code>open</code>.</li>
+<li>Rủi ro vận hành đã được PO chấp nhận: không có beat/sweeper trong môi trường triển khai thì worker chết có thể để lại shard RUNNING mồ côi.</li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li>Bằng chứng quyết định (PO dán nguyên văn vào phiên QC, lưu ngoài repo): <code>H:\labelx-docs\phieu-chot-M-02-lan1-2026-10-11.txt</code> (CR-109 duyệt, BLOCKER-024 chưa chấp nhận, ký 4 epic), <code>H:\labelx-docs\phieu-chot-M-02-lan2-2026-10-11.txt</code> (BLOCKER-024 chấp nhận và đóng, BLOCKER-026, lease). Phiếu lần 2 thay phiếu lần 1 ở mục BLOCKER-024. File form HTML chỉ là công cụ tạo phiếu, không chứa lựa chọn.</li>
+<li><a href="../blockers/BLOCKER-024.html">BLOCKER-024</a>, <a href="../blockers/BLOCKER-025.html">BLOCKER-025</a>, <a href="../blockers/BLOCKER-026.html">BLOCKER-026</a>, <a href="DEC-013.html">DEC-013</a>, <a href="../change-requests/CR-109.html">CR-109</a></li>
+</ul>
+</article></main></body></html>

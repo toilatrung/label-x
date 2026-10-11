@@ -207,6 +207,11 @@ class WorkUnit(dj_models.Model):
     last_error = dj_models.TextField(blank=True, default="")
     started_at = dj_models.DateTimeField(null=True, blank=True)
     finished_at = dj_models.DateTimeField(null=True, blank=True)
+    # Lần gần nhất message shard được gửi vào broker; sweeper chỉ gửi lại khi đã quá hạn.
+    dispatched_at = dj_models.DateTimeField(null=True, blank=True)
+    # Chủ sở hữu lease hiện tại của shard (token do worker nhận shard sinh ra). Chỉ chủ lease mới
+    # được chốt COMPLETED/FAILED; delivery trùng hoặc worker cũ sau khi bị thu hồi thì không.
+    lease_token = dj_models.CharField(max_length=32, blank=True, default="")
 
     class Meta:
         db_table = "work_unit"

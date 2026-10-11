@@ -349,3 +349,22 @@ def test_dataset_endpoints_contract_and_error_codes(spec):
         resp = gen_tasks_op["responses"][code]
         err_schema = resp["content"]["application/json"]["schema"]
         assert "Error" in err_schema["$ref"], f"Response {code} must reference Error schema"
+
+
+@pytest.mark.parametrize(
+    ("path", "method"),
+    [
+        ("/api/config-versions/{id}/publish/", "post"),
+        ("/api/runs/{id}/cancel/", "post"),
+        ("/api/runs/{id}/retry-failed/", "post"),
+        ("/internal/metrics/", "get"),
+    ],
+)
+def test_bodyless_endpoints_match_contract(spec, path, method):
+    """F-8: schema sinh từ view không được thêm requestBody và phải phủ mã lỗi của contract."""
+    static = spec["paths"][path][method]
+    generated = SchemaGenerator().get_schema(request=None, public=True)["paths"][path][method]
+    assert generated["operationId"] == static["operationId"]
+    assert "requestBody" not in static
+    assert "requestBody" not in generated
+    assert set(static["responses"]) <= set(generated["responses"])
