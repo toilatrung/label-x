@@ -85,9 +85,11 @@ def test_transient_failure_schedules_real_retry_with_2_4_8_backoff(run_setup, se
     set_runner(boom)
     unit = first_unit(run_setup)
     countdowns: list[float] = []
+    carried: dict = {}
 
-    def fake_retry(*, exc, countdown, max_retries):
+    def fake_retry(*, exc, kwargs, countdown, max_retries):
         countdowns.append(countdown)
+        carried.update(kwargs)  # message retry mang lease_token của owner
         assert max_retries == 3  # bị chặn, không còn None
         raise Retry()
 
@@ -96,7 +98,7 @@ def test_transient_failure_schedules_real_retry_with_2_4_8_backoff(run_setup, se
             run_work_unit.push_request(retries=retries)
             try:
                 with pytest.raises(Retry):
-                    run_work_unit.run(unit.pk)
+                    run_work_unit.run(unit.pk, **carried)
             finally:
                 run_work_unit.pop_request()
             unit.refresh_from_db()
@@ -104,7 +106,7 @@ def test_transient_failure_schedules_real_retry_with_2_4_8_backoff(run_setup, se
         run_work_unit.push_request(retries=3)
         try:
             with pytest.raises(ConnectionError):
-                run_work_unit.run(unit.pk)
+                run_work_unit.run(unit.pk, **carried)
         finally:
             run_work_unit.pop_request()
     assert countdowns == [2, 4, 8]
@@ -354,6 +356,15 @@ def test_cancel_during_failing_run_does_not_flip_unit_to_failed(run_setup, set_r
     assert QCRun.objects.get(pk=run_setup.pk).status == QCRun.Status.CANCELLED
 
 
+def expire_lease(unit: WorkUnit) -> None:
+    """Broker giao lại sau visibility timeout / sweeper: lease của worker đã chết quá hạn."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    WorkUnit.objects.filter(pk=unit.pk).update(started_at=timezone.now() - timedelta(hours=2))
+
+
 def test_worker_killed_before_commit_redelivery_completes_once(inline_queue):
     run = make_run(engine="duplicate", shapes=SHAPES)
     unit = first_unit(run)
@@ -363,6 +374,9 @@ def test_worker_killed_before_commit_redelivery_completes_once(inline_queue):
     unit.refresh_from_db()
     assert unit.status == WorkUnit.Status.RUNNING  # chưa ack, broker sẽ giao lại
     assert ShardCommit.objects.count() == 0 and CandidateRecord.objects.count() == 0
+    # Giao lại ngay khi lease còn hạn là delivery trùng: bị bỏ qua, không chạy song song.
+    assert run_work_unit.apply(args=[unit.pk]).get() == "running"
+    expire_lease(unit)
     assert run_work_unit.apply(args=[unit.pk]).get() == WorkUnit.Status.COMPLETED
     assert ShardCommit.objects.filter(run_id=run.pk).count() == 1
     assert CandidateRecord.objects.filter(run_id=run.pk).count() == 1
@@ -380,6 +394,7 @@ def test_worker_killed_after_commit_redelivery_completes_once_without_rerun(inli
     assert ShardCommit.objects.filter(run_id=run.pk).count() == 1
     candidates = CandidateRecord.objects.filter(run_id=run.pk).count()
     ledger = list(LedgerUnit.objects.filter(run_id=run.pk).values_list("pk", "outcome"))
+    expire_lease(unit)
     with mock.patch(
         "orchestration.tasks.registry.runner", side_effect=AssertionError("không chạy lại")
     ):
