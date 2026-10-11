@@ -111,16 +111,24 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByText(/Applicability version: 2026.10/)).toBeDefined();
     expect(screen.getByText('worker timeout')).toBeDefined();
     expect(screen.getByText(/disabled/)).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Chạy lại shard lỗi' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Quality Control Run' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Snapshot' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Chạy phân tích mới' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Chạy lại shard lỗi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chạy lại engine lỗi' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(true));
   });
 
   it('keeps QC admin read-only on the config screen', async () => {
     const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
     expect(await screen.findByRole('option', { name: /Published config/ })).toBeDefined();
-    expect((screen.getByRole('button', { name: 'Tạo QC run' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Lấy mẫu')).toBeDefined();
+    expect(screen.getByText('Sẵn sàng chạy')).toBeDefined();
+    expect(screen.getByText(/Chức năng vẫn chưa được kết nối với server/)).toBeDefined();
     expect(calls.some((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/runs/')).toBe(false);
   });
 
@@ -157,9 +165,9 @@ describe('Execution screens on real API contract', () => {
     expect(await screen.findByText('Chưa chọn phiên bản cấu hình')).toBeDefined();
     fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
     expect(await screen.findByText('Duplicate / Overlap')).toBeDefined();
-    expect(screen.getByText('Ngưỡng kiểm tra engine')).toBeDefined();
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
-    expect(screen.getByText('Bật trong config')).toBeDefined();
+    expect(screen.getByText('Engine kiểm tra')).toBeDefined();
+    expect(screen.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
+    expect((screen.getByRole('checkbox', { name: 'Duplicate / Overlap: bật' }) as HTMLInputElement).checked).toBe(true);
     expect(screen.getByLabelText('Ngưỡng và model tham chiếu').textContent).toContain('"tau_loc": 0.55');
     expect(screen.getByLabelText('Ngưỡng và model tham chiếu').textContent).toContain('detector-v2');
     const configCall = calls.find((r) => new URL(r.url).pathname === '/api/config-versions/' && r.method === 'GET');
@@ -204,7 +212,7 @@ describe('Execution screens on real API contract', () => {
     await screen.findByRole('option', { name: /Different Config v9/ });
     expect(screen.getByText('Selected Config v7')).toBeDefined();
     expect(screen.queryByText('Different Config v9')).toBeNull();
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
+    expect(screen.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
     expect(screen.queryByText(/Ngưỡng tin cậy ≥ 0.9/)).toBeNull();
     // Dropdown preserves option for the selected config
     expect(screen.getByRole('option', { name: /Selected Config v7 · v7 \(đang chọn\)/ })).toBeDefined();
@@ -256,7 +264,7 @@ describe('Execution screens on real API contract', () => {
   it('does not fetch candidates when no run is selected, and fetches only after run is selected', async () => {
     searchParamsState.current = '';
     const { calls } = await setup('qalead', <ExecutionHistoryPage />);
-    await screen.findByText('QC-12');
+    await screen.findByText('#QC-12');
     expect(calls.some((r) => new URL(r.url).pathname.includes('/candidates/'))).toBe(false);
     expect(screen.queryByText('Candidate nghi vấn & Evidence')).toBeNull();
 

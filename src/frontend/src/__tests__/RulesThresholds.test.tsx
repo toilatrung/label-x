@@ -141,7 +141,7 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     expect(screen.getByText('Metric')).toBeDefined();
 
     // Hiển thị ngưỡng hiệu lực từ params
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
+    expect(screen.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
     expect(screen.getByText(/Dung sai biên 2 px · Diện tích tối thiểu 24 px²/)).toBeDefined();
     expect(screen.getByText(/Detector v2.3 · Ngưỡng tin cậy ≥ 0.6/)).toBeDefined();
 
