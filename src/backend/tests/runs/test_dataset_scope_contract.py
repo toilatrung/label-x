@@ -1,4 +1,4 @@
-"""R-3: mã lỗi thật của endpoint có dataset scope phải khớp contract (openapi.yaml) và schema sinh ra."""
+"""R-3: mã lỗi thật của endpoint có dataset scope khớp contract và schema sinh ra."""
 
 from __future__ import annotations
 
