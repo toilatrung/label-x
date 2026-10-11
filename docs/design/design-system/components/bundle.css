@@ -432,3 +432,9 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
  .lx-ws--reference .lx-ws__decide > .lx-row { align-items: stretch; flex-direction: column; }
  .lx-ws--reference .lx-ws__decide > .lx-row .lx-btn { width: 100%; justify-content: center; }
 }
+
+/* Notice — inline banner inside a region; square, border not shadow. Used for "not connected to server" */
+.lx-notice { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border); background: var(--neutral-soft); color: var(--ink-muted); font: 500 13px/20px var(--font-sans); }
+.lx-notice__ico { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke: currentColor; fill: none; }
+.lx-notice--warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
