@@ -26,6 +26,7 @@ const results = [];
 const api = [];
 const pageErrors = [];
 const consoleErrors = [];
+const requestFailures = [];
 
 function record(name, details = {}) {
   results.push({ name, status: 'passed', ...details });
@@ -39,8 +40,15 @@ function record(name, details = {}) {
     const page = await context.newPage();
     page.on('pageerror', error => pageErrors.push({ username, message: error.message }));
     page.on('console', message => {
-      if (message.type() === 'error') consoleErrors.push({ username, message: message.text() });
+      if (message.type() === 'error') {
+        consoleErrors.push({ username, message: message.text(), source: message.location().url || null });
+      }
     });
+    page.on('requestfailed', request => requestFailures.push({
+      username,
+      url: request.url(),
+      error: request.failure()?.errorText || 'unknown',
+    }));
     page.on('response', response => {
       const url = new URL(response.url());
       if (url.origin === BACKEND && url.pathname.startsWith('/api/')) {
@@ -85,6 +93,19 @@ function record(name, details = {}) {
     await page.getByRole('table', { name: 'Kết quả Decision Case' }).getByText('Historical case for reusable lookup').waitFor();
     await page.screenshot({ path: path.join(output, 'qa-lead-evidence-and-case.png'), fullPage: true });
     record('QA Lead sees escalation evidence, reviewer decision, and reusable Decision Case lookup');
+
+    const workspaceCaseResponse = page.waitForResponse(response => {
+      const url = new URL(response.url());
+      return url.pathname === '/api/decision-cases/' && url.searchParams.get('issue') === '1';
+    });
+    await page.goto(`${FRONTEND}/review/workspace?frame_id=1`);
+    assert.equal((await workspaceCaseResponse).status(), 200);
+    await page.getByText('Historical case for reusable lookup').waitFor();
+    await page.screenshot({ path: path.join(output, 'review-workspace-decision-case.png'), fullPage: true });
+    record('Review Workspace reuses Decision Case lookup for its active issue');
+
+    await page.goto(`${FRONTEND}/escalations`);
+    await page.getByText('Trang 1', { exact: true }).waitFor();
 
     const secondResponse = page.waitForResponse(r => new URL(r.url()).searchParams.has('cursor') && r.status() === 200);
     await page.getByRole('button', { name: 'Trang sau' }).click();
@@ -191,8 +212,20 @@ function record(name, details = {}) {
 
   assert.deepEqual(pageErrors, []);
   const expectedConsoleErrors = consoleErrors.filter(item => item.message.includes('status of 403'));
-  const unexpectedConsoleErrors = consoleErrors.filter(item => !item.message.includes('status of 403'));
+  const isExpectedEnvironmentUrl = url =>
+    url?.startsWith('https://fonts.googleapis.com/') ||
+    url?.startsWith('http://localhost:9000/labelx-snapshots/t039/browser.jpg');
+  const expectedEnvironmentErrors = consoleErrors.filter(item => isExpectedEnvironmentUrl(item.source));
+  const unexpectedConsoleErrors = consoleErrors.filter(item =>
+    !item.message.includes('status of 403') && !isExpectedEnvironmentUrl(item.source));
+  const expectedRequestFailures = requestFailures.filter(item => isExpectedEnvironmentUrl(item.url));
+  const isExpectedNavigationCancellation = item =>
+    item.error === 'net::ERR_ABORTED' && new URL(item.url).pathname === '/api/decision-cases/';
+  const expectedNavigationCancellations = requestFailures.filter(isExpectedNavigationCancellation);
+  const unexpectedRequestFailures = requestFailures.filter(item =>
+    !isExpectedEnvironmentUrl(item.url) && !isExpectedNavigationCancellation(item));
   assert.deepEqual(unexpectedConsoleErrors, []);
+  assert.deepEqual(unexpectedRequestFailures, []);
   const evidence = {
     status: 'passed',
     generated_at: new Date().toISOString(),
@@ -205,6 +238,10 @@ function record(name, details = {}) {
     api,
     pageErrors,
     expectedConsoleErrors,
+    expectedEnvironmentErrors,
+    expectedRequestFailures,
+    expectedNavigationCancellations,
+    requestFailures: unexpectedRequestFailures,
     consoleErrors: unexpectedConsoleErrors,
   };
   fs.writeFileSync(path.join(output, 'browser-api-evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`);

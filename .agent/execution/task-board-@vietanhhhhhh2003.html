@@ -44,15 +44,15 @@
 </ul>
 <h2 id="t-039-task-record">T-039 Task Record</h2>
 <table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
-<tr><td>T-039</td><td>E-15</td><td>Escalations UI và tra cứu Decision Case dùng lại Workspace</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-038 tại <code>73f6da0</code>; T-032/T-037 soft</td><td><a href="../reports/implementation/T-039-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/106">issue #106</a>; branch <code>feat/T-039-e15-escalations-ui</code></td><td>2026-10-11</td></tr>
+<tr><td>T-039</td><td>E-15</td><td>Escalations UI và tra cứu Decision Case dùng lại Workspace</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-037/T-038 integrated at <code>integration/m03@3a42998</code></td><td><a href="../reports/implementation/T-039-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/106">issue #106</a>; <a href="https://github.com/toilatrung/label-x/pull/138">PR #138</a>; branch <code>feat/T-039-e15-escalations-ui</code></td><td>2026-10-11</td></tr>
 </tbody></table>
 <h2 id="t-039-acceptance-criteria">T-039 Acceptance Criteria</h2><ul>
 <li>[x] UI đọc/ghi API T-038, hiển thị evidence và toàn bộ reviewer decisions; không dùng fixture runtime.</li>
 <li>[x] Guard QA Lead/Super Admin, chặn cùng tài khoản chuyển cấp ở UI; lỗi role/scope/separation từ backend được hiển thị theo error code.</li>
 <li>[x] Form outcome/rule/label/reason và override reason khớp validation; Decision Case lookup lọc issue/rule/version.</li>
 <li>[x] Cursor pagination đi qua trang đầu, cùng loading/empty/error/retry.</li>
-<li>[x] Frontend full suite <code>23 files / 222 tests</code>, lint, typecheck và production build đạt.</li>
-<li>[x] Browser role matrix/API environment: Edge + Next.js + Django + PostgreSQL cô lập, 10 checks/49 API calls/0 page error; evidence tại <code>src/frontend/evidence/t039/</code>.</li>
+<li>[x] Frontend full suite <code>29 files / 307 tests</code>, lint, typecheck và production build đạt.</li>
+<li>[x] Browser role matrix/API environment: Edge + Next.js + Django + PostgreSQL cô lập trong Docker/WSL, 11 checks/58 API calls/0 page error; gồm Decision Case lookup trong Review Workspace; evidence tại <code>src/frontend/evidence/t039/</code>.</li>
 <li>[ ] Independent review/QA và GitHub Actions trên PR head còn chờ trước khi done.</li>
 </ul>
 </article></main></body></html>

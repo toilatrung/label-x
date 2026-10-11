@@ -13,6 +13,7 @@ import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
 import { ReviewDecisionForm } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
+import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup';
 
 type FrameIssues = components['schemas']['FrameIssues'];
 type Issue = components['schemas']['Issue'];
@@ -1091,6 +1092,10 @@ export function ReviewWorkspace({
                     </p>
                   )}
                 </details>
+
+                <div style={{ marginTop: '12px' }}>
+                  <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
+                </div>
               </div>
 
               {/* Decisions Section */}
