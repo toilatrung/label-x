@@ -1,0 +1,261 @@
+import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/lib/auth/auth-context';
+import EscalationsPage from '@/app/escalations/page';
+import { installMockAuthApi } from './helpers/mock-api';
+import type { EscalationIssue } from '@/lib/escalations/api';
+
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace }),
+  usePathname: () => '/escalations',
+}));
+
+const issue: EscalationIssue = {
+  id: 42,
+  family: 'E2',
+  origin: 'reviewer',
+  state: 'escalated',
+  anchor: {
+    kind: 'annotation',
+    objects: [],
+    rule_id: 'VEH-03',
+    bbox: null,
+    policy_version: 'anchor-v1',
+  },
+  n_i: 1,
+  q_i: 0.8,
+  severity: 'medium',
+  rule_ids: ['VEH-03'],
+  evidence: [
+    {
+      engine: 'detector',
+      rule_id: 'VEH-03',
+      expected: 'car',
+      actual: 'truck',
+      prediction_bbox: { x1: 10, y1: 20, x2: 30, y2: 40 },
+      prediction_class: 'truck',
+      confidence: 0.92,
+      iou: 0.7,
+    },
+  ],
+  links: [],
+  review_decisions: [
+    {
+      id: 8,
+      issue_id: 42,
+      actor_user_id: 4,
+      actor_role: 'reviewer',
+      decision: 'escalate',
+      revision: 'sha-review-1',
+      reason: 'Không chắc nhãn xe.',
+      rule_ids: ['VEH-03'],
+      reference_version: 'ref-v1',
+      reference_match_status: 'not_matched',
+      reference_error_ids: [],
+      recorded_at: '2026-10-11T01:00:00Z',
+    },
+  ],
+};
+
+const issuePage2: EscalationIssue = { ...issue, id: 84, review_decisions: [] };
+
+function testQueryClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+}
+
+describe('Escalations UI (T-039)', () => {
+  beforeEach(() => {
+    replace.mockClear();
+  });
+
+  async function renderPage(
+    username = 'qalead',
+    customHandler?: (request: Request) => Promise<Response | null>,
+  ) {
+    const api = installMockAuthApi();
+    await api.signIn(username);
+    const authFetch = api.fetchSpy.getMockImplementation()!;
+    const calls: Request[] = [];
+
+    api.fetchSpy.mockImplementation(async (request: Request) => {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith('/api/auth/')) return authFetch(request);
+      calls.push(request);
+      const custom = await customHandler?.(request);
+      if (custom) return custom;
+      if (url.pathname === '/api/escalations/') {
+        if (url.searchParams.get('cursor') === '42') {
+          return Response.json({ next: null, previous: null, results: [issuePage2] });
+        }
+        return Response.json({
+          next: 'http://localhost:8000/api/escalations/?cursor=42',
+          previous: null,
+          results: [issue],
+        });
+      }
+      if (url.pathname === '/api/decision-cases/') return Response.json([]);
+      if (url.pathname === '/api/issues/42/adjudications/') {
+        return Response.json({
+          id: 91,
+          issue_id: 42,
+          outcome: 'confirm',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: 'car',
+          reason: 'Evidence và guideline thống nhất.',
+          case_version: 'v2',
+          created_at: '2026-10-11T02:00:00Z',
+        }, { status: 201 });
+      }
+      return Response.json({ code: 'NOT_FOUND', message: 'Not found' }, { status: 404 });
+    });
+
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <AuthProvider><EscalationsPage /></AuthProvider>
+      </QueryClientProvider>,
+    );
+    return { api, calls };
+  }
+
+  it('renders API evidence and reviewer decisions, then loads beyond the first page', async () => {
+    const { calls } = await renderPage();
+    expect(await screen.findByText('Escalations & Decision Cases')).toBeDefined();
+    expect(await screen.findByText('#42')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(screen.getByText('detector')).toBeDefined();
+    expect(screen.getByText('Thực tế: truck')).toBeDefined();
+    expect(screen.getByText('Không chắc nhãn xe.')).toBeDefined();
+    expect(screen.getByText(/sha-review-1/)).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }));
+    expect(await screen.findByText('#84')).toBeDefined();
+    expect(calls.some((call) => new URL(call.url).searchParams.get('cursor') === '42')).toBe(true);
+  });
+
+  it('validates and posts the adjudication contract with an idempotency key', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+
+    fireEvent.change(screen.getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
+    fireEvent.change(screen.getByLabelText('Lý do *'), {
+      target: { value: 'Evidence và guideline thống nhất.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+
+    expect(await screen.findByText(/Đã lưu Decision Case #91/)).toBeDefined();
+    const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
+    expect(request).toBeDefined();
+    expect(request?.headers.get('Idempotency-Key')).toBeTruthy();
+    await expect(request?.clone().json()).resolves.toEqual({
+      outcome: 'confirm',
+      rule_id: 'VEH-03',
+      correct_label: 'car',
+      reason: 'Evidence và guideline thống nhất.',
+    });
+  });
+
+  it('blocks the same account that escalated before sending adjudication', async () => {
+    const ownIssue: EscalationIssue = {
+      ...issue,
+      review_decisions: [{ ...issue.review_decisions[0], actor_user_id: 2 }],
+    };
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname === '/api/escalations/') {
+        return Response.json({ next: null, previous: null, results: [ownIssue] });
+      }
+      return null;
+    });
+
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(screen.getByText(/không được tự phân xử/i)).toBeDefined();
+    expect((screen.getByRole('button', { name: 'Lưu kết luận phân xử' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+
+  it('surfaces backend RBAC/separation errors with the contract code', async () => {
+    await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname === '/api/issues/42/adjudications/') {
+        return Response.json({
+          code: 'SAME_REQUESTER_APPROVER',
+          message: 'Người phân xử không được là người đã chuyển cấp.',
+          request_id: 'req-t039-403',
+        }, { status: 403 });
+      }
+      return null;
+    });
+
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    fireEvent.change(screen.getByLabelText('Lý do *'), { target: { value: 'Đủ bằng chứng.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    expect(await screen.findByText(/SAME_REQUESTER_APPROVER/)).toBeDefined();
+    expect(screen.getByText(/Người duyệt phải khác người yêu cầu/)).toBeDefined();
+  });
+
+  it('maps the approved guideline_gap outcome to the current T-038 wire value', async () => {
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname === '/api/issues/42/adjudications/') {
+        return Response.json({
+          id: 92,
+          issue_id: 42,
+          outcome: 'guideline_missing',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: null,
+          reason: 'Guideline chưa bao phủ tình huống này.',
+          case_version: 'v3',
+          created_at: '2026-10-11T02:30:00Z',
+        }, { status: 201 });
+      }
+      return null;
+    });
+
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    fireEvent.click(screen.getByLabelText('Thiếu guideline'));
+    fireEvent.change(screen.getByLabelText('Lý do *'), {
+      target: { value: 'Guideline chưa bao phủ tình huống này.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    expect(await screen.findByText(/Đã lưu Decision Case #92/)).toBeDefined();
+
+    const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
+    expect((await request?.clone().json()).outcome).toBe('guideline_missing');
+  });
+
+  it('enforces the page role matrix without issuing data requests', async () => {
+    const { calls } = await renderPage('reviewer');
+    expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
+    expect(screen.queryByText('Escalations & Decision Cases')).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('queries Decision Cases by the requested case version', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    await waitFor(() => expect(calls.some((call) => new URL(call.url).pathname === '/api/decision-cases/')).toBe(true));
+
+    fireEvent.change(screen.getByLabelText('Case version'), { target: { value: 'v2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tra cứu' }));
+    await waitFor(() => expect(calls.some((call) => {
+      const url = new URL(call.url);
+      return url.pathname === '/api/decision-cases/' && url.searchParams.get('version') === 'v2';
+    })).toBe(true));
+  });
+
+  it('requires an override reason for a global Super Admin', async () => {
+    await renderPage('admin');
+    await screen.findByText('#42');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(screen.getByLabelText('Lý do override *')).toBeDefined();
+  });
+});

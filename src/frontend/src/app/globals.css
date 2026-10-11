@@ -84,3 +84,21 @@ body {
 .lx-execution-config pre { overflow-x: auto; padding: var(--space-4); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .lx-execution-warning { padding: var(--space-3); border-left: 3px solid var(--warning, #b7791f); background: var(--surface-sunken); }
 .lx-run-status--failed, .lx-run-status--partial, .lx-engine-status--failed, .lx-engine-status--partial, .lx-engine-status--not_checked { color: var(--danger, #a33); }
+
+/* T-039: Escalation adjudication and reusable Decision Case lookup. */
+.lx-escalation-run-filter { flex: 0 1 280px; }
+.lx-escalation-table { min-width: 840px; }
+.lx-escalation-workspace .lx-side { flex-basis: 380px; }
+.lx-decision { padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+.lx-decision:last-child { padding-bottom: 0; border-bottom: 0; }
+.lx-decision p { margin: var(--space-2) 0; white-space: pre-wrap; }
+.lx-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.lx-fieldset > .lx-label { margin-bottom: var(--space-2); }
+.lx-case-filters { flex-wrap: wrap; align-items: end; }
+.lx-case-filters .lx-field { flex: 1 1 180px; }
+.lx-case-filters__actions { padding-bottom: 1px; }
+.lx-case-lookup--compact .lx-case-filters .lx-field { flex-basis: 100%; }
+@media (max-width: 560px) {
+  .lx-case-filters .lx-field, .lx-escalation-run-filter { flex-basis: 100%; }
+  .lx-case-filters__actions { width: 100%; }
+}
