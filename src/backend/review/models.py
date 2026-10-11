@@ -419,3 +419,49 @@ class ReworkVerification(models.Model):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise ValueError("ReworkVerification is append-only")
+
+
+class FinalRunVerificationQuerySet(models.QuerySet["FinalRunVerification"]):
+    def update(self, **kwargs: Any) -> int:
+        raise ValueError("FinalRunVerification is append-only")
+
+    def delete(self) -> tuple[int, dict[str, int]]:
+        raise ValueError("FinalRunVerification is append-only")
+
+
+class FinalRunVerification(models.Model):
+    """Immutable lineage from a full-scope final run to its rework evidence."""
+
+    final_run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, related_name="verification_lineage"
+    )
+    verification = models.ForeignKey(
+        ReworkVerification, on_delete=models.PROTECT, related_name="final_run_links"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = FinalRunVerificationQuerySet.as_manager()
+
+    class Meta:
+        db_table = "final_run_link"
+        ordering = ["verification_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["final_run", "verification"],
+                name="final_run_link_unique_verification",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"FinalRunVerification (run={self.final_run_id}, verification={self.verification_id})"
+        )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk is not None:
+            raise ValueError("FinalRunVerification is append-only")
+        kwargs["force_insert"] = True
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise ValueError("FinalRunVerification is append-only")

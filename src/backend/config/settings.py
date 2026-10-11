@@ -236,6 +236,7 @@ LOGGING = {
 
 # T-025: tự xếp shard vào Celery sau khi tạo/retry run.
 ORCHESTRATION_AUTO_DISPATCH = env.bool("ORCHESTRATION_AUTO_DISPATCH", default=True)
+FINAL_RUN_AUTO_DISPATCH = env.bool("FINAL_RUN_AUTO_DISPATCH", default=True)
 ORCHESTRATION_RUNNING_STALE_SECONDS = env.int("ORCHESTRATION_RUNNING_STALE_SECONDS", default=1800)
 ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
     "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", default=300
@@ -243,6 +244,10 @@ ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
 CELERY_BEAT_SCHEDULE = {
     "orchestration-redispatch-pending": {
         "task": "orchestration.redispatch_pending",
+        "schedule": 120.0,
+    },
+    "review-sweep-ready-final-runs": {
+        "task": "review.sweep_ready_final_runs",
         "schedule": 120.0,
     },
 }
