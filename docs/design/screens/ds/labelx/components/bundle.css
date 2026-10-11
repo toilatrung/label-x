@@ -438,3 +438,17 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
   border: 1px solid var(--border); background: var(--neutral-soft); color: var(--ink-muted); font: 500 13px/20px var(--font-sans); }
 .lx-notice__ico { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke: currentColor; fill: none; }
 .lx-notice--warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
+
+/* Workspace helpers (FE-05): thay style inline trong Review Workspace. */
+.lx-grow { flex: 1; }
+.lx-row--between { justify-content: space-between; }
+.lx-grid--2 { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.lx-h2--sm { font-size: 13px; }
+.lx-table--sm { font-size: 12px; }
+.lx-stage__bar--foot { border-top: 1px solid #343a43; border-bottom: 0; }
+.lx-ws__summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.lx-ws__note { margin: var(--space-2) 0 0; font-size: 13px; }
+.lx-ws__empty { max-width: 640px; margin: 48px auto; text-align: center; }
+.lx-stage__view--flush { padding: 0; }
+.lx-choice--disabled { opacity: .5; cursor: not-allowed; }
+.lx-choice--disabled input { cursor: not-allowed; }

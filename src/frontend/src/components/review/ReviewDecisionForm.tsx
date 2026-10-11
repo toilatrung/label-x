@@ -572,6 +572,20 @@ export function ReviewDecisionForm({
             />
             <span>Chưa chắc chắn</span>
           </label>
+          <label
+            className="lx-choice lx-choice--disabled"
+            title="Yêu cầu sửa (request_fix) được thực hiện qua atomic POST /api/rework/ thuộc luồng T-040 sau khi confirm, không gửi qua POST decisions."
+          >
+            <input
+              type="radio"
+              name="decision-action"
+              value="request_fix"
+              checked={false}
+              disabled={true}
+              aria-disabled="true"
+            />
+            <span>Yêu cầu sửa</span>
+          </label>
           <label className="lx-choice">
             <input
               type="radio"
@@ -583,26 +597,11 @@ export function ReviewDecisionForm({
             />
             <span>Chuyển cấp trên</span>
           </label>
-          <label
-            className="lx-choice"
-            style={{ opacity: 0.5, cursor: 'not-allowed' }}
-            title="Yêu cầu sửa (request_fix) được thực hiện qua atomic POST /api/rework/ thuộc luồng T-040 sau khi confirm, không gửi qua POST decisions."
-          >
-            <input
-              type="radio"
-              name="decision-action"
-              value="request_fix"
-              checked={false}
-              disabled={true}
-              aria-disabled="true"
-            />
-            <span>Yêu cầu sửa (T-040 rework)</span>
-          </label>
         </div>
 
         {/* Fields for confirm action */}
         {action === 'confirm' && (
-          <div className="lx-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="lx-grid lx-grid--2">
             <div className="lx-field">
               <label className="lx-label" htmlFor="decision-family">
                 Loại lỗi đã xác nhận (phải khớp nhóm issue: {issue.family})

@@ -7,12 +7,13 @@ import { readErrorDetail, ApiRequestError } from '@/lib/api/errors';
 import type { components } from '@/lib/api/contract';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLeaseManager } from './useLeaseManager';
-import { useEffortCollector, effortCollectorStatus } from './useEffortCollector';
+import { useEffortCollector } from './useEffortCollector';
 import { ReviewCanvas } from './ReviewCanvas';
 import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
 import { ReviewDecisionForm } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup';
 
 type FrameIssues = components['schemas']['FrameIssues'];
@@ -21,6 +22,24 @@ type Lease = components['schemas']['Lease'];
 type LeaseGrant = components['schemas']['LeaseGrant'];
 type BBox = components['schemas']['BBox'];
 type ObjectRef = components['schemas']['ObjectRef'];
+
+const SEVERITY_LABELS: Record<string, string> = {
+  critical: 'Cao',
+  medium: 'Trung bình',
+  minor: 'Nhẹ',
+};
+
+const ISSUE_STATE_LABELS: Record<string, string> = {
+  pending_review: 'Chờ review',
+  in_review: 'Đang review',
+  confirmed: 'Đã xác nhận',
+  rejected: 'Đã bác bỏ',
+  escalated: 'Đã chuyển cấp trên',
+  fix_pending: 'Chờ sửa',
+  recheck_pending: 'Chờ kiểm tra lại',
+  resolved: 'Đã xử lý',
+  reopened: 'Mở lại',
+};
 
 export interface ReviewWorkspaceProps {
   frameId: number;
@@ -825,16 +844,7 @@ export function ReviewWorkspace({
               </span>
             )}
 
-            {/* T-036 Collector status */}
-            <span
-              className="lx-tag"
-              title={effortCollectorStatus.reason}
-              style={{ fontSize: '11px', background: 'var(--neutral-soft)', color: 'var(--ink-muted)' }}
-            >
-              Collector: T-036 hoạt động (idle: chờ PO)
-            </span>
-
-            <span style={{ flex: 1 }} />
+            <span className="lx-grow" />
 
             {/* Layer Checkboxes */}
             <label className="lx-check">
@@ -843,7 +853,7 @@ export function ReviewWorkspace({
                 checked={showAnnotations}
                 onChange={(e) => setShowAnnotations(e.target.checked)}
               />
-              <span>Vùng neo Issue</span>
+              <span>Annotation hiện tại</span>
             </label>
             <label className="lx-check">
               <input
@@ -907,7 +917,7 @@ export function ReviewWorkspace({
           </div>
 
           {/* Interactive Canvas View */}
-          <div className="lx-stage__view" style={{ padding: 0 }}>
+          <div className="lx-stage__view lx-stage__view--flush">
             <ReviewCanvas
               frame={data.frame}
               issues={issues}
@@ -936,7 +946,7 @@ export function ReviewWorkspace({
           </div>
 
           {/* Stage Bottom Bar */}
-          <div className="lx-stage__bar" style={{ borderTop: '1px solid #343a43', borderBottom: 0 }}>
+          <div className="lx-stage__bar lx-stage__bar--foot">
             {/* Frame navigation (disabled per lease handoff contract) */}
             <button
               type="button"
@@ -981,7 +991,7 @@ export function ReviewWorkspace({
               Issue tiếp ›
             </button>
 
-            <span style={{ flex: 1 }} />
+            <span className="lx-grow" />
 
             {reviewMode === 'frame' ? (
               <span>
@@ -1017,16 +1027,16 @@ export function ReviewWorkspace({
                               : 'lx-badge--info'
                         }`}
                       >
-                        {activeIssue.severity}
+                        {SEVERITY_LABELS[activeIssue.severity] ?? activeIssue.severity}
                       </span>
                     )}
                     <span className="lx-badge">
-                      {activeIssue.state}
+                      {ISSUE_STATE_LABELS[activeIssue.state] ?? activeIssue.state}
                     </span>
                   </div>
                 </div>
 
-                <h2 className="lx-h2" style={{ fontSize: '15px' }}>
+                <h2 className="lx-h2">
                   {activeIssue.family === 'E1'
                     ? 'Nghi vấn: Thiếu bounding box (E1)'
                     : activeIssue.family === 'E2'
@@ -1041,13 +1051,13 @@ export function ReviewWorkspace({
                 </h2>
 
                 <dl className="lx-kv">
-                  <dt>Frame · Đối tượng</dt>
+                  <dt>Frame · Object</dt>
                   <dd>
                     {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor.objects?.[0]?.id ?? 'N/A'}
                   </dd>
                   <dt>Annotation hiện tại</dt>
                   <dd>{activeIssue.evidence?.[0]?.actual || 'Chưa cung cấp nhãn từ API (T-035 gap)'}</dd>
-                  <dt>Nguồn gốc (Origin)</dt>
+                  <dt>Nguồn</dt>
                   <dd>
                     {activeIssue.origin === 'engine' ? 'Mô hình tự động' : 'Reviewer tạo thủ công'}
                     {resolvedRevision ? (
@@ -1073,8 +1083,8 @@ export function ReviewWorkspace({
                 />
 
                 {/* Similar Cases & Lineage Links */}
-                <details style={{ marginTop: '8px' }}>
-                  <summary style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
+                <details>
+                  <summary className="lx-ws__summary">
                     Case tương tự đã phân xử ({activeIssue.links?.length || 0})
                   </summary>
                   {activeIssue.links && activeIssue.links.length > 0 ? (
@@ -1087,9 +1097,8 @@ export function ReviewWorkspace({
                       ))}
                     </div>
                   ) : (
-                    <p className="lx-subtle" style={{ margin: '8px 0 0', fontSize: '13px' }}>
-                      Không có case tương tự hoặc liên kết lineage cho issue này từ máy chủ.
-                    </p>
+                    // TODO(backend): GET /api/issues/{id}/similar-cases/ — case tương tự đã phân xử
+                    <NotConnectedNotice detail="Chưa có case tương tự đã phân xử cho issue này" />
                   )}
                 </details>
 
