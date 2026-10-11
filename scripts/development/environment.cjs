@@ -52,7 +52,11 @@ function preflight(root = ROOT, platform = process.platform, environment = proce
   const frontendFile = path.join(root, 'src/frontend/.env.local');
   if (fs.existsSync(frontendFile)) {
     const current = values(fs.readFileSync(frontendFile, 'utf8'));
-    if (current.NEXT_PUBLIC_API_BASE_URL !== 'http://localhost:8000/api') {
+    // Default is the Next proxy (same origin). Direct calls and proxy targets must stay on the bundled local API.
+    const direct = current.NEXT_PUBLIC_API_BASE_URL;
+    const target = current.LABELX_API_PROXY_TARGET;
+    if ((direct !== undefined && !/^http:\/\/(localhost|127\.0\.0\.1):8000\/api$/.test(direct)) ||
+      (target !== undefined && !/^http:\/\/(localhost|127\.0\.0\.1):8000$/.test(target))) {
       throw Error('Frontend API URL differs from bundled local setup. Review it manually; the file was preserved.');
     }
   }

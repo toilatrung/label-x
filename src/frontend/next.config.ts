@@ -6,7 +6,12 @@ import type { NextConfig } from "next";
 const mockAuth = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_AUTH_MODE === "mock";
 const apiProxyTarget = (process.env.LABELX_API_PROXY_TARGET || "http://127.0.0.1:8000").replace(/\/$/, "");
 
+// Next proxies with a 30 s default timeout; snapshot imports and QC runs can take longer and would
+// be cut (ECONNRESET) while the backend keeps working. Read at build/start, not at request time.
+const proxyTimeout = Number(process.env.LABELX_API_PROXY_TIMEOUT_MS) || 300_000;
+
 const nextConfig: NextConfig = {
+  experimental: { proxyTimeout },
   // Contract paths end in a slash; POST requests must not redirect.
   skipTrailingSlashRedirect: true,
   // The mock auth route handlers own /api/auth/* only in mock mode; elsewhere they answer 404,
