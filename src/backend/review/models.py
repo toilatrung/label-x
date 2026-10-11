@@ -210,3 +210,72 @@ class ReviewDecision(models.Model):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise ValueError("ReviewDecision is append-only")
+
+
+class DecisionCaseQuerySet(models.QuerySet["DecisionCase"]):
+    def update(self, **kwargs: Any) -> int:
+        raise ValueError("DecisionCase is append-only")
+
+    def delete(self) -> tuple[int, dict[str, int]]:
+        raise ValueError("DecisionCase is append-only")
+
+
+class DecisionCase(models.Model):
+    """Versioned human adjudication decision case; append-only history (UC-12, FR-ESC-04)."""
+
+    class Outcome(models.TextChoices):
+        CONFIRM = "confirm", "Confirm"
+        REJECT = "reject", "Reject"
+        GUIDELINE_MISSING = "guideline_missing", "Guideline missing"
+
+    issue = models.ForeignKey(Issue, on_delete=models.PROTECT, related_name="decision_cases")
+    review_decision = models.ForeignKey(
+        ReviewDecision,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="decision_cases",
+    )
+    case_version = models.CharField(max_length=16)
+    outcome = models.CharField(max_length=24, choices=Outcome.choices)
+    rule_id = models.CharField(max_length=32)
+    correct_label = models.CharField(  # noqa: DJ001 - OpenAPI nullable label
+        max_length=64, null=True, blank=True
+    )
+    reason = models.TextField()
+    override_reason = models.TextField(blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    idempotency_key = models.CharField(  # noqa: DJ001
+        max_length=36, null=True, blank=True
+    )
+    request_hash = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = DecisionCaseQuerySet.as_manager()
+
+    class Meta:
+        db_table = "review_decision_case"
+        ordering = ["created_at", "pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issue", "case_version"],
+                name="review_decision_case_unique_version_per_issue",
+            ),
+            models.UniqueConstraint(
+                fields=["issue", "actor", "idempotency_key"],
+                condition=Q(idempotency_key__isnull=False),
+                name="review_decision_case_idempotency",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"DecisionCase {self.pk} ({self.outcome} {self.case_version} issue={self.issue_id})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk is not None:
+            raise ValueError("DecisionCase is append-only")
+        kwargs["force_insert"] = True
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise ValueError("DecisionCase is append-only")

@@ -2,6 +2,11 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from review.adjudication_views import (
+    DecisionCaseDetailView,
+    DecisionCaseListView,
+    EscalationsListView,
+)
 from runs.views import ConfigVersionListView, ConfigVersionPublishView
 
 urlpatterns = [
@@ -18,6 +23,13 @@ urlpatterns = [
     path("api/frames/", include("review.frame_urls")),
     path("api/issues/", include("review.issue_urls")),
     path("api/effort-events/", include("effort.urls")),
+    path("api/escalations/", EscalationsListView.as_view(), name="escalations-list"),
+    path("api/decision-cases/", DecisionCaseListView.as_view(), name="decision-cases-list"),
+    path(
+        "api/decision-cases/<int:pk>/",
+        DecisionCaseDetailView.as_view(),
+        name="decision-cases-detail",
+    ),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",
