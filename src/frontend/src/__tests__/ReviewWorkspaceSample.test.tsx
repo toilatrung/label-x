@@ -31,4 +31,17 @@ describe('ReviewWorkspaceSample (thiết kế ReviewWorkspace.dc.html)', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
+
+  it('gives each blocked button its own message', () => {
+    render(<ReviewWorkspaceSample />);
+    const status = () => screen.getByRole('status').textContent;
+    fireEvent.click(screen.getByRole('button', { name: 'Mở trong CVAT' }));
+    expect(status()).toContain('chưa mở được CVAT');
+    expect(status()).not.toContain('Quyết định');
+    fireEvent.click(screen.getByRole('button', { name: /Frame sau/ }));
+    expect(status()).toContain('Chưa chuyển frame');
+    fireEvent.click(screen.getByRole('button', { name: /Issue trước/ }));
+    expect(status()).toContain('Chưa chuyển issue');
+    expect(status()).not.toContain('Quyết định');
+  });
 });

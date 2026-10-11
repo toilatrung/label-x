@@ -462,3 +462,41 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-stack--tight { gap: 6px; }
 .lx-mt-1 { margin-top: 4px; }
 .lx-text-13 { font-size: 13px; }
+
+/* Utilities for Review Workspace (FE-05 follow-up): thay toàn bộ style inline. Đặt cuối file để thắng class nền. */
+.lx-gap-1 { gap: var(--space-1); }
+.lx-gap-2 { gap: var(--space-2); }
+.lx-gap-3 { gap: var(--space-3); }
+.lx-gap-4 { gap: var(--space-4); }
+.lx-mt-2 { margin-top: var(--space-2); }
+.lx-mt-3 { margin-top: var(--space-3); }
+.lx-ml-3 { margin-left: var(--space-3); }
+.lx-m-0 { margin: 0; }
+.lx-items-center { align-items: center; }
+.lx-text-11 { font-size: 11px; }
+.lx-text-12 { font-size: 12px; }
+.lx-text-ink { color: var(--ink); }
+.lx-text-warning { color: var(--warning); }
+.lx-text-success { color: var(--success); }
+.lx-text-danger { color: var(--danger); }
+.lx-text-info { color: var(--info); }
+.lx-bg-surface { background: var(--surface); }
+.lx-w-130 { width: 130px; }
+.lx-state--center { text-align: center; padding: var(--space-6); }
+.lx-state--center-sm { text-align: center; padding: var(--space-3); }
+.lx-callout--spaced { margin: var(--space-6) 0; }
+.lx-callout--neutral { background: var(--neutral-soft); }
+.lx-callout--success { background: var(--success-soft); }
+.lx-callout--compact { padding: var(--space-2) var(--space-3); }
+.lx-card--compact { padding: var(--space-2) var(--space-3); background: var(--surface); }
+.lx-card--receipt { padding: var(--space-3); font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--info); }
+.lx-btn--xs { padding: 2px 6px; font-size: 11px; }
+.lx-btn--block { width: 100%; justify-content: center; }
+.lx-link--plain { text-decoration: none; }
+.lx-stage__zoom { font-size: 11px; min-width: 36px; text-align: center; }
+.lx-stage__muted { color: #a1a8b3; }
+.lx-ws__sep { margin: 0 var(--space-1); }
+.lx-ws__foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
+.lx-ws__note--tight { margin: var(--space-1) 0; font-size: 13px; }
+.lx-field--divider { border-top: 1px dashed var(--border); padding-top: var(--space-2); }
+.lx-stack--divider { border-top: 1px solid var(--border); padding-top: var(--space-2); }
