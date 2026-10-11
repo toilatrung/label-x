@@ -126,20 +126,16 @@ def test_build_final_run_is_idempotent_and_links_verification(world, monkeypatch
         "review.finalization_service.create_snapshot_from_cvat", lambda **_kwargs: fixed
     )
 
-    final, created = build_final_run(
-        origin_run_id=world["run"].pk, actor=world["other"]
-    )
-    replay, replay_created = build_final_run(
-        origin_run_id=world["run"].pk, actor=world["other"]
-    )
+    final, created = build_final_run(origin_run_id=world["run"].pk, actor=world["other"])
+    replay, replay_created = build_final_run(origin_run_id=world["run"].pk, actor=world["other"])
 
     assert created is True and replay_created is False
     assert replay.pk == final.pk
     assert final.is_final is True and final.origin_run_id == world["run"].pk
     assert final.snapshot_id == fixed.pk
-    assert FinalRunVerification.objects.filter(
-        final_run=final, verification=verification
-    ).count() == 1
+    assert (
+        FinalRunVerification.objects.filter(final_run=final, verification=verification).count() == 1
+    )
     world["run"].refresh_from_db()
     assert world["run"].is_final is False and world["run"].status == QCRun.Status.COMPLETED
 
@@ -176,9 +172,7 @@ def test_concurrent_final_triggers_have_one_effect(world, monkeypatch):
     "terminal_status",
     [QCRun.Status.PARTIAL, QCRun.Status.FAILED, QCRun.Status.CANCELLED],
 )
-def test_terminal_attempt_can_retry_without_two_active_effects(
-    world, monkeypatch, terminal_status
-):
+def test_terminal_attempt_can_retry_without_two_active_effects(world, monkeypatch, terminal_status):
     _issue, fixed, _verification = _resolved_scope(world)
     monkeypatch.setattr(
         "review.finalization_service.create_snapshot_from_cvat", lambda **_kwargs: fixed
@@ -188,15 +182,16 @@ def test_terminal_attempt_can_retry_without_two_active_effects(
     first.finished_at = timezone.now()
     first.save(update_fields=["status", "finished_at"])
 
-    second, created = build_final_run(
-        origin_run_id=world["run"].pk, actor=world["other"]
-    )
+    second, created = build_final_run(origin_run_id=world["run"].pk, actor=world["other"])
     assert created is True and second.pk != first.pk
-    assert QCRun.objects.filter(
-        origin_run=world["run"],
-        is_final=True,
-        status__in=[QCRun.Status.QUEUED, QCRun.Status.RUNNING],
-    ).count() == 1
+    assert (
+        QCRun.objects.filter(
+            origin_run=world["run"],
+            is_final=True,
+            status__in=[QCRun.Status.QUEUED, QCRun.Status.RUNNING],
+        ).count()
+        == 1
+    )
 
 
 @pytest.mark.django_db

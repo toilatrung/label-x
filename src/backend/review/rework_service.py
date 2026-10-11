@@ -572,9 +572,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     if passed:
         from review.tasks import enqueue_final_run
 
-        transaction.on_commit(
-            lambda: enqueue_final_run(rework.issue.frame_review.run_id, user.pk)
-        )
+        transaction.on_commit(lambda: enqueue_final_run(rework.issue.frame_review.run_id, user.pk))
     frame = FrameReview.objects.select_for_update().get(pk=issue.frame_review_id)
     frame.state = FrameReview.State.COMPLETED if passed else FrameReview.State.AWAITING_FOLLOWUP
     frame.save(update_fields=["state"])

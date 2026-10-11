@@ -40,9 +40,11 @@ def _assert_scope_ready(origin_run: QCRun) -> list[ReworkVerification]:
         raise FinalRunNotReady("Chỉ run gốc mới có thể tạo final run toàn phạm vi.")
     if origin_run.status != QCRun.Status.COMPLETED:
         raise FinalRunNotReady("Run gốc chưa Completed.")
-    if Issue.objects.filter(frame_review__run=origin_run).exclude(
-        state__in=_CLOSED_ISSUE_STATES
-    ).exists():
+    if (
+        Issue.objects.filter(frame_review__run=origin_run)
+        .exclude(state__in=_CLOSED_ISSUE_STATES)
+        .exists()
+    ):
         raise FinalRunNotReady("Phạm vi còn issue mở hoặc đang chờ review.")
 
     reworks = list(_scope_reworks(origin_run).select_for_update())
@@ -131,18 +133,19 @@ def build_final_run(*, origin_run_id: int, actor: User) -> tuple[QCRun, bool]:
     token = _lineage_token(origin_run, verifications)
     run_key_base = f"final-run-{origin_run.pk}-{token}"
     previous_attempts = list(
-        QCRun.objects.select_for_update().filter(
+        QCRun.objects.select_for_update()
+        .filter(
             origin_run=origin_run,
             is_final=True,
             idempotency_key__startswith=run_key_base,
-        ).order_by("pk")
+        )
+        .order_by("pk")
     )
     existing = next(
         (
             run
             for run in reversed(previous_attempts)
-            if run.status
-            in (QCRun.Status.QUEUED, QCRun.Status.RUNNING, QCRun.Status.COMPLETED)
+            if run.status in (QCRun.Status.QUEUED, QCRun.Status.RUNNING, QCRun.Status.COMPLETED)
         ),
         None,
     )
@@ -232,17 +235,21 @@ def operational_run(origin_run: QCRun) -> QCRun:
     original run authoritative.
     """
 
-    if Issue.objects.filter(frame_review__run=origin_run).exclude(
-        state__in=_CLOSED_ISSUE_STATES
-    ).exists():
+    if (
+        Issue.objects.filter(frame_review__run=origin_run)
+        .exclude(state__in=_CLOSED_ISSUE_STATES)
+        .exists()
+    ):
         return origin_run
     candidates = QCRun.objects.filter(
         origin_run=origin_run, is_final=True, status=QCRun.Status.COMPLETED
     ).order_by("-finished_at", "-pk")
     for candidate in candidates:
-        if Issue.objects.filter(frame_review__run=candidate).exclude(
-            state__in=_CLOSED_ISSUE_STATES
-        ).exists():
+        if (
+            Issue.objects.filter(frame_review__run=candidate)
+            .exclude(state__in=_CLOSED_ISSUE_STATES)
+            .exists()
+        ):
             continue
         if has_complete_required_coverage(candidate):
             return candidate

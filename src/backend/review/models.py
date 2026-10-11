@@ -454,8 +454,7 @@ class FinalRunVerification(models.Model):
 
     def __str__(self) -> str:
         return (
-            f"FinalRunVerification (run={self.final_run_id}, "
-            f"verification={self.verification_id})"
+            f"FinalRunVerification (run={self.final_run_id}, verification={self.verification_id})"
         )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
