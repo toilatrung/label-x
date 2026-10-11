@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import EscalationsPage from '@/app/escalations/page';
@@ -145,7 +145,7 @@ describe('Escalations UI (T-039)', () => {
     await screen.findByText('#42');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
 
-    fireEvent.change(within(screen.getByRole('region', { name: 'Phân xử theo dữ liệu thật' })).getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
+    fireEvent.change(screen.getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
     fireEvent.change(screen.getByLabelText('Lý do *'), {
       target: { value: 'Evidence và guideline thống nhất.' },
     });
@@ -259,6 +259,18 @@ describe('Escalations UI (T-039)', () => {
     await screen.findByText('#42');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByLabelText('Lý do override *')).toBeDefined();
+  });
+
+  it('lists real issues in the design layout and blocks Tạo Guideline Gap with the notice (FE-12)', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('#42');
+    expect(screen.queryByText('QC-00098')).toBeNull();
+    expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    const before = calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(screen.getByText(/Chức năng vẫn chưa được kết nối với server/)).toBeDefined();
+    expect(calls.length).toBe(before);
   });
 
   it('shows the three design tabs, sample rows and the not-connected notice (FE-06)', async () => {
