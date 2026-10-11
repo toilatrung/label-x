@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-040 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="T-040-duy12345-6789">
+<meta name="labelx:title" content="T-040 Rework Re-check Verify">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, rework, t-040]">
+<meta name="labelx:priority" content="1"></head><body><main><article>
+<div class="meta"><b>id</b><span>T-040-duy12345-6789</span><b>title</b><span>T-040 Rework Re-check Verify</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[implementation, m03, rework, t-040]</span><b>priority</b><span>1</span></div>
+<h1>T-040 — Rework API, snapshot revision mới, re-check và verify</h1>
+<h2>Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>T-040-@duy12345-6789</code></li>
+<li><strong>Title</strong>: <code>Rework API, snapshot revision mới, re-check và verify</code></li>
+<li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>T-040</code></li>
+<li><strong>Epic ID</strong>: <code>E-16</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-11</code></li>
+</ul>
+<h2>Trạng thái</h2><ul>
+<li><strong>Owner</strong>: Lê Duy Nam (<code>@duy12345-6789</code>).</li>
+<li><strong>Branch</strong>: <code>feat/T-040-e16-rework-recheck-verify</code>.</li>
+<li><strong>Implementation</strong>: phần POST contract đã triển khai và test trên PostgreSQL.</li>
+<li><strong>Task state</strong>: <code>in-progress / blocked for integration</code>.</li>
+<li><strong>Blocker</strong>: T-038 PR #135 chưa merge vào <code>integration/m03</code>; M03-D04 GET list/detail chưa có CR/PO approval; E2E CVAT thật thuộc T-045/T-046 và chưa được tuyên bố đạt.</li>
+</ul>
+<h2>Luồng đã triển khai</h2><ol>
+<li><code>POST /api/rework/</code>: tạo yêu cầu sửa cho Issue confirmed; cùng transaction đổi state, tạo ReworkRequest, append ReviewDecision(<code>request_fix</code>) và audit.</li>
+<li><code>POST /api/rework/{id}/submitted/</code>: chỉ annotator được giao hoặc Super Admin hợp lệ; revision không đổi trả <code>409 REVISION_UNCHANGED</code>.</li>
+<li>LabelX đọc đúng CVAT job, tạo snapshot khóa mới và QC run re-check qua orchestrator M-02; không ghi annotation vào CVAT.</li>
+<li><code>POST /api/rework/{id}/verify/</code>: reviewer khác annotator/cùng thể nhân; chỉ chạy sau re-check Completed. Pass → resolved; fail → reopened.</li>
+</ol>
+<h2>Code chính</h2><table><thead><tr><th>File</th><th>Vai trò</th></tr></thead><tbody>
+<tr><td><code>review/models.py</code></td><td>ReworkRequest, ReworkRecheck lineage và ReworkVerification append-only.</td></tr>
+<tr><td><code>review/rework_service.py</code></td><td>Validation, RBAC/scope/identity, transition, idempotency, snapshot/re-check, verify và audit.</td></tr>
+<tr><td><code>review/rework_views.py</code>, <code>review/rework_urls.py</code></td><td>Ba POST API trong OpenAPI hiện hành.</td></tr>
+<tr><td><code>review/migrations/0004_*.py</code></td><td>Schema, unique constraints và PostgreSQL trigger chặn sửa/xóa verification.</td></tr>
+<tr><td><code>tests/review/test_rework.py</code></td><td>Test create/replay/rollback, revision, lineage, gate, separation of duties, pass/fail và append-only.</td></tr>
+</tbody></table>
+<h2>Kiểm soát quan trọng</h2><ul>
+<li>Dataset được suy ra server-side qua Issue/Rework; không tin dataset từ client.</li>
+<li>CVAT deep link phải đúng host cấu hình, task, job và frame của Issue.</li>
+<li>Idempotency bảo vệ create/submitted/verify; submission không có header vẫn dùng khóa xác định từ rework + revision.</li>
+<li>Snapshot mới phải locked, khác revision gốc và khớp revision gửi lên; re-check run lưu <code>origin_run_id</code>.</li>
+<li>Verifier phải có identity xác minh và khác natural person của annotator; Super Admin cần lý do override.</li>
+<li>Chỉ run <code>completed</code> được verify; Partial/Failed/Cancelled không vượt gate.</li>
+</ul>
+<h2>Evidence</h2><table><thead><tr><th>Kiểm tra</th><th>Kết quả</th></tr></thead><tbody>
+<tr><td>Ruff review + focused tests</td><td><code>PASS</code></td></tr>
+<tr><td><code>makemigrations --check --dry-run</code></td><td><code>No changes detected</code></td></tr>
+<tr><td>Review regression + M-03 fixture + contract</td><td><code>89 passed in 36.89s</code></td></tr>
+<tr><td>Full backend suite</td><td><code>492 passed, 1 skipped in 322.57s</code></td></tr>
+<tr><td>Django system check</td><td><code>0 issues</code></td></tr>
+<tr><td>PostgreSQL trigger append-only</td><td><code>PASS</code></td></tr>
+</tbody></table>
+<h2>Acceptance và phần chưa được phép tuyên bố</h2><ul>
+<li>[x] Atomic create + ReviewDecision + audit; scope và duplicate guard.</li>
+<li>[x] Revision không đổi bị từ chối; snapshot/re-check lineage và retry idempotent.</li>
+<li>[x] Verify sớm/cùng người sửa bị chặn; pass/fail chuyển đúng state.</li>
+<li>[x] Verification append-only ở ORM và PostgreSQL.</li>
+<li>[ ] M03-D04 GET list/detail: contract matrix ghi <code>CHỜ PO/CR</code>; không tự thêm endpoint ngoài contract.</li>
+<li>[ ] T-038/PR #135 merge vào <code>integration/m03</code> rồi cập nhật branch.</li>
+<li>[ ] CVAT thật, worker thật và test T-045/T-046: <code>NOT VERIFIED</code>.</li>
+<li>[ ] Independent review/QC và merge vào nhánh tích hợp.</li>
+</ul>
+<h2>Liên kết</h2><ul>
+<li>Task: <a href="https://github.com/toilatrung/label-x/issues/107">Issue #107</a>; kế hoạch: <a href="https://github.com/toilatrung/label-x/issues/97">Issue #97</a>.</li>
+<li>Dependency: <a href="https://github.com/toilatrung/label-x/pull/130">PR #130 (T-035, merged)</a>; <a href="https://github.com/toilatrung/label-x/pull/135">PR #135 (T-038, pending)</a>.</li>
+</ul>
+</article></main></body></html>
