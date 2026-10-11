@@ -20,13 +20,19 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 
+CSRF_REASON = "csrf"
+
+
 class ApiError(APIException):
     """Lỗi mang sẵn mã `ErrorCode` của contract (docs/04-api/openapi.yaml)."""
 
-    def __init__(self, status_code: int, code: str, message: str) -> None:
+    def __init__(
+        self, status_code: int, code: str, message: str, details: dict[str, Any] | None = None
+    ) -> None:
         super().__init__(detail=message, code=code)
         self.status_code = status_code
         self.error_code = code
+        self.error_details = details or {}
 
 
 def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
@@ -49,6 +55,7 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
     if isinstance(exc, ApiError):
         code = exc.error_code
         message = str(exc.detail)
+        details = dict(exc.error_details)
     elif isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
         code = "NOT_AUTHENTICATED"
         message = "Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục."
@@ -61,6 +68,9 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
             else "Bạn không có quyền thực hiện thao tác này."
         )
         response.status_code = status.HTTP_403_FORBIDDEN
+        # SessionAuthentication báo lỗi CSRF bằng PermissionDenied("CSRF Failed: ...").
+        if message.startswith("CSRF Failed"):
+            details = {"reason": CSRF_REASON}
     elif isinstance(exc, (NotFound, Http404)):
         code = "NOT_FOUND"
         message = (
