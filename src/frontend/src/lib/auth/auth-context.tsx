@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { AuthSession, AuthUser, LoginCredentials, UserRole } from '@/types/auth';
 import { apiClient, ApiRequestError, AUTH_EXPIRED_EVENT } from '@/lib/api/client';
-import { errorMessage } from '@/lib/api/errors';
+import { errorMessage, isCsrfError } from '@/lib/api/errors';
 import { hasDatasetPermission, rolesForDataset } from './roles';
 
 type LoginResult = { success: boolean; error?: string };
@@ -73,10 +73,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setAuthError(null);
     try {
-      const csrf = await apiClient.GET('/api/auth/csrf/');
-      if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status, csrf.error, csrf.response.headers);
-      const { data, error, response } = await apiClient.POST('/api/auth/login/', { body: credentials });
-      if (error || !data) throw new ApiRequestError(response.status, error, response.headers);
+      const attempt = async () => {
+        const csrf = await apiClient.GET('/api/auth/csrf/', { cache: 'no-store' });
+        if (!csrf.response.ok) throw new ApiRequestError(csrf.response.status, csrf.error, csrf.response.headers);
+        const reply = await apiClient.POST('/api/auth/login/', { body: credentials });
+        if (reply.error || !reply.data) throw new ApiRequestError(reply.response.status, reply.error, reply.response.headers);
+        return reply.data;
+      };
+      // A stale or overwritten csrftoken cookie is fixed by fetching a fresh one; retry only once.
+      const data = await attempt().catch((error: unknown) => {
+        if (!isCsrfError(error)) throw error;
+        return attempt();
+      });
       acceptSession(data);
       return { success: true };
     } catch (error) {

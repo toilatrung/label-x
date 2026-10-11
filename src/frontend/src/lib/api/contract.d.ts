@@ -369,6 +369,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/metrics/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Metric queue/shard của QC Run (Prometheus text)
+         * @description Prometheus text exposition 0.0.4, tính từ trạng thái DB (QCRun, WorkUnit, ShardCommit,
+         *     LedgerUnit, CandidateRecord), không cache. Gộp mọi dataset nên chỉ `qc_admin`/`super_admin`
+         *     có RoleAssignment toàn hệ thống (dataset_id null) được đọc; vai trò gán theo dataset
+         *     trả 403 FORBIDDEN. Họ metric: `labelx_shard_units`, `labelx_shard_retries_total`,
+         *     `labelx_shard_error_ratio`, `labelx_shard_duration_seconds`,
+         *     `labelx_shard_queue_wait_seconds`, `labelx_runs`, `labelx_run_queue_latency_seconds`,
+         *     `labelx_run_duration_seconds`, `labelx_shard_commits`, `labelx_candidates`,
+         *     `labelx_ledger_units`. Label chỉ gồm `engine`, `status`, `outcome`, `le` (không có run_id).
+         *     Định nghĩa đếm: CR-109.
+         */
+        get: operations["internal_metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/guidelines/rules/": {
         parameters: {
             query?: never;
@@ -872,6 +900,8 @@ export interface components {
              * @description VALIDATION_ERROR: {"fields": {"<tên trường>": ["<lỗi>"]}}.
              *     INVALID_TRANSITION: {"from": "...", "event": "..."} và có thể drift_jobs.
              *     BUSINESS_RULE_UNMET ở frames_complete: {"undecided_issue_ids": [..]}.
+             *     FORBIDDEN do thiếu hoặc sai CSRF (mọi request ghi, gồm auth_login/auth_logout): {"reason": "csrf"};
+             *     client dùng khóa này để phân biệt với thiếu quyền và lấy lại csrftoken.
              */
             details?: {
                 [key: string]: unknown;
@@ -2085,6 +2115,7 @@ export interface operations {
                     "application/json": components["schemas"]["Snapshot"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2254,6 +2285,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2278,6 +2310,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
@@ -2303,6 +2336,7 @@ export interface operations {
                     "application/json": components["schemas"]["Run"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
@@ -2328,6 +2362,7 @@ export interface operations {
                     "application/json": components["schemas"]["LedgerEntry"][];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2355,6 +2390,7 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedRunShardList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
@@ -2420,6 +2456,27 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    internal_metrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metric ở dạng text Prometheus */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            403: components["responses"]["Forbidden"];
         };
     };
     guidelines_rules_list: {

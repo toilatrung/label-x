@@ -2,21 +2,35 @@
 
 from __future__ import annotations
 
+import logging
 import re
+import uuid
+from datetime import timedelta
 from typing import Any
 
 from celery import shared_task
+from celery.exceptions import Retry
+from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
 from orchestration.models import ShardCommit
-from orchestration.runsync import mark_run_running, refresh_run
-from orchestration.services import engine_input_to_payload, seed_ledger
-from orchestration.tasks import run_engine_shard
+from orchestration.retry import default_policy
+from orchestration.runsync import refresh_run
+from orchestration.services import (
+    ShardOutputError,
+    StaleLeaseError,
+    engine_input_to_payload,
+    mark_shard_failed,
+    seed_ledger,
+)
+from orchestration.tasks import execute_shard
 from runs.models import QCRun, WorkUnit
 from snapshots.models import SnapshotFrame
 
+logger = logging.getLogger("labelx.orchestration")
 _FRAMES = re.compile(r"^job:(?P<job>\d+):frames:(?P<start>\d+)-(?P<end>\d+)$")
 
 
@@ -25,16 +39,19 @@ def shard_units(work_unit: WorkUnit) -> tuple[EngineUnitRef, ...]:
     match = _FRAMES.match(work_unit.shard_key)
     if match is None:
         return ()
-    frames = SnapshotFrame.objects.filter(
-        snapshot_job__snapshot_id=work_unit.run.snapshot_id,
-        snapshot_job__cvat_job_id=int(match["job"]),
-        frame_index__gte=int(match["start"]),
-        frame_index__lte=int(match["end"]),
-    ).select_related("snapshot_job")
-    return tuple(
-        EngineUnitRef("frame", FrameKey(f.snapshot_job.cvat_task_id, f.frame_index))
-        for f in frames.order_by("frame_index")
+    # Chỉ lấy khoá frame: tải cả cột JSON (shapes/media) làm mỗi shard mất ~4 s (đo thật trên 588
+    # frame), nhân với số shard trong request tạo run.
+    frames = (
+        SnapshotFrame.objects.filter(
+            snapshot_job__snapshot_id=work_unit.run.snapshot_id,
+            snapshot_job__cvat_job_id=int(match["job"]),
+            frame_index__gte=int(match["start"]),
+            frame_index__lte=int(match["end"]),
+        )
+        .order_by("frame_index")
+        .values_list("snapshot_job__cvat_task_id", "frame_index")
     )
+    return tuple(EngineUnitRef("frame", FrameKey(task_id, index)) for task_id, index in frames)
 
 
 def build_engine_input(work_unit: WorkUnit) -> EngineInput:
@@ -45,6 +62,10 @@ def build_engine_input(work_unit: WorkUnit) -> EngineInput:
     raw = engines.get(engine, {}) if isinstance(engines, dict) else {}
     params = raw.get("params", {}) if isinstance(raw, dict) else {}
     version = run.engine_versions[engine]
+    units = shard_units(work_unit)
+    if not units and _FRAMES.match(work_unit.shard_key):
+        # Shard khai báo frame mà snapshot không có: không được "pass" im lặng.
+        raise ValueError(f"shard {work_unit.shard_key} không có frame trong snapshot")
     return EngineInput(
         idempotency_key=work_unit.idempotency_key,
         run_id=run.pk,
@@ -54,7 +75,7 @@ def build_engine_input(work_unit: WorkUnit) -> EngineInput:
         config=EngineConfig(engine, str(cfg.pk), True, params),
         seed=run.seed,
         shard_index=work_unit.shard_index,
-        units=shard_units(work_unit),
+        units=units,
     )
 
 
@@ -65,49 +86,248 @@ def prepare_work_unit(work_unit: WorkUnit) -> dict[str, Any]:
     return engine_input_to_payload(engine_input)
 
 
-@shared_task(name="orchestration.run_work_unit", acks_late=True, reject_on_worker_lost=True)
-def run_work_unit(work_unit_id: int) -> str:
-    """Chạy một WorkUnit; idempotent: unit đã commit hoặc run đã huỷ thì không làm gì."""
-    with transaction.atomic():
-        unit = (
-            WorkUnit.objects.select_for_update()
-            .select_related("run", "run__config_version")
-            .get(pk=work_unit_id)
-        )
-        if unit.run.cancel_requested_at or unit.status in (
-            WorkUnit.Status.CANCELLED,
-            WorkUnit.Status.COMPLETED,
-        ):
-            return unit.status
-        unit.status = WorkUnit.Status.RUNNING
-        unit.started_at = unit.started_at or timezone.now()
-        unit.save(update_fields=["status", "started_at"])
-        mark_run_running(unit.run_id)
-    payload = prepare_work_unit(unit)
-    try:
-        run_engine_shard.apply(args=(payload,)).get(propagate=True)
-    except Exception as exc:
-        WorkUnit.objects.filter(pk=unit.pk).update(
-            status=WorkUnit.Status.FAILED, last_error=str(exc)[:1000], finished_at=timezone.now()
-        )
-        refresh_run(unit.run_id)
-        raise
-    WorkUnit.objects.filter(pk=unit.pk).update(
-        status=WorkUnit.Status.COMPLETED, last_error="", finished_at=timezone.now()
+_PERMANENT_ERRORS = (ShardOutputError, LookupError, ValueError)
+_ACTIVE_RUN = (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
+
+
+def _finish_unit(unit_id: int, token: str, status: str, error: str = "") -> bool:
+    """Chốt WorkUnit chỉ khi còn RUNNING **và** còn là chủ lease: unit đã CANCELLED, hoặc đã bị
+    worker khác nhận lại (lease đổi), thì lần chốt này là no-op (trả False)."""
+    return bool(
+        WorkUnit.objects.filter(
+            pk=unit_id, status=WorkUnit.Status.RUNNING, lease_token=token
+        ).update(status=status, last_error=error[:1000], finished_at=timezone.now())
     )
+
+
+def _running_stale_seconds() -> float:
+    return float(getattr(settings, "ORCHESTRATION_RUNNING_STALE_SECONDS", 1800))
+
+
+def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | None, str, str]:
+    """Nhận lease của shard. Trả (unit, token, status_hiện_tại); unit=None nếu không được chạy.
+
+    Thứ tự khoá cố định **QCRun -> WorkUnit** (giống cancel_qc_run) để không deadlock với huỷ.
+    Một owner duy nhất chạy shard: delivery trùng khi lease còn hạn bị bỏ qua; retry hợp lệ của
+    chính owner (mang `lease_token`) và shard bị bỏ rơi (lease quá hạn) thì được nhận.
+    """
+    run_id = WorkUnit.objects.filter(pk=work_unit_id).values_list("run_id", flat=True).first()
+    if run_id is None:
+        return None, "", "missing"
+    with transaction.atomic():
+        run = QCRun.objects.select_for_update().select_related("config_version").get(pk=run_id)
+        unit = WorkUnit.objects.select_for_update().get(pk=work_unit_id)
+        unit.run = run
+        if (
+            run.cancel_requested_at
+            or run.status not in _ACTIVE_RUN
+            or unit.status
+            in (WorkUnit.Status.CANCELLED, WorkUnit.Status.COMPLETED, WorkUnit.Status.FAILED)
+        ):
+            return None, "", unit.status
+        now = timezone.now()
+        token = uuid.uuid4().hex  # mỗi lần nhận: token mới; token cũ (kể cả của retry) hết hiệu lực
+        if unit.status == WorkUnit.Status.RUNNING:
+            fresh = unit.started_at is not None and unit.started_at > now - timedelta(
+                seconds=_running_stale_seconds()
+            )
+            retry_ticket = bool(presented_token) and presented_token == unit.lease_token
+            if fresh and not retry_ticket:
+                return None, "", "running"  # delivery trùng: đã có owner đang chạy
+        unit.status = WorkUnit.Status.RUNNING
+        unit.started_at = now  # lease: làm mới mỗi lần nhận, sweeper dựa vào đây
+        unit.lease_token = token
+        unit.save(update_fields=["status", "started_at", "lease_token"])
+        if run.status == QCRun.Status.QUEUED:  # run đã khoá ở trên: cập nhật an toàn
+            run.status = QCRun.Status.RUNNING
+            run.started_at = now
+            run.save(update_fields=["status", "started_at"])
+        return unit, token, WorkUnit.Status.RUNNING
+
+
+def _settle(
+    unit: WorkUnit,
+    token: str,
+    status: str,
+    error: str = "",
+    engine_input: EngineInput | None = None,
+    attempts: int = 1,
+) -> bool:
+    """Chốt shard + (nếu lỗi) ledger trong một transaction, khoá QCRun trước (cùng thứ tự với
+    claim/cancel/commit). Chỉ chủ lease mới chốt được; không phải chủ thì không đụng gì."""
+    with transaction.atomic():
+        QCRun.objects.select_for_update().only("id").get(pk=unit.run_id)
+        finished = _finish_unit(unit.pk, token, status, error)
+        if not finished and status == WorkUnit.Status.COMPLETED:
+            # commit_shard_output (fencing) đã chốt COMPLETED trong cùng transaction ghi kết quả.
+            finished = WorkUnit.objects.filter(
+                pk=unit.pk, status=WorkUnit.Status.COMPLETED, lease_token=token
+            ).exists()
+        if not finished:
+            return False
+        if status == WorkUnit.Status.FAILED and engine_input is not None:
+            mark_shard_failed(engine_input, attempts=attempts)
     refresh_run(unit.run_id)
-    return WorkUnit.Status.COMPLETED
+    return True
 
 
-def dispatch_run(run_id: int) -> int:
-    """Xếp mọi WorkUnit pending của run vào queue. Gọi lại an toàn (task idempotent)."""
+@shared_task(
+    bind=True,
+    name="orchestration.run_work_unit",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) -> str:
+    """Chạy một WorkUnit; idempotent: unit đã commit/huỷ/đang có owner thì bỏ qua.
+
+    - Một owner duy nhất chạy shard (lease). Lỗi tạm thời -> `self.retry` thật (2/4/8s, tối đa
+      `max_retries`) kèm vé `lease_token` dùng một lần: nhận retry đổi token nên bản sao của
+      cùng retry bị bỏ qua.
+    - Lỗi cố định hoặc hết retry -> unit FAILED (chỉ chủ lease chốt được).
+    - Worker chết: broker giao lại (acks_late) hoặc sweeper thu hồi lease quá hạn.
+    - Ghi kết quả có fencing token trong chính transaction ghi (worker cũ bị thu hồi không ghi
+      được); ShardCommit unique chặn ghi trùng.
+    """
+    unit, token, current = _claim(work_unit_id, lease_token)
+    if unit is None:
+        if current in (WorkUnit.Status.COMPLETED, WorkUnit.Status.FAILED):
+            # Worker có thể chết sau khi commit nhưng trước khi chốt run: giao lại thì chốt nốt.
+            run_id = WorkUnit.objects.filter(pk=work_unit_id).values_list("run_id", flat=True)[0]
+            refresh_run(run_id)
+        return current
+    policy = default_policy()
+    engine_input: EngineInput | None = None
+    try:
+        engine_input = build_engine_input(unit)
+        seed_ledger(engine_input.run_id, engine_input.engine, engine_input.units)
+        execute_shard(engine_input, fence=(unit.pk, token))
+    except StaleLeaseError:
+        return "stale"  # đã bị thu hồi: không ghi gì, không chốt, không retry
+    except Exception as exc:
+        permanent = isinstance(exc, _PERMANENT_ERRORS)
+        if permanent or policy.exhausted(self.request.retries):
+            _settle(
+                unit,
+                token,
+                WorkUnit.Status.FAILED,
+                str(exc),
+                engine_input,
+                attempts=self.request.retries + 1,
+            )
+            raise
+        ticket = uuid.uuid4().hex  # vé retry dùng một lần: nhận retry sẽ đổi token (xem _claim)
+        if not WorkUnit.objects.filter(
+            pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=token
+        ).update(lease_token=ticket):
+            raise  # không còn là chủ lease: không lên lịch retry
+        try:
+            self.retry(
+                exc=exc,
+                kwargs={"lease_token": ticket},
+                countdown=policy.backoff(self.request.retries + 1),
+                max_retries=policy.max_retries,
+            )
+        except Retry:
+            raise
+        except Exception:
+            # Không gửi được message retry: trả unit về PENDING (chỉ khi còn là chủ lease) để
+            # lệnh/task redispatch nhặt lại.
+            WorkUnit.objects.filter(
+                pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=ticket
+            ).update(status=WorkUnit.Status.PENDING)
+            raise
+    _settle(unit, token, WorkUnit.Status.COMPLETED)
+    unit.refresh_from_db(fields=["status"])
+    return unit.status
+
+
+def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
+    """Xếp WorkUnit pending của run vào queue. Gọi lại an toàn (task idempotent).
+
+    `stale_after` (giây): chỉ gửi lại unit chưa từng gửi hoặc gửi đã quá hạn, tránh nhân message
+    khi queue đang backlog (sweeper). Không truyền thì gửi mọi unit pending (dispatch đầu tiên).
+
+    Run đã huỷ/terminal thì bỏ qua. Lỗi gửi broker của một unit không làm hỏng unit khác:
+    unit đó vẫn PENDING để `redispatch_pending` nhặt lại. Trả số unit đã xếp hàng được.
+    """
     run = QCRun.objects.get(pk=run_id)
-    pending = list(run.work_units.filter(status=WorkUnit.Status.PENDING).select_related("run"))
+    if run.cancel_requested_at or run.status not in _ACTIVE_RUN:
+        return 0
+    pending_qs = run.work_units.filter(status=WorkUnit.Status.PENDING)
+    if stale_after is not None:
+        cutoff = timezone.now() - timedelta(seconds=stale_after)
+        pending_qs = pending_qs.filter(Q(dispatched_at__isnull=True) | Q(dispatched_at__lte=cutoff))
+    pending = list(pending_qs.select_related("run"))
+    if not pending and not run.work_units.filter(status=WorkUnit.Status.RUNNING).exists():
+        refresh_run(run_id)  # run không có shard (engine tắt/thiếu model) hoặc kẹt sau unit cuối
+        return 0
     for unit in pending:  # chốt mẫu số ledger của cả run trước khi shard đầu tiên chạy
         prepare_work_unit(unit)
+    queued = 0
     for unit in pending:
-        run_work_unit.delay(unit.pk)
-    return len(pending)
+        try:
+            run_work_unit.delay(unit.pk)
+        except Exception:
+            logger.exception(
+                "dispatch failed", extra={"qc_run_id": run_id, "work_unit_id": unit.pk}
+            )
+            # Broker không với tới được: dừng sớm, không đợi timeout cho từng shard (đo thật:
+            # 18 shard x ~3 s làm POST /api/runs/ mất ~55 s). Phần còn lại giữ PENDING cho sweeper.
+            break
+        else:
+            queued += 1
+            WorkUnit.objects.filter(pk=unit.pk).update(dispatched_at=timezone.now())
+    return queued
+
+
+def dispatch_run_safely(run_id: int, stale_after: float | None = None) -> int:
+    """Dùng trong transaction.on_commit: không bao giờ ném lỗi sau khi run đã commit."""
+    try:
+        return dispatch_run(run_id, stale_after)
+    except Exception:
+        logger.exception("dispatch failed", extra={"qc_run_id": run_id})
+        return 0
+
+
+def redispatch_pending(
+    older_than_seconds: float | None = None, running_stale_seconds: float | None = None
+) -> dict[str, int]:
+    """Xếp lại shard PENDING của run QUEUED/RUNNING đã quá tuổi (broker mất message/gửi lỗi).
+
+    Không đụng run đã huỷ. Idempotent: ledger seed ignore_conflicts, ShardCommit chặn ghi đôi.
+    Unit PENDING chỉ được gửi lại nếu lần gửi trước đã quá `older_than_seconds` (không nhân
+    message khi backlog). Unit RUNNING chỉ bị thu hồi khi lease (`started_at`, làm mới mỗi lần
+    worker nhận) quá `running_stale_seconds` — phải lớn hơn thời gian chạy tối đa của một shard.
+    Lưu ý: message gửi lại bắt đầu với retries=0 nên ngân sách retry tính lại theo từng lần gửi.
+    """
+    if older_than_seconds is None:
+        older_than_seconds = getattr(settings, "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", 300)
+    if running_stale_seconds is None:
+        running_stale_seconds = getattr(settings, "ORCHESTRATION_RUNNING_STALE_SECONDS", 1800)
+    cutoff = timezone.now() - timedelta(seconds=older_than_seconds)
+    running_cutoff = timezone.now() - timedelta(seconds=running_stale_seconds)
+    # Shard RUNNING bỏ rơi (worker chết/mất message): đưa về PENDING để xếp lại. An toàn vì task
+    # idempotent (ShardCommit chặn ghi đôi); unit đang chạy thật chưa quá hạn nên không bị đụng.
+    WorkUnit.objects.filter(
+        status=WorkUnit.Status.RUNNING,
+        started_at__lte=running_cutoff,
+        run__status__in=_ACTIVE_RUN,
+        run__cancel_requested_at__isnull=True,
+    ).update(status=WorkUnit.Status.PENDING)
+    run_ids = list(
+        QCRun.objects.filter(
+            status__in=_ACTIVE_RUN, cancel_requested_at__isnull=True, created_at__lte=cutoff
+        ).values_list("pk", flat=True)
+    )
+    return {
+        "runs": len(run_ids),
+        "queued": sum(dispatch_run_safely(pk, older_than_seconds) for pk in run_ids),
+    }
+
+
+@shared_task(name="orchestration.redispatch_pending")
+def redispatch_pending_task() -> dict[str, int]:
+    return redispatch_pending()
 
 
 def committed_shards(run_id: int) -> int:
