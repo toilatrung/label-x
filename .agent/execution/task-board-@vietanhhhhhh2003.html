@@ -6,10 +6,10 @@
 <meta name="labelx:type" content="execution">
 <meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="execution">
-<meta name="labelx:tags" content="[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040]">
+<meta name="labelx:tags" content="[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040, t-041]">
 <meta name="labelx:priority" content="2">
 </head><body><main><article>
-<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040]</span><b>priority</b><span>2</span></div>
+<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040, t-041]</span><b>priority</b><span>2</span></div>
 <h1 id="task-board-vietanhhhhhh2003">Task Board — @vietanhhhhhh2003</h1>
 <h2 id="purpose">Purpose</h2>
 <p>File riêng của Nguyễn Xuân Việt Anh (@vietanhhhhhh2003) theo CR-100. Integrator gộp thay đổi này vào <code>.agent/execution/task-board.html</code>.</p>
@@ -65,5 +65,18 @@
 <li>[x] PostgreSQL focused test <code>5 passed</code>; toàn bộ review regression <code>62 passed</code>; Django check, migration check và Ruff đều đạt.</li>
 <li>[ ] M03-D04 GET list/detail vẫn chờ PO/CR; không tự mở rộng contract.</li>
 <li>[ ] Independent review/QC và GitHub Actions trên PR head cần hoàn tất trước khi done.</li>
+</ul>
+<h2 id="t-041-task-record">T-041 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-041</td><td>E-16</td><td>Snapshot toàn phạm vi, final QC run và verification lineage</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-040/PR #142 integrated; T-045 backend environment available</td><td><a href="../reports/implementation/T-041-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/108">issue #108</a>; branch <code>feat/T-041-e16-final-run-lineage</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-041-acceptance-criteria">T-041 Acceptance Criteria</h2><ul>
+<li>[x] Trigger lặp và hai transaction đồng thời chỉ tạo một final run active; terminal Partial/Failed/Cancelled có thể tạo retry mới.</li>
+<li>[x] Snapshot final đọc toàn bộ CVAT job scope và fail closed nếu job hash không khớp revision re-check đã verify.</li>
+<li>[x] Final run liên kết append-only tới verification; run/snapshot/evidence gốc không bị sửa.</li>
+<li>[x] Nguồn vận hành chỉ chọn final Completed có required-engine ledger đầy đủ; issue mới hoặc ledger thiếu giữ run gốc.</li>
+<li>[x] PostgreSQL focused concurrency/regression, Ruff, mypy và migration drift check đạt.</li>
+<li>[ ] M03-D05 lineage read endpoint vẫn chờ PO/CR; không tự mở rộng REST contract.</li>
+<li>[ ] CVAT/browser E2E thật theo T-045/T-046 và independent review/QC còn chờ.</li>
 </ul>
 </article></main></body></html>
