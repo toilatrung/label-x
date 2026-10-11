@@ -189,7 +189,8 @@ def test_broker_failure_midway_leaves_pending_and_redispatch_recovers(
         sent.append(pk)
 
     monkeypatch.setattr(run_work_unit, "delay", delay)
-    assert dispatch_run(run_setup.pk) == 1  # unit 2 gửi được, unit 1 lỗi: không ném
+    assert dispatch_run(run_setup.pk) == 0  # broker lỗi: dừng sớm, không ném, không thử unit 2
+    assert sent == [sent[0]]  # chỉ một lần thử gửi (không chờ timeout cho từng shard)
     statuses = sorted(run_setup.work_units.values_list("status", flat=True))
     assert statuses == ["pending", "pending"]  # delay chỉ ghi nhận, chưa chạy
     assert QCRun.objects.get(pk=run_setup.pk).status == QCRun.Status.QUEUED

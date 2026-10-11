@@ -189,6 +189,9 @@ def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
             logger.exception(
                 "dispatch failed", extra={"qc_run_id": run_id, "work_unit_id": unit.pk}
             )
+            # Broker không với tới được: dừng sớm, không đợi timeout cho từng shard (đo thật:
+            # 18 shard x ~3 s làm POST /api/runs/ mất ~55 s). Phần còn lại giữ PENDING cho sweeper.
+            break
         else:
             queued += 1
             WorkUnit.objects.filter(pk=unit.pk).update(dispatched_at=timezone.now())
