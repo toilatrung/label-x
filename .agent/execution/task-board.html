@@ -273,6 +273,105 @@ ul.dir{columns:2;font-size:14px}
 <td>2026-10-09</td>
 </tr>
 <tr>
+<td>T-019</td>
+<td>E-04</td>
+<td>Nạp learner annotation BDD100K vào CVAT và đóng BLOCKER-024</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>done</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-019.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/74">PR #74</a> (merge <code>1b07c91</code>); CVAT task <code>23</code>/job <code>20</code></td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-020</td>
+<td>E-04</td>
+<td>Snapshot bất biến: chuẩn hóa, hash, lineage và concurrency guard</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>done</td>
+<td>T-019 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-020.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/76">PR #76</a> (merge <code>d2cf1ee</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-021</td>
+<td>E-04</td>
+<td>Snapshot API, drift guard và CVAT deep link</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>T-020 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-021.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/86">PR #86</a> (merge <code>fe363c5</code>); backend <code>320 passed, 1 skipped</code></td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-022</td>
+<td>E-04</td>
+<td>Màn Snapshot, SnapshotHistory: chọn project/task/job, hash/drift, skipped shapes, parent snapshot, deep link CVAT</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>review</td>
+<td>T-021 (PR #86)</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-022.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/88">PR #88</a> (merge <code>a0b1e84</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-023</td>
+<td>E-05</td>
+<td>Thư viện matching một-một tất định, dùng chung</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>done</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-023.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/79">PR #79</a> (merge <code>6588c0f</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-024</td>
+<td>E-08</td>
+<td>QC Run domain, shard idempotency và lifecycle</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-020, T-021, T-023</td>
+<td>BLOCKER-025</td>
+<td><a href="../reports/implementation/T-024.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/89">PR #89</a> (merge <code>cc5ac12</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-025</td>
+<td>E-08</td>
+<td>Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-024</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-025.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/90">PR #90</a> (merge <code>5de0727</code>), <a href="https://github.com/toilatrung/label-x/pull/93">PR #93</a> (merge <code>3950ea0</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-026</td>
+<td>E-08</td>
+<td>AnalysisConfig + ExecutionHistory trên API thật</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>blocked</td>
+<td>T-024, T-025 merged</td>
+<td>detector/metric/vlm runner registration and real E2E pending (#96); T-029 relies on real evidence</td>
+<td><a href="../reports/implementation/T-026.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/91">PR #91</a> (merge <code>a2a75e2</code>); Refs #68</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-027</td>
+<td>E-09</td>
+<td>Engine Schema/Taxonomy và Geometry tất định</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>T-020 and T-025 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-027.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/95">PR #95</a> (merge <code>b57626f</code>); issue <a href="https://github.com/toilatrung/label-x/issues/69">#69</a></td>
+<td>2026-10-10</td>
+</tr>
+<tr>
 <td>T-047</td>
 <td>E-02</td>
 <td>DB role runtime không sửa/xoá được audit: check --deploy, lệnh cấp role, CI (M-01-RESOLVE F-02)</td>
@@ -315,6 +414,50 @@ ul.dir{columns:2;font-size:14px}
 <td>none</td>
 <td>implementation report; QA report passed (ec627bd); PR #77 (ec627bd); chờ review report dạng file (F-1)</td>
 <td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-029</td>
+<td>E-09</td>
+<td>Hiển thị config/threshold engine chỉ đọc và candidate/evidence</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>in-progress</td>
+<td>T-026 (#68), T-027 (#69), T-028 (#70)</td>
+<td>Nhánh PR #94 tích hợp mã API/UI T-026 từ #91 và develop b57626f; endpoint candidates theo Phương án 2 <a href="../governance/change-requests/CR-108.html">CR-108</a> (proposed), raw_count null, dedup_count từ DB. Chờ PO quyết định CR-108, leader review lại và nghiệm thu candidate/evidence từ pipeline thật; không đánh dấu done.</td>
+<td><a href="../reports/implementation/T-029.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/94">PR #94</a> (merge <code>4f68794</code>); Refs #57, #71; sửa F-2/F-3 và tích hợp mã F-1 vào nhánh PR hiện có. Frontend 171 tests; backend 408 passed, 1 skipped; detector 10 tests; lint/typecheck/build đạt. Báo cáo tách APIClient fixture, frontend mock và ảnh config local; F-1 chưa được leader nghiệm thu.</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-030</td>
+<td>E-11</td>
+<td>score_v0 cho mọi frame, score version bất biến, tie-break hash tất định</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td>
+<td>review</td>
+<td>T-027/T-028 contract (soft)</td>
+<td>none</td>
+<td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/72">#72</a>; <a href="../reports/implementation/T-030.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/85">PR #85</a> (merge <code>ded90fc</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-031</td>
+<td>E-11</td>
+<td>Random slice, control ranking, giải thích điểm + AuditSampling, E2E M-02</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003), @tdt2112</td>
+<td>review</td>
+<td>T-030 (satisfied); T-024 / PR #89 (satisfied)</td>
+<td>none</td>
+<td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/73">#73</a>; <a href="../reports/implementation/T-031.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/92">PR #92</a> (merge <code>cd13551</code>)</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-032</td>
+<td>E-13…E-16</td>
+<td>Chốt contract, ownership model và fixture dùng chung M-03</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>M-02 baseline; PO approval required for contract deltas</td>
+<td>M03-D01…M03-D06 awaiting PO/CR</td>
+<td><a href="../reports/implementation/T-032.html">implementation</a>; <a href="../../docs/04-api/m03-contract-model-fixture-matrix.html">contract matrix</a>; <a href="https://github.com/toilatrung/label-x/pull/111">PR #111</a> (merge <code>5c37d42</code>); issue <a href="https://github.com/toilatrung/label-x/issues/99">#99</a>; focused contract tests <code>27 passed</code> after review remediation</td>
+<td>2026-10-10</td>
 </tr>
 <tr>
 <td>M-02-RESOLVE</td>
@@ -1517,6 +1660,12 @@ ul.dir{columns:2;font-size:14px}
 <li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status. (chuyển <code>done</code> sau khi có review report và xác nhận QC độc lập)</li>
 </ul>
+<h3 id="t-030">T-030</h3>
+<h4>Acceptance Criteria</h4>
+<ul><li>[x] Mọi frame có score, kể cả frame không có candidate hoặc thiếu evidence; frame thiếu evidence có flag.</li><li>[x] Hai lần chạy cùng input, score version và seed cho cùng thứ tự và ranking hash.</li><li>[x] Mỗi kết quả lưu điểm nền, anchor counts và đóng góp <code>n_i * q_i</code>.</li><li>[x] Score version và kết quả trả về là bất biến.</li></ul>
+<h3 id="t-031">T-031</h3>
+<h4>Acceptance Criteria</h4>
+<ul><li>[x] Lát audit ngẫu nhiên chọn <code>ceil(r% × N)</code> bằng seed cố định, độc lập thứ tự risk.</li><li>[x] Random control, annotation-count heuristic và max-confidence heuristic có source, thứ tự và content hash riêng.</li><li>[x] Component giải thích điểm trả JSON-safe score, baseline, issue counts và từng đóng góp.</li><li>[x] Hai run cùng snapshot/config/seed/version cho cùng content hash và ranking hash.</li><li>[x] Seam E2E fixture BDD100K chạy snapshot → duplicate engine → score/control; full <code>make check</code> xanh.</li><li>[x] Persistence bất biến và HTTP <code>/api/runs/{id}/ranking/</code> đã nối vào runs domain T-024, có RBAC/scope và queue risk/random.</li></ul>
 <h3 id="m-02-resolve">M-02-RESOLVE</h3>
 <h4 id="record-metadata_m02r">Record Metadata</h4>
 <ul>
