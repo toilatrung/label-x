@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from engines.interface import (
     Anchor,
@@ -31,6 +32,10 @@ _TERMINAL_FROM_ENGINE = {
     EngineUnitOutcome.FAILED.value,
     EngineUnitOutcome.NOT_CHECKED.value,
 }
+
+
+class StaleLeaseError(Exception):
+    """Worker không còn là chủ lease của shard (đã bị thu hồi/huỷ/chốt): không được ghi kết quả."""
 
 
 class ShardOutputError(ValueError):
@@ -158,14 +163,25 @@ def _run_cancelled(run_id: int) -> bool:
     )
 
 
-def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool:
+def commit_shard_output(
+    engine_input: EngineInput,
+    output: EngineOutput,
+    fence: tuple[int, str] | None = None,
+) -> bool:
     """Ghi nguyên tử kết quả shard.
 
     True nếu commit mới; False nếu đã commit (retry no-op) hoặc run đã huỷ.
 
+    `fence=(work_unit_id, lease_token)`: fencing token ngay trong transaction ghi. Khoá QCRun rồi
+    WorkUnit, chỉ ghi khi unit còn RUNNING và `lease_token` khớp; không thì ném StaleLeaseError
+    (worker cũ trả output sau khi bị thu hồi không ghi được ShardCommit/candidate/ledger). Khi
+    ghi thành công, WorkUnit được chốt COMPLETED trong cùng transaction.
+
     Hoặc toàn bộ (ShardCommit + candidate + ledger) được ghi, hoặc không gì cả: worker chết
     giữa chừng rollback, lần chạy lại ghi đúng một lần.
     """
+    from runs.models import WorkUnit
+
     _validate(engine_input, output)
     run_id = engine_input.run_id
     if ShardCommit.objects.filter(
@@ -178,6 +194,12 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
                 # Huỷ thắng shard đang chạy: không ghi candidate/ledger cho run đã huỷ.
                 logger.info("shard commit skipped: run cancelled", extra={"qc_run_id": run_id})
                 return False
+            if fence is not None:
+                unit_id, token = fence
+                owner = WorkUnit.objects.select_for_update().only("status", "lease_token")
+                unit = owner.get(pk=unit_id)
+                if unit.status != WorkUnit.Status.RUNNING or unit.lease_token != token:
+                    raise StaleLeaseError(f"work_unit {unit_id} không còn thuộc lease này")
             shard = ShardCommit.objects.create(
                 idempotency_key=engine_input.idempotency_key,
                 run_id=run_id,
@@ -193,6 +215,10 @@ def commit_shard_output(engine_input: EngineInput, output: EngineOutput) -> bool
                 ignore_conflicts=True,
             )
             _apply_unit_results(engine_input, output)
+            if fence is not None:
+                WorkUnit.objects.filter(pk=fence[0]).update(
+                    status=WorkUnit.Status.COMPLETED, finished_at=timezone.now(), last_error=""
+                )
     except IntegrityError:
         # Một worker khác commit cùng khoá/shard trước; transaction của ta đã rollback sạch.
         if ShardCommit.objects.filter(
