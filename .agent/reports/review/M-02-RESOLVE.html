@@ -55,8 +55,8 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Owner</strong>: <code>@toilatrung</code></li>
 <li><strong>Reviewer</strong>: <code>subagent độc lập (review tĩnh #1 và re-review delta)</code></li>
 <li><strong>Executor</strong>: <code>claude-code (Sonnet 5.5) cho @toilatrung</code></li>
-<li><strong>Status</strong>: <code>changes-required</code></li>
-<li><strong>Decision</strong>: <code>CHANGES_REQUESTED (review #1); APPROVED chỉ cho delta 3cb40b3..bb73895</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED tại d3a6c33 (reviewer độc lập, lượt 3); các lượt trước CHANGES_REQUESTED (review #1, lượt 1 bc49799, lượt 2 34d9824) đã được xử lý</code></li>
 <li><strong>Review Type</strong>: <code>code</code></li>
 <li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-10</code></li>
@@ -123,4 +123,4 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Re-review delta <code>9f29b50</code>, <code>e433292</code>..<code>9cba54c</code> (gồm <code>ea8a515</code>, <code>973de62</code>, <code>b752553</code>, <code>1bed0b1</code>, <code>3995030</code>) (pending).</li>
 <li>[ ] Duyệt của PO (CR-102).</li>
 </ul>
-</article></main></body></html>
+<h2 id="review-doc-lap-cuoi">Review độc lập cuối (2026-10-11)</h2><p>Lượt 1 (bc49799) CHANGES_REQUESTED: R-1, R-2 major, R-3, R-4 minor. Lượt 2 (34d9824) CHANGES_REQUESTED: RV2-1 (vé retry dùng một lần), RV2-2 (fencing token trong transaction commit). Lượt 3 <strong>APPROVE tại <code>d3a6c33</code></strong>: RV2-1 và RV2-2 đã sửa, xác minh bằng probe PostgreSQL độc lập (36 passed), ruff/mypy đạt, pytest 511 passed / 1 skipped; không có critical/major mới. R-8 (minor): bỏ <code>refresh_run</code> khi giao lại vẫn qua test cũ; đã sửa bằng PR #139. Reviewer không phải PO; CR-102 do PO comment duyệt trên PR #126. NOT VERIFIED: SIGKILL/broker thật, phục hồi tự động với lease mặc định, tính lại hash từ dữ liệu nguồn, SeaweedFS.</p></article></main></body></html>
