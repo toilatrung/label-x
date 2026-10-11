@@ -37,16 +37,19 @@ def shard_units(work_unit: WorkUnit) -> tuple[EngineUnitRef, ...]:
     match = _FRAMES.match(work_unit.shard_key)
     if match is None:
         return ()
-    frames = SnapshotFrame.objects.filter(
-        snapshot_job__snapshot_id=work_unit.run.snapshot_id,
-        snapshot_job__cvat_job_id=int(match["job"]),
-        frame_index__gte=int(match["start"]),
-        frame_index__lte=int(match["end"]),
-    ).select_related("snapshot_job")
-    return tuple(
-        EngineUnitRef("frame", FrameKey(f.snapshot_job.cvat_task_id, f.frame_index))
-        for f in frames.order_by("frame_index")
+    # Chỉ lấy khoá frame: tải cả cột JSON (shapes/media) làm mỗi shard mất ~4 s (đo thật trên 588
+    # frame), nhân với số shard trong request tạo run.
+    frames = (
+        SnapshotFrame.objects.filter(
+            snapshot_job__snapshot_id=work_unit.run.snapshot_id,
+            snapshot_job__cvat_job_id=int(match["job"]),
+            frame_index__gte=int(match["start"]),
+            frame_index__lte=int(match["end"]),
+        )
+        .order_by("frame_index")
+        .values_list("snapshot_job__cvat_task_id", "frame_index")
     )
+    return tuple(EngineUnitRef("frame", FrameKey(task_id, index)) for task_id, index in frames)
 
 
 def build_engine_input(work_unit: WorkUnit) -> EngineInput:
