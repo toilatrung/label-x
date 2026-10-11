@@ -134,7 +134,7 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
 
     // Hiển thị đầy đủ các engine
     expect(screen.getByText('Schema / Taxonomy')).toBeDefined();
-    expect(screen.getByText('Geometry')).toBeDefined();
+    expect(within(screen.getByRole('region', { name: 'Cấu hình ngưỡng engine' })).getByText('Geometry')).toBeDefined();
     expect(screen.getByText('Duplicate / Overlap')).toBeDefined();
     expect(screen.getByText('Mô hình độc lập (Detector)')).toBeDefined();
     expect(screen.getByText('Mô hình thị giác – ngôn ngữ (VLM)')).toBeDefined();
@@ -228,5 +228,22 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
     expect(mappingCalls()).toHaveLength(0);
     expect(configCalls()).toHaveLength(0);
+  });
+});
+
+describe('Rules & Thresholds design regions (FE-09)', () => {
+  it('renders the three design tabs with sample data and a blocked save button', async () => {
+    const { api } = await setup('qalead', () => json({ next: null, previous: null, results: [] }));
+    expect(await screen.findByText('S-001')).toBeDefined();
+    expect(screen.getByText('Cấu hình hiện tại v7')).toBeDefined();
+    expect(screen.getAllByText('Dữ liệu minh họa').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('status')[0].textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    const before = api.fetchSpy.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu thành v8' }));
+    expect(api.fetchSpy.mock.calls.length).toBe(before);
+    fireEvent.click(screen.getByRole('tab', { name: 'Ngưỡng phát hành' }));
+    expect(screen.getByLabelText('Coverage tối thiểu để phát hành')).toBeDefined();
+    fireEvent.click(screen.getByRole('tab', { name: 'Chính sách lấy mẫu' }));
+    expect(screen.getByLabelText('Cách chọn seed')).toBeDefined();
   });
 });
