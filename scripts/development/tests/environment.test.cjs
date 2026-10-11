@@ -93,3 +93,9 @@ test('frontend external proxy target is preserved and rejected', t => {
   fs.appendFileSync(path.join(dir, 'src/frontend/.env.local'), '\nLABELX_API_PROXY_TARGET=https://external\n');
   assert.throws(() => preflight(dir, 'linux', {}), /Frontend API/);
 });
+test('process env API overrides are checked, not only .env.local', t => {
+  const dir = fixture(t); initEnv(dir);
+  assert.throws(() => preflight(dir, 'linux', {LABELX_API_PROXY_TARGET: 'https://external.invalid'}), /Frontend API/);
+  assert.throws(() => preflight(dir, 'linux', {NEXT_PUBLIC_API_BASE_URL: 'https://external/api'}), /Frontend API/);
+  assert.doesNotThrow(() => preflight(dir, 'linux', {LABELX_API_PROXY_TARGET: 'http://127.0.0.1:8000'}));
+});
