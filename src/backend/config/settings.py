@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "runs.apps.RunsConfig",
     "orchestration.apps.OrchestrationConfig",
     "review.apps.ReviewConfig",
+    "effort.apps.EffortConfig",
 ]
 
 MIDDLEWARE = [

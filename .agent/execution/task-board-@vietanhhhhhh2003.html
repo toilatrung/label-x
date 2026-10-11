@@ -28,4 +28,18 @@
 <ul><li>[x] Lát audit ngẫu nhiên chọn <code>ceil(r% × N)</code> bằng seed cố định, độc lập thứ tự risk.</li><li>[x] Random control, annotation-count heuristic và max-confidence heuristic có source, thứ tự và content hash riêng.</li><li>[x] Component giải thích điểm trả JSON-safe score, baseline, issue counts và từng đóng góp.</li><li>[x] Hai run cùng snapshot/config/seed/version cho cùng content hash và ranking hash.</li><li>[x] Seam E2E fixture BDD100K chạy snapshot → duplicate engine → score/control; full <code>make check</code> xanh.</li><li>[x] Persistence bất biến và HTTP <code>/api/runs/{id}/ranking/</code> đã nối vào runs domain T-024, có RBAC/scope và queue risk/random.</li></ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul><li>[x] Every acceptance criterion has automated evidence.</li><li>[x] Required implementation report is stored in <code>.agent/reports/implementation/</code>.</li><li>[x] Per-user task board is in <code>review</code>.</li><li>[ ] Independent review and PR approval remain pending.</li></ul>
+<h2 id="t-036-task-record">T-036 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-036</td><td>E-14</td><td>Effort events idempotent và client collector theo hoạt động</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-032 satisfied; T-033/T-035 integrated on <code>integration/m03@7326af3</code></td><td><a href="../reports/implementation/T-036-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/103">issue #103</a>; branch <code>feat/T-036-e14-effort-events</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-036-acceptance-criteria">T-036 Acceptance Criteria</h2><ul>
+<li>[x] Retry cùng <code>client_event_id</code> không ghi trùng; UUID trùng nhưng payload/actor khác trả conflict.</li>
+<li>[x] Collector batch/retry giữ UUID, persist queue, loại idle/mất focus/pause/complete/mất lease.</li>
+<li>[x] Backend kiểm role, server-derived dataset scope, CVAT identity, frame và timeline.</li>
+<li>[x] Event lưu actor/frame/activity/timeline/active milliseconds và snapshot nguồn policy; mặc định <code>t_idle=null</code>.</li>
+<li>[x] PostgreSQL 17 migration/full backend suite, runtime DB-role check, S3 integration và các job CI cục bộ đều đạt.</li>
+<li>[x] Frontend full test/production build, detector, framework, bootstrap-Windows, lint, mypy và typecheck đạt.</li>
+<li>[x] Test tích hợp API thật chạy claim lease → manual Issue → ReviewDecision → effort event → complete frame.</li>
+<li>[ ] Review/QA độc lập và GitHub Actions trên PR head còn chờ trước khi done.</li>
+</ul>
 </article></main></body></html>
