@@ -17,6 +17,7 @@ from config.exceptions import ApiError
 from review import decision_source
 from review.models import FrameReview, Lease
 from runs.models import QCRun, RunRanking, RunRankingEntry
+from snapshots.models import SnapshotJob
 
 
 def _now() -> datetime:
@@ -58,7 +59,10 @@ def _reviewer_identity(request: Request, *, action: str = "queues.next") -> Cvat
 
 
 def _ineligibility_code(identity: CvatIdentity, entry: RunRankingEntry) -> str | None:
-    job = entry.snapshot_frame.snapshot_job
+    return _ineligibility_code_for_job(identity, entry.snapshot_frame.snapshot_job)
+
+
+def _ineligibility_code_for_job(identity: CvatIdentity, job: SnapshotJob) -> str | None:
     author_id = job.assignee_cvat_user_id
     if author_id is None:
         return "IDENTITY_MAPPING_MISSING"
@@ -72,6 +76,23 @@ def _ineligibility_code(identity: CvatIdentity, entry: RunRankingEntry) -> str |
     if author.employee_id == identity.employee_id:
         return "SELF_REVIEW_FORBIDDEN"
     return None
+
+
+def _deny_frame_ineligible(
+    request: Request, identity: CvatIdentity, frame: FrameReview, action: str
+) -> None:
+    code = _ineligibility_code_for_job(identity, frame.snapshot_frame.snapshot_job)
+    if code is None:
+        return
+    record_rejection_audit(
+        request=request,
+        code=code,
+        object_type="frame",
+        object_id=frame.pk,
+        action=action,
+        message="Snapshot assignee identity forbids this review.",
+    )
+    raise ApiError(status.HTTP_403_FORBIDDEN, code, "Không thể review frame này.")
 
 
 def _deny_ineligible(
@@ -106,6 +127,7 @@ def _close_expired(lease: Lease, now: datetime) -> None:
     # Reservation is measured from the actual expiry, not delayed materialization.
     frame.incomplete_since = lease.expires_at if saved else None
     frame.save(update_fields=["state", "previous_reviewer", "incomplete_since"])
+    decision_source.reset_undecided_issues(frame)
 
 
 def _grant_payload(lease: Lease, entry: RunRankingEntry, *, resumed: bool) -> dict[str, object]:
@@ -237,9 +259,11 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
     resumed = frame.state == FrameReview.State.INCOMPLETE and frame.previous_reviewer_id == user_id
     try:
         with transaction.atomic():
+            decision_source.materialize_candidate_issues(frame)
             frame.state = FrameReview.State.IN_REVIEW
             frame.incomplete_since = None
             frame.save(update_fields=["state", "incomplete_since"])
+            decision_source.claim_undecided_issues(frame)
             lease = Lease.objects.create(
                 frame_review=frame,
                 holder=user,

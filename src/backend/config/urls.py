@@ -15,6 +15,8 @@ urlpatterns = [
     path("api/runs/", include("runs.urls")),
     path("api/queues/", include("review.queue_urls")),
     path("api/leases/", include("review.lease_urls")),
+    path("api/frames/", include("review.frame_urls")),
+    path("api/issues/", include("review.issue_urls")),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",

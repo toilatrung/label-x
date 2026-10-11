@@ -350,9 +350,12 @@ def test_materializer_observes_exact_lease_expiry_boundary(
 
 def test_matrix_lists_every_contract_decision_action(contract: dict[str, Any]) -> None:
     matrix = MATRIX_PATH.read_text(encoding="utf-8")
-    actions = _enum(contract, "IssueDecisionAction")
-    assert actions == {"confirm", "reject", "uncertain", "escalate", "request_fix"}
-    assert all(f"<code>{action}</code>" in matrix for action in actions)
+    input_actions = _enum(contract, "IssueDecisionAction")
+    persisted_actions = _enum(contract, "PersistedIssueDecisionAction")
+    assert input_actions == {"confirm", "reject", "uncertain", "escalate"}
+    assert persisted_actions == input_actions | {"request_fix"}
+    assert all(f"<code>{action}</code>" in matrix for action in persisted_actions)
+    assert "ReworkService + ReviewDecision(request_fix) append" in matrix
 
 
 def test_matrix_contains_every_delta_and_handoff_guard(fixture: dict[str, Any]) -> None:
