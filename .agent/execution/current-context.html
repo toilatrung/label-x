@@ -57,23 +57,23 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="current-state">Current State</h2>
 <ul>
-<li><strong>Context Revision</strong>: <code>14</code></li>
+<li><strong>Context Revision</strong>: <code>15</code></li>
 <li><strong>Context Status</strong>: <code>current</code></li>
-<li><strong>Last Updated</strong>: <code>2026-10-09</code></li>
-<li><strong>Updated By</strong>: <code>claude-code (integrator) cho Trịnh Quang Trung</code></li>
-<li><strong>Update Trigger</strong>: <code>m-01-resolve (gộp file riêng, đăng ký T-047…T-049)</code></li>
+<li><strong>Last Updated</strong>: <code>2026-10-11</code></li>
+<li><strong>Updated By</strong>: <code>claude-code (integrator, phiên QC) cho Trịnh Quang Trung</code></li>
+<li><strong>Update Trigger</strong>: <code>m-02-integrate (gộp 22 file riêng T-019…T-032, đổi mã M-01-RESOLVE sang T-047…T-049, đồng bộ planning; F-1, F-6 của flow-2026-10-10)</code></li>
 <li><strong>Planning Roadmap ID</strong>: <code>R-001</code></li>
 <li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_ACTIVE</code> (từ 2026-10-08)</li>
 <li><strong>Onboarding State</strong>: <code>execution-started</code></li>
-<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-10 (EPIC_IN_PROGRESS); E-04 (EPIC_BLOCKED, BLOCKER-024); còn lại EPIC_PROPOSED</code></li>
-<li><strong>Active Task IDs</strong>: <code>T-004 (blocked, BLOCKER-024). T-001, T-002, T-003, T-005 done 2026-10-08 (QA passed; make check trên Postgres đạt; T-005 có bằng chứng CPU inference)</code></li>
-<li><strong>In Review</strong>: <code>T-006…T-018 đã merge vào develop (PR #31, #46…#60) hoặc đang review trên nhánh fix/M-01-RESOLVE (T-016, T-047, T-048); chưa task nào có QA độc lập từ T-008 trở đi; T-049 in-progress</code></li>
+<li><strong>Active Epic IDs</strong>: <code>E-01, E-02, E-03, E-10 (EPIC_IN_PROGRESS); E-04 (EPIC_BLOCKED, BLOCKER-024); E-05, E-08, E-09, E-11 vẫn EPIC_PROPOSED dù đã có task M-02 merge (chờ PO ký epic, DEC-002); còn lại EPIC_PROPOSED</code></li>
+<li><strong>Active Task IDs</strong>: <code>T-004 (blocked, BLOCKER-024). M-02: T-026 (blocked), T-029 (in-progress), M-02-RESOLVE (review, PR #126, task độc lập với milestone). T-001, T-002, T-003, T-005 done 2026-10-08 (QA passed; make check trên Postgres đạt; T-005 có bằng chứng CPU inference)</code></li>
+<li><strong>In Review</strong>: <code>T-006…T-018 đã merge vào develop (PR #31, #46…#60) hoặc đang review trên nhánh fix/M-01-RESOLVE (T-016, T-047, T-048); chưa task nào có QA độc lập từ T-008 trở đi; T-049 in-progress. M-02: T-019, T-020, T-021, T-022, T-023, T-024, T-025, T-027, T-030, T-031, T-032 và M-02-RESOLVE ở review (T-019, T-020, T-023 owner ghi done nhưng chưa có review/QA độc lập); code đã merge vào develop (PR #74…#111) trừ M-02-RESOLVE (PR #126 còn mở)</code></li>
 <li><strong>Pending Task IDs</strong>: <code>không còn task M-01 pending; T-016/T-047/T-048 chờ review và merge vào develop; F-05, F-06 của audit flow-2026-10-09 chờ PO (xem T-049)</code></li>
-<li><strong>Active Blocker IDs</strong>: <code>BLOCKER-015, BLOCKER-022, BLOCKER-024, BLOCKER-025</code></li>
-<li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007 (proposed), DEC-008, DEC-010, DEC-012</code></li>
+<li><strong>Active Blocker IDs</strong>: <code>BLOCKER-015, BLOCKER-022, BLOCKER-024, BLOCKER-025, BLOCKER-026, BLOCKER-027, BLOCKER-028, BLOCKER-029 (đều open)</code></li>
+<li><strong>Active Decision IDs</strong>: <code>DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007 (proposed), DEC-008, DEC-010, DEC-012, DEC-013</code></li>
 <li><strong>Active Risk IDs</strong>: <code>RISK-001…RISK-012</code></li>
-<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing), CR-105 (implementing), CR-106 (implemented), CR-107 (implemented)</code></li>
-<li><strong>Current Session ID</strong>: <code>SES-006</code></li>
+<li><strong>Active Change Request IDs</strong>: <code>CR-101 (implementing), CR-102 (implementing), CR-103 (implementing), CR-104 (implementing), CR-105 (implementing), CR-106 (implemented), CR-107 (implemented), CR-108 (proposed), CR-109 (proposed)</code></li>
+<li><strong>Current Session ID</strong>: <code>SES-008</code></li>
 </ul>
 <h2 id="wave-1-integration">Wave 1 Integration</h2>
 <p>Gộp ngày 2026-10-07 theo CR-100 từ 5 file <code>current-context-@&lt;user&gt;.html</code> (đã gộp vào <code>.agent/execution/current-context.html</code> và xoá). Mọi PR task nhắm <code>develop</code> (CR-104); chỉ PO merge <code>develop</code> sang <code>main</code>. Cả 5 PR (#19–#23) đã squash-merge vào <code>develop</code>; review/QA tại <code>.agent/reports/review/</code> và <code>.agent/reports/qa/</code>.</p>
@@ -102,6 +102,23 @@ ul.dir{columns:2;font-size:14px}
 </tbody>
 </table>
 <p>Cột Branch và Base Commit lấy từ file riêng; "—" là file riêng không ghi. Nhánh có thể đã bị xoá sau squash-merge.</p>
+<h2 id="wave-3-integration">Wave 3 Integration</h2>
+<p>Gộp ngày 2026-10-11 theo CR-100 từ <code>current-context-@duy12345-6789.html</code>, 4 file <code>task-board-@&lt;user&gt;.html</code>, <code>task-commit-map-@tdt2112.html</code>, <code>BLOCKER-024-@duy12345-6789.html</code>, <code>CR-108-@tdt2112.html</code>, <code>R-2-drf-schema-comparison-@tdt2112.json</code> và 14 báo cáo implementation T-019…T-032 (các tệp riêng đã xoá). Mã <code>T-020</code>…<code>T-022</code> của M-01-RESOLVE đã đổi sang <code>T-047</code>…<code>T-049</code> vì trùng với snapshot M-02 (issue #62…#64). Tên nhánh lấy từ PR đã merge; base commit để <code>—</code> khi file riêng không ghi.</p>
+<table><thead><tr><th>Task</th><th>Epic</th><th>Owner</th><th>Branch</th><th>Base Commit</th><th>Status</th></tr></thead><tbody>
+<tr><td>T-019</td><td>E-04</td><td>@duy12345-6789</td><td><code>feat/T-019-e04-learner-annotation-bdd100k</code></td><td>1b07c91 (merge PR #74)</td><td>review (owner ghi done)</td></tr>
+<tr><td>T-020</td><td>E-04</td><td>@duy12345-6789</td><td><code>feat/T-020-e04-immutable-snapshot</code></td><td>—</td><td>review (owner ghi done)</td></tr>
+<tr><td>T-021</td><td>E-04</td><td>@duy12345-6789</td><td><code>feat/T-021-e04-snapshot-api-drift</code></td><td>—</td><td>review (PR #86)</td></tr>
+<tr><td>T-022</td><td>E-04</td><td>@tdt2112</td><td><code>codex/issue-64-snapshot-ui</code></td><td>—</td><td>review (PR #88)</td></tr>
+<tr><td>T-023</td><td>E-05</td><td>@ducha180104</td><td><code>feat/T-023-e05-one-to-one-matching</code></td><td>—</td><td>review (owner ghi done)</td></tr>
+<tr><td>T-024</td><td>E-08</td><td>@ducha180104</td><td><code>feat/T-024-e08-qc-run-shard</code></td><td>—</td><td>review (BLOCKER-025)</td></tr>
+<tr><td>T-025</td><td>E-08</td><td>@ducha180104</td><td><code>feat/T-025-e08-worker-orchestration, feat/T-025-e08-run-wiring</code></td><td>—</td><td>review (PR #90, #93)</td></tr>
+<tr><td>T-026</td><td>E-08</td><td>@tdt2112</td><td><code>feat/T-026-e08-execution-screens</code></td><td>—</td><td>blocked (#96)</td></tr>
+<tr><td>T-027</td><td>E-09</td><td>@duy12345-6789</td><td><code>feat/T-027-e09-schema-geometry-engine</code></td><td>—</td><td>review (PR #95)</td></tr>
+<tr><td>T-029</td><td>E-09</td><td>@tdt2112</td><td><code>feat/T-029-e09-engine-config-ui</code></td><td>—</td><td>in-progress (PR #94 đã merge; chờ CR-108)</td></tr>
+<tr><td>T-030</td><td>E-11</td><td>@vietanhhhhhh2003</td><td><code>feat/T-030-e11-score-v0</code></td><td>—</td><td>review (PR #85)</td></tr>
+<tr><td>T-031</td><td>E-11</td><td>@vietanhhhhhh2003 / @tdt2112</td><td><code>feat/T-031-e11-random-control-ranking</code></td><td>—</td><td>review (PR #92)</td></tr>
+<tr><td>T-032</td><td>E-13…E-16</td><td>@duy12345-6789</td><td><code>feat/T-032-m03-contract-fixtures</code></td><td>—</td><td>review (PR #111)</td></tr>
+</tbody></table>
 <h2 id="carried-notes">Carried Notes</h2>
 <p>Ghi chú còn hiệu lực chép từ file riêng (bỏ hướng dẫn quy trình đã lỗi thời như "mở PR vào <code>main</code>").</p>
 <h3 id="notes-t-001">T-001 — @toilatrung</h3>
@@ -155,4 +172,6 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>T-017 (PR #59, 3c5ab60) và T-018 (PR #60, 9f9b509) đã merge. T-018 được chuẩn bị bởi @toilatrung theo yêu cầu PO, owner Nguyễn Đức Hà; phụ thuộc T-016 nay do nhánh <code>fix/M-01-RESOLVE</code> thực hiện. Chưa có review/QA độc lập.</li>
 </ul>
+<h3 id="t-019-t-020-duy12345-6789">T-019, T-020 — @duy12345-6789</h3>
+<p>2026-10-09: PR #74 (T-019) đã merge. Learner export SHA-256 <code>e4dbc74a770b0b00e126caf7da2be5368dc4c3344a468d250ccbf58e2da1775c</code>; strict audit 10/10 ảnh BDD100K val, 68 bbox, 0 lỗi bounds; CVAT task 23/job 20, adapter hash hai lần giống nhau, không có ignored shape/track. Quyết định PO: giữ BLOCKER-024 open, chưa nghiệm thu dataset annotation thật; các số liệu export/job cũ là tự khai của dev, chưa được QC xác minh. T-020: PO yêu cầu sửa PR #76 sau merge #74 (parent locking, finalization đọc/hash aggregate ổn định); dữ liệu thật vẫn deferred ở BLOCKER-024.</p>
 </article></main></body></html>
