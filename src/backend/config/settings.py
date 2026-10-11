@@ -7,6 +7,7 @@ Stack theo DEC-001: Django + DRF, PostgreSQL, Celery + Redis, Object Storage (S3
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -155,6 +156,9 @@ SPECTACULAR_SETTINGS = {
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+# POST tạo snapshot/config/run từ trình duyệt gửi Idempotency-Key (contract); thiếu header này trong
+# allow-headers thì preflight bị chặn và UI báo "Không kết nối được máy chủ".
+CORS_ALLOW_HEADERS = (*default_headers, "idempotency-key")
 # Frontend khác origin cần đọc mã tra cứu cả khi lỗi 5xx trả HTML thay vì Error JSON.
 CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 # Frontend khác origin (dev: :3000 gọi API :8000) gửi POST kèm session cookie phải qua kiểm Origin
