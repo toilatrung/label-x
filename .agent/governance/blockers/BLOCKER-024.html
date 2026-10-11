@@ -52,7 +52,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Annotation người học của T-004 không nằm trên ảnh BDD100K</code></li>
 <li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
 <li><strong>Reporter</strong>: <code>claude-code (reviewer/integrator) cho Trịnh Quang Trung</code></li>
-<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Status</strong>: <code>accepted</code></li>
 <li><strong>Blocker Type</strong>: <code>dependency</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-07</code></li>
@@ -73,6 +73,13 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>Nạp CVAT local</td><td>Task 1/job 1 (project 1 = Dataset 1): 588 frame, 4414 rectangle</td><td>Adapter chỉ đọc (token read_only); hash job 1 đọc ba lần (kể cả sau khởi động lại WSL) = <code>sha256:5079fb8daa805bee28f3e0dc2e92bfead2d28f968dbabd4076deb7d9d81a4041</code>; ignored shapes/tracks 0. Token ghi của provisioner (chỉ script dev) tách khỏi service token read_only.</td></tr>
 </tbody></table>
 <p><strong>Giới hạn (vì sao blocker giữ <code>open</code>)</strong>: (1) đối chiếu thành viên chỉ với <em>mirror</em> HuggingFace, chưa phải cây ảnh chính thức của bdd100k.com; (2) provenance nguồn learner (ai gán nhãn, theo hướng dẫn nào) chưa xác minh độc lập. <strong>PO cần xác nhận provenance cây ảnh chính thức và nguồn nhãn</strong> trước khi đóng. Tiêu chí kiểm của blocker (val &gt; 0, hash hai lần trùng) đã có số liệu ở bảng trên nhưng chưa được PO chấp nhận. Việc cập nhật report T-004 và trạng thái T-004/E-04 chưa làm trong M-02-RESOLVE (NOT VERIFIED/chờ PO). Bằng chứng JSON/ảnh: <code>.agent/evidence/M-02-RESOLVE/</code>.</p>
+<h3 id="quyet-dinh-po-2026-10-11">Quyết định PO 2026-10-11 (phiếu chốt M-02): chưa chấp nhận, cần bổ sung</h3>
+<p>PO chọn phương án C: <strong>chưa chấp nhận</strong> bằng chứng provenance hiện có; blocker giữ <code>open</code>. T-004 giữ <code>blocked</code>, E-04 giữ <code>EPIC_BLOCKED</code>, EDGE-009 giữ <code>blocked</code>.</p>
+<p>Nguồn nhãn do PO khai: <q>H:\labelx-docs\LEARNER_EXPORTS là bộ do cả team học viên T-011 - Replacer gán theo hướng dẫn và guildline của nhóm tự đề ra</q>. Đây là lời khai của PO, chưa có tài liệu đi kèm trong repo (hướng dẫn gán nhãn, guideline của nhóm, danh sách người gán).</p>
+<p><strong>Điều cần bổ sung</strong>: phiếu chốt không ghi cụ thể. Theo hai điểm blocker nêu ở trên thì còn thiếu (1) đối chiếu thành viên với cây ảnh chính thức của bdd100k.com thay vì chỉ mirror HuggingFace, (2) tài liệu nguồn nhãn (guideline của nhóm, người gán). PO cần xác nhận hai điểm này có đúng là phần cần bổ sung không.</p>
+<h3 id="quyet-dinh-po-2026-10-11-lan-2">Quyết định PO 2026-10-11 (phiếu chốt lần 2): chấp nhận và đóng</h3>
+<p>PO chọn phương án C, <strong>chấp nhận</strong> và đóng BLOCKER-024, ghi trong <a href="../decisions/DEC-014.html">DEC-014</a>. Lý do PO ghi: “Đã có tệp annotation do nhóm đánh xong còn gì”. Mục “chưa chấp nhận” ở trên là bước trước đó cùng ngày, được thay bằng quyết định này.</p>
+<p>Trạng thái <code>accepted</code> (PO chấp nhận rủi ro), <strong>không</strong> phải <code>resolved</code>, vì điều kiện xác minh chưa được thực hiện. Giới hạn còn lại: (1) đối chiếu 588 ảnh chỉ với mirror HuggingFace <code>Hanshiya/bdd100k</code>, chưa với cây ảnh chính thức bdd100k.com; (2) nguồn nhãn là lời khai PO (bộ do cả team học viên T-011 - Replacer gán theo hướng dẫn và guideline của nhóm), chưa có tài liệu guideline hay danh sách người gán trong repo. Hệ quả: T-004 chuyển <code>in-progress</code> (cần cập nhật báo cáo T-004 với audit learner mới và QA bổ sung), E-04 chuyển <code>EPIC_IN_PROGRESS</code>, EDGE-009 chuyển <code>active</code>.</p>
 <h2 id="impact">Impact</h2>
 <ul>
 <li><strong>Blocked Epics or Tasks</strong>: <code>T-004 (E-04); hạ nguồn: E-05 snapshot dữ liệu thật, E-08/E-09 QC Run trên dữ liệu thật</code></li>
@@ -97,9 +104,9 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[ ] The blocking condition no longer prevents affected work.</li>
-<li>[ ] Resolution evidence is linked.</li>
-<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[x] The blocking condition no longer prevents affected work.</li>
+<li>[x] Resolution evidence is linked.</li>
+<li>[x] Affected epic and task statuses are updated.</li>
 <li>[ ] Workaround removal is tracked when applicable.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
@@ -115,4 +122,4 @@ ul.dir{columns:2;font-size:14px}
 <li>Preserve every heading in this template.</li>
 <li>Use repository-relative links and exact enum values.</li>
 </ul>
-</article></main></body></html>
+<h2 id="po-technical-merge">PO instruction — technical merge scope</h2><p>Ngày 2026-10-09, PO yêu cầu giữ dữ liệu annotation thật trong blocker chờ PO cung cấp; review PR #74 → #76 trên code/fixture. Chấp nhận merge phần công cụ đã qua review không đồng nghĩa đạt AC dữ liệu thật. BLOCKER-024 giữ open, T-019 và issue #61 chưa hoàn tất; downstream chỉ dùng fixture cho tới khi dữ liệu thật được kiểm độc lập. PR #76 vẫn phải sửa mọi finding code major trước khi duyệt.</p></article></main></body></html>

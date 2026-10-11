@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>T-029 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-029-tdt2112">
+<meta name="labelx:id" content="implementation-t-029">
 <meta name="labelx:title" content="T-029 Engine Config and Candidate/Evidence Display Implementation Report">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -45,7 +45,7 @@ figure img{max-width:100%;height:auto;border:1px solid var(--border)}
 figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 @media print{.top{display:none}article{border:0}}
 </style></head>
-<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-029-@tdt2112</span><span class="sp"></span></header>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-029</span><span class="sp"></span></header>
 <main><article>
 <div class="meta"><b>id</b><span>T-029-tdt2112</span><b>title</b><span>T-029 Engine Config and Candidate/Evidence Display Implementation Report</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>execution</span><b>tags</b><span>[implementation, config, threshold, candidate, evidence, t-029]</span><b>priority</b><span>2</span></div>
 <h1 id="t-029-implementation-report">T-029 — Hiển thị config/threshold engine chỉ đọc và candidate/evidence</h1>
@@ -53,7 +53,7 @@ figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 <p>Bản sửa review PR <a href="https://github.com/toilatrung/label-x/pull/94">#94</a>, cập nhật trực tiếp nhánh <code>feat/T-029-e09-engine-config-ui</code>. Không tạo PR mới.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>T-029-@tdt2112</code></li>
+<li><strong>Report ID</strong>: <code>T-029</code></li>
 <li><strong>Title</strong>: Hiển thị config/threshold engine chỉ đọc và candidate/evidence</li>
 <li><strong>Owner</strong>: Trần Đức Thọ (@tdt2112)</li>
 <li><strong>Executor</strong>: Worker local và Codex</li>
@@ -82,13 +82,13 @@ figcaption{font-size:12.5px;color:var(--muted);margin-top:6px}
 <ul>
 <li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/71">#71</a>; review <a href="https://github.com/toilatrung/label-x/pull/94#issuecomment-6093436322">Trung F-1/F-2/F-3</a> do người dùng cung cấp.</li>
 <li><strong>Context Packages</strong>: <code>AGENT.html</code>, <code>docs/04-api/openapi.yaml</code>, PR #91.</li>
-<li><strong>Task Board</strong>: <a href="../../execution/task-board-@tdt2112.html">task-board-@tdt2112.html</a>.</li>
+<li><strong>Task Board</strong>: <a href="../../execution/task-board.html">task-board-@tdt2112.html</a>.</li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (nguồn canonical).</li>
 <li><strong>Decisions</strong>: Chưa có bằng chứng PO duyệt CR-108.</li>
-<li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-108-@tdt2112.html">CR-108-@tdt2112.html</a> giữ <code>proposed</code>; Option 2 được đưa ra để review, không tự ghi approved.</li>
+<li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-108.html">CR-108.html</a> giữ <code>proposed</code>; Option 2 được đưa ra để review, không tự ghi approved.</li>
 <li><strong>Risks or Blockers</strong>: <a href="https://github.com/toilatrung/label-x/issues/96">M-02-RESOLVE #96</a>; không thay AC của T-029.</li>
 <li><strong>Review Request</strong>: PR #94 chờ @toilatrung hoặc @DucHa180104 xem lại; không có duyệt trong báo cáo này.</li>
-<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map-@tdt2112.html">Task Commit Map</a>; lần sửa F-2/F-3 <code>bf5af73</code>, merge dependency local <code>70446e5</code> và <code>3d2e06e</code>; commit GitHub chứa tree tương ứng: <code>fd09fbe99aaceb7f4c3ece4b13343123ba9402fe</code>.</li>
+<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map.html">Task Commit Map</a>; lần sửa F-2/F-3 <code>bf5af73</code>, merge dependency local <code>70446e5</code> và <code>3d2e06e</code>; commit GitHub chứa tree tương ứng: <code>fd09fbe99aaceb7f4c3ece4b13343123ba9402fe</code>.</li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
