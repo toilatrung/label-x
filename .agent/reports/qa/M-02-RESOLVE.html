@@ -114,6 +114,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Rationale</strong>: <code>QA của 3cb40b3 passed kèm quan sát; không tuyên bố nghiệm thu M-02</code></li>
 <li><strong>Authorized By</strong>: <code>none (chưa có PO)</code></li>
 </ul>
+<p><strong>Evidence mới chưa QA</strong>: <code>ac02-sigkill-target-running-lease-code.json</code> (commit <code>2d2a180</code>, R-5) là số liệu của tác giả, QA độc lập chưa kiểm lại.</p>
 <p><strong>QA delta pending (cập nhật)</strong>: delta <code>bc49799..c7e923c</code> (gồm <code>ea8a515</code> lease_token + migration <code>runs.0006</code>, <code>973de62</code>, <code>b752553</code>, <code>1bed0b1</code>, evidence <code>c7e923c</code>) chưa QA độc lập; <code>make check</code> của tác giả trên <code>c7e923c</code> EXIT 0 (backend 507 passed / 1 skipped, vitest 189, detector 10). Phần sau vẫn đúng: các commit <code>9f29b50</code>, <code>e433292</code>, <code>c8c8826</code> và evidence <code>836903c</code> (F-9, F-10, F-11) chưa được QA độc lập. Số liệu trong evidence mới là của tác giả; QA chưa kiểm lại.</p>
 <h2 id="qa-bo-sung-delta-3cb40b3-538eff1">QA bổ sung — delta 3cb40b3..538eff1</h2>
 <p>Thực hiện bởi subagent QA độc lập (không viết code), chạy <strong>tuần tự</strong>, worktree detached <code>538eff1</code>, DB riêng <code>labelx_qa2</code> (pytest dùng <code>test_labelx_qa2</code>; không đụng <code>labelx</code>/<code>test_labelx</code>/dev stack). Đây <strong>không thay thế phê duyệt PO (CR-102)</strong>.</p>
