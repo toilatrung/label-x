@@ -114,9 +114,36 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Rationale</strong>: <code>QA của 3cb40b3 passed kèm quan sát; không tuyên bố nghiệm thu M-02</code></li>
 <li><strong>Authorized By</strong>: <code>none (chưa có PO)</code></li>
 </ul>
+<h2 id="qa-bo-sung-delta-3cb40b3-538eff1">QA bổ sung — delta 3cb40b3..538eff1</h2>
+<p>Thực hiện bởi subagent QA độc lập (không viết code), chạy <strong>tuần tự</strong>, worktree detached <code>538eff1</code>, DB riêng <code>labelx_qa2</code> (pytest dùng <code>test_labelx_qa2</code>; không đụng <code>labelx</code>/<code>test_labelx</code>/dev stack). Đây <strong>không thay thế phê duyệt PO (CR-102)</strong>.</p>
+<table>
+<thead><tr><th>#</th><th>Kiểm tra</th><th>Kết quả</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>ruff check; ruff format --check; mypy (gói theo Makefile typecheck)</td><td>PASS: All checks passed; 170 files formatted; mypy no issues in 124 files</td></tr>
+<tr><td>2</td><td>pytest orchestration+runs+test_contract+duplicate_overlap</td><td>PASS: 121 passed</td></tr>
+<tr><td>2b</td><td>pytest -q đầy đủ</td><td>PASS: 473 passed, 1 skipped (144s)</td></tr>
+<tr><td>3</td><td>migrate DB mới; runs.0005 áp dụng; makemigrations --check; migrate runs 0004 rồi về latest</td><td>PASS: chuỗi 0001–0005 sạch; "No changes detected"; unapply/apply 0005 OK</td></tr>
+<tr><td>4</td><td>spectacular: Errors 0; có 4 path (publish, cancel, retry-failed, /internal/metrics/)</td><td>PASS: Errors 0 (1 warning enum-collision "status" có từ trước); cả 4 path hiện diện</td></tr>
+<tr><td>4b</td><td>npm run gen:api:contract + git diff --exit-code contract.d.ts</td><td>PASS: không diff</td></tr>
+<tr><td>5</td><td>scripts/validate-framework.py</td><td>PASS: FRAMEWORK_VALIDATION_PASS</td></tr>
+<tr><td>7</td><td>rbac-matrix có internal_metrics (AD, SA) khớp metrics_view.IsSystemWideOps</td><td>PASS: cột AD+SA đánh dấu; code yêu cầu role thuộc SYSTEM_WIDE_ROLES (super_admin, qc_admin) với dataset_id null; ghi rõ CR-109 chờ PO</td></tr>
+<tr><td>8</td><td>test_failure_injection.py chạy 3 lần</td><td>PASS: 28 passed x3; không tái hiện flaky (kể cả test_frames_shard_without_frames_fails_not_silently_passes)</td></tr>
+</tbody></table>
+<p><strong>Mutation (tạm thời trong worktree QA, đã khôi phục, git status sạch):</strong></p>
+<table>
+<thead><tr><th>Mutation</th><th>Test bắt được</th></tr></thead>
+<tbody>
+<tr><td>Bỏ guard <code>_run_cancelled</code> (if False)</td><td>CAUGHT: test_cancel_during_run_is_not_overwritten_and_run_not_ranked</td></tr>
+<tr><td><code>started_at = unit.started_at or now()</code></td><td>CAUGHT: test_claim_refreshes_lease</td></tr>
+<tr><td>Bỏ cập nhật <code>dispatched_at</code></td><td>CAUGHT: test_redispatch_does_not_amplify_backlogged_messages</td></tr>
+<tr><td>Bỏ bộ lọc stale <code>dispatched_at</code> trong dispatch_run</td><td>CAUGHT: test_redispatch_does_not_amplify_backlogged_messages</td></tr>
+<tr><td>Tắt thu hồi RUNNING (cutoff tương lai)</td><td>CAUGHT: test_redispatch_recovers_stale_running_shards</td></tr>
+<tr><td>Cutoff RUNNING = now (bỏ lease)</td><td>CAUGHT: test_redispatch_recovers_stale_running_shards (chạy với -x nên chưa xác nhận test_live_long_running riêng)</td></tr>
+</tbody></table>
+<p><strong>NOT VERIFIED:</strong> mutation cho <code>select_for_update(of=("self",))</code> (không có test tái hiện khoá/đảo thứ tự; chỉ review mã); hành vi trên broker/worker thật (test dùng inline queue/mock); race cancel đồng thời thực sự nhiều tiến trình; <code>make check</code> đầy đủ và frontend test/typecheck/lint không chạy; CI trên SHA cuối; phê duyệt CR-109/CR-102 của PO. Không phát hiện lỗi (defect) trong delta.</p>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] QA report của 3cb40b3 do subagent độc lập thực hiện.</li>
-<li>[ ] Delta QA 3cb40b3..35b7de1.</li>
+<li>[x] Delta QA 3cb40b3..538eff1 (subagent độc lập, xem mục "QA bổ sung").</li>
 </ul>
 </article></main></body></html>
