@@ -163,6 +163,19 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Quality Control cho annotation CVAT",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Several models share the field names "status"/"action"; pin stable component names.
+    "ENUM_NAME_OVERRIDES": {
+        "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
+        "RunStatusEnum": "runs.models.QCRun.Status",
+        "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
+        "PersistedIssueDecisionActionEnum": [
+            "confirm",
+            "reject",
+            "uncertain",
+            "escalate",
+            "request_fix",
+        ],
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")

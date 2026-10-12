@@ -17,6 +17,7 @@ from review.adjudication_service import (
     list_decision_cases,
     list_escalations,
 )
+from review.api_serializers import PaginatedEscalationSerializer
 from review.case_serializers import (
     AdjudicationCreateSerializer,
     DecisionCaseDetailSerializer,
@@ -36,6 +37,16 @@ class EscalationsListView(APIView):
     def get_dataset_id(self, request: Request) -> int | None:
         return None
 
+    @extend_schema(
+        operation_id="escalations_list",
+        responses={
+            200: PaginatedEscalationSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def get(self, request: Request) -> Response:
         data = list_escalations(request)
         return Response(data)

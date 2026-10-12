@@ -1,5 +1,6 @@
 """Approved T-035 review endpoints from docs/04-api/openapi.yaml."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -8,6 +9,16 @@ from rest_framework.views import APIView
 from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
+from review.api_serializers import (
+    FrameCompleteRequestSerializer,
+    FrameIssuesSerializer,
+    FrameSummarySerializer,
+    IssueDecisionCreateSerializer,
+    IssueDecisionSerializer,
+    IssueSerializer,
+    ManualIssueCreateSerializer,
+)
 from review.decision_service import write_decision
 from review.issue_service import _positive_int, complete_frame, create_manual_issue
 from review.models import FrameReview, Issue
@@ -39,6 +50,15 @@ class FrameIssuesView(_ReviewView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="frames_issues",
+        responses={
+            200: FrameIssuesSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def get(self, request: Request, pk: int) -> Response:
         frame = FrameReview.objects.select_related(
             "run__snapshot", "snapshot_frame__snapshot_job"
@@ -71,6 +91,18 @@ class FrameCompleteView(_ReviewView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="frames_complete",
+        request=FrameCompleteRequestSerializer,
+        responses={
+            200: FrameSummarySerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+            422: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def post(self, request: Request, pk: int) -> Response:
         frame = complete_frame(request=request, frame_id=pk)
         return Response(frame_summary(frame))
@@ -90,6 +122,19 @@ class ManualIssueView(_ReviewView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="issues_create",
+        request=ManualIssueCreateSerializer,
+        responses={
+            201: IssueSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+            422: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def post(self, request: Request) -> Response:
         issue = create_manual_issue(request=request)
         return Response(issue_response(issue), status=status.HTTP_201_CREATED)
@@ -106,6 +151,15 @@ class IssueDetailView(_ReviewView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="issues_retrieve",
+        responses={
+            200: IssueSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def get(self, request: Request, pk: int) -> Response:
         issue = Issue.objects.select_related(
             "candidate", "frame_review__snapshot_frame__snapshot_job"
@@ -126,6 +180,19 @@ class IssueDecisionView(_ReviewView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="issues_decide",
+        request=IssueDecisionCreateSerializer,
+        responses={
+            201: IssueDecisionSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+            422: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def post(self, request: Request, pk: int) -> Response:
         decision = write_decision(request=request, issue_id=pk)
         return Response(decision_response(decision), status=status.HTTP_201_CREATED)

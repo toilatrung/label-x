@@ -5,6 +5,7 @@ from __future__ import annotations
 from django.db.models import Count, Q, QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
 from rest_framework.request import Request
@@ -14,6 +15,8 @@ from rest_framework.views import APIView
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
+from review.api_serializers import PaginatedReworkSerializer, ReworkReadSerializer
 from review.models import ReworkRequest
 from review.rework_views import ReworkCreateView
 
@@ -78,6 +81,16 @@ class ReworkListView(APIView):
     object_type = "rework"
     requires_dataset = True
 
+    @extend_schema(
+        operation_id="rework_list",
+        parameters=[
+            OpenApiParameter("dataset_id", int, required=True),
+            OpenApiParameter("status", str, required=False, enum=ReworkRequest.Status.values),
+            OpenApiParameter("cursor", str, required=False),
+        ],
+        responses={200: PaginatedReworkSerializer, 400: ErrorSerializer, 403: ErrorSerializer},
+        tags=["rework"],
+    )
     def get(self, request: Request) -> Response:
         dataset_id = int(request.query_params["dataset_id"])
         selected = request.query_params.get("status")
@@ -115,6 +128,11 @@ class ReworkDetailView(APIView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="rework_retrieve",
+        responses={200: ReworkReadSerializer, 403: ErrorSerializer, 404: ErrorSerializer},
+        tags=["rework"],
+    )
     def get(self, request: Request, pk: int) -> Response:
         rework = _base_queryset().get(pk=pk)
         dataset_id = rework.issue.frame_review.run.dataset_id
