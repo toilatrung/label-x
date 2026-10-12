@@ -94,11 +94,22 @@ def operational_source(run: QCRun) -> dict[str, object]:
 
     origin = QCRun.objects.get(pk=run.origin_run_id) if run.origin_run_id is not None else run
     source, reason, attempts = select_operational_source(origin)
+    blocked_reasons = (
+        []
+        if reason == "selected_final"
+        else [reason]
+        if not attempts
+        else sorted(
+            {str(attempt["reason"]) for attempt in attempts if attempt["reason"] != "selected"}
+        )
+    )
     return {
         "origin_run_id": origin.pk,
         "run_id": source.pk,
         "run_kind": run_kind(source),
         "status": source.status,
+        "scope_complete": reason == "selected_final",
+        "blocked_reasons": blocked_reasons,
         "reason": reason,
         "coverage": _coverage(source),
         "final_attempts": attempts,

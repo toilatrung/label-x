@@ -231,6 +231,8 @@ def test_run_lineage_fields_for_origin_recheck_and_final(final_world):
     before = run_lineage_fields(final)
     assert before["selected_final_sources"] == []  # final not Completed yet
     assert before["operational_source"]["reason"] == "no_valid_final"
+    assert before["operational_source"]["scope_complete"] is False
+    assert before["operational_source"]["blocked_reasons"] == ["final_run_queued"]
 
     _complete_final(final)
     fields = run_lineage_fields(final)
@@ -247,3 +249,6 @@ def test_run_lineage_fields_for_origin_recheck_and_final(final_world):
     source = fields["operational_source"]
     assert source["run_id"] == final.pk and source["run_kind"] == "final"
     assert source["reason"] == "selected_final" and source["coverage"]["complete"] is True
+    assert source["scope_complete"] is True and source["blocked_reasons"] == []
+    blocked = run_lineage_fields(origin)["operational_source"]
+    assert blocked["run_id"] == final.pk
