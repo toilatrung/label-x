@@ -356,6 +356,23 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-review-meta span, .lx-review-meta time { display: inline-flex; align-items: center; gap: var(--space-2); }
 .lx-review-start { height: 40px; }
 .lx-review-empty { padding: 48px var(--space-4); text-align: center; color: var(--ink-muted); }
+.lx-attn { outline: 2px solid var(--warning); outline-offset: 2px; }
+.lx-review-filters--4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.lx-review-thumb--empty { display: flex; align-items: center; justify-content: center; background: var(--surface-sunken); color: var(--ink-subtle); }
+.lx-review-explain { margin: var(--space-1) 0 0; padding: var(--space-1); background: var(--surface-sunken); font-size: 11px; max-width: 240px; overflow-x: auto; }
+.lx-review-explain-toggle { font-size: 12px; cursor: pointer; }
+.lx-review-note { margin: 0 0 var(--space-2); font-size: 13px; }
+.lx-review-controls { align-items: flex-end; }
+.lx-review-controls__dataset { flex: 1 1 250px; }
+.lx-review-controls__run { flex: 2 1 300px; display: flex; gap: var(--space-2); align-items: flex-end; }
+.lx-review-controls__run .lx-field { flex: 1; }
+.lx-card--lease { border-color: var(--primary); }
+.lx-card--lease-conflict { border-color: var(--danger); }
+.lx-card__head--lease { background: var(--surface-selected); }
+.lx-card__head--lease-conflict { background: var(--danger-soft); }
+.lx-row--center { align-items: center; }
+.lx-row--between { justify-content: space-between; }
+.lx-stack--4 { gap: var(--space-4); }
 @media (max-width:1180px) {
  .lx-topnav { padding: 0 var(--space-4); gap: var(--space-1); }
  .lx-topnav .lx-nav a.lx-navbtn, .lx-topnav .lx-navbtn { padding: 0 var(--space-2); font-size: 12px; }

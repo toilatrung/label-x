@@ -251,7 +251,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       await renderReviewPage('reviewer');
 
       // Check header and wait for tabs to render upon run query success
-      expect(await screen.findByText('Trung tâm kiểm tra (Review Queues)')).toBeDefined();
+      expect(await screen.findByText('Trung tâm kiểm tra')).toBeDefined();
       expect(await screen.findByRole('tab', { name: /Hàng đợi rủi ro/i })).toBeDefined();
 
       // Check frame key contains both task and frame number
@@ -342,7 +342,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       const { calls } = await renderReviewPage('annotator');
 
       expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
-      expect(screen.queryByText('Trung tâm kiểm tra (Review Queues)')).toBeNull();
+      expect(screen.queryByText('Trung tâm kiểm tra')).toBeNull();
 
       // Assert 0 data queries to ranking, run, or queue
       const dataCalls = calls.filter((c) => !c.url.includes('/api/auth/'));
@@ -380,7 +380,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       );
 
       expect(await screen.findByText('IDENTITY_MAPPING_MISSING')).toBeDefined();
-      expect(screen.queryByText('Trung tâm kiểm tra (Review Queues)')).toBeNull();
+      expect(screen.queryByText('Trung tâm kiểm tra')).toBeNull();
       const dataCalls = calls.filter((c) => !c.url.includes('/api/auth/'));
       expect(dataCalls.length).toBe(0);
     });
@@ -388,7 +388,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
     it('never calls GET /api/runs/ (history list) for reviewer', async () => {
       const { calls } = await renderReviewPage('reviewer');
 
-      await screen.findByText('Trung tâm kiểm tra (Review Queues)');
+      await screen.findByText('Trung tâm kiểm tra');
 
       const runsListCalls = calls.filter((c) => {
         const path = new URL(c.url).pathname;

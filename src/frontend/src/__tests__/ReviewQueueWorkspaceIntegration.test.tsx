@@ -191,7 +191,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Trung tâm kiểm tra (Review Queues)')).toBeInTheDocument();
+      expect(screen.getByText('Trung tâm kiểm tra')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Nhận frame kế tiếp từ hàng đợi/i })).toBeInTheDocument();
     });
 
