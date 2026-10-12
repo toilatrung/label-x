@@ -1,0 +1,94 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useAuth } from '@/lib/auth/auth-context';
+import { canAccessConfiguration } from '@/lib/auth/roles';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
+import { ConfigTabs, EditIconButton } from './ConfigTabs';
+
+type TabKey = 'models' | 'guideline';
+
+const TABS = [
+  { key: 'models' as const, label: 'Mô hình' },
+  { key: 'guideline' as const, label: 'Phiên bản guideline' },
+];
+
+// Dữ liệu minh họa lấy từ docs/design/screens/ModelsGuidelines.dc.html.
+const MODELS = [
+  { name: 'Detector', role: 'Phát hiện object độc lập', version: 'v2.3', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.60', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
+  { name: 'Classifier', role: 'Kiểm tra lại nhãn của object', version: 'v1.8', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.70', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
+  { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: 'v0.9', mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Thử nghiệm', badge: 'lx-badge lx-badge--warning' },
+];
+
+const GUIDELINES = [
+  { name: 'Guideline v1.2', taxonomy: 'v3', datasets: 'Road Vision Urban v1.3 – v1.4', effective: '2026-08-20', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
+  { name: 'Guideline v1.3', taxonomy: 'v3', datasets: 'Chưa áp dụng', effective: 'Chờ phê duyệt', status: 'Chờ phê duyệt', badge: 'lx-badge lx-badge--warning' },
+  { name: 'Guideline v1.1', taxonomy: 'v2', datasets: 'Road Vision Urban v1.1 – v1.2', effective: '2026-06-01', status: 'Đã thay thế', badge: 'lx-badge' },
+];
+
+/**
+ * Thẻ hai tab của ModelsGuidelines theo thiết kế. Dữ liệu minh họa; chưa có API.
+ * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
+ * GET /api/guidelines/versions/ (hiệu lực guideline, taxonomy và Dataset áp dụng).
+ */
+export function ModelsGuidelinesCard() {
+  const { hasPermission } = useAuth();
+  const canWrite = hasPermission(canAccessConfiguration);
+  const [tab, setTab] = useState<TabKey>('models');
+  const [blockedAction, setBlockedAction] = useState<string | null>(null);
+  return (
+    <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
+      <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
+      <div className="lx-card__body lx-row">
+        <SampleDataBadge />
+        <NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} />
+      </div>
+
+      {tab === 'models' && (
+        <>
+          <div className="lx-scroll">
+            <table className="lx-table lx-table--min-760">
+              <thead><tr>
+                <th>Mô hình</th><th>Vai trò</th><th>Phiên bản</th><th>Ánh xạ lớp</th><th className="r">Ngưỡng tin cậy</th><th>Trạng thái</th><th></th>
+              </tr></thead>
+              <tbody>
+                {MODELS.map(model => (
+                  <tr key={model.name}>
+                    <td className="lx-cell__main">{model.name}</td>
+                    <td className="lx-muted">{model.role}</td>
+                    <td className="lx-mono">{model.version}</td>
+                    <td className="lx-muted">{model.mapping}</td>
+                    <td className={model.confidence ? 'r' : 'r lx-subtle'}>{model.confidence ?? '—'}</td>
+                    <td><span className={model.badge}>{model.status}</span></td>
+                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={!canWrite} onBlocked={() => setBlockedAction('Chỉnh mô hình')} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="lx-card__foot"><span>Mô hình chưa được xác minh không tự động biến candidate thành lỗi đã xác nhận.</span></div>
+        </>
+      )}
+
+      {tab === 'guideline' && (
+        <div className="lx-scroll">
+          <table className="lx-table lx-table--min-680">
+            <thead><tr><th>Guideline</th><th>Taxonomy</th><th>Áp dụng cho Dataset</th><th>Hiệu lực từ</th><th>Trạng thái</th></tr></thead>
+            <tbody>
+              {GUIDELINES.map(guideline => (
+                <tr key={guideline.name}>
+                  <td className="lx-cell__main">{guideline.name}</td>
+                  <td className="lx-muted">{guideline.taxonomy}</td>
+                  <td className="lx-muted">{guideline.datasets}</td>
+                  <td className="lx-muted">{guideline.effective}</td>
+                  <td><span className={guideline.badge}>{guideline.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}

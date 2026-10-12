@@ -31,7 +31,7 @@ async function setup(username: string, handler: () => Response) {
   return api;
 }
 
-describe('WorkflowPermissions (T-016)', () => {
+describe('WorkflowPermissions (T-016, FE-09)', () => {
   it('renders the matrix, rules and own roles returned by the API', async () => {
     const api = await setup('qalead', () => json({
       matrix: [{ function: 'Rework', roles: roles('execute') }],
@@ -45,7 +45,10 @@ describe('WorkflowPermissions (T-016)', () => {
     expect(screen.getByText('Không tự review')).toBeDefined();
     expect(screen.getByText('Chờ triển khai')).toBeDefined();
     expect(screen.getByText('Đã áp dụng')).toBeDefined();
-    expect(screen.getByText('Dataset #1')).toBeDefined();
+    expect(screen.getAllByText('Thực hiện').length).toBe(5);
+    expect(screen.queryByText('Vai trò của bạn')).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect((screen.getByRole('checkbox', { name: 'Ghi nhật ký' }) as HTMLInputElement).checked).toBe(true);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(true);
     expect(screen.queryByRole('button', { name: /sửa|xoá|xóa|edit|delete/i })).toBeNull();
   });
@@ -60,5 +63,10 @@ describe('WorkflowPermissions (T-016)', () => {
     const api = await setup('reviewer', () => json({}));
     await screen.findAllByText(/quyền/i);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(false);
+  });
+
+  it('shows an empty row when the API returns no matrix rows', async () => {
+    await setup('qalead', () => json({ matrix: [], rules: [], user_roles: [] }));
+    expect(await screen.findByText('Chưa có ma trận phân quyền.')).toBeDefined();
   });
 });

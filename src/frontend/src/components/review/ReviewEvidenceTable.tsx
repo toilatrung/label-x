@@ -27,14 +27,14 @@ export function ReviewEvidenceTable({
   currentAnnotationClass,
 }: ReviewEvidenceTableProps) {
   return (
-    <div className="lx-stack" style={{ gap: '8px' }}>
-      <h3 className="lx-h2" style={{ fontSize: '13px', margin: 0 }}>
+    <div className="lx-stack lx-gap-2">
+      <h3 className="lx-h2 lx-h2--sm lx-m-0">
         Bằng chứng
       </h3>
-      <table className="lx-table" style={{ fontSize: '12px' }}>
+      <table className="lx-table lx-text-12">
         <tbody>
           <tr>
-            <td className="lx-muted" style={{ width: '130px' }}>
+            <td className="lx-muted lx-w-130">
               Annotation class
             </td>
             <td>
@@ -54,12 +54,12 @@ export function ReviewEvidenceTable({
 
             return (
               <tr key={`ev-${idx}`}>
-                <td className="lx-muted" style={{ width: '130px' }}>
+                <td className="lx-muted lx-w-130">
                   {engineLabel}
                 </td>
                 <td>
-                  <div className="lx-stack" style={{ gap: '4px' }}>
-                    <div className="lx-row" style={{ gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div className="lx-stack lx-gap-1">
+                    <div className="lx-row lx-gap-2 lx-items-center">
                       {ev.prediction_class && <b>{ev.prediction_class}</b>}
                       {hasConfidence && (
                         <span className="lx-subtle">
@@ -72,20 +72,20 @@ export function ReviewEvidenceTable({
                         </span>
                       )}
                       {ev.rule_id && (
-                        <span className="lx-tag" style={{ fontSize: '11px' }}>
+                        <span className="lx-tag lx-text-11">
                           Rule: {ev.rule_id}
                         </span>
                       )}
                     </div>
 
                     {pBBox && (
-                      <div className="lx-subtle lx-mono" style={{ fontSize: '11px' }}>
+                      <div className="lx-subtle lx-mono lx-text-11">
                         Prediction bbox: [{pBBox.x1}, {pBBox.y1}, {pBBox.x2}, {pBBox.y2}]
                       </div>
                     )}
 
                     {(ev.expected || ev.actual) && (
-                      <div className="lx-subtle" style={{ fontSize: '11px' }}>
+                      <div className="lx-subtle lx-text-11">
                         {ev.expected && <span>Kỳ vọng: <b>{ev.expected}</b> </span>}
                         {ev.actual && <span>{ev.expected ? '· ' : ''}Thực tế: <b>{ev.actual}</b></span>}
                       </div>
@@ -104,19 +104,19 @@ export function ReviewEvidenceTable({
 
             return (
               <tr key={`eng-${idx}`}>
-                <td className="lx-muted" style={{ width: '130px' }}>
+                <td className="lx-muted lx-w-130">
                   {engineTitle}
                 </td>
                 <td>
                   {eng.status === 'failed' ? (
-                    <span className="lx-row" style={{ gap: '6px' }}>
+                    <span className="lx-row lx-gap-2">
                       <span className="lx-badge lx-badge--danger">Failed</span>
                       <span className="lx-subtle">
                         {eng.failed_units !== undefined ? `${eng.failed_units} đơn vị lỗi` : 'lỗi thực thi'}
                       </span>
                     </span>
                   ) : eng.status === 'not_checked' ? (
-                    <span className="lx-row" style={{ gap: '6px' }}>
+                    <span className="lx-row lx-gap-2">
                       <span className="lx-badge lx-badge--warning">Not checked</span>
                       <span className="lx-subtle">
                         {eng.reason || 'chưa kiểm tra theo cấu hình'}
@@ -132,7 +132,7 @@ export function ReviewEvidenceTable({
 
           {evidenceList.length === 0 && engineStatuses.length === 0 && (
             <tr>
-              <td colSpan={2} className="lx-muted" style={{ textAlign: 'center', padding: '12px' }}>
+              <td colSpan={2} className="lx-muted lx-state--center-sm">
                 Không có bằng chứng tự động cho issue này.
               </td>
             </tr>
