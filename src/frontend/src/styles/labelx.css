@@ -547,6 +547,16 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-callout--flush { border-radius: 0; }
 .lx-mt-6 { margin-top: 6px; }
 
+/* App shell and context bar (FE-10): replace inline styles, Quality Control Run state dots */
+.lx-shell { min-height: 100vh; display: flex; flex-direction: column; background: var(--canvas); }
+.lx-dot--success { background: var(--success); }
+.lx-dot--warning { background: var(--warning); }
+.lx-dot--info { background: var(--info); }
+.lx-dot--danger { background: var(--danger); }
+.lx-chip__rev { font-size: 12px; color: var(--ink-muted); }
+.lx-chip--role { margin-left: auto; }
+.lx-chip__v--primary { color: var(--primary); }
+
 /* Layout modifiers used by Snapshot and Snapshot history (FE-02) */
 .lx-card--inner { border-color: var(--border); }
 .lx-th--check { width: 40px; }

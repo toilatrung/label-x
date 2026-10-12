@@ -23,7 +23,7 @@ export function AppShell({
   context,
 }: AppShellProps) {
   return (
-    <div className="lx" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--canvas)' }}>
+    <div className="lx lx-shell">
       <TopBar activeKey={activeKey} />
       <ContextBar {...context} />
       <main className="lx-app-content">
