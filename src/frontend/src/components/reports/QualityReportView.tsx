@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { DemoRegionNotice } from './DemoRegionNotice';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { CLASS_ROWS, CONFUSED_PAIRS, ERROR_TYPES, EXPORT_FORMATS, REPORT_METRICS, REPORT_SCOPE, ROOT_CAUSES } from '@/lib/reports/sample-data';
 
 type Tab = 'summary' | 'class' | 'cause';
@@ -11,7 +10,6 @@ const DASH = <span className="lx-subtle">—</span>;
 
 export function QualityReportHeader() {
   const [open, setOpen] = useState(false);
-  const [blocked, setBlocked] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -26,7 +24,6 @@ export function QualityReportHeader() {
       <div className="lx-head__text">
         <h1 className="lx-h1">Quality Report</h1>
         <p className="lx-lead">{REPORT_SCOPE}. Báo cáo luôn ghi rõ phạm vi, nguồn Ground Truth, coverage và những phần chưa đủ dữ liệu.</p>
-        {blocked && <NotConnectedNotice />}
       </div>
       <div className="lx-actions lx-actions--rel" ref={menuRef}>
         <span className="lx-badge lx-badge--danger">Release blocked</span>
@@ -38,7 +35,7 @@ export function QualityReportHeader() {
           <div className="lx-menu lx-menu--end lx-menu--right" role="menu">
             {/* TODO(backend): POST /api/runs/{id}/report/export/ (pdf | csv | json) */}
             {EXPORT_FORMATS.map((f) => (
-              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => { setOpen(false); setBlocked(true); }}>
+              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => { setOpen(false); signalNoticeAttention(); }}>
                 <span className="lx-menu__t">{f.label}</span><span className="lx-menu__d">{f.note}</span>
               </button>
             ))}
@@ -54,7 +51,7 @@ export function QualityReportBody() {
   return (
     <>
       {/* TODO(backend): GET /api/runs/{id}/report/ (metric, lỗi theo loại, theo lớp, nguyên nhân gốc) */}
-      <DemoRegionNotice />
+      <DemoRegionNotice listenGlobal />
       <div className="lx-grid lx-grid--4">
         {REPORT_METRICS.map((m) => (
           <div key={m.key} className="lx-metric">

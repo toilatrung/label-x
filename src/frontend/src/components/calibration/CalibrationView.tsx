@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DemoRegionNotice } from './DemoRegionNotice';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { MODEL_ROWS, REVIEWER_ROWS } from '@/lib/calibration/sample-data';
 
 type Tab = 'reviewer' | 'model';
@@ -10,17 +9,15 @@ const TABS: ReadonlyArray<[Tab, string]> = [['reviewer', 'Hiệu chỉnh reviewe
 const DASH = <span className="lx-subtle">—</span>;
 
 export function CalibrationHeader() {
-  const [blocked, setBlocked] = useState(false);
   return (
     <div className="lx-head">
       <div className="lx-head__text">
         <h1 className="lx-h1">Calibration</h1>
         <p className="lx-lead">Hiệu chỉnh reviewer và hiệu chỉnh mô hình là hai việc riêng, có tập dữ liệu, metric và cách điều chỉnh khác nhau. Không trộn hai loại này.</p>
-        {blocked && <NotConnectedNotice />}
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/calibration/assignments/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn lx-btn--primary" onClick={() => setBlocked(true)}>Giao bài hiệu chỉnh</button>
+        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Giao bài hiệu chỉnh</button>
       </div>
     </div>
   );
@@ -31,7 +28,7 @@ export function CalibrationBody() {
   return (
     <>
       {/* TODO(backend): GET /api/calibration/reviewers/ ; GET /api/calibration/models/ */}
-      <DemoRegionNotice />
+      <DemoRegionNotice listenGlobal />
       <section className="lx-card" aria-label="Hiệu chỉnh">
         <div className="lx-tabs lx-tabs--inset" role="tablist">
           {TABS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={`lx-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>{label}</button>)}
