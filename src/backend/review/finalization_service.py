@@ -7,11 +7,18 @@ import json
 
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Exists, OuterRef, QuerySet
 
 from engines.interface import EngineStatus
+from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
-from review.models import FinalRunVerification, Issue, ReworkRequest, ReworkVerification
+from review.models import (
+    FinalRunVerification,
+    FrameReview,
+    Issue,
+    ReworkRequest,
+    ReworkVerification,
+)
 from runs.models import QCRun
 from runs.services import ScopeBusyError, create_qc_run
 from snapshots.models import Snapshot
@@ -227,30 +234,108 @@ def has_complete_required_coverage(run: QCRun) -> bool:
     return True
 
 
-def operational_run(origin_run: QCRun) -> QCRun:
-    """Resolve the safe source for operational history/report consumers.
+def _has_open_issue(run: QCRun) -> bool:
+    return (
+        Issue.objects.filter(frame_review__run=run).exclude(state__in=_CLOSED_ISSUE_STATES).exists()
+    )
 
-    This function does not mutate the origin pointer. A final Partial/Failed/
-    Cancelled run, incomplete ledger, or newly opened issue therefore leaves the
-    original run authoritative.
+
+def unreviewed_new_candidates(origin_run: QCRun, final_run: QCRun) -> QuerySet[CandidateRecord]:
+    """Final-run candidates absent from the origin run that have no closed human outcome.
+
+    A candidate with the same dedup key existed when the origin scope was reviewed, so it is
+    not "new". Anything else must be routed to the review queue and decided (issue rejected
+    or resolved) before the final run can become the operational source.
     """
 
-    if (
-        Issue.objects.filter(frame_review__run=origin_run)
-        .exclude(state__in=_CLOSED_ISSUE_STATES)
-        .exists()
+    known = CandidateRecord.objects.filter(run=origin_run).values("dedup_key")
+    decided = Issue.objects.filter(candidate_id=OuterRef("pk"), state__in=_CLOSED_ISSUE_STATES)
+    return (
+        CandidateRecord.objects.filter(run=final_run)
+        .exclude(dedup_key__in=known)
+        .exclude(Exists(decided))
+        .order_by("pk")
+    )
+
+
+def final_source_status(origin_run: QCRun, final_run: QCRun) -> tuple[bool, str]:
+    """Return ``(selectable, reason)`` for one final attempt; never mutates anything."""
+
+    if final_run.status != QCRun.Status.COMPLETED:
+        return False, f"final_run_{final_run.status}"
+    if _has_open_issue(final_run):
+        return False, "open_issue_in_final_run"
+    if unreviewed_new_candidates(origin_run, final_run).exists():
+        return False, "new_candidate_unreviewed"
+    if not has_complete_required_coverage(final_run):
+        return False, "coverage_incomplete"
+    return True, "selected"
+
+
+def select_operational_source(origin_run: QCRun) -> tuple[QCRun, str, list[dict[str, object]]]:
+    """Pick the safe source and explain each final attempt (read-only).
+
+    A final Partial/Failed/Cancelled run, incomplete ledger, new unreviewed candidate or a
+    newly opened issue leaves the original run authoritative.
+    """
+
+    attempts: list[dict[str, object]] = []
+    if _has_open_issue(origin_run):
+        return origin_run, "origin_has_open_issue", attempts
+    selected: QCRun | None = None
+    for candidate in QCRun.objects.filter(origin_run=origin_run, is_final=True).order_by(
+        "-finished_at", "-pk"
     ):
-        return origin_run
-    candidates = QCRun.objects.filter(
-        origin_run=origin_run, is_final=True, status=QCRun.Status.COMPLETED
-    ).order_by("-finished_at", "-pk")
-    for candidate in candidates:
-        if (
-            Issue.objects.filter(frame_review__run=candidate)
-            .exclude(state__in=_CLOSED_ISSUE_STATES)
-            .exists()
-        ):
-            continue
-        if has_complete_required_coverage(candidate):
-            return candidate
-    return origin_run
+        selectable, reason = final_source_status(origin_run, candidate)
+        attempts.append({"run_id": candidate.pk, "status": candidate.status, "reason": reason})
+        if selectable and selected is None:
+            selected = candidate
+    if selected is None:
+        return origin_run, "no_valid_final", attempts
+    return selected, "selected_final", attempts
+
+
+def operational_run(origin_run: QCRun) -> QCRun:
+    """Resolve the safe source for operational history/report consumers."""
+
+    return select_operational_source(origin_run)[0]
+
+
+def _frame_may_complete(frame: FrameReview) -> bool:
+    """A frame completes only when every issue on it is closed and every rework resolved."""
+
+    if frame.issues.exclude(state__in=_CLOSED_ISSUE_STATES).exists():
+        return False
+    return (
+        not ReworkRequest.objects.filter(issue__frame_review=frame)
+        .exclude(status=ReworkRequest.Status.RESOLVED)
+        .exists()
+    )
+
+
+@transaction.atomic
+def complete_scope_frames(origin_run_id: int) -> int:
+    """Finalize scope frames once a valid final source is selected (idempotent).
+
+    Verify-pass alone never completes a frame: this runs only after the final run is
+    Completed with full coverage and no unreviewed new candidate. Returns frames changed.
+    """
+
+    origin_run = QCRun.objects.select_for_update().get(pk=origin_run_id)
+    if origin_run.is_final or origin_run.origin_run_id is not None:
+        return 0
+    source, _reason, _attempts = select_operational_source(origin_run)
+    if source.pk == origin_run.pk:
+        return 0
+    changed = 0
+    frames = (
+        FrameReview.objects.select_for_update()
+        .filter(run=origin_run, state=FrameReview.State.AWAITING_FOLLOWUP)
+        .order_by("pk")
+    )
+    for frame in frames:
+        if _frame_may_complete(frame):
+            frame.state = FrameReview.State.COMPLETED
+            frame.save(update_fields=["state"])
+            changed += 1
+    return changed
