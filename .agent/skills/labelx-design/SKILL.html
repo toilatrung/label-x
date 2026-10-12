@@ -56,7 +56,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Red is for the logo X (<code>brand</code>) and blocking states (<code>danger</code>) only.</li>
 <li>State is always a word: use <code>StatusBadge</code> with text. The one exception is the Quality Control Run dot, which carries a tooltip and aria-label.</li>
 <li>Context is always visible: every screen sits under the context bar (Dataset, Quality Control Run, Snapshot, Phạm vi, Guideline, Taxonomy). Dataset, Run and Phạm vi open selection menus and update the other chips.</li>
-<li>Content frames, buttons and inputs use subtle 5px corners: <code>radius-lg</code> for cards, panels and the workspace; <code>radius-md</code> for controls. Badges and tags use 4px, context chips are pill-shaped, and floating dropdown cards use 6px.</li>
+<li>Square by default: cards, tables, panels, buttons, inputs are square. Only small elements are rounded: badges and tags (4px), context chips (pill), switches, avatar, status dots, floating dropdown cards (6px).</li>
 <li>Borders, not shadows: 1px <code>border</code>; shadow only on dropdown cards.</li>
 <li>Row actions are borderless icon buttons (<code>lx-iconbtn</code>) with <code>data-tip</code> and <code>aria-label</code> carrying the same Vietnamese verb phrase. Page-level actions use boxed <code>lx-btn</code>; one primary per region.</li>
 <li>Rebalance content: each screen is neither crowded nor empty. Related lists become tabs inside one page; a history or log opens from a button on its own page.</li>
@@ -131,7 +131,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Pick the module and decide: independent screen (dropdown item) or a step (add to a flow) or a tab inside an existing page.</li>
 <li>Build with <code>TopBar</code> (active, active-item) and, if a step, <code>FlowNav</code> (flow, step).</li>
 <li>Use only DS tokens and <code>lx-*</code> classes; add a new class to the Design System first if one is missing.</li>
-<li>Check: frames and controls use their rounded tokens, state as words, row actions as icon buttons with tooltips, no abbreviations, numbers consistent with the data above, all states of the context bar still correct.</li>
+<li>Check: square corners, state as words, row actions as icon buttons with tooltips, no abbreviations, numbers consistent with the data above, all states of the context bar still correct.</li>
 <li>Reply to review comments in the thread and resolve them when done.</li>
 </ol>
 </article></main></body></html>
