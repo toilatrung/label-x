@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
+import { formatDateTime, snapshotCode } from '@/lib/format';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
@@ -79,14 +80,14 @@ function HistoryContent() {
     finally { setActing(false); }
   }
   return <AppShell activeKey="analysis" flowStep={3} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Execution History</h1><p className="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p></div><div className="lx-actions"><Link href="/analysis/config" className="lx-btn lx-btn--primary">Chạy phân tích mới</Link></div></div>}>
-    <DatasetPicker onChange={(nextDatasetId) => { setChosenId(null); if (datasetId !== null && nextDatasetId !== datasetId) setIgnoreQueryRun(true); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} />
     <div className="lx-cols">
-      <section className="lx-card lx-main" aria-label="Các lần chạy"><header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">Dữ liệu thật từ LabelX API</span></header>
-        {!datasetId && <div className="lx-card__body">Chọn Dataset để xem lịch sử.</div>}
+      <section className="lx-card lx-main" aria-label="Các lần chạy"><header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">{datasetId === null ? 'Chưa chọn Dataset' : `Dataset #${datasetId}`}</span></header>
+        <div className="lx-card__body"><DatasetPicker onChange={(nextDatasetId) => { setChosenId(null); if (datasetId !== null && nextDatasetId !== datasetId) setIgnoreQueryRun(true); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} /></div>
+        {!datasetId && <div className="lx-card__body lx-muted">Chọn Dataset để xem lịch sử.</div>}
         {runs.isError && <div role="alert" className="lx-card__body">{errorMessage(runs.error)}</div>}
         {runs.isLoading && datasetId && <div className="lx-card__body">Đang tải…</div>}
         {runs.data && <><div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice detail="API danh sách run chưa trả Coverage tổng hợp. Không cộng Coverage giữa các engine vì đơn vị có thể khác nhau (frame, shape); xem Coverage đúng đơn vị trong chi tiết từng engine." /></div><div className="lx-scroll"><table className="lx-table lx-table--min-520"><thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th className="r">Coverage</th><th>Trạng thái</th></tr></thead><tbody>
-          {runs.data.results.map((r) => <tr key={r.id} aria-selected={selectedId === r.id}><td><div className="lx-cell__main lx-mono">#QC-{r.id}</div><button type="button" className="lx-link" onClick={() => { setChosenId(r.id); setIgnoreQueryRun(true); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td><td className="lx-mono">SNP-{r.snapshot_id}</td><td className="lx-muted">{new Date(r.created_at).toLocaleString('vi-VN')}</td><td className="r">—</td><td><span className={`lx-badge ${statusBadge(r.status)}`}>{runStatusLabel[r.status]}</span></td></tr>)}
+          {runs.data.results.map((r) => <tr key={r.id} aria-selected={selectedId === r.id}><td><div className="lx-cell__main lx-mono">#QC-{r.id}</div><button type="button" className="lx-btn lx-btn--sm" onClick={() => { setChosenId(r.id); setIgnoreQueryRun(true); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td><td className="lx-mono">{snapshotCode(r.snapshot_id)}</td><td className="lx-muted">{formatDateTime(r.created_at)}</td><td className="r">—</td><td><span className={`lx-badge ${statusBadge(r.status)}`}>{runStatusLabel[r.status]}</span></td></tr>)}
           {runs.data.results.length === 0 && <tr><td colSpan={5}>Chưa có Quality Control Run trong Dataset này.</td></tr>}
         </tbody></table></div></>}
         {runs.data?.next && <footer className="lx-card__foot"><button className="lx-btn lx-btn--sm" type="button" onClick={() => setRunCursor(cursorFrom(runs.data?.next))}>Trang tiếp</button></footer>}
@@ -111,19 +112,19 @@ function HistoryContent() {
       <h2 className="lx-h2">Dữ liệu kỹ thuật <span className="lx-mono">#QC-{selectedId}</span></h2>
       {detail.isError && <p role="alert">{errorMessage(detail.error)}</p>}
       {detail.isLoading && <p>Đang tải chi tiết…</p>}
-      {selected && <><div className="lx-execution-summary"><span>Snapshot SNP-{selected.snapshot_id}</span><span>Config v{selected.config_version_id}</span><span>Seed {selected.seed}</span><strong>{runStatusLabel[selected.status]}</strong></div>
-        {selected.status === 'queued' && detail.dataUpdatedAt - new Date(selected.created_at).getTime() > 120_000 && <p role="alert" className="lx-callout">Run đã chờ hơn 2 phút và chưa bắt đầu. Kiểm tra worker/dispatch; không xem trạng thái queued là kết quả QC.</p>}
+      {selected && <><div className="lx-execution-summary"><span>Snapshot {snapshotCode(selected.snapshot_id)}</span><span>Phiên bản cấu hình v{selected.config_version_id}</span><span>Seed {selected.seed}</span><strong>{runStatusLabel[selected.status]}</strong></div>
+        {selected.status === 'queued' && detail.dataUpdatedAt - new Date(selected.created_at).getTime() > 120_000 && <p role="alert" className="lx-callout">Quality Control Run đã chờ hơn 2 phút và chưa bắt đầu. Kiểm tra worker và việc điều phối; không xem trạng thái đang chờ là kết quả kiểm tra.</p>}
         {canManage && ['queued', 'running'].includes(selected.status) && <div className="lx-execution-actions"><button className="lx-btn" type="button" disabled={acting} onClick={() => act('cancel')}>Hủy run</button></div>}
         {actionError && <p role="alert" className="lx-callout">{actionError}</p>}
         <h3>Coverage ledger theo engine</h3>
         {ledger.isError && <p role="alert">{errorMessage(ledger.error)}</p>}
-        {ledger.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>Engine</th><th>Trạng thái</th><th>Coverage</th><th>Completed</th><th>Failed</th><th>Pending</th><th>Not checked</th></tr></thead><tbody>{ledger.data.map((row) => <React.Fragment key={row.engine}><tr><td>{row.engine}{row.required ? ' · required' : ''}</td><td><span className={`lx-badge lx-engine-status--${row.status}`}>{engineStatusLabel[row.status]}</span></td><td>{row.coverage === null ? 'N/A' : `${Math.round(row.coverage * 100)}%`} ({row.completed}/{row.eligible})</td><td>{row.completed}</td><td>{row.failed}</td><td>{row.pending}</td><td>{row.not_checked}</td></tr>
+        {ledger.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>Engine</th><th>Trạng thái</th><th>Coverage</th><th>Completed</th><th>Failed</th><th>Pending</th><th>Not checked</th></tr></thead><tbody>{ledger.data.map((row) => <React.Fragment key={row.engine}><tr><td>{engineName[row.engine] ?? row.engine}{row.required ? ' · bắt buộc' : ''}</td><td><span className={`lx-badge lx-engine-status--${row.status}`}>{engineStatusLabel[row.status]}</span></td><td>{row.coverage === null ? 'N/A' : `${Math.round(row.coverage * 100)}%`} ({row.completed}/{row.eligible})</td><td>{row.completed}</td><td>{row.failed}</td><td>{row.pending}</td><td>{row.not_checked}</td></tr>
           {row.excluded > 0 && <tr><td colSpan={7}><div className="lx-execution-warning" role="note">⚠ {row.excluded} {row.unit} bị loại khỏi mẫu số coverage: {exclusionText(row)}. Applicability version: {row.applicability_version}.</div></td></tr>}
           {row.not_checked > row.excluded && <tr><td colSpan={7}>Not checked: {Object.entries(row.not_checked_reasons).filter(([reason, count]) => count > 0 && !['not_applicable', 'not_triggered'].includes(reason)).map(([reason, count]) => `${reason}: ${count}`).join(' · ')}</td></tr>}
         </React.Fragment>)}</tbody></table></div>}
         <h3>Trạng thái shard</h3>
         {shards.isError && <p role="alert">{errorMessage(shards.error)}</p>}
-        {shards.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>Shard</th><th>Engine</th><th>Trạng thái</th><th>Lần thử</th><th>Lỗi cuối</th></tr></thead><tbody>{shards.data.results.map((s) => <tr key={s.id}><td>{s.shard_key}</td><td>{s.engine}</td><td>{s.status}</td><td>{s.attempt}</td><td>{s.last_error || '—'}</td></tr>)}{shards.data.results.length === 0 && <tr><td colSpan={5}>Chưa có shard.</td></tr>}</tbody></table></div>}
+        {shards.data && <div className="lx-execution-scroll"><table className="lx-table"><thead><tr><th>Shard</th><th>Engine</th><th>Trạng thái</th><th>Lần thử</th><th>Lỗi cuối</th></tr></thead><tbody>{shards.data.results.map((s) => <tr key={s.id}><td>{s.shard_key}</td><td>{engineName[s.engine] ?? s.engine}</td><td>{s.status}</td><td>{s.attempt}</td><td>{s.last_error || '—'}</td></tr>)}{shards.data.results.length === 0 && <tr><td colSpan={5}>Chưa có shard.</td></tr>}</tbody></table></div>}
         {shards.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setShardCursor(cursorFrom(shards.data?.next))}>Trang shard tiếp</button>}
         <h3>Danh sách candidate và evidence</h3>
         <div className="lx-execution-candidates">
