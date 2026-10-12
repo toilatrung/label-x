@@ -13,7 +13,8 @@ import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { SAMPLE_HISTORY_ROWS } from '@/lib/mock/snapshots';
-import { useDatasets, useSnapshotHistory } from '@/lib/snapshots/queries';
+import { useDatasetRuns, useDatasets, useSnapshotHistory } from '@/lib/snapshots/queries';
+import { latestRunBySnapshot } from '@/lib/snapshots/runs';
 
 const statusTone = (status: Snapshot['status']) => status === 'locked' ? 'success' : status === 'failed' ? 'danger' : 'info';
 const frameTotal = (item: Snapshot) => item.jobs.some(job => job.frames.length) ? item.jobs.reduce((sum, job) => sum + job.frames.length, 0) : null;
@@ -27,6 +28,8 @@ export default function SnapshotHistoryPage() {
   const items = datasets.data?.pages.flatMap(page => page.results) ?? [];
   const selectedDataset = items.find(item => item.id === datasetId);
   const history = useSnapshotHistory(session?.user.id, canRead ? datasetId : null);
+  const runs = useDatasetRuns(session?.user.id, datasetId, canRead && !datasets.isError);
+  const latestRuns = React.useMemo(() => latestRunBySnapshot(runs.data ?? []), [runs.data]);
   const snapshots = history.data?.pages.flatMap(page => page.results) ?? [];
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
 
@@ -65,7 +68,7 @@ export default function SnapshotHistoryPage() {
           <button className="lx-btn" type="button" onClick={() => void history.refetch()}>Thử lại</button></div>}
         {history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
         {sample && <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail="Không tải được lịch sử thật; bảng dưới là dữ liệu minh họa theo thiết kế" /></div>}
-        {!sample && !!snapshots.length && <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail="Cột Quality Control Run chưa có API liên kết Snapshot với Quality Control Run" /></div>}
+        {!sample && !!snapshots.length && runs.isError && <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail={`Không tải được danh sách Quality Control Run nên cột Quality Control Run chưa có dữ liệu. ${errorMessage(runs.error)}`} /></div>}
       </div>
       {(sample || !!snapshots.length) && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
         <th>Snapshot</th><th>Dataset</th><th>Revision</th><th className="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th>
@@ -74,12 +77,13 @@ export default function SnapshotHistoryPage() {
           <td className="lx-mono">{row.id}</td><td>{row.dataset}</td><td className="lx-mono">{row.revision}</td><td className="r">{row.frames}</td>
           <td className="lx-mono">{row.run}</td><td><span className={`lx-badge${row.tone ? ` lx-badge--${row.tone}` : ''}`}>{row.status}</span></td>
         </tr>) : snapshots.map(item => <tr key={item.id}>
-          {/* TODO(backend): GET /api/snapshots/{id}/runs/ cho cột Quality Control Run */}
           <td className="lx-mono"><Link href={`/analysis?snapshotId=${item.id}`}>{snapshotCode(item.id)}</Link></td>
           <td>{selectedDataset?.name ?? `Dataset #${item.dataset_id}`}</td>
           <td className="lx-mono" title={item.revision_hash ?? undefined}>{shortRevision(item.revision_hash)}</td>
           <td className="r">{formatCount(frameTotal(item))}</td>
-          <td className="lx-subtle">—</td>
+          <td className="lx-mono">{latestRuns.get(item.id)
+            ? <Link href={`/analysis/history?run=${latestRuns.get(item.id)!.id}`}>Run #{latestRuns.get(item.id)!.id}</Link>
+            : <span className="lx-subtle">{runs.isPending && canRead ? 'Đang tải…' : '—'}</span>}</td>
           <td><span className={`lx-badge lx-badge--${statusTone(item.status)}`}>{snapshotStatus(item.status)}</span></td>
         </tr>)}
       </tbody></table></div>}

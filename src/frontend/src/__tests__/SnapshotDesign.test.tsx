@@ -6,6 +6,7 @@ import AnalysisPage from '@/app/analysis/page';
 import SnapshotHistoryPage from '@/app/analysis/snapshots/page';
 import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import * as api from '@/lib/snapshots/api';
+import * as exec from '@/lib/execution/api';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -25,6 +26,11 @@ vi.mock('@/lib/snapshots/api', async importOriginal => ({
   getDatasets: vi.fn(), getSnapshot: vi.fn(), getSnapshots: vi.fn(), getTasks: vi.fn(), postSnapshot: vi.fn(),
 }));
 
+vi.mock('@/lib/execution/api', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/lib/execution/api')>()),
+  listRuns: vi.fn(), listConfigs: vi.fn(),
+}));
+
 const client = () => new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
 const wrap = (node: React.ReactNode) => render(<QueryClientProvider client={client()}>{node}</QueryClientProvider>);
 const dataset = { id: 42, name: 'Urban', cvat_project_id: 31, taxonomy_version: 'v3', guideline_version: 'v1.2' };
@@ -34,11 +40,16 @@ const locked = { id: 7, dataset_id: 42, status: 'locked' as const, revision_hash
     frames: [{ frame_index: 0, file_name: 'a.jpg', width: 1, height: 1, cvat_url: 'https://cvat.example/f' },
       { frame_index: 1, file_name: 'b.jpg', width: 1, height: 1, cvat_url: 'https://cvat.example/f2' }] }] };
 
+const run = (id: number, snapshot_id: number, seed: number) => ({ id, snapshot_id, config_version_id: 8, seed, status: 'completed',
+  model_artifact: { name: 'detector', version: 'v4.1', checksum: 'x' }, engines: [] });
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(api.getDatasets).mockResolvedValue({ results: [dataset], next: null, previous: null });
   vi.mocked(api.getTasks).mockResolvedValue([]);
   vi.mocked(api.getSnapshots).mockResolvedValue({ results: [locked], next: null, previous: null });
+  vi.mocked(exec.listRuns).mockResolvedValue({ results: [run(5, 7, 20261008), run(9, 7, 77)], next: null, previous: null } as never);
+  vi.mocked(exec.listConfigs).mockResolvedValue({ results: [{ id: 8, name: 'cfg-2026.10.1', status: 'published' }], next: null, previous: null } as never);
 });
 
 describe('Snapshot (Snapshot.dc.html)', () => {
@@ -55,7 +66,26 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(await side.findByText('abc')).toBeDefined();
     expect(side.getByText('Đã khoá')).toBeDefined();
     expect(side.getByText('Mô hình độc lập')).toBeDefined();
-    expect(side.getAllByText('Dữ liệu minh họa').length).toBe(1);
+    // Mô hình, cấu hình và seed lấy từ Quality Control Run mới nhất (id lớn nhất) của Snapshot.
+    expect(await side.findByText('detector v4.1')).toBeDefined();
+    expect(side.getByText('cfg-2026.10.1')).toBeDefined();
+    expect(side.getByText('77')).toBeDefined();
+    expect(side.queryByText('Dữ liệu minh họa')).toBeNull();
+  });
+
+  it('falls back to labelled sample values when the runs cannot be read', async () => {
+    vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
+    wrap(<AnalysisPage />);
+    const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
+    expect(await side.findByText('Dữ liệu minh họa')).toBeDefined();
+    expect(side.getByText('Detector v2.3 · Classifier v1.8')).toBeDefined();
+  });
+
+  it('says so when the locked snapshot has no run yet', async () => {
+    vi.mocked(exec.listRuns).mockResolvedValue({ results: [], next: null, previous: null } as never);
+    wrap(<AnalysisPage />);
+    const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
+    expect(await side.findByText(/chưa có Quality Control Run nên chưa có mô hình/)).toBeDefined();
   });
 
   it('shows the whole design with sample data and a blocked write when datasets cannot be loaded', async () => {
@@ -120,7 +150,7 @@ describe('Snapshot create form scope', () => {
 });
 
 describe('Snapshot history (SnapshotHistory.dc.html)', () => {
-  it('uses the design columns with real snapshots and one not-connected notice', async () => {
+  it('uses the design columns with real snapshots and links each to its latest Quality Control Run', async () => {
     wrap(<SnapshotHistoryPage />);
     expect(await screen.findByRole('heading', { name: 'Lịch sử snapshot' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Về Snapshot' }).getAttribute('href')).toBe('/analysis');
@@ -132,7 +162,17 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     expect(row.getByText('abc')).toBeDefined();
     expect(row.getByText('2')).toBeDefined();
     expect(row.getByText('Đã khóa')).toBeDefined();
-    expect(screen.getAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(1);
+    expect(await row.findByRole('link', { name: 'Run #9' })).toBeDefined();
+    expect(row.getByRole('link', { name: 'Run #9' }).getAttribute('href')).toBe('/analysis/history?run=9');
+    expect(screen.queryAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(0);
+  });
+
+  it('keeps the run column empty with one notice when the runs cannot be read', async () => {
+    vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
+    wrap(<SnapshotHistoryPage />);
+    const row = within((await screen.findByRole('link', { name: 'SNP-007' })).closest('tr') as HTMLElement);
+    await waitFor(() => expect(screen.getAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(1));
+    expect(row.queryByRole('link', { name: /Run #/ })).toBeNull();
   });
 
   it('keeps the design table as labelled sample data when the history cannot be loaded', async () => {
