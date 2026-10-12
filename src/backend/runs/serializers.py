@@ -256,11 +256,13 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     def get_queue(self, obj: RunRankingEntry) -> str:
         return "random" if obj.ranking.source == "random_audit" else "risk"
 
-    def get_review_state(self, _obj: RunRankingEntry) -> str:
-        return "unreviewed"
+    def get_review_state(self, obj: RunRankingEntry) -> str:
+        # Annotated by RunRankingView from persisted FrameReview/Lease rows (expiry-aware).
+        return str(getattr(obj, "effective_review_state", None) or "unreviewed")
 
-    def get_lease_holder_user_id(self, _obj: RunRankingEntry) -> int | None:
-        return None
+    def get_lease_holder_user_id(self, obj: RunRankingEntry) -> int | None:
+        holder = getattr(obj, "active_lease_holder_id", None)
+        return int(holder) if holder is not None else None
 
 
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
