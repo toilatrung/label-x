@@ -84,14 +84,23 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
-# TBD-09: no business defaults; deployment must supply approved policy values.
-REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=None)
+# M-03 pilot policy (DEC-019 / CR-113): pilot defaults, not scientific acceptance values.
+# Each value can be overridden from the environment; an explicitly invalid value fails closed.
+REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=900)
 REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
-    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=None
+    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=300
 )
-# JSON object, e.g. {"source": "...", "decision_status": "...", "t_idle_seconds": 120,
-# "version": "..."}; unset keeps the policy undecided (no business default).
-EFFORT_IDLE_POLICY = env.json("EFFORT_IDLE_POLICY", default=None)
+# JSON object overriding the whole idle policy, e.g. {"source": "...", "decision_status": "...",
+# "t_idle_seconds": 120, "version": "..."}.
+EFFORT_IDLE_POLICY = env.json(
+    "EFFORT_IDLE_POLICY",
+    default={
+        "source": "DEC-019/P03",
+        "decision_status": "approved_for_pilot",
+        "t_idle_seconds": 120,
+        "version": "pilot-1",
+    },
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
