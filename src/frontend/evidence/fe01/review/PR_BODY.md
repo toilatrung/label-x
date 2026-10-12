@@ -11,7 +11,7 @@ Final repair handoff for leader QA rerun. **Leader QA acceptance remains pending
 | M3 | Zero diff from base in TopBar, ContextBar and AppShell. Direct Summary URL and Home arrow work; Overview menu wiring requested from FE10. |
 | F1 | Repeated sync retains one regional notice and issues no fake mutation. |
 | F2 | Genuine route links to Reports, Review, Gate and History; preview release link retained; first Snapshot link corrected to `/analysis` per latest-base route map. |
-| F3 | TODOs and `.agent/reports/implementation/blocker-fe01-missing-aggregation-endpoints.html` identify missing aggregations separately from existing `/api/runs/{id}/gate/` contract pending Summary wiring. |
+| F3 | TODOs and `.agent/reports/implementation/blocker-fe01-missing-aggregation-endpoints-@tdt2112.html` identify missing aggregations separately from existing `/api/runs/{id}/gate/` contract pending Summary wiring. |
 | F4 / F5 | Full “Quality Control Run”; no invented Dataset version from Guideline/Taxonomy. |
 | F7 / F8 | Overview remains baseline per leader directive; clean local integration of develop-fe is preserved. Latest base `e358c8b` integrated; literal branch name unchanged. |
 
@@ -49,3 +49,5 @@ Latest `origin/develop-fe` `e358c8be661ed4eb6eb37fdf13626bac4172d0f2` is integra
 **New production build: exit 0**, BUILD_ID `PwTBS3cAI9RPUzGOrXGDm`, app HTTP 200 / proxy CSRF 204 on owned port 3001. Reviewed refresh helper **overall exit 1** because foreign port 3000 is absent after successful build/readiness; no foreign service restarted. New design verifier **24 screens / 18 states, exit 0**; static verification only. Full logs remain locally in `.cache/fe01-latest-base-{make-check,build,refresh,design-verify,capture}.log`.
 
 Fresh scope/CSS/shell/privacy/receipt checks accompany the repair. Leader QA, new-head CI, clean release reproducibility, other roles/no-Dataset browser flow, delayed responses/user switching, pagination beyond page one, Task scope interactions, offscreen table scrolling, preview release click and Review Center click are NOT VERIFIED by this collector. Backend aggregation and Gate callout wiring remain pending; FE10 Overview link remains pending. Please rerun QA; this PR does not close #147.
+
+CI ownership repair (CR-100): the blocker report now uses the `-@tdt2112.html` filename and per-user metadata ID. Only report ownership metadata and public references changed; product source, eight captures and the receipt are unchanged. New-head CI is pending; leader QA and release acceptance remain pending.

@@ -10,7 +10,7 @@ Issue #147; branch `feat/feat/FE-01-home-quality-summary`; base `develop-fe` at 
 - FE-01 has zero inline styles in `page.tsx`, `QualityControlHome.tsx`, `QualitySummary.tsx`; 39 added CSS utility lines are identical in all three mirrors.
 - `TopBar.tsx`, `ContextBar.tsx`, `AppShell.tsx` match `origin/develop-fe` exactly. Per [leader directive](https://github.com/toilatrung/label-x/pull/181#issuecomment-6117171982), FE10 PR #183 owns the Overview Quality Summary link. Direct `/?view=summary` and the Home row arrow work.
 - Repeated sync retains one warning per Home region. Summary links use `/reports`, `/review`, `/reports/gate`, `/analysis/history`; preview Home links use `/reports/releases` and `/analysis` (Snapshot creation); `/analysis/snapshots` is Snapshot history per latest upstream skill.
-- [Aggregation blocker](../../../../../.agent/reports/implementation/blocker-fe01-missing-aggregation-endpoints.html) distinguishes proposed missing aggregation endpoints from existing `GET /api/runs/{id}/gate/` contract, whose Summary callout wiring is pending.
+- [Aggregation blocker](../../../../../.agent/reports/implementation/blocker-fe01-missing-aggregation-endpoints-@tdt2112.html) distinguishes proposed missing aggregation endpoints from existing `GET /api/runs/{id}/gate/` contract, whose Summary callout wiring is pending.
 
 ## Fresh Codex CLI browser evidence
 
@@ -59,3 +59,7 @@ The old e511673 merge and approved repairs were committed as `f2ea0c7`, then lat
 - Leader QA rerun and final acceptance, new repair commit CI, clean release reproducibility, other roles/no-Dataset account, real pagination beyond the first page, delayed-response/user-switch browser scenarios, Task scope interaction, offscreen table scrolling, preview release click and Review Center click are **NOT VERIFIED by this fresh collector**. Existing source/tests or previous evidence do not turn them into new browser proofs.
 - Real aggregation data and existing Gate contract wiring remain blocked/pending as documented. FE10 Overview menu link remains pending.
 - [QA recheck request](QA_RECHECK.md) requests leader QA rerun; it does not claim QA acceptance.
+
+## CI ownership metadata repair
+
+The framework job failed CR-100 ownership validation for the unsuffixed blocker report. The report now uses `blocker-fe01-missing-aggregation-endpoints-@tdt2112.html` and metadata ID `blocker-fe01-missing-aggregation-endpoints-tdt2112`; its substantive findings and status are unchanged. The three public references are updated. Product source, all eight captures and the receipt are unchanged. Ownership validation uses actor `tdt2112` against current `origin/develop-fe` (`78c6146e11f43381f63d31cc7e90033793c012d8`); the existing integrated ancestor `e358c8b` is preserved. New-head CI and leader QA remain pending.
