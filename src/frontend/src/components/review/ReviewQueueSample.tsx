@@ -60,7 +60,7 @@ export function ReviewQueueSample() {
               </div>
             </div>
             {/* TODO(backend): POST /api/queues/{name}/next/ nhận đúng frame này; bị chặn, không gọi API giả */}
-            <button type="button" className="lx-btn lx-btn--primary lx-review-start" aria-label={`Bắt đầu kiểm tra ${f.name}`} onClick={block}>Bắt đầu kiểm tra</button>
+            <button type="button" className="lx-btn lx-btn--primary lx-review-start" aria-label={`Bắt đầu kiểm tra ${f.name} (chưa kết nối server)`} aria-disabled="true" onClick={block}>Bắt đầu kiểm tra</button>
           </article>
         ))}
         {rows.length === 0 && <div className="lx-review-empty"><p>Không có ảnh khớp bộ lọc.</p><button type="button" className="lx-btn" onClick={reset}>Xóa bộ lọc</button></div>}
