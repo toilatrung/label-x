@@ -216,10 +216,10 @@ export function EngineThresholdsTable({
         <span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span>
       </header>
       <div className="lx-card__body">
-        <div className="lx-callout" role="note">
+        <div className="lx-callout lx-callout--info" role="note">
           <strong>Trạng thái trong cấu hình</strong>
           <div>
-            Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.
+            Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi Quality Control Run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.
           </div>
         </div>
       </div>

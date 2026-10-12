@@ -483,6 +483,7 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-row--nowrap { flex-wrap: nowrap; }
 .lx-mt-1 { margin-top: 4px; }
 .lx-text-13 { font-size: 13px; }
+.lx-plain-list { list-style: none; margin: 0; padding: 0; line-height: 20px; }
 
 .lx-list > li[aria-current="true"] { background: var(--surface-selected); }
 

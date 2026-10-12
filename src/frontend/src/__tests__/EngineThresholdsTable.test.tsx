@@ -55,7 +55,7 @@ describe('EngineThresholdsTable component (T-029)', () => {
     expect(disabledBadges.length).toBe(2);
     expect(screen.getByText('Trạng thái cấu hình')).toBeDefined();
     expect(screen.getByText('Trạng thái trong cấu hình')).toBeDefined();
-    expect(screen.getByText(/Mỗi QC run dùng một config version riêng/)).toBeDefined();
+    expect(screen.getByText(/Mỗi Quality Control Run dùng một config version riêng/)).toBeDefined();
   });
 
   it('displays indeterminate status and unconfigured notice when engines are missing or lack required params without fake fallbacks', () => {
