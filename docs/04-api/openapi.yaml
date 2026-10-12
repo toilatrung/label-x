@@ -2465,7 +2465,7 @@ components:
             operational_source:
               type: object
               additionalProperties: true
-              description: Gồm scope_complete và blocked_reasons (DEC-019 P07)
+              description: Gồm scope_complete và blocked_reasons (DEC-019 P07) — mảng đầy đủ mọi lý do đang chặn nguồn, không trùng, sắp xếp cố định, rỗng khi scope_complete
     DecisionCase:
       type: object
       required: [id, issue_id, outcome, actor_user_id, rule_id, correct_label, reason, case_version, created_at]

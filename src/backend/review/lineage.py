@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from orchestration.services import ledger_counts
-from review.finalization_service import final_source_status, select_operational_source
+from review.finalization_service import (
+    final_source_blockers,
+    final_source_status,
+    select_operational_source,
+)
 from review.models import FinalRunVerification, ReworkVerification
 from runs.models import QCRun
 
@@ -94,13 +100,21 @@ def operational_source(run: QCRun) -> dict[str, object]:
 
     origin = QCRun.objects.get(pk=run.origin_run_id) if run.origin_run_id is not None else run
     source, reason, attempts = select_operational_source(origin)
+    # Every reason that applies (DEC-019 P07), unique and sorted so the list is stable. The
+    # source decision itself is unchanged: only a missing valid final blocks the scope.
     blocked_reasons = (
         []
         if reason == "selected_final"
         else [reason]
         if not attempts
         else sorted(
-            {str(attempt["reason"]) for attempt in attempts if attempt["reason"] != "selected"}
+            {
+                blocker
+                for run in QCRun.objects.filter(
+                    pk__in=[cast(int, attempt["run_id"]) for attempt in attempts]
+                )
+                for blocker in final_source_blockers(origin, run)
+            }
         )
     )
     return {

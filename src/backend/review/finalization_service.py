@@ -259,18 +259,35 @@ def unreviewed_new_candidates(origin_run: QCRun, final_run: QCRun) -> QuerySet[C
     )
 
 
-def final_source_status(origin_run: QCRun, final_run: QCRun) -> tuple[bool, str]:
-    """Return ``(selectable, reason)`` for one final attempt; never mutates anything."""
+def final_source_blockers(origin_run: QCRun, final_run: QCRun) -> list[str]:
+    """Every reason one final attempt cannot be the source, in evaluation order (read-only).
+
+    A non-Completed attempt has the single reason ``final_run_<status>``: its candidates,
+    issues and ledger say nothing about the scope. A Completed one can be blocked by several
+    independent reasons at once.
+    """
 
     if final_run.status != QCRun.Status.COMPLETED:
-        return False, f"final_run_{final_run.status}"
+        return [f"final_run_{final_run.status}"]
+    reasons = []
     if _has_open_issue(final_run):
-        return False, "open_issue_in_final_run"
+        reasons.append("open_issue_in_final_run")
     if unreviewed_new_candidates(origin_run, final_run).exists():
-        return False, "new_candidate_unreviewed"
+        reasons.append("new_candidate_unreviewed")
     if not has_complete_required_coverage(final_run):
-        return False, "coverage_incomplete"
-    return True, "selected"
+        reasons.append("coverage_incomplete")
+    return reasons
+
+
+def final_source_status(origin_run: QCRun, final_run: QCRun) -> tuple[bool, str]:
+    """Return ``(selectable, reason)`` for one final attempt; never mutates anything.
+
+    ``reason`` is the first blocker (the evaluation order decides the source); the full list
+    is ``final_source_blockers``.
+    """
+
+    blockers = final_source_blockers(origin_run, final_run)
+    return (False, blockers[0]) if blockers else (True, "selected")
 
 
 def select_operational_source(origin_run: QCRun) -> tuple[QCRun, str, list[dict[str, object]]]:
