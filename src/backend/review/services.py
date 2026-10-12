@@ -119,9 +119,13 @@ def _close_expired(lease: Lease, now: datetime) -> None:
         return
     frame = lease.frame_review
     frame.refresh_from_db()
-    saved = decision_source.has_persisted_decision(frame)
     lease.closed_at = now
     lease.save(update_fields=["closed_at"])
+    if frame.state != FrameReview.State.IN_REVIEW:
+        # The frame moved on while the lease stayed open (e.g. rework verified ->
+        # awaiting_followup, or reviewed/completed): expiry must not rewrite its state.
+        return
+    saved = decision_source.has_persisted_decision(frame)
     frame.state = FrameReview.State.INCOMPLETE if saved else FrameReview.State.UNREVIEWED
     frame.previous_reviewer_id = lease.holder_id if saved else None
     # Reservation is measured from the actual expiry, not delayed materialization.
