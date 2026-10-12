@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
 
 type TabKey = 'rules' | 'gate' | 'sampling';
@@ -39,18 +38,17 @@ const GATE = [
  * TODO(backend): GET /api/config-versions/{id}/rules/ (bảng quy tắc), GET/PATCH ngưỡng phát hành và chính sách lấy mẫu,
  * POST /api/config-versions/ (lưu thành phiên bản mới).
  */
-export function RulesPolicyCard({ blockedAction, onBlocked, canWrite, rulesExtra }: {
+export function RulesPolicyCard({ blockedAction: _blockedAction, onBlocked, canWrite, rulesExtra }: {
   blockedAction: string | null; onBlocked: (action: string) => void; canWrite: boolean;
   /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Quy tắc kiểm tra, ngoài thẻ ba tab của thiết kế. */
   rulesExtra?: React.ReactNode;
 }) {
+  void _blockedAction;
   const [tab, setTab] = useState<TabKey>('rules');
   return (
     <>
     <section className="lx-card" aria-label="Cấu hình quy tắc và ngưỡng">
       <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Cấu hình quy tắc và ngưỡng" />
-      <div className="lx-card__body"><NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} /></div>
-
       {tab === 'rules' && (
         <div className="lx-scroll">
           <table className="lx-table lx-table--min-760">

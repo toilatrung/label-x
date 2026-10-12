@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
+import { FlowNav } from '@/components/layout/FlowNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
@@ -12,8 +13,6 @@ import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { formatDateTime, snapshotCode } from '@/lib/format';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
 
 function exclusionText(row: LedgerEntry) {
@@ -79,14 +78,16 @@ function HistoryContent() {
     } catch (err) { setActionError(errorMessage(err)); }
     finally { setActing(false); }
   }
-  return <AppShell activeKey="analysis" flowStep={3} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Execution History</h1><p className="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p></div><div className="lx-actions"><Link href="/analysis/config" className="lx-btn lx-btn--primary">Chạy phân tích mới</Link></div></div>}>
+  return <AppShell activeKey="analysis" flowStep={3} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Execution History</h1><p className="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p></div></div>}>
     <div className="lx-cols">
-      <section className="lx-card lx-main" aria-label="Các lần chạy"><header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">{datasetId === null ? 'Chưa chọn Dataset' : `Dataset #${datasetId}`}</span></header>
+      <section className="lx-card lx-main" aria-label="Các lần chạy">
+        <FlowNav flow="analysis" currentStep={3} variant="tabs" inCard />
+        <header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">{datasetId === null ? 'Chưa chọn Dataset' : `Dataset #${datasetId}`}</span></header>
         <div className="lx-card__body"><DatasetPicker onChange={(nextDatasetId) => { setChosenId(null); if (datasetId !== null && nextDatasetId !== datasetId) setIgnoreQueryRun(true); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} /></div>
         {!datasetId && <div className="lx-card__body lx-muted">Chọn Dataset để xem lịch sử.</div>}
         {runs.isError && <div role="alert" className="lx-card__body">{errorMessage(runs.error)}</div>}
         {runs.isLoading && datasetId && <div className="lx-card__body">Đang tải…</div>}
-        {runs.data && <><div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice detail="API danh sách run chưa trả Coverage tổng hợp. Không cộng Coverage giữa các engine vì đơn vị có thể khác nhau (frame, shape); xem Coverage đúng đơn vị trong chi tiết từng engine." /></div><div className="lx-scroll"><table className="lx-table lx-table--min-520"><thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th className="r">Coverage</th><th>Trạng thái</th></tr></thead><tbody>
+        {runs.data && <><div className="lx-scroll"><table className="lx-table lx-table--min-520"><thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th className="r">Coverage</th><th>Trạng thái</th></tr></thead><tbody>
           {runs.data.results.map((r) => <tr key={r.id} aria-selected={selectedId === r.id}><td><div className="lx-cell__main lx-mono">#QC-{r.id}</div><button type="button" className="lx-btn lx-btn--sm" onClick={() => { setChosenId(r.id); setIgnoreQueryRun(true); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td><td className="lx-mono">{snapshotCode(r.snapshot_id)}</td><td className="lx-muted">{formatDateTime(r.created_at)}</td><td className="r">—</td><td><span className={`lx-badge ${statusBadge(r.status)}`}>{runStatusLabel[r.status]}</span></td></tr>)}
           {runs.data.results.length === 0 && <tr><td colSpan={5}>Chưa có Quality Control Run trong Dataset này.</td></tr>}
         </tbody></table></div></>}

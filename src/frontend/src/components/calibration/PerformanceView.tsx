@@ -1,5 +1,4 @@
 import React from 'react';
-import { DemoRegionNotice } from './DemoRegionNotice';
 import { ACTIVE_CALIBRATIONS, PERF_BENCHMARKS, PERF_METRICS, PERF_SCOPES, SAMPLING_STREAMS } from '@/lib/calibration/sample-data';
 import Link from 'next/link';
 
@@ -22,7 +21,6 @@ export function PerformanceBody() {
   return (
     <>
       {/* TODO(backend): GET /api/evaluation/performance/ */}
-      <DemoRegionNotice />
       <div className="lx-grid lx-grid--4">
         {PERF_METRICS.map((m) => (
           <div key={m.key} className="lx-metric">

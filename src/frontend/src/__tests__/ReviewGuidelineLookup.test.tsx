@@ -129,7 +129,7 @@ describe('ReviewGuidelineLookup (T-037 Fail-Closed & Stale-Safe Guideline Lookup
   it('displays Case lookup limitation note without fabricating fake cases', async () => {
     render(<ReviewGuidelineLookup ruleId="VEH-03" guidelineVersion="v1.0" />);
     expect(
-      screen.getByText(/Chức năng tra cứu Case tương tự hiện chưa khả dụng/)
+      screen.getByText(/Không tìm thấy Case tương tự trong response hiện tại/)
     ).toBeDefined();
   });
 });

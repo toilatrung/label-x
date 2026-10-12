@@ -7,8 +7,7 @@ export { API_FEATURES, API_NAVIGATION } from './features';
 
 /**
  * Contract inventory from docs/04-api/openapi.yaml, split by product feature.
- * `backend` means a Django URL and matching HTTP handler exist on develop-fe.
- * `mock` means the operation is contract-only; its example is intentionally marked as mock data.
+ * `backend` identifies runtime endpoints; `mock` identifies contract examples supplied by PR #252.
  */
 export const API_ENDPOINTS: ApiEndpoint[] = API_NAVIGATION.flatMap(group =>
   group.sections.flatMap(currentSection =>

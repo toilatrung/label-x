@@ -14,6 +14,7 @@ export interface EngineThresholdsTableProps {
   emptyTitle?: string;
   emptyDescription?: string;
   layout?: 'thresholds' | 'analysis';
+  topSlot?: React.ReactNode;
 }
 
 export interface EngineMeta {
@@ -126,10 +127,12 @@ export function EngineThresholdsTable({
   emptyTitle,
   emptyDescription,
   layout = 'thresholds',
+  topSlot,
 }: EngineThresholdsTableProps) {
   if (!hasPermission) {
     return (
       <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
+        {topSlot}
         <header className="lx-card__head">
           <span className="lx-cell__main">Ngưỡng kiểm tra engine</span>
           <span className="lx-subtle">Chỉ đọc</span>
@@ -149,6 +152,7 @@ export function EngineThresholdsTable({
   if (error) {
     return (
       <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
+        {topSlot}
         <header className="lx-card__head">
           <span className="lx-cell__main">Ngưỡng kiểm tra engine</span>
           <span className="lx-subtle">Chỉ đọc</span>
@@ -166,6 +170,7 @@ export function EngineThresholdsTable({
   if (isLoading) {
     return (
       <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
+        {topSlot}
         <header className="lx-card__head">
           <span className="lx-cell__main">Ngưỡng kiểm tra engine</span>
           <span className="lx-subtle">Chỉ đọc</span>
@@ -188,6 +193,7 @@ export function EngineThresholdsTable({
   if (!config) {
     return (
       <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
+        {topSlot}
         <header className="lx-card__head">
           <span className="lx-cell__main">Ngưỡng kiểm tra engine</span>
           <span className="lx-subtle">Chỉ đọc</span>
@@ -197,7 +203,7 @@ export function EngineThresholdsTable({
             <strong>{emptyTitle ?? 'Chưa có cấu hình đã phát hành'}</strong>
             <div>
               {emptyDescription ??
-                'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'}
+                'Chưa có phiên bản cấu hình engine đã phát hành. Trạng thái này không đồng nghĩa engine đang tắt.'}
             </div>
           </div>
         </div>
@@ -213,6 +219,7 @@ export function EngineThresholdsTable({
 
   return (
     <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
+      {topSlot}
       <header className="lx-card__head">
         {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div className="lx-row"><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint">Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
       </header>

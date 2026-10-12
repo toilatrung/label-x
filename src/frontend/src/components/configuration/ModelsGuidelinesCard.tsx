@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
 
 type TabKey = 'models' | 'guideline';
@@ -39,16 +37,10 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(canAccessConfiguration);
   const [tab, setTab] = useState<TabKey>('models');
-  const [blockedAction, setBlockedAction] = useState<string | null>(null);
   return (
     <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
       <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
-      <div className="lx-card__body lx-row">
-        <SampleDataBadge />
-        <NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} />
-      </div>
-
       {tab === 'models' && (
         <>
           <div className="lx-scroll">
@@ -65,7 +57,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
                     <td className="lx-muted">{model.mapping}</td>
                     <td className={model.confidence ? 'r' : 'r lx-subtle'}>{model.confidence ?? '—'}</td>
                     <td><span className={model.badge}>{model.status}</span></td>
-                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={!canWrite} onBlocked={() => setBlockedAction('Chỉnh mô hình')} /></td>
+                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={!canWrite} onBlocked={() => undefined} /></td>
                   </tr>
                 ))}
               </tbody>

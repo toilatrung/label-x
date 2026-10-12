@@ -11,6 +11,7 @@ interface AppShellProps {
   activeKey?: string;
   flowStep?: number;
   showFlowNav?: boolean;
+  flowNavVariant?: 'stepper' | 'tabs';
   context?: React.ComponentProps<typeof ContextBar>;
 }
 
@@ -20,8 +21,10 @@ export function AppShell({
   activeKey,
   flowStep = 1,
   showFlowNav = true,
+  flowNavVariant,
   context,
 }: AppShellProps) {
+  const resolvedVariant = flowNavVariant ?? (['analysis', 'reports'].includes(activeKey ?? '') ? 'tabs' : 'stepper');
   return (
     <div className="lx lx-shell">
       <TopBar activeKey={activeKey} />
@@ -29,7 +32,7 @@ export function AppShell({
       <main className="lx-app-content">
         {pageHeader}
         {showFlowNav && activeKey && ['analysis', 'review', 'reports'].includes(activeKey) &&
-        <FlowNav flow={activeKey as FlowModule} currentStep={flowStep} />}
+        <FlowNav flow={activeKey as FlowModule} currentStep={flowStep} variant={resolvedVariant} />}
         {children}
       </main>
     </div>

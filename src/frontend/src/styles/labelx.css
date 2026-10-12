@@ -118,9 +118,9 @@
 
 /* ---- Tabs ---- */
 .lx-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.lx-tab { appearance: none; background: none; border: 0; padding: 10px 12px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 -2px 0 transparent; }
-.lx-tab:hover { color: var(--ink); }
-.lx-tab.is-active { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); }
+.lx-tab { appearance: none; background: none; border: 0; padding: 10px 12px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 -2px 0 transparent; text-decoration: none; }
+.lx-tab:hover, .lx-tab:focus { color: var(--ink); text-decoration: none; }
+.lx-tab.is-active { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); text-decoration: none; }
 .lx-count { font-size: 12px; font-weight: 600; color: var(--ink-subtle); font-variant-numeric: tabular-nums; }
 
 /* ---- Metric tile, progress, callout ---- */
@@ -246,8 +246,11 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-flow__step.is-active a { background: var(--surface-selected); color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); }
 .lx-flow__n { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--border-strong); border-radius: 50%; font-size: 11px; line-height: 1; }
 .lx-flow__step.is-active .lx-flow__n { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-.lx-flow__sep { width: 12px; height: 12px; flex: none; fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
 .lx-flow__pos { font: 500 12px/16px var(--font-mono, monospace); color: var(--ink-muted); white-space: nowrap; }
+.lx-flow-tabs { margin-bottom: calc(var(--space-4) - var(--space-6)); }
+@media (max-width: 900px) {
+  .lx-flow-tabs { margin-bottom: 0; }
+}
 
 /* ---- Navigation bar v2: graphite bar, open tab joins a white panel ---- */
 .lx-topnav { gap: 40px; background: var(--primary); border-bottom: 0; }

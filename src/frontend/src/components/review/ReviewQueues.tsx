@@ -24,7 +24,6 @@ import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
 import { ReviewQueueSample } from './ReviewQueueSample';
 import { Icon } from '@/components/ui/Icon';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
 export interface ReviewQueuesProps {
@@ -755,7 +754,6 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               </select>
             </label>
           </div>
-          <NotConnectedNotice detail="Tìm kiếm và mức ưu tiên chờ API" />
           <div className="lx-card__head">
             <strong>Ảnh cần kiểm tra</strong>
             <div className="lx-actions">

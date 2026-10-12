@@ -5,19 +5,30 @@ export const session = {
 };
 
 export const snapshot = {
-  id: 18, dataset_id: 12, status: 'locked', revision_hash: 'sha256:91c4…8fa2',
-  guideline_version: 'bdd100k-v1', taxonomy_version: '2026.10', out_of_scope_shapes: 3,
+  id: 14, dataset_id: 14, display_id: 'SNP-014', status: 'locked', revision_hash: 'a91f3c',
+  guideline_version: 'v1.2', taxonomy_version: 'v3', frame_count: 12500, seed: 20261004,
+  config_version_id: 7, models: ['Detector v2.3', 'Classifier v1.8'], created_by_name: 'Mocking User',
+  created_at: '2026-10-04T06:50:00Z', out_of_scope_shapes: 3,
 };
 
 export const configVersion = {
-  id: 4, name: 'BDD100K baseline', status: 'published', engines: { geometry: { enabled: true } },
-  thresholds: { risk: 0.72 }, models: {}, created_by: 7, created_at: '2026-10-12T02:15:00Z',
-  published_at: '2026-10-12T02:20:00Z',
+  id: 7, name: 'Road Vision Urban v7', status: 'published', engines: {
+    schema: { enabled: true, label: 'Schema / Taxonomy', note: 'Taxonomy v3 · thuộc tính bắt buộc theo từng lớp' },
+    geometry: { enabled: true, label: 'Geometry', tolerance_px: 2, minimum_area: 24 },
+    duplicate: { enabled: true, label: 'Duplicate / Overlap', iou_threshold: 0.85 },
+    detector: { enabled: true, label: 'Mô hình độc lập', model: 'Detector v2.3', confidence_threshold: 0.6 },
+    vision_language: { enabled: true, label: 'Mô hình thị giác – ngôn ngữ', max_candidates: 400 },
+    metric: { enabled: false, label: 'Metric', reason: 'Chưa có Ground Truth' },
+  },
+  thresholds: { coverage: 0.95, open_critical_issues: 0, residual_error_rate: 0.05, reviewer_agreement: 0.9, verified_rework: 1 },
+  sampling: { random_rate: 0.008, random_minimum: 100, risk_rate: 0.008, seed_mode: 'generated_and_persisted' },
+  models: { detector: 'v2.3', classifier: 'v1.8' }, created_by: 7, created_at: '2026-10-04T06:45:00Z',
+  published_at: '2026-10-04T06:47:00Z',
 };
 
 export const run = {
-  id: 31, snapshot_id: 18, config_version_id: 4, status: 'completed', is_final: true,
-  created_at: '2026-10-12T03:00:00Z',
+  id: 91, display_id: 'QC-091', snapshot_id: 14, config_version_id: 7, status: 'partial', is_final: true,
+  created_at: '2026-10-04T06:58:00Z',
 };
 
 export const issue = {

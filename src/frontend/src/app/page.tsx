@@ -11,6 +11,7 @@ import type { Run } from '@/lib/execution/api';
 import { QualityControlHome } from '@/components/overview/QualityControlHome';
 import { QualitySummary } from '@/components/overview/QualitySummary';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
+import { QUALITY_SUMMARY_API_EXPLORER } from '@/lib/overview/api-explorer-data';
 
 type DatasetResolution =
   | { authUserId: number | null; requestedId: null; status: 'idle' }
@@ -242,16 +243,27 @@ function OverviewContent() {
     setRetryNonce((prev) => prev + 1);
   };
 
+  const summaryDataset = isSummary && !currentDataset && effectiveStatus !== 'revoked' ? {
+    id: QUALITY_SUMMARY_API_EXPLORER.dataset.id,
+    name: QUALITY_SUMMARY_API_EXPLORER.dataset.name,
+    cvat_project_id: QUALITY_SUMMARY_API_EXPLORER.dataset.cvatProjectId,
+    guideline_version: QUALITY_SUMMARY_API_EXPLORER.dataset.guidelineVersion,
+    taxonomy_version: 'v3',
+  } : currentDataset;
+
   // ContextBar props conforming strictly to restored ContextBarProps baseline
   const contextProps: React.ComponentProps<typeof ContextBar> = {
-    datasetName: currentDataset?.name,
-    datasetIdOverride: datasetId ?? undefined,
-    guidelineVersion: currentDataset?.guideline_version ?? '—',
-    taxonomyVersion: currentDataset?.taxonomy_version ?? '—',
+    datasetName: summaryDataset?.name,
+    datasetIdOverride: effectiveStatus === 'revoked' ? null : (datasetId ?? (isSummary ? summaryDataset?.id : null)),
+    guidelineVersion: summaryDataset?.guideline_version ?? '—',
+    taxonomyVersion: summaryDataset?.taxonomy_version ?? '—',
     activeRun: effectiveSelectedRun
       ? `#${effectiveSelectedRun.id} · ${effectiveSelectedRun.status ? effectiveSelectedRun.status.toUpperCase() : '—'}`
-      : 'Chưa chọn',
-    snapshotName: effectiveSelectedRun?.snapshot_id ? `#${effectiveSelectedRun.snapshot_id}` : 'Chưa chọn',
+      : (isSummary ? `#QC-0${QUALITY_SUMMARY_API_EXPLORER.run.id}` : 'Chưa chọn'),
+    runState: effectiveSelectedRun ? undefined : (isSummary ? 'partial' : undefined),
+    snapshotName: effectiveSelectedRun?.snapshot_id
+      ? `#${effectiveSelectedRun.snapshot_id}`
+      : (isSummary ? `SNP-0${QUALITY_SUMMARY_API_EXPLORER.run.snapshotId}` : 'Chưa chọn'),
   };
 
   return (

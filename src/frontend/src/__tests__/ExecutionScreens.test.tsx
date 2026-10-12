@@ -115,11 +115,11 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('columnheader', { name: 'Quality Control Run' })).toBeDefined();
     expect(screen.getByRole('columnheader', { name: 'Snapshot' })).toBeDefined();
     expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Chạy phân tích mới' })).toBeDefined();
+    expect(screen.queryByRole('link', { name: 'Chạy phân tích mới' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
     expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
-    expect(screen.getByText(/Không cộng Coverage giữa các engine/)).toBeDefined();
+    expect(screen.queryByText(/Không cộng Coverage giữa các engine/)).toBeNull();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Chạy lại engine lỗi' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(true));
@@ -131,7 +131,7 @@ describe('Execution screens on real API contract', () => {
     expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText('Lấy mẫu')).toBeDefined();
     expect(screen.getByText('Sẵn sàng chạy')).toBeDefined();
-    expect(screen.getAllByText(/Chức năng vẫn chưa được kết nối với server/)).toHaveLength(2);
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Xem chi tiết lấy mẫu' }).getAttribute('href')).toBe('/calibration/audit-sampling');
     expect(screen.getByText('Thời gian dự kiến')).toBeDefined();
     expect(calls.some((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/runs/')).toBe(false);
@@ -226,7 +226,7 @@ describe('Execution screens on real API contract', () => {
     // The design has no header action and no "real data" label; sample data is only on the sampling region.
     expect(screen.queryByRole('link', { name: 'Lịch sử thực thi' })).toBeNull();
     expect(screen.queryByText('Dữ liệu thật từ LabelX API')).toBeNull();
-    expect(screen.getAllByText('Dữ liệu minh họa')).toHaveLength(1);
+    expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
     const ready = within(screen.getByRole('complementary'));
     expect(ready.getByRole('heading', { name: 'Sẵn sàng chạy' })).toBeDefined();
     // Dataset is a select (also for a global role), not a bare number input.
@@ -315,7 +315,7 @@ describe('Execution screens on real API contract', () => {
       configsOverride: { next: null, previous: null, results: [] },
     });
     expect(await screen.findByText('Chưa có cấu hình đã phát hành')).toBeDefined();
-    expect(screen.getByText(/API chưa trả về phiên bản cấu hình engine đã phát hành/)).toBeDefined();
+    expect(screen.getByText(/Chưa có phiên bản cấu hình engine đã phát hành/)).toBeDefined();
   });
 
   it('displays error state in EngineThresholdsTable on AnalysisConfig when config-versions API fails (T-029 / F-1)', async () => {

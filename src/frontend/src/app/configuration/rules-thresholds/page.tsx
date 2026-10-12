@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AppShell } from "@/components/layout/AppShell";
 import { RulesPolicyCard } from "@/components/configuration/RulesPolicyCard";
-import { SampleDataBadge } from "@/components/ui/SampleDataBadge";
 import { EngineThresholdsTable } from "@/components/execution/EngineThresholdsTable";
 import { apiClient, ApiRequestError } from "@/lib/api/client";
 import { errorMessage } from "@/lib/api/errors";
@@ -82,7 +81,6 @@ function RulesThresholds() {
           </p>
         </div>
         <div className="lx-actions">
-          <SampleDataBadge />
           <span className="lx-hint">Cấu hình hiện tại v7</span>
           {/* TODO(backend): POST /api/config-versions/ (lưu thành phiên bản mới); nút chặn, không gọi API giả */}
           <button type="button" className="lx-btn lx-btn--primary" disabled={!canViewConfig} onClick={() => setBlockedAction("Lưu thành v8")}>Lưu thành v8</button>

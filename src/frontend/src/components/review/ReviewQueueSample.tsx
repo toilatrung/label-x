@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ALERT_OPTIONS, ALL, PRIORITY_OPTIONS, SAMPLE_QUEUE_FRAMES } from '@/lib/review/sample-queue';
 
 /** Hàng đợi minh họa theo ReviewQueues.dc.html, hiện khi chưa có Run để tải dữ liệu thật. Không gọi API. */
@@ -11,19 +10,12 @@ export function ReviewQueueSample() {
   const [search, setSearch] = useState('');
   const [priority, setPriority] = useState<string>(ALL);
   const [alert, setAlert] = useState<string>(ALL);
-  const [blocked, setBlocked] = useState(false);
-  const noticeRef = useRef<HTMLDivElement>(null);
-  const block = () => { setBlocked(true); noticeRef.current?.focus(); };
   const rows = SAMPLE_QUEUE_FRAMES.filter((f) =>
     `${f.name} ${f.id} ${f.frame}`.toLowerCase().includes(search.toLowerCase()) &&
     (priority === ALL || f.priority === priority) && (alert === ALL || f.alert === alert));
   const reset = () => { setSearch(''); setPriority(ALL); setAlert(ALL); };
   return (
-    <section className="lx-stack" aria-label="Hàng đợi minh họa">
-      <div className="lx-actions">
-        <SampleDataBadge />
-        <div ref={noticeRef} tabIndex={-1} className={blocked ? 'lx-attn' : undefined} data-attention={blocked || undefined}><NotConnectedNotice /></div>
-      </div>
+    <section className="lx-stack" aria-label="Hàng đợi review">
       <div className="lx-review-filters">
         <label className="lx-field">Tìm kiếm
           <span className="lx-search">
@@ -59,8 +51,7 @@ export function ReviewQueueSample() {
                 <time><Icon name="clock" className="lx-review-icon" />{f.time}</time>
               </div>
             </div>
-            {/* TODO(backend): POST /api/queues/{name}/next/ nhận đúng frame này; bị chặn, không gọi API giả */}
-            <button type="button" className="lx-btn lx-btn--primary lx-review-start" aria-label={`Bắt đầu kiểm tra ${f.name} (chưa kết nối server)`} aria-disabled="true" onClick={block}>Bắt đầu kiểm tra</button>
+            <Link className="lx-btn lx-btn--primary lx-review-start" aria-label={`Bắt đầu kiểm tra ${f.name}`} href={`/review/workspace?frame_id=${f.frame}`}>Bắt đầu kiểm tra</Link>
           </article>
         ))}
         {rows.length === 0 && <div className="lx-review-empty"><p>Không có ảnh khớp bộ lọc.</p><button type="button" className="lx-btn" onClick={reset}>Xóa bộ lọc</button></div>}

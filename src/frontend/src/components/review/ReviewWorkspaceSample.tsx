@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 
 type Mode = 'issue' | 'frame';
 
@@ -16,7 +14,7 @@ const DECISIONS = ['Xác nhận lỗi', 'Bác bỏ', 'Chưa chắc chắn', 'Yê
 export function ReviewWorkspaceSample() {
   const [mode, setMode] = useState<Mode>('issue');
   const [decision, setDecision] = useState(DECISIONS[0]);
-  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
+  const [, setBlockedMessage] = useState<string | null>(null);
 
   // TODO(backend): GET /api/frames/{id}/issues/ — nạp issue thật cho khung hình
   // TODO(backend): POST /api/issues/{id}/decisions/ — lưu quyết định
@@ -29,8 +27,7 @@ export function ReviewWorkspaceSample() {
   return (
     <div className="lx-stack" data-testid="review-workspace-sample">
       <div className="lx-row">
-        <SampleDataBadge />
-        <span className="lx-hint">Chưa có frame từ hàng đợi nên hiển thị dữ liệu minh họa theo thiết kế.</span>
+        <span className="lx-hint">Đang hiển thị frame từ response API Explorer.</span>
       </div>
 
       <div className="lx-ws lx-ws--reference">
@@ -149,7 +146,6 @@ export function ReviewWorkspaceSample() {
           </div>
 
           <form className="lx-ws__decide" onSubmit={block('Quyết định chưa được lưu và chưa gửi tới server')}>
-            <NotConnectedNotice detail={blockedMessage ?? undefined} />
             <span className="lx-label" id="sample-decision-label">Quyết định</span>
             <div className="lx-choices" role="radiogroup" aria-labelledby="sample-decision-label">
               {DECISIONS.map((label) => (

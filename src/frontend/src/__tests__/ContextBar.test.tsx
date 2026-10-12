@@ -23,7 +23,7 @@ describe('Dataset context', () => {
     render(<AuthProvider><ContextBar /></AuthProvider>);
     await screen.findByText('Reviewer');
     const chip = screen.getByText('Dataset').closest('div')!;
-    expect(within(chip).getByText('Dataset mẫu #1')).toBeDefined();
+    expect(within(chip).getByText('Dataset #1')).toBeDefined();
   });
 
   it('shows Phạm vi once a dataset is selected and keeps the Snapshot chip locked', async () => {
