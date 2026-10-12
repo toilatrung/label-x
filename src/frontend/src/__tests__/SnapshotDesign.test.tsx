@@ -80,19 +80,26 @@ describe('Snapshot create form scope', () => {
 
   it('counts the selected task, job and frame like the design hint', () => {
     show();
+    expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
     expect(screen.getByText(/Hiện chọn 1 task · 1 job · 12 frame\./)).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
   });
 
-  it('sends the whole dataset when select-all is used and cancels back to an empty selection', async () => {
+  it('shows the stage column placeholder next to the assignee', () => {
+    show();
+    expect(screen.getByRole('columnheader', { name: 'Người thực hiện · Giai đoạn' })).toBeDefined();
+    expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 17' }).closest('tr') as HTMLElement).getByText(/3 · —/)).toBeDefined();
+  });
+
+  it('selects the whole dataset by default, sends it, and cancel restores that default', async () => {
     vi.mocked(api.postSnapshot).mockResolvedValue({ id: 5, status: 'locked' } as never);
     show();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Huỷ' }));
-    expect((screen.getByRole('checkbox', { name: 'Chọn Job 17' }) as HTMLInputElement).checked).toBe(false);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Huỷ' }));
+    expect((screen.getByRole('checkbox', { name: 'Chọn tất cả' }) as HTMLInputElement).checked).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     await waitFor(() => expect(api.postSnapshot).toHaveBeenCalledTimes(1));
     expect(vi.mocked(api.postSnapshot).mock.calls[0][0]).toEqual({ dataset_id: 42, scope: { cvat_task_ids: [], cvat_job_ids: [] } });
