@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ApiExplorer } from '@/app/swagger/ApiExplorer';
 import { API_ENDPOINTS, API_NAVIGATION } from '@/lib/api-explorer/catalog';
+import { STATUS_RESPONSE_EXAMPLES } from '@/lib/api-explorer/status-examples';
 
 describe('API Explorer', () => {
   it('shows contract operations with backend and mock states', () => {
@@ -24,11 +25,33 @@ describe('API Explorer', () => {
     expect(screen.queryByText('/api/evaluations/{id}/')).not.toBeInTheDocument();
   });
 
-  it('keeps exactly one sample response for every operation', () => {
+  it('keeps a default response and adds state variants where the contract has a state machine', () => {
     const ids = new Set(API_ENDPOINTS.map(endpoint => endpoint.id));
     expect(API_ENDPOINTS).toHaveLength(77);
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'runs_list')?.responseExamples?.map(example => example.label))
+      .toEqual(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'snapshots_list')?.responseExamples?.map(example => example.label))
+      .toEqual(['pending', 'exporting', 'locked', 'failed']);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'rework_list')?.responseExamples?.map(example => example.label))
+      .toEqual(['fix_pending', 'recheck_pending', 'resolved', 'reopened']);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'queues_list')?.responseExamples?.map(example => example.label))
+      .toEqual(['unreviewed', 'in_review', 'incomplete', 'reviewed', 'awaiting_followup', 'completed']);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'evaluations_retrieve')?.responseExamples?.map(example => example.label))
+      .toEqual(['queued', 'running', 'completed', 'failed', 'insufficient_sample']);
+    expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'waivers_approve')?.responseExamples?.map(example => example.label))
+      .toEqual(['pending', 'approved', 'rejected', 'expired']);
+    expect(Object.keys(STATUS_RESPONSE_EXAMPLES).length).toBeGreaterThanOrEqual(25);
+    expect(Object.values(STATUS_RESPONSE_EXAMPLES).every(examples => examples && examples.length > 0)).toBe(true);
+  });
+
+  it('switches the displayed and copied payload between response states', () => {
+    render(<ApiExplorer />);
+    const selector = screen.getByRole('combobox', { name: 'Chọn response runs_list' });
+    fireEvent.change(selector, { target: { value: '4' } });
+    expect((selector as HTMLSelectElement).value).toBe('4');
+    expect(selector.querySelector('option:checked')?.textContent).toBe('failed');
   });
 
   it('groups APIs by the product navigation shown in the design', () => {

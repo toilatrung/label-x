@@ -2,6 +2,12 @@ export type ApiConnection = 'backend' | 'mock';
 export type ApiMethod = 'GET' | 'POST' | 'PATCH';
 export type ApiOrigin = 'openapi' | 'design';
 
+export interface ApiResponseExample {
+  label: string;
+  responseStatus?: number;
+  response: unknown;
+}
+
 export interface ApiEndpoint {
   id: string;
   method: ApiMethod;
@@ -13,6 +19,7 @@ export interface ApiEndpoint {
   origin?: ApiOrigin;
   responseStatus: number;
   response: unknown;
+  responseExamples?: readonly ApiResponseExample[];
 }
 
 export interface ApiSection {

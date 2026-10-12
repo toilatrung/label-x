@@ -879,7 +879,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
    * 9. TopBar baseline navigation (Quality Summary wiring requested for FE10 PR183)
    * ------------------------------------------------------------------------- */
   describe('TopBar baseline navigation', () => {
-    it('TopBar Overview dropdown includes Quality Control Home link, while Quality Summary remains disabled pending FE10 PR183', async () => {
+    it('TopBar Overview dropdown links to both Quality Control Home and Quality Summary', async () => {
       const { authApi } = setupMockEnv();
       await authApi.signIn('admin');
 
@@ -893,10 +893,10 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       fireEvent.click(overviewBtn);
 
       const homeLink = screen.getByRole('menuitem', { name: /Quality Control Home/ });
-      const summaryBtn = screen.getByRole('menuitem', { name: /Quality Summary/ });
+      const summaryLink = screen.getByRole('menuitem', { name: /Quality Summary/ });
 
       expect(homeLink.getAttribute('href')).toBe('/');
-      expect(summaryBtn).toBeDisabled();
+      expect(summaryLink.getAttribute('href')).toBe('/?view=summary');
     });
   });
 });

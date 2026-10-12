@@ -189,6 +189,7 @@
 .responseHead { height: 38px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #343942; }
 .responseHead > div { display: flex; align-items: center; gap: 8px; color: #aeb4bf; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
 .responseHead strong { padding: 3px 6px; color: #83d4ae; background: rgba(74, 222, 128, .1); font: 600 10px/1 var(--font-mono); }
+.responseHead select { max-width: 180px; border: 1px solid #4a515d; border-radius: 3px; padding: 3px 22px 3px 6px; background: #292e36; color: #e8eaee; font: 500 11px/1.2 var(--font-mono); text-transform: none; letter-spacing: 0; }
 .responseHead button { border: 0; background: transparent; color: #cfd3da; font: 500 11px/1 var(--font-sans); cursor: pointer; }
 .responseHead button:hover { color: white; }
 .response pre { max-height: 250px; margin: 0; padding: 14px; overflow: auto; font: 500 11px/1.6 var(--font-mono); tab-size: 2; }

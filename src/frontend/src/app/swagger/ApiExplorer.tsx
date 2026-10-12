@@ -16,7 +16,11 @@ const ORIGIN_LABEL = { openapi: 'OpenAPI', design: 'Design' } as const;
 
 function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
   const [copied, setCopied] = React.useState(false);
-  const payload = JSON.stringify(endpoint.response, null, 2);
+  const [exampleIndex, setExampleIndex] = React.useState(0);
+  const examples = endpoint.responseExamples;
+  const selectedExample = examples?.[exampleIndex];
+  const payload = JSON.stringify(selectedExample?.response ?? endpoint.response, null, 2);
+  const responseStatus = selectedExample?.responseStatus ?? endpoint.responseStatus;
 
   async function copyPayload() {
     await navigator.clipboard.writeText(payload);
@@ -40,7 +44,13 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
       </div>
       <div className={styles.response}>
         <div className={styles.responseHead}>
-          <div><span>Response mẫu</span><strong>{endpoint.responseStatus}</strong></div>
+          <div><span>Response mẫu</span><strong>{responseStatus}</strong>
+            {examples && examples.length > 1 && <select value={exampleIndex}
+              aria-label={`Chọn response ${endpoint.id}`}
+              onChange={event => setExampleIndex(Number(event.target.value))}>
+              {examples.map((example, index) => <option value={index} key={example.label}>{example.label}</option>)}
+            </select>}
+          </div>
           <button type="button" onClick={() => void copyPayload()} aria-label={`Sao chép payload ${endpoint.id}`}>
             {copied ? 'Đã sao chép' : 'Sao chép'}
           </button>
@@ -80,7 +90,7 @@ export function ApiExplorer() {
       <div>
         <p className={styles.eyebrow}>LABELX API · OPENAPI + DESIGN INVENTORY</p>
         <h1>API Explorer</h1>
-        <p className={styles.intro}>Theo dõi mức độ triển khai backend ngay trong frontend. Danh mục hợp nhất OpenAPI contract và nhu cầu từ các màn hình design; mỗi operation có một response mẫu.</p>
+        <p className={styles.intro}>Theo dõi mức độ triển khai backend ngay trong frontend. Danh mục hợp nhất OpenAPI contract và nhu cầu từ các màn hình design; API có state machine cung cấp response mẫu cho đầy đủ trạng thái.</p>
       </div>
       <div className={styles.metrics} aria-label="Tổng quan API">
         <div><strong>{API_ENDPOINTS.length}</strong><span>Operations</span></div>
