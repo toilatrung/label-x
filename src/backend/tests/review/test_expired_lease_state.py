@@ -1,4 +1,9 @@
-"""M03-R02/F1: lease expiry must not rewrite a frame that already left in_review."""
+"""M03-R02/F1: lease expiry must not rewrite a frame that already left in_review.
+
+Several tests here put the frame in awaiting_followup with a plain state update instead of
+calling verify_rework. They only prove the lease/expiry side; the real verify and
+frames/complete paths are exercised end to end in test_frame_followup_flow.py.
+"""
 
 from __future__ import annotations
 
@@ -46,7 +51,11 @@ def _claim_again(world):
 
 @pytest.mark.django_db
 def test_awaiting_followup_survives_expired_lease_and_scope_completes(final_world):  # noqa: F811
-    """claim -> lease expires -> verify -> awaiting_followup -> new claim -> still awaiting."""
+    """claim -> lease expires -> verify -> awaiting_followup -> new claim -> still awaiting.
+
+    Verify is simulated by a state update: this only proves the lease side.
+    The real verify_rework path is covered in test_frame_followup_flow.py.
+    """
 
     world = final_world
     frame = world["issue"].frame_review
@@ -74,6 +83,9 @@ def test_awaiting_followup_survives_expired_lease_and_scope_completes(final_worl
 @pytest.mark.django_db
 @pytest.mark.parametrize("state", [FrameReview.State.REVIEWED, FrameReview.State.COMPLETED])
 def test_other_post_review_states_are_not_rewritten(world, state):
+    """Verify is simulated by a state update: this only proves the lease side.
+    The real verify_rework path is covered in test_frame_followup_flow.py.
+    """
     lease_id, frame_id = claim(world)
     _expire(lease_id)
     FrameReview.objects.filter(pk=frame_id).update(state=state)
@@ -111,7 +123,11 @@ def test_in_review_expiry_with_saved_decision_is_incomplete_and_resumes(world):
 
 @pytest.mark.django_db
 def test_undecided_issue_is_requeued_when_frame_already_left_in_review(world):
-    """R1: expiry closes the lease and requeues undecided issues without touching the frame."""
+    """R1: expiry closes the lease and requeues undecided issues without touching the frame.
+
+    Verify is simulated by a state update: this only proves the lease side.
+    The real verify_rework path is covered in test_frame_followup_flow.py.
+    """
 
     lease_id, frame_id = claim(world)
     decided, _ = manual(world, lease_id, frame_id)
@@ -210,7 +226,11 @@ def test_postgres_verify_holds_run_lock_first_claim_then_sees_awaiting_followup(
 
 @pytest.mark.django_db(transaction=True)
 def test_postgres_claim_holds_run_lock_first_verify_then_wins(world, monkeypatch):
-    """Order 2 (forced): the claim materializes expiry under the run lock; verify waits."""
+    """Order 2 (forced): the claim materializes expiry under the run lock; verify waits.
+
+    Verify is simulated by a state update: this only proves the lease side.
+    The real verify_rework path is covered in test_frame_followup_flow.py.
+    """
 
     assert connection.vendor == "postgresql"
     lease_id, frame_id = claim(world)
@@ -312,10 +332,21 @@ def test_live_lease_on_in_review_frame_still_renews_and_resumes(world):
     assert resumed.data["lease"]["id"] == lease_id
 
 
-def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state, *, undecided=False):  # noqa: F811
+def _verify_pass_with_lease(
+    confirmed,  # noqa: F811
+    world,
+    monkeypatch,
+    frame_state,
+    *,
+    undecided=False,
+    incomplete_since=None,
+):
     frame = confirmed.frame_review
     frame.state = frame_state
-    frame.save(update_fields=["state"])
+    if incomplete_since is not None:
+        frame.previous_reviewer = world["reviewer"]
+        frame.incomplete_since = incomplete_since
+    frame.save(update_fields=["state", "previous_reviewer", "incomplete_since"])
     lease = Lease.objects.create(
         frame_review=frame,
         holder=world["reviewer"],
@@ -492,3 +523,20 @@ def test_postgres_renew_holds_run_lock_first_then_handover_closes_lease(world, m
     assert response.status_code == 200  # renew ran while the frame was still in_review
     assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
     assert Lease.objects.get(pk=lease_id).closed_at is not None
+
+
+@pytest.mark.django_db
+def test_incomplete_to_awaiting_keeps_previous_reviewer_and_reservation(
+    confirmed,  # noqa: F811
+    world,
+    monkeypatch,
+):
+    """Recorded behaviour (harmless): INCOMPLETE -> AWAITING_FOLLOWUP leaves the old fields."""
+
+    since = timezone.now() - timedelta(minutes=3)
+    frame, _lease, _other, _rework = _verify_pass_with_lease(
+        confirmed, world, monkeypatch, FrameReview.State.INCOMPLETE, incomplete_since=since
+    )
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+    assert frame.previous_reviewer_id == world["reviewer"].pk
+    assert frame.incomplete_since == since

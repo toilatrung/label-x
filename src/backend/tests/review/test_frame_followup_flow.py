@@ -296,3 +296,51 @@ def test_postgres_race_verify_holds_lock_first_then_complete(world, monkeypatch)
     assert ReworkRequest.objects.get(pk=rework.pk).status == ReworkRequest.Status.RESOLVED
     assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
     assert Lease.objects.get(pk=lease_id).closed_at is not None
+
+
+@pytest.mark.django_db
+def test_escalated_issue_is_not_undecided_but_keeps_the_scope_open(world, monkeypatch):
+    """Escalated issues wait for a case, not for the reviewer: they never block hand-over."""
+
+    lease_id, frame_id = claim(world)
+    rework = _rework(world, _confirmed_issue(world, lease_id, frame_id))
+    escalated = Issue.objects.create(
+        frame_review=_frame(frame_id),
+        family=Issue.Family.E2,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.ESCALATED,
+        anchor={"kind": "manual_region", "objects": []},
+    )
+    snapshot = changed_snapshot(world)
+    _stub_recheck(monkeypatch, world, [snapshot])
+
+    _verified(world, rework, snapshot)
+
+    assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
+    escalated.refresh_from_db()
+    assert escalated.state == Issue.State.ESCALATED
+    # an escalated issue is still open: the scope does not complete around it
+    monkeypatch.setattr(
+        finalization_service, "create_snapshot_from_cvat", lambda **_kwargs: snapshot
+    )
+    with pytest.raises(finalization_service.FinalRunNotReady):
+        build_final_run(origin_run_id=world["run"].pk, actor=world["other"])
+    assert complete_scope_frames(world["run"].pk) == 0
+    assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+
+
+@pytest.mark.django_db
+def test_complete_frame_with_escalated_issue_is_not_blocked(world):
+    lease_id, frame_id = claim(world)
+    _confirmed_issue(world, lease_id, frame_id)
+    Issue.objects.create(
+        frame_review=_frame(frame_id),
+        family=Issue.Family.E2,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.ESCALATED,
+        anchor={"kind": "manual_region", "objects": []},
+    )
+    done = _complete(world, lease_id, frame_id)
+    assert done.status_code == 200, done.data  # not 422 undecided_issue_ids
+    assert _frame(frame_id).state == FrameReview.State.REVIEWED
