@@ -982,7 +982,7 @@ export function ReviewWorkspace({
             {reviewMode === 'frame' ? (
               <span>
                 {effectivePolicy
-                  ? 'Nhấn vào đối tượng cvat_shape hoặc kéo vẽ vùng để tạo manual issue.'
+                  ? 'Nhấn vào đối tượng trên ảnh hoặc kéo vẽ vùng để tạo issue thủ công.'
                   : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
               </span>
             ) : (
@@ -1131,7 +1131,7 @@ export function ReviewWorkspace({
                 </button>
               ) : (
                 <p className="lx-subtle lx-text-12">
-                  {policyError || 'Chức năng tạo issue thủ công tạm khóa do thiếu anchor policy_version.'}
+                  {policyError || 'Chức năng tạo issue thủ công tạm khoá do thiếu phiên bản chính sách neo.'}
                 </p>
               )}
             </div>

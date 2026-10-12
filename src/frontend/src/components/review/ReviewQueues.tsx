@@ -740,18 +740,18 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             <label className="lx-field">Trạng thái
               <select
                 id="filter-review-state"
-                aria-label="Lọc theo trạng thái review (review_state)"
+                aria-label="Lọc theo trạng thái review"
                 className="lx-select"
                 value={filters.review_state ?? ''}
                 onChange={(e) => handleFilterChange({ review_state: (e.target.value as FrameReviewState) || undefined })}
               >
-                <option value="">-- Trạng thái (Review State) --</option>
-                <option value="unreviewed">Chưa review (unreviewed)</option>
-                <option value="in_review">Đang review (in_review)</option>
-                <option value="incomplete">Đang dở (incomplete)</option>
-                <option value="reviewed">Đã review (reviewed)</option>
-                <option value="awaiting_followup">Chờ theo dõi (awaiting_followup)</option>
-                <option value="completed">Hoàn tất (completed)</option>
+                <option value="">-- Trạng thái review --</option>
+                <option value="unreviewed">Chưa review</option>
+                <option value="in_review">Đang review</option>
+                <option value="incomplete">Đang dở</option>
+                <option value="reviewed">Đã review</option>
+                <option value="awaiting_followup">Chờ theo dõi</option>
+                <option value="completed">Hoàn tất</option>
               </select>
             </label>
           </div>

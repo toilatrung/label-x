@@ -1417,7 +1417,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
 
       expect(screen.getByText('bicycle')).toBeInTheDocument();
       expect(screen.getByText(/độ tin cậy 0.00/i)).toBeInTheDocument();
-      expect(screen.getByText(/Intersection over Union 0.00/i)).toBeInTheDocument();
+      expect(screen.getByText(/Intersection over Union \(IoU\) 0.00/i)).toBeInTheDocument();
       expect(screen.getByText(/Quy tắc: RULE-VEH-01/i)).toBeInTheDocument();
       expect(screen.getByText(/Prediction bbox: \[12, 34, 56, 78\]/i)).toBeInTheDocument();
       expect(screen.getByText(/Thực tế:/i)).toBeInTheDocument();

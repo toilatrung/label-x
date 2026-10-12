@@ -68,7 +68,7 @@ export function ReviewEvidenceTable({
                       )}
                       {hasIou && (
                         <span className="lx-subtle">
-                          · Intersection over Union {ev.iou!.toFixed(2)}
+                          · Intersection over Union (IoU) {ev.iou!.toFixed(2)}
                         </span>
                       )}
                       {ev.rule_id && (
