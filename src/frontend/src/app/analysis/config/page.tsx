@@ -12,9 +12,10 @@ import { errorMessage } from '@/lib/api/errors';
 import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { createConfig, createRun, cursorFrom, listConfigs, listSnapshots, publishConfig, type ConfigVersion, type ConfigVersionCreate, type RunCreate } from '@/lib/execution/api';
-import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
+import { ENGINES_META, EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
+import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 
 const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm'] as const;
 
@@ -119,27 +120,9 @@ function ConfigContent() {
     finally { setConfigBusy(false); }
   }
 
-  return <AppShell activeKey="analysis" flowStep={2} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div><div className="lx-actions"><Link href="/analysis/history" className="lx-btn">Lịch sử thực thi</Link></div></div>}>
+  return <AppShell activeKey="analysis" flowStep={2} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div></div>}>
     <form onSubmit={submit} className="lx-cols">
       <div className="lx-main lx-stack">
-        <section className="lx-card" aria-label="Dữ liệu đầu vào">
-          <header className="lx-card__head"><h2 className="lx-h2">Dữ liệu đầu vào</h2><span className="lx-hint">Dữ liệu thật từ LabelX API</span></header>
-          <div className="lx-card__body lx-grid lx-grid--3">
-            <DatasetPicker onChange={() => { setSnapshotCursor(null); setSnapshotId(null); setPending(null); }} />
-            <div className="lx-field"><label className="lx-label" htmlFor="analysis-snapshot">Snapshot đã khóa</label><select className="lx-select" id="analysis-snapshot" value={snapshotId ?? ''} onChange={(e) => { setSnapshotId(e.target.value ? Number(e.target.value) : null); setPending(null); }} disabled={!datasetId || snapshots.isPending}>
-              <option value="">Chọn Snapshot</option>{locked.map((s) => <option key={s.id} value={s.id}>SNP-{s.id} · {s.revision_hash?.slice(0, 12) ?? 'Chưa có hash'}</option>)}
-            </select></div>
-            <div className="lx-field"><label className="lx-label" htmlFor="analysis-config">Phiên bản cấu hình</label><select className="lx-select" id="analysis-config" value={configId ?? ''} onChange={(e) => { const nextId = e.target.value ? Number(e.target.value) : null; setConfigId(nextId); setSelectedConfigRecord(configs.data?.results.find((c) => c.id === nextId) ?? (selectedConfigRecord?.id === nextId ? selectedConfigRecord : null)); setPending(null); }} disabled={configs.isPending}>
-              <option value="">Chọn config đã publish</option>
-              {selectedConfigRecord && !configs.data?.results.some((c) => c.id === selectedConfigRecord.id) && <option value={selectedConfigRecord.id}>{selectedConfigRecord.name} · v{selectedConfigRecord.id} (đang chọn)</option>}
-              {configs.data?.results.map((c) => <option key={c.id} value={c.id}>{c.name} · v{c.id}</option>)}
-            </select></div>
-          </div>
-          {(snapshots.isError || configs.isError) && <div className="lx-card__body" role="alert">{snapshots.isError ? errorMessage(snapshots.error) : errorMessage(configs.error)}</div>}
-          {datasetId && snapshots.data && locked.length === 0 && <div className="lx-card__body lx-muted">Dataset này chưa có Snapshot đã khóa.</div>}
-          {configs.data?.results.length === 0 && <div className="lx-card__body lx-callout" role="alert">Chưa có config version đã publish. Quality Control Admin hoặc Super Admin cần tạo và publish một phiên bản trước khi chạy phân tích.</div>}
-          {(snapshots.data?.next || configs.data?.next) && <footer className="lx-card__foot"><div className="lx-actions">{snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang Snapshot tiếp</button>}{configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang config tiếp</button>}</div></footer>}
-        </section>
         <div className="lx-execution-config">
           <EngineThresholdsTable
             config={activeConfig}
@@ -149,9 +132,10 @@ function ConfigContent() {
             emptyTitle={configs.data?.results.length === 0 ? 'Chưa có cấu hình đã phát hành' : 'Chưa chọn phiên bản cấu hình'}
             emptyDescription={configs.data?.results.length === 0
               ? 'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'
-              : 'Vui lòng chọn một phiên bản cấu hình đã phát hành từ danh sách phía trên để xem chi tiết ngưỡng kiểm tra engine.'}
+              : 'Chọn một phiên bản cấu hình đã phát hành ở cột "Sẵn sàng chạy" để xem chi tiết ngưỡng kiểm tra engine.'}
           />
-          {activeConfig && <pre className="lx-code" aria-label="Ngưỡng và model tham chiếu">{JSON.stringify({ thresholds: activeConfig.thresholds, models: activeConfig.models }, null, 2)}</pre>}
+          {activeConfig && <details className="lx-card lx-card__body"><summary>Ngưỡng và model tham chiếu (JSON)</summary>
+            <pre className="lx-code" aria-label="Ngưỡng và model tham chiếu">{JSON.stringify({ thresholds: activeConfig.thresholds, models: activeConfig.models }, null, 2)}</pre></details>}
         </div>
         <section className="lx-card" aria-label="Lấy mẫu">
           <header className="lx-card__head"><h2 className="lx-h2">Lấy mẫu</h2><div className="lx-row"><SampleDataBadge /><Link className="lx-link lx-text-13" href="/calibration/audit-sampling">Xem chi tiết lấy mẫu</Link></div></header>
@@ -168,9 +152,22 @@ function ConfigContent() {
       <aside className="lx-card lx-side">
         <header className="lx-card__head"><h2 className="lx-h2">Sẵn sàng chạy</h2></header>
         <div className="lx-card__body lx-stack">
+          <DatasetPicker onChange={() => { setSnapshotCursor(null); setSnapshotId(null); setPending(null); }} />
+          <div className="lx-field"><label className="lx-label" htmlFor="analysis-snapshot">Snapshot đã khoá</label><select className="lx-select" id="analysis-snapshot" value={snapshotId ?? ''} onChange={(e) => { setSnapshotId(e.target.value ? Number(e.target.value) : null); setPending(null); }} disabled={!datasetId || snapshots.isPending}>
+            <option value="">Chọn Snapshot</option>{locked.map((s) => <option key={s.id} value={s.id}>{snapshotCode(s.id)} · {shortRevision(s.revision_hash)}</option>)}
+          </select></div>
+          <div className="lx-field"><label className="lx-label" htmlFor="analysis-config">Phiên bản cấu hình</label><select className="lx-select" id="analysis-config" value={configId ?? ''} onChange={(e) => { const nextId = e.target.value ? Number(e.target.value) : null; setConfigId(nextId); setSelectedConfigRecord(configs.data?.results.find((c) => c.id === nextId) ?? (selectedConfigRecord?.id === nextId ? selectedConfigRecord : null)); setPending(null); }} disabled={configs.isPending}>
+            <option value="">Chọn phiên bản đã phát hành</option>
+            {selectedConfigRecord && !configs.data?.results.some((c) => c.id === selectedConfigRecord.id) && <option value={selectedConfigRecord.id}>{selectedConfigRecord.name} · v{selectedConfigRecord.id} (đang chọn)</option>}
+            {configs.data?.results.map((c) => <option key={c.id} value={c.id}>{c.name} · v{c.id}</option>)}
+          </select></div>
+          {(snapshots.isError || configs.isError) && <div className="lx-callout" role="alert">{snapshots.isError ? errorMessage(snapshots.error) : errorMessage(configs.error)}</div>}
+          {datasetId && snapshots.data && locked.length === 0 && <p className="lx-muted lx-text-13">Dataset này chưa có Snapshot đã khoá.</p>}
+          {configs.data?.results.length === 0 && <div className="lx-callout lx-callout--neutral" role="status">Chưa có phiên bản cấu hình đã phát hành. Quality Control Admin hoặc Super Admin cần tạo và phát hành một phiên bản trước khi chạy phân tích.</div>}
+          {(snapshots.data?.next || configs.data?.next) && <div className="lx-actions">{snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang Snapshot tiếp</button>}{configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang phiên bản tiếp</button>}</div>}
           <dl className="lx-kv">
-            <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `SNP-${selectedSnapshot.id} · ${selectedSnapshot.revision_hash?.slice(0, 6) ?? 'chưa có hash'}` : '—'}</dd>
-            <dt>Phạm vi</dt><dd>{selectedSnapshot ? `${taskCount} task · ${selectedSnapshot.jobs.length} job · ${frameCount.toLocaleString('en-US')} frame` : '—'}</dd>
+            <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `${snapshotCode(selectedSnapshot.id)} · ${shortRevision(selectedSnapshot.revision_hash)}` : '—'}</dd>
+            <dt>Phạm vi</dt><dd>{selectedSnapshot ? `${taskCount} task · ${selectedSnapshot.jobs.length} job · ${formatCount(frameCount)} frame` : '—'}</dd>
             <dt>Engine</dt><dd>{activeConfig ? `${enabledEngineCount} bật · ${ENGINES.length - enabledEngineCount} tắt` : '—'}</dd>
             <dt>Thời gian dự kiến</dt><dd>—</dd>
           </dl>
@@ -184,18 +181,24 @@ function ConfigContent() {
         </div>
       </aside>
     </form>
-    {canConfigure && <section className="lx-card lx-card__body lx-stack" aria-label="Tạo phiên bản cấu hình">
-      <h2 className="lx-h2">Tạo phiên bản cấu hình</h2>
-      <p className="lx-muted">Một phiên bản mới sẽ được phát hành để QA Lead chọn khi chạy QC. Phiên bản đã phát hành không chỉnh sửa trực tiếp.</p>
-      <form onSubmit={saveConfig} className="lx-stack">
+    {canConfigure && <section className="lx-card" aria-label="Tạo phiên bản cấu hình">
+      <header className="lx-card__head"><h2 className="lx-h2">Tạo phiên bản cấu hình</h2><span className="lx-hint">Phiên bản đã phát hành không chỉnh sửa trực tiếp</span></header>
+      <form onSubmit={saveConfig} className="lx-card__body lx-stack">
+        <p className="lx-muted lx-text-13">Phiên bản mới được phát hành để Quality Assurance Lead chọn khi chạy phân tích.</p>
         <div className="lx-field"><label className="lx-label" htmlFor="config-name">Tên cấu hình</label><input className="lx-input" id="config-name" value={configName} maxLength={128} onChange={(e) => { setConfigName(e.target.value); setConfigPending(null); }} required /></div>
-        <fieldset><legend>Engine cần chạy</legend><div className="lx-execution-actions">{ENGINES.map((engine) => <label className="lx-switch" key={engine}><input type="checkbox" checked={enabledEngines.includes(engine)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, engine] : current.filter((item) => item !== engine)); setConfigPending(null); }} /><span /> {engine}</label>)}</div></fieldset>
+        <fieldset className="lx-field lx-fieldset">
+          <legend className="lx-label">Engine cần chạy</legend>
+          <div className="lx-card lx-card--inner"><table className="lx-table"><tbody>{ENGINES_META.map((meta) => <tr key={meta.key}>
+            <td className="lx-th--check"><label className="lx-switch"><input type="checkbox" aria-label={meta.name} checked={enabledEngines.includes(meta.key)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, meta.key] : current.filter((item) => item !== meta.key)); setConfigPending(null); }} /><span /></label></td>
+            <td><div className="lx-cell__main">{meta.name}</div><div className="lx-cell__sub">{meta.sub}</div></td>
+          </tr>)}</tbody></table></div>
+        </fieldset>
         <div className="lx-field"><label className="lx-label" htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea className="lx-textarea" id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); setConfigPending(null); }} /></div>
-        <div className="lx-field"><label className="lx-label" htmlFor="config-models">Model tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); setConfigPending(null); }} /></div>
+        <div className="lx-field"><label className="lx-label" htmlFor="config-models">Mô hình tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); setConfigPending(null); }} /></div>
         {configError && <p role="alert" className="lx-callout">{configError}</p>}
-        {draftId && <div className="lx-callout">Config v{draftId} đã được tạo nhưng chưa xác nhận publish. <button type="button" className="lx-btn" disabled={configBusy} onClick={retryPublish}>Thử publish lại</button></div>}
-        {enabledEngines.length === 0 && <p role="alert">Cần bật ít nhất một engine.</p>}
-        <button type="submit" className="lx-btn lx-btn--primary" disabled={configBusy || !configName.trim() || enabledEngines.length === 0}>{configBusy ? 'Đang lưu…' : 'Tạo và publish config'}</button>
+        {draftId && <div className="lx-callout lx-callout--warning">Phiên bản v{draftId} đã được tạo nhưng chưa xác nhận phát hành. <button type="button" className="lx-btn" disabled={configBusy} onClick={retryPublish}>Thử phát hành lại</button></div>}
+        {enabledEngines.length === 0 && <p role="alert" className="lx-callout lx-callout--warning">Cần bật ít nhất một engine.</p>}
+        <div className="lx-actions lx-actions--end"><button type="submit" className="lx-btn lx-btn--primary" disabled={configBusy || !configName.trim() || enabledEngines.length === 0}>{configBusy ? 'Đang lưu…' : 'Tạo và phát hành'}</button></div>
       </form>
     </section>}
   </AppShell>;
