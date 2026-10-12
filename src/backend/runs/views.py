@@ -36,6 +36,7 @@ from runs.serializers import (
     PaginatedWorkUnitSerializer,
     RankedFrameSerializer,
     RunCreateSerializer,
+    RunDetailSerializer,
     RunSerializer,
     WorkUnitSerializer,
 )
@@ -342,7 +343,7 @@ class RunDetailView(APIView):
     @extend_schema(
         operation_id="runs_retrieve",
         responses={
-            200: RunSerializer,
+            200: RunDetailSerializer,
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -358,7 +359,7 @@ class RunDetailView(APIView):
         )
         if run is None:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
-        return Response(RunSerializer(run).data)
+        return Response(RunDetailSerializer(run).data)
 
 
 class RunCancelView(APIView):

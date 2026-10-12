@@ -89,6 +89,9 @@ REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=None)
 REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
     "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=None
 )
+# JSON object, e.g. {"source": "...", "decision_status": "...", "t_idle_seconds": 120,
+# "version": "..."}; unset keeps the policy undecided (no business default).
+EFFORT_IDLE_POLICY = env.json("EFFORT_IDLE_POLICY", default=None)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
