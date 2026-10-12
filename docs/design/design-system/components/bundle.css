@@ -546,3 +546,9 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-table--min-520 { min-width: 520px; }
 .lx-callout--flush { border-radius: 0; }
 .lx-mt-6 { margin-top: 6px; }
+
+/* Layout modifiers used by Snapshot and Snapshot history (FE-02) */
+.lx-card--inner { border-color: var(--border); }
+.lx-th--check { width: 40px; }
+.lx-check-accent { accent-color: var(--primary); }
+.lx-wrap-any { overflow-wrap: anywhere; }
