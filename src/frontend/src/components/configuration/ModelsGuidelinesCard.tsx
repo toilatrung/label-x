@@ -32,12 +32,16 @@ const GUIDELINES = [
  * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
  * GET /api/guidelines/versions/ (hiệu lực guideline, taxonomy và Dataset áp dụng).
  */
-export function ModelsGuidelinesCard() {
+export function ModelsGuidelinesCard({ guidelineExtra }: {
+  /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Phiên bản guideline, ngoài thẻ hai tab của thiết kế. */
+  guidelineExtra?: React.ReactNode;
+} = {}) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(canAccessConfiguration);
   const [tab, setTab] = useState<TabKey>('models');
   const [blockedAction, setBlockedAction] = useState<string | null>(null);
   return (
+    <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
       <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
       <div className="lx-card__body lx-row">
@@ -90,5 +94,7 @@ export function ModelsGuidelinesCard() {
         </div>
       )}
     </section>
+    {tab === 'guideline' && guidelineExtra}
+    </>
   );
 }
