@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -27,12 +27,31 @@ class ReviewPolicyView(APIView):
     )
     action_name = "review_policy.retrieve"
     object_type = "review_policy"
-    requires_dataset = False
+
+    @property
+    def requires_dataset(self) -> bool:
+        """CR-113: `dataset_id` is optional; when given it is scope-checked, else unchanged."""
+
+        request = getattr(self, "request", None)
+        params = getattr(request, "query_params", None)
+        return params is not None and "dataset_id" in params
 
     @extend_schema(
         operation_id="review_policy_retrieve",
+        parameters=[
+            OpenApiParameter(
+                "dataset_id",
+                int,
+                required=False,
+                description=(
+                    "Tùy chọn (CR-113). Nếu có, caller phải có scope dataset này "
+                    "(403 OUT_OF_SCOPE nếu thiếu); policy pilot trả về như nhau."
+                ),
+            )
+        ],
         responses={
             200: PolicySerializer,
+            400: ErrorSerializer,
             403: ErrorSerializer,
             503: ErrorSerializer,
         },

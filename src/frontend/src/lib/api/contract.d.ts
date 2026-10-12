@@ -814,6 +814,8 @@ export interface paths {
         /**
          * Policy lease/idle đang áp dụng (read-only, có version)
          * @description Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+         *     `dataset_id` là tùy chọn: nếu có, caller phải có scope dataset đó (thiếu scope → 403 `OUT_OF_SCOPE`,
+         *     giá trị không hợp lệ → 400); nếu không có, hành vi như trước (chỉ kiểm vai trò). Policy pilot trả như nhau.
          */
         get: operations["review_policy_retrieve"];
         put?: never;
@@ -3379,7 +3381,9 @@ export interface operations {
     };
     review_policy_retrieve: {
         parameters: {
-            query?: never;
+            query?: {
+                dataset_id?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3395,6 +3399,7 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewPolicy"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             503: components["responses"]["Unavailable"];
         };
