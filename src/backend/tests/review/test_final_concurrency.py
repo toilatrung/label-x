@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import time
 from concurrent.futures import ThreadPoolExecutor
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
-from django.db import close_old_connections, transaction
+from django.db import connections, transaction
 from django.utils import timezone
 
 from orchestration.models import LedgerUnit
@@ -24,27 +24,52 @@ from review.lineage import run_lineage_fields
 from review.models import FrameReview, Issue
 from review.tasks import complete_scope_frames_sweep
 from runs.models import EngineResult, QCRun
+from runs.services import InvalidTransitionError, cancel_qc_run
 from tests.review.test_final_source_guard import _candidate, _complete_final
 
 pytest_plugins = ["tests.review.test_queue_lease", "tests.review.test_final_source_guard"]
 
 THREADS = 4
+GATE_TIMEOUT = 2.0
 
 
 @pytest.fixture
 def widen_race_window(monkeypatch):
-    """Hold each thread between its read of the scope and its write so overlap is certain.
+    """Hold every completer between its read of the frame and its write (0.4 s).
 
-    Without this the critical section is microseconds long and unlocked code can pass by luck.
+    Only used by tests whose racers are all completers: without the pause the critical
+    section is microseconds long and unlocked code can pass by luck.
     """
-    real = finalization_service.select_operational_source
+    real = finalization_service._frame_may_complete
 
-    def slow(origin_run):
-        result = real(origin_run)
+    def slow(frame):
+        result = real(frame)
         time.sleep(0.4)
         return result
 
-    monkeypatch.setattr(finalization_service, "select_operational_source", slow)
+    monkeypatch.setattr(finalization_service, "_frame_may_complete", slow)
+
+
+@pytest.fixture
+def completer_gate(monkeypatch):
+    """Force the dangerous order: a writer may act AFTER the completer passed its check.
+
+    The completer pauses right after ``_frame_may_complete`` returns (it already decided the
+    frame may complete) until the writer reports it is done, or GATE_TIMEOUT elapses. With
+    correct row locks the writer is blocked behind the completer, so the wait simply times out
+    and completion happens first; without locks the writer commits inside the pause.
+    """
+    gate = type("Gate", (), {"passed_check": Event(), "writer_done": Event()})()
+    real = finalization_service._frame_may_complete
+
+    def gated(frame):
+        result = real(frame)
+        gate.passed_check.set()
+        gate.writer_done.wait(timeout=GATE_TIMEOUT)
+        return result
+
+    monkeypatch.setattr(finalization_service, "_frame_may_complete", gated)
+    return gate
 
 
 def _race(fn, n: int = THREADS) -> list:
@@ -52,12 +77,12 @@ def _race(fn, n: int = THREADS) -> list:
     barrier = Barrier(n)
 
     def worker(index: int):
-        close_old_connections()
+        connections.close_all()
         try:
             barrier.wait(timeout=20)
             return fn(index)
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=n) as pool:
         return [future.result(timeout=60) for future in [pool.submit(worker, i) for i in range(n)]]
@@ -117,43 +142,76 @@ def test_parallel_route_new_candidates_is_idempotent_under_row_locks(final_world
     assert Issue.objects.filter(candidate=new).count() == 1
 
 
-@pytest.mark.django_db(transaction=True)
-def test_new_issue_racing_completion_never_completes_over_an_open_issue(
-    final_world, widen_race_window
-):
-    """A writer that takes the run lock first must keep the frame from completing."""
+def _open_issue(frame: FrameReview) -> None:
+    Issue.objects.create(
+        frame_review=frame,
+        family=Issue.Family.E2,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.PENDING_REVIEW,
+        anchor={"kind": "manual_region", "objects": []},
+    )
+
+
+def _race_writer_against_completion(final_world, completer_gate, lock_in_writer):
+    """Run one completer and one issue writer; return (final frame state, state writer saw).
+
+    ``lock_in_writer(frame_id, origin_id)`` is the lock the writer takes before it looks at
+    the frame, i.e. the lock protocol under test. The writer starts only after the completer
+    has passed ``_frame_may_complete``.
+    """
     origin_id = final_world["run"].pk
     frame = _awaiting(final_world)
     _complete_final(final_world["final"])
-    saw_completed_before_issue: list[bool] = []
+    seen: dict[str, str] = {}
 
-    def writer_or_completer(index: int):
+    def completer_or_writer(index: int):
         if index == 0:
             return complete_scope_frames(origin_id)
+        assert completer_gate.passed_check.wait(timeout=20)
         with transaction.atomic():
-            QCRun.objects.select_for_update().get(
-                pk=origin_id
-            )  # same lock protocol as issue writers
+            lock_in_writer(frame.pk, origin_id)
             current = FrameReview.objects.get(pk=frame.pk)
-            saw_completed_before_issue.append(current.state == FrameReview.State.COMPLETED)
-            Issue.objects.create(
-                frame_review=current,
-                family=Issue.Family.E2,
-                origin=Issue.Origin.REVIEWER,
-                state=Issue.State.PENDING_REVIEW,
-                anchor={"kind": "manual_region", "objects": []},
-            )
+            seen["state"] = current.state
+            _open_issue(current)
+        completer_gate.writer_done.set()
         return None
 
-    _race(writer_or_completer, n=2)
-
+    _race(completer_or_writer, n=2)
     frame.refresh_from_db()
-    if saw_completed_before_issue == [False]:
-        # Issue was committed first, so completion must have seen it and stayed out.
-        assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
-    else:
-        assert frame.state == FrameReview.State.COMPLETED  # completion legitimately ran first
-    assert complete_scope_frames(origin_id) == 0  # open issue now blocks any later completion
+    return frame.state, seen["state"]
+
+
+def _lock_run_only(_frame_id: int, origin_id: int) -> None:
+    QCRun.objects.select_for_update().get(pk=origin_id)  # the issue writers' lock protocol
+
+
+def _lock_frame_only(frame_id: int, _origin_id: int) -> None:
+    FrameReview.objects.select_for_update().get(pk=frame_id)  # a writer that skips the run lock
+
+
+@pytest.mark.django_db(transaction=True)
+def test_issue_writer_taking_the_run_lock_cannot_slip_in_after_the_completion_check(
+    final_world, completer_gate
+):
+    """Needs the ORIGIN RUN lock in complete_scope_frames (a frame-only lock does not stop it)."""
+    state, writer_saw = _race_writer_against_completion(final_world, completer_gate, _lock_run_only)
+    # Never: the writer saw the frame still open (its issue committed after the completer's
+    # check) and the frame was completed anyway.
+    assert not (state == FrameReview.State.COMPLETED and writer_saw != FrameReview.State.COMPLETED)
+    assert writer_saw == FrameReview.State.COMPLETED  # locks serialise: completion went first
+
+
+@pytest.mark.django_db(transaction=True)
+def test_issue_writer_taking_only_the_frame_lock_cannot_slip_in_after_the_check(
+    final_world, completer_gate
+):
+    """Needs the FRAME row lock in complete_scope_frames (defence in depth: no production
+    writer skips the run lock, but one that locks only the frame row must still be safe)."""
+    state, writer_saw = _race_writer_against_completion(
+        final_world, completer_gate, _lock_frame_only
+    )
+    assert not (state == FrameReview.State.COMPLETED and writer_saw != FrameReview.State.COMPLETED)
+    assert writer_saw == FrameReview.State.COMPLETED
 
 
 @pytest.mark.django_db
@@ -223,8 +281,11 @@ def test_incomplete_ledger_blocks_source_and_completion(final_world, gap):
 @pytest.mark.django_db
 @pytest.mark.parametrize("gap", LEDGER_GAPS)
 def test_new_candidate_is_not_routed_from_an_incomplete_ledger(final_world, gap):
+    """Invariants only. KNOWN LIMIT (awaiting PO decision): ``blocked_reasons`` reports a single
+    reason per final attempt, so with both a new candidate and a ledger gap only one is listed;
+    this test deliberately does not pin which one."""
     origin, final = final_world["run"], final_world["final"]
-    _awaiting(final_world)
+    frame = _awaiting(final_world)
     _complete_final(final)
     new = _candidate(final, f"gap-{gap}")
     _break_ledger(final, gap)
@@ -234,8 +295,9 @@ def test_new_candidate_is_not_routed_from_an_incomplete_ledger(final_world, gap)
     assert not Issue.objects.filter(candidate=new).exists()
     source = run_lineage_fields(origin)["operational_source"]
     assert source["run_id"] == origin.pk and source["scope_complete"] is False
-    # Only the first blocking reason per attempt is reported (new candidate is checked first).
-    assert source["blocked_reasons"] == ["new_candidate_unreviewed"]
+    assert source["blocked_reasons"]  # blocked, whatever the first reason is
+    frame.refresh_from_db()
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
 
 
 @pytest.mark.django_db
@@ -268,26 +330,58 @@ def test_failed_attempt_then_valid_retry_selects_only_the_valid_final(final_worl
     ).exists()  # original evidence intact
 
 
-@pytest.mark.django_db(transaction=True)
-def test_cancel_racing_the_sweeper_leaves_a_consistent_source(final_world):
-    origin_id, final = final_world["run"].pk, final_world["final"]
+@pytest.mark.django_db
+def test_completed_final_cannot_be_cancelled_and_sweep_still_completes(final_world):
+    """Production rule (runs.services.cancel_qc_run): terminal runs reject cancellation."""
+    origin, final = final_world["run"], final_world["final"]
     frame = _awaiting(final_world)
     _complete_final(final)
 
+    with pytest.raises(InvalidTransitionError):
+        cancel_qc_run(run_id=final.pk, actor=final_world["other"])
+
+    final.refresh_from_db()
+    assert final.status == QCRun.Status.COMPLETED
+    assert complete_scope_frames(origin.pk) == 1
+    frame.refresh_from_db()
+    assert frame.state == FrameReview.State.COMPLETED
+    assert operational_run(origin).pk == final.pk
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cancelling_a_retry_attempt_while_sweeping_keeps_the_valid_final(
+    final_world, widen_race_window
+):
+    """Attempt 1 is a valid Completed final; attempt 2 (retry) is running and gets cancelled
+    through the real service while sweepers run. Source and frame outcome must be stable."""
+    origin, valid = final_world["run"], final_world["final"]
+    frame = _awaiting(final_world)
+    _complete_final(valid)
+    retry = QCRun.objects.create(
+        snapshot=valid.snapshot,
+        config_version=valid.config_version,
+        seed=valid.seed,
+        dataset_id=valid.dataset_id,
+        scope_hash=valid.scope_hash,
+        created_by=valid.created_by,
+        origin_run=origin,
+        is_final=True,
+        status=QCRun.Status.RUNNING,
+        idempotency_key=f"{valid.idempotency_key}-retry",
+    )
+    actor = final_world["other"]
+
     def cancel_or_sweep(index: int):
         if index == 0:
-            QCRun.objects.filter(pk=final.pk).update(status=QCRun.Status.CANCELLED)
-            return None
-        return complete_scope_frames(origin_id)
+            return cancel_qc_run(run_id=retry.pk, actor=actor).status
+        return complete_scope_frames(origin.pk)
 
-    _race(cancel_or_sweep, n=2)
+    results = _race(cancel_or_sweep, n=3)
 
+    assert results[0] == QCRun.Status.CANCELLED
+    assert sorted(results[1:]) == [0, 1]  # exactly one sweeper completed the frame
+    retry.refresh_from_db()
     frame.refresh_from_db()
-    final.refresh_from_db()
-    assert final.status == QCRun.Status.CANCELLED
-    if frame.state == FrameReview.State.COMPLETED:
-        pass  # sweep won the race while the final was still Completed: legitimate order
-    else:
-        assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
-    # whatever the order, once cancelled the origin run must be the source again
-    assert operational_run(QCRun.objects.get(pk=origin_id)).pk == origin_id
+    assert retry.status == QCRun.Status.CANCELLED
+    assert frame.state == FrameReview.State.COMPLETED
+    assert operational_run(origin).pk == valid.pk
