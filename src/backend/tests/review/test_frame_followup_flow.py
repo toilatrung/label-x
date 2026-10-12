@@ -434,3 +434,72 @@ def test_idempotent_200_needs_every_issue_decided_even_on_a_handed_over_frame(wo
 
     assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
     assert _completion_audits(frame_id) == 0
+
+
+def _rejection_audits(frame_id):
+    return AuditEvent.objects.filter(action="frames.complete.rejected").count()
+
+
+@pytest.mark.django_db
+def test_stale_holder_cannot_complete_a_frame_another_reviewer_now_holds(world):
+    """A's lease expired and B claimed the frame: A's complete is a 409, B is untouched.
+
+    The frame is in_review again (held by B), so it must never count as "already completed".
+    """
+
+    stale_lease, frame_id = claim(world)  # reviewer A
+    Lease.objects.filter(pk=stale_lease).update(expires_at=timezone.now() - timedelta(seconds=1))
+    taken = client(world["other"]).post(next_url(), {"run_id": world["run"].pk}, format="json")
+    assert taken.status_code == 200, taken.data  # reviewer B re-claims the same frame
+    assert taken.data["frame"]["id"] == frame_id
+    b_lease = taken.data["lease"]["id"]
+    assert b_lease != stale_lease
+    assert _frame(frame_id).state == FrameReview.State.IN_REVIEW
+
+    response = _complete(world, stale_lease, frame_id)
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert response.data["details"] == {"frame_state": "in_review"}
+    assert _frame(frame_id).state == FrameReview.State.IN_REVIEW
+    assert Lease.objects.get(pk=b_lease).closed_at is None
+    assert Lease.objects.get(pk=stale_lease).closed_at is not None
+    assert _completion_audits(frame_id) == 0
+
+
+@pytest.mark.django_db
+def test_live_lease_on_a_frame_past_review_is_not_an_idempotent_complete(world):
+    """Defence in depth: only a CLOSED lease earns the idempotent 200.
+
+    A live lease on a frame that already left review is an inconsistent state (claim/renew now
+    close it). It is built with plain updates because no API path leaves it behind.
+    """
+
+    lease_id, frame_id = claim(world)
+    _confirmed_issue(world, lease_id, frame_id)
+    FrameReview.objects.filter(pk=frame_id).update(state=FrameReview.State.AWAITING_FOLLOWUP)
+    assert Lease.objects.get(pk=lease_id).closed_at is None
+
+    response = _complete(world, lease_id, frame_id)
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert response.data["details"] == {"frame_state": "awaiting_followup"}
+    assert _completion_audits(frame_id) == 0
+
+
+@pytest.mark.django_db
+def test_each_frame_left_review_conflict_records_exactly_one_rejection_audit(world, monkeypatch):
+    """Records current behaviour: one rejection audit per 409 for a frame no longer in review."""
+
+    lease_id, frame_id = claim(world)
+    rework = _rework(world, _confirmed_issue(world, lease_id, frame_id))
+    snapshot = changed_snapshot(world)
+    _stub_recheck(monkeypatch, world, [snapshot])
+    _verified(world, rework, snapshot)  # frame handed over
+    before = _rejection_audits(frame_id)
+
+    for attempt in (1, 2):
+        response = client(world["other"]).post(
+            f"/api/frames/{frame_id}/complete/", {"lease_id": lease_id}, format="json"
+        )
+        assert response.status_code == 409
+        assert _rejection_audits(frame_id) == before + attempt
