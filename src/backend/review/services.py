@@ -136,6 +136,26 @@ def _close_expired(lease: Lease, now: datetime) -> None:
     decision_source.reset_undecided_issues(frame)
 
 
+def _close_if_frame_moved_on(lease: Lease, now: datetime) -> bool:
+    """Treat a live lease on a frame that already left in_review as closed.
+
+    A lease only has meaning while its frame is in_review. When the frame moved on (rework
+    verified -> awaiting_followup, reviewed, completed) the lease is closed and undecided
+    issues return to the queue; the frame state itself is never touched here.
+    """
+    lease.refresh_from_db()
+    if lease.closed_at is not None:
+        return True
+    frame = lease.frame_review
+    frame.refresh_from_db()
+    if frame.state == FrameReview.State.IN_REVIEW:
+        return False
+    lease.closed_at = now
+    lease.save(update_fields=["closed_at"])
+    decision_source.reset_undecided_issues(frame)
+    return True
+
+
 def _grant_payload(lease: Lease, entry: RunRankingEntry, *, resumed: bool) -> dict[str, object]:
     frame = lease.frame_review
     source_frame = entry.snapshot_frame
@@ -205,6 +225,8 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
             continue
         if lease.expires_at <= now:
             _close_expired(lease, now)
+        elif _close_if_frame_moved_on(lease, now):
+            continue
         else:
             active_run = lease.frame_review.run
             if not has_review_scope(user_id=user_id, dataset_id=active_run.dataset_id):
@@ -238,8 +260,10 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
         )
         if open_lease is not None:
             if open_lease.expires_at > now:
-                continue
-            _close_expired(open_lease, now)
+                if not _close_if_frame_moved_on(open_lease, now):
+                    continue
+            else:
+                _close_expired(open_lease, now)
             frame.refresh_from_db()
         if frame.state not in {FrameReview.State.UNREVIEWED, FrameReview.State.INCOMPLETE}:
             continue
@@ -315,6 +339,8 @@ def renew(*, request: Request, lease_id: int) -> Lease | None:
     now = _now()
     if lease.expires_at <= now and lease.closed_at is None:
         _close_expired(lease, now)
+    elif lease.closed_at is None:
+        _close_if_frame_moved_on(lease, now)
     if lease.holder_id != user_id or lease.closed_at is not None:
         record_rejection_audit(
             request=request,

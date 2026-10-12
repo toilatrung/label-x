@@ -251,3 +251,248 @@ def test_postgres_claim_holds_run_lock_first_verify_then_wins(world, monkeypatch
     assert response.status_code == 200  # claim won: frame was in_review, now re-leased
     assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
     assert Lease.objects.get(pk=lease_id).closed_at is not None
+
+
+def _live_lease_on_moved_frame(world):
+    """claim -> frame leaves in_review (verify) while the lease is still alive."""
+
+    lease_id, frame_id = claim(world)
+    decided, _ = manual(world, lease_id, frame_id)
+    undecided, _ = manual(world, lease_id, frame_id)
+    assert decide(world, lease_id, decided).status_code in (200, 201)
+    FrameReview.objects.filter(pk=frame_id).update(state=FrameReview.State.AWAITING_FOLLOWUP)
+    assert Lease.objects.get(pk=lease_id).closed_at is None
+    return lease_id, frame_id, undecided
+
+
+@pytest.mark.django_db
+def test_live_lease_on_awaiting_followup_frame_is_not_resumed(world):
+    lease_id, frame_id, undecided = _live_lease_on_moved_frame(world)
+
+    response = _claim_again(world)
+
+    assert response.status_code == 204  # no resumed grant for a frame that left in_review
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
+    assert Issue.objects.get(pk=undecided).state == Issue.State.PENDING_REVIEW
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+
+
+@pytest.mark.django_db
+def test_other_reviewer_claim_closes_live_lease_on_moved_frame(world):
+    lease_id, frame_id, undecided = _live_lease_on_moved_frame(world)
+
+    response = client(world["other"]).post(next_url(), {"run_id": world["run"].pk}, format="json")
+
+    assert response.status_code == 204
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
+    assert Issue.objects.get(pk=undecided).state == Issue.State.PENDING_REVIEW
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+
+
+@pytest.mark.django_db
+def test_renew_on_awaiting_followup_frame_is_conflict_and_closes_lease(world):
+    lease_id, frame_id, undecided = _live_lease_on_moved_frame(world)
+
+    renewed = client(world["reviewer"]).post(f"/api/leases/{lease_id}/renew/", {}, format="json")
+
+    assert renewed.status_code == 409 and renewed.data["code"] == "LEASE_CONFLICT"
+    lease = Lease.objects.get(pk=lease_id)
+    assert lease.closed_at is not None
+    assert Issue.objects.get(pk=undecided).state == Issue.State.PENDING_REVIEW
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+
+
+@pytest.mark.django_db
+def test_live_lease_on_in_review_frame_still_renews_and_resumes(world):
+    lease_id, frame_id = claim(world)
+    renewed = client(world["reviewer"]).post(f"/api/leases/{lease_id}/renew/", {}, format="json")
+    assert renewed.status_code == 200
+    resumed = _claim_again(world)
+    assert resumed.status_code == 200 and resumed.data["resumed"] is True
+    assert resumed.data["lease"]["id"] == lease_id
+
+
+def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state):  # noqa: F811
+    frame = confirmed.frame_review
+    frame.state = frame_state
+    frame.save(update_fields=["state"])
+    lease = Lease.objects.create(
+        frame_review=frame,
+        holder=world["reviewer"],
+        queue_source="risk",
+        expires_at=timezone.now() + timedelta(minutes=10),
+    )
+    undecided = Issue.objects.create(
+        frame_review=frame,
+        family=Issue.Family.E2,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.IN_REVIEW,
+        anchor={"kind": "manual_region", "objects": []},
+    )
+    rework = ReworkRequest.objects.get(pk=create_request(confirmed, world).data["id"])
+    snapshot = changed_snapshot(world)
+    run = _run_for(world, snapshot)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (snapshot, run))
+    assert _submit(world, rework, snapshot).status_code == 202
+    assert _verify(world, rework, snapshot, True).status_code == 200
+    lease.refresh_from_db()
+    frame.refresh_from_db()
+    undecided.refresh_from_db()
+    return frame, lease, undecided
+
+
+@pytest.mark.django_db
+def test_verify_keeps_completed_frame_completed(confirmed, world, monkeypatch):  # noqa: F811
+    frame, _lease, _undecided = _verify_pass_with_lease(
+        confirmed, world, monkeypatch, FrameReview.State.COMPLETED
+    )
+    assert frame.state == FrameReview.State.COMPLETED
+
+
+@pytest.mark.django_db
+def test_verify_hands_in_review_frame_over_and_closes_lease(confirmed, world, monkeypatch):  # noqa: F811
+    frame, lease, undecided = _verify_pass_with_lease(
+        confirmed, world, monkeypatch, FrameReview.State.IN_REVIEW
+    )
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+    assert lease.closed_at is not None
+    assert undecided.state == Issue.State.PENDING_REVIEW
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "state",
+    [
+        FrameReview.State.UNREVIEWED,
+        FrameReview.State.INCOMPLETE,
+        FrameReview.State.REVIEWED,
+        FrameReview.State.AWAITING_FOLLOWUP,
+    ],
+)
+def test_verify_keeps_existing_behaviour_for_other_states(confirmed, world, monkeypatch, state):  # noqa: F811
+    frame, lease, _undecided = _verify_pass_with_lease(confirmed, world, monkeypatch, state)
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+    assert lease.closed_at is None  # only an in_review frame hands its lease over
+
+
+@pytest.mark.django_db
+def test_scope_completes_after_handover_once_undecided_issue_is_decided(final_world):  # noqa: F811
+    """Handover requeues the undecided issue; scope completes once every issue is closed.
+
+    There is no queue path for an awaiting_followup frame today, so the decision itself is
+    simulated with a state update (see the report to the coordinator).
+    """
+
+    world = final_world
+    frame = world["issue"].frame_review
+    frame.state = FrameReview.State.IN_REVIEW
+    frame.save(update_fields=["state"])
+    lease = Lease.objects.create(
+        frame_review=frame,
+        holder=world["reviewer"],
+        queue_source="risk",
+        expires_at=timezone.now() + timedelta(minutes=10),
+    )
+    undecided = Issue.objects.create(
+        frame_review=frame,
+        family=Issue.Family.E2,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.IN_REVIEW,
+        anchor={"kind": "manual_region", "objects": []},
+    )
+    rework_service._move_frame_to_followup(frame)
+    lease.refresh_from_db()
+    undecided.refresh_from_db()
+    assert lease.closed_at is not None and undecided.state == Issue.State.PENDING_REVIEW
+
+    _complete_final(world["final"])
+    assert complete_scope_frames(world["run"].pk) == 0  # an open issue blocks completion
+    ReworkRequest.objects.filter(issue__frame_review=frame).update(
+        status=ReworkRequest.Status.RESOLVED
+    )
+    Issue.objects.filter(pk=undecided.pk).update(state=Issue.State.REJECTED)
+    assert complete_scope_frames(world["run"].pk) == 1
+    frame.refresh_from_db()
+    assert frame.state == FrameReview.State.COMPLETED
+
+
+def _renew_in_thread(world, lease_id):
+    connections.close_all()
+    try:
+        return client(world["reviewer"]).post(f"/api/leases/{lease_id}/renew/", {}, format="json")
+    finally:
+        connections.close_all()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_verify_handover_holds_run_lock_first_renew_is_refused(world):
+    assert connection.vendor == "postgresql"
+    lease_id, frame_id = claim(world)
+    run_id = world["run"].pk
+    entered, release = Event(), Event()
+
+    def handover():
+        connections.close_all()
+        try:
+            with transaction.atomic():
+                QCRun.objects.select_for_update().get(pk=run_id)  # lock verify_rework holds
+                entered.set()
+                assert release.wait(timeout=15)
+                frame = FrameReview.objects.select_for_update().get(pk=frame_id)
+                rework_service._move_frame_to_followup(frame)
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        verifier = pool.submit(handover)
+        assert entered.wait(timeout=15)
+        renewer = pool.submit(_renew_in_thread, world, lease_id)
+        renew_blocked = not renewer.done()
+        release.set()
+        verifier.result(timeout=30)
+        response = renewer.result(timeout=30)
+    assert renew_blocked
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_renew_holds_run_lock_first_then_handover_closes_lease(world, monkeypatch):
+    assert connection.vendor == "postgresql"
+    lease_id, frame_id = claim(world)
+    run_id = world["run"].pk
+    inside_renew, release = Event(), Event()
+    real_scope = services.has_review_scope
+
+    def paused_scope(**kwargs):
+        inside_renew.set()  # renew already owns the run lock here
+        assert release.wait(timeout=15)
+        return real_scope(**kwargs)
+
+    monkeypatch.setattr(services, "has_review_scope", paused_scope)
+    handover_done = Event()
+
+    def handover():
+        connections.close_all()
+        try:
+            with transaction.atomic():
+                QCRun.objects.select_for_update().get(pk=run_id)
+                frame = FrameReview.objects.select_for_update().get(pk=frame_id)
+                rework_service._move_frame_to_followup(frame)
+            handover_done.set()
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        renewer = pool.submit(_renew_in_thread, world, lease_id)
+        assert inside_renew.wait(timeout=15)
+        verifier = pool.submit(handover)
+        handover_blocked = not handover_done.wait(timeout=1.0)
+        release.set()
+        response = renewer.result(timeout=30)
+        verifier.result(timeout=30)
+    assert handover_blocked
+    assert response.status_code == 200  # renew ran while the frame was still in_review
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
