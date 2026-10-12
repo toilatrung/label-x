@@ -11,6 +11,7 @@ import { SnapshotCreateSample, SnapshotInUseExtra, SnapshotInUseSample, Snapshot
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
+import { formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
 import { useDatasets, useSnapshot, useSnapshotHistory, useTasks } from '@/lib/snapshots/queries';
 
 function SnapshotWorkspace() {
@@ -117,7 +118,7 @@ function SnapshotWorkspace() {
     context={{
       datasetName: displayDatasetName,
       datasetIdOverride: item?.dataset_id,
-      snapshotName: item ? `SNP-${item.id} · ${item.status}` : undefined,
+      snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : undefined,
       guidelineVersion: displayGuideline,
       taxonomyVersion: displayTaxonomy,
     }}
@@ -174,11 +175,11 @@ function SnapshotWorkspace() {
           <button className="lx-btn" type="button" onClick={() => void recent.refetch()}>Thử lại</button></div>
         : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
         : recentLocked ? <div className="lx-stack"><dl className="lx-kv">
-          <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>SNP-{recentLocked.id}</Link></dd>
-          <dt>Annotation revision</dt><dd className="lx-mono lx-wrap-any">{recentLocked.revision_hash || '—'}</dd>
+          <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>{snapshotCode(recentLocked.id)}</Link></dd>
+          <dt>Annotation revision</dt><dd className="lx-mono" title={recentLocked.revision_hash ?? undefined}>{shortRevision(recentLocked.revision_hash)}</dd>
           <dt>Taxonomy</dt><dd>{recentLocked.taxonomy_version || '—'}</dd>
           <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
-          <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {recentLocked.created_at}</dd>
+          <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
         </dl><SnapshotInUseExtra /></div> : isSearchingLocked && datasetId ? (
           <p className="lx-muted" role="status">Đang tải…</p>
         ) : (

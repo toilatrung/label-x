@@ -8,6 +8,7 @@ import { ForbiddenView } from '@/components/auth/ForbiddenView';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
+import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
@@ -74,10 +75,10 @@ export default function SnapshotHistoryPage() {
           <td className="lx-mono">{row.run}</td><td><span className={`lx-badge${row.tone ? ` lx-badge--${row.tone}` : ''}`}>{row.status}</span></td>
         </tr>) : snapshots.map(item => <tr key={item.id}>
           {/* TODO(backend): GET /api/snapshots/{id}/runs/ cho cột Quality Control Run */}
-          <td className="lx-mono"><Link href={`/analysis?snapshotId=${item.id}`}>SNP-{item.id}</Link></td>
+          <td className="lx-mono"><Link href={`/analysis?snapshotId=${item.id}`}>{snapshotCode(item.id)}</Link></td>
           <td>{selectedDataset?.name ?? `Dataset #${item.dataset_id}`}</td>
-          <td className="lx-mono lx-wrap-any">{item.revision_hash || '—'}</td>
-          <td className="r">{frameTotal(item)?.toLocaleString('en-US') ?? '—'}</td>
+          <td className="lx-mono" title={item.revision_hash ?? undefined}>{shortRevision(item.revision_hash)}</td>
+          <td className="r">{formatCount(frameTotal(item))}</td>
           <td className="lx-subtle">—</td>
           <td><span className={`lx-badge lx-badge--${statusTone(item.status)}`}>{snapshotStatus(item.status)}</span></td>
         </tr>)}

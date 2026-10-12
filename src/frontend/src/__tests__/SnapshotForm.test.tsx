@@ -33,6 +33,7 @@ describe('Snapshot create form', () => {
     show();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task 9' }));
+    screen.getAllByRole('button', { name: /\d+ Job/ }).forEach(button => fireEvent.click(button));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 22' }));
     fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: '  QA pass  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
@@ -52,6 +53,7 @@ describe('Snapshot create form', () => {
   it('retries an unknown result with the same body and idempotency key', async () => {
     post.mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce({ id: 102, status: 'locked' });
     show();
+    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     expect(await screen.findByRole('button', { name: 'Gửi lại cùng yêu cầu' })).toBeDefined();

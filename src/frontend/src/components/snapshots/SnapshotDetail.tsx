@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { formatDateTime, snapshotCode } from '@/lib/format';
 import { safeCvatUrl, snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
 
 function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean }) {
@@ -32,7 +33,7 @@ function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean 
 export function SnapshotDetail({ item }: { item: Snapshot }) {
   const drift = item.drift_jobs.length > 0;
   return <section className="lx-card" aria-label="Chi tiết Snapshot">
-    <div className="lx-card__head"><h2 className="lx-h2">SNP-{item.id}</h2>
+    <div className="lx-card__head"><h2 className="lx-h2">{snapshotCode(item.id)}</h2>
       <span className={`lx-badge lx-badge--${item.status === 'locked' ? 'success' : item.status === 'failed' ? 'danger' : 'info'}`}>
         {snapshotStatus(item.status)}</span></div>
     <div className="lx-card__body lx-stack">
@@ -40,12 +41,12 @@ export function SnapshotDetail({ item }: { item: Snapshot }) {
         <dt>Dataset</dt><dd>#{item.dataset_id}</dd>
         <dt>Hash tổng</dt><dd className="lx-mono lx-wrap-any">{item.revision_hash || 'Chưa có'}</dd>
         <dt>Snapshot cha</dt><dd>{item.parent_snapshot_id ? <Link href={`/analysis?snapshotId=${item.parent_snapshot_id}`}>
-          SNP-{item.parent_snapshot_id}</Link> : 'Không có'}</dd>
+          {snapshotCode(item.parent_snapshot_id)}</Link> : 'Không có'}</dd>
         <dt>Shape bị bỏ qua</dt><dd>{item.out_of_scope_shapes ?? 'Chưa có dữ liệu'}</dd>
         <dt>Taxonomy</dt><dd>{item.taxonomy_version || '—'}</dd>
         <dt>Guideline</dt><dd>{item.guideline_version || '—'}</dd>
-        <dt>Tạo lúc</dt><dd>{item.created_at}</dd>
-        <dt>Khóa lúc</dt><dd>{item.locked_at || 'Chưa khóa'}</dd>
+        <dt>Tạo lúc</dt><dd>{formatDateTime(item.created_at)}</dd>
+        <dt>Khóa lúc</dt><dd>{item.locked_at ? formatDateTime(item.locked_at) : 'Chưa khóa'}</dd>
       </dl>
       <div className={`lx-callout lx-callout--${drift ? 'warning' : 'info'}`} role="status">
         {drift ? `Job có drift: ${item.drift_jobs.join(', ')}` : item.status === 'locked' ?
