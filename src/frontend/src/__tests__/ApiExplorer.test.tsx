@@ -5,18 +5,18 @@ import { API_ENDPOINTS, API_NAVIGATION } from '@/lib/api-explorer/catalog';
 import { STATUS_RESPONSE_EXAMPLES } from '@/lib/api-explorer/status-examples';
 
 describe('API Explorer', () => {
-  it('shows contract operations with backend and mock states', () => {
+  it('shows backend and product API operations as available data sources', () => {
     render(<ApiExplorer />);
     expect(screen.getByRole('heading', { name: 'API Explorer' })).toBeInTheDocument();
     expect(screen.getAllByText('Backend API').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Contract API').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Product API').length).toBeGreaterThan(0);
     expect(screen.getByText('/api/auth/session/')).toBeInTheDocument();
     expect(screen.getByText('/api/evaluations/{id}/')).toBeInTheDocument();
   });
 
   it('filters operations by connection status and search text', () => {
     render(<ApiExplorer />);
-    fireEvent.click(screen.getByRole('button', { name: /Contract API/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Product API/ }));
     expect(screen.queryByText('/api/auth/session/')).not.toBeInTheDocument();
     expect(screen.getByText('/api/evaluations/{id}/')).toBeInTheDocument();
 

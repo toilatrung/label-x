@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { BENCHMARKS, BENCHMARK_DETAIL } from '@/lib/calibration/sample-data';
 
 export function BenchmarkHeader() {
@@ -14,8 +13,8 @@ export function BenchmarkHeader() {
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/benchmarks/import-cvat/ ; POST /api/benchmarks/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn" onClick={signalNoticeAttention}>Nhập từ CVAT</button>
-        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Tạo benchmark</button>
+        <button type="button" className="lx-btn">Nhập từ CVAT</button>
+        <button type="button" className="lx-btn lx-btn--primary">Tạo benchmark</button>
       </div>
     </div>
   );
@@ -25,7 +24,6 @@ export function BenchmarkBody() {
   return (
     <>
       {/* TODO(backend): GET /api/benchmarks/ */}
-      <DemoRegionNotice listenGlobal />
       <div className="lx-cols">
         <section className="lx-card lx-main" aria-label="Các phiên bản benchmark">
           <div className="lx-card__head"><h2 className="lx-h2">Các phiên bản benchmark</h2></div>

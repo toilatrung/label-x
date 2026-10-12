@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { RANDOM_AUDIT_FIELDS, RANDOM_AUDIT_ROWS, RISK_ROWS } from '@/lib/calibration/sample-data';
 
 type Tab = 'random' | 'risk';
@@ -16,7 +15,7 @@ export function AuditSamplingHeader() {
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/audit-samples/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Tạo mẫu mới</button>
+        <button type="button" className="lx-btn lx-btn--primary">Tạo mẫu mới</button>
       </div>
     </div>
   );
@@ -27,7 +26,6 @@ export function AuditSamplingBody() {
   return (
     <>
       {/* TODO(backend): GET /api/audit-samples/?stream=random|risk */}
-      <DemoRegionNotice listenGlobal />
       <section className="lx-card" aria-label="Lấy mẫu kiểm toán">
         <div className="lx-tabs lx-tabs--inset" role="tablist">
           {TABS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={`lx-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>{label}</button>)}

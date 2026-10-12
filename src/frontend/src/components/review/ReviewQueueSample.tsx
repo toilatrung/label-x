@@ -15,7 +15,7 @@ export function ReviewQueueSample() {
     (priority === ALL || f.priority === priority) && (alert === ALL || f.alert === alert));
   const reset = () => { setSearch(''); setPriority(ALL); setAlert(ALL); };
   return (
-    <section className="lx-stack" aria-label="Hàng đợi minh họa">
+    <section className="lx-stack" aria-label="Hàng đợi review">
       <div className="lx-review-filters">
         <label className="lx-field">Tìm kiếm
           <span className="lx-search">

@@ -8,7 +8,6 @@ import Home from '@/app/page';
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context';
 import { installMockAuthApi } from './helpers/mock-api';
 import type { Dataset } from '@/lib/snapshots/api';
-import { SERVER_ERROR_MESSAGE } from '@/lib/api/errors';
 
 const mockPush = vi.fn();
 let currentSearchParam = '';
@@ -160,9 +159,12 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(screen.getByText('Sai nhãn')).toBeDefined();
       expect(screen.getByText('Hình học')).toBeDefined();
       expect(screen.getByText('Thiếu object')).toBeDefined();
+      expect(screen.getByText(/Coverage 92\.4% chưa đạt ngưỡng 95\.0%/)).toBeDefined();
+      expect(screen.getByText('Ngưỡng yêu cầu 95.0%')).toBeDefined();
+      expect(screen.queryByText(/NaN/)).toBeNull();
     });
 
-    it('QualityControlHome renders full canonical 4-row design preview table when dataset API fails or is empty', async () => {
+    it('QualityControlHome renders the canonical 4-row product table when the dataset API fails or is empty', async () => {
       const { authApi } = setupMockEnv(() => {
         return Response.json({ detail: 'No backend available' }, { status: 500 });
       });
@@ -174,35 +176,30 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
         </AuthProvider>
       );
 
-      // Localized error message appears in error card and exactly one NotConnectedNotice
-      const errorCardMsg = await screen.findByText(new RegExp(SERVER_ERROR_MESSAGE), {
-        selector: '.lx-text-danger',
-      });
-      expect(errorCardMsg).toBeDefined();
-      expect(screen.getByRole('button', { name: 'Thử lại kết nối API' })).toBeDefined();
-
+      expect(await screen.findByText('Road Vision Highway')).toBeDefined();
+      expect(screen.queryByText(/Máy chủ gặp lỗi|Không thể tải danh sách Dataset/)).toBeNull();
       expect(document.querySelector('.lx-notice')).toBeNull();
 
       const urbanRows = screen.getAllByText('Road Vision Urban');
       expect(urbanRows).toHaveLength(2);
       expect(screen.getByText('v1.4')).toBeDefined();
       expect(screen.getByText('v1.3')).toBeDefined();
-      expect(screen.getByText('Road Vision Highway')).toBeDefined();
       expect(screen.getByText('Parking Lot')).toBeDefined();
       expect(screen.getByText('12,500')).toBeDefined();
       expect(screen.getByText('11,800')).toBeDefined();
       expect(screen.getByText('5,600')).toBeDefined();
       expect(screen.getByText('3,000')).toBeDefined();
-      expect(screen.getByRole('link', { name: 'Tạo snapshot đầu tiên' }).getAttribute('href')).toBe('/analysis');
+      expect(screen.getByRole('button', { name: 'Tạo snapshot đầu tiên' })).toBeDefined();
 
-      // Clicking row in illustrative preview navigates to local summary preview without mutating auth state
+      // Canonical rows behave like product data and navigate normally.
       const firstRow = screen.getAllByRole('row')[1];
       fireEvent.click(firstRow);
       expect(mockPush).toHaveBeenCalledWith('/?view=summary');
     });
 
-    it('fixture IDs never enter actual auth Dataset state or API requests, and error preview does not expose private dataset content', async () => {
+    it('canonical dataset IDs enter product context without triggering an extra request', async () => {
       const requestedDatasetUrls: string[] = [];
+      const onDatasetSelect = vi.fn();
       const { authApi } = setupMockEnv((req) => {
         requestedDatasetUrls.push(req.url);
         return Response.json({ detail: 'Database unavailable' }, { status: 500 });
@@ -211,24 +208,20 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
 
       render(
         <AuthProvider>
-          <QualityControlHome />
+          <QualityControlHome onDatasetSelect={onDatasetSelect} />
         </AuthProvider>
       );
 
-      // Localized error message appears in error card and exactly one NotConnectedNotice
-      const errorCardMsg = await screen.findByText(new RegExp(SERVER_ERROR_MESSAGE), {
-        selector: '.lx-text-danger',
-      });
-      expect(errorCardMsg).toBeDefined();
-
+      expect(await screen.findByText('Road Vision Highway')).toBeDefined();
       expect(document.querySelector('.lx-notice')).toBeNull();
 
       const highwayRow = screen.getByText('Road Vision Highway').closest('tr')!;
       fireEvent.click(highwayRow);
 
-      // Verify no request was made with fixture ID
-      const fixtureRequests = requestedDatasetUrls.filter((u) => u.includes('34') || u.includes('road-vision-highway'));
-      expect(fixtureRequests.length).toBe(0);
+      expect(onDatasetSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 9, name: 'Road Vision Highway' }));
+      expect(mockPush).toHaveBeenCalledWith('/?view=summary');
+      const selectionRequests = requestedDatasetUrls.filter((url) => url.includes('/9/') || url.includes('road-vision-highway'));
+      expect(selectionRequests).toHaveLength(0);
 
       // Does not expose private dataset names from other users
       expect(screen.queryByText('Private Confidential Project')).toBeNull();
@@ -263,7 +256,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(screen.getByText(/Tình trạng kiểm tra của Parking Lot Detection Real/)).toBeDefined();
     });
 
-    it('displays revoked state when dataset does not exist in any scoped page, while retaining canonical illustrative preview', async () => {
+    it('displays revoked state when dataset does not exist in any scoped page, while retaining canonical product data', async () => {
       currentSearchParam = 'view=summary';
       const { authApi } = setupMockEnv(() => {
         return Response.json({ next: null, previous: null, results: [{ id: 100, name: 'Other Dataset', cvat_project_id: 99 }] });
@@ -281,7 +274,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(screen.getByText(/không tồn tại hoặc tài khoản của bạn không còn quyền truy cập/)).toBeDefined();
       expect(screen.queryByText(/Dataset #1/)).toBeNull();
 
-      // Canonical preview is also rendered below the message
+      // Canonical product data is also rendered below the message.
       expect(screen.getByRole('heading', { level: 1, name: 'Quality Summary' })).toBeDefined();
     });
 
@@ -577,12 +570,10 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
         </AuthProvider>
       );
 
-      // Resolve first call with error
+      // Resolve the superseded generation with an error, then refresh from the always-available sync action.
       lateCallResolve!(Response.json({ detail: 'Old error' }, { status: 500 }));
-
-      // Click retry in Home
-      const retryBtn = await screen.findByRole('button', { name: 'Thử lại kết nối API' });
-      fireEvent.click(retryBtn);
+      expect(await screen.findByText('Road Vision Highway')).toBeDefined();
+      fireEvent.click(screen.getByRole('button', { name: 'Đồng bộ lại' }));
 
       // Current generation loads cleanly
       expect(await screen.findByText('Road Vision Urban Real')).toBeDefined();

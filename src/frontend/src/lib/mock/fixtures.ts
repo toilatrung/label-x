@@ -18,5 +18,5 @@ export function formatCount(value: number | null | undefined): string {
 }
 
 export function formatPercent(value: number | null | undefined): string {
-  return value === null || value === undefined ? '—' : `${value.toFixed(1)}%`;
+  return value === null || value === undefined || !Number.isFinite(value) ? '—' : `${value.toFixed(1)}%`;
 }

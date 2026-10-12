@@ -124,10 +124,15 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
     } : null,
   })),
   runs_gate: variants(gateStatuses, status => ({
-    run_id: 31, source_run_id: 31, source_reason: 'final_run', status,
+    run_id: 91, source_run_id: 91, source_reason: 'final_run', status,
+    summary: status === 'passed' ? '6 đạt · 0 chưa đạt' : '2 đạt · 3 chưa đạt · 1 chờ phê duyệt',
     conditions: [
-      { name: 'coverage', status: status === 'passed' ? 'passed' : status, observed: status === 'not_checked' ? null : status === 'passed' ? 0.98 : 0.92, threshold: 0.95, waiver_id: null },
-      { name: 'agreement', status: 'waived', observed: 0.88, threshold: 0.9, waiver_id: 6 },
+      { name: 'Toàn vẹn phiên bản', status: 'passed', result: 'Snapshot, taxonomy, guideline khớp nhau', observed: 1, threshold: 1, waiver_id: null },
+      { name: 'Benchmark và kiểm tra mẫu', status: 'passed', result: 'Benchmark v1.2 đã đính kèm', observed: 1, threshold: 1, waiver_id: null },
+      { name: 'Coverage', status: status === 'passed' ? 'passed' : 'failed', result: status === 'passed' ? '95.8% / ngưỡng 95%' : '92.4% / ngưỡng 95%', observed: status === 'not_checked' ? null : status === 'passed' ? 0.958 : 0.924, threshold: 0.95, action: 'Chạy bổ sung hoặc xin waiver', waiver_id: null },
+      { name: 'Lỗi nghiêm trọng', status: status === 'passed' ? 'passed' : 'failed', result: status === 'passed' ? '0 chưa đóng' : '3 chưa đóng', observed: status === 'passed' ? 0 : 3, threshold: 0, action: 'Sửa và xác minh', waiver_id: null },
+      { name: 'Rework', status: status === 'passed' ? 'passed' : 'failed', result: status === 'passed' ? 'Tất cả đã xác minh' : '12 yêu cầu bắt buộc chưa xác minh', observed: status === 'passed' ? 0 : 12, threshold: 0, action: 'Mở Rework Tracking', waiver_id: null },
+      { name: 'Phê duyệt', status: status === 'passed' ? 'passed' : 'not_checked', result: status === 'passed' ? 'Đã phê duyệt' : 'Chưa gửi phê duyệt', observed: null, threshold: null, action: 'Sau khi các điều kiện trên đạt', waiver_id: null },
     ],
   })),
   waivers_approve: variants(waiverStatuses, (status, index) => ({
