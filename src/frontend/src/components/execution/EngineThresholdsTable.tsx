@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import type { components } from '@/lib/api/contract';
 
 export type ConfigVersion = components['schemas']['ConfigVersion'];
@@ -213,13 +214,13 @@ export function EngineThresholdsTable({
   return (
     <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
       <header className="lx-card__head">
-        {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint" style={{ marginLeft: 8 }}>Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
+        {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div className="lx-row"><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint">Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
       </header>
       {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
       <div className="lx-scroll">
-        <table className="lx-table" style={{ minWidth: 680 }}>
+        <table className="lx-table lx-table--min-700">
           <thead>
-            {layout === 'analysis' ? <tr><th style={{ width: 64 }}>Bật</th><th>Engine</th><th>Cấu hình hiện tại</th></tr> : <tr><th style={{ width: 150 }}>Trạng thái cấu hình</th><th>Engine</th><th style={{ width: 120 }}>Phiên bản</th><th>Tham số ngưỡng trong config</th></tr>}
+            {layout === 'analysis' ? <tr><th>Bật</th><th>Engine</th><th>Cấu hình hiện tại</th><th aria-label="Thao tác" /></tr> : <tr><th>Trạng thái cấu hình</th><th>Engine</th><th>Phiên bản</th><th>Tham số ngưỡng trong config</th></tr>}
           </thead>
           <tbody>
             {ENGINES_META.map((meta) => {
@@ -246,7 +247,13 @@ export function EngineThresholdsTable({
               const effectiveThreshold = meta.formatParams(params);
               const hasParams = Object.keys(params).length > 0;
 
-              const configuration = effectiveThreshold ? <><div className="lx-cell__main">{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</> : hasParams ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div> : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;
+              const configuration = meta.key === 'metric' && !hasParams
+                ? <span className="lx-badge lx-badge--warning">Chưa có Ground Truth</span>
+                : effectiveThreshold
+                  ? <><div className="lx-cell__main">{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
+                  : hasParams
+                    ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div>
+                    : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;
 
               return (
                 <tr key={meta.key}>
@@ -259,6 +266,7 @@ export function EngineThresholdsTable({
                   </td>
                   {layout === 'thresholds' && <td><span className="lx-mono">{version}</span></td>}
                   <td>{configuration}</td>
+                  {layout === 'analysis' && <td className="r"><Link className="lx-iconbtn" href={meta.key === 'metric' ? '/calibration/benchmark' : '/configuration/rules-thresholds'} data-tip={meta.key === 'metric' ? 'Chọn benchmark Ground Truth' : 'Chỉnh cấu hình engine'} aria-label={meta.key === 'metric' ? 'Chọn benchmark Ground Truth' : `Chỉnh cấu hình ${meta.name}`}><svg viewBox="0 0 16 16" aria-hidden="true"><path d={meta.key === 'metric' ? 'M3 8h10M9 4l4 4-4 4' : 'M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z'} /></svg></Link></td>}
                 </tr>
               );
             })}

@@ -117,6 +117,8 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('link', { name: 'Chạy phân tích mới' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
+    expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
+    expect(screen.getByText(/Không cộng Coverage giữa các engine/)).toBeDefined();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Chạy lại engine lỗi' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(true));
@@ -128,8 +130,34 @@ describe('Execution screens on real API contract', () => {
     expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText('Lấy mẫu')).toBeDefined();
     expect(screen.getByText('Sẵn sàng chạy')).toBeDefined();
-    expect(screen.getByText(/Chức năng vẫn chưa được kết nối với server/)).toBeDefined();
+    expect(screen.getAllByText(/Chức năng vẫn chưa được kết nối với server/)).toHaveLength(2);
+    expect(screen.getByRole('link', { name: 'Xem chi tiết lấy mẫu' }).getAttribute('href')).toBe('/calibration/audit-sampling');
+    expect(screen.getByText('Thời gian dự kiến')).toBeDefined();
     expect(calls.some((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/runs/')).toBe(false);
+  });
+
+  it('keeps Review Queues navigation visible for QC admin while write actions stay hidden', async () => {
+    searchParamsState.current = 'run=12';
+    const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    fireEvent.change(await screen.findByLabelText('Dataset'), { target: { value: '1' } });
+
+    expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Chạy lại engine lỗi' })).toBeNull();
+    expect(calls.some((request) => request.method === 'POST')).toBe(false);
+  });
+
+  it('drops a URL-selected run when a global user changes Dataset context', async () => {
+    searchParamsState.current = 'run=12';
+    const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    const dataset = await screen.findByLabelText('Dataset');
+    fireEvent.change(dataset, { target: { value: '1' } });
+    expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    const detailCallsBefore = calls.filter((request) => new URL(request.url).pathname === '/api/runs/12/').length;
+
+    fireEvent.change(screen.getByLabelText('Dataset'), { target: { value: '2' } });
+
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Mở Review Queues →' })).toBeNull());
+    expect(calls.filter((request) => new URL(request.url).pathname === '/api/runs/12/').length).toBe(detailCallsBefore);
   });
 
   it('creates and publishes a version through the real config endpoints', async () => {

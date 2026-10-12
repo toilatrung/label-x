@@ -126,10 +126,10 @@ function ConfigContent() {
           <header className="lx-card__head"><h2 className="lx-h2">Dữ liệu đầu vào</h2><span className="lx-hint">Dữ liệu thật từ LabelX API</span></header>
           <div className="lx-card__body lx-grid lx-grid--3">
             <DatasetPicker onChange={() => { setSnapshotCursor(null); setSnapshotId(null); setPending(null); }} />
-            <div className="lx-field"><label htmlFor="analysis-snapshot">Snapshot đã khóa</label><select id="analysis-snapshot" value={snapshotId ?? ''} onChange={(e) => { setSnapshotId(e.target.value ? Number(e.target.value) : null); setPending(null); }} disabled={!datasetId || snapshots.isPending}>
+            <div className="lx-field"><label className="lx-label" htmlFor="analysis-snapshot">Snapshot đã khóa</label><select className="lx-select" id="analysis-snapshot" value={snapshotId ?? ''} onChange={(e) => { setSnapshotId(e.target.value ? Number(e.target.value) : null); setPending(null); }} disabled={!datasetId || snapshots.isPending}>
               <option value="">Chọn Snapshot</option>{locked.map((s) => <option key={s.id} value={s.id}>SNP-{s.id} · {s.revision_hash?.slice(0, 12) ?? 'Chưa có hash'}</option>)}
             </select></div>
-            <div className="lx-field"><label htmlFor="analysis-config">Phiên bản cấu hình</label><select id="analysis-config" value={configId ?? ''} onChange={(e) => { const nextId = e.target.value ? Number(e.target.value) : null; setConfigId(nextId); setSelectedConfigRecord(configs.data?.results.find((c) => c.id === nextId) ?? (selectedConfigRecord?.id === nextId ? selectedConfigRecord : null)); setPending(null); }} disabled={configs.isPending}>
+            <div className="lx-field"><label className="lx-label" htmlFor="analysis-config">Phiên bản cấu hình</label><select className="lx-select" id="analysis-config" value={configId ?? ''} onChange={(e) => { const nextId = e.target.value ? Number(e.target.value) : null; setConfigId(nextId); setSelectedConfigRecord(configs.data?.results.find((c) => c.id === nextId) ?? (selectedConfigRecord?.id === nextId ? selectedConfigRecord : null)); setPending(null); }} disabled={configs.isPending}>
               <option value="">Chọn config đã publish</option>
               {selectedConfigRecord && !configs.data?.results.some((c) => c.id === selectedConfigRecord.id) && <option value={selectedConfigRecord.id}>{selectedConfigRecord.name} · v{selectedConfigRecord.id} (đang chọn)</option>}
               {configs.data?.results.map((c) => <option key={c.id} value={c.id}>{c.name} · v{c.id}</option>)}
@@ -154,13 +154,13 @@ function ConfigContent() {
           {activeConfig && <pre className="lx-code" aria-label="Ngưỡng và model tham chiếu">{JSON.stringify({ thresholds: activeConfig.thresholds, models: activeConfig.models }, null, 2)}</pre>}
         </div>
         <section className="lx-card" aria-label="Lấy mẫu">
-          <header className="lx-card__head"><h2 className="lx-h2">Lấy mẫu</h2><SampleDataBadge /></header>
+          <header className="lx-card__head"><h2 className="lx-h2">Lấy mẫu</h2><div className="lx-row"><SampleDataBadge /><Link className="lx-link lx-text-13" href="/calibration/audit-sampling">Xem chi tiết lấy mẫu</Link></div></header>
           {/* TODO(backend): add typed sampling policy fields to ConfigVersion instead of illustrative disabled controls. */}
           <div className="lx-card__body lx-stack"><NotConnectedNotice detail="API ConfigVersion chưa có trường chính sách lấy mẫu có kiểu dữ liệu xác định; các điều khiển bên dưới chỉ minh họa và không ghi dữ liệu." />
             <div className="lx-grid lx-grid--3">
-              <div className="lx-field"><label htmlFor="random-sample">Kiểm tra ngẫu nhiên · số frame</label><input id="random-sample" value="100" disabled /><span className="lx-hint">Dùng để ước lượng chất lượng toàn Dataset</span></div>
-              <div className="lx-field"><label htmlFor="risk-sample">Lấy mẫu theo rủi ro · số frame</label><input id="risk-sample" value="100" disabled /><span className="lx-hint">Dùng để tìm lỗi, không suy ra tỷ lệ lỗi</span></div>
-              <div className="lx-field"><label htmlFor="risk-criteria">Tiêu chí rủi ro</label><select id="risk-criteria" disabled><option>Bất đồng mô hình, lớp khó, vật thể nhỏ</option></select></div>
+              <div className="lx-field"><label className="lx-label" htmlFor="random-sample">Kiểm tra ngẫu nhiên · số frame</label><input className="lx-input" id="random-sample" value="100" disabled /><span className="lx-hint">Dùng để ước lượng chất lượng toàn Dataset</span></div>
+              <div className="lx-field"><label className="lx-label" htmlFor="risk-sample">Lấy mẫu theo rủi ro · số frame</label><input className="lx-input" id="risk-sample" value="100" disabled /><span className="lx-hint">Dùng để tìm lỗi, không suy ra tỷ lệ lỗi</span></div>
+              <div className="lx-field"><label className="lx-label" htmlFor="risk-criteria">Tiêu chí rủi ro</label><select className="lx-select" id="risk-criteria" disabled><option>Bất đồng mô hình, lớp khó, vật thể nhỏ</option></select></div>
             </div>
           </div>
         </section>
@@ -172,13 +172,15 @@ function ConfigContent() {
             <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `SNP-${selectedSnapshot.id} · ${selectedSnapshot.revision_hash?.slice(0, 6) ?? 'chưa có hash'}` : '—'}</dd>
             <dt>Phạm vi</dt><dd>{selectedSnapshot ? `${taskCount} task · ${selectedSnapshot.jobs.length} job · ${frameCount.toLocaleString('en-US')} frame` : '—'}</dd>
             <dt>Engine</dt><dd>{activeConfig ? `${enabledEngineCount} bật · ${ENGINES.length - enabledEngineCount} tắt` : '—'}</dd>
-            <dt>Seed</dt><dd><input id="analysis-seed" aria-label="Seed" type="number" value={seed} onChange={(e) => { setSeed(Number(e.target.value)); setPending(null); }} /></dd>
+            <dt>Thời gian dự kiến</dt><dd>—</dd>
           </dl>
+          <NotConnectedNotice detail="API chưa cung cấp thời gian chạy dự kiến; giao diện không tự suy đoán từ dữ liệu hiện có." />
+          <div className="lx-field"><label className="lx-label" htmlFor="analysis-seed">Seed</label><input className="lx-input" id="analysis-seed" type="number" value={seed} onChange={(e) => { setSeed(Number(e.target.value)); setPending(null); }} /></div>
           {activeConfig && enabledEngineCount < ENGINES.length && <div className="lx-callout lx-callout--warning"><span className="lx-callout__text">{ENGINES.length - enabledEngineCount} engine đang tắt, nên kết quả sẽ ghi là Not checked.</span></div>}
-          <ol className="lx-muted" style={{ margin: 0, paddingLeft: 20, fontSize: 13, lineHeight: '22px' }}><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>
+          <ol className="lx-muted lx-text-13"><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>
           {!canCreate && <p className="lx-muted">Vai trò hiện tại chỉ được xem cấu hình và lịch sử; Quality Assurance Lead hoặc Super Admin mới được chạy phân tích.</p>}
           {submitError && <p role="alert" className="lx-callout">{submitError}</p>}
-          <button type="submit" className="lx-btn lx-btn--primary" style={{ justifyContent: 'center' }} disabled={!canCreate || !selectedSnapshot || !selectedConfig || submitting}>{submitting ? 'Đang chạy…' : 'Chạy phân tích'}</button>
+          <button type="submit" className="lx-btn lx-btn--primary lx-btn--block" disabled={!canCreate || !selectedSnapshot || !selectedConfig || submitting}>{submitting ? 'Đang chạy…' : 'Chạy phân tích'}</button>
         </div>
       </aside>
     </form>
@@ -186,10 +188,10 @@ function ConfigContent() {
       <h2 className="lx-h2">Tạo phiên bản cấu hình</h2>
       <p className="lx-muted">Một phiên bản mới sẽ được phát hành để QA Lead chọn khi chạy QC. Phiên bản đã phát hành không chỉnh sửa trực tiếp.</p>
       <form onSubmit={saveConfig} className="lx-stack">
-        <div className="lx-field"><label htmlFor="config-name">Tên cấu hình</label><input id="config-name" value={configName} maxLength={128} onChange={(e) => { setConfigName(e.target.value); setConfigPending(null); }} required /></div>
-        <fieldset><legend>Engine cần chạy</legend><div className="lx-execution-actions">{ENGINES.map((engine) => <label key={engine}><input type="checkbox" checked={enabledEngines.includes(engine)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, engine] : current.filter((item) => item !== engine)); setConfigPending(null); }} /> {engine}</label>)}</div></fieldset>
-        <div className="lx-field"><label htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); setConfigPending(null); }} /></div>
-        <div className="lx-field"><label htmlFor="config-models">Model tham chiếu (JSON)</label><textarea id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); setConfigPending(null); }} /></div>
+        <div className="lx-field"><label className="lx-label" htmlFor="config-name">Tên cấu hình</label><input className="lx-input" id="config-name" value={configName} maxLength={128} onChange={(e) => { setConfigName(e.target.value); setConfigPending(null); }} required /></div>
+        <fieldset><legend>Engine cần chạy</legend><div className="lx-execution-actions">{ENGINES.map((engine) => <label className="lx-switch" key={engine}><input type="checkbox" checked={enabledEngines.includes(engine)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, engine] : current.filter((item) => item !== engine)); setConfigPending(null); }} /><span /> {engine}</label>)}</div></fieldset>
+        <div className="lx-field"><label className="lx-label" htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea className="lx-textarea" id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); setConfigPending(null); }} /></div>
+        <div className="lx-field"><label className="lx-label" htmlFor="config-models">Model tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); setConfigPending(null); }} /></div>
         {configError && <p role="alert" className="lx-callout">{configError}</p>}
         {draftId && <div className="lx-callout">Config v{draftId} đã được tạo nhưng chưa xác nhận publish. <button type="button" className="lx-btn" disabled={configBusy} onClick={retryPublish}>Thử publish lại</button></div>}
         {enabledEngines.length === 0 && <p role="alert">Cần bật ít nhất một engine.</p>}

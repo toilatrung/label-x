@@ -45,14 +45,39 @@ describe('EngineThresholdsTable component (T-029)', () => {
     expect(screen.getByText(/Detector v2.4 · Ngưỡng tin cậy ≥ 0.75/)).toBeDefined();
     expect(screen.getByText(/Tối đa 200 candidate mỗi lần chạy/)).toBeDefined();
 
-    // Metric has empty params, so it should display unconfigured notice rather than a fake default
-    expect(screen.getByText('Tắt · kết quả sẽ là Not checked')).toBeDefined();
+    // Metric has no Ground Truth and the design provides a benchmark action.
+    expect(screen.getByText('Chưa có Ground Truth')).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Chọn benchmark Ground Truth' }).getAttribute('href')).toBe('/calibration/benchmark');
+    expect(screen.getAllByRole('link', { name: /Chỉnh cấu hình/ })).toHaveLength(5);
 
     // Thiết kế FE-03 biểu diễn cờ cấu hình bằng switch chỉ đọc.
     expect(screen.getAllByRole('checkbox').filter((control) => (control as HTMLInputElement).checked)).toHaveLength(4);
     expect(screen.getAllByRole('checkbox').filter((control) => !(control as HTMLInputElement).checked)).toHaveLength(2);
     expect(screen.getByRole('columnheader', { name: 'Bật' })).toBeDefined();
     expect(screen.getByRole('columnheader', { name: 'Cấu hình hiện tại' })).toBeDefined();
+  });
+
+  it('keeps configured status badges in the thresholds layout', () => {
+    render(<EngineThresholdsTable config={publishedConfig} layout="thresholds" />);
+
+    expect(screen.getAllByText('Bật trong config')).toHaveLength(4);
+    expect(screen.getAllByText('Tắt trong config')).toHaveLength(2);
+  });
+
+  it('shows undeclared status badges in the thresholds layout', () => {
+    render(<EngineThresholdsTable config={{ ...publishedConfig, engines: {} }} layout="thresholds" />);
+
+    expect(screen.getAllByText('Chưa khai báo')).toHaveLength(6);
+  });
+
+  it('keeps Ground Truth status explicit when Metric is enabled without benchmark data', () => {
+    render(<EngineThresholdsTable config={{ ...publishedConfig, engines: { metric: { enabled: true, version: '1.0.0', params: {} } } }} layout="analysis" />);
+
+    const metricTitle = screen.getByText('Metric');
+    const row = metricTitle.closest('tr');
+    expect(row).toBeDefined();
+    expect(within(row!).getByText('Chưa có Ground Truth')).toBeDefined();
+    expect(within(row!).queryByText('Chưa được cấu hình/không có dữ liệu từ API')).toBeNull();
   });
 
   it('displays indeterminate status and unconfigured notice when engines are missing or lack required params without fake fallbacks', () => {
@@ -74,9 +99,10 @@ describe('EngineThresholdsTable component (T-029)', () => {
     expect(unknownControls).toHaveLength(6);
     expect(unknownControls.every((control) => !(control as HTMLInputElement).checked)).toBe(true);
 
-    // All 6 engines should display unconfigured notice
+    // Five non-Metric engines display the generic notice; Metric has a specific Ground Truth state.
     const unconfiguredNotices = screen.getAllByText('Chưa được cấu hình/không có dữ liệu từ API');
-    expect(unconfiguredNotices.length).toBe(6);
+    expect(unconfiguredNotices.length).toBe(5);
+    expect(screen.getByText('Chưa có Ground Truth')).toBeDefined();
 
     // Verify absolutely NO fake fallback defaults appear
     expect(screen.queryByText(/Taxonomy v3/)).toBeNull();

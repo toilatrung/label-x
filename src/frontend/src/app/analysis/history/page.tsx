@@ -11,6 +11,8 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
 
 function exclusionText(row: LedgerEntry) {
@@ -47,12 +49,13 @@ function HistoryContent() {
   const client = useQueryClient();
   const queryRunId = Number(params.get('run'));
   const [chosenId, setChosenId] = useState<number | null>(null);
+  const [ignoreQueryRun, setIgnoreQueryRun] = useState(false);
   const [runCursor, setRunCursor] = useState<string | null>(null);
   const [shardCursor, setShardCursor] = useState<string | null>(null);
   const [candidateCursor, setCandidateCursor] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
-  const selectedId = chosenId ?? (Number.isInteger(queryRunId) && queryRunId > 0 ? queryRunId : null);
+  const selectedId = chosenId ?? (!ignoreQueryRun && Number.isInteger(queryRunId) && queryRunId > 0 ? queryRunId : null);
   const canManage = hasDatasetPermission(session, datasetId, (role) => role === 'qa_lead' || role === 'super_admin');
   const runs = useQuery({ queryKey: ['analysis-runs', session?.user.id, datasetId, runCursor], queryFn: ({ signal }) => listRuns(datasetId!, runCursor, signal), enabled: datasetId !== null, retry: false, refetchInterval: (q) => q.state.data?.results.some((r) => ['queued', 'running'].includes(r.status)) ? 3000 : false });
   const detail = useQuery({ queryKey: ['analysis-run', session?.user.id, selectedId], queryFn: ({ signal }) => getRun(selectedId!, signal), enabled: selectedId !== null && datasetId !== null, retry: false, refetchInterval: (q) => q.state.data && ['queued', 'running'].includes(q.state.data.status) ? 3000 : false });
@@ -60,9 +63,6 @@ function HistoryContent() {
   const shards = useQuery({ queryKey: ['analysis-shards', session?.user.id, selectedId, shardCursor], queryFn: ({ signal }) => listShards(selectedId!, shardCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const candidates = useQuery({ queryKey: ['analysis-candidates', session?.user.id, selectedId, candidateCursor], queryFn: ({ signal }) => listCandidates(selectedId!, candidateCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const selected = detail.data;
-  const selectedCoverage = ledger.data && ledger.data.reduce((sum, row) => sum + row.eligible, 0) > 0
-    ? ledger.data.reduce((sum, row) => sum + row.completed, 0) / ledger.data.reduce((sum, row) => sum + row.eligible, 0)
-    : null;
   async function act(kind: 'cancel' | 'retry') {
     if (!selectedId || !canManage || acting) return;
     setActing(true); setActionError(null);
@@ -79,34 +79,35 @@ function HistoryContent() {
     finally { setActing(false); }
   }
   return <AppShell activeKey="analysis" flowStep={3} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Execution History</h1><p className="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p></div><div className="lx-actions"><Link href="/analysis/config" className="lx-btn lx-btn--primary">Chạy phân tích mới</Link></div></div>}>
-    <div className="lx-card__body"><DatasetPicker onChange={() => { setChosenId(null); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} /></div>
+    <DatasetPicker onChange={(nextDatasetId) => { setChosenId(null); if (datasetId !== null && nextDatasetId !== datasetId) setIgnoreQueryRun(true); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} />
     <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Các lần chạy"><header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">Dữ liệu thật từ LabelX API</span></header>
         {!datasetId && <div className="lx-card__body">Chọn Dataset để xem lịch sử.</div>}
         {runs.isError && <div role="alert" className="lx-card__body">{errorMessage(runs.error)}</div>}
         {runs.isLoading && datasetId && <div className="lx-card__body">Đang tải…</div>}
-        {runs.data && <div className="lx-scroll"><table className="lx-table" style={{ minWidth: 560 }}><thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th className="r">Coverage</th><th>Trạng thái</th></tr></thead><tbody>
-          {runs.data.results.map((r) => <tr key={r.id} aria-selected={selectedId === r.id}><td><div className="lx-cell__main lx-mono">#QC-{r.id}</div><button type="button" className="lx-link" onClick={() => { setChosenId(r.id); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td><td className="lx-mono">SNP-{r.snapshot_id}</td><td className="lx-muted">{new Date(r.created_at).toLocaleString('vi-VN')}</td><td className="r">{selectedId === r.id && selectedCoverage !== null ? `${(selectedCoverage * 100).toFixed(1)}%` : '—'}</td><td><span className={`lx-badge ${statusBadge(r.status)}`}>{runStatusLabel[r.status]}</span></td></tr>)}
+        {runs.data && <><div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice detail="API danh sách run chưa trả Coverage tổng hợp. Không cộng Coverage giữa các engine vì đơn vị có thể khác nhau (frame, shape); xem Coverage đúng đơn vị trong chi tiết từng engine." /></div><div className="lx-scroll"><table className="lx-table lx-table--min-520"><thead><tr><th>Quality Control Run</th><th>Snapshot</th><th>Bắt đầu</th><th className="r">Coverage</th><th>Trạng thái</th></tr></thead><tbody>
+          {runs.data.results.map((r) => <tr key={r.id} aria-selected={selectedId === r.id}><td><div className="lx-cell__main lx-mono">#QC-{r.id}</div><button type="button" className="lx-link" onClick={() => { setChosenId(r.id); setIgnoreQueryRun(true); setShardCursor(null); setCandidateCursor(null); }}>Chi tiết</button></td><td className="lx-mono">SNP-{r.snapshot_id}</td><td className="lx-muted">{new Date(r.created_at).toLocaleString('vi-VN')}</td><td className="r">—</td><td><span className={`lx-badge ${statusBadge(r.status)}`}>{runStatusLabel[r.status]}</span></td></tr>)}
           {runs.data.results.length === 0 && <tr><td colSpan={5}>Chưa có Quality Control Run trong Dataset này.</td></tr>}
-        </tbody></table></div>}
+        </tbody></table></div></>}
         {runs.data?.next && <footer className="lx-card__foot"><button className="lx-btn lx-btn--sm" type="button" onClick={() => setRunCursor(cursorFrom(runs.data?.next))}>Trang tiếp</button></footer>}
       </section>
-      <section className="lx-card lx-side" style={{ flexBasis: 480 }} aria-label="Chi tiết Quality Control Run">
+      <section className="lx-card lx-side lx-side--wide" aria-label="Chi tiết Quality Control Run">
         <header className="lx-card__head"><h2 className="lx-h2">Chi tiết {selectedId ? <span className="lx-mono">#QC-{selectedId}</span> : null}</h2>{selected && <span className="lx-hint">Thời gian chạy {runDuration(selected.created_at, selected.finished_at)}</span>}</header>
         {!selectedId && <div className="lx-card__body lx-muted">Chọn Chi tiết tại một Quality Control Run để xem trạng thái từng engine.</div>}
         {detail.isLoading && <div className="lx-card__body">Đang tải chi tiết…</div>}
         {detail.isError && <div className="lx-card__body" role="alert">{errorMessage(detail.error)}</div>}
-        {selected && <div className="lx-card__body lx-stack" style={{ gap: 14 }}>
-          {(ledger.data ?? []).map((row) => <div key={row.engine} className="lx-stack" style={{ gap: 6 }}><div className="lx-row" style={{ justifyContent: 'space-between' }}><span>{engineName[row.engine] ?? row.engine}</span><span className={`lx-badge ${statusBadge(row.status)}`}>{engineStatusLabel[row.status]}</span></div>{row.coverage !== null && <div className={row.status === 'partial' ? 'lx-progress lx-progress--warn' : 'lx-progress'}><i style={{ width: `${Math.round(row.coverage * 100)}%` }} /></div>}{selected.engines.find((engine) => engine.engine === row.engine)?.reason && <span className="lx-hint">{selected.engines.find((engine) => engine.engine === row.engine)?.reason}</span>}</div>)}
+        {selected && <div className="lx-card__body lx-stack lx-stack--3">
+          {(ledger.data ?? []).map((row) => <div key={row.engine} className="lx-stack lx-stack--2"><div className="lx-row lx-row--between"><span>{engineName[row.engine] ?? row.engine}</span><span className={`lx-badge ${statusBadge(row.status)}`}>{engineStatusLabel[row.status]}</span></div>{row.coverage !== null && <div className={row.status === 'partial' ? 'lx-progress lx-progress--warn' : 'lx-progress'}><i style={{ width: `${Math.round(row.coverage * 100)}%` }} /></div>}{selected.engines.find((engine) => engine.engine === row.engine)?.reason && <span className="lx-hint">{selected.engines.find((engine) => engine.engine === row.engine)?.reason}</span>}</div>)}
           {ledger.isLoading && <span className="lx-muted">Đang tải Coverage theo engine…</span>}
           {ledger.isError && <span role="alert">{errorMessage(ledger.error)}</span>}
           {candidates.data && <div className="lx-callout lx-callout--info"><span className="lx-callout__text">Candidate: {candidates.data.raw_count === null ? '' : `${candidates.data.raw_count} bản ghi thô → `}{candidates.data.dedup_count} sau khi gộp trùng, đã sẵn sàng cho Review Center.</span></div>}
-          {canManage && <div className="lx-actions">{selected.status === 'partial' && <button className="lx-btn" type="button" disabled={acting} onClick={() => act('retry')}>Chạy lại engine lỗi</button>}<Link className="lx-btn lx-btn--primary" href="/review">Mở Review Queues →</Link></div>}
+          <div className="lx-actions">{canManage && selected.status === 'partial' && <button className="lx-btn" type="button" disabled={acting} onClick={() => act('retry')}>Chạy lại engine lỗi</button>}<Link className="lx-btn lx-btn--primary" href="/review">Mở Review Queues →</Link></div>
           {actionError && <p role="alert" className="lx-callout">{actionError}</p>}
         </div>}
       </section>
     </div>
-    {selectedId && datasetId && <section className="lx-card lx-card__body lx-stack" aria-label="Dữ liệu kỹ thuật Quality Control Run">
+    {selectedId && datasetId && <section className="lx-card" aria-label="Dữ liệu kỹ thuật Quality Control Run">
+      <div className="lx-card__body lx-stack">
       <h2 className="lx-h2">Dữ liệu kỹ thuật <span className="lx-mono">#QC-{selectedId}</span></h2>
       {detail.isError && <p role="alert">{errorMessage(detail.error)}</p>}
       {detail.isLoading && <p>Đang tải chi tiết…</p>}
@@ -144,6 +145,7 @@ function HistoryContent() {
           )}
         </div>
       </>}
+      </div>
     </section>}
   </AppShell>;
 }
