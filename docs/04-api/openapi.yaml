@@ -360,10 +360,10 @@ paths:
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
-          description: Run
+          description: Run kèm lineage verification và nguồn vận hành (D05, DEC-019 P07)
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Run" }
+              schema: { $ref: "#/components/schemas/RunDetail" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -874,12 +874,58 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
+    get:
+      operationId: rework_list
+      tags: [rework]
+      summary: Danh sách yêu cầu sửa trong dataset (D04, chỉ đọc)
+      description: |
+        Annotator chỉ thấy rework được giao; Reviewer/QA Lead trong dataset và Super Admin thấy
+        toàn dataset. `counts` đếm theo status trong phạm vi nhìn thấy (không theo bộ lọc status).
+      x-labelx-trace: [UC-07, FR-RWK-01]
+      x-labelx-roles: [annotator, reviewer, qa_lead, super_admin]
+      parameters:
+        - { name: dataset_id, in: query, required: true, schema: { type: integer } }
+        - name: status
+          in: query
+          schema: { type: string, enum: [fix_pending, recheck_pending, resolved, reopened] }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Trang rework kèm counts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedReworkList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/rework/{id}/:
+    get:
+      operationId: rework_retrieve
+      tags: [rework]
+      summary: Chi tiết rework kèm timeline các vòng (D04, chỉ đọc)
+      description: |
+        Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+        `timeline` liệt kê từng vòng recheck/verification theo thứ tự; `review_state` là trạng thái frame.
+      x-labelx-trace: [UC-07, FR-RWK-01]
+      x-labelx-roles: [annotator, reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Rework chi tiết
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReworkDetail" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/rework/{id}/submitted/:
     post:
       operationId: rework_submitted
       tags: [rework]
       summary: Annotator báo đã sửa trên CVAT
-      description: Chỉ assignee được báo đã sửa; revision mới phải khác revision gốc, sau đó tạo snapshot job mới.
+      description: |
+        Chỉ assignee được báo đã sửa; revision mới phải khác revision gốc, sau đó tạo snapshot job mới.
+        409: INVALID_TRANSITION | IDEMPOTENCY_KEY_REUSED | REVISION_UNCHANGED (revision hoặc snapshot đã được
+        rework gốc hoặc một vòng trước dùng).
       x-labelx-trace: [UC-07, FR-RWK-02, FR-RWK-03]
       x-labelx-roles: [annotator, super_admin]
       x-labelx-transition: issue.fix_submitted
@@ -974,12 +1020,72 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/decision-cases/:
+    get:
+      operationId: decision_cases_list
+      tags: [review]
+      summary: Tra cứu Decision Case theo rule/issue/version/outcome (UC-12)
+      description: Cursor pagination theo id, giới hạn theo dataset scope; chỉ đọc, lịch sử append-only.
+      x-labelx-trace: [UC-12, FR-ESC-04]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - { name: rule_id, in: query, schema: { type: string } }
+        - { name: issue, in: query, schema: { type: integer } }
+        - { name: version, in: query, schema: { type: string } }
+        - name: outcome
+          in: query
+          schema: { type: string, enum: [confirm, reject, guideline_gap] }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Trang Decision Case
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedDecisionCaseList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/decision-cases/{id}/:
+    get:
+      operationId: decision_cases_detail
+      tags: [review]
+      summary: Một version Decision Case kèm lịch sử các version của issue
+      x-labelx-trace: [UC-12, FR-ESC-04]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Decision Case và history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DecisionCaseDetail" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/review-policy/:
+    get:
+      operationId: review_policy_retrieve
+      tags: [review]
+      summary: Policy lease/idle đang áp dụng (read-only, có version)
+      description: Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+      x-labelx-trace: [FR-REV-13, FR-EVL-06]
+      x-labelx-roles: [annotator, reviewer, qa_lead, qc_admin, super_admin]
+      responses:
+        "200":
+          description: Policy hiện hành
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewPolicy" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "503": { $ref: "#/components/responses/Unavailable" }
   /api/effort-events/:
     post:
       operationId: effort_events_create
       tags: [evaluation]
       summary: Ghi batch effort event từ client
-      description: client_event_id chống ghi trùng; khoảng idle quá t_idle không tính vào effort.
+      description: |
+        client_event_id chống ghi trùng. Server tự tính active time từ started_at/ended_at trừ các `gaps`
+        (idle chỉ bị loại nếu vượt t_idle; blur/hidden/pause loại ngay; chồng lấn tính một lần).
+        409: replay với gaps khác, POLICY_VERSION_MISMATCH, POLICY_NOT_CONFIGURED.
       x-labelx-trace: [UC-05, FR-EVL-06]
       x-labelx-roles: [reviewer, qa_lead, super_admin]
       requestBody:
@@ -1207,6 +1313,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    Unavailable:
+      description: Policy chưa được cấu hình (POLICY_NOT_CONFIGURED)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
 
   schemas:
     # ------------------------------------------------------------ lỗi chung
@@ -1230,6 +1341,8 @@ components:
         - ISSUE_EXISTS
         - BUSINESS_RULE_UNMET
         - INSUFFICIENT_SAMPLE
+        - POLICY_NOT_CONFIGURED
+        - POLICY_VERSION_MISMATCH
     Error:
       type: object
       required: [code, message, request_id]
@@ -2099,12 +2212,59 @@ components:
       properties:
         frame: { $ref: "#/components/schemas/FrameSummary" }
         guideline_version: { type: string, nullable: true }
+        snapshot_revision:
+          type: string
+          description: Revision snapshot đã khoá của run, do server cấp (không lấy từ client)
+        annotations:
+          type: array
+          description: Mọi annotation của frame trong snapshot, kể cả object không có candidate
+          items: { $ref: "#/components/schemas/FrameAnnotation" }
+        predictions:
+          type: array
+          description: Output engine bất biến của run cho frame
+          items: { $ref: "#/components/schemas/FramePrediction" }
         engines:
           type: array
           items: { $ref: "#/components/schemas/EngineRunStatus" }
         issues:
           type: array
           items: { $ref: "#/components/schemas/Issue" }
+    FrameAnnotation:
+      type: object
+      required: [id, source, label_id, bbox]
+      properties:
+        id: { type: string, description: "<source.kind>:<source.id>" }
+        source:
+          type: object
+          required: [kind, id]
+          properties:
+            kind: { type: string }
+            id: { type: integer }
+        label_id: { type: integer }
+        bbox:
+          type: object
+          nullable: true
+          required: [x1, y1, x2, y2]
+          properties:
+            x1: { type: number }
+            y1: { type: number }
+            x2: { type: number }
+            y2: { type: number }
+        rotation: { type: number }
+        occluded: { type: boolean }
+        outside: { type: boolean }
+        z_order: { type: integer }
+        attributes: { type: array, items: { type: object, additionalProperties: true } }
+    FramePrediction:
+      type: object
+      required: [candidate_id, engine, engine_version, family, anchor, evidence]
+      properties:
+        candidate_id: { type: integer }
+        engine: { type: string }
+        engine_version: { type: string }
+        family: { type: string }
+        anchor: { type: object, additionalProperties: true }
+        evidence: {}
     FrameCompleteRequest:
       type: object
       required: [lease_id]
@@ -2264,6 +2424,142 @@ components:
         activity: { type: string, enum: [view_frame, review_issue, adjudicate, recheck_verify] }
         started_at: { type: string, format: date-time }
         ended_at: { type: string, format: date-time }
+        gaps:
+          type: array
+          items: { $ref: "#/components/schemas/EffortGap" }
+        policy_version: { type: string, maxLength: 64 }
+    EffortGap:
+      type: object
+      description: Khoảng trong event mà người dùng không làm việc.
+      required: [started_at, ended_at, reason]
+      properties:
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        reason: { type: string, enum: [idle, blur, hidden, pause] }
+    ReviewPolicy:
+      type: object
+      required: [policy_version, source, decision_status, lease_ttl_seconds, resume_reservation_seconds, idle_threshold_seconds, idle_gap_rule, immediate_exclusion_reasons, renew_on]
+      properties:
+        policy_version: { type: string }
+        source: { type: string }
+        decision_status: { type: string }
+        lease_ttl_seconds: { type: integer }
+        resume_reservation_seconds: { type: integer }
+        idle_threshold_seconds: { type: integer }
+        idle_gap_rule: { type: string }
+        immediate_exclusion_reasons: { type: array, items: { type: string } }
+        renew_on: { type: string }
+    RunDetail:
+      allOf:
+        - $ref: "#/components/schemas/Run"
+        - type: object
+          required: [verification_lineage, selected_final_sources, operational_source]
+          properties:
+            verification_lineage: { type: object, additionalProperties: true }
+            selected_final_sources: { type: object, additionalProperties: true }
+            operational_source:
+              type: object
+              additionalProperties: true
+              description: Gồm scope_complete và blocked_reasons (DEC-019 P07)
+    DecisionCase:
+      type: object
+      required: [id, issue_id, outcome, actor_user_id, rule_id, correct_label, reason, case_version, created_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        outcome: { type: string, enum: [confirm, reject, guideline_gap] }
+        actor_user_id: { type: integer }
+        rule_id: { type: string }
+        correct_label: { type: string, nullable: true }
+        reason: { type: string }
+        case_version: { type: string }
+        created_at: { type: string, format: date-time }
+    DecisionCaseHistoryItem:
+      type: object
+      required: [id, case_version, outcome, actor_user_id, created_at]
+      properties:
+        id: { type: integer }
+        case_version: { type: string }
+        outcome: { type: string, enum: [confirm, reject, guideline_gap] }
+        actor_user_id: { type: integer }
+        created_at: { type: string, format: date-time }
+    DecisionCaseDetail:
+      allOf:
+        - $ref: "#/components/schemas/DecisionCase"
+        - type: object
+          required: [history]
+          properties:
+            history: { type: array, items: { $ref: "#/components/schemas/DecisionCaseHistoryItem" } }
+    PaginatedDecisionCaseList:
+      type: object
+      required: [next, previous, results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results: { type: array, items: { $ref: "#/components/schemas/DecisionCase" } }
+    ReworkRead:
+      type: object
+      required: [id, dataset_id, issue_id, frame_id, annotator_user_id, created_by_user_id, status, instruction, severity, original_revision, submitted_revision, recheck_run_id, due_at, cvat_deep_link, submitted_at, resolved_at, created_at, updated_at, round_count]
+      properties:
+        id: { type: integer }
+        dataset_id: { type: integer }
+        issue_id: { type: integer }
+        frame_id: { type: integer }
+        annotator_user_id: { type: integer }
+        created_by_user_id: { type: integer }
+        status: { type: string, enum: [fix_pending, recheck_pending, resolved, reopened] }
+        instruction: { type: string }
+        severity: { $ref: "#/components/schemas/Severity" }
+        original_revision: { type: string }
+        submitted_revision: { type: string, nullable: true }
+        recheck_run_id: { type: integer, nullable: true }
+        due_at: { type: string, format: date-time }
+        cvat_deep_link: { type: string }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        resolved_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        round_count: { type: integer, minimum: 0 }
+    ReworkDetail:
+      allOf:
+        - $ref: "#/components/schemas/ReworkRead"
+        - type: object
+          required: [review_state, timeline]
+          properties:
+            review_state: { type: string, enum: [unreviewed, in_review, incomplete, reviewed, awaiting_followup, completed] }
+            timeline: { type: array, items: { $ref: "#/components/schemas/ReworkRound" } }
+    ReworkRound:
+      type: object
+      required: [round, revision, snapshot_id, recheck_run_id, recheck_run_status, submitted_at, verification, result_status]
+      properties:
+        round: { type: integer }
+        revision: { type: string }
+        snapshot_id: { type: integer }
+        recheck_run_id: { type: integer }
+        recheck_run_status: { type: string }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        verification:
+          type: object
+          nullable: true
+          required: [id, outcome, verifier_user_id, reason, verified_at]
+          properties:
+            id: { type: integer }
+            outcome: { type: string, enum: [pass, fail] }
+            verifier_user_id: { type: integer }
+            reason: { type: string }
+            verified_at: { type: string, format: date-time }
+        result_status: { type: string, enum: [fix_pending, recheck_pending, resolved, reopened] }
+    PaginatedReworkList:
+      type: object
+      required: [next, previous, results, counts]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results: { type: array, items: { $ref: "#/components/schemas/ReworkRead" } }
+        counts:
+          type: object
+          description: Số rework theo status trong phạm vi nhìn thấy
+          additionalProperties: { type: integer }
     EffortEventReceipt:
       type: object
       required: [accepted, duplicates]
