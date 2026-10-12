@@ -53,6 +53,18 @@ export function ContextBar({
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const focusItem = (index: number) => requestAnimationFrame(() => {
+    root.current?.querySelectorAll<HTMLElement>('[role="menuitem"]')[index]?.focus();
+  });
+  function menuKey(event: React.KeyboardEvent<HTMLDivElement>) {
+    const items = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    if (!items.length || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[next]?.focus();
+  }
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
@@ -63,7 +75,7 @@ export function ContextBar({
   }, [open]);
 
   const datasetContent = <>
-    <span className="lx-chip__k">Dataset:</span>
+    <span className="lx-chip__k">Dataset</span>
     <span className="lx-chip__v">{datasetLabel}</span>
     {isReadOnly && <span className="lx-tag lx-tag--ro">read-only</span>}
   </>;
@@ -74,10 +86,11 @@ export function ContextBar({
       <div className="lx-row lx-context-items">
         {options.length > 1 && datasetIdOverride === undefined ? (
           <div className="lx-ctx" ref={root}>
-            <button ref={trigger} type="button" className="lx-chip" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+            <button ref={trigger} type="button" className="lx-chip" aria-haspopup="menu" aria-expanded={open} onClick={() => { const next = !open; setOpen(next); if (next) focusItem(Math.max(0, options.indexOf(datasetId ?? -1))); }}
+              onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); setOpen(true); focusItem(Math.max(0, options.indexOf(datasetId ?? -1))); } }}>
               {datasetContent}<Chevron />
             </button>
-            {open && <div className="lx-menu" role="menu">
+            {open && <div className="lx-menu" role="menu" onKeyDown={menuKey}>
               <div className="lx-menu__head">Dataset và Version</div>
               {options.map((id) => <button key={id} type="button" role="menuitem" className={`lx-menu__item${id === datasetId ? ' is-active' : ''}`}
                 onClick={() => { setDatasetId(id); setOpen(false); }}>
@@ -88,35 +101,35 @@ export function ContextBar({
         ) : <div className="lx-chip lx-chip--static">{datasetContent}</div>}
 
         <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Quality Control Run:</span>
+          <span className="lx-chip__k">Quality Control Run</span>
           <span className="lx-chip__v lx-mono">{activeRun}</span>
           {run && <span className={`lx-dot ${run.tone}`} role="img" aria-label={`Trạng thái run: ${run.label}`} title={`Trạng thái: ${run.label}`} />}
         </div>
 
         <div className="lx-chip lx-chip--static" title="Snapshot bất biến">
-          <span className="lx-chip__k">Snapshot:</span>
+          <span className="lx-chip__k">Snapshot</span>
           <span className="lx-chip__v lx-mono">{snapshotName}</span>
           {snapshotRevision && <span className="lx-chip__rev lx-mono">{snapshotRevision}</span>}
           {snapshotName !== 'Chưa chọn' && <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" role="img" aria-label="Đã khoá"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>}
         </div>
 
         {effectiveDatasetId !== null && <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Phạm vi:</span>
+          <span className="lx-chip__k">Phạm vi</span>
           <span className="lx-chip__v">{scopeName}</span>
         </div>}
 
         <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Guideline:</span>
+          <span className="lx-chip__k">Guideline</span>
           <span className="lx-chip__v">{guidelineVersion}</span>
         </div>
 
         <div className="lx-chip lx-chip--static">
-          <span className="lx-chip__k">Taxonomy:</span>
+          <span className="lx-chip__k">Taxonomy</span>
           <span className="lx-chip__v">{taxonomyVersion}</span>
         </div>
 
         <div className="lx-chip lx-chip--static lx-chip--role">
-          <span className="lx-chip__k">Vai trò:</span>
+          <span className="lx-chip__k">Vai trò</span>
           <span className="lx-chip__v lx-chip__v--primary">{roleLabel}</span>
         </div>
       </div>

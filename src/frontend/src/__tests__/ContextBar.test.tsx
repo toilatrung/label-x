@@ -11,10 +11,10 @@ describe('Dataset context', () => {
     await api.signIn('admin');
     render(<AuthProvider><ContextBar /></AuthProvider>);
     await screen.findByText('Super Admin');
-    const chip = screen.getByText('Dataset:').closest('div')!;
+    const chip = screen.getByText('Dataset').closest('div')!;
     expect(within(chip).getByText('Chưa chọn')).toBeDefined();
     expect(screen.queryByText(/Dataset.*#1/)).toBeNull();
-    expect(screen.queryByText('Phạm vi:')).toBeNull();
+    expect(screen.queryByText('Phạm vi')).toBeNull();
   });
 
   it('uses an explicit dataset grant from the session', async () => {
@@ -22,7 +22,7 @@ describe('Dataset context', () => {
     await api.signIn('reviewer');
     render(<AuthProvider><ContextBar /></AuthProvider>);
     await screen.findByText('Reviewer');
-    const chip = screen.getByText('Dataset:').closest('div')!;
+    const chip = screen.getByText('Dataset').closest('div')!;
     expect(within(chip).getByText('Dataset mẫu #1')).toBeDefined();
   });
 
@@ -31,7 +31,7 @@ describe('Dataset context', () => {
     await api.signIn('reviewer');
     render(<AuthProvider><ContextBar snapshotName="SNP-011" snapshotRevision="rev f02a6d" /></AuthProvider>);
     await screen.findByText('Reviewer');
-    expect(screen.getByText('Phạm vi:')).toBeDefined();
+    expect(screen.getByText('Phạm vi')).toBeDefined();
     expect(screen.getByText('Toàn dataset')).toBeDefined();
     expect(screen.getByText('rev f02a6d')).toBeDefined();
     expect(screen.getByRole('img', { name: 'Đã khoá' })).toBeDefined();
@@ -44,7 +44,7 @@ describe('Dataset context', () => {
     await screen.findByText('Reviewer');
     expect(screen.getByRole('img', { name: 'Trạng thái run: Partial' })).toBeDefined();
     expect(screen.getByText('read-only')).toBeDefined();
-    expect(screen.getByText('Guideline:')).toBeDefined();
-    expect(screen.getByText('Taxonomy:')).toBeDefined();
+    expect(screen.getByText('Guideline')).toBeDefined();
+    expect(screen.getByText('Taxonomy')).toBeDefined();
   });
 });

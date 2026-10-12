@@ -13,7 +13,7 @@ interface FlowStep { href: string; title: string; description?: string }
 // Nhãn và liên kết lấy từ docs/design/screens/FlowNav.dc.html.
 const FLOWS: Record<FlowModule, { title: string; steps: FlowStep[]; permission: (role: UserRole) => boolean }> = {
   analysis: { title: 'Quy trình phân tích', permission: canAccessAnalysis, steps: [
-    { href: '/analysis/snapshots', title: 'Snapshot' },
+    { href: '/analysis', title: 'Snapshot' },
     { href: '/analysis/config', title: 'Analysis Configuration' },
     { href: '/analysis/history', title: 'Execution History' }] },
   review: { title: 'Quy trình review', permission: canAccessReview, steps: [

@@ -33,7 +33,7 @@ it('links every step and offers previous/next arrows with tooltips naming the ne
   const nav = await screen.findByRole('navigation', { name: 'Quy trình phân tích' });
   expect(within(nav).getByRole('link', { name: /^3.*Execution History/ }).getAttribute('href')).toBe('/analysis/history');
   expect(within(nav).getByRole('link', { name: /^2.*Analysis Configuration/ }).getAttribute('aria-current')).toBe('step');
-  expect(within(nav).getByRole('link', { name: 'Bước trước: Snapshot' }).getAttribute('href')).toBe('/analysis/snapshots');
+  expect(within(nav).getByRole('link', { name: 'Bước trước: Snapshot' }).getAttribute('href')).toBe('/analysis');
   expect(within(nav).getByRole('link', { name: 'Bước sau: Execution History' }).getAttribute('href')).toBe('/analysis/history');
   expect(within(nav).getByText('Bước 2 / 3')).toBeDefined();
 });
