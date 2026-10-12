@@ -4,11 +4,28 @@ from rest_framework import status
 
 from config.exceptions import ApiError
 from orchestration.models import CandidateRecord
-from review.models import FrameReview, Issue, ReviewDecision
+from review.models import FrameReview, Issue, ReviewDecision, ReworkRequest
 
 
 def has_persisted_decision(frame: FrameReview) -> bool:
     return ReviewDecision.objects.filter(issue__frame_review=frame).exists()
+
+
+def undecided_issue_ids(frame: FrameReview) -> list[int]:
+    """Issues without any committed human decision (escalated ones wait for a case instead)."""
+    return sorted(
+        Issue.objects.filter(frame_review=frame)
+        .exclude(state=Issue.State.ESCALATED)
+        .exclude(review_decisions__isnull=False)
+        .values_list("pk", flat=True)
+        .distinct()
+    )
+
+
+def frame_reworks_all_resolved(frame: FrameReview) -> bool:
+    """True when the frame has at least one rework and every one of them is resolved."""
+    reworks = ReworkRequest.objects.filter(issue__frame_review=frame)
+    return reworks.exists() and not reworks.exclude(status=ReworkRequest.Status.RESOLVED).exists()
 
 
 def reset_undecided_issues(frame: FrameReview) -> None:

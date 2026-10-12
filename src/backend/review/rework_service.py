@@ -23,9 +23,11 @@ from accounts.models import CvatIdentity, Role, RoleAssignment
 from accounts.permissions import record_rejection_audit
 from audit.services import append_audit_event
 from config.exceptions import ApiError
+from review import decision_source
 from review.models import (
     FrameReview,
     Issue,
+    Lease,
     ReviewDecision,
     ReworkRecheck,
     ReworkRequest,
@@ -639,7 +641,28 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
 
         transaction.on_commit(lambda: enqueue_final_run(rework.issue.frame_review.run_id, user.pk))
     frame = FrameReview.objects.select_for_update().get(pk=issue.frame_review_id)
-    # Completion belongs to the final-scope path (finalization_service), never to a single verify.
+    _move_frame_to_followup(frame)
+    return rework
+
+
+def _move_frame_to_followup(frame: FrameReview) -> None:
+    """Frame effect of a verify, in the verify transaction.
+
+    A frame enters awaiting_followup only when no issue on it is left undecided: while the
+    reviewer still has work there the frame and its lease are left alone (the verification and
+    the resolved rework are still recorded) and frames/complete moves it later. Completion
+    belongs to the final-scope path (finalization_service), never to a single verify, so a
+    COMPLETED frame is left exactly as it is. A frame still in_review with a live lease is
+    handed over to follow-up and its lease closed. Any other state keeps the existing behaviour.
+    """
+
+    if frame.state == FrameReview.State.COMPLETED:
+        return
+    if decision_source.undecided_issue_ids(frame):
+        return
+    if frame.state == FrameReview.State.IN_REVIEW:
+        Lease.objects.filter(frame_review=frame, closed_at__isnull=True).update(
+            closed_at=timezone.now()
+        )
     frame.state = FrameReview.State.AWAITING_FOLLOWUP
     frame.save(update_fields=["state"])
-    return rework
