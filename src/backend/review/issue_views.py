@@ -11,6 +11,7 @@ from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from review.api_serializers import (
+    IDEMPOTENCY_KEY_PARAM,
     FrameCompleteRequestSerializer,
     FrameIssuesSerializer,
     FrameSummarySerializer,
@@ -124,6 +125,7 @@ class ManualIssueView(_ReviewView):
 
     @extend_schema(
         operation_id="issues_create",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=ManualIssueCreateSerializer,
         responses={
             201: IssueSerializer,
@@ -182,6 +184,7 @@ class IssueDecisionView(_ReviewView):
 
     @extend_schema(
         operation_id="issues_decide",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=IssueDecisionCreateSerializer,
         responses={
             201: IssueDecisionSerializer,

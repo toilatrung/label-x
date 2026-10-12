@@ -573,3 +573,50 @@ def test_frame_issues_serves_locked_revision_full_annotations_and_scope(world, m
     assert client(world["author"]).get(f"/api/frames/{frame_id}/issues/").status_code == 403
     outsider = User.objects.create_user("outsider-r03")
     assert client(outsider).get(f"/api/frames/{frame_id}/issues/").status_code == 403
+
+
+@pytest.mark.django_db
+def test_claim_with_candidate_outside_review_contract_is_422_and_atomic(world):
+    """queues_next documents 422: a candidate whose family is not in the contract blocks claim."""
+    from orchestration.models import CandidateRecord, ShardCommit
+
+    run = world["run"]
+    shard = ShardCommit.objects.create(
+        idempotency_key="bogus-shard",
+        run=run,
+        snapshot_id=run.snapshot_id,
+        engine="detector",
+        engine_version="v1",
+        shard_index=0,
+        output_sha256="a" * 64,
+    )
+    CandidateRecord.objects.create(
+        run=run,
+        dedup_key="d" * 64,
+        shard=shard,
+        engine="detector",
+        engine_version="v1",
+        family="bogus_family",
+        cvat_task_id=200,
+        frame_number=0,
+        anchor={"kind": "prediction_region", "objects": [], "policy_version": "anchor-v1"},
+        policy_version="anchor-v1",
+        evidence={"engine": "detector"},
+        evidence_sha256="e" * 64,
+    )
+    response = client(world["reviewer"]).post(next_url(), {"run_id": run.pk}, format="json")
+    assert response.status_code == 422, response.data
+    assert response.data["code"] == "BUSINESS_RULE_UNMET"
+    assert not Lease.objects.filter(closed_at__isnull=True).exists()  # nothing half-claimed
+
+
+@pytest.mark.django_db
+def test_ranking_passes_stored_json_through_even_when_unexpected(world):
+    """The documented schema must not coerce runtime data (no 500 on odd stored JSON)."""
+    entry = RunRankingEntry.objects.filter(ranking__source=RunRanking.Source.RISK).get()
+    entry.issue_counts = {"E1": "three", "E2": None, "extra": {"nested": 1}}
+    entry.explanation = ["not", "a", "dict"]
+    entry.save(update_fields=["issue_counts", "explanation"])
+    (row,) = ranking_rows(client(world["reviewer"]), world["run"].pk)
+    assert row["issue_counts"] == {"E1": "three", "E2": None, "extra": {"nested": 1}}
+    assert row["explanation"] == ["not", "a", "dict"]

@@ -17,7 +17,7 @@ from review.adjudication_service import (
     list_decision_cases,
     list_escalations,
 )
-from review.api_serializers import PaginatedEscalationSerializer
+from review.api_serializers import IDEMPOTENCY_KEY_PARAM, PaginatedEscalationSerializer
 from review.case_serializers import (
     AdjudicationCreateSerializer,
     DecisionCaseDetailSerializer,
@@ -39,6 +39,10 @@ class EscalationsListView(APIView):
 
     @extend_schema(
         operation_id="escalations_list",
+        parameters=[
+            OpenApiParameter("run", int, required=False),
+            OpenApiParameter("cursor", str, required=False),
+        ],
         responses={
             200: PaginatedEscalationSerializer,
             400: ErrorSerializer,
@@ -68,6 +72,7 @@ class IssueAdjudicationView(APIView):
 
     @extend_schema(
         operation_id="issues_adjudicate",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=AdjudicationCreateSerializer,
         responses={
             201: DecisionCaseSerializer,

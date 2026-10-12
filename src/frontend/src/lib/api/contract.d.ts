@@ -1175,15 +1175,15 @@ export interface components {
             /** @description QC run cuối sau rework (FR-RWK-06) hoặc run gốc khi không có rework (BLOCKER-011) */
             is_final: boolean;
             /** @description Run gốc mà run cuối này nối verification về (DEC-005) */
-            origin_run_id?: number | null;
-            score_version?: string | null;
-            model_artifact?: components["schemas"]["ModelArtifact"] | null;
+            origin_run_id: number | null;
+            score_version: string | null;
+            model_artifact: components["schemas"]["ModelArtifact"] | null;
             engines: components["schemas"]["EngineRunStatus"][];
             created_by: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
-            finished_at?: string | null;
+            finished_at: string | null;
         };
         RunShard: {
             id: number;
@@ -1371,7 +1371,7 @@ export interface components {
             explanation: {
                 [key: string]: unknown;
             };
-            lease_holder_user_id?: number | null;
+            lease_holder_user_id: number | null;
         };
         GuidelineRule: {
             /** @example VEH-03 */
@@ -1550,7 +1550,7 @@ export interface components {
         };
         FrameIssues: {
             frame: components["schemas"]["FrameSummary"];
-            guideline_version?: string | null;
+            guideline_version: string | null;
             /** @description Revision snapshot đã khoá của run, do server cấp (không lấy từ client) */
             snapshot_revision?: string;
             /** @description Mọi annotation của frame trong snapshot, kể cả object không có candidate */
@@ -1635,10 +1635,10 @@ export interface components {
             action: components["schemas"]["PersistedIssueDecisionAction"];
             actor_user_id: number;
             revision: string;
-            family?: components["schemas"]["IssueFamily"];
-            severity?: components["schemas"]["Severity"];
-            reason?: string | null;
-            rule_id?: string | null;
+            family: components["schemas"]["IssueFamily"];
+            severity: components["schemas"]["Severity"] | null;
+            reason: string | null;
+            rule_id: string | null;
             /** Format: date-time */
             created_at: string;
             audit_event_id?: number;
@@ -1658,7 +1658,7 @@ export interface components {
             outcome: "confirm" | "reject" | "guideline_gap";
             actor_user_id: number;
             rule_id: string;
-            correct_label?: string | null;
+            correct_label: string | null;
             reason: string;
             case_version: string;
             /** Format: date-time */
@@ -1691,12 +1691,12 @@ export interface components {
             /** @enum {string} */
             status: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
             original_revision: string;
-            submitted_revision?: string | null;
-            recheck_run_id?: number | null;
+            submitted_revision: string | null;
+            recheck_run_id: number | null;
             /** Format: date-time */
             due_at: string;
             /** Format: uri */
-            cvat_deep_link?: string;
+            cvat_deep_link: string;
         };
         ReferenceCreate: {
             snapshot_id: number;
@@ -2017,8 +2017,8 @@ export interface components {
             results: components["schemas"]["ConfigVersion"][];
         };
         PaginatedIssueList: {
-            next?: string | null;
-            previous?: string | null;
+            next: string | null;
+            previous: string | null;
             results: components["schemas"]["Issue"][];
         };
         PaginatedRunList: {
@@ -2027,8 +2027,8 @@ export interface components {
             results: components["schemas"]["Run"][];
         };
         PaginatedRankedFrameList: {
-            next?: string | null;
-            previous?: string | null;
+            next: string | null;
+            previous: string | null;
             /** @enum {string} */
             source: "risk" | "random_audit";
             /** @description SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate */
@@ -2973,6 +2973,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
         };
@@ -3060,7 +3061,9 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedIssueList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     issues_adjudicate: {
