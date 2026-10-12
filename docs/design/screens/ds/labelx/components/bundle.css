@@ -552,4 +552,3 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-th--check { width: 40px; }
 .lx-check-accent { accent-color: var(--primary); }
 .lx-wrap-any { overflow-wrap: anywhere; }
-.lx-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
