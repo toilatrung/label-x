@@ -70,6 +70,8 @@ function testQueryClient() {
 describe('Escalations UI (T-039)', () => {
   beforeEach(() => {
     replace.mockClear();
+    HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+    HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
   });
 
   async function renderPage(
@@ -279,7 +281,7 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.queryByText(/IoU/)).toBeNull();
   });
 
-  it('lists real issues in the design layout and blocks Tạo Guideline Gap with the notice (FE-12)', async () => {
+  it('opens Guideline Gap design from an issue without saving it (FE-12)', async () => {
     const { calls } = await renderPage();
     await screen.findByText('QC-00042');
     expect(screen.queryByText('QC-00098')).toBeNull();
@@ -287,7 +289,10 @@ describe('Escalations UI (T-039)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     const before = calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect(screen.getByText(/Chức năng vẫn chưa được kết nối với server/)).toBeDefined();
+    expect(screen.getByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeDefined();
+    expect(screen.getByText(/QC-00042 · Quy tắc VEH-03/)).toBeDefined();
+    fireEvent.click(screen.getByRole('dialog').querySelector('button[type="submit"]')!);
+    expect(screen.getByText('Mô tả nội dung còn thiếu.')).toBeDefined();
     expect(calls.length).toBe(before);
   });
 

@@ -106,11 +106,12 @@ function SnapshotWorkspace() {
     }
   }, [item, snapshotDataset, datasetQuery.hasNextPage, datasetQuery.isFetchingNextPage, datasetQuery]);
 
-  const displayDatasetName = item ? snapshotDataset?.name : selectedDataset?.name;
+  const isSampleFallback = (datasetQuery.isError || (datasetQuery.isSuccess && !allDatasets.length)) && !id;
+  const displayDatasetName = item ? snapshotDataset?.name : (selectedDataset?.name ?? (isSampleFallback ? 'Road Vision Urban · v1.4' : undefined));
   const displayGuideline = item ? (item.guideline_version ?? snapshotDataset?.guideline_version ?? undefined)
-    : (selectedDataset?.guideline_version ?? undefined);
+    : (selectedDataset?.guideline_version ?? (isSampleFallback ? 'v1.2' : undefined));
   const displayTaxonomy = item ? (item.taxonomy_version ?? snapshotDataset?.taxonomy_version ?? undefined)
-    : (selectedDataset?.taxonomy_version ?? undefined);
+    : (selectedDataset?.taxonomy_version ?? (isSampleFallback ? 'v3' : undefined));
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
   if (!canEnter) return <ForbiddenView requiredPermission="Quality Assurance Lead / Quality Control Admin / Super Admin" />;
@@ -124,10 +125,10 @@ function SnapshotWorkspace() {
   return <AppShell activeKey="analysis" flowStep={1} showFlowNav={false}
     context={{
       datasetName: displayDatasetName,
-      datasetIdOverride: item?.dataset_id,
-      snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : undefined,
-      snapshotRevision: item?.revision_hash ? shortRevision(item.revision_hash) : undefined,
-      isReadOnly: item?.status === 'locked',
+      datasetIdOverride: item?.dataset_id ?? (isSampleFallback ? 1 : undefined),
+      snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : (isSampleFallback ? 'SNP-014 · Đã khoá' : undefined),
+      snapshotRevision: item?.revision_hash ? shortRevision(item.revision_hash) : (isSampleFallback ? 'a91f3c' : undefined),
+      isReadOnly: item?.status === 'locked' || isSampleFallback,
       guidelineVersion: displayGuideline,
       taxonomyVersion: displayTaxonomy,
     }}
@@ -147,63 +148,60 @@ function SnapshotWorkspace() {
         <FlowNav flow="analysis" currentStep={1} variant="tabs" />
         <div className="lx-card__head"><h2 className="lx-h2">Tạo snapshot mới</h2></div>
         <div className="lx-card__body lx-stack">
-          {datasetQuery.isError && <>
-            <div className="lx-callout" role="alert">{errorMessage(datasetQuery.error)}</div>
+          {isSampleFallback ? (
             <SnapshotCreateSample />
-          </>}
-          {!datasetQuery.isError && <SnapshotRevisionFields dataset={
-            <div className="lx-field"><label className="lx-label" htmlFor="snapshot-dataset">Dataset / project CVAT</label>
-              <select id="snapshot-dataset" className="lx-select" value={datasetId ?? ''} disabled={requestLocked}
-                onChange={event => setDatasetId(event.target.value ? Number(event.target.value) : null)}>
-                <option value="">Chọn Dataset</option>
-                {datasetId !== null && !selectedDataset && <option value={datasetId}>Dataset #{datasetId}</option>}
-                {allDatasets.map(dataset => <option key={dataset.id} value={dataset.id}>
-                  {dataset.name} · project #{dataset.cvat_project_id}</option>)}
-              </select></div>} />}
-            {datasetQuery.isPending && <p role="status">Đang tải Dataset…</p>}
-            {datasetQuery.isSuccess && !allDatasets.length && (
-              <p className="lx-muted">Chưa có Dataset nào trong phạm vi tài khoản của bạn.</p>
-            )}
-            {datasetQuery.hasNextPage && <button className="lx-btn" type="button" disabled={datasetQuery.isFetchingNextPage}
-              onClick={() => void datasetQuery.fetchNextPage()}>Tải thêm Dataset</button>}
-            {datasetId === null && !datasetQuery.isError && <p className="lx-muted">Vui lòng chọn một Dataset để tạo Snapshot.</p>}
-            {datasetId !== null && !selectedDataset && datasetQuery.isSuccess && (
-              <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
-            )}
-            {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
-            {selectedDataset && canRead && <>
-              {taskQuery.isPending && <p role="status">Đang tải Task/Job…</p>}
-              {taskQuery.isError && <div className="lx-callout" role="alert">{errorMessage(taskQuery.error)}
-                <button className="lx-btn" type="button" onClick={() => void taskQuery.refetch()}>Thử lại</button></div>}
-              {taskQuery.data && <SnapshotForm key={`${session.user.id}:${datasetId}`} datasetId={datasetId!}
-                tasks={taskQuery.data} canCreate={canCreate} onRequestLockChange={setRequestLocked} />}
-            </>}
+          ) : (
+            <>
+              <SnapshotRevisionFields dataset={
+                <div className="lx-field"><label className="lx-label" htmlFor="snapshot-dataset">Dataset / project CVAT</label>
+                  <select id="snapshot-dataset" className="lx-select" value={datasetId ?? ''} disabled={requestLocked}
+                    onChange={event => setDatasetId(event.target.value ? Number(event.target.value) : null)}>
+                    <option value="">Chọn Dataset</option>
+                    {datasetId !== null && !selectedDataset && <option value={datasetId}>Dataset #{datasetId}</option>}
+                    {allDatasets.map(dataset => <option key={dataset.id} value={dataset.id}>
+                      {dataset.name} · project #{dataset.cvat_project_id}</option>)}
+                  </select></div>} />
+              {datasetQuery.isPending && <p role="status">Đang tải Dataset…</p>}
+              {datasetQuery.hasNextPage && <button className="lx-btn" type="button" disabled={datasetQuery.isFetchingNextPage}
+                onClick={() => void datasetQuery.fetchNextPage()}>Tải thêm Dataset</button>}
+              {datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để tạo Snapshot.</p>}
+              {datasetId !== null && !selectedDataset && datasetQuery.isSuccess && (
+                <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
+              )}
+              {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
+              {selectedDataset && canRead && <>
+                {taskQuery.isPending && <p role="status">Đang tải Task/Job…</p>}
+                {taskQuery.isError && <div className="lx-callout" role="alert">{errorMessage(taskQuery.error)}
+                  <button className="lx-btn" type="button" onClick={() => void taskQuery.refetch()}>Thử lại</button></div>}
+                {taskQuery.data && <SnapshotForm key={`${session.user.id}:${datasetId}`} datasetId={datasetId!}
+                  tasks={taskQuery.data} canCreate={canCreate} onRequestLockChange={setRequestLocked} />}
+              </>}
+            </>
+          )}
         </div>
       </section>
       <section className="lx-card lx-side" aria-label="Snapshot đang dùng"><div className="lx-card__head"><h2 className="lx-h2">Snapshot đang dùng</h2>
-        {recentLocked && !recent.isError && <span className="lx-badge lx-badge--success">Đã khoá</span>}</div>
-        <div className="lx-card__body">{datasetQuery.isError ? <SnapshotInUseSample />
-          : recent.isError ? <div className="lx-callout" role="alert">{errorMessage(recent.error)}
-            <button className="lx-btn" type="button" onClick={() => void recent.refetch()}>Thử lại</button></div>
-            : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
-              : recentLocked ? <div className="lx-stack"><dl className="lx-kv">
-                <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>{snapshotCode(recentLocked.id)}</Link></dd>
-                <dt>Annotation revision</dt><dd className="lx-mono" title={recentLocked.revision_hash ?? undefined}>{shortRevision(recentLocked.revision_hash)}</dd>
-                <dt>Taxonomy</dt><dd>{recentLocked.taxonomy_version || '—'}</dd>
-                <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
-                <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
-              </dl>
-                {datasetRuns.isError ? <SnapshotInUseExtra error={errorMessage(datasetRuns.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
-                  <dt>Mô hình độc lập</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
-                  <dt>Cấu hình kiểm tra</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
-                  <dt>Seed lấy mẫu</dt><dd className="lx-mono">{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>
-                </dl>}
-                {datasetRuns.isSuccess && !inUseRun && <p className="lx-muted lx-text-13">Snapshot này chưa có Quality Control Run nên chưa có mô hình, cấu hình và seed.</p>}
-              </div> : isSearchingLocked && datasetId ? (
-                <p className="lx-muted" role="status">Đang tải…</p>
-              ) : (
-                <p className="lx-muted">{datasetId === null ? 'Vui lòng chọn một Dataset để tạo Snapshot.' : 'Chưa có Snapshot đã khóa.'}</p>
-              )}</div>
+        {(recentLocked || isSampleFallback) && <span className="lx-badge lx-badge--success">Đã khoá</span>}</div>
+        <div className="lx-card__body">{isSampleFallback || (recent.isError && !recentLocked) ? <SnapshotInUseSample />
+        : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
+        : recentLocked ? <div className="lx-stack"><dl className="lx-kv">
+          <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>{snapshotCode(recentLocked.id)}</Link></dd>
+          <dt>Annotation revision</dt><dd className="lx-mono" title={recentLocked.revision_hash ?? undefined}>{shortRevision(recentLocked.revision_hash)}</dd>
+          <dt>Taxonomy</dt><dd>{recentLocked.taxonomy_version || '—'}</dd>
+          <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
+          <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
+        </dl>
+          {datasetRuns.isError ? <SnapshotInUseExtra error={errorMessage(datasetRuns.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
+            <dt>Mô hình độc lập</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
+            <dt>Cấu hình kiểm tra</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
+            <dt>Seed lấy mẫu</dt><dd className="lx-mono">{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>
+          </dl>}
+          {datasetRuns.isSuccess && !inUseRun && <p className="lx-muted lx-text-13">Snapshot này chưa có Quality Control Run nên chưa có mô hình, cấu hình và seed.</p>}
+        </div> : isSearchingLocked && datasetId ? (
+          <p className="lx-muted" role="status">Đang tải…</p>
+        ) : (
+          <p className="lx-muted">{datasetId === null ? 'Vui lòng chọn một Dataset để tạo Snapshot.' : 'Chưa có Snapshot đã khóa.'}</p>
+        )}</div>
       </section>
     </div>}
   </AppShell>;

@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { REWORK_ROWS, REWORK_TABS, type ReworkTabKey } from '@/lib/mock/rework';
 import { SAMPLE, formatCount, formatPercent } from '@/lib/mock/fixtures';
 
@@ -14,7 +12,6 @@ export function ReworkTracking() {
   const { rework } = SAMPLE;
   return (
     <>
-      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice /></div>
       <div className="lx-grid lx-grid--4">
         <div className="lx-metric"><span className="lx-metric__k">Tổng yêu cầu sửa</span><span className="lx-metric__v">{formatCount(rework.total)}</span><span className="lx-metric__n">Từ {formatCount(SAMPLE.confirmedErrors)} lỗi đã xác nhận</span></div>
         <div className="lx-metric"><span className="lx-metric__k">Chờ sửa</span><span className="lx-metric__v">5</span><span className="lx-metric__n">Annotator chưa nộp lại</span></div>

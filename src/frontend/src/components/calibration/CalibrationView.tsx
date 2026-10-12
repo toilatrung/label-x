@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { MODEL_ROWS, REVIEWER_ROWS } from '@/lib/calibration/sample-data';
 
 type Tab = 'reviewer' | 'model';
@@ -17,7 +16,7 @@ export function CalibrationHeader() {
       </div>
       <div className="lx-actions">
         {/* TODO(backend): POST /api/calibration/assignments/ (chặn, không gọi API giả) */}
-        <button type="button" className="lx-btn lx-btn--primary" onClick={signalNoticeAttention}>Giao bài hiệu chỉnh</button>
+        <button type="button" className="lx-btn lx-btn--primary">Giao bài hiệu chỉnh</button>
       </div>
     </div>
   );
@@ -28,7 +27,6 @@ export function CalibrationBody() {
   return (
     <>
       {/* TODO(backend): GET /api/calibration/reviewers/ ; GET /api/calibration/models/ */}
-      <DemoRegionNotice listenGlobal />
       <section className="lx-card" aria-label="Hiệu chỉnh">
         <div className="lx-tabs lx-tabs--inset" role="tablist">
           {TABS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={`lx-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>{label}</button>)}

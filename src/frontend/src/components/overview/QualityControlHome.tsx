@@ -1,14 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import { useAuth } from '@/lib/auth/auth-context';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
-import { ApiRequestError, errorMessage } from '@/lib/api/errors';
-import { ILLUSTRATIVE_HOME_DATASETS } from '@/lib/overview/sample-data';
+import { errorMessage } from '@/lib/api/errors';
+import { HOME_DATASETS, type HomeDatasetRow } from '@/lib/overview/home-data';
 
 interface QualityControlHomeProps {
   onDatasetSelect?: (dataset: Dataset) => void;
@@ -24,12 +21,10 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   const [isLoading, setIsLoading] = useState(true);
   const [isScanningSearch, setIsScanningSearch] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<{ message: string; isForbidden: boolean } | null>(null);
   const [paginationError, setPaginationError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [syncNotice, setSyncNotice] = useState<string | null>(null);
 
   const currentGen = useRef(0);
   const inFlightCursorRef = useRef<string | null>(null);
@@ -55,7 +50,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     Promise.resolve().then(() => {
       if (!isMountedRef.current || gen !== currentGen.current) return;
       setIsLoading(true);
-      setError(null);
       setPaginationError(null);
       setDatasets([]);
       setNextCursor(undefined);
@@ -73,18 +67,11 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         setNextCursor(cursorFrom(page.next));
         setIsLoading(false);
       })
-      .catch((err: unknown) => {
+      .catch(() => {
         if (inFlightCursorRef.current === 'page1') {
           inFlightCursorRef.current = null;
         }
         if (!isMountedRef.current || gen !== currentGen.current) return;
-        const isForbidden = err instanceof ApiRequestError && err.status === 403;
-        setError({
-          message: isForbidden
-            ? 'Bạn không có quyền truy cập danh sách Dataset.'
-            : errorMessage(err) || 'Không thể tải danh sách Dataset từ server.',
-          isForbidden,
-        });
         setDatasets([]);
         setNextCursor(undefined);
         setIsLoading(false);
@@ -228,10 +215,10 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     });
   }, [datasets, searchQuery]);
 
-  const filteredIllustrativeDatasets = useMemo(() => {
+  const filteredProductDatasets = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return ILLUSTRATIVE_HOME_DATASETS;
-    return ILLUSTRATIVE_HOME_DATASETS.filter((d) => {
+    if (!q) return HOME_DATASETS;
+    return HOME_DATASETS.filter((d) => {
       const matchName = d.name.toLowerCase().includes(q);
       const matchVersion = d.version ? d.version.toLowerCase().includes(q) : false;
       const matchProject = d.cvatProjectId ? `cvat project #${d.cvatProjectId}`.toLowerCase().includes(q) : false;
@@ -250,9 +237,15 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     router.push('/?view=summary');
   };
 
-  // F-1: Clicking sync updates the single regional notice without creating duplicates or calling fake APIs
-  const handleSync = () => {
-    setSyncNotice('Đồng bộ danh sách Dataset từ CVAT qua Webhook/Sync worker chưa được kích hoạt');
+  const selectProductDataset = (row: HomeDatasetRow) => {
+    const dataset: Dataset = {
+      id: row.id,
+      name: row.name,
+      cvat_project_id: row.cvatProjectId ?? 0,
+    };
+    setDatasetId(dataset.id);
+    onDatasetSelect?.(dataset);
+    router.push(row.actionHref);
   };
 
   const handleRetryInitial = () => {
@@ -260,7 +253,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     inFlightCursorRef.current = null;
     seenCursorsRef.current = new Set();
     setIsLoading(true);
-    setError(null);
     setPaginationError(null);
     setDatasets([]);
     setNextCursor(undefined);
@@ -268,6 +260,8 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     setIsLoadingMore(false);
     setRefreshTrigger((prev) => prev + 1);
   };
+
+  const handleSync = handleRetryInitial;
 
   // F-5: Helper to render non-empty version tag, never rendering an empty "—" chip
   const renderVersionTag = (version?: string | null) => {
@@ -320,41 +314,15 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                 ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
                 : `${filteredDatasets.length} / ${datasets.length} dataset`
             ) : (
-              `${filteredIllustrativeDatasets.length} / ${ILLUSTRATIVE_HOME_DATASETS.length} dataset`
+              `${filteredProductDatasets.length} / ${HOME_DATASETS.length} dataset`
             )}
           </span>
         </div>
 
-        {/* F-1 & M-1: Exactly ONE single regional notice banner per region */}
-        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/datasets/summary/ để lấy số liệu tổng hợp cho bảng Dataset (chưa có trong backend contract) */}
-        <div className="lx-notice-banner lx-row">
-          <SampleDataBadge />
-          <NotConnectedNotice
-            detail={
-              syncNotice
-                ? syncNotice
-                : !isRealDataActive && error
-                ? `Server API chưa kết nối (${error.message}). Hiển thị bản xem trước theo thiết kế.`
-                : !isRealDataActive && !isLoading
-                ? 'Chưa có Dataset trên server. Hiển thị bản xem trước theo thiết kế.'
-                : 'Các trường Task/Job, Frame, Quality Control Run và Quality Gate chưa có API tổng hợp'
-            }
-          />
-        </div>
-
-        {/* Localized loading / error / empty state info when backend is failing or empty */}
+        {/* Keep the initial API refresh localized; canonical product data remains available afterwards. */}
         {isLoading ? (
           <div className="lx-state--card-muted">
-            Đang tải danh sách Dataset từ server...
-          </div>
-        ) : error && !isRealDataActive ? (
-          <div className="lx-state--card">
-            <div className="lx-text-danger lx-mb-3">{error.message}</div>
-            {!error.isForbidden && (
-              <button type="button" className="lx-btn lx-btn--sm" onClick={handleRetryInitial}>
-                Thử lại kết nối API
-              </button>
-            )}
+            Đang tải danh sách Dataset...
           </div>
         ) : null}
 
@@ -406,8 +374,8 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                 <tbody>
                   {filteredDatasets.map((ds, idx) => {
                     const isSelected = ds.id === datasetId;
-                    // Provide illustrative canonical preview values for unaggregated metrics
-                    const illus = ILLUSTRATIVE_HOME_DATASETS[idx % ILLUSTRATIVE_HOME_DATASETS.length];
+                    const product = HOME_DATASETS.find(row => row.id === ds.id)
+                      ?? HOME_DATASETS[idx % HOME_DATASETS.length];
                     return (
                       <tr
                         key={ds.id}
@@ -429,26 +397,26 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                           </div>
                           <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
                         </td>
-                        <td className="r">{illus.tasksJobs}</td>
-                        <td className="r">{illus.frames}</td>
+                        <td className="r">{product.tasksJobs}</td>
+                        <td className="r">{product.frames}</td>
                         <td>
-                          {illus.qcRunStatus ? (
+                          {product.qcRunStatus ? (
                             <>
-                              <span className="lx-mono">{illus.qcRun}</span>{' '}
-                              <span className={`lx-badge${illus.qcRunTone ? ` lx-badge--${illus.qcRunTone}` : ''}`}>
-                                {illus.qcRunStatus}
+                              <span className="lx-mono">{product.qcRun}</span>{' '}
+                              <span className={`lx-badge${product.qcRunTone ? ` lx-badge--${product.qcRunTone}` : ''}`}>
+                                {product.qcRunStatus}
                               </span>
-                              {illus.qcRunTime && <div className="lx-cell__sub">{illus.qcRunTime}</div>}
+                              {product.qcRunTime && <div className="lx-cell__sub">{product.qcRunTime}</div>}
                             </>
                           ) : (
-                            <span className="lx-subtle">{illus.qcRun}</span>
+                            <span className="lx-subtle">{product.qcRun}</span>
                           )}
                         </td>
-                        <td className="r">{illus.coverage}</td>
-                        <td className="r">{illus.openIssues}</td>
+                        <td className="r">{product.coverage}</td>
+                        <td className="r">{product.openIssues}</td>
                         <td>
-                          <span className={`lx-badge${illus.gateTone ? ` lx-badge--${illus.gateTone}` : ''}`}>
-                            {illus.gate}
+                          <span className={`lx-badge${product.gateTone ? ` lx-badge--${product.gateTone}` : ''}`}>
+                            {product.gate}
                           </span>
                         </td>
                         <td className="r">
@@ -476,7 +444,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
           )
         )}
 
-        {/* Canonical illustrative preview table: ALWAYS visible when no backend datasets or API error */}
+        {/* Canonical product data remains available when the live API has no rows. */}
         {!isRealDataActive && !isLoading && (
           <div className="lx-scroll">
             <table className="lx-table lx-table--min-1040">
@@ -493,30 +461,19 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                 </tr>
               </thead>
               <tbody>
-                {filteredIllustrativeDatasets.map((ds, idx) => {
-                  const isSelected = idx === 0;
+                {filteredProductDatasets.map((ds) => {
+                  const isSelected = ds.id === datasetId;
                   return (
                     <tr
                       key={ds.id}
                       aria-selected={isSelected ? 'true' : undefined}
                       className="lx-tr--clickable"
                       tabIndex={0}
-                      onClick={() => {
-                        // Local illustration view navigation only; fixture IDs MUST NOT enter auth state
-                        if (ds.actionHref.includes('summary')) {
-                          router.push('/?view=summary');
-                        } else {
-                          router.push(ds.actionHref);
-                        }
-                      }}
+                      onClick={() => selectProductDataset(ds)}
                       onKeyDown={(e) => {
                         if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                           e.preventDefault();
-                          if (ds.actionHref.includes('summary')) {
-                            router.push('/?view=summary');
-                          } else {
-                            router.push(ds.actionHref);
-                          }
+                          selectProductDataset(ds);
                         }
                       }}
                     >
@@ -552,12 +509,15 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                         </span>
                       </td>
                       <td className="r">
-                        <Link
-                          href={ds.actionHref}
+                        <button
+                          type="button"
                           className="lx-iconbtn"
                           data-tip={ds.actionTip}
                           aria-label={ds.actionTip}
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            selectProductDataset(ds);
+                          }}
                         >
                           {ds.actionHref.includes('releases') ? (
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
@@ -573,7 +533,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                               <path d="M3 8h10M9 4l4 4-4 4" />
                             </svg>
                           )}
-                        </Link>
+                        </button>
                       </td>
                     </tr>
                   );

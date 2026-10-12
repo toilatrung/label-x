@@ -153,7 +153,7 @@ describe('EngineThresholdsTable component (T-029)', () => {
     render(<EngineThresholdsTable config={null} />);
     expect(screen.getByText('Chưa có cấu hình đã phát hành')).toBeDefined();
     expect(
-      screen.getByText(/Không thể xác nhận ngưỡng từ dữ liệu hiện có/)
+      screen.getByText(/Trạng thái này không đồng nghĩa engine đang tắt/)
     ).toBeDefined();
     expect(screen.queryByText(/Hệ thống chưa kích hoạt ngưỡng kiểm tra tự động/)).toBeNull();
   });

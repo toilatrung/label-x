@@ -5,15 +5,12 @@ import { QualityReportBody, QualityReportHeader } from '@/components/reports/Qua
 import { QualityGateBody } from '@/components/reports/QualityGateView';
 import { ReleaseHistoryBody } from '@/components/reports/ReleaseHistoryView';
 
-const NOTICE = 'Chức năng vẫn chưa được kết nối với server';
-
 describe('Quality Report', () => {
-  it('renders the standard metrics with sample-data label and notice', () => {
+  it('renders the standard design metrics without implementation notices', () => {
     render(<><QualityReportHeader /><QualityReportBody /></>);
     expect(screen.getByText('12,500')).toBeTruthy();
     expect(screen.getByText('92.4%')).toBeTruthy();
-    expect(screen.getByText('Dữ liệu minh họa')).toBeTruthy();
-    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.queryByRole('status')).toBeNull();
   });
   it('switches tabs and keeps Polyline as not evaluated', () => {
     render(<QualityReportBody />);
@@ -29,15 +26,12 @@ describe('Quality Report', () => {
     expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toHaveLength(3);
     expect(screen.queryByText(/thành công/i)).toBeNull();
   });
-  it('emphasizes the existing notice when an export format is chosen, without adding a second one', () => {
+  it('closes the export menu without exposing implementation notices', () => {
     render(<><QualityReportHeader /><QualityReportBody /></>);
-    expect(screen.getAllByText(NOTICE)).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Xuất báo cáo/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /PDF/ }));
-    expect(screen.getAllByText(NOTICE)).toHaveLength(1);
-    const wrapper = screen.getByText(NOTICE).closest('[data-attention]') as HTMLElement;
-    expect(wrapper).toBeTruthy();
-    expect(document.activeElement).toBe(wrapper);
+    expect(screen.queryByRole('status')).toBeNull();
     expect(screen.queryByRole('menu')).toBeNull();
   });
   it('closes the export menu on Escape and on an outside click', () => {
@@ -59,15 +53,14 @@ describe('Quality Gate', () => {
     expect(screen.getAllByRole('row')).toHaveLength(7);
     expect(screen.getByText('2 đạt · 3 chưa đạt · 1 chờ phê duyệt')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Phê duyệt phát hành' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getAllByRole('status').length).toBe(2);
+    expect(screen.queryByRole('status')).toBeNull();
   });
   it('does not claim the waiver was sent', () => {
     render(<QualityGateBody />);
     fireEvent.change(screen.getByLabelText('Lý do (bắt buộc)'), { target: { value: 'x' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gửi xin waiver' }));
     expect(screen.queryByText(/đã gửi|thành công/i)).toBeNull();
-    expect(screen.getAllByText(NOTICE)).toHaveLength(2);
-    expect(screen.getAllByText(NOTICE).map((n) => n.closest('[data-attention]')).filter(Boolean)).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
 
@@ -77,9 +70,8 @@ describe('Release History', () => {
     expect(screen.getByText('Road Vision Urban v1.4').closest('tr')!.textContent).toContain('Blocked');
     expect(screen.getByText('Manifest · v1.3')).toBeTruthy();
     expect(screen.getByText('SNP-011')).toBeTruthy();
-    expect(screen.getAllByRole('status').length).toBe(2);
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Tải manifest (JSON)' }));
-    expect(screen.getAllByRole('status').length).toBe(2);
-    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

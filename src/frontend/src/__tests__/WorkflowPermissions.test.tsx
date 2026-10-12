@@ -47,7 +47,7 @@ describe('WorkflowPermissions (T-016, FE-09)', () => {
     expect(screen.getByText('Đã áp dụng')).toBeDefined();
     expect(screen.getAllByText('Thực hiện').length).toBe(5);
     expect(screen.queryByText('Vai trò của bạn')).toBeNull();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByRole('status')).toBeNull();
     expect((screen.getByRole('checkbox', { name: 'Ghi nhật ký' }) as HTMLInputElement).checked).toBe(true);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(true);
     expect(screen.queryByRole('button', { name: /sửa|xoá|xóa|edit|delete/i })).toBeNull();

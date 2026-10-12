@@ -7,6 +7,7 @@ import {
   CASES, ESCALATION_TABS, GAPS, LIST_TIP, type EscalationsTabKey,
 } from '@/lib/mock/escalations';
 import { EscalationsWorkspace } from './EscalationsWorkspace';
+import { GuidelineGapModal } from './GuidelineGapModal';
 
 const SvgArrow = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>;
 
@@ -16,7 +17,7 @@ const SvgArrow = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8
  */
 export function EscalationsDesign() {
   const [tab, setTab] = useState<EscalationsTabKey>('gaps');
-  const [blockedAction, setBlockedAction] = useState<string | null>(null);
+  const [gapOpen, setGapOpen] = useState(false);
   const list = tab === 'gaps' ? GAPS : tab === 'cases' ? CASES : null;
   return (
     <div className="lx-page">
@@ -26,8 +27,7 @@ export function EscalationsDesign() {
           <p className="lx-lead">Guideline Gap ghi lại chỗ hướng dẫn còn thiếu, Decision Case là các quyết định đã được phê duyệt. Từ đó, người có thẩm quyền phân xử các issue chưa đủ căn cứ hoặc reviewer bất đồng.</p>
         </div>
         <div className="lx-actions">
-          {/* TODO(backend): POST /api/guideline-gaps/ (BLOCKER-030); nút chặn, không gọi API giả */}
-          {tab === 'gaps' && <button type="button" className="lx-btn lx-btn--primary" onClick={() => setBlockedAction('Tạo Guideline Gap')}>Tạo Guideline Gap</button>}
+          {tab === 'gaps' && <button type="button" className="lx-btn lx-btn--primary" onClick={() => setGapOpen(true)}>Tạo Guideline Gap</button>}
         </div>
       </div>
 
@@ -40,7 +40,7 @@ export function EscalationsDesign() {
             </button>
           ))}
         </div>
-        {tab !== 'adj' && <div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} /></div>}
+        {tab !== 'adj' && <div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice /></div>}
         {list && (
           <div className="lx-scroll">
             <table className="lx-table lx-table--min-880">
@@ -61,6 +61,7 @@ export function EscalationsDesign() {
       </section>
 
       {tab === 'adj' && <EscalationsWorkspace />}
+      {gapOpen && <GuidelineGapModal onClose={() => setGapOpen(false)} />}
     </div>
   );
 }

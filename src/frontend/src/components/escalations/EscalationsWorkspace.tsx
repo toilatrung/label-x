@@ -18,6 +18,7 @@ import {
 } from '@/lib/escalations/api';
 import { DecisionCaseLookup } from './DecisionCaseLookup';
 import { AdjudicationEmptyDetail } from './AdjudicationEmptyDetail';
+import { GuidelineGapModal } from './GuidelineGapModal';
 
 type Outcome = AdjudicationInput['outcome'];
 
@@ -192,7 +193,7 @@ export function EscalationsWorkspace() {
   const [overrideReason, setOverrideReason] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [savedCase, setSavedCase] = useState<DecisionCase | null>(null);
-  const [gapBlocked, setGapBlocked] = useState(false);
+  const [gapOpen, setGapOpen] = useState(false);
   const requestRef = useRef<{ body: string; key: string } | null>(null);
   const cursor = cursors.at(-1) ?? null;
 
@@ -244,7 +245,7 @@ export function EscalationsWorkspace() {
     setOverrideReason('');
     setFormError(null);
     setSavedCase(null);
-    setGapBlocked(false);
+    setGapOpen(false);
     mutation.reset();
     requestRef.current = null;
   };
@@ -526,10 +527,9 @@ export function EscalationsWorkspace() {
                       </div>
                     </div>
                   )}
-                  <NotConnectedNotice detail={gapBlocked ? 'Thao tác "Tạo Guideline Gap" chưa được thực hiện' : 'Trường Sau khi phân xử và nút Tạo Guideline Gap chờ endpoint POST /api/rework/ và POST /api/guideline-gaps/ (BLOCKER-030)'} />
+                  <NotConnectedNotice detail="Trường Sau khi phân xử và việc lưu Guideline Gap chờ endpoint POST /api/rework/ và POST /api/guideline-gaps/ (BLOCKER-030)" />
                   <div className="lx-actions lx-actions--end">
-                    {/* TODO(backend): POST /api/guideline-gaps/ (BLOCKER-030); nút chặn, không gọi API giả */}
-                    <button className="lx-btn" type="button" onClick={() => setGapBlocked(true)}>Tạo Guideline Gap</button>
+                    <button className="lx-btn" type="button" onClick={() => setGapOpen(true)}>Tạo Guideline Gap</button>
                     <button
                       className="lx-btn lx-btn--primary"
                       type="submit"
@@ -547,6 +547,7 @@ export function EscalationsWorkspace() {
       </div>
 
       <DecisionCaseLookup initialIssueId={selected?.id ?? savedCase?.issue_id} />
+      {gapOpen && selected && <GuidelineGapModal onClose={() => setGapOpen(false)} issueId={selected.id} initialRule={selected.rule_ids?.[0] ?? ''} />}
     </div>
   );
 }

@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { SAMPLE_IN_USE, SAMPLE_IN_USE_EXTRA, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
 
 /** Ba trường của Snapshot đang dùng chưa có API; luôn là dữ liệu minh họa, một cảnh báo cho cả khối. */
 export function SnapshotInUseExtra({ error }: { error?: string }) {
+  void error;
   return (
     <div className="lx-stack lx-stack--divider">
-      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail={error ? `Không tải được Quality Control Run của Snapshot nên mô hình, cấu hình và seed là dữ liệu minh họa. ${error}` : 'Mô hình độc lập, cấu hình kiểm tra và seed lấy mẫu chưa có trên Snapshot API'} /></div>
       <dl className="lx-kv">
         {SAMPLE_IN_USE_EXTRA.map(([label, value, mono]) => (
           <React.Fragment key={label}><dt>{label}</dt><dd className={mono ? 'lx-mono' : undefined}>{value}</dd></React.Fragment>
@@ -24,7 +22,6 @@ export function SnapshotInUseSample() {
   const s = SAMPLE_IN_USE;
   return (
     <div className="lx-stack">
-      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice /></div>
       <dl className="lx-kv">
         <dt>Mã snapshot</dt><dd className="lx-mono">{s.id}</dd>
         <dt>Annotation revision</dt><dd className="lx-mono">{s.revision}</dd>
@@ -56,7 +53,6 @@ export function SnapshotRevisionFields({ dataset }: { dataset: React.ReactNode }
           <span className="lx-hint">Giữ nguyên để tái lập mẫu</span>
         </div>
       </div>
-      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail="Annotation revision và seed lấy mẫu chưa có API; Snapshot hiện tạo từ revision mới nhất" /></div>
     </>
   );
 }
@@ -64,13 +60,9 @@ export function SnapshotRevisionFields({ dataset }: { dataset: React.ReactNode }
 /** Bản minh họa đủ thiết kế của thẻ "Tạo snapshot mới", dùng khi không tải được Dataset. Mọi nút ghi bị chặn. */
 export function SnapshotCreateSample() {
   const f = SAMPLE_SNAPSHOT_FORM;
-  const [blocked, setBlocked] = useState<string | null>(null);
+  const [, setBlocked] = useState<string | null>(null);
   return (
     <div className="lx-stack">
-      <div className="lx-row">
-        <SampleDataBadge />
-        <NotConnectedNotice detail={blocked ? `Thao tác "${blocked}" chưa được thực hiện` : undefined} />
-      </div>
       <div className="lx-grid lx-grid--3">
         <div className="lx-field"><label className="lx-label" htmlFor="sample-dataset">Dataset</label><input id="sample-dataset" className="lx-input" value={f.dataset} readOnly disabled /></div>
         <div className="lx-field"><label className="lx-label" htmlFor="sample-revision">Annotation revision</label>

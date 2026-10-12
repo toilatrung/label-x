@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ROLE_LABELS } from '@/lib/auth/roles';
-import { isMockAuth } from '@/lib/auth/config';
 
 export type RunState = 'checked' | 'partial' | 'running' | 'failed';
 
@@ -17,7 +16,7 @@ const RUN_STATES: Record<RunState, { label: string; tone: string }> = {
 
 interface ContextBarProps {
   datasetName?: string;
-  datasetIdOverride?: number;
+  datasetIdOverride?: number | null;
   snapshotName?: string;
   /** Revision của Snapshot đã khoá, ví dụ "rev f02a6d". */
   snapshotRevision?: string;
@@ -45,9 +44,9 @@ export function ContextBar({
 }: ContextBarProps) {
   const { user, session, datasetId, setDatasetId } = useAuth();
   const roleLabel = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
-  const effectiveDatasetId = datasetIdOverride ?? datasetId;
-  const datasetLabel = effectiveDatasetId === null ? 'Chưa chọn'
-    : (datasetName ?? `${isMockAuth ? 'Dataset mẫu' : 'Dataset'} #${effectiveDatasetId}`);
+  const effectiveDatasetId = datasetIdOverride === undefined ? datasetId : datasetIdOverride;
+  const datasetLabel = datasetName ?? (effectiveDatasetId === null ? 'Chưa chọn'
+    : `Dataset #${effectiveDatasetId}`);
   // Dataset chọn được trong phạm vi quyền của phiên; vai trò toàn hệ thống chọn dataset ở màn hình làm việc.
   const options = [...new Set(session?.roles.flatMap((assignment) => (assignment.dataset_id === null ? [] : [assignment.dataset_id])) ?? [])];
   const [open, setOpen] = useState(false);
@@ -94,7 +93,7 @@ export function ContextBar({
               <div className="lx-menu__head">Dataset và Version</div>
               {options.map((id) => <button key={id} type="button" role="menuitem" className={`lx-menu__item${id === datasetId ? ' is-active' : ''}`}
                 onClick={() => { setDatasetId(id); setOpen(false); }}>
-                <span className="lx-menu__t">{isMockAuth ? 'Dataset mẫu' : 'Dataset'} #{id}</span>
+                <span className="lx-menu__t">Dataset #{id}</span>
               </button>)}
             </div>}
           </div>

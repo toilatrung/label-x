@@ -5,18 +5,18 @@ import { API_ENDPOINTS, API_NAVIGATION } from '@/lib/api-explorer/catalog';
 import { STATUS_RESPONSE_EXAMPLES } from '@/lib/api-explorer/status-examples';
 
 describe('API Explorer', () => {
-  it('shows contract operations with backend and mock states', () => {
+  it('shows backend and product API operations as available data sources', () => {
     render(<ApiExplorer />);
     expect(screen.getByRole('heading', { name: 'API Explorer' })).toBeInTheDocument();
-    expect(screen.getAllByText('Đã kết nối BE').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Mockup · Chưa nối BE').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Backend API').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Product API').length).toBeGreaterThan(0);
     expect(screen.getByText('/api/auth/session/')).toBeInTheDocument();
     expect(screen.getByText('/api/evaluations/{id}/')).toBeInTheDocument();
   });
 
   it('filters operations by connection status and search text', () => {
     render(<ApiExplorer />);
-    fireEvent.click(screen.getByRole('button', { name: /Chưa nối BE/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Product API/ }));
     expect(screen.queryByText('/api/auth/session/')).not.toBeInTheDocument();
     expect(screen.getByText('/api/evaluations/{id}/')).toBeInTheDocument();
 
@@ -31,9 +31,9 @@ describe('API Explorer', () => {
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'runs_list')?.responseExamples?.map(example => example.label))
-      .toEqual(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
+      .toEqual(['design', 'queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'snapshots_list')?.responseExamples?.map(example => example.label))
-      .toEqual(['pending', 'exporting', 'locked', 'failed']);
+      .toEqual(['design', 'pending', 'exporting', 'locked', 'failed']);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'rework_list')?.responseExamples?.map(example => example.label))
       .toEqual(['fix_pending', 'recheck_pending', 'resolved', 'reopened']);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'queues_list')?.responseExamples?.map(example => example.label))
@@ -49,8 +49,8 @@ describe('API Explorer', () => {
   it('switches the displayed and copied payload between response states', () => {
     render(<ApiExplorer />);
     const selector = screen.getByRole('combobox', { name: 'Chọn response runs_list' });
-    fireEvent.change(selector, { target: { value: '4' } });
-    expect((selector as HTMLSelectElement).value).toBe('4');
+    fireEvent.change(selector, { target: { value: '5' } });
+    expect((selector as HTMLSelectElement).value).toBe('5');
     expect(selector.querySelector('option:checked')?.textContent).toBe('failed');
   });
 

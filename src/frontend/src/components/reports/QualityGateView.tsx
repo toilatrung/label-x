@@ -2,19 +2,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { DemoRegionNotice } from './DemoRegionNotice';
 import { GATE_CONDITIONS, GATE_SUMMARY, WAIVER_CONDITIONS } from '@/lib/reports/sample-data';
 
 export function QualityGateBody() {
   const [condition, setCondition] = useState<string>(WAIVER_CONDITIONS[0]);
   const [reason, setReason] = useState('');
-  const [pulse, setPulse] = useState(0);
+  const [, setPulse] = useState(0);
   return (
     <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Điều kiện phát hành">
         <div className="lx-card__head"><h2 className="lx-h2">Điều kiện phát hành</h2><span className="lx-hint">{GATE_SUMMARY}</span></div>
         {/* TODO(backend): GET /api/runs/{id}/gate/ (runs_gate đã có trong contract, chưa nối) */}
-        <div className="lx-card__body"><DemoRegionNotice /></div>
         <div className="lx-scroll">
           <table className="lx-table lx-table--min-720">
             <thead><tr><th>Điều kiện</th><th>Kết quả</th><th>Trạng thái</th><th>Cần làm</th></tr></thead>
@@ -39,7 +37,6 @@ export function QualityGateBody() {
       <aside className="lx-card lx-side" aria-label="Phê duyệt phát hành">
         <div className="lx-card__head"><h2 className="lx-h2">Phê duyệt phát hành</h2></div>
         <div className="lx-card__body lx-stack">
-          <DemoRegionNotice pulse={pulse} />
           <p className="lx-muted lx-m-0 lx-text-13">Chưa thể phát hành vì còn 3 điều kiện chưa đạt. Hệ thống không tự quyết định phát hành.</p>
           {/* TODO(backend): POST /api/releases/{id}/approve/ */}
           <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled>Phê duyệt phát hành</button>
