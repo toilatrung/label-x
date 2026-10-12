@@ -148,12 +148,21 @@
 .sidebar a { padding: 7px 0; display: flex; justify-content: space-between; color: var(--ink-muted); text-decoration: none; font-size: 13px; }
 .sidebar a:hover { color: var(--brand); }
 .sidebar b { min-width: 22px; color: var(--ink-subtle); font: 500 11px/18px var(--font-mono); text-align: center; background: var(--surface-sunken); }
+.sidebarGroup + .sidebarGroup { border-top: 1px solid var(--border); }
+.sidebarSections { padding: 0 0 7px 10px; }
+.sidebarSections a { padding: 4px 0; color: var(--ink-subtle); font-size: 11px; }
+.sidebarSections b { background: transparent; }
 
 .catalog { min-width: 0; }
 .group { scroll-margin-top: 154px; margin-bottom: 44px; }
 .groupTitle { margin-bottom: 13px; display: flex; align-items: baseline; gap: 10px; }
 .groupTitle h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
 .groupTitle span { color: var(--ink-subtle); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.section { scroll-margin-top: 154px; }
+.section + .section { margin-top: 24px; }
+.sectionTitle { margin: 0 0 10px; padding-bottom: 7px; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--border); }
+.sectionTitle h3 { margin: 0; color: var(--ink-muted); font-size: 14px; }
+.sectionTitle span { color: var(--ink-subtle); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
 .endpointList { display: flex; flex-direction: column; gap: 10px; }
 
 .endpoint { scroll-margin-top: 154px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 1px 0 rgba(17, 24, 39, .02); }
@@ -212,8 +221,11 @@
   .content { grid-template-columns: 1fr; gap: 24px; }
   .sidebar { position: static; display: flex; flex-wrap: wrap; gap: 6px; }
   .sidebar > p { flex-basis: 100%; }
+  .sidebarGroup { display: contents; }
   .sidebar a { padding: 6px 9px; gap: 8px; border: 1px solid var(--border); background: var(--surface); }
+  .sidebarSections { display: none; }
   .group { scroll-margin-top: 72px; }
+  .section { scroll-margin-top: 72px; }
   .endpoint { scroll-margin-top: 72px; }
 }
 
