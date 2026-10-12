@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { BrandMark } from '@/components/ui/BrandMark';
 import { API_ENDPOINTS, API_NAVIGATION, type ApiConnection, type ApiEndpoint } from '@/lib/api-explorer/catalog';
 import styles from './swagger.module.css';
 
@@ -81,7 +82,7 @@ export function ApiExplorer() {
 
   return <main className={styles.shell}>
     <header className={styles.topbar}>
-      <Link href="/" className={styles.brand} aria-label="Về trang chủ LabelX">Label<span>X</span></Link>
+      <Link href="/" className={styles.brand} aria-label="Về trang chủ LabelX"><BrandMark /></Link>
       <div className={styles.product}><span>Developer tools</span><strong>API Explorer</strong></div>
       <a className={styles.schemaLink} href="/api/schema/" target="_blank" rel="noreferrer">OpenAPI schema <span aria-hidden="true">↗</span></a>
     </header>
