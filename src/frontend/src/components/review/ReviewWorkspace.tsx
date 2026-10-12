@@ -684,7 +684,7 @@ export function ReviewWorkspace({
 
   if (loading) {
     return (
-      <div className="lx-card lx-card__body" style={{ textAlign: 'center', padding: '48px' }}>
+      <div className="lx-card lx-card__body lx-state--center">
         <p className="lx-muted">Đang tải dữ liệu khung hình và issue từ API thật...</p>
       </div>
     );
@@ -692,11 +692,11 @@ export function ReviewWorkspace({
 
   if (forbiddenCode || errorMsg) {
     return (
-      <div className="lx-callout" role="alert" style={{ margin: '24px 0' }}>
+      <div className="lx-callout lx-callout--spaced" role="alert">
         <span className="lx-callout__text">
           <b>Truy cập bị chặn ({forbiddenCode || 'Lỗi'}):</b> {errorMsg}
         </span>
-        <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+        <div className="lx-row lx-mt-3">
           {!forbiddenCode && (
             <button onClick={retryLoad} className="lx-btn">
               Thử lại
@@ -718,9 +718,9 @@ export function ReviewWorkspace({
 
   if (!data) {
     return (
-      <div className="lx-callout" role="alert" style={{ margin: '24px 0' }}>
+      <div className="lx-callout lx-callout--spaced" role="alert">
         <span className="lx-callout__text">Không tìm thấy dữ liệu khung hình.</span>
-        <button onClick={retryLoad} className="lx-btn" style={{ marginTop: '12px' }}>
+        <button onClick={retryLoad} className="lx-btn lx-mt-3">
           Thử lại
         </button>
       </div>
@@ -742,11 +742,11 @@ export function ReviewWorkspace({
   );
 
   return (
-    <div className="lx-stack" style={{ gap: '16px' }}>
+    <div className="lx-stack lx-gap-4">
       {/* Read-Only Notice if accessed without LeaseGrant handoff */}
       {isReadOnly && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ background: 'var(--neutral-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--ink)' }}>
+        <div className="lx-callout lx-callout--info lx-callout--neutral" role="status">
+          <span className="lx-callout__text lx-text-ink">
             <b>Chế độ xem kiểm tra (Read-only):</b> Frame được mở trực tiếp không kèm LeaseGrant từ hàng đợi ReviewQueues (T-034 handoff). Bạn có thể xem hình ảnh, annotation và bằng chứng nhưng thao tác lưu quyết định và hoàn tất bị khóa.
           </span>
         </div>
@@ -754,11 +754,11 @@ export function ReviewWorkspace({
 
       {/* Lease Status Banner if expired or holder mismatch */}
       {!isReadOnly && (isExpired || isHolderMismatch || leaseError || forcedLeaseInvalidated) && (
-        <div className="lx-callout" role="alert" style={{ background: 'var(--warning-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--warning-strong, #854d0e)' }}>
+        <div className="lx-callout lx-callout--warning" role="alert">
+          <span className="lx-callout__text lx-text-warning">
             <b>Cảnh báo Lease:</b> {leaseError || 'Xung đột lease (409 Conflict): Quyền giữ frame đã hết hạn hoặc thuộc người khác.'} Quyền ghi đã bị khóa để bảo toàn dữ liệu. Các quyết định đã lưu trên server trước đó vẫn được giữ nguyên.
           </span>
-          <button onClick={renewLease} className="lx-btn lx-btn--sm" style={{ marginLeft: '12px' }}>
+          <button onClick={renewLease} className="lx-btn lx-btn--sm lx-ml-3">
             Thử gia hạn lease
           </button>
         </div>
@@ -766,11 +766,11 @@ export function ReviewWorkspace({
 
       {/* Frame Completion Banner */}
       {isCompleted && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ background: 'var(--success-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--success)' }}>
+        <div className="lx-callout lx-callout--info lx-callout--success" role="status">
+          <span className="lx-callout__text lx-text-success">
             Khung hình đã hoàn tất kiểm tra review thành công. Lease đã được trả lại.
           </span>
-          <Link href="/review" className="lx-btn lx-btn--sm" style={{ marginLeft: '12px' }}>
+          <Link href="/review" className="lx-btn lx-btn--sm lx-ml-3">
             Về hàng đợi
           </Link>
         </div>
@@ -781,8 +781,8 @@ export function ReviewWorkspace({
         <div className="lx-callout" role="alert">
           <span className="lx-callout__text">{completeError}</span>
           {undecidedIssueIds.length > 0 && (
-            <div className="lx-row" style={{ gap: '6px', marginTop: '6px' }}>
-              <span className="lx-subtle" style={{ fontSize: '12px' }}>Chuyển đến issue chưa quyết định:</span>
+            <div className="lx-row lx-gap-2 lx-mt-2">
+              <span className="lx-subtle lx-text-12">Chuyển đến issue chưa quyết định:</span>
               {undecidedIssueIds.map((uId) => (
                 <button
                   key={`undecided-${uId}`}
@@ -828,15 +828,14 @@ export function ReviewWorkspace({
 
             {/* Lease countdown & manual renew while valid (follow-up-22) */}
             {lease && !isExpired && !forcedLeaseInvalidated && (
-              <span className="lx-row" style={{ gap: '6px', alignItems: 'center' }}>
-                <span className="lx-subtle" style={{ color: remainingSeconds < 60 ? 'var(--warning)' : '#a1a8b3' }}>
+              <span className="lx-row lx-gap-2 lx-items-center">
+                <span className={`lx-subtle ${remainingSeconds < 60 ? 'lx-text-warning' : 'lx-stage__muted'}`}>
                   · Lease: {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}
                 </span>
                 <button
                   type="button"
                   onClick={renewLease}
-                  className="lx-btn lx-btn--ghost lx-btn--sm"
-                  style={{ padding: '2px 6px', fontSize: '11px' }}
+                  className="lx-btn lx-btn--ghost lx-btn--sm lx-btn--xs"
                   title="Gia hạn lease thủ công trong khi vẫn còn hiệu lực"
                 >
                   Thử gia hạn lease
@@ -865,7 +864,7 @@ export function ReviewWorkspace({
             </label>
 
             {/* Zoom controls */}
-            <div className="lx-row" style={{ gap: '4px' }}>
+            <div className="lx-row lx-gap-1">
               <button
                 type="button"
                 className="lx-ghostbtn"
@@ -874,7 +873,7 @@ export function ReviewWorkspace({
               >
                 +
               </button>
-              <span style={{ fontSize: '11px', minWidth: '36px', textAlign: 'center' }}>
+              <span className="lx-stage__zoom">
                 {Math.round(zoom * 100)}%
               </span>
               <button
@@ -904,13 +903,12 @@ export function ReviewWorkspace({
                 href={cvatDeepLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="lx-ghostbtn"
-                style={{ textDecoration: 'none' }}
+                className="lx-ghostbtn lx-link--plain"
               >
                 Mở trong CVAT ↗
               </a>
             ) : (
-              <span className="lx-subtle" style={{ fontSize: '11px' }}>
+              <span className="lx-subtle lx-text-11">
                 CVAT link: Chưa có từ API
               </span>
             )}
@@ -965,7 +963,7 @@ export function ReviewWorkspace({
               Frame sau ›
             </button>
 
-            <span className="lx-subtle" style={{ margin: '0 4px' }}>|</span>
+            <span className="lx-subtle lx-ws__sep">|</span>
 
             {/* In-frame issue navigation */}
             <button
@@ -1011,12 +1009,12 @@ export function ReviewWorkspace({
             <>
               {/* Issue Header Section */}
               <div className="lx-ws__sec">
-                <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="lx-row lx-row--between lx-items-center">
                   <span>
                     <b className="lx-mono">QC-{String(activeIssue.id).padStart(5, '0')}</b>
                     <span className="lx-hint"> · Issue {currentIssueIndex + 1} / {totalIssues}</span>
                   </span>
-                  <div className="lx-row" style={{ gap: '6px' }}>
+                  <div className="lx-row lx-gap-2">
                     {activeIssue.severity && (
                       <span
                         className={`lx-badge ${
@@ -1088,9 +1086,9 @@ export function ReviewWorkspace({
                     Case tương tự đã phân xử ({activeIssue.links?.length || 0})
                   </summary>
                   {activeIssue.links && activeIssue.links.length > 0 ? (
-                    <div style={{ marginTop: '6px' }}>
+                    <div className="lx-mt-2">
                       {activeIssue.links.map((link, idx) => (
-                        <p key={`link-${idx}`} className="lx-muted" style={{ margin: '4px 0', fontSize: '13px' }}>
+                        <p key={`link-${idx}`} className="lx-muted lx-ws__note--tight">
                           Issue #{link.issue_id} · {link.kind === 'recurrence_of' ? 'Tái diễn (recurrence)' : 'Gợi ý tái diễn (suggested recurrence)'}
                           {link.run_id != null ? ` · Run #${link.run_id}` : ''}
                         </p>
@@ -1102,7 +1100,7 @@ export function ReviewWorkspace({
                   )}
                 </details>
 
-                <div style={{ marginTop: '12px' }}>
+                <div className="lx-mt-3">
                   <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
                 </div>
               </div>
@@ -1130,7 +1128,7 @@ export function ReviewWorkspace({
               />
             </>
           ) : (
-            <div className="lx-ws__sec" style={{ textAlign: 'center', padding: '32px' }}>
+            <div className="lx-ws__sec lx-state--center">
               <p className="lx-muted">Khung hình này không có issue tự động nào.</p>
               {effectivePolicy && !isMutationBlocked ? (
                 <button
@@ -1144,7 +1142,7 @@ export function ReviewWorkspace({
                   + Tạo issue thủ công
                 </button>
               ) : (
-                <p className="lx-subtle" style={{ fontSize: '12px' }}>
+                <p className="lx-subtle lx-text-12">
                   {policyError || 'Chức năng tạo issue thủ công tạm khóa do thiếu anchor policy_version.'}
                 </p>
               )}
@@ -1152,11 +1150,10 @@ export function ReviewWorkspace({
           )}
 
           {/* Complete Frame Action Footer */}
-          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <div className="lx-ws__foot">
             <button
               type="button"
-              className="lx-btn lx-btn--primary"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="lx-btn lx-btn--primary lx-btn--fill"
               disabled={isCompleting || isMutationBlocked}
               onClick={handleCompleteFrame}
             >
