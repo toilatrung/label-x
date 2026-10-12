@@ -12,7 +12,11 @@
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
-<style>body{margin:0;background:#f6f7f9}</style>
+<style>
+body{margin:0;background:var(--canvas)}
+.lx-gap-dialog{box-sizing:border-box;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--border-strong);border-radius:var(--radius-lg);color:var(--ink);background:var(--surface);overflow:auto}
+.lx-gap-dialog::backdrop{background:color-mix(in srgb,var(--primary) 55%,transparent)}
+</style>
 </helmet>
 <div class="lx" style="min-height: 100vh; background: var(--canvas)">
 <dc-import name="TopBar" active="escalations" active-item="escalations" hint-size="100%,100px"></dc-import>
@@ -23,7 +27,7 @@
 <h1 class="lx-h1">Escalations</h1>
 <p class="lx-lead">Guideline Gap ghi lại chỗ hướng dẫn còn thiếu, Decision Case là các quyết định đã được phê duyệt. Từ đó, người có thẩm quyền phân xử các issue chưa đủ căn cứ hoặc reviewer bất đồng.</p>
 </div>
-<div class="lx-actions"><sc-if value="{{isGaps}}" hint-placeholder-val="{{true}}"><button class="lx-btn lx-btn--primary">Tạo Guideline Gap</button></sc-if></div>
+<div class="lx-actions"><sc-if value="{{isGaps}}" hint-placeholder-val="{{true}}"><button id="gap-from-list" class="lx-btn lx-btn--primary" onClick="{{openGapFromList}}">Tạo Guideline Gap</button></sc-if></div>
 </div>
 
 <section class="lx-card">
@@ -92,7 +96,7 @@
 <div class="lx-field"><label class="lx-label" for="g3">Sau khi phân xử</label><select id="g3" class="lx-select"><option>Tạo yêu cầu sửa cho annotator</option><option>Chỉ ghi nhận quyết định</option></select></div>
 </div>
 <div class="lx-field"><label class="lx-label" for="g4">Lý do phân xử</label><textarea id="g4" class="lx-textarea" placeholder="Nêu căn cứ để các case tương tự có thể tham chiếu."></textarea></div>
-<div class="lx-actions" style="justify-content: flex-end"><button class="lx-btn">Tạo Guideline Gap</button><button class="lx-btn lx-btn--primary">Lưu phân xử</button></div>
+<div class="lx-actions" style="justify-content: flex-end"><button id="gap-from-adj" class="lx-btn" onClick="{{openGapFromAdj}}">Tạo Guideline Gap</button><button class="lx-btn lx-btn--primary">Lưu phân xử</button></div>
 
 </div>
 </section>
@@ -100,12 +104,37 @@
 </div>
 </sc-if>
 
+<sc-if value="{{isGapOpen}}" hint-placeholder-val="{{false}}"><dialog id="guideline-gap-dialog" class="lx-gap-dialog" aria-labelledby="guideline-gap-title" aria-describedby="guideline-gap-description"><dc-import name="GuidelineGapModal" context="{{gapContext}}" hint-size="640px,620px"></dc-import></dialog></sc-if>
+
 </main>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
 class Component extends DCLogic {
+  openGap(context, triggerId) {
+    this.gapTriggerId = triggerId;
+    this.setState({gapContext:context}).then(() => {
+      const dialog = this.host.querySelector('#guideline-gap-dialog');
+      if (!dialog) return;
+      dialog.addEventListener('close', () => {
+        if (this.state.gapContext) this.setState({gapContext:null}).then(() => this.host.querySelector('#' + this.gapTriggerId)?.focus());
+      });
+      dialog.addEventListener('click', event => {
+        if (event.target !== dialog) return;
+        const box = dialog.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+      });
+      dialog.showModal();
+    });
+  }
   renderVals() {
+    if (this.host && !this.gapCloseListener) {
+      this.gapCloseListener = event => {
+        event.preventDefault();
+        this.host.querySelector('#guideline-gap-dialog')?.close();
+      };
+      this.host.addEventListener('guideline-gap-close', this.gapCloseListener);
+    }
     const cur = (this.state && this.state.tab) || 'gaps';
     const B = (c) => 'lx-badge' + (c ? ' lx-badge--' + c : '');
     const GAPS = { cols: ['Mã', 'Nội dung còn thiếu', 'Quy tắc', 'Case liên quan', 'Trạng thái'], tip: 'Phân xử các case liên quan', rows: [
@@ -125,6 +154,10 @@ class Component extends DCLogic {
       isGaps: cur === 'gaps',
       isList: cur !== 'adj',
       isAdj: cur === 'adj',
+      isGapOpen: !!this.state.gapContext,
+      gapContext: this.state.gapContext || 'list',
+      openGapFromList: () => this.openGap('list', 'gap-from-list'),
+      openGapFromAdj: () => this.openGap('adj', 'gap-from-adj'),
       tip: D.tip,
       cols: D.cols,
       goAdj: () => this.setState({ tab: 'adj' }),
