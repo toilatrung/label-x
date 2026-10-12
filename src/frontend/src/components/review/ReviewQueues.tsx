@@ -392,7 +392,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   return (
     <div className="lx-stack">
       {/* Context Bar / Controls */}
-      <div className="lx-card lx-card__body lx-stack">
+      <div className="lx-card lx-card--compact lx-stack">
         <div className="lx-cols lx-review-controls">
           <div className="lx-review-controls__dataset">
             <ReviewDatasetPicker
@@ -405,14 +405,14 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           <form onSubmit={handleRunSubmit} className="lx-review-controls__run">
             <div className="lx-field">
               <label htmlFor="review-run-id" className="lx-label">
-                Mã QC Run (Run ID)
+                Mã Quality Control Run
               </label>
               <input
                 id="review-run-id"
                 className="lx-input"
                 type="number"
                 min={1}
-                placeholder="Nhập ID Run (vd: 12)"
+                placeholder="Nhập mã (ví dụ 12)"
                 value={runInput}
                 onChange={(e) => setRunInput(e.target.value)}
               />
@@ -431,7 +431,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         {!datasetId && (
           <div role="status" className="lx-callout lx-callout--info">
             <div className="lx-callout__text">
-              Vui lòng chọn bộ dữ liệu (dataset) để xem hàng đợi kiểm tra.
+              Chọn Dataset để xem hàng đợi kiểm tra.
             </div>
           </div>
         )}
@@ -439,7 +439,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         {datasetId && !effectiveRunId && (
           <div role="status" className="lx-callout lx-callout--info">
             <div className="lx-callout__text">
-              Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra.
+              Nhập mã Quality Control Run để tải hàng đợi kiểm tra.
             </div>
           </div>
         )}
@@ -551,7 +551,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                 )}
               </div>
               <span className="lx-hint">
-                Ngữ cảnh lease đã sẵn sàng cho không gian làm việc T-037.
+                Lease đã sẵn sàng cho màn kiểm tra.
               </span>
             </div>
           </div>

@@ -35,13 +35,13 @@ export function ReviewEvidenceTable({
         <tbody>
           <tr>
             <td className="lx-muted lx-w-130">
-              Annotation class
+              Lớp annotation
             </td>
             <td>
               {currentAnnotationClass ? (
                 <b>{currentAnnotationClass}</b>
               ) : (
-                <span className="lx-subtle">Không khả dụng (T-035 chưa serialize class nhãn ở top-level)</span>
+                <span className="lx-subtle">Không khả dụng (server chưa trả lớp nhãn)</span>
               )}
             </td>
           </tr>
@@ -68,12 +68,12 @@ export function ReviewEvidenceTable({
                       )}
                       {hasIou && (
                         <span className="lx-subtle">
-                          · IoU {ev.iou!.toFixed(2)}
+                          · Intersection over Union {ev.iou!.toFixed(2)}
                         </span>
                       )}
                       {ev.rule_id && (
                         <span className="lx-tag lx-text-11">
-                          Rule: {ev.rule_id}
+                          Quy tắc: {ev.rule_id}
                         </span>
                       )}
                     </div>

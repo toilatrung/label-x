@@ -125,7 +125,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
     it('locks manual policy on zero-issue frame when propPolicy is omitted', () => {
       const res = resolveAnchorPolicy(null, []);
       expect(res.policy).toBeNull();
-      expect(res.error).toMatch(/zero-issue gap/);
+      expect(res.error).toMatch(/frame chưa có issue để lấy phiên bản/);
     });
 
     it('locks manual policy when server issues have conflicting policy versions', () => {
@@ -136,7 +136,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       };
       const res = resolveAnchorPolicy(null, [testIssueE2, conflictingIssue]);
       expect(res.policy).toBeNull();
-      expect(res.error).toMatch(/xung đột policy/);
+      expect(res.error).toMatch(/xung đột phiên bản chính sách/);
     });
   });
 
@@ -526,7 +526,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       expect(snapshotEndpointHit).toBe(false);
 
       expect(
-        screen.getByText(/Plain Reviewer chưa có nguồn snapshot revision được cấp quyền từ API/i)
+        screen.getByText(/tài khoản Reviewer chưa được cấp quyền đọc Snapshot/i)
       ).toBeInTheDocument();
     });
 
@@ -661,7 +661,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
 
       // Warning callout must be shown
       expect(
-        screen.getByText(new RegExp(`Chỉ issue có trạng thái.*in_review.*mới có thể lưu quyết định`, 'i'))
+        screen.getByText(new RegExp(`Chỉ issue ở trạng thái.*Đang review.*mới lưu được quyết định`, 'i'))
       ).toBeInTheDocument();
 
       // Submit button must be disabled
@@ -1417,8 +1417,8 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
 
       expect(screen.getByText('bicycle')).toBeInTheDocument();
       expect(screen.getByText(/độ tin cậy 0.00/i)).toBeInTheDocument();
-      expect(screen.getByText(/IoU 0.00/i)).toBeInTheDocument();
-      expect(screen.getByText(/Rule: RULE-VEH-01/i)).toBeInTheDocument();
+      expect(screen.getByText(/Intersection over Union 0.00/i)).toBeInTheDocument();
+      expect(screen.getByText(/Quy tắc: RULE-VEH-01/i)).toBeInTheDocument();
       expect(screen.getByText(/Prediction bbox: \[12, 34, 56, 78\]/i)).toBeInTheDocument();
       expect(screen.getByText(/Thực tế:/i)).toBeInTheDocument();
       expect(screen.getByText('bicycle_detected')).toBeInTheDocument();
