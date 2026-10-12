@@ -10,8 +10,10 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.request import Request
 
+from audit.models import AuditEvent
 from audit.services import append_audit_event
 from config.exceptions import ApiError
+from review import decision_source
 from review.decision_service import (
     _authorize_frame,
     _body,
@@ -159,6 +161,17 @@ def create_manual_issue(*, request: Request) -> Issue:
     return issue
 
 
+def _already_completed(frame: FrameReview) -> bool:
+    if frame.state == FrameReview.State.REVIEWED:
+        return True
+    return (
+        frame.state == FrameReview.State.AWAITING_FOLLOWUP
+        and AuditEvent.objects.filter(
+            action="frame.complete", object_type="frame", object_id=str(frame.pk)
+        ).exists()
+    )
+
+
 @transaction.atomic
 def complete_frame(*, request: Request, frame_id: int) -> FrameReview:
     body = _body(request)
@@ -177,16 +190,10 @@ def complete_frame(*, request: Request, frame_id: int) -> FrameReview:
     identity = _reviewer_identity(request, action="frames.complete")
     _deny_frame_ineligible(request, identity, frame, "frames.complete")
     lease = Lease.objects.filter(pk=lease_id, frame_review=frame, holder=user).first()
-    if lease is not None and frame.state == FrameReview.State.REVIEWED and lease.closed_at:
+    if lease is not None and lease.closed_at and _already_completed(frame):
         return frame  # Idempotent retry: no second audit, lease closure, or effort effect.
     _owned_lease(request, frame=frame, lease_id=lease_id, action="frames.complete")
-    undecided = list(
-        Issue.objects.filter(frame_review=frame)
-        .exclude(state=Issue.State.ESCALATED)
-        .exclude(review_decisions__isnull=False)
-        .values_list("pk", flat=True)
-        .distinct()
-    )
+    undecided = decision_source.undecided_issue_ids(frame)
     if undecided:
         raise ApiError(
             status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -198,6 +205,10 @@ def complete_frame(*, request: Request, frame_id: int) -> FrameReview:
     lease.closed_at = _now()
     lease.save(update_fields=["closed_at"])
     frame.state = FrameReview.State.REVIEWED
+    # Rework verified while the reviewer was still deciding: hand the frame over to follow-up
+    # now that nothing is left to decide (same transaction; a repeat call is a no-op above).
+    if decision_source.frame_reworks_all_resolved(frame):
+        frame.state = FrameReview.State.AWAITING_FOLLOWUP
     frame.save(update_fields=["state"])
     append_audit_event(
         actor=user,

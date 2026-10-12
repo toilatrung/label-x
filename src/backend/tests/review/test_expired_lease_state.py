@@ -312,7 +312,7 @@ def test_live_lease_on_in_review_frame_still_renews_and_resumes(world):
     assert resumed.data["lease"]["id"] == lease_id
 
 
-def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state):  # noqa: F811
+def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state, *, undecided=False):  # noqa: F811
     frame = confirmed.frame_review
     frame.state = frame_state
     frame.save(update_fields=["state"])
@@ -322,13 +322,15 @@ def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state):  # noqa
         queue_source="risk",
         expires_at=timezone.now() + timedelta(minutes=10),
     )
-    undecided = Issue.objects.create(
-        frame_review=frame,
-        family=Issue.Family.E2,
-        origin=Issue.Origin.REVIEWER,
-        state=Issue.State.IN_REVIEW,
-        anchor={"kind": "manual_region", "objects": []},
-    )
+    other_issue = None
+    if undecided:
+        other_issue = Issue.objects.create(
+            frame_review=frame,
+            family=Issue.Family.E2,
+            origin=Issue.Origin.REVIEWER,
+            state=Issue.State.IN_REVIEW,
+            anchor={"kind": "manual_region", "objects": []},
+        )
     rework = ReworkRequest.objects.get(pk=create_request(confirmed, world).data["id"])
     snapshot = changed_snapshot(world)
     run = _run_for(world, snapshot)
@@ -337,26 +339,47 @@ def _verify_pass_with_lease(confirmed, world, monkeypatch, frame_state):  # noqa
     assert _verify(world, rework, snapshot, True).status_code == 200
     lease.refresh_from_db()
     frame.refresh_from_db()
-    undecided.refresh_from_db()
-    return frame, lease, undecided
+    rework.refresh_from_db()
+    if other_issue is not None:
+        other_issue.refresh_from_db()
+    return frame, lease, other_issue, rework
 
 
 @pytest.mark.django_db
 def test_verify_keeps_completed_frame_completed(confirmed, world, monkeypatch):  # noqa: F811
-    frame, _lease, _undecided = _verify_pass_with_lease(
+    frame, _lease, _other, _rework = _verify_pass_with_lease(
         confirmed, world, monkeypatch, FrameReview.State.COMPLETED
     )
     assert frame.state == FrameReview.State.COMPLETED
 
 
 @pytest.mark.django_db
-def test_verify_hands_in_review_frame_over_and_closes_lease(confirmed, world, monkeypatch):  # noqa: F811
-    frame, lease, undecided = _verify_pass_with_lease(
+def test_verify_hands_in_review_frame_over_when_everything_is_decided(
+    confirmed,  # noqa: F811
+    world,
+    monkeypatch,
+):
+    frame, lease, _other, rework = _verify_pass_with_lease(
         confirmed, world, monkeypatch, FrameReview.State.IN_REVIEW
     )
+    assert rework.status == ReworkRequest.Status.RESOLVED
     assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
     assert lease.closed_at is not None
-    assert undecided.state == Issue.State.PENDING_REVIEW
+
+
+@pytest.mark.django_db
+def test_verify_leaves_frame_and_lease_alone_while_an_issue_is_undecided(
+    confirmed,  # noqa: F811
+    world,
+    monkeypatch,
+):
+    frame, lease, other, rework = _verify_pass_with_lease(
+        confirmed, world, monkeypatch, FrameReview.State.IN_REVIEW, undecided=True
+    )
+    assert rework.status == ReworkRequest.Status.RESOLVED  # the verification is still recorded
+    assert frame.state == FrameReview.State.IN_REVIEW
+    assert lease.closed_at is None
+    assert other.state == Issue.State.IN_REVIEW
 
 
 @pytest.mark.django_db
@@ -370,50 +393,23 @@ def test_verify_hands_in_review_frame_over_and_closes_lease(confirmed, world, mo
     ],
 )
 def test_verify_keeps_existing_behaviour_for_other_states(confirmed, world, monkeypatch, state):  # noqa: F811
-    frame, lease, _undecided = _verify_pass_with_lease(confirmed, world, monkeypatch, state)
+    frame, lease, _other, _rework = _verify_pass_with_lease(confirmed, world, monkeypatch, state)
     assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
     assert lease.closed_at is None  # only an in_review frame hands its lease over
 
 
 @pytest.mark.django_db
-def test_scope_completes_after_handover_once_undecided_issue_is_decided(final_world):  # noqa: F811
-    """Handover requeues the undecided issue; scope completes once every issue is closed.
-
-    There is no queue path for an awaiting_followup frame today, so the decision itself is
-    simulated with a state update (see the report to the coordinator).
-    """
-
-    world = final_world
-    frame = world["issue"].frame_review
-    frame.state = FrameReview.State.IN_REVIEW
-    frame.save(update_fields=["state"])
-    lease = Lease.objects.create(
-        frame_review=frame,
-        holder=world["reviewer"],
-        queue_source="risk",
-        expires_at=timezone.now() + timedelta(minutes=10),
+@pytest.mark.parametrize("state", [FrameReview.State.UNREVIEWED, FrameReview.State.INCOMPLETE])
+def test_verify_does_not_hide_a_claimable_frame_with_undecided_issue(
+    confirmed,  # noqa: F811
+    world,
+    monkeypatch,
+    state,
+):
+    frame, _lease, _other, _rework = _verify_pass_with_lease(
+        confirmed, world, monkeypatch, state, undecided=True
     )
-    undecided = Issue.objects.create(
-        frame_review=frame,
-        family=Issue.Family.E2,
-        origin=Issue.Origin.REVIEWER,
-        state=Issue.State.IN_REVIEW,
-        anchor={"kind": "manual_region", "objects": []},
-    )
-    rework_service._move_frame_to_followup(frame)
-    lease.refresh_from_db()
-    undecided.refresh_from_db()
-    assert lease.closed_at is not None and undecided.state == Issue.State.PENDING_REVIEW
-
-    _complete_final(world["final"])
-    assert complete_scope_frames(world["run"].pk) == 0  # an open issue blocks completion
-    ReworkRequest.objects.filter(issue__frame_review=frame).update(
-        status=ReworkRequest.Status.RESOLVED
-    )
-    Issue.objects.filter(pk=undecided.pk).update(state=Issue.State.REJECTED)
-    assert complete_scope_frames(world["run"].pk) == 1
-    frame.refresh_from_db()
-    assert frame.state == FrameReview.State.COMPLETED
+    assert frame.state == state
 
 
 def _renew_in_thread(world, lease_id):
