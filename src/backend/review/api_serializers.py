@@ -217,6 +217,31 @@ class ReworkReadSerializer(serializers.Serializer[Any]):
     resolved_at = serializers.DateTimeField(allow_null=True)
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
+    round_count = serializers.IntegerField()
+
+
+class ReworkVerificationSummarySerializer(serializers.Serializer[Any]):
+    id = serializers.IntegerField()
+    outcome = serializers.CharField(help_text="pass | fail")
+    verifier_user_id = serializers.IntegerField()
+    reason = serializers.CharField(allow_blank=True)
+    verified_at = serializers.DateTimeField()
+
+
+class ReworkRoundSerializer(serializers.Serializer[Any]):
+    round = serializers.IntegerField()
+    revision = serializers.CharField()
+    snapshot_id = serializers.IntegerField()
+    recheck_run_id = serializers.IntegerField()
+    recheck_run_status = serializers.CharField()
+    submitted_at = serializers.DateTimeField(allow_null=True)
+    verification = ReworkVerificationSummarySerializer(allow_null=True)
+    result_status = serializers.ChoiceField(choices=ReworkRequest.Status.values)
+
+
+class ReworkDetailSerializer(ReworkReadSerializer):
+    review_state = serializers.ChoiceField(choices=FrameReview.State.values)
+    timeline = ReworkRoundSerializer(many=True)
 
 
 class PaginatedReworkSerializer(serializers.Serializer[Any]):

@@ -16,8 +16,12 @@ from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
-from review.api_serializers import PaginatedReworkSerializer, ReworkReadSerializer
+from review.api_serializers import (
+    PaginatedReworkSerializer,
+    ReworkDetailSerializer,
+)
 from review.models import ReworkRequest
+from review.rework_timeline import rework_timeline
 from review.rework_views import ReworkCreateView
 
 _READ_ROLES = (Role.ANNOTATOR, Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
@@ -50,6 +54,15 @@ def rework_read(rework: ReworkRequest) -> dict[str, object]:
         "resolved_at": rework.resolved_at.isoformat() if rework.resolved_at else None,
         "created_at": rework.created_at.isoformat(),
         "updated_at": rework.updated_at.isoformat(),
+        "round_count": len(rework_timeline(rework)),
+    }
+
+
+def rework_detail(rework: ReworkRequest) -> dict[str, object]:
+    return {
+        **rework_read(rework),
+        "review_state": rework.issue.frame_review.state,
+        "timeline": rework_timeline(rework),
     }
 
 
@@ -71,7 +84,7 @@ def _sees_all(user_id: int | None, dataset_id: int) -> bool:
 def _base_queryset() -> QuerySet[ReworkRequest]:
     return ReworkRequest.objects.select_related(
         "issue__frame_review__run", "issue__frame_review__snapshot_frame"
-    )
+    ).prefetch_related("rechecks__run", "verifications__recheck_run")
 
 
 class ReworkListView(APIView):
@@ -130,7 +143,7 @@ class ReworkDetailView(APIView):
 
     @extend_schema(
         operation_id="rework_retrieve",
-        responses={200: ReworkReadSerializer, 403: ErrorSerializer, 404: ErrorSerializer},
+        responses={200: ReworkDetailSerializer, 403: ErrorSerializer, 404: ErrorSerializer},
         tags=["rework"],
     )
     def get(self, request: Request, pk: int) -> Response:
@@ -138,7 +151,7 @@ class ReworkDetailView(APIView):
         dataset_id = rework.issue.frame_review.run.dataset_id
         if rework.annotator_id != request.user.pk and not _sees_all(request.user.pk, dataset_id):
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
-        return Response(rework_read(rework))
+        return Response(rework_detail(rework))
 
 
 @csrf_exempt
