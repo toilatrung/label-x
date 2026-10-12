@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import type { components } from '@/lib/api/contract';
 
 export type ConfigVersion = components['schemas']['ConfigVersion'];
@@ -12,6 +13,7 @@ export interface EngineThresholdsTableProps {
   hasPermission?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  layout?: 'thresholds' | 'analysis';
 }
 
 interface EngineMeta {
@@ -61,7 +63,7 @@ const ENGINES_META: EngineMeta[] = [
     formatParams: (params) => {
       const parts: string[] = [];
       if (typeof params.iou_threshold === 'number') {
-        parts.push(`Intersection over Union (IoU) ≥ ${params.iou_threshold}`);
+        parts.push(`Intersection over Union ≥ ${params.iou_threshold}`);
       }
       if (typeof params.same_class === 'boolean') {
         parts.push(params.same_class ? 'Cùng lớp' : 'Khác lớp');
@@ -123,6 +125,7 @@ export function EngineThresholdsTable({
   hasPermission = true,
   emptyTitle,
   emptyDescription,
+  layout = 'thresholds',
 }: EngineThresholdsTableProps) {
   if (!hasPermission) {
     return (
@@ -203,35 +206,21 @@ export function EngineThresholdsTable({
   }
 
   const rawEngines = (config.engines || {}) as Record<string, unknown>;
+  const enabledCount = ENGINES_META.filter((meta) => {
+    const value = rawEngines[meta.key];
+    return typeof value === 'object' && value !== null && (value as Record<string, unknown>).enabled === true;
+  }).length;
 
   return (
     <section className="lx-card" aria-label="Cấu hình ngưỡng engine">
       <header className="lx-card__head">
-        <div>
-          <span className="lx-cell__main">Ngưỡng kiểm tra engine</span>
-          <span className="lx-hint" style={{ marginLeft: 8 }}>
-            Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})
-          </span>
-        </div>
-        <span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span>
+        {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div className="lx-row"><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint">Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
       </header>
-      <div className="lx-card__body">
-        <div className="lx-callout" role="note">
-          <strong>Trạng thái trong cấu hình</strong>
-          <div>
-            Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.
-          </div>
-        </div>
-      </div>
+      {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
       <div className="lx-scroll">
-        <table className="lx-table">
+        <table className="lx-table lx-table--min-700">
           <thead>
-            <tr>
-              <th style={{ width: '150px' }}>Trạng thái cấu hình</th>
-              <th>Engine</th>
-              <th style={{ width: '120px' }}>Phiên bản</th>
-              <th>Tham số ngưỡng trong config</th>
-            </tr>
+            {layout === 'analysis' ? <tr><th>Bật</th><th>Engine</th><th>Cấu hình hiện tại</th><th aria-label="Thao tác" /></tr> : <tr><th>Trạng thái cấu hình</th><th>Engine</th><th>Phiên bản</th><th>Tham số ngưỡng trong config</th></tr>}
           </thead>
           <tbody>
             {ENGINES_META.map((meta) => {
@@ -258,42 +247,26 @@ export function EngineThresholdsTable({
               const effectiveThreshold = meta.formatParams(params);
               const hasParams = Object.keys(params).length > 0;
 
+              const configuration = meta.key === 'metric' && !hasParams
+                ? <span className="lx-badge lx-badge--warning">Chưa có Ground Truth</span>
+                : effectiveThreshold
+                  ? <><div className="lx-cell__main">{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
+                  : hasParams
+                    ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div>
+                    : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;
+
               return (
                 <tr key={meta.key}>
                   <td>
-                    {isEnabled === true ? (
-                      <span className="lx-badge lx-badge--success">Bật trong config</span>
-                    ) : isEnabled === false ? (
-                      <span className="lx-badge">Tắt trong config</span>
-                    ) : (
-                      <span className="lx-badge">Chưa khai báo</span>
-                    )}
+                    {layout === 'analysis' ? <label className="lx-switch"><input type="checkbox" checked={isEnabled === true} disabled aria-label={`${meta.name}: ${isEnabled === true ? 'bật' : isEnabled === false ? 'tắt' : 'chưa khai báo'}`} readOnly /><span /></label> : isEnabled === true ? <span className="lx-badge lx-badge--success">Bật trong config</span> : isEnabled === false ? <span className="lx-badge">Tắt trong config</span> : <span className="lx-badge">Chưa khai báo</span>}
                   </td>
                   <td>
                     <div className="lx-cell__main">{meta.name}</div>
                     <div className="lx-cell__sub">{meta.sub}</div>
                   </td>
-                  <td>
-                    <span className="lx-mono">{version}</span>
-                  </td>
-                  <td>
-                    {effectiveThreshold ? (
-                      <>
-                        <div className="lx-cell__main">{effectiveThreshold}</div>
-                        {hasParams && (
-                          <div className="lx-cell__sub lx-mono">
-                            {JSON.stringify(params)}
-                          </div>
-                        )}
-                      </>
-                    ) : hasParams ? (
-                      <div className="lx-cell__main lx-mono">
-                        {JSON.stringify(params)}
-                      </div>
-                    ) : (
-                      <span className="lx-subtle">Chưa được cấu hình/không có dữ liệu từ API</span>
-                    )}
-                  </td>
+                  {layout === 'thresholds' && <td><span className="lx-mono">{version}</span></td>}
+                  <td>{configuration}</td>
+                  {layout === 'analysis' && <td className="r"><Link className="lx-iconbtn" href={meta.key === 'metric' ? '/calibration/benchmark' : '/configuration/rules-thresholds'} data-tip={meta.key === 'metric' ? 'Chọn benchmark Ground Truth' : 'Chỉnh cấu hình engine'} aria-label={meta.key === 'metric' ? 'Chọn benchmark Ground Truth' : `Chỉnh cấu hình ${meta.name}`}><svg viewBox="0 0 16 16" aria-hidden="true"><path d={meta.key === 'metric' ? 'M3 8h10M9 4l4 4-4 4' : 'M3 13l.7-3L10.5 3.2a1.4 1.4 0 0 1 2 2L5.7 12 3 13z'} /></svg></Link></td>}
                 </tr>
               );
             })}
@@ -302,13 +275,13 @@ export function EngineThresholdsTable({
       </div>
       <footer className="lx-card__foot">
         <span>
-          Cấu hình phát hành lúc:{' '}
+          {layout === 'analysis' ? 'Phiên bản đã phát hành lúc: ' : 'Cấu hình phát hành lúc: '}
           {config.published_at
             ? new Date(config.published_at).toLocaleString('vi-VN')
             : config.created_at
             ? new Date(config.created_at).toLocaleString('vi-VN')
             : '—'}
-          . Các giá trị <span className="lx-mono">params</span> và cờ bật/tắt ở đây thuộc phiên bản cấu hình được hiển thị, không đại diện cho mọi QC run.
+          {layout === 'analysis' ? '. Engine tắt được ghi là Not checked, không được xem là đạt.' : <>. Các giá trị <span className="lx-mono">params</span> và cờ bật/tắt ở đây thuộc phiên bản cấu hình được hiển thị, không đại diện cho mọi QC run.</>}
         </span>
       </footer>
     </section>
