@@ -251,6 +251,16 @@ class PaginatedCandidateListSerializer(serializers.Serializer[Any]):
     results = CandidateSerializer(many=True)
 
 
+@extend_schema_field({"type": "object", "additionalProperties": {"type": "integer"}})
+class IssueCountsField(serializers.JSONField):
+    """Stored JSON passed through unchanged; only the OpenAPI description is typed."""
+
+
+@extend_schema_field({"type": "object", "additionalProperties": True})
+class ExplanationField(serializers.JSONField):
+    """Stored JSON passed through unchanged; only the OpenAPI description is typed."""
+
+
 class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     """Stored ranking row matching and extending the public RankedFrame schema."""
 
@@ -265,8 +275,8 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     score_version = serializers.CharField(source="ranking.score_version", read_only=True)
     review_state = serializers.SerializerMethodField()
     lease_holder_user_id = serializers.SerializerMethodField()
-    issue_counts = serializers.DictField(child=serializers.IntegerField(), read_only=True)
-    explanation = serializers.DictField(read_only=True)
+    issue_counts = IssueCountsField(read_only=True)
+    explanation = ExplanationField(read_only=True)
 
     class Meta:
         model = RunRankingEntry
