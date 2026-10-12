@@ -1,0 +1,99 @@
+{
+  "purpose": "Checklist hợp đồng API cho FE (tdt2112): #240 ReviewWorkspace, #245 rework/history. Trích từ A/B/C result, chưa kiểm FE, chưa sửa OpenAPI.",
+  "sources": [
+    "A-result.json",
+    "A-result-241.json",
+    "B-result.json",
+    "C-result.json",
+    "C-wave2-result.json",
+    "integration-result.json"
+  ],
+  "status": "Backend chưa push; tích hợp ở /tmp/labelx-m03-integrator@900dc97 (#238,#239,#242,#243,#244). #241 (A, ee4a361) và #246 (C, 22a4e11) chưa nằm trong integration-result.json. OpenAPI/types FE: coordinator chưa tích hợp. Mọi dữ liệu là fixture, không có CVAT thật.",
+  "reviewWorkspace_240": [
+    {
+      "item": "Queue frame state",
+      "endpoint": "GET /api/queues/... (RankedFrame)",
+      "detail": "review_state và lease_holder_user_id lấy từ FrameReview/Lease đã lưu; lease hết hạn chưa materialize hiển thị incomplete (có decision đã lưu) hoặc unreviewed; GET không ghi. review_state filter áp ở DB trước cursor pagination, giá trị không hợp lệ -> 400. Risk/random là 2 ranking riêng nhưng state frame dùng chung theo (run, frame).",
+      "source": "A-result #238"
+    },
+    {
+      "item": "Frame issues",
+      "endpoint": "GET /api/frames/{id}/issues/",
+      "detail": "Thêm snapshot_revision (sha256 snapshot khóa), annotations[] (id, source{kind,id}, label_id, bbox{x1,y1,x2,y2}|null, rotation, occluded, outside, z_order, attributes[]) và predictions[] (candidate_id, engine, engine_version, family, anchor, evidence). Chỉ có label_id, không có tên class. predictions[] là candidate engine của run, không phải model prediction thô. Hình dạng item là đề xuất của A, chờ PO/coordinator xác nhận.",
+      "source": "A-result #239"
+    },
+    {
+      "item": "Decision case",
+      "endpoint": "GET /api/decision-cases/ và /{id}/; POST adjudicate",
+      "detail": "outcome public: confirm|reject|guideline_gap (guideline_missing ghi mới -> 400; dòng cũ đọc ra guideline_gap). List dạng {next,previous,results}, page 50, filter rule_id/issue/version/outcome; cursor/issue/outcome sai -> 400. Detail có history[{id,case_version,outcome,actor_user_id,created_at}]. #241 chưa tích hợp vào 900dc97.",
+      "source": "A-result-241"
+    },
+    {
+      "item": "Review policy",
+      "endpoint": "GET /api/review-policy/",
+      "detail": "Trả policy_version, source, decision_status, lease_ttl_seconds, resume_reservation_seconds, idle_threshold_seconds, idle_gap_rule, immediate_exclusion_reasons, renew_on. 503 POLICY_NOT_CONFIGURED khi thiếu giá trị. Route chưa được thêm vào config/urls.py và env pilot (900/300/120) chưa cấu hình, nên hiện chưa gọi được thật.",
+      "source": "C-wave2 #246"
+    },
+    {
+      "item": "Effort events",
+      "endpoint": "POST /api/effort-events/",
+      "detail": "Gửi policy_version và gaps[] (reason idle|blur|hidden|pause) từng event; dùng lại client_event_id khi retry. Server tự tính active_ms (không tin client). Idle chỉ loại khi > ngưỡng; blur/hidden/pause loại ngay; khoảng chồng đếm một lần. 409 POLICY_VERSION_MISMATCH, 409 POLICY_NOT_CONFIGURED, replay khác gaps -> 409. Role annotator không được gửi effort event.",
+      "source": "C-wave2 #246"
+    },
+    {
+      "item": "Hành vi client (FE tự làm)",
+      "detail": "Renew lease chỉ khi có thao tác; dừng khi hoàn tất/hết hạn; blur/hidden/pause báo ngay. Server không ép các việc này.",
+      "source": "C-wave2 notDone"
+    }
+  ],
+  "reworkHistory_245": [
+    {
+      "item": "Tạo rework",
+      "endpoint": "POST /api/rework/",
+      "detail": "Body: issue_id, annotator_user_id, instruction, severity, due_at, cvat_deep_link. Cần Idempotency-Key UUID chữ thường (tùy chọn). Issue phải confirmed."
+    },
+    {
+      "item": "Submit revision",
+      "endpoint": "POST /api/rework/{id}/submitted/",
+      "detail": "Body: cvat_revision. 202. Revision đã thấy (gốc hoặc vòng trước) -> 409 REVISION_UNCHANGED. Cùng key + cùng body -> replay; cùng key khác body/revision -> 409 IDEMPOTENCY_KEY_REUSED. Đang recheck_pending và gửi revision khác -> 409 INVALID_TRANSITION. Annotator khác -> 403 OUT_OF_SCOPE."
+    },
+    {
+      "item": "Verify",
+      "endpoint": "POST /api/rework/{id}/verify/",
+      "detail": "Body: passed(bool), revision, reason (bắt buộc khi fail), override_reason (Super Admin). 200. Chỉ khi recheck run Completed, không thì 409 INVALID_TRANSITION. Cùng annotator/cùng người thật -> 403 SAME_REQUESTER_APPROVER."
+    },
+    {
+      "item": "Vòng sửa mới (#242)",
+      "detail": "Verify fail: response status = fix_pending (KHÔNG còn reopened), issue.state = fix_pending; reopened chỉ là bước audit trung gian. Có thể submit revision mới nhiều vòng. Verify pass: status resolved, issue resolved. FE không được chờ trạng thái reopened."
+    },
+    {
+      "item": "Frame state sau verify pass",
+      "detail": "frame.state = awaiting_followup. Hoàn tất frame thuộc finalization_service.complete_scope_frames (sweeper), không phải verify. FE đừng hiển thị 'completed' ngay sau verify pass."
+    },
+    {
+      "item": "GET rework",
+      "endpoint": "GET /api/rework/ và /api/rework/{id}/",
+      "detail": "List filter ?status= (sai -> 400) kèm counts theo status, cursor pagination. Field: id, dataset_id, issue_id, frame_id, annotator_user_id, created_by_user_id, status, instruction, severity, original_revision, submitted_revision, recheck_run_id, due_at, cvat_deep_link, submitted_at, resolved_at, created_at, updated_at. Annotator thấy đúng việc của mình; object của người khác -> 404; thiếu scope dataset -> 403. Response chưa có danh sách vòng (rechecks) hay verifications; lịch sử từng vòng chưa có endpoint đọc, FE chưa dựng được timeline vòng từ API hiện có.",
+      "source": "C-result #244, B-result"
+    },
+    {
+      "item": "Run detail lineage",
+      "endpoint": "GET /api/runs/{id}/",
+      "detail": "Thêm verification_lineage[{verification_id,rework_id,recheck_run_id,outcome,revision,verified_at}], selected_final_sources[{cvat_job_id,rework_id,verification_id,source_run_id,source_revision}], operational_source{origin_run_id,run_id,run_kind,status,reason,coverage,final_attempts,scope_complete,blocked_reasons}. Cần xác minh RunSerializer đã gọi run_lineage_fields chưa: C ghi là việc của A/coordinator, tôi chưa thấy bằng chứng đã tích hợp.",
+      "source": "C-result, C-wave2"
+    },
+    {
+      "item": "Cảnh báo UI",
+      "detail": "Chức năng chưa có backend vẫn dựng đủ giao diện kèm 'Chức năng vẫn chưa được kết nối với server' theo CLAUDE.md; khớp 1:1 docs/design/screens/*.dc.html."
+    }
+  ],
+  "errorSchema": "Lỗi qua ApiError: {code, message, details?}. Mã dùng: VALIDATION_ERROR(400), OUT_OF_SCOPE/IDENTITY_MAPPING_MISSING/SAME_REQUESTER_APPROVER(403), NOT_FOUND(404), INVALID_TRANSITION/REVISION_UNCHANGED/IDEMPOTENCY_KEY_REUSED/POLICY_VERSION_MISMATCH/POLICY_NOT_CONFIGURED(409), POLICY_NOT_CONFIGURED(503 ở GET policy). Hình dạng JSON lỗi lấy từ code đọc được; chưa đối chiếu OpenAPI.",
+  "openQuestions": [
+    "FrameIssues item shape và predictions[] là đề xuất của A, cần PO xác nhận.",
+    "Chưa có endpoint đọc lịch sử các vòng rework (rechecks/verifications) cho #245.",
+    "Run detail lineage đã vào RunSerializer chưa?",
+    "Route /api/review-policy/ và biến cấu hình pilot chưa áp dụng.",
+    "FE types sinh từ OpenAPI chưa được tái sinh."
+  ],
+  "notVerified": "Tôi không chạy code hay đọc FE; mọi mục là trích từ result JSON và đọc nhanh code ở /tmp/labelx-m03-integrator (rework_urls.py, rework_read_views.py, lineage.py)."
+}

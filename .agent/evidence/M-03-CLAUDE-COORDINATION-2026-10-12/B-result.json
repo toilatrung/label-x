@@ -1,0 +1,16 @@
+{
+  "group": "B", "issue": 242, "state": "DONE_PENDING_COORDINATOR_QC",
+  "worktree": "/tmp/labelx-m03-claude-b", "branch": "feat/m03-resolve-claude-b",
+  "baseSHA": "6419d1b9f39ba601bb800f8bbd62164f586dc0bb", "commitSHA": "8284fb2852a399b96a90d48d842604b8ab68d6f8", "pushed": false,
+  "files": ["src/backend/review/models.py","src/backend/review/rework_service.py","src/backend/review/migrations/0006_reworkrecheck_rounds.py","src/backend/tests/review/test_rework.py","src/backend/tests/review/test_queue_lease.py"],
+  "tests": {"pytest tests/review tests/test_m03_contract_fixture.py": "91 passed, 0 failed, 0 skipped", "ruff check/format": "pass", "mypy review": "Success: no issues found in 28 source files", "makemigrations --check": "No changes detected"},
+  "notes": [
+    "ReworkRecheck: OneToOne -> FK related_name=rechecks, thêm round/idempotency_key/request_hash (migration 0006, backfill từ rework.submission_*). C cần dùng rework.rechecks thay rework.recheck.",
+    "Verify fail: rework/issue về fix_pending (audit rework.verify_fail + issue.reopen_fix); response status = fix_pending.",
+    "Verify pass: frame.state = awaiting_followup (theo handoff C); complete_scope_frames chưa có trong base 6419d1b nên chưa kiểm tích hợp.",
+    "Sửa nhỏ ngoài biên file: test_queue_lease.test_migration_upgrade_from_baseline_schema giờ migrate về leaf cuối test, vì trước đó để DB ở schema 0002 làm test transactional sau đó (race verify) lỗi 'rework_request does not exist'.",
+    "Chỉ fixture/test nội bộ; không E2E CVAT thật, không PASS dữ liệu thật. Test DB riêng: labelx_claude_b."
+  ],
+  "blocker": null,
+  "handoff": "Coordinator tích hợp + QC độc lập; OpenAPI: response status verify-fail đổi reopened -> fix_pending (enum đã có fix_pending), cần coordinator xác nhận contract."
+}

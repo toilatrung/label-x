@@ -1,0 +1,66 @@
+{
+  "worktree": "/tmp/labelx-m03-integrator",
+  "branch": "feat/m03-resolve-integrator",
+  "base": "900dc97",
+  "pushed": false,
+  "commits": [
+    {
+      "step": 1,
+      "sha": "5d8f591",
+      "what": "cherry-pick A ee4a361 (#241 Case API)",
+      "conflicts": "none",
+      "checks": "pytest tests/review tests/effort tests/test_m03_contract_fixture.py: 118 passed; ruff ok; mypy (changed files + CI scope) ok; makemigrations --check: no changes"
+    },
+    {
+      "step": 2,
+      "sha": "3456350",
+      "what": "cherry-pick C 22a4e11 (#246 policy/effort)",
+      "conflicts": "none (15ce418 parent not in tree, picked cleanly)",
+      "checks": "same set: 130 passed; ruff ok; mypy ok (24 files); migrations no changes"
+    },
+    {
+      "step": 3,
+      "sha": "df20061",
+      "what": "register api/review-policy/ in config/urls.py; EFFORT_IDLE_POLICY env.json hook in settings (default None); RunDetailSerializer adds verification_lineage/selected_final_sources/operational_source to GET /api/runs/{id}/ only; pilot 900/300/120 + version in .env.example (not as code defaults); 2 new tests tests/runs/test_run_detail_lineage.py",
+      "checks": "FULL backend suite 649 passed, 1 skipped; ruff check/format clean; mypy config effort + changed modules ok; makemigrations --check no changes (review 0006 of B present, no conflict)"
+    }
+  ],
+  "command": "cd /tmp/labelx-m03-integrator/src/backend && DJANGO_SECRET_KEY=<dummy> CORS_ALLOWED_ORIGINS=http://localhost:3000 DATABASE_URL=postgres://labelx:labelx@localhost:5432/labelx_claude_a uv run --frozen pytest -q -p no:cacheprovider",
+  "pilotPolicy": "Values live in .env.example only; real deployment env must set REVIEW_LEASE_TTL_SECONDS=900, REVIEW_INCOMPLETE_RESERVATION_SECONDS=300, EFFORT_IDLE_POLICY json (t_idle_seconds=120, version m03-pilot-v1). Unset -> /api/review-policy/ returns 503 by design.",
+  "issuesForCoordinator": [
+    "spectacular --validate still reports 12 'unable to guess serializer' errors (89 error lines total incl. details): ReviewPolicyView (new, C), ReworkVerify/Submitted/Detail, QueueNext, ManualIssue, LeaseRenew, IssueDetail, IssueDecision, FrameIssues, FrameComplete, EscalationsList. Case/adjudication/run views are fine. R05 AC 'no view lacking serializer' NOT met; I did not touch them (outside the step list / other groups' files).",
+    "OpenAPI (docs/04-api/openapi.yaml) NOT edited: still needs decision-cases paths, review-policy, effort gaps[]/policy_version, FrameIssues new fields, Run lineage fields. No regeneration/drift check done.",
+    "Run detail lineage computed per request (several queries); list endpoint intentionally excludes it.",
+    "No endpoint reads rework round history (per coordinator note) - not added.",
+    "CI mypy scope is 'config effort'; bare 'mypy .' fails on fixtures/ module path (pre-existing, not from these commits)."
+  ],
+  "notVerified": [
+    "browser/UI",
+    "real CVAT/E2E data",
+    "OpenAPI parity",
+    "deployed pilot config"
+  ],
+  "stopped": {
+    "reason": "coordinator label-x-98 ordered all backend work stopped (user takes over backend)",
+    "headSHA": "07b3381c0e4b1615b6847b93215556c0e3769c87",
+    "worktree": "/tmp/labelx-m03-integrator (untouched since stop; no reset/clean)",
+    "uncommittedChanges": [
+      "src/backend/config/settings.py: pilot DEFAULTS in code (REVIEW_LEASE_TTL_SECONDS=900, REVIEW_INCOMPLETE_RESERVATION_SECONDS=300, EFFORT_IDLE_POLICY default dict t_idle_seconds=120 version 'pilot-1', env still overrides)",
+      "src/backend/.env.example: comment/version updated to match",
+      "src/backend/tests/runs/test_run_detail_lineage.py: added default-policy and override tests"
+    ],
+    "steps": {
+      "1 serializers for 12 views": "DONE, committed 07b3381. spectacular --validate: 0 errors, 0 warnings (was 12 view errors, 2 warnings); added ENUM_NAME_OVERRIDES in settings; new test tests/test_openapi_schema_clean.py",
+      "2 pilot defaults in code": "DONE but NOT COMMITTED (see uncommittedChanges); last full run 652 passed, 1 skipped; mypy ok; ruff ok; spectacular --fail-on-warn clean. Note: /api/review-policy/ no longer 503 by default; explicit invalid/None override still fails closed.",
+      "3 rework history/timeline endpoint": "NOT STARTED",
+      "4 regenerate openapi.yaml + drift": "NOT STARTED (docs/04-api/openapi.yaml untouched)",
+      "5 update result": "this update",
+      "6 #243 new-candidate routing + 5 review probes rerun": "NOT STARTED; probes in .agent/evidence/M-03-REVIEW-2026-10-12/ not rerun"
+    },
+    "lastResults": {
+      "pytest full": "652 passed, 1 skipped (includes the uncommitted step-2 changes)",
+      "spectacular": "Errors 0, Warnings 0",
+      "note": "test pollution seen once: other tests mutate settings globally (test_queue_lease sets 60/120), so default-policy test reads config.settings module directly"
+    }
+  }
+}

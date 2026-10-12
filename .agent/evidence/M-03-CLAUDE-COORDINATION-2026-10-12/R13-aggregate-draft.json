@@ -1,0 +1,228 @@
+{
+  "purpose": "Draft aggregate for R13 #249. Draft only: not a QA result, not a closure decision, writes nothing canonical.",
+  "author": "label-x-37 (group C session; writes the summary, certifies nothing)",
+  "observedIntegratorHead": "07b3381c0e4b1615b6847b93215556c0e3769c87 in /tmp/labelx-m03-integrator at time of writing (still moving; label-x-62 committing; working tree had uncommitted edits to .env.example, settings.py, test_run_detail_lineage.py). Not the 'SHA cuoi'.",
+  "baseSHA": "6419d1b9f39ba601bb800f8bbd62164f586dc0bb",
+  "tasks": [
+    {
+      "id": "R01",
+      "issue": 237,
+      "owner": "toilatrung",
+      "status": "review",
+      "evidence": [
+        "DEC-019",
+        "CR-113",
+        "R01-traceability.json"
+      ],
+      "remaining": "HTML report per CR-100; delta table consumer->test; PO written confirmation of interface; effective date/version name of policy"
+    },
+    {
+      "id": "R02",
+      "issue": 238,
+      "status": "backend integrated, QA pending",
+      "code": "A 826efc1 -> integrator 900dc97 line",
+      "remaining": "independent QA; probes queue_state/filter on final SHA; browser state/filter/resume (FE)"
+    },
+    {
+      "id": "R03",
+      "issue": 239,
+      "status": "backend integrated, QA pending",
+      "code": "A 07a634f",
+      "remaining": "independent QA; item shape of annotations/predictions was A's proposal pending PO/coordinator confirm; LeaseGrant payload not changed"
+    },
+    {
+      "id": "R04",
+      "issue": 240,
+      "owner": "tdt2112",
+      "status": "not started (FE, develop-fe)",
+      "remaining": "all; FE-handoff.json lists API contract"
+    },
+    {
+      "id": "R05",
+      "issue": 241,
+      "status": "backend integrated (5d8f591) + serializers for 12 views (07b3381, per commit message/stat; not verified by this session)",
+      "remaining": "FE generated-client switch; types regeneration; semantic parity; QA; 'spectacular clean' claim to be re-run by QA"
+    },
+    {
+      "id": "R06",
+      "issue": 242,
+      "status": "backend integrated, QA pending",
+      "code": "B 8284fb2 incl. migration review/0006",
+      "remaining": "independent QA (b0 is author); migration from 0005 with data; PG concurrent verify"
+    },
+    {
+      "id": "R07",
+      "issue": 243,
+      "status": "backend integrated, QA pending (author C; C does not certify)",
+      "code": "C bbc56e7, 15ce418",
+      "remaining": "routing of new final candidates into Issues/queue NOT implemented; no threaded PG test for complete_scope_frames; probes final_candidate/verify_pass_frame to re-run by QA outside A/B/C"
+    },
+    {
+      "id": "R08",
+      "issue": 244,
+      "status": "backend integrated; lineage exposed in RunSerializer (df20061, per commit message/stat; not verified by this session)",
+      "remaining": "QA outside A/B/C; OpenAPI; consumer payload examples+SHA for R09"
+    },
+    {
+      "id": "R09",
+      "issue": 245,
+      "owner": "tdt2112",
+      "status": "not started (FE)",
+      "remaining": "all"
+    },
+    {
+      "id": "R10",
+      "issue": 246,
+      "status": "backend integrated (3456350) with URL + env hook (df20061, per commit message/stat; not verified by this session)",
+      "remaining": "FE collector for 3 consumers; deployed config; R10 AC4 browser acceptance NOT VERIFIED; annotator effort scope undecided"
+    },
+    {
+      "id": "R11",
+      "issue": 247,
+      "owner": "DucHa180104",
+      "status": "readiness checklist written (R11-readiness.json); environment not built by anyone in this wave",
+      "remaining": "import path for CVAT export (loader) undecided; ENV-1..6; PO tests real CVAT (local port 8080) separately"
+    },
+    {
+      "id": "R12",
+      "issue": 248,
+      "owner": "duy12345-6789",
+      "status": "plan exists (R12-qa-plan.json); no QA executed",
+      "remaining": "QA on final SHA; scope split: session label-x-37 (author of C) QAs only #238,#239,#241,#242; #243/#244/#246 and integrated tree need a QA outside A/B/C (being chosen)"
+    },
+    {
+      "id": "R13",
+      "issue": 249,
+      "owner": "duy12345-6789",
+      "status": "this draft only",
+      "remaining": "canonical updates by integrator/PO only; PO decides M-03 closure"
+    }
+  ],
+  "poDecisionsRecorded": [
+    "DEC-019 P01-P09 all A (accepted), CR-113 approved; DEC-020/CR-114 approved (three Claude sessions, PO tests CVAT data later).",
+    "Pilot policy lease 900 s / resume 300 s / idle 120 s is the default in code (per coordinator message; verify in settings of the final SHA). Pilot only, not scientific acceptance.",
+    "Rework round history is built inside M-03.",
+    "New candidate = final-run candidate whose dedup_key is absent from the origin run and which has no Issue in rejected/resolved state.",
+    "Serializers/extend_schema for 12 backend views (landed as 07b3381 on the integrator branch).",
+    "Real CVAT runs locally on port 8080 and PO tests it separately; snapshot/revision/hash/provenance stay immutable and internal."
+  ],
+  "poDecisionsOpen": [
+    "UI to edit policy: out of scope, not approved.",
+    "Loader/import path for CVAT export files (new contract or PO-run script) - blocks any real-data E2E from export.",
+    "Whether final-run candidates are materialised into Issues automatically (routing half of #243 AC-1; guard blocks selection but nothing queues them).",
+    "Annotator effort events (endpoint rejects the annotator role).",
+    "operational_source extras beyond {run_id, scope_complete, blocked_reasons}.",
+    "Who performs independent QA for #243/#244/#246 and the integrated tree (user choosing)."
+  ],
+  "qaIndependence": {
+    "rule": "QA author differs from code author per part; no self-approval.",
+    "thisSessionMayQA": [
+      "#238",
+      "#239",
+      "#241",
+      "#242"
+    ],
+    "thisSessionMustNotCertify": [
+      "#243",
+      "#244",
+      "#246",
+      "lineage/policy/serializer commits by label-x-62",
+      "integrated tree"
+    ],
+    "b0Rule": "label-x-b0 authored #242 and must not QA #242"
+  },
+  "r12PlanReview": {
+    "reviewedFiles": [
+      "R12-qa-plan.json",
+      "FE-handoff.json",
+      "integration-result.json"
+    ],
+    "problems": [
+      {
+        "id": "P1",
+        "issue": "Plan baseline is 900dc97 and excludes #241 and #246, but the integrator branch already has them (5d8f591, 3456350) plus URL/env/serializer commits. QA must run on the 'SHA cuoi', not 900dc97; the plan's notIncluded list is stale.",
+        "fix": "Rewrite baseline to the final SHA; keep a per-commit author table to enforce independence."
+      },
+      {
+        "id": "P2",
+        "issue": "The five review probes (/tmp/test_labelx_m03_review_probes.py, copy in .agent/evidence/M-03-REVIEW-2026-10-12/test_review_probes.py) are not in the plan, although R12 AC requires them to turn PASS. On the review baseline all 5 failed (queue holder, in_review filter, verify-fail resubmit, new final candidate, verify-pass frame).",
+        "fix": "Add: run the probe file against the final SHA; all 5 must pass; they assert behaviour, do not edit them to pass. Note the probe for new final candidate may test the old 'issue materialised at claim' assumption; QA must read it before judging."
+      },
+      {
+        "id": "P3",
+        "issue": "Plan has no check for read-only behaviour of GET endpoints beyond #238.",
+        "fix": "Add DB row-count/updated_at comparison before/after GET rework list/detail, run detail, review-policy, frame issues."
+      },
+      {
+        "id": "P4",
+        "issue": "Role x endpoint matrix missing for D04/D05/policy/case read (annotator, reviewer, QA lead, QC admin, super admin, no role, other dataset).",
+        "fix": "Add a table-driven direct-API run; expected: annotator own rework only, foreign detail 404, missing scope 403, QC admin not allowed on rework read."
+      },
+      {
+        "id": "P5",
+        "issue": "The 'spectacular --validate' pass criterion says exit 0, but the baseline exited 0 with 56 errors.",
+        "fix": "Pass criterion = zero errors and zero warnings counted from output, plus tests/test_openapi_schema_clean.py; also diff the generated schema against docs/04-api/openapi.yaml and record the delta (not edited by QA)."
+      },
+      {
+        "id": "P6",
+        "issue": "Migrations: only #242 migration is mentioned.",
+        "fix": "On the final SHA run migrate on an empty DB, migrate from baseline 6419d1b with data, makemigrations --check, and confirm no other migration was added."
+      },
+      {
+        "id": "P7",
+        "issue": "Race coverage: only #242 concurrent verify named. complete_scope_frames and build_final_run trigger have no PG threaded test for the sweeper path.",
+        "fix": "Record as a known gap in the QA result; do not mark #243 AC3/AC4 concurrency as verified."
+      },
+      {
+        "id": "P8",
+        "issue": "Effort checks use override_settings; the plan correctly says not acceptance evidence, but does not require checking the deployed default.",
+        "fix": "Add: start the app with the final settings/env.example defaults and GET /api/review-policy/ must return 900/300/120 with a version; record what the env hook reads. If the default is unset the endpoint returns 503: report as finding."
+      },
+      {
+        "id": "P9",
+        "issue": "Data separation: test seed images from the earlier review were not valid JPEG.",
+        "fix": "Label every fixture, decode-check media bytes if a seed is used, and keep fixtures out of any acceptance claim."
+      },
+      {
+        "id": "P10",
+        "issue": "DB isolation: plan says one DB per QA but not how to avoid collisions with test_<name> databases of other sessions.",
+        "fix": "Each QA uses a unique DATABASE_URL db name (pytest creates test_<name>); drop it afterwards; never touch the integrator or shared checkout."
+      },
+      {
+        "id": "P11",
+        "issue": "Frontend gates absent from the backend plan (npm test, lint, build, contract regeneration diff, bundle scan for secrets) although R12 covers them.",
+        "fix": "Add as separate FE section; N/A until R04/R09/R10-FE exist; report as not run, never skipped silently."
+      },
+      {
+        "id": "P12",
+        "issue": "Test order: plan mentions both orders for tests/review, good; add random order or reverse for tests/effort and tests/runs where policy/lineage touch settings.",
+        "fix": "Add -p no:randomly baseline plus one shuffled run if the plugin exists; record seed."
+      }
+    ],
+    "additions": {
+      "evidenceRules": [
+        "Record exact SHA, command, full summary line and failures for each run",
+        "Each AC maps to a test id or command output",
+        "A skipped test is listed with the reason",
+        "Fixture runs are labelled and never produce a real-data PASS",
+        "No E2E real-CVAT PASS claim (PO tests port 8080 data separately)"
+      ],
+      "mustReport": [
+        "Anything beyond scope goes to label-x-98 only; no GitHub, no push/merge"
+      ]
+    }
+  },
+  "knownGapsToCarry": [
+    "No threaded PostgreSQL test for complete_scope_frames.",
+    "No automatic routing of final-run candidates into Issues.",
+    "No FE for R04/R09/R10; no browser acceptance anywhere.",
+    "No real CVAT export used; no import loader.",
+    "R10 AC4 and R11 environment readiness NOT VERIFIED.",
+    "Full backend suite, make check, spectacular validation not run by this session."
+  ],
+  "notClaimed": [
+    "No QA has been executed by this session.",
+    "No closure or approval of M-03 is proposed.",
+    "E2E with real CVAT data is not PASS."
+  ]
+}

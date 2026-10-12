@@ -1,0 +1,27 @@
+{
+  "group": "C",
+  "pid": 4360,
+  "session": "label-x-37 [8f09b5]",
+  "state": "READY",
+  "previousWork": "none (session was idle after /clear; only task was contacting Codex)",
+  "issues": [243, 244],
+  "worktree": "/tmp/labelx-m03-claude-c",
+  "branch": "feat/m03-resolve-claude-c",
+  "baseSHA": "6419d1b9f39ba601bb800f8bbd62164f586dc0bb",
+  "baseRef": "origin/integration/m03",
+  "plannedFiles": [
+    "src/backend/review/finalization_service.py",
+    "src/backend/review/rework_views.py (GET list/detail read only)",
+    "src/backend/review/serialization.py (rework read serializers)",
+    "src/backend/review/rework_urls.py (only if GET routes needed; otherwise patch proposal to coordinator)",
+    "src/backend/tests/review/test_finalization.py",
+    "src/backend/tests/review/test_rework.py (GET tests only, new file preferred: tests/review/test_rework_read.py)"
+  ],
+  "willNotTouch": [
+    "review/models.py", "review/migrations/*", "review/rework_service.py (group B)",
+    "runs/serializers.py (group A; patch proposal for verification_lineage/selected_final_sources/operational_source goes to coordinator)",
+    "shared checkout /mnt/h/label-x", "OpenAPI/shared URL files (patch proposal only)"
+  ],
+  "constraints": "no push/merge/close; no canonical .agent writes; fixtures labelled, no real-data E2E PASS claims",
+  "dependencyNote": "R07 depends on R06 (#242, group B) rework interface; will code against current rework_service and flag changes to B/coordinator."
+}
