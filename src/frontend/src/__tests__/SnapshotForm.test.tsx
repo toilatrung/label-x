@@ -31,6 +31,7 @@ describe('Snapshot create form', () => {
   it('sends selected Task and Job to the real snapshot contract', async () => {
     post.mockResolvedValue({ id: 101, status: 'locked' });
     show();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task 9' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 22' }));
     fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: '  QA pass  ' } });

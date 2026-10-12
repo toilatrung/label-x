@@ -13,7 +13,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [all, setAll] = React.useState(false);
+  const [all, setAll] = React.useState(true);
   const [taskIds, setTaskIds] = React.useState<Set<number>>(new Set());
   const [jobIds, setJobIds] = React.useState<Set<number>>(new Set());
   const [note, setNote] = React.useState('');
@@ -33,7 +33,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
     ? jobs.reduce((sum, job) => sum + (job.frame_count ?? 0), 0) : null;
   const frameText = (value: number | null) => value === null ? '—' : value.toLocaleString('en-US');
   const selectedFrames = knownFrames(selectedJobs.map(({ job }) => job));
-  const reset = () => { setAll(false); setTaskIds(new Set()); setJobIds(new Set()); setNote(''); setFailure(null); };
+  const reset = () => { setAll(true); setTaskIds(new Set()); setJobIds(new Set()); setNote(''); setFailure(null); };
 
   React.useEffect(() => {
     if (!pending) return;
@@ -110,7 +110,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
             disabled={all || taskIds.has(task.cvat_task_id)}
             checked={isSelected(task, job)}
             onChange={() => toggleJob(job.cvat_job_id)} /></td>
-            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'}</td><td className="r">{job.frame_count ?? '—'}</td></tr>)}
+            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'} · {/* TODO(backend): CvatJob chưa có giai đoạn */}—</td><td className="r">{job.frame_count ?? '—'}</td></tr>)}
         </React.Fragment>)}</tbody></table></div></div>
       <p className="lx-hint">Chọn cả Task hoặc từng Job. {all ? `Toàn Dataset · ${tasks.length} task · ${jobCount} job · ${frameText(knownFrames(tasks.flatMap(task => task.jobs)))} frame.`
         : `Hiện chọn ${selectedTaskCount} task · ${selectedCount} job · ${frameText(selectedFrames)} frame.`}</p>
