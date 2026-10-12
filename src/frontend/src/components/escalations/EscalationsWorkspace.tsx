@@ -89,21 +89,21 @@ function EscalationDetail({ issue }: { issue: EscalationIssue }) {
         <header className="lx-card__head">
           <h2 className="lx-h2">Bằng chứng</h2>
           <span className="lx-hint">
-            Anchor: <span className="lx-mono">{issue.anchor.kind}</span> · Policy:{' '}
+            Vị trí neo: <span className="lx-mono">{issue.anchor.kind}</span> · Chính sách neo:{' '}
             <span className="lx-mono">{issue.anchor.policy_version}</span>
           </span>
         </header>
         {issue.evidence.length === 0 ? (
-          <div className="lx-card__body lx-muted">Issue chưa có evidence.</div>
+          <div className="lx-card__body lx-muted">Issue chưa có bằng chứng.</div>
         ) : (
           <div className="lx-scroll">
-            <table className="lx-table" aria-label="Evidence của escalation">
+            <table className="lx-table" aria-label="Bằng chứng của escalation">
               <thead>
                 <tr>
-                  <th>Engine / Rule</th>
-                  <th>Expected / Actual</th>
-                  <th>Prediction</th>
-                  <th>Confidence / Intersection over Union</th>
+                  <th>Engine / Quy tắc</th>
+                  <th>Kỳ vọng / Thực tế</th>
+                  <th>Dự đoán</th>
+                  <th>Độ tin cậy / Intersection over Union</th>
                 </tr>
               </thead>
               <tbody>

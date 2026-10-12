@@ -131,6 +131,11 @@ describe('Escalations UI (T-039)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByText('detector')).toBeDefined();
+    expect(screen.getByText(/Vị trí neo:/)).toBeDefined();
+    expect(screen.getByText(/Chính sách neo:/)).toBeDefined();
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      'Engine / Quy tắc', 'Kỳ vọng / Thực tế', 'Dự đoán', 'Độ tin cậy / Intersection over Union']);
+    expect(screen.queryByText(/Anchor|Policy|Evidence/)).toBeNull();
     expect(screen.getByText('Thực tế: truck')).toBeDefined();
     expect(screen.getByText('Không chắc nhãn xe.')).toBeDefined();
     expect(screen.getByText(/sha-review-1/)).toBeDefined();

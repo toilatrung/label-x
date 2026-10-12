@@ -21,7 +21,7 @@ function arg(name, fallback) {
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
-  console.log(require('node:fs').readFileSync(__filename, 'utf8').split('*/')[0].replace(/^\/\*\n?| \* ?/gm, ''));
+  console.log(require('node:fs').readFileSync(__filename, 'utf8').split('*/')[0].replace(/^#!.*\n/, '').replace(/^\/\*\n?/, '').replace(/^ \* ?/gm, '').trim());
   process.exit(0);
 }
 const PORT = Number(arg('--port', process.env.MOCK_API_PORT || 3100));

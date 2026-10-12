@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Chạy frontend LabelX để PO kiểm tra giao diện, không cần backend, Postgres, Redis hay CVAT.
 #
-#   scripts/frontend/dev.sh [-p PORT] [-H HOST] [--role VAI_TRÒ] [--no-api] [--install]
+#   scripts/frontend/dev.sh [-p PORT] [-H HOST] [--i-know-lan] [--role VAI_TRÒ] [--no-api] [--install]
 #
 #   -p, --port PORT   Cổng mở trình duyệt (mặc định 3000).
 #   -H, --host HOST   Địa chỉ nghe (mặc định localhost).
+#   --i-know-lan      Bắt buộc khi HOST không phải localhost/127.0.0.1/::1: mock auth (mật khẩu password123) và API giả
+#                     sẽ mở cho mọi máy trong mạng. Chỉ dùng trên mạng tin cậy.
 #   --role VAI_TRÒ    In sẵn tài khoản của vai trò: admin|qalead|qcadmin|reviewer|annotator|productowner|modelowner.
 #   --no-api          Không bật API giả lập: chỉ /api/auth/* hoạt động, trang gọi API khác báo lỗi kết nối.
 #   --install         Chạy npm ci dù đã có node_modules (mặc định chỉ chạy khi thiếu).
@@ -16,12 +18,13 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
-port=3000 host=localhost role="" api=1 install=0
+port=3000 host=localhost role="" api=1 install=0 lan=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -p|--port) port="${2:?thiếu số cổng}"; shift 2 ;;
     -H|--host) host="${2:?thiếu host}"; shift 2 ;;
     --role) role="${2:?thiếu vai trò}"; shift 2 ;;
+    --i-know-lan) lan=1; shift ;;
     --no-api) api=0; shift ;;
     --install) install=1; shift ;;
     -h|--help) fe_help "${BASH_SOURCE[0]}"; exit 0 ;;
@@ -30,6 +33,12 @@ while [ $# -gt 0 ]; do
 done
 [[ "$port" =~ ^[0-9]+$ ]] || fe_die "Cổng không hợp lệ: $port"
 [ -z "$role" ] || fe_valid_role "$role" || fe_die "Vai trò không hợp lệ: $role (${FE_ROLES[*]})"
+case "$host" in
+  localhost|127.0.0.1|::1) ;;
+  *)
+    [ "$lan" -eq 1 ] || fe_die "HOST=$host mở mock auth (tài khoản mẫu, mật khẩu $FE_PASSWORD) và API giả lập ra mạng. Dùng localhost, hoặc thêm --i-know-lan nếu chắc chắn mạng này tin cậy."
+    echo "CẢNH BÁO: $host mở mock auth (mật khẩu $FE_PASSWORD) và API giả lập cho mọi máy trong mạng." >&2 ;;
+esac
 command -v curl >/dev/null || fe_die "Cần curl."
 fe_ensure_deps "$install"
 

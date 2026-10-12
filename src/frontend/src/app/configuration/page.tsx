@@ -89,7 +89,7 @@ function WorkflowPermissionsView() {
 }
 
 export default function ConfigurationPage() {
-  return <AuthGuard permissionCheck={canAccessConfiguration} requiredPermissionName="QA Lead / QC Admin / Super Admin">
+  return <AuthGuard permissionCheck={canAccessConfiguration} requiredPermissionName="Quality Assurance Lead / Quality Control Admin / Super Admin">
     <AppShell activeKey="configuration"><WorkflowPermissionsView /></AppShell>
   </AuthGuard>;
 }

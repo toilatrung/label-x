@@ -23,6 +23,12 @@ interface QualitySummaryProps {
   onTaskScopeChange?: (task: string | null) => void;
 }
 
+function realFrames(task: { jobs?: { frame_count?: number }[] }): string | null {
+  const jobs = task.jobs ?? [];
+  return jobs.some((job) => job.frame_count !== undefined)
+    ? jobs.reduce((sum, job) => sum + (job.frame_count ?? 0), 0).toLocaleString('en-US') : null;
+}
+
 export function QualitySummary({
   currentDataset,
   selectedRun,
@@ -129,20 +135,18 @@ export function QualitySummary({
         </div>
       </div>
 
-      {/* Top Banner Notice when displaying illustrative sample data */}
+      {/* Quality Gate callout */}
+      {/* TODO(backend): Nối GET /api/runs/{id}/gate/ (runs_gate đã có sẵn trong OpenAPI contract; pending wiring chi tiết cho Quality Summary callout) */}
       <div className="lx-notice-banner lx-row">
         <SampleDataBadge />
         <NotConnectedNotice
           detail={
             isRealDataset
-              ? 'Số liệu tổng hợp Quality Summary (Coverage, Issue, Engine, Review) đang dùng dữ liệu minh họa vì server chưa có API tổng hợp.'
-              : 'Chưa có Dataset nào được chọn từ server. Đang hiển thị bản xem trước theo thiết kế chuẩn.'
+              ? 'Cổng phát hành (Quality Gate) trong Quality Summary'
+              : 'Chưa có Dataset nào được chọn từ server; đang hiển thị bản xem trước theo thiết kế chuẩn'
           }
         />
       </div>
-
-      {/* Quality Gate callout */}
-      {/* TODO(backend): Nối GET /api/runs/{id}/gate/ (runs_gate đã có sẵn trong OpenAPI contract; pending wiring chi tiết cho Quality Summary callout) */}
       <div className="lx-callout">
         <span className="lx-badge lx-badge--danger">Release blocked</span>
         <span className="lx-callout__text">
@@ -265,7 +269,13 @@ export function QualitySummary({
           </div>
           <div className="lx-notice-banner lx-row">
             <SampleDataBadge />
-            <NotConnectedNotice detail="Thống kê chất lượng theo từng Task" />
+            <NotConnectedNotice
+              detail={
+                isRealDataset
+                  ? 'Task, Job và Frame lấy từ server; Coverage, Candidate, Đã xác nhận và Gate là dữ liệu minh họa'
+                  : 'Thống kê chất lượng theo từng Task'
+              }
+            />
           </div>
           <div className="lx-scroll">
             <table className="lx-table lx-table--min-640">
@@ -332,15 +342,13 @@ export function QualitySummary({
                             <div className="lx-cell__sub">
                               Jobs: {task.jobs.map((j) => `#${j.cvat_job_id}`).join(', ')}
                             </div>
-                          ) : (
-                            <div className="lx-cell__sub">{illus.sub}</div>
-                          )}
+                          ) : null}
                         </td>
-                        <td className="r">{task.jobs?.length ?? illus.jobs}</td>
-                        <td className="r">{illus.frames}</td>
-                        <td className={`r${illus.isWarnCoverage ? ' is-warn' : ''}`}>{illus.coverage}</td>
-                        <td className="r">{illus.candidates}</td>
-                        <td className="r">{illus.confirmed}</td>
+                        <td className="r">{task.jobs?.length ?? '—'}</td>
+                        <td className="r">{realFrames(task) ?? '—'}</td>
+                        <td className={`r lx-muted${illus.isWarnCoverage ? ' is-warn' : ''}`}>{illus.coverage}</td>
+                        <td className="r lx-muted">{illus.candidates}</td>
+                        <td className="r lx-muted">{illus.confirmed}</td>
                         <td>
                           <span className={`lx-badge lx-badge--${illus.gateTone}`}>
                             {illus.gate}

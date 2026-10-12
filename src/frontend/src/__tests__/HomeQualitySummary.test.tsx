@@ -132,6 +132,31 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(notices.length).toBeGreaterThanOrEqual(4);
     });
 
+    it('shows one not-connected notice per region and separates real task data from sample columns', async () => {
+      const { authApi } = setupMockEnv(undefined, 1, (req) => req.url.includes('/api/datasets/1/tasks/')
+        ? Response.json([{ cvat_task_id: 118, name: 'Urban day', jobs: [
+          { cvat_job_id: 2270, assignee_cvat_user_id: 1, frame_count: 200, updated_date: '2026-10-09T07:00:00Z' },
+          { cvat_job_id: 2271, assignee_cvat_user_id: null, frame_count: 400, updated_date: '2026-10-09T07:00:00Z' }] }])
+        : undefined);
+      await authApi.signIn('reviewer');
+      const ds: Dataset = { id: 1, name: 'Road Vision Urban Real', cvat_project_id: 31 };
+      render(<AuthProvider><QualitySummary currentDataset={ds} /></AuthProvider>);
+      const detail = 'Task, Job và Frame lấy từ server; Coverage, Candidate, Đã xác nhận và Gate là dữ liệu minh họa';
+      let row: HTMLElement | undefined;
+      await waitFor(() => {
+        expect(screen.getAllByRole('status').some((el) => (el.textContent ?? '').includes(detail))).toBe(true);
+        row = screen.getByRole('row', { name: /Task #118 · Urban day/ });
+      });
+      // Gate, engine, review, task and candidate regions: exactly one notice each, none at the top of the page.
+      expect(screen.getAllByText(new RegExp(NOT_CONNECTED_MESSAGE))).toHaveLength(5);
+      expect(screen.queryByText(/Số liệu tổng hợp Quality Summary/)).toBeNull();
+      // Real columns: Job count and Frame sum from the server; sample columns are muted.
+      const cells = Array.from(row!.querySelectorAll('td'));
+      expect(cells[1].textContent).toBe('2');
+      expect(cells[2].textContent).toBe('600');
+      [3, 4, 5].forEach((index) => expect(cells[index].className).toContain('lx-muted'));
+    });
+
     it('QualitySummary renders full canonical UI matching Dashboard.dc.html when no dataset is selected (no-backend preview)', async () => {
       const { authApi } = setupMockEnv();
       await authApi.signIn('admin');

@@ -105,7 +105,7 @@ function SnapshotWorkspace() {
     : (selectedDataset?.taxonomy_version ?? undefined);
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
-  if (!canEnter) return <ForbiddenView requiredPermission="QA Lead / QC Admin / Super Admin" />;
+  if (!canEnter) return <ForbiddenView requiredPermission="Quality Assurance Lead / Quality Control Admin / Super Admin" />;
 
   const isSearchingLocked =
     !recentLocked &&

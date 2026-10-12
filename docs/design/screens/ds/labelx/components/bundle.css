@@ -521,7 +521,7 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-btn--fill { width: 100%; justify-content: center; }
 .lx-link--plain { text-decoration: none; }
 .lx-stage__zoom { font-size: 11px; min-width: 36px; text-align: center; }
-.lx-stage__muted { color: #a1a8b3; }
+.lx-stage__muted { color: var(--on-stage); opacity: .72; }
 .lx-ws__sep { margin: 0 var(--space-1); }
 .lx-ws__foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
 .lx-ws__note--tight { margin: var(--space-1) 0; font-size: 13px; }
