@@ -291,6 +291,15 @@ class ReworkVerifyRequestSerializer(serializers.Serializer[Any]):
     override_reason = serializers.CharField(required=False, allow_blank=True)
 
 
+class ReworkCurrentRevisionSerializer(serializers.Serializer[Any]):
+    rework_id = serializers.IntegerField()
+    cvat_job_id = serializers.IntegerField()
+    revision_sha256 = serializers.CharField(min_length=64, max_length=64)
+    original_revision = serializers.CharField()
+    unchanged = serializers.BooleanField()
+    read_at = serializers.DateTimeField()
+
+
 class ReworkRequestSerializer(serializers.Serializer[Any]):
     id = serializers.IntegerField()
     issue_id = serializers.IntegerField()

@@ -17,9 +17,11 @@ from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from review.api_serializers import (
     PaginatedReworkSerializer,
+    ReworkCurrentRevisionSerializer,
     ReworkDetailSerializer,
 )
 from review.models import ReworkRequest
+from review.rework_service import read_current_revision
 from review.rework_timeline import rework_timeline
 from review.rework_views import ReworkCreateView
 
@@ -151,6 +153,40 @@ class ReworkDetailView(APIView):
         if rework.annotator_id != request.user.pk and not _sees_all(request.user.pk, dataset_id):
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
         return Response(rework_detail(rework))
+
+
+class ReworkCurrentRevisionView(APIView):
+    """Read-only: the revision `submitted` would claim now. No snapshot/run/audit is written."""
+
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = _READ_ROLES
+    action_name = "rework.current_revision"
+    object_type = "rework"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            ReworkRequest.objects.filter(pk=self.kwargs["pk"])
+            .values_list("issue__frame_review__run__dataset_id", flat=True)
+            .first()
+        )
+
+    @extend_schema(
+        operation_id="rework_current_revision",
+        responses={
+            200: ReworkCurrentRevisionSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            502: ErrorSerializer,
+        },
+        tags=["rework"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        rework = _base_queryset().get(pk=pk)
+        dataset_id = rework.issue.frame_review.run.dataset_id
+        if rework.annotator_id != request.user.pk and not _sees_all(request.user.pk, dataset_id):
+            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
+        return Response(read_current_revision(rework))
 
 
 class ReworkCollectionView(APIView):

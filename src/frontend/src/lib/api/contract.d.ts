@@ -685,6 +685,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rework/{id}/current-revision/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revision CVAT hiện tại của job rework (chỉ đọc)
+         * @description Trả `revision_sha256` mà `POST /api/rework/{id}/submitted/` sẽ nhận làm `cvat_revision` nếu gửi ngay:
+         *     backend đọc CVAT (chỉ GET) và băm bằng đúng hàm chuẩn hóa snapshot một-job mà recheck dùng, nhưng
+         *     không tạo snapshot/run/audit, không upload object storage và không đọc lại để kiểm drift
+         *     (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
+         *     `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
+         *     Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+         *     CVAT không đọc được trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại (không cache).
+         */
+        get: operations["rework_current_revision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rework/{id}/submitted/": {
         parameters: {
             query?: never;
@@ -1833,6 +1859,15 @@ export interface components {
             /** @enum {string} */
             review_state: "unreviewed" | "in_review" | "incomplete" | "reviewed" | "awaiting_followup" | "completed";
             timeline: components["schemas"]["ReworkRound"][];
+        };
+        ReworkCurrentRevision: {
+            rework_id: number;
+            cvat_job_id: number;
+            revision_sha256: string;
+            original_revision: string;
+            unchanged: boolean;
+            /** Format: date-time */
+            read_at: string;
         };
         ReworkRound: {
             round: number;
@@ -3185,6 +3220,31 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    rework_current_revision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision hiện tại */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkCurrentRevision"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            502: components["responses"]["BadGateway"];
         };
     };
     rework_submitted: {
