@@ -8,12 +8,38 @@ from __future__ import annotations
 
 from typing import Any
 
+from drf_spectacular.utils import OpenApiParameter
 from rest_framework import serializers
 
-from review.models import FrameReview, Issue, ReviewDecision, ReworkRequest
+from review.models import FrameReview, Issue, ReviewDecision, ReworkRequest, ReworkVerification
+
+IDEMPOTENCY_KEY_PARAM = OpenApiParameter(
+    "Idempotency-Key",
+    str,
+    OpenApiParameter.HEADER,
+    required=False,
+    description="Khóa chống ghi trùng cho request ghi (chuỗi tối đa 36 ký tự).",
+)
 
 FAMILIES = Issue.Family.values
 SEVERITIES = Issue.Severity.values
+# Mirror of the contract enums (docs/04-api/openapi.yaml); documentation-only.
+FRAME_STATES = FrameReview.State.values
+ENGINE_NAMES = ["schema", "geometry", "duplicate", "detector", "metric", "vlm"]
+ENGINE_STATUSES = ["running", "checked", "partial", "failed", "not_checked"]
+NOT_CHECKED_REASONS = ["disabled", "no_model", "no_reference", "not_applicable", "not_triggered"]
+DECISION_ACTIONS = [
+    "confirm",
+    "reject",
+    "uncertain",
+    "escalate",
+    "request_fix",
+    "adjudicate_confirm",
+    "adjudicate_reject",
+    "adjudicate_guideline_gap",
+]
+ACTOR_ROLES = ["reviewer", "qa_lead", "super_admin"]
+REFERENCE_MATCH = ["matched", "not_matched", "not_evaluated"]
 
 
 class PolicySerializer(serializers.Serializer[Any]):
@@ -48,49 +74,125 @@ class GrantedFrameSerializer(serializers.Serializer[Any]):
     id = serializers.IntegerField()
     run_id = serializers.IntegerField()
     frame_key = FrameKeySerializer()
-    cvat_job_id = serializers.IntegerField()
-    rank = serializers.IntegerField()
-    review_state = serializers.ChoiceField(choices=FrameReview.State.values)
-    missing_evidence = serializers.JSONField()
-    width = serializers.IntegerField()
-    height = serializers.IntegerField()
+    cvat_job_id = serializers.IntegerField(required=False)
+    rank = serializers.IntegerField(allow_null=True, required=False)
+    review_state = serializers.ChoiceField(choices=FRAME_STATES)
+    missing_evidence = serializers.BooleanField()
+    image_url = serializers.URLField(required=False)
+    width = serializers.IntegerField(required=False)
+    height = serializers.IntegerField(required=False)
+    cvat_deep_link = serializers.URLField(required=False)
 
 
 class LeaseGrantSerializer(serializers.Serializer[Any]):
     lease = LeaseSerializer()
     frame = GrantedFrameSerializer()
-    resumed = serializers.BooleanField()
+    resumed = serializers.BooleanField(required=False)
 
 
 class FrameSummarySerializer(serializers.Serializer[Any]):
+    # cvat_job_id/rank/width/height are always sent, but the contract keeps them optional on
+    # purpose (frontend generated types would otherwise break; see R-241-parity-result.json).
     id = serializers.IntegerField()
     run_id = serializers.IntegerField()
     frame_key = FrameKeySerializer()
-    cvat_job_id = serializers.IntegerField()
-    rank = serializers.IntegerField(allow_null=True)
-    review_state = serializers.ChoiceField(choices=FrameReview.State.values)
+    cvat_job_id = serializers.IntegerField(required=False)
+    rank = serializers.IntegerField(allow_null=True, required=False)
+    review_state = serializers.ChoiceField(choices=FRAME_STATES)
     missing_evidence = serializers.BooleanField()
-    image_url = serializers.CharField()
-    width = serializers.IntegerField()
-    height = serializers.IntegerField()
-    cvat_deep_link = serializers.CharField()
+    image_url = serializers.URLField(required=False)
+    width = serializers.IntegerField(required=False)
+    height = serializers.IntegerField(required=False)
+    cvat_deep_link = serializers.URLField(required=False)
 
 
 class FrameCompleteRequestSerializer(serializers.Serializer[Any]):
     lease_id = serializers.IntegerField(min_value=1)
 
 
+class BBoxSerializer(serializers.Serializer[Any]):
+    x1 = serializers.FloatField()
+    y1 = serializers.FloatField()
+    x2 = serializers.FloatField()
+    y2 = serializers.FloatField()
+
+
+class ObjectRefSerializer(serializers.Serializer[Any]):
+    namespace = serializers.ChoiceField(choices=["cvat_shape", "detector", "reviewer_region"])
+    id = serializers.CharField()
+
+
+class AnchorSerializer(serializers.Serializer[Any]):
+    kind = serializers.ChoiceField(
+        choices=[
+            "prediction_region",
+            "annotation",
+            "annotation_cluster",
+            "annotation_rule",
+            "manual_object",
+            "manual_region",
+        ]
+    )
+    objects = ObjectRefSerializer(many=True)
+    rule_id = serializers.CharField(allow_null=True, required=False)
+    bbox = BBoxSerializer(allow_null=True, required=False)
+    policy_version = serializers.CharField()
+
+
+class EvidenceSerializer(serializers.Serializer[Any]):
+    engine = serializers.ChoiceField(choices=ENGINE_NAMES)
+    rule_id = serializers.CharField(allow_null=True, required=False)
+    expected = serializers.CharField(allow_null=True, required=False)
+    actual = serializers.CharField(allow_null=True, required=False)
+    prediction_bbox = BBoxSerializer(allow_null=True, required=False)
+    prediction_class = serializers.CharField(allow_null=True, required=False)
+    confidence = serializers.FloatField(allow_null=True, required=False)
+    iou = serializers.FloatField(allow_null=True, required=False)
+
+
+class IssueLinkSerializer(serializers.Serializer[Any]):
+    kind = serializers.ChoiceField(choices=["recurrence_of", "suggested_recurrence_of"])
+    issue_id = serializers.IntegerField()
+    run_id = serializers.IntegerField(required=False)
+
+
+class FrameAnnotationSourceSerializer(serializers.Serializer[Any]):
+    kind = serializers.CharField()
+    id = serializers.IntegerField()
+
+
+class FrameAnnotationSerializer(serializers.Serializer[Any]):
+    id = serializers.CharField()
+    source: Any = FrameAnnotationSourceSerializer()
+    label_id = serializers.IntegerField()
+    bbox = BBoxSerializer(allow_null=True)
+    rotation = serializers.FloatField(required=False)
+    occluded = serializers.BooleanField(required=False)
+    outside = serializers.BooleanField(required=False)
+    z_order = serializers.IntegerField(required=False)
+    attributes = serializers.ListField(child=serializers.DictField(), required=False)
+
+
+class FramePredictionSerializer(serializers.Serializer[Any]):
+    candidate_id = serializers.IntegerField()
+    engine = serializers.CharField()
+    engine_version = serializers.CharField()
+    family = serializers.CharField()
+    anchor = serializers.DictField()
+    evidence = serializers.JSONField()
+
+
 class ReviewDecisionRecordSerializer(serializers.Serializer[Any]):
     id = serializers.IntegerField()
     issue_id = serializers.IntegerField()
     actor_user_id = serializers.IntegerField()
-    actor_role = serializers.CharField()
-    decision = serializers.ChoiceField(choices=ReviewDecision.Action.values)
+    actor_role = serializers.ChoiceField(choices=ACTOR_ROLES)
+    decision = serializers.ChoiceField(choices=DECISION_ACTIONS)
     revision = serializers.CharField()
-    reason = serializers.CharField(allow_null=True)
+    reason = serializers.CharField(allow_blank=True)
     rule_ids = serializers.ListField(child=serializers.CharField())
     reference_version = serializers.CharField(allow_null=True)
-    reference_match_status = serializers.CharField()
+    reference_match_status = serializers.ChoiceField(choices=REFERENCE_MATCH)
     reference_error_ids = serializers.ListField(child=serializers.CharField())
     recorded_at = serializers.DateTimeField()
 
@@ -100,29 +202,32 @@ class IssueSerializer(serializers.Serializer[Any]):
     family = serializers.ChoiceField(choices=FAMILIES)
     origin = serializers.ChoiceField(choices=Issue.Origin.values)
     state = serializers.ChoiceField(choices=Issue.State.values)
-    anchor = serializers.JSONField()
-    n_i = serializers.JSONField(allow_null=True)
-    q_i = serializers.JSONField(allow_null=True)
-    severity = serializers.ChoiceField(choices=SEVERITIES, allow_null=True)
-    rule_ids = serializers.ListField(child=serializers.CharField())
-    evidence = serializers.JSONField()
-    links = serializers.JSONField()
+    anchor = AnchorSerializer()
+    n_i = serializers.IntegerField()
+    # Always sent; optional in the contract on purpose (see FrameSummarySerializer).
+    q_i = serializers.FloatField(allow_null=True, required=False)
+    severity = serializers.ChoiceField(choices=SEVERITIES, allow_null=True, required=False)
+    rule_ids = serializers.ListField(child=serializers.CharField(), required=False)
+    evidence = EvidenceSerializer(many=True)
+    links = IssueLinkSerializer(many=True)
     review_decisions = ReviewDecisionRecordSerializer(many=True)
 
 
 class EngineStatusSerializer(serializers.Serializer[Any]):
-    engine = serializers.CharField()
-    status = serializers.CharField()
-    reason = serializers.CharField(allow_null=True)
-    failed_units = serializers.IntegerField()
+    engine = serializers.ChoiceField(choices=ENGINE_NAMES)
+    status = serializers.ChoiceField(choices=ENGINE_STATUSES)
+    # Always sent; optional in the contract on purpose (see FrameSummarySerializer).
+    reason = serializers.ChoiceField(choices=NOT_CHECKED_REASONS, allow_null=True, required=False)
+    failed_units = serializers.IntegerField(required=False)
 
 
 class FrameIssuesSerializer(serializers.Serializer[Any]):
     frame = FrameSummarySerializer()
     guideline_version = serializers.CharField(allow_null=True)
-    snapshot_revision = serializers.CharField()
-    annotations = serializers.ListField(child=serializers.DictField())
-    predictions = serializers.ListField(child=serializers.DictField())
+    # Always sent; optional in the contract on purpose (frontend types, see R-241 result).
+    snapshot_revision = serializers.CharField(required=False)
+    annotations = FrameAnnotationSerializer(many=True, required=False)
+    predictions = FramePredictionSerializer(many=True, required=False)
     engines = EngineStatusSerializer(many=True)
     issues = IssueSerializer(many=True)
 
@@ -131,7 +236,7 @@ class ManualIssueCreateSerializer(serializers.Serializer[Any]):
     frame_id = serializers.IntegerField(min_value=1)
     lease_id = serializers.IntegerField(min_value=1)
     family = serializers.ChoiceField(choices=FAMILIES)
-    anchor = serializers.JSONField()
+    anchor = AnchorSerializer()
     description = serializers.CharField(required=False, allow_blank=True)
 
 
@@ -152,12 +257,12 @@ class IssueDecisionSerializer(serializers.Serializer[Any]):
     action = serializers.ChoiceField(choices=ReviewDecision.Action.values)
     actor_user_id = serializers.IntegerField()
     revision = serializers.CharField()
-    family = serializers.ChoiceField(choices=FAMILIES, allow_null=True)
+    family = serializers.ChoiceField(choices=FAMILIES)
     severity = serializers.ChoiceField(choices=SEVERITIES, allow_null=True)
     reason = serializers.CharField(allow_null=True)
     rule_id = serializers.CharField(allow_null=True)
     created_at = serializers.DateTimeField()
-    audit_event_id = serializers.IntegerField(allow_null=True)
+    audit_event_id = serializers.IntegerField(required=False)
 
 
 class PaginatedEscalationSerializer(serializers.Serializer[Any]):
@@ -222,7 +327,7 @@ class ReworkReadSerializer(serializers.Serializer[Any]):
 
 class ReworkVerificationSummarySerializer(serializers.Serializer[Any]):
     id = serializers.IntegerField()
-    outcome = serializers.CharField(help_text="pass | fail")
+    outcome = serializers.ChoiceField(choices=ReworkVerification.Outcome.values)
     verifier_user_id = serializers.IntegerField()
     reason = serializers.CharField(allow_blank=True)
     verified_at = serializers.DateTimeField()
