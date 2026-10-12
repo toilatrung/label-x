@@ -41,10 +41,12 @@ export function FlowNav({
   flow,
   currentStep = 1,
   variant = 'stepper',
+  inCard = false,
 }: {
   flow: FlowModule;
   currentStep?: number;
   variant?: 'stepper' | 'tabs';
+  inCard?: boolean;
 }) {
   const { hasPermission } = useAuth();
   const definition = FLOWS[flow];
@@ -52,7 +54,7 @@ export function FlowNav({
   const index = Math.min(Math.max(currentStep, 1), definition.steps.length) - 1;
 
   if (variant === 'tabs') {
-    return (
+    const tabs = (
       <nav className="lx-tabs lx-tabs--inset" role="tablist" aria-label={definition.title}>
         {definition.steps.map((step, i) => (
           <Link
@@ -68,6 +70,16 @@ export function FlowNav({
           </Link>
         ))}
       </nav>
+    );
+
+    if (inCard) {
+      return tabs;
+    }
+
+    return (
+      <section className="lx-card lx-flow-tabs" aria-label={definition.title}>
+        {tabs}
+      </section>
     );
   }
 

@@ -81,7 +81,7 @@ function HistoryContent() {
   return <AppShell activeKey="analysis" flowStep={3} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Execution History</h1><p className="lx-lead">Theo dõi từng lần chạy và kết quả của từng engine. Engine lỗi hoặc chưa chạy được ghi rõ là Failed, Partial hoặc Not checked.</p></div></div>}>
     <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Các lần chạy">
-        <FlowNav flow="analysis" currentStep={3} variant="tabs" />
+        <FlowNav flow="analysis" currentStep={3} variant="tabs" inCard />
         <header className="lx-card__head"><h2 className="lx-h2">Các lần chạy</h2><span className="lx-hint">{datasetId === null ? 'Chưa chọn Dataset' : `Dataset #${datasetId}`}</span></header>
         <div className="lx-card__body"><DatasetPicker onChange={(nextDatasetId) => { setChosenId(null); if (datasetId !== null && nextDatasetId !== datasetId) setIgnoreQueryRun(true); setRunCursor(null); setShardCursor(null); setCandidateCursor(null); }} /></div>
         {!datasetId && <div className="lx-card__body lx-muted">Chọn Dataset để xem lịch sử.</div>}

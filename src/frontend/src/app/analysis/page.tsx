@@ -145,7 +145,7 @@ function SnapshotWorkspace() {
       {item && <SnapshotDetail item={item} />}
     </> : <div className="lx-cols">
       <section className="lx-card lx-main" aria-label="Tạo snapshot mới">
-        <FlowNav flow="analysis" currentStep={1} variant="tabs" />
+        <FlowNav flow="analysis" currentStep={1} variant="tabs" inCard />
         <div className="lx-card__head"><h2 className="lx-h2">Tạo snapshot mới</h2></div>
         <div className="lx-card__body lx-stack">
           {isSampleFallback ? (

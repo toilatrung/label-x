@@ -126,7 +126,7 @@ function ConfigContent() {
           <EngineThresholdsTable
             config={activeConfig}
             layout="analysis"
-            topSlot={<FlowNav flow="analysis" currentStep={2} variant="tabs" />}
+            topSlot={<FlowNav flow="analysis" currentStep={2} variant="tabs" inCard />}
             isLoading={configs.isPending}
             error={configs.isError ? errorMessage(configs.error) : null}
             emptyTitle={configs.data?.results.length === 0 ? 'Chưa có cấu hình đã phát hành' : 'Chưa chọn phiên bản cấu hình'}
