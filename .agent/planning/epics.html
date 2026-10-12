@@ -83,7 +83,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Nền backend/frontend, auth, RBAC, audit, storage và CI</strong> — Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</td>
 <td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-002, T-011, T-012, T-013, T-014, T-015, T-016, T-047, T-049, T-069</code></td>
+<td><code>T-002, T-011, T-012, T-013, T-014, T-015, T-016, T-047, T-049</code></td>
 <td>Xem <a href="#e-02">chi tiết</a></td>
 <td><code>BLOCKER-003, BLOCKER-013, BLOCKER-025, DEC-002, DEC-003, CR-101, RISK-012</code></td>
 </tr>
@@ -120,10 +120,10 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>E-06</code></td>
 <td><code>M-04</code></td>
-<td><strong>Công cụ reference pilot: GT BDD100K, suy lỗi, khoá, leakage</strong> — LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</td>
+<td><strong>Công cụ reference: hai GT, phân xử, suy lỗi, khoá, leakage</strong> — LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</td>
 <td><code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></td>
-<td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-050, T-052, T-053, T-054, T-055, T-065</code></td>
+<td><code>EPIC_PROPOSED</code></td>
+<td><code>none</code></td>
 <td>Xem <a href="#e-06">chi tiết</a></td>
 <td><code>BLOCKER-005, BLOCKER-013, BLOCKER-018, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
@@ -132,8 +132,8 @@ ul.dir{columns:2;font-size:14px}
 <td><code>M-04</code></td>
 <td><strong>Bộ reference tập hiệu chỉnh đã khoá</strong> — Có reference (GT + 𝓔) đã khoá cho tập hiệu chỉnh để chọn ngưỡng Detector, học score và chọn k*.</td>
 <td><code>Lê Duy Nam</code></td>
-<td><code>EPIC_READY</code></td>
-<td><code>T-051, T-056</code></td>
+<td><code>EPIC_PROPOSED</code></td>
+<td><code>none</code></td>
 <td>Xem <a href="#e-07">chi tiết</a></td>
 <td><code>BLOCKER-015, BLOCKER-016, BLOCKER-018, BLOCKER-020, DEC-002, DEC-003, CR-101, BLOCKER-022</code></td>
 </tr>
@@ -163,7 +163,7 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Detector baseline, candidate E1/E2 và evidence</strong> — Một Detector baseline đã freeze chạy trên GPU worker sinh candidate E1/E2 kèm evidence; thiếu model thì Not checked.</td>
 <td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-005, T-057, T-058, T-059, T-066</code></td>
+<td><code>T-005</code></td>
 <td>Xem <a href="#e-10">chi tiết</a></td>
 <td><code>BLOCKER-005, BLOCKER-025, DEC-002, DEC-003, DEC-008, CR-101</code></td>
 </tr>
@@ -182,8 +182,8 @@ ul.dir{columns:2;font-size:14px}
 <td><code>M-04</code></td>
 <td><strong>VLM tắt trong pilot (TBD-08)</strong> — Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</td>
 <td><code>Nguyễn Xuân Việt Anh</code></td>
-<td><code>EPIC_IN_PROGRESS</code></td>
-<td><code>T-060</code></td>
+<td><code>EPIC_PROPOSED</code></td>
+<td><code>none</code></td>
 <td>Xem <a href="#e-12">chi tiết</a></td>
 <td><code>BLOCKER-002, DEC-002, DEC-003</code></td>
 </tr>
@@ -232,8 +232,8 @@ ul.dir{columns:2;font-size:14px}
 <td><code>M-04</code></td>
 <td><strong>Hiệu chỉnh score</strong> — Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá (Metric engine và pilot nhỏ hoãn theo CR-101).</td>
 <td><code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></td>
-<td><code>EPIC_READY</code></td>
-<td><code>T-061, T-062, T-063, T-064, T-067, T-068</code></td>
+<td><code>EPIC_PROPOSED</code></td>
+<td><code>none</code></td>
 <td>Xem <a href="#e-17">chi tiết</a></td>
 <td><code>BLOCKER-010, BLOCKER-015, BLOCKER-016, BLOCKER-021, DEC-002, DEC-003, CR-101</code></td>
 </tr>
@@ -315,7 +315,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Ký epic</strong>: một epic chỉ chuyển <code>EPIC_READY</code> khi Product Owner ghi chữ ký vào trường <strong>PO Sign-off</strong> (người, ngày) và mọi task của epic có developer được gán (BLOCKER-001).</li>
 <li><strong>Frontend thuộc phạm vi epic</strong>: epic có màn hình gồm cả backend lẫn frontend (dòng <code>Frontend:</code> trong Included); epic chỉ xong khi màn hình chạy trên API thật.</li>
-<li><strong>Cập nhật 2026-10-12 (CR-111 approved, DEC-015)</strong>: phần frontend chưa bắt đầu của epic chuyển sang milestone <a href="M-FE01.html">M-FE01</a> (nhánh <code>develop-fe</code>, Phase 1 dựng giao diện, Phase 2 nối từng API ngay khi backend sẵn sàng); epic chỉ <code>EPIC_DONE</code> khi cả hai phần xong.</li>
+<li><strong>Cập nhật 2026-10-11 (CR-111, chờ duyệt)</strong>: phần frontend chưa bắt đầu của epic chuyển sang milestone <a href="M-FE01.html">M-FE01</a> (nhánh <code>develop-fe</code>, Phase 1 dựng giao diện, Phase 2 nối API); epic chỉ <code>EPIC_DONE</code> khi cả hai phần xong.</li>
 <li><strong>Thiết kế tham khảo</strong>: <code>docs/design/</code> (Design System và <code>screens/*.dc.html</code>) là thiết kế mẫu để tham khảo khi code frontend, không phải đặc tả pixel. Delta thiết kế bổ sung just-in-time ngay trước epic dùng tới: đăng nhập/audit trước E-02; hàng đợi frame + đóng góp điểm trước E-13; Workspace delta trước E-14; reference hai GT trước E-06; thí nghiệm và KPI trước E-19/E-20 (BLOCKER-013).</li>
 </ul>
 <h3 id="e-01">E-01</h3>
@@ -398,7 +398,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-09</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_1">Objective</h4>
 <p>Mọi epic nghiệp vụ dựng trên một nền chung: phiên đăng nhập, quyền theo scope, audit append-only cùng transaction, truy cập storage có kiểm soát, app shell Next.js và CI.</p>
@@ -457,7 +457,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-069. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-03">E-03</h3>
+<h3 id="e-03">E-03</h3>
 <h4 id="record-metadata_2">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-03</code></li>
@@ -659,17 +659,17 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_5">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-06</code></li>
-<li><strong>Title</strong>: <code>Công cụ reference pilot: GT BDD100K, suy lỗi, khoá, leakage</code></li>
+<li><strong>Title</strong>: <code>Công cụ reference: hai GT, phân xử, suy lỗi, khoá, leakage</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (frontend: Trần Đức Thọ)</code></li>
-<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
+<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-15</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_5">Objective</h4>
-<p>Pilot theo CR-101 nhập một GT gốc BDD100K theo checksum, ghép với annotation learner đầu vào để suy 𝓔; QA duyệt ngoại lệ/mapping, khoá reference và chặn leakage. Nhập hai GT độc lập dành cho giai đoạn sau.</p>
+<p>LabelX nhập hai bản GT độc lập, ghép, đưa bất đồng cho QA Lead phân xử, suy ra 𝓔, khoá version và chặn rò rỉ dữ liệu.</p>
 <h4 id="scope_5">Scope</h4>
 <h5 id="included_5">Included</h5>
 <ul>
@@ -691,7 +691,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_5">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-04, E-05</code></li>
-<li><strong>Blocked By</strong>: <code>none</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_5">Related Files</h4>
 <ul>
@@ -705,7 +705,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_5">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Khoá reference khi còn bất đồng/ngoại lệ mapping hoặc eligibility chưa được QA xử lý → 422; pilot không yêu cầu hai bản GT</li>
+<li>[ ] Khoá reference khi còn bất đồng → 422</li>
 <li>[ ] Không có thao tác xoá lỗi trực tiếp khỏi 𝓔</li>
 <li>[ ] Overlap held-out với training manifest chặn đánh giá</li>
 <li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
@@ -725,18 +725,18 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-050, T-052, T-053, T-054, T-055, T-065. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-07">E-07</h3>
+<h3 id="e-07">E-07</h3>
 <h4 id="record-metadata_6">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-07</code></li>
 <li><strong>Title</strong>: <code>Bộ reference tập hiệu chỉnh đã khoá</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam</code></li>
-<li><strong>Status</strong>: <code>EPIC_READY</code></li>
+<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_6">Objective</h4>
 <p>Có reference (GT + 𝓔) đã khoá cho tập hiệu chỉnh để chọn ngưỡng Detector, học score và chọn k*.</p>
@@ -755,7 +755,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_6">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-06</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-015</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_6">Related Files</h4>
 <ul>
@@ -770,7 +770,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="acceptance-criteria_6">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Reference hiệu chỉnh khoá version với đủ provenance</li>
-<li>[ ] Pilot báo cáo nguồn GT gốc BDD100K, checksum/version và provenance theo CR-101; tỉ lệ khớp hai GT ghi không áp dụng vì pilot dùng một GT</li>
+<li>[ ] Tỉ lệ khớp hai GT được báo cáo</li>
 <li>[ ] Không người xác minh nào tự review annotation của mình (BR-12)</li>
 <li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
 <li>[ ] Dependencies and governance links are current.</li>
@@ -789,7 +789,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-051, T-056. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-08">E-08</h3>
+<h3 id="e-08">E-08</h3>
 <h4 id="record-metadata_7">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-08</code></li>
@@ -936,7 +936,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-06 — giao task đợt 1</code></li>
 </ul>
 <h4 id="objective_9">Objective</h4>
 <p>Một Detector baseline đã freeze chạy trên GPU worker sinh candidate E1/E2 kèm evidence; thiếu model thì Not checked.</p>
@@ -992,7 +992,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-057, T-058, T-059, T-066. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-11">E-11</h3>
+<h3 id="e-11">E-11</h3>
 <h4 id="record-metadata_10">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-11</code></li>
@@ -1068,12 +1068,12 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
 <li><strong>Title</strong>: <code>VLM tắt trong pilot (TBD-08)</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh</code></li>
-<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
+<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-14</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
 <p>Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</p>
@@ -1123,7 +1123,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-060. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-13">E-13</h3>
+<h3 id="e-13">E-13</h3>
 <h4 id="record-metadata_12">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-13</code></li>
@@ -1397,12 +1397,12 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-17</code></li>
 <li><strong>Title</strong>: <code>Hiệu chỉnh score</code></li>
 <li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (frontend: Trần Đức Thọ)</code></li>
-<li><strong>Status</strong>: <code>EPIC_READY</code></li>
+<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — DEC-017: tạo task và giao việc chiều nay; scientific acceptance gates giữ nguyên</code></li>
+<li><strong>PO Sign-off</strong>: <code>pending</code></li>
 </ul>
 <h4 id="objective_16">Objective</h4>
 <p>Score version được học và kiểm chứng ngoài fold trên tập hiệu chỉnh rồi khoá.</p>
@@ -1456,7 +1456,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
-<p>Task expansion DEC-017: T-061, T-062, T-063, T-064, T-067, T-068. Evidence scientific/QA còn pending; task state theo task board.</p><h3 id="e-18">E-18</h3>
+<h3 id="e-18">E-18</h3>
 <h4 id="record-metadata_17">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-18</code></li>
@@ -1486,7 +1486,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_17">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-17</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-015</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_17">Related Files</h4>
 <ul>
@@ -1552,7 +1552,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_18">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-18, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-015</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_18">Related Files</h4>
 <ul>
@@ -1617,7 +1617,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_19">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-19</code></li>
-<li><strong>Blocked By</strong>: <code>BLOCKER-015</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-015, BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_19">Related Files</h4>
 <ul>
@@ -1747,7 +1747,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="dependencies_21">Dependencies</h4>
 <ul>
 <li><strong>Depends On</strong>: <code>E-20, E-16</code></li>
-<li><strong>Blocked By</strong>: <code>none</code></li>
+<li><strong>Blocked By</strong>: <code>BLOCKER-022</code></li>
 </ul>
 <h4 id="related-files_21">Related Files</h4>
 <ul>
@@ -1916,4 +1916,4 @@ ul.dir{columns:2;font-size:14px}
 <li>Do not change baselined scope without an approved change request.</li>
 <li>Do not record fabricated links, evidence, or completion state.</li>
 </ul>
-<h2 id="m04-follow-up-2026-10-12">M-04 Follow-up — 2026-10-12</h2><p>D01 duyệt về nguyên tắc nhưng chưa ghi tên QA Lead/QC Admin và yêu cầu làm rõ; không tự ký hay chuyển E-06/07/12/17 sang READY/IN_PROGRESS. D02 đã đưa source learner vào fixtures/learner/m04; BLOCKER-024 accepted theo DEC-014. D05 có draft config QA; D08 duyệt CR-111. Đồng bộ title/objective/AC một GT của E-06/E-07 theo CR-101; không thêm scope hai GT. Xem DEC-015 và báo cáo M-04 lần 2. D03/04/06/09 vẫn pending; precision/epsilon đã có DEC-013.</p><h2 id="m04-round3">M-04 Round 3 — 2026-10-12</h2><p>DEC-016: QA Lead Nguyễn Đức Hà; QC Admin Trịnh Quang Trung; Nam chuẩn bị, Hà khoá reference. BLOCKER-022 resolved về gán người; các scientific/review/split gates chưa đóng. Scope images/frames, không video processing/temporal. Metadata source groups vẫn cần cho leakage/CV. PO giữ baseline và E-16 dependency; matching 0.50/0.30 và n_min 50/folds 5 được chọn có điều kiện sau review/thống kê.</p><h2 id="m04-dispatch">M-04 Task Dispatch — 2026-10-12</h2><p>DEC-017 bổ sung uỷ quyền mới tạo issues và giao task đầu chiều nay. E-06/12 IN_PROGRESS cho công việc nền, E-07/17 READY chờ dependencies; E-10/E-02 giữ IN_PROGRESS. Các ghi chú DEC-015/016 phía trên giữ như lịch sử, được đọc cùng bổ sung này. Không tự giải quyết scientific gates.</p></article></main></body></html>
+</article></main></body></html>

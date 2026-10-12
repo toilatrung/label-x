@@ -54,7 +54,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Milestone M-FE01 và nhánh develop-fe: tách frontend khỏi M-02…M-05 để làm song song</code></li>
 <li><strong>Owner</strong>: <code>project-owner (Trịnh Quang Trung, @toilatrung)</code></li>
 <li><strong>Proposer</strong>: <code>claude-code (label-x-9d) theo yêu cầu của PO</code></li>
-<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Status</strong>: <code>proposed</code></li>
 <li><strong>Change Type</strong>: <code>scope</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-11</code></li>
@@ -62,7 +62,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="proposed-change">Proposed Change</h2>
 <p>Trước: epic có màn hình gồm cả backend và frontend; epic chỉ xong khi màn hình chạy trên API thật (epics.html, mục quy ước). Mọi task nhánh từ <code>develop</code>, PR base <code>develop</code> (CR-104).</p>
-<p>Sau (được PO duyệt ngày 2026-10-12): (1) thêm milestone <code>M-FE01</code> chứa toàn bộ phần frontend: Phase 1 dựng giao diện đủ 24 màn theo thiết kế, chức năng chưa có API hiển thị cảnh báo chưa kết nối; Phase 2 nối route vào API thật theo từng endpoint backend sẵn sàng; không đợi hoàn tất toàn bộ backend. (2) Dùng nhánh tích hợp <code>develop-fe</code> từ <code>develop</code>; task frontend <code>FE-xx</code> nhánh từ <code>develop-fe</code>, PR base <code>develop-fe</code>; PO merge <code>develop-fe</code> → <code>develop</code> sau review toàn luồng. (3) M-02…M-05 đo acceptance phần backend/API; epic chỉ <code>EPIC_DONE</code> khi Phase 2 tương ứng xong.</p>
+<p>Sau: (1) thêm milestone <code>M-FE01</code> chứa toàn bộ phần frontend: Phase 1 dựng giao diện đủ 24 màn theo thiết kế, chức năng chưa có API hiển thị cảnh báo chưa kết nối; Phase 2 nối route vào API thật sau. (2) Dùng nhánh tích hợp <code>develop-fe</code> từ <code>develop</code>; task frontend <code>FE-xx</code> nhánh từ <code>develop-fe</code>, PR base <code>develop-fe</code>; PO merge <code>develop-fe</code> → <code>develop</code> sau review toàn luồng. (3) M-02…M-05 đo acceptance phần backend/API; epic chỉ <code>EPIC_DONE</code> khi Phase 2 tương ứng xong.</p>
 <h2 id="justification">Justification</h2>
 <p>Kiểm toán 2026-10-11: 0/20 màn mức A, 7 mức B, 13 mức C so với thiết kế; giao diện bị chặn đợi backend nên chậm. Tách luồng cho phép nhiều developer làm giao diện song song, backend không bị kéo theo. Sản phẩm hoàn thiện mục tiêu 2026-10-20 giữ nguyên.</p>
 <h2 id="impact-assessment">Impact Assessment</h2>
@@ -83,11 +83,11 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="approval">Approval</h2>
 <ul>
-<li><strong>Decision</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>pending</code></li>
 <li><strong>Approver</strong>: <code>Trịnh Quang Trung (@toilatrung), Product Owner</code></li>
-<li><strong>Decision Date</strong>: <code>2026-10-12</code></li>
-<li><strong>Conditions</strong>: <code>BE xong đến đâu thực hiện nối FE đến đó; endpoint đã merge, contract ổn định và checks đạt thì nối phần tương ứng ngay, không đợi toàn bộ milestone backend. Epic chỉ DONE sau frontend/API acceptance tương ứng.</code></li>
-<li><strong>Rationale</strong>: <code>PO duyệt phương án A trong phiếu M-04 ngày 2026-10-12, D08; bằng chứng .agent/evidence/M-04/po-response-2026-10-12.json; DEC-015.</code></li>
+<li><strong>Decision Date</strong>: <code>none</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>PO đã yêu cầu bằng lời trong phiên; chờ ghi quyết định chính thức</code></li>
 </ul>
 <h2 id="implementation-plan">Implementation Plan</h2>
 <ul>
@@ -98,9 +98,9 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[x] Approval recorded on 2026-10-12; earlier planning edits were proposals, not implementation authorization.</li>
+<li>[ ] Approval is recorded before baseline modification.</li>
 <li>[ ] Approved changes are implemented and verified.</li>
 <li>[ ] All affected baselines and traceability links are updated.</li>
 <li>[ ] Status is <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code>, or <code>superseded</code>.</li>
 </ul>
-<h2 id="po-follow-up">PO Follow-up — 2026-10-12</h2><p>Phương án A đã duyệt; nguồn <a href="../../evidence/M-04/po-response-2026-10-12.json">phiếu PO D08</a>, <a href="../decisions/DEC-015.html">DEC-015</a>. Chưa ghi CR implemented: còn giao owner/task và kiểm các thay đổi baseline. Không coi phiếu này là comment duyệt PR.</p></article></main></body></html>
+</article></main></body></html>

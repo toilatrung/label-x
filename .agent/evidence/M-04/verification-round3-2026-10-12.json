@@ -1,9 +1,0 @@
-{
-  "report_html": "passed",
-  "links": 5,
-  "yaml_delta": "passed",
-  "blocker_022": "resolved by explicit role assignment",
-  "qa_execution_evidence": "pending; placeholders not counted",
-  "split_and_source_groups": "pending; images-only does not waive metadata leakage checks",
-  "application_suite": "not rerun; no application code change; previous frontend worker error remains recorded"
-}
