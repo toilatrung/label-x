@@ -1,7 +1,8 @@
 import type { ApiEndpoint } from './types';
 import { API_NAVIGATION } from './features';
+import { STATUS_RESPONSE_EXAMPLES } from './status-examples';
 
-export type { ApiConnection, ApiEndpoint, ApiMethod, ApiNavigationGroup, ApiOrigin, ApiSection } from './types';
+export type { ApiConnection, ApiEndpoint, ApiMethod, ApiNavigationGroup, ApiOrigin, ApiResponseExample, ApiSection } from './types';
 export { API_FEATURES, API_NAVIGATION } from './features';
 
 /**
@@ -15,6 +16,7 @@ export const API_ENDPOINTS: ApiEndpoint[] = API_NAVIGATION.flatMap(group =>
       ...endpoint,
       group: group.label,
       section: currentSection.label,
+      responseExamples: STATUS_RESPONSE_EXAMPLES[endpoint.id],
     })),
   ),
 );

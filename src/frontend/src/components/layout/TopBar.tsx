@@ -36,7 +36,7 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
     { label: 'Workflow & Permissions', icon: 'users', href: '/configuration', desc: 'Quy trình làm việc và phân quyền theo vai trò' });
   const modules: Module[] = [
     { key: 'overview', label: 'Overview', items: [{ label: 'Quality Control Home', icon: 'home', href: '/', desc: 'Chọn Dataset và Version để làm việc' },
-      { label: 'Quality Summary', icon: 'chart', desc: 'Tình trạng chất lượng, coverage, khối lượng review' }] },
+      { label: 'Quality Summary', icon: 'chart', href: '/?view=summary', desc: 'Tình trạng chất lượng, coverage, khối lượng review' }] },
     ...(hasPermission(canAccessAnalysis) ? [{ key: 'analysis', label: 'Quality Analysis', href: '/analysis' }] : []),
     ...(hasPermission(canAccessReview, true) ? [{ key: 'review', label: 'Review Center', href: '/review' }] : []),
     ...(hasPermission(canAccessEscalations, true) ? [{ key: 'escalations', label: 'Escalations', href: '/escalations' }] : []),
