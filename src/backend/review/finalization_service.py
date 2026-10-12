@@ -12,6 +12,7 @@ from django.db.models import Exists, OuterRef, QuerySet
 from engines.interface import EngineStatus
 from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
+from review import decision_source
 from review.models import (
     FinalRunVerification,
     FrameReview,
@@ -21,7 +22,7 @@ from review.models import (
 )
 from runs.models import QCRun
 from runs.services import ScopeBusyError, create_qc_run
-from snapshots.models import Snapshot
+from snapshots.models import Snapshot, SnapshotFrame
 from snapshots.orchestration import SnapshotScope, create_snapshot_from_cvat
 
 
@@ -301,6 +302,40 @@ def operational_run(origin_run: QCRun) -> QCRun:
     return select_operational_source(origin_run)[0]
 
 
+def route_new_candidates(origin_run: QCRun, final_run: QCRun) -> int:
+    """Send new final-run candidates to the review queue as pending issues (idempotent).
+
+    Each candidate is attached to the final run's FrameReview for its snapshot frame; a frame
+    that was already finished goes back to UNREVIEWED so the queue can claim it. Returns the
+    number of issues created by this call; a repeat call creates none.
+    """
+
+    routed = 0
+    for candidate in unreviewed_new_candidates(origin_run, final_run):
+        snapshot_frame = SnapshotFrame.objects.filter(
+            snapshot_job__snapshot_id=final_run.snapshot_id,
+            snapshot_job__cvat_task_id=candidate.cvat_task_id,
+            frame_index=candidate.frame_number,
+        ).first()
+        if snapshot_frame is None:
+            continue
+        frame, _ = FrameReview.objects.select_for_update().get_or_create(
+            run=final_run, snapshot_frame=snapshot_frame
+        )
+        _issue, created = decision_source.materialize_candidate_issue(frame, candidate)
+        if not created:
+            continue
+        routed += 1
+        if frame.state in (
+            FrameReview.State.COMPLETED,
+            FrameReview.State.REVIEWED,
+            FrameReview.State.AWAITING_FOLLOWUP,
+        ):
+            frame.state = FrameReview.State.UNREVIEWED
+            frame.save(update_fields=["state"])
+    return routed
+
+
 def _frame_may_complete(frame: FrameReview) -> bool:
     """A frame completes only when every issue on it is closed and every rework resolved."""
 
@@ -324,6 +359,11 @@ def complete_scope_frames(origin_run_id: int) -> int:
     origin_run = QCRun.objects.select_for_update().get(pk=origin_run_id)
     if origin_run.is_final or origin_run.origin_run_id is not None:
         return 0
+    for attempt in QCRun.objects.select_for_update().filter(
+        origin_run=origin_run, is_final=True, status=QCRun.Status.COMPLETED
+    ):
+        if has_complete_required_coverage(attempt):
+            route_new_candidates(origin_run, attempt)
     source, _reason, _attempts = select_operational_source(origin_run)
     if source.pk == origin_run.pk:
         return 0

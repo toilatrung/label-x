@@ -15,7 +15,7 @@ from review.finalization_service import (
     build_final_run,
     complete_scope_frames,
 )
-from review.models import FrameReview, ReworkRequest
+from review.models import ReworkRequest
 from runs.models import QCRun
 
 logger = logging.getLogger("labelx.review")
@@ -94,7 +94,6 @@ def complete_scope_frames_sweep() -> int:
         QCRun.objects.filter(
             is_final=False,
             origin_run__isnull=True,
-            frame_reviews__state=FrameReview.State.AWAITING_FOLLOWUP,
             rework_runs__is_final=True,
             rework_runs__status=QCRun.Status.COMPLETED,
         )

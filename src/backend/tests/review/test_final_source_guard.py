@@ -252,3 +252,79 @@ def test_run_lineage_fields_for_origin_recheck_and_final(final_world):
     assert source["scope_complete"] is True and source["blocked_reasons"] == []
     blocked = run_lineage_fields(origin)["operational_source"]
     assert blocked["run_id"] == final.pk
+
+
+@pytest.mark.django_db
+def test_new_candidate_is_routed_to_queue_once_and_blocks_completion(final_world):
+    from review.finalization_service import route_new_candidates
+
+    origin, final = final_world["run"], final_world["final"]
+    frame = final_world["issue"].frame_review
+    frame.state = FrameReview.State.AWAITING_FOLLOWUP
+    frame.save(update_fields=["state"])
+    _complete_final(final)
+    # Known candidate (same key as origin) must not be routed; new one must.
+    _candidate(origin, "known")
+    _candidate(final, "known")
+    new = _candidate(final, "brand-new")
+
+    assert complete_scope_frames(origin.pk) == 0
+    routed = Issue.objects.get(candidate=new)
+    assert routed.state == Issue.State.PENDING_REVIEW
+    assert routed.origin == Issue.Origin.ENGINE and routed.frame_review.run_id == final.pk
+    assert routed.frame_review.state == FrameReview.State.UNREVIEWED
+    assert not Issue.objects.filter(candidate__dedup_key="known", frame_review__run=final).exists()
+
+    # Repeat runs create nothing new and still do not complete or select the final.
+    assert route_new_candidates(origin, final) == 0
+    assert complete_scope_frames(origin.pk) == 0
+    assert Issue.objects.filter(candidate=new).count() == 1
+    assert operational_run(origin).pk == origin.pk
+    frame.refresh_from_db()
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+
+    # Human decision on the routed issue lets the scope complete.
+    routed.state = Issue.State.REJECTED
+    routed.save(update_fields=["state"])
+    assert operational_run(origin).pk == final.pk
+    assert complete_scope_frames(origin.pk) == 1
+
+
+@pytest.mark.django_db
+def test_no_new_candidate_routes_nothing(final_world):
+    from review.finalization_service import route_new_candidates
+
+    origin, final = final_world["run"], final_world["final"]
+    _complete_final(final)
+    assert route_new_candidates(origin, final) == 0
+    assert not Issue.objects.filter(frame_review__run=final).exists()
+
+
+@pytest.mark.django_db
+def test_routing_waits_for_complete_final_ledger(final_world):
+    origin, final = final_world["run"], final_world["final"]
+    new = _candidate(final, "early-candidate")
+    assert complete_scope_frames(origin.pk) == 0  # final still queued: not routed yet
+    assert not Issue.objects.filter(candidate=new).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_routing_creates_one_issue(final_world):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from django.db import close_old_connections
+
+    origin_id, final = final_world["run"].pk, final_world["final"]
+    _complete_final(final)
+    new = _candidate(final, "race-candidate")
+
+    def run() -> int:
+        close_old_connections()
+        try:
+            return complete_scope_frames(origin_id)
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(lambda _i: run(), range(2)))
+    assert Issue.objects.filter(candidate=new).count() == 1
