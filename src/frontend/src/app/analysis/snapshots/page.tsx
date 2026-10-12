@@ -38,7 +38,7 @@ export default function SnapshotHistoryPage() {
   const loadFailed = datasets.isError || history.isError;
   const sample = loadFailed;
   const hint = sample ? `${SAMPLE_HISTORY_ROWS.length} snapshot` : `${snapshots.length} snapshot đã tải`;
-  return <AppShell activeKey="analysis" flowStep={1} context={{ datasetName: selectedDataset?.name }}
+  return <AppShell activeKey="analysis" showFlowNav={false} context={{ datasetName: selectedDataset?.name }}
     pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Lịch sử snapshot</h1>
       <p className="lx-lead">Các snapshot đã tạo, annotation revision tương ứng và Quality Control Run đã chạy trên từng snapshot. Snapshot không thể sửa.</p></div>
       <div className="lx-actions"><Link className="lx-btn" href="/analysis">Về Snapshot</Link></div></div>}>
