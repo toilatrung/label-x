@@ -11,7 +11,9 @@ import { SnapshotCreateSample, SnapshotInUseExtra, SnapshotInUseSample, Snapshot
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
-import { useDatasets, useSnapshot, useSnapshotHistory, useTasks } from '@/lib/snapshots/queries';
+import { formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
+import { useDatasetRuns, useDatasets, usePublishedConfigs, useSnapshot, useSnapshotHistory, useTasks } from '@/lib/snapshots/queries';
+import { latestRunBySnapshot } from '@/lib/snapshots/runs';
 
 function SnapshotWorkspace() {
   const { session, isLoading, datasetId, setDatasetId } = useAuth();
@@ -34,6 +36,11 @@ function SnapshotWorkspace() {
   const recentLocked = recent.data?.pages
     .flatMap(page => page.results)
     .find(item => item.dataset_id === datasetId && item.status === 'locked');
+
+  const datasetRuns = useDatasetRuns(userId, datasetId, canRead && !id && !datasetQuery.isError);
+  const publishedConfigs = usePublishedConfigs(userId, canRead && !id && !datasetQuery.isError);
+  const inUseRun = recentLocked ? latestRunBySnapshot(datasetRuns.data ?? []).get(recentLocked.id) : undefined;
+  const inUseConfig = inUseRun ? publishedConfigs.data?.results.find(config => config.id === inUseRun.config_version_id) : undefined;
 
   const [paginationError, setPaginationError] = React.useState<string | null>(null);
   const visitedCursorsRef = React.useRef<Set<string>>(new Set());
@@ -117,8 +124,8 @@ function SnapshotWorkspace() {
     context={{
       datasetName: displayDatasetName,
       datasetIdOverride: item?.dataset_id,
-      snapshotName: item ? `SNP-${item.id} · ${item.status}` : undefined,
-      snapshotRevision: item?.revision_hash ? item.revision_hash.slice(0, 7) : undefined,
+      snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : undefined,
+      snapshotRevision: item?.revision_hash ? shortRevision(item.revision_hash) : undefined,
       isReadOnly: item?.status === 'locked',
       scopeName: 'Toàn dataset',
       guidelineVersion: displayGuideline,
@@ -177,12 +184,19 @@ function SnapshotWorkspace() {
           <button className="lx-btn" type="button" onClick={() => void recent.refetch()}>Thử lại</button></div>
         : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
         : recentLocked ? <div className="lx-stack"><dl className="lx-kv">
-          <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>SNP-{recentLocked.id}</Link></dd>
-          <dt>Annotation revision</dt><dd className="lx-mono lx-wrap-any">{recentLocked.revision_hash || '—'}</dd>
+          <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>{snapshotCode(recentLocked.id)}</Link></dd>
+          <dt>Annotation revision</dt><dd className="lx-mono" title={recentLocked.revision_hash ?? undefined}>{shortRevision(recentLocked.revision_hash)}</dd>
           <dt>Taxonomy</dt><dd>{recentLocked.taxonomy_version || '—'}</dd>
           <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
-          <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {recentLocked.created_at}</dd>
-        </dl><SnapshotInUseExtra /></div> : isSearchingLocked && datasetId ? (
+          <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
+        </dl>
+          {datasetRuns.isError ? <SnapshotInUseExtra error={errorMessage(datasetRuns.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
+            <dt>Mô hình độc lập</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
+            <dt>Cấu hình kiểm tra</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
+            <dt>Seed lấy mẫu</dt><dd className="lx-mono">{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>
+          </dl>}
+          {datasetRuns.isSuccess && !inUseRun && <p className="lx-muted lx-text-13">Snapshot này chưa có Quality Control Run nên chưa có mô hình, cấu hình và seed.</p>}
+        </div> : isSearchingLocked && datasetId ? (
           <p className="lx-muted" role="status">Đang tải…</p>
         ) : (
           <p className="lx-muted">{datasetId === null ? 'Vui lòng chọn một Dataset để tạo Snapshot.' : 'Chưa có Snapshot đã khóa.'}</p>
