@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-050 — Contract reference M-04 — LabelX</title>
+<meta name="labelx:id" content="T-050-duy12345-6789">
+<meta name="labelx:title" content="T-050 — Contract reference M-04">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="evaluation">
+<meta name="labelx:tags" content="[implementation, T-050, M-04, reference]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-050</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>T-050-duy12345-6789</span><b>title</b><span>T-050 — Contract reference M-04</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>evaluation</span><b>tags</b><span>[implementation, T-050, M-04, reference]</span><b>priority</b><span>3</span></div>
+<h1 id="T-050-duy12345-6789">T-050 — Contract reference M-04</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bàn giao contract reference M-04 cho importer, derive, approve/lock, Detector và FE. Báo cáo ghi bằng chứng triển khai contract; reviewer/QA/PO quyết định acceptance.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>T-050</code></li>
+<li><strong>Title</strong>: <code>Contract reference M-04 và delta API</code></li>
+<li><strong>Owner</strong>: <code>@DucHa180104 (owner issue #197)</code></li>
+<li><strong>Executor</strong>: <code>@duy12345-6789, Codex; người dùng xác nhận tiếp tục triển khai</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>T-050</code></li>
+<li><strong>Epic ID</strong>: <code>E-06</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-12</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>OpenAPI delta, GT/reference/version/mapping schemas, dataset RBAC, state machine, 33 wire fixtures, schema tests, generated contract.d.ts, backend/FE error enum, HTML handoff.</code></li>
+<li><strong>Not Implemented</strong>: <code>Endpoint/model/importer runtime T-052…054; GT thật; QA policy T-055; Detector/GPU; held-out KPI; video; review/merge.</code></li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td>docs/04-api/openapi.yaml</td><td>Giữ create/lock; thêm list/detail/derive/approve. Tách draft/config và immutable version; actor/time/hash/evidence guards.</td><td>T-050</td></tr>
+<tr><td>docs/04-api/rbac-matrix.html; state-machines.html</td><td>Data/Model Owner chuẩn bị; QA approve/lock; dataset/natural-person identity/split/leakage.</td><td>T-050</td></tr>
+<tr><td>docs/04-api/m04-reference-delta.html</td><td>Delta baseline, body migration, error table, input/output từng task và gate chờ QA.</td><td>T-050</td></tr>
+<tr><td>src/backend/fixtures/m04_reference_contract_v1.json</td><td>33 JSON request/response scenarios; 3 synthetic frames và hash placeholder, không phải evidence thật.</td><td>T-050</td></tr>
+<tr><td>src/backend/tests/test_t050_reference_contract.py</td><td>Validate JSON wire, missing provenance, GT không độc lập/sai checksum, correction giữ bản khóa.</td><td>T-050</td></tr>
+<tr><td>src/backend/config/serializers.py; src/frontend/src/lib/api/errors.ts</td><td>Đồng bộ 8 code mới và thông báo tiếng Việt; dùng lại IDEMPOTENCY_KEY_REUSED.</td><td>T-050</td></tr>
+<tr><td>src/frontend/src/lib/api/contract.d.ts</td><td>Sinh từ static OpenAPI; runtime endpoints chưa triển khai vẫn chưa xuất hiện trong schema Django.</td><td>T-050</td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>https://github.com/toilatrung/label-x/issues/197; tracking #196</code></li>
+<li><strong>Context Packages</strong>: <code>docs/04-api/m04-reference-delta.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html; không tự chuyển done</code></li>
+<li><strong>Current Context</strong>: <code>Baseline develop d06eddf905dd624ca74a59463bd2d6c624de4a81</code></li>
+<li><strong>Decisions</strong>: <code>DEC-013; DEC-002; PO #196. DEC-015/016/017 chưa merge.</code></li>
+<li><strong>Change Requests</strong>: <code>CR-101; CR-100; CR-103; CR-104</code></li>
+<li><strong>Risks or Blockers</strong>: <code>T-051 split/N/seed/source-group; T-055 matching/eligibility QA; T-057 model training manifest; T-061 sample/folds. Contract giữ gate, không tự nghiệm thu.</code></li>
+<li><strong>Review Request</strong>: <code>@tdt2112; owner @DucHa180104; approval độc lập CR-102</code></li>
+<li><strong>Commits</strong>: <code>e9611bbc890ec894622646cbb33880dbdfa0eee8 (implementation trên nhánh, chưa merge develop)</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>git fetch origin develop; git rebase origin/develop</td><td>passed</td><td>Cập nhật 78 upstream commits; baseline d06eddf là ancestor.</td></tr>
+<tr><td>pytest tests/test_t050_reference_contract.py tests/test_contract.py -q</td><td>passed</td><td>67 passed; wire/schema validation, không gọi endpoint reference chưa cài.</td></tr>
+<tr><td>npm run gen:api:contract</td><td>passed</td><td>openapi-typescript 7.13.0; contract.d.ts commit cùng delta.</td></tr>
+<tr><td>manage.py spectacular --file /tmp/labelx-t050-runtime.yaml --validate</td><td>passed</td><td>0 errors; 1 enum naming warning baseline. Runtime type đã sinh để kiểm và bỏ artifact local.</td></tr>
+<tr><td>make check</td><td>passed</td><td>Exit 0 trên implementation e9611bbc890ec894622646cbb33880dbdfa0eee8. Backend 580 passed / 1 skipped (S3 opt-in); frontend 203 passed; Detector 10 passed; Ruff/ESLint/mypy/tsc passed; FRAMEWORK_VALIDATION_PASS. WSL Ubuntu; Python 3.12.15 (Detector 3.10.22); Node 22.23.3; frozen deps; PostgreSQL 17, Redis 7; CORS/CSRF origin localhost:3000 theo CI.</td></tr>
+<tr><td>make validate-kit</td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; metadata/links/template headings của report và per-user commit map hợp lệ.</td></tr>
+<tr><td>docker compose -f infrastructure/docker-compose.dev.yml up -d --wait postgres redis</td><td>passed</td><td>Cả hai healthy. Không thay volume hay xóa dữ liệu.</td></tr>
+<tr><td>Edge headless docs/04-api/m04-reference-delta.html</td><td>passed</td><td>Đã xem ảnh .ci-artifacts/t050/reference-delta.png; tiếng Việt rõ/bảng không vỡ. Screenshot local không commit.</td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>AC1 schema + derive/approve/lock + policy/errors, reuse routes</td><td>passed; ready for review</td><td><a href="../../../docs/04-api/m04-reference-delta.html">Delta</a>; OpenAPI validator + JSON fixtures; giữ create/lock operationId.</td></tr>
+<tr><td>AC2 fixtures + dataset RBAC + importer/Detector/FE seams</td><td>passed; ready for review</td><td>33 scenarios; role metadata + seam table. Runtime enforcement thuộc T-054.</td></tr>
+<tr><td>AC3 draft khác locked + actor/time/hash/evidence + refusal</td><td>passed; ready for review</td><td>Version bundle; correction giữ parent; refusal missing review/split/training/self-review trong fixtures.</td></tr>
+<tr><td>Fixture SHA-256</td><td>recorded</td><td>f9b3f4ed97642600a25805b2ef64c864b0b8f87ee646b8a37bbb3e81268ff811; hash tệp fixture, không phải hash GT thật.</td></tr>
+<tr><td>Independent review/QA/CI</td><td>pending</td><td>Không approval thay reviewer; task chưa done; PR base develop.</td></tr></tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: <code>Executor @duy12345-6789 theo xác nhận người dùng; giữ owner/reviewer #197, không đổi assignee hay impersonate.</code></li>
+<li><strong>Approved By</strong>: <code>Implementation: người dùng; review/QA/merge: pending independent approver.</code></li>
+<li><strong>Known Limitations</strong>: <code>Fixtures tổng hợp không chứng minh runtime enforcement. Matching/split/eligibility/sample gates chờ evidence. Windows check ban đầu lỗi enum backend đã sửa; CORS thiếu env đã xác định; mypy Windows bị Application Control nên dùng WSL. Gate cuối ở Command Evidence.</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Mỗi thay đổi thuộc scope T-050.</li><li>[x] AC/bằng chứng contract được liên kết.</li><li>[x] Deviation và limitations rõ.</li><li>[x] Make check + validate-kit pass.</li><li>[x] Handoff reviewer độc lập @tdt2112, owner @DucHa180104.</li><li>[x] Commit map riêng liên kết commit triển khai e9611bbc890ec894622646cbb33880dbdfa0eee8.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Lưu <code>.agent/reports/implementation/T-050-@duy12345-6789.html</code> theo CR-100/103. Chỉ xác nhận implementation; acceptance chờ independent review/QA.</p>
+</article></main></body></html>
