@@ -651,7 +651,6 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
-        "422": { $ref: "#/components/responses/Unprocessable" }
   /api/leases/{id}/renew/:
     post:
       operationId: leases_renew
@@ -743,6 +742,7 @@ paths:
               schema: { $ref: "#/components/schemas/Issue" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
   /api/issues/{id}/decisions/:
@@ -814,7 +814,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedIssueList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/issues/{id}/adjudications/:
     post:
       operationId: issues_adjudicate
@@ -1616,7 +1618,7 @@ components:
         failed_units: { type: integer }
     Run:
       type: object
-      required: [id, snapshot_id, config_version_id, seed, status, is_final, engines, created_by, created_at]
+      required: [id, snapshot_id, config_version_id, seed, status, is_final, engines, created_by, created_at, origin_run_id, score_version, model_artifact, finished_at]
       properties:
         id: { type: integer }
         snapshot_id: { type: integer }
@@ -1942,7 +1944,7 @@ components:
           items: { $ref: "#/components/schemas/EngineUnitResult" }
     RankedFrame:
       type: object
-      required: [frame_id, frame_key, rank, score, baseline_score, score_version, queue, source, review_state, missing_evidence, issue_counts, explanation]
+      required: [frame_id, frame_key, rank, score, baseline_score, score_version, queue, source, review_state, missing_evidence, issue_counts, explanation, lease_holder_user_id]
       properties:
         frame_id: { type: integer }
         frame_key: { $ref: "#/components/schemas/FrameKey" }
@@ -2208,7 +2210,7 @@ components:
         recorded_at: { type: string, format: date-time }
     FrameIssues:
       type: object
-      required: [frame, engines, issues]
+      required: [frame, engines, issues, guideline_version]
       properties:
         frame: { $ref: "#/components/schemas/FrameSummary" }
         guideline_version: { type: string, nullable: true }
@@ -2308,7 +2310,7 @@ components:
         override_reason bắt buộc nếu Super Admin dùng quyền ghi đè.
     IssueDecision:
       type: object
-      required: [id, issue_id, action, actor_user_id, revision, created_at]
+      required: [id, issue_id, action, actor_user_id, revision, created_at, family, severity, reason, rule_id]
       properties:
         id: { type: integer }
         issue_id: { type: integer }
@@ -2316,7 +2318,9 @@ components:
         actor_user_id: { type: integer }
         revision: { type: string }
         family: { $ref: "#/components/schemas/IssueFamily" }
-        severity: { $ref: "#/components/schemas/Severity" }
+        severity:
+          allOf: [{ $ref: "#/components/schemas/Severity" }]
+          nullable: true
         reason: { type: string, nullable: true }
         rule_id: { type: string, nullable: true }
         created_at: { type: string, format: date-time }
@@ -2332,7 +2336,7 @@ components:
         override_reason: { type: string }
     Adjudication:
       type: object
-      required: [id, issue_id, outcome, actor_user_id, rule_id, reason, case_version, created_at]
+      required: [id, issue_id, outcome, actor_user_id, rule_id, reason, case_version, created_at, correct_label]
       properties:
         id: { type: integer }
         issue_id: { type: integer }
@@ -2368,7 +2372,7 @@ components:
         override_reason: { type: string }
     ReworkRequest:
       type: object
-      required: [id, issue_id, annotator_user_id, status, original_revision, due_at]
+      required: [id, issue_id, annotator_user_id, status, original_revision, due_at, submitted_revision, recheck_run_id, cvat_deep_link]
       properties:
         id: { type: integer }
         issue_id: { type: integer }
@@ -2736,7 +2740,7 @@ components:
           items: { $ref: "#/components/schemas/ConfigVersion" }
     PaginatedIssueList:
       type: object
-      required: [results]
+      required: [results, next, previous]
       properties:
         next: { type: string, nullable: true }
         previous: { type: string, nullable: true }
@@ -2754,7 +2758,7 @@ components:
           items: { $ref: "#/components/schemas/Run" }
     PaginatedRankedFrameList:
       type: object
-      required: [source, content_hash, ranking_hash, results]
+      required: [source, content_hash, ranking_hash, results, next, previous]
       properties:
         next: { type: string, nullable: true }
         previous: { type: string, nullable: true }

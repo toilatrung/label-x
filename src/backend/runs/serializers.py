@@ -9,7 +9,9 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from orchestration.models import CandidateRecord
+from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
+from review.models import FrameReview
 from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
 
 
@@ -41,7 +43,7 @@ class EngineRunStatusSerializer(serializers.Serializer[Any]):
 class RunSerializer(serializers.ModelSerializer[Any]):
     """Schema for Run matching OpenAPI components.schemas.Run."""
 
-    model_artifact = ModelArtifactSerializer(read_only=True)
+    model_artifact = ModelArtifactSerializer(read_only=True, allow_null=True)
     engines = serializers.SerializerMethodField()
     origin_run_id = serializers.IntegerField(
         source="origin_run.id", allow_null=True, read_only=True
@@ -66,6 +68,7 @@ class RunSerializer(serializers.ModelSerializer[Any]):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(EngineStatusSerializer(many=True))
     def get_engines(self, obj: QCRun) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
         for er in obj.engine_results.all():
@@ -256,10 +259,14 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     score = serializers.SerializerMethodField()
     baseline_score = serializers.SerializerMethodField()
     queue = serializers.SerializerMethodField()
-    source: Any = serializers.CharField(source="ranking.source", read_only=True)
+    source: Any = serializers.ChoiceField(
+        choices=["risk", "random_audit"], source="ranking.source", read_only=True
+    )
     score_version = serializers.CharField(source="ranking.score_version", read_only=True)
     review_state = serializers.SerializerMethodField()
     lease_holder_user_id = serializers.SerializerMethodField()
+    issue_counts = serializers.DictField(child=serializers.IntegerField(), read_only=True)
+    explanation = serializers.DictField(read_only=True)
 
     class Meta:
         model = RunRankingEntry
@@ -280,6 +287,7 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(FrameKeySerializer)
     def get_frame_key(self, obj: RunRankingEntry) -> dict[str, int]:
         return {
             "cvat_task_id": obj.snapshot_frame.snapshot_job.cvat_task_id,
@@ -292,13 +300,16 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     def get_baseline_score(self, obj: RunRankingEntry) -> float:
         return float(obj.baseline_score)
 
+    @extend_schema_field(serializers.ChoiceField(choices=["risk", "random"]))
     def get_queue(self, obj: RunRankingEntry) -> str:
         return "random" if obj.ranking.source == "random_audit" else "risk"
 
+    @extend_schema_field(serializers.ChoiceField(choices=FrameReview.State.values))
     def get_review_state(self, obj: RunRankingEntry) -> str:
         # Annotated by RunRankingView from persisted FrameReview/Lease rows (expiry-aware).
         return str(getattr(obj, "effective_review_state", None) or "unreviewed")
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_lease_holder_user_id(self, obj: RunRankingEntry) -> int | None:
         holder = getattr(obj, "active_lease_holder_id", None)
         return int(holder) if holder is not None else None
@@ -307,7 +318,7 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
-    source: Any = serializers.CharField()
+    source: Any = serializers.ChoiceField(choices=["risk", "random_audit"])
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
     results = RankedFrameSerializer(many=True)

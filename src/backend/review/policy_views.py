@@ -33,7 +33,6 @@ class ReviewPolicyView(APIView):
         operation_id="review_policy_retrieve",
         responses={
             200: PolicySerializer,
-            401: ErrorSerializer,
             403: ErrorSerializer,
             503: ErrorSerializer,
         },
