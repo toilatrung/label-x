@@ -13,7 +13,6 @@ import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
 import { ReviewDecisionForm, ISSUE_STATE_LABELS } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup';
 
 type FrameIssues = components['schemas']['FrameIssues'];
@@ -673,7 +672,7 @@ export function ReviewWorkspace({
   if (loading) {
     return (
       <div className="lx-card lx-card__body lx-state--center">
-        <p className="lx-muted">Đang tải dữ liệu khung hình và issue từ API thật...</p>
+        <p className="lx-muted">Đang tải dữ liệu khung hình và issue...</p>
       </div>
     );
   }
@@ -1042,7 +1041,7 @@ export function ReviewWorkspace({
                     {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor.objects?.[0]?.id ?? 'N/A'}
                   </dd>
                   <dt>Annotation hiện tại</dt>
-                  <dd>{activeIssue.evidence?.[0]?.actual || 'Server chưa cung cấp nhãn'}</dd>
+                  <dd>{activeIssue.evidence?.[0]?.actual || 'Không có dữ liệu nhãn'}</dd>
                   <dt>Nguồn</dt>
                   <dd>
                     {activeIssue.origin === 'engine' ? 'Mô hình tự động' : 'Reviewer tạo thủ công'}
@@ -1084,7 +1083,7 @@ export function ReviewWorkspace({
                     </div>
                   ) : (
                     // TODO(backend): GET /api/issues/{id}/similar-cases/ — case tương tự đã phân xử
-                    <NotConnectedNotice detail="Chưa có case tương tự đã phân xử cho issue này" />
+                    null
                   )}
                 </details>
 

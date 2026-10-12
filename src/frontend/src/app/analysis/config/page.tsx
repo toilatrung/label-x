@@ -13,8 +13,6 @@ import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { createConfig, createRun, cursorFrom, listConfigs, listSnapshots, publishConfig, type ConfigVersion, type ConfigVersionCreate, type RunCreate } from '@/lib/execution/api';
 import { ENGINES_META, EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 
 const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm'] as const;
@@ -131,16 +129,16 @@ function ConfigContent() {
             error={configs.isError ? errorMessage(configs.error) : null}
             emptyTitle={configs.data?.results.length === 0 ? 'Chưa có cấu hình đã phát hành' : 'Chưa chọn phiên bản cấu hình'}
             emptyDescription={configs.data?.results.length === 0
-              ? 'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'
+              ? 'Chưa có phiên bản cấu hình engine đã phát hành. Trạng thái này không đồng nghĩa engine đang tắt.'
               : 'Chọn một phiên bản cấu hình đã phát hành ở cột "Sẵn sàng chạy" để xem chi tiết ngưỡng kiểm tra engine.'}
           />
           {activeConfig && <details className="lx-card lx-card__body"><summary>Ngưỡng và model tham chiếu (JSON)</summary>
             <pre className="lx-code" aria-label="Ngưỡng và model tham chiếu">{JSON.stringify({ thresholds: activeConfig.thresholds, models: activeConfig.models }, null, 2)}</pre></details>}
         </div>
         <section className="lx-card" aria-label="Lấy mẫu">
-          <header className="lx-card__head"><h2 className="lx-h2">Lấy mẫu</h2><div className="lx-row"><SampleDataBadge /><Link className="lx-link lx-text-13" href="/calibration/audit-sampling">Xem chi tiết lấy mẫu</Link></div></header>
+          <header className="lx-card__head"><h2 className="lx-h2">Lấy mẫu</h2><div className="lx-row"><Link className="lx-link lx-text-13" href="/calibration/audit-sampling">Xem chi tiết lấy mẫu</Link></div></header>
           {/* TODO(backend): add typed sampling policy fields to ConfigVersion instead of illustrative disabled controls. */}
-          <div className="lx-card__body lx-stack"><NotConnectedNotice detail="API ConfigVersion chưa có trường chính sách lấy mẫu có kiểu dữ liệu xác định; các điều khiển bên dưới chỉ minh họa và không ghi dữ liệu." />
+          <div className="lx-card__body lx-stack">
             <div className="lx-grid lx-grid--3">
               <div className="lx-field"><label className="lx-label" htmlFor="random-sample">Kiểm tra ngẫu nhiên · số frame</label><input className="lx-input" id="random-sample" value="100" disabled /><span className="lx-hint">Dùng để ước lượng chất lượng toàn Dataset</span></div>
               <div className="lx-field"><label className="lx-label" htmlFor="risk-sample">Lấy mẫu theo rủi ro · số frame</label><input className="lx-input" id="risk-sample" value="100" disabled /><span className="lx-hint">Dùng để tìm lỗi, không suy ra tỷ lệ lỗi</span></div>
@@ -171,7 +169,6 @@ function ConfigContent() {
             <dt>Engine</dt><dd>{activeConfig ? `${enabledEngineCount} bật · ${ENGINES.length - enabledEngineCount} tắt` : '—'}</dd>
             <dt>Thời gian dự kiến</dt><dd>—</dd>
           </dl>
-          <NotConnectedNotice detail="API chưa cung cấp thời gian chạy dự kiến; giao diện không tự suy đoán từ dữ liệu hiện có." />
           <div className="lx-field"><label className="lx-label" htmlFor="analysis-seed">Seed</label><input className="lx-input" id="analysis-seed" type="number" value={seed} onChange={(e) => { setSeed(Number(e.target.value)); setPending(null); }} /></div>
           {activeConfig && enabledEngineCount < ENGINES.length && <div className="lx-callout lx-callout--warning"><span className="lx-callout__text">{ENGINES.length - enabledEngineCount} engine đang tắt, nên kết quả sẽ ghi là Not checked.</span></div>}
           <ol className="lx-muted lx-text-13"><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>

@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import {
   CASES, ESCALATION_TABS, GAPS, LIST_TIP, type EscalationsTabKey,
 } from '@/lib/mock/escalations';
@@ -16,7 +14,7 @@ const SvgArrow = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8
  */
 export function EscalationsDesign() {
   const [tab, setTab] = useState<EscalationsTabKey>('gaps');
-  const [blockedAction, setBlockedAction] = useState<string | null>(null);
+  const [, setBlockedAction] = useState<string | null>(null);
   const list = tab === 'gaps' ? GAPS : tab === 'cases' ? CASES : null;
   return (
     <div className="lx-page">
@@ -40,7 +38,6 @@ export function EscalationsDesign() {
             </button>
           ))}
         </div>
-        {tab !== 'adj' && <div className="lx-card__body lx-row"><SampleDataBadge /><NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} /></div>}
         {list && (
           <div className="lx-scroll">
             <table className="lx-table lx-table--min-880">

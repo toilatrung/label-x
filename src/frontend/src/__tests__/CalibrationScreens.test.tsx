@@ -8,14 +8,11 @@ import { CalibrationBody, CalibrationHeader } from '@/components/calibration/Cal
 
 import { canAccessCalibration } from '@/lib/auth/roles';
 
-const NOTICE = 'Chức năng vẫn chưa được kết nối với server';
-
 describe('Performance Evaluation', () => {
-  it('shows standard figures, sample label and notice', () => {
+  it('shows every figure from the design without implementation notices', () => {
     render(<><PerformanceHeader /><PerformanceBody /></>);
     expect(screen.getByText('94.1%')).toBeTruthy();
-    expect(screen.getByText('Dữ liệu minh họa')).toBeTruthy();
-    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.queryByRole('status')).toBeNull();
     expect(screen.getAllByRole('row')).toHaveLength(4);
     expect(screen.getByRole('img', { name: '76%' })).toBeTruthy();
     expect((screen.getByLabelText('Phạm vi đánh giá') as HTMLSelectElement).disabled).toBe(true);
@@ -28,11 +25,10 @@ describe('Benchmark', () => {
     render(<><BenchmarkHeader /><BenchmarkBody /></>);
     expect(screen.getAllByRole('row')).toHaveLength(4);
     expect(screen.getByText('Benchmark đã khoá không thể sửa. Cần thay đổi thì tạo phiên bản mới.')).toBeTruthy();
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Tạo benchmark' }));
     expect(screen.queryByText(/thành công|đã tạo/i)).toBeNull();
-    expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
 
@@ -46,17 +42,15 @@ describe('Audit Sampling', () => {
   });
 });
 
-describe('Write actions without a server', () => {
-  it('emphasizes the existing notice when Tạo mẫu mới or Giao bài hiệu chỉnh is pressed', () => {
+describe('Write actions', () => {
+  it('does not expose implementation notices', () => {
     const { unmount } = render(<><AuditSamplingHeader /><AuditSamplingBody /></>);
     fireEvent.click(screen.getByRole('button', { name: 'Tạo mẫu mới' }));
-    expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(document.activeElement).toBe(screen.getByRole('status').closest('[data-attention]'));
+    expect(screen.queryByRole('status')).toBeNull();
     unmount();
     render(<><CalibrationHeader /><CalibrationBody /></>);
     fireEvent.click(screen.getByRole('button', { name: 'Giao bài hiệu chỉnh' }));
-    expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
 

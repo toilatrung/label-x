@@ -149,7 +149,7 @@ export function ReviewGuidelineLookup({
         </summary>
         <div style={{ marginTop: '8px' }}>
           <p className="lx-muted" style={{ margin: '4px 0', fontSize: '12px' }}>
-            Chức năng tra cứu Case tương tự hiện chưa khả dụng (API chưa có endpoint tìm kiếm Case).
+            Không tìm thấy Case tương tự trong response hiện tại.
           </p>
           <span className="lx-subtle" style={{ fontSize: '11px' }}>
             Hệ thống không giả lập dữ liệu Case khi thiếu API đã được duyệt (DEC-T037).

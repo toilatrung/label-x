@@ -7,7 +7,6 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { apiClient, ApiRequestError } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import type { components } from '@/lib/api/contract';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { canAccessConfiguration, ROLE_LABELS } from '@/lib/auth/roles';
 import type { UserRole } from '@/types/auth';
 
@@ -72,7 +71,6 @@ function WorkflowPermissionsView() {
           <div className="lx-card__head"><h2 className="lx-h2">Quy tắc quy trình</h2></div>
           <div className="lx-card__body lx-stack lx-stack--rows">
             {/* TODO(backend): PATCH /api/auth/workflow-permissions/rules/{rule}/ (bật/tắt quy tắc); công tắc chỉ phản ánh `enforced`, không ghi */}
-            <NotConnectedNotice detail="Công tắc quy tắc chỉ hiển thị trạng thái áp dụng hiện tại" />
             {data?.rules.map(rule => <div key={rule.rule} className="lx-row lx-row--between lx-row--nowrap">
               <div>
                 <div className="lx-cell__main">{rule.name}</div>

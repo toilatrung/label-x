@@ -23,14 +23,13 @@ async function setup(username: string) {
 }
 
 describe('Rework Tracking (FE-06)', () => {
-  it('renders metrics, tabs and sample rows with the not-connected notice, without extra API calls', async () => {
+  it('renders metrics, tabs and every design row without implementation notices', async () => {
     const api = await setup('reviewer');
     expect(await screen.findByRole('heading', { name: 'Rework Tracking' })).toBeDefined();
     expect(screen.getByText('Tổng yêu cầu sửa')).toBeDefined();
     expect(screen.getByText('86.0%')).toBeDefined();
     expect(screen.getByText('74 / 86 yêu cầu đã đóng')).toBeDefined();
-    expect(screen.getByText('Dữ liệu minh họa')).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByRole('status')).toBeNull();
     expect(screen.getByText('RW-0212')).toBeDefined();
     fireEvent.click(screen.getByRole('tab', { name: /Chờ xác minh/ }));
     expect(screen.getByText('RW-0198')).toBeDefined();

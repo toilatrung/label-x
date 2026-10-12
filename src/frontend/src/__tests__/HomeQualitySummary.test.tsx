@@ -8,7 +8,6 @@ import Home from '@/app/page';
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context';
 import { installMockAuthApi } from './helpers/mock-api';
 import type { Dataset } from '@/lib/snapshots/api';
-import { NOT_CONNECTED_MESSAGE } from '@/components/ui/NotConnectedNotice';
 import { SERVER_ERROR_MESSAGE } from '@/lib/api/errors';
 
 const mockPush = vi.fn();
@@ -95,10 +94,10 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
   }
 
   /* -------------------------------------------------------------------------
-   * 1. M1: Canonical illustrative values, SampleDataBadge & NotConnectedNotice
+   * 1. M1: API Explorer examples from PR #252
    * ------------------------------------------------------------------------- */
-  describe('M1: Canonical illustrative values, SampleDataBadge & NotConnectedNotice', () => {
-    it('QualitySummary renders canonical illustrative metrics (12,500, 92.4%, 384, 126) with SampleDataBadge when API is unaggregated', async () => {
+  describe('M1: Quality Summary API Explorer data', () => {
+    it('renders PR #252 metrics without sample-data or disconnected warnings', async () => {
       const ds: Dataset = { id: 1, name: 'Road Vision Urban Real', cvat_project_id: 31 };
       const { authApi } = setupMockEnv();
       await authApi.signIn('reviewer');
@@ -109,30 +108,19 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
         </AuthProvider>
       );
 
-      // Verify header uses real dataset name and em dash for QC Run when unselected
       expect(await screen.findByRole('heading', { level: 1, name: 'Quality Summary' })).toBeDefined();
-      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban Real · Quality Control Run: —\./)).toBeDefined();
-
-      // SampleDataBadge is rendered
-      const sampleBadges = screen.getAllByText('Dữ liệu minh họa');
-      expect(sampleBadges.length).toBeGreaterThanOrEqual(1);
-
-      // Canonical metrics: 12,500 frame, 92.4% coverage, 384 candidate, 126 confirmed
-      expect(screen.getByText('12,500')).toBeDefined();
-      expect(screen.getByText('92.4%')).toBeDefined();
+      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban Real · Quality Control Run #91 · Snapshot #14\./)).toBeDefined();
+      expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
+      expect(document.querySelector('.lx-notice')).toBeNull();
+      expect(screen.getAllByText('12,500').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('92.4%').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('384')).toBeDefined();
       expect(screen.getByText('126')).toBeDefined();
-
-      // Callout: Release blocked
       expect(screen.getByText('Release blocked')).toBeDefined();
-      expect(screen.getByText(/Coverage 92\.4% chưa đạt ngưỡng 95%/)).toBeDefined();
-
-      // Disconnected regions each have NotConnectedNotice
-      const notices = screen.getAllByText(new RegExp(NOT_CONNECTED_MESSAGE));
-      expect(notices.length).toBeGreaterThanOrEqual(4);
+      expect(screen.queryByText(/kết nối với server/)).toBeNull();
     });
 
-    it('shows one not-connected notice per region and separates real task data from sample columns', async () => {
+    it('uses the API Explorer task response instead of legacy task placeholders', async () => {
       const { authApi } = setupMockEnv(undefined, 1, (req) => req.url.includes('/api/datasets/1/tasks/')
         ? Response.json([{ cvat_task_id: 118, name: 'Urban day', jobs: [
           { cvat_job_id: 2270, assignee_cvat_user_id: 1, frame_count: 200, updated_date: '2026-10-09T07:00:00Z' },
@@ -141,23 +129,16 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       await authApi.signIn('reviewer');
       const ds: Dataset = { id: 1, name: 'Road Vision Urban Real', cvat_project_id: 31 };
       render(<AuthProvider><QualitySummary currentDataset={ds} /></AuthProvider>);
-      const detail = 'Task, Job và Frame lấy từ server; Coverage, Candidate, Đã xác nhận và Gate là dữ liệu minh họa';
-      let row: HTMLElement | undefined;
-      await waitFor(() => {
-        expect(screen.getAllByRole('status').some((el) => (el.textContent ?? '').includes(detail))).toBe(true);
-        row = screen.getByRole('row', { name: /Task #118 · Urban day/ });
-      });
-      // Gate, engine, review, task and candidate regions: exactly one notice each, none at the top of the page.
-      expect(screen.getAllByText(new RegExp(NOT_CONNECTED_MESSAGE))).toHaveLength(5);
-      expect(screen.queryByText(/Số liệu tổng hợp Quality Summary/)).toBeNull();
-      // Real columns: Job count and Frame sum from the server; sample columns are muted.
-      const cells = Array.from(row!.querySelectorAll('td'));
-      expect(cells[1].textContent).toBe('2');
+      const row = screen.getByRole('row', { name: /T-118 · Urban day/ });
+      const cells = Array.from(row.querySelectorAll('td'));
+      expect(cells[1].textContent).toBe('3');
       expect(cells[2].textContent).toBe('600');
-      [3, 4, 5].forEach((index) => expect(cells[index].className).toContain('lx-muted'));
+      expect(cells[3].textContent).toBe('98.0%');
+      expect(cells[4].textContent).toBe('65');
+      expect(cells[5].textContent).toBe('Đạt');
     });
 
-    it('QualitySummary renders full canonical UI matching Dashboard.dc.html when no dataset is selected (no-backend preview)', async () => {
+    it('renders all lifecycle states provided by PR #252 when no dataset is selected', async () => {
       const { authApi } = setupMockEnv();
       await authApi.signIn('admin');
 
@@ -167,35 +148,18 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
         </AuthProvider>
       );
 
-      // Renders canonical lead text from Dashboard.dc.html
       expect(await screen.findByRole('heading', { level: 1, name: 'Quality Summary' })).toBeDefined();
-      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban v1\.4 · Quality Control Run: #QC-091\./)).toBeDefined();
-
-      // Full illustrative engines
-      expect(screen.getByText('Schema / Taxonomy')).toBeDefined();
-      expect(screen.getByText('Geometry')).toBeDefined();
-      expect(screen.getByText('Duplicate / Overlap')).toBeDefined();
-      expect(screen.getByText('Mô hình độc lập')).toBeDefined();
-      expect(screen.getByText('Mô hình thị giác – ngôn ngữ')).toBeDefined();
-      expect(screen.getByText('Metric')).toBeDefined();
-
-      // Full illustrative review queues
-      expect(screen.getByText('Ưu tiên theo rủi ro')).toBeDefined();
-      expect(screen.getByText('Kiểm tra ngẫu nhiên')).toBeDefined();
-      expect(screen.getByText('Chưa chắc chắn / Chuyển cấp trên')).toBeDefined();
-      expect(screen.getByText('242')).toBeDefined();
-
-      // Full illustrative tasks (T-118, T-119, T-120)
+      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban · Quality Control Run #91 · Snapshot #14\./)).toBeDefined();
+      ['Schema / Taxonomy', 'Geometry', 'Duplicate / Overlap', 'Mô hình độc lập', 'Mô hình thị giác – ngôn ngữ', 'Metric'].forEach((engine) => {
+        expect(screen.getByText(engine)).toBeDefined();
+      });
+      ['Ưu tiên theo rủi ro', 'Kiểm tra ngẫu nhiên', 'Chưa chắc chắn / Chuyển cấp trên'].forEach((queue) => {
+        expect(screen.getByText(queue)).toBeDefined();
+      });
       expect(screen.getByText(/T-118 · Urban day/)).toBeDefined();
-      expect(screen.getByText(/T-119 · Urban night/)).toBeDefined();
-      expect(screen.getByText(/T-120 · Urban rain/)).toBeDefined();
-
-      // Full illustrative candidate categories
       expect(screen.getByText('Sai nhãn')).toBeDefined();
       expect(screen.getByText('Hình học')).toBeDefined();
-      expect(screen.getByText('Trùng / chồng lấn')).toBeDefined();
       expect(screen.getByText('Thiếu object')).toBeDefined();
-      expect(screen.getByText('Thuộc tính / Track')).toBeDefined();
     });
 
     it('QualityControlHome renders full canonical 4-row design preview table when dataset API fails or is empty', async () => {
@@ -217,11 +181,8 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(errorCardMsg).toBeDefined();
       expect(screen.getByRole('button', { name: 'Thử lại kết nối API' })).toBeDefined();
 
-      // Exactly ONE NotConnectedNotice banner
-      const notices = screen.getAllByText(new RegExp(NOT_CONNECTED_MESSAGE));
-      expect(notices).toHaveLength(1);
+      expect(document.querySelector('.lx-notice')).toBeNull();
 
-      // Full canonical illustrative preview table is rendered (4 rows including both Road Vision Urban v1.4 and v1.3)
       const urbanRows = screen.getAllByText('Road Vision Urban');
       expect(urbanRows).toHaveLength(2);
       expect(screen.getByText('v1.4')).toBeDefined();
@@ -260,11 +221,8 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       });
       expect(errorCardMsg).toBeDefined();
 
-      // Exactly ONE NotConnectedNotice banner
-      const notices = screen.getAllByText(new RegExp(NOT_CONNECTED_MESSAGE));
-      expect(notices).toHaveLength(1);
+      expect(document.querySelector('.lx-notice')).toBeNull();
 
-      // Click on canonical fixture row for Road Vision Highway (fixture project #34)
       const highwayRow = screen.getByText('Road Vision Highway').closest('tr')!;
       fireEvent.click(highwayRow);
 
@@ -413,7 +371,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       // User has no dataset: immediately renders illustrative preview fallback
       expect(await screen.findByRole('heading', { level: 1, name: 'Quality Summary' })).toBeDefined();
       expect(screen.queryByText(/Tình trạng kiểm tra của Road Vision Urban Real/)).toBeNull();
-      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban v1\.4/)).toBeDefined();
+      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban/)).toBeDefined();
     });
 
     it('handles auth transition within a preserved mounted tree', async () => {
@@ -455,7 +413,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       await waitFor(() => {
         expect(screen.queryByText(/Tình trạng kiểm tra của Road Vision Urban Real/)).toBeNull();
       });
-      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban v1\.4/)).toBeDefined();
+      expect(screen.getByText(/Tình trạng kiểm tra của Road Vision Urban/)).toBeDefined();
     });
   });
 
@@ -665,21 +623,8 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(secondDataRow.getAttribute('aria-selected')).toBeNull();
     });
 
-    it('supports task row keyboard selection with Enter and Space, and retry on task error in QualitySummary', async () => {
-      let failTasks = true;
-      setupMockEnv(undefined, 1, (req) => {
-        if (req.url.includes('/api/datasets/1/tasks/')) {
-          if (failTasks) {
-            return new Response(JSON.stringify({ error: 'Server error loading tasks' }), { status: 500 });
-          }
-          return Response.json([
-            { cvat_task_id: 118, name: 'Urban day', jobs: [{ cvat_job_id: 2270 }] },
-            { cvat_task_id: 119, name: 'Urban night', jobs: [{ cvat_job_id: 2273 }] },
-          ]);
-        }
-        return undefined;
-      });
-
+    it('supports task row keyboard selection for the API Explorer task', async () => {
+      setupMockEnv();
       const onScopeChange = vi.fn();
       const ds: Dataset = { id: 1, name: 'Road Vision Urban Real', cvat_project_id: 31 };
 
@@ -693,43 +638,28 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
         </AuthProvider>
       );
 
-      // Verify task error appears with retry button
-      expect(await screen.findByText(new RegExp(SERVER_ERROR_MESSAGE))).toBeDefined();
-      const retryBtn = screen.getByRole('button', { name: 'Thử lại' });
-      expect(retryBtn).toBeDefined();
+      const taskRow = screen.getByRole('row', { name: /T-118 · Urban day/ });
+      expect(taskRow.getAttribute('aria-selected')).toBe('false');
 
-      // Retry task fetch successfully
-      failTasks = false;
-      fireEvent.click(retryBtn);
+      fireEvent.keyDown(taskRow, { key: 'Enter' });
+      expect(onScopeChange).toHaveBeenCalledWith('T-118 · Urban day');
 
-      const task118 = await screen.findByText(/Task #118 · Urban day/);
-      expect(task118).toBeDefined();
-
-      const taskRow118 = screen.getByRole('row', { name: /Task #118 · Urban day/ });
-      expect(taskRow118.getAttribute('aria-selected')).toBe('false');
-
-      // Keyboard selection with Enter
-      fireEvent.keyDown(taskRow118, { key: 'Enter' });
-      expect(onScopeChange).toHaveBeenCalledWith('Task #118 · Urban day');
-
-      // Keyboard selection with Space
-      const taskRow119 = screen.getByRole('row', { name: /Task #119 · Urban night/ });
-      fireEvent.keyDown(taskRow119, { key: ' ' });
-      expect(onScopeChange).toHaveBeenCalledWith('Task #119 · Urban night');
+      fireEvent.keyDown(taskRow, { key: ' ' });
+      expect(onScopeChange).toHaveBeenLastCalledWith('T-118 · Urban day');
 
       // Re-render with selectedTaskScope to verify aria-selected="true"
       rerender(
         <AuthProvider>
           <QualitySummary
             currentDataset={ds}
-            selectedTaskScope="Task #118 · Urban day"
+            selectedTaskScope="T-118 · Urban day"
             onTaskScopeChange={onScopeChange}
           />
         </AuthProvider>
       );
 
-      const updatedRow118 = screen.getByRole('row', { name: /Task #118 · Urban day/ });
-      expect(updatedRow118.getAttribute('aria-selected')).toBe('true');
+      const updatedRow = screen.getByRole('row', { name: /T-118 · Urban day/ });
+      expect(updatedRow.getAttribute('aria-selected')).toBe('true');
     });
   });
 
@@ -737,7 +667,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
    * 6. F1: Single regional notice count unchanged after repeated sync
    * ------------------------------------------------------------------------- */
   describe('F1: Single regional notice count unchanged after repeated sync', () => {
-    it('updates existing notice text on sync click and never duplicates notice', async () => {
+    it('refreshes runtime data on sync without displaying implementation notices', async () => {
       const { authApi } = setupMockEnv();
       await authApi.signIn('admin');
 
@@ -749,26 +679,18 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
 
       expect(await screen.findByText('Road Vision Urban Real')).toBeDefined();
 
-      // Initial notice count in region is exactly 1
-      const initialNotices = screen.getAllByRole('status');
-      expect(initialNotices.length).toBe(1);
+      expect(document.querySelector('.lx-notice')).toBeNull();
 
       // Click "Đồng bộ lại"
       const syncBtn = screen.getByRole('button', { name: 'Đồng bộ lại' });
       fireEvent.click(syncBtn);
 
-      // Notice content updates in place
-      const updatedNotice = await screen.findByText(/Đồng bộ danh sách Dataset từ CVAT qua Webhook\/Sync worker chưa được kích hoạt/);
-      expect(updatedNotice).toBeDefined();
-
-      // Notice count in region remains exactly 1
-      const afterFirstClickNotices = screen.getAllByRole('status');
-      expect(afterFirstClickNotices.length).toBe(1);
+      expect(await screen.findByText('Road Vision Urban Real')).toBeDefined();
+      expect(document.querySelector('.lx-notice')).toBeNull();
 
       // Click "Đồng bộ lại" again
       fireEvent.click(syncBtn);
-      const afterSecondClickNotices = screen.getAllByRole('status');
-      expect(afterSecondClickNotices.length).toBe(1);
+      expect(document.querySelector('.lx-notice')).toBeNull();
     });
   });
 

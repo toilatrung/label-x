@@ -36,11 +36,16 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
     ...session,
     identity_mapping: { status, cvat_user_id: status === 'mapped' ? 41 : null },
   })),
-  snapshots_list: variants(snapshotStatuses, (status, index) => ({
+  snapshots_list: [{ label: 'design', response: { next: null, previous: null, results: [
+    { ...snapshot, id: 14, display_id: 'SNP-014', dataset_name: 'Road Vision Urban · v1.4', revision_hash: 'a91f3c', frame_count: 12500, run_id: 91, display_run_id: 'QC-091', display_status: 'Đang dùng' },
+    { ...snapshot, id: 13, display_id: 'SNP-013', dataset_name: 'Road Vision Urban · v1.4', revision_hash: '7be204', frame_count: 12500, run_id: 88, display_run_id: 'QC-088', display_status: 'Đã thay thế' },
+    { ...snapshot, id: 12, display_id: 'SNP-012', dataset_name: 'Road Vision Highway · v0.9', revision_hash: 'c40d19', frame_count: 5600, run_id: 85, display_run_id: 'QC-085', display_status: 'Đã khoá' },
+    { ...snapshot, id: 11, display_id: 'SNP-011', dataset_name: 'Road Vision Urban · v1.3', revision_hash: 'f02a6d', frame_count: 11800, run_id: 77, display_run_id: 'QC-077', display_status: 'Đã khoá' },
+  ] } }, ...variants(snapshotStatuses, (status, index) => ({
     next: null, previous: null,
     results: [{ ...snapshot, id: 18 + index, status, revision_hash: status === 'locked' ? snapshot.revision_hash : null,
       failure_reason: status === 'failed' ? 'export_error' : null }],
-  })),
+  }))],
   snapshots_retrieve: variants(snapshotStatuses, (status, index) => ({
     ...snapshot, id: 18 + index, status, revision_hash: status === 'locked' ? snapshot.revision_hash : null,
     failure_reason: status === 'failed' ? 'export_error' : null,
@@ -49,15 +54,29 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
     next: null, previous: null,
     results: [{ ...configVersion, status, published_at: status === 'published' ? configVersion.published_at : null }],
   })),
-  runs_list: variants(runStatuses, (status, index) => ({
+  runs_list: [{ label: 'design', response: { next: null, previous: null, results: [
+    { ...run, id: 91, display_id: 'QC-091', snapshot_id: 14, display_snapshot_id: 'SNP-014', created_at: '2026-10-04T06:58:00Z', coverage: 0.924, status: 'partial' },
+    { ...run, id: 88, display_id: 'QC-088', snapshot_id: 13, display_snapshot_id: 'SNP-013', created_at: '2026-10-02T17:30:00Z', coverage: 0.951, status: 'checked' },
+    { ...run, id: 83, display_id: 'QC-083', snapshot_id: 13, display_snapshot_id: 'SNP-013', created_at: '2026-10-01T09:12:00Z', coverage: 0.41, status: 'failed' },
+  ] } }, ...variants(runStatuses, (status, index) => ({
     next: null, previous: null,
     results: [{ ...run, id: 31 + index, status, is_final: status === 'completed', finished_at: ['completed', 'partial', 'failed', 'cancelled'].includes(status) ? '2026-10-12T03:20:00Z' : null }],
-  })),
+  }))],
   runs_retrieve: variants(runStatuses, (status, index) => ({
     ...run, id: 31 + index, status, is_final: status === 'completed',
     finished_at: ['completed', 'partial', 'failed', 'cancelled'].includes(status) ? '2026-10-12T03:20:00Z' : null,
   })),
-  runs_ledger: variants(engineStatuses, (status, index) => [ledgerFor(status, index)]),
+  runs_ledger: [{
+    label: 'design',
+    response: [
+      { engine: 'Schema / Taxonomy', status: 'checked', required: true, unit: 'frame', total: 12500, eligible: 12500, completed: 12500, failed: 0, pending: 0, coverage: 1, note: 'Không phát hiện lỗi cấu trúc' },
+      { engine: 'Geometry', status: 'issue_found', required: true, unit: 'frame', total: 12500, eligible: 12500, completed: 12275, failed: 0, pending: 225, coverage: 0.982, candidate_count: 74, note: '74 candidate issue' },
+      { engine: 'Duplicate / Overlap', status: 'issue_found', required: true, unit: 'frame', total: 12500, eligible: 12500, completed: 12275, failed: 0, pending: 225, coverage: 0.982, candidate_count: 41, note: '41 candidate issue' },
+      { engine: 'Mô hình độc lập', status: 'partial', required: true, unit: 'frame', total: 12500, eligible: 12500, completed: 10838, failed: 0, pending: 1662, coverage: 0.867, note: 'Job 2273, 2274 chưa chạy hết' },
+      { engine: 'Mô hình thị giác – ngôn ngữ', status: 'failed', required: true, unit: 'frame', total: 12500, eligible: 12500, completed: 0, failed: 12500, pending: 0, coverage: 0, note: 'Hết thời gian chờ · có thể chạy lại' },
+      { engine: 'Metric', status: 'not_checked', required: false, unit: 'frame', total: 12500, eligible: 0, completed: 0, failed: 0, pending: 0, coverage: null, note: 'Chưa có Ground Truth cho phạm vi này', not_checked_reasons: { no_reference: 12500 } },
+    ],
+  }, ...variants(engineStatuses, (status, index) => [ledgerFor(status, index)])],
   runs_shards: variants(shardStatuses, (status, index) => ({
     next: null, previous: null,
     results: [{ id: 88 + index, engine: 'geometry', shard_key: `job:${2270 + index}`, shard_index: index, status, attempt: status === 'failed' ? 3 : 1,

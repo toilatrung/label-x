@@ -41,7 +41,7 @@ export function ReviewEvidenceTable({
               {currentAnnotationClass ? (
                 <b>{currentAnnotationClass}</b>
               ) : (
-                <span className="lx-subtle">Không khả dụng (server chưa trả lớp nhãn)</span>
+                <span className="lx-subtle">Không có dữ liệu lớp nhãn</span>
               )}
             </td>
           </tr>

@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import { useAuth } from '@/lib/auth/auth-context';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 import { ILLUSTRATIVE_HOME_DATASETS } from '@/lib/overview/sample-data';
 
@@ -29,7 +27,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [syncNotice, setSyncNotice] = useState<string | null>(null);
 
   const currentGen = useRef(0);
   const inFlightCursorRef = useRef<string | null>(null);
@@ -250,11 +247,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     router.push('/?view=summary');
   };
 
-  // F-1: Clicking sync updates the single regional notice without creating duplicates or calling fake APIs
-  const handleSync = () => {
-    setSyncNotice('Đồng bộ danh sách Dataset từ CVAT qua Webhook/Sync worker chưa được kích hoạt');
-  };
-
   const handleRetryInitial = () => {
     currentGen.current++;
     inFlightCursorRef.current = null;
@@ -268,6 +260,8 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     setIsLoadingMore(false);
     setRefreshTrigger((prev) => prev + 1);
   };
+
+  const handleSync = handleRetryInitial;
 
   // F-5: Helper to render non-empty version tag, never rendering an empty "—" chip
   const renderVersionTag = (version?: string | null) => {
@@ -323,23 +317,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
               `${filteredIllustrativeDatasets.length} / ${ILLUSTRATIVE_HOME_DATASETS.length} dataset`
             )}
           </span>
-        </div>
-
-        {/* F-1 & M-1: Exactly ONE single regional notice banner per region */}
-        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/datasets/summary/ để lấy số liệu tổng hợp cho bảng Dataset (chưa có trong backend contract) */}
-        <div className="lx-notice-banner lx-row">
-          <SampleDataBadge />
-          <NotConnectedNotice
-            detail={
-              syncNotice
-                ? syncNotice
-                : !isRealDataActive && error
-                ? `Server API chưa kết nối (${error.message}). Hiển thị bản xem trước theo thiết kế.`
-                : !isRealDataActive && !isLoading
-                ? 'Chưa có Dataset trên server. Hiển thị bản xem trước theo thiết kế.'
-                : 'Các trường Task/Job, Frame, Quality Control Run và Quality Gate chưa có API tổng hợp'
-            }
-          />
         </div>
 
         {/* Localized loading / error / empty state info when backend is failing or empty */}

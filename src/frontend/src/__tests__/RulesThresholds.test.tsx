@@ -158,9 +158,7 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     );
 
     expect(await screen.findByText('Chưa có cấu hình đã phát hành')).toBeDefined();
-    expect(
-      screen.getByText(/Không thể xác nhận ngưỡng từ dữ liệu hiện có/)
-    ).toBeDefined();
+    expect(screen.getByText(/Trạng thái này không đồng nghĩa engine đang tắt/)).toBeDefined();
     expect(screen.getByText('Chưa có mapping guideline.')).toBeDefined();
   });
 
@@ -237,8 +235,7 @@ describe('Rules & Thresholds design regions (FE-09)', () => {
     const { api } = await setup('qalead', () => json({ next: null, previous: null, results: [] }));
     expect(await screen.findByText('S-001')).toBeDefined();
     expect(screen.getByText('Cấu hình hiện tại v7')).toBeDefined();
-    expect(screen.getAllByText('Dữ liệu minh họa').length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('status')[0].textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     // Công tắc bị khoá: không đổi trạng thái khi bấm
     const toggle = screen.getByRole('checkbox', { name: 'A-003' }) as HTMLInputElement;
     expect(toggle.disabled).toBe(true);
@@ -246,9 +243,9 @@ describe('Rules & Thresholds design regions (FE-09)', () => {
     const before = api.fetchSpy.mock.calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Lưu thành v8' }));
     expect(api.fetchSpy.mock.calls.length).toBe(before);
-    expect(screen.getAllByRole('status')[0].textContent).toContain('Thao tác "Lưu thành v8" chưa được thực hiện');
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh quy tắc' })[0]);
-    expect(screen.getAllByRole('status')[0].textContent).toContain('Thao tác "Chỉnh quy tắc" chưa được thực hiện');
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'Ngưỡng phát hành' }));
     const coverage = screen.getByLabelText('Coverage tối thiểu để phát hành') as HTMLInputElement;
     expect(coverage.readOnly).toBe(true);

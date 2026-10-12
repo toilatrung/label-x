@@ -197,7 +197,7 @@ export function EngineThresholdsTable({
             <strong>{emptyTitle ?? 'Chưa có cấu hình đã phát hành'}</strong>
             <div>
               {emptyDescription ??
-                'API chưa trả về phiên bản cấu hình engine đã phát hành. Không thể xác nhận ngưỡng từ dữ liệu hiện có; riêng việc thiếu cấu hình published không xác định trạng thái engine đang chạy.'}
+                'Chưa có phiên bản cấu hình engine đã phát hành. Trạng thái này không đồng nghĩa engine đang tắt.'}
             </div>
           </div>
         </div>
