@@ -3,6 +3,9 @@
 import httpx
 import pytest
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from accounts.models import Role, RoleAssignment
 from audit.models import AuditEvent
@@ -27,6 +30,13 @@ def rework(confirmed, world):  # noqa: F811
     created = create_request(confirmed, world)
     assert created.status_code == 201, created.data
     return ReworkRequest.objects.get(pk=created.data["id"])
+
+
+@pytest.fixture(autouse=True)
+def clean_throttle_cache():
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture
@@ -57,8 +67,18 @@ def _counts():
 @pytest.mark.django_db
 def test_annotator_reads_current_revision_without_any_db_write(rework, world, current):
     before = _counts()
-    response = client(world["author"]).get(_url(rework))
+    row_before = ReworkRequest.objects.filter(pk=rework.pk).values().get()
+    with CaptureQueriesContext(connection) as queries:
+        response = client(world["author"]).get(_url(rework))
     assert response.status_code == 200, response.data
+    writes = [
+        q["sql"]
+        for q in queries
+        if q["sql"].lstrip().split(None, 1)[0].upper() not in {"SELECT", "SAVEPOINT", "RELEASE"}
+    ]
+    assert writes == []
+    assert ReworkRequest.objects.filter(pk=rework.pk).values().get() == row_before
+    assert response.data["rework_status"] == "fix_pending"
     assert response.data["rework_id"] == rework.pk
     assert response.data["cvat_job_id"] == 100
     assert response.data["revision_sha256"] == REVISION
@@ -151,3 +171,35 @@ def test_cvat_failure_is_a_clear_business_error_and_writes_nothing(rework, world
 @pytest.mark.django_db
 def test_write_methods_are_not_allowed(rework, world, current):
     assert client(world["author"]).post(_url(rework), {}, format="json").status_code == 405
+
+
+@pytest.mark.django_db
+def test_malformed_cvat_payload_is_502_not_500(rework, world, monkeypatch):
+    def missing_key(**_kw):
+        raise KeyError("frames")
+
+    monkeypatch.setattr(rework_service, "compute_job_revision", missing_key)
+    response = client(world["author"]).get(_url(rework))
+    assert response.status_code == 502 and response.data["code"] == "BUSINESS_RULE_UNMET"
+
+
+@pytest.mark.django_db
+def test_resolved_rework_reports_its_status(rework, world, current):
+    ReworkRequest.objects.filter(pk=rework.pk).update(status=ReworkRequest.Status.RESOLVED)
+    response = client(world["author"]).get(_url(rework))
+    assert response.status_code == 200 and response.data["rework_status"] == "resolved"
+
+
+@pytest.mark.django_db
+def test_throttle_is_per_user_and_scoped_to_this_endpoint(rework, world, current):
+    author = client(world["author"])
+    assert [author.get(_url(rework)).status_code for _ in range(6)] == [200] * 6
+    limited = author.get(_url(rework))
+    assert limited.status_code == 429
+    assert limited.data["code"] == "BUSINESS_RULE_UNMET"
+    assert limited.data["details"]["retry_after_seconds"] >= 1
+    assert limited["Retry-After"]
+    # another user is unaffected; so are other endpoints of the throttled user
+    assert client(world["reviewer"]).get(_url(rework)).status_code == 200
+    assert author.get(f"/api/rework/{rework.pk}/").status_code == 200
+    assert author.get("/api/rework/?dataset_id=42").status_code == 200

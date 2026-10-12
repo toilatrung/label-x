@@ -165,6 +165,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+    # Each current-revision read costs 8+N CVAT requests (N = frames); throttle per user.
+    # Counters live in Django's default cache (per-process LocMemCache unless CACHES is set).
+    "DEFAULT_THROTTLE_RATES": {
+        "rework_current_revision": env("REWORK_CURRENT_REVISION_RATE", default="6/min"),
+    },
 }
 
 SPECTACULAR_SETTINGS = {

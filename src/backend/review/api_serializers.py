@@ -297,6 +297,7 @@ class ReworkCurrentRevisionSerializer(serializers.Serializer[Any]):
     revision_sha256 = serializers.CharField(min_length=64, max_length=64)
     original_revision = serializers.CharField()
     unchanged = serializers.BooleanField()
+    rework_status = serializers.ChoiceField(choices=ReworkRequest.Status.values, required=False)
     read_at = serializers.DateTimeField()
 
 

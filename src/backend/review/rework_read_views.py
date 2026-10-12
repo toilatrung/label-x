@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.pagination import CursorPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from accounts.models import Role, RoleAssignment
@@ -155,10 +156,17 @@ class ReworkDetailView(APIView):
         return Response(rework_detail(rework))
 
 
+class ReworkCurrentRevisionThrottle(UserRateThrottle):
+    """Per-user limit: every call re-reads the job from CVAT (8+N requests, no content cache)."""
+
+    scope = "rework_current_revision"
+
+
 class ReworkCurrentRevisionView(APIView):
     """Read-only: the revision `submitted` would claim now. No snapshot/run/audit is written."""
 
     permission_classes = [HasRoleAndDatasetScope]
+    throttle_classes = [ReworkCurrentRevisionThrottle]
     allowed_roles = _READ_ROLES
     action_name = "rework.current_revision"
     object_type = "rework"
@@ -177,8 +185,17 @@ class ReworkCurrentRevisionView(APIView):
             200: ReworkCurrentRevisionSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
+            429: ErrorSerializer,
             502: ErrorSerializer,
         },
+        description=(
+            "Chỉ đọc (không ghi DB/audit). `unchanged` chỉ có ý nghĩa khi `rework_status` là "
+            "fix_pending. `original_revision` là revision snapshot gốc (có thể nhiều job) nên "
+            "`unchanged` chỉ đáng tin khi snapshot gốc một job. Revision phụ thuộc "
+            "guideline_version và taxonomy_version hiện hành; `unchanged=false` không có nghĩa "
+            "annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift). "
+            "Giới hạn 6 lần/phút/người dùng (429); mỗi lần đọc lại CVAT."
+        ),
         tags=["rework"],
     )
     def get(self, request: Request, pk: int) -> Response:

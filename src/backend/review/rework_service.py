@@ -371,7 +371,14 @@ def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
     job_id = frame.snapshot_frame.snapshot_job.cvat_job_id
     try:
         revision = compute_job_revision(dataset_id=frame.run.dataset_id, cvat_job_id=job_id)
-    except (httpx.HTTPError, SnapshotSourceError, RuntimeError, ValueError, TypeError) as exc:
+    except (
+        httpx.HTTPError,
+        SnapshotSourceError,
+        LookupError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+    ) as exc:
         raise ApiError(
             status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được job CVAT."
         ) from exc
@@ -381,6 +388,7 @@ def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
         "revision_sha256": revision,
         "original_revision": rework.original_revision,
         "unchanged": revision in _known_revisions(rework),
+        "rework_status": rework.status,
         "read_at": timezone.now().isoformat(),
     }
 

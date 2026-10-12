@@ -932,7 +932,16 @@ paths:
         (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
         `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
         Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
-        CVAT không đọc được trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại (không cache).
+        CVAT không đọc được (hoặc trả dữ liệu thiếu/sai) trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại
+        (8+N request, N = số frame; không cache nội dung) nên giới hạn 6 lần/phút/người dùng, vượt trả 429
+        `BUSINESS_RULE_UNMET` kèm header `Retry-After` và `details.retry_after_seconds`.
+
+        Hạn chế ngữ nghĩa:
+        - `unchanged` chỉ có ý nghĩa khi `rework_status` là `fix_pending`.
+        - `original_revision` là revision của snapshot gốc (có thể nhiều job) còn `revision_sha256` là của snapshot
+          một job, nên `unchanged` chỉ đáng tin khi snapshot gốc một job.
+        - Revision phụ thuộc `guideline_version` và `taxonomy_version` hiện hành.
+        - `unchanged=false` không có nghĩa annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift).
       x-labelx-trace: [UC-07, FR-RWK-01]
       x-labelx-roles: [annotator, reviewer, qa_lead, super_admin]
       parameters:
@@ -945,6 +954,7 @@ paths:
               schema: { $ref: "#/components/schemas/ReworkCurrentRevision" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
         "502": { $ref: "#/components/responses/BadGateway" }
   /api/rework/{id}/submitted/:
     post:
@@ -1307,6 +1317,13 @@ components:
       schema: { type: string }
 
   responses:
+    TooManyRequests:
+      description: Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds)
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     BadGateway:
       description: Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET)
       content:
@@ -2568,6 +2585,7 @@ components:
         revision_sha256: { type: string, minLength: 64, maxLength: 64 }
         original_revision: { type: string }
         unchanged: { type: boolean }
+        rework_status: { type: string, enum: [fix_pending, recheck_pending, resolved, reopened] }
         read_at: { type: string, format: date-time }
     ReworkRound:
       type: object

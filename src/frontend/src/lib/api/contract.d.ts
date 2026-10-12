@@ -700,7 +700,16 @@ export interface paths {
          *     (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
          *     `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
          *     Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
-         *     CVAT không đọc được trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại (không cache).
+         *     CVAT không đọc được (hoặc trả dữ liệu thiếu/sai) trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại
+         *     (8+N request, N = số frame; không cache nội dung) nên giới hạn 6 lần/phút/người dùng, vượt trả 429
+         *     `BUSINESS_RULE_UNMET` kèm header `Retry-After` và `details.retry_after_seconds`.
+         *
+         *     Hạn chế ngữ nghĩa:
+         *     - `unchanged` chỉ có ý nghĩa khi `rework_status` là `fix_pending`.
+         *     - `original_revision` là revision của snapshot gốc (có thể nhiều job) còn `revision_sha256` là của snapshot
+         *       một job, nên `unchanged` chỉ đáng tin khi snapshot gốc một job.
+         *     - Revision phụ thuộc `guideline_version` và `taxonomy_version` hiện hành.
+         *     - `unchanged=false` không có nghĩa annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift).
          */
         get: operations["rework_current_revision"];
         put?: never;
@@ -1866,6 +1875,8 @@ export interface components {
             revision_sha256: string;
             original_revision: string;
             unchanged: boolean;
+            /** @enum {string} */
+            rework_status?: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
             /** Format: date-time */
             read_at: string;
         };
@@ -2084,6 +2095,16 @@ export interface components {
         };
     };
     responses: {
+        /** @description Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds) */
+        TooManyRequests: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
         BadGateway: {
             headers: {
@@ -3244,6 +3265,7 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
             502: components["responses"]["BadGateway"];
         };
     };
