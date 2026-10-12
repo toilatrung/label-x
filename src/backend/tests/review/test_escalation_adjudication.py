@@ -273,22 +273,22 @@ def test_valid_adjudication_reject(adj_world):
     assert issue.state == Issue.State.REJECTED
 
 
-def test_valid_adjudication_guideline_missing(adj_world):
-    """guideline_missing outcome keeps issue in escalated state (FR-ESC-05 deferred)."""
+def test_valid_adjudication_guideline_gap(adj_world):
+    """guideline_gap outcome keeps issue in escalated state (FR-ESC-05 deferred)."""
     qa_lead = adj_world["qa_lead"]
     issue = adj_world["issue"]
 
     resp = client(qa_lead).post(
         f"/api/issues/{issue.pk}/adjudications/",
         {
-            "outcome": "guideline_missing",
+            "outcome": "guideline_gap",
             "rule_id": "RULE-01",
             "reason": "Corner case not covered in current guideline version",
         },
         format="json",
     )
     assert resp.status_code == 201, resp.data
-    assert resp.data["outcome"] == "guideline_missing"
+    assert resp.data["outcome"] == "guideline_gap"
     assert resp.data["case_version"] == "v1"
 
     issue.refresh_from_db()
@@ -296,11 +296,11 @@ def test_valid_adjudication_guideline_missing(adj_world):
 
 
 def test_unsupported_outcome_rejected(adj_world):
-    """Outcomes outside confirm, reject, guideline_missing are rejected 400 VALIDATION_ERROR."""
+    """Outcomes outside confirm, reject, guideline_gap are rejected 400 VALIDATION_ERROR."""
     qa_lead = adj_world["qa_lead"]
     issue = adj_world["issue"]
 
-    for bad_outcome in ["guideline_gap", "uncertain", "unknown"]:
+    for bad_outcome in ["guideline_missing", "uncertain", "unknown"]:
         resp = client(qa_lead).post(
             f"/api/issues/{issue.pk}/adjudications/",
             {"outcome": bad_outcome, "rule_id": "RULE-01", "reason": "Test bad outcome"},
@@ -395,7 +395,7 @@ def test_decision_case_version_increments_and_lookups(adj_world):
     # 1. First adjudication with guideline_missing keeps issue escalated
     r1 = client(qa1).post(
         f"/api/issues/{issue.pk}/adjudications/",
-        {"outcome": "guideline_missing", "rule_id": "RULE-01", "reason": "Version 1"},
+        {"outcome": "guideline_gap", "rule_id": "RULE-01", "reason": "Version 1"},
         format="json",
     )
     assert r1.status_code == 201
@@ -416,7 +416,8 @@ def test_decision_case_version_increments_and_lookups(adj_world):
     get1 = client(qa1).get(f"/api/decision-cases/{case1_id}/")
     assert get1.status_code == 200
     assert get1.data["case_version"] == "v1"
-    assert get1.data["outcome"] == "guideline_missing"
+    assert get1.data["outcome"] == "guideline_gap"
+    assert [h["case_version"] for h in get1.data["history"]] == ["v1", "v2"]
 
     get2 = client(qa1).get(f"/api/decision-cases/{case2_id}/")
     assert get2.status_code == 200
@@ -426,13 +427,13 @@ def test_decision_case_version_increments_and_lookups(adj_world):
     # 4. Lookup list by issue and rule_id
     list_issue = client(qa1).get(f"/api/decision-cases/?issue={issue.pk}")
     assert list_issue.status_code == 200
-    assert len(list_issue.data) == 2
-    versions = [c["case_version"] for c in list_issue.data]
+    assert len(list_issue.data["results"]) == 2
+    versions = [c["case_version"] for c in list_issue.data["results"]]
     assert versions == ["v1", "v2"]
 
     list_rule = client(qa1).get("/api/decision-cases/?rule_id=RULE-01")
     assert list_rule.status_code == 200
-    assert len(list_rule.data) == 2
+    assert len(list_rule.data["results"]) == 2
 
 
 def test_decision_case_history_append_only(adj_world):
@@ -615,3 +616,51 @@ def test_concurrency_adjudication_atomic(adj_world):
     assert 201 in statuses
     assert 409 in statuses
     assert DecisionCase.objects.filter(issue=issue).count() == 1
+
+
+def test_case_list_filters_version_outcome_pagination_and_legacy_mapping(adj_world, monkeypatch):
+    qa1 = adj_world["qa_lead"]
+    qa2 = adj_world["qa_lead_2"]
+    issue = adj_world["issue"]
+    for api_user, outcome in ((qa1, "guideline_gap"), (qa2, "confirm")):
+        done = client(api_user).post(
+            f"/api/issues/{issue.pk}/adjudications/",
+            {"outcome": outcome, "rule_id": "RULE-01", "reason": "r"},
+            format="json",
+        )
+        assert done.status_code == 201, done.data
+    # A pre-R05 row persisted with the legacy outcome must read as the public enum.
+    legacy = DecisionCase(
+        issue=issue,
+        case_version="v0",
+        outcome="guideline_missing",
+        rule_id="RULE-01",
+        reason="legacy",
+        actor=qa1,
+    )
+    legacy.save()
+
+    api = client(qa1)
+    gap = api.get("/api/decision-cases/?outcome=guideline_gap")
+    assert sorted(c["case_version"] for c in gap.data["results"]) == ["v0", "v1"]
+    assert {c["outcome"] for c in gap.data["results"]} == {"guideline_gap"}
+    assert api.get("/api/decision-cases/?outcome=guideline_missing").status_code == 400
+    one = api.get("/api/decision-cases/?version=v2")
+    assert [c["outcome"] for c in one.data["results"]] == ["confirm"]
+    assert api.get("/api/decision-cases/?issue=abc").status_code == 400
+
+    monkeypatch.setattr("review.adjudication_service.CASE_PAGE_SIZE", 2)
+    first = api.get(f"/api/decision-cases/?issue={issue.pk}")
+    assert len(first.data["results"]) == 2 and first.data["next"]
+    second = api.get(first.data["next"])
+    seen = [c["id"] for c in first.data["results"] + second.data["results"]]
+    assert len(seen) == len(set(seen)) == 3 and second.data["next"] is None
+    # detail exposes the append-only history of the issue
+    detail = api.get(f"/api/decision-cases/{legacy.pk}/")
+    assert detail.data["outcome"] == "guideline_gap"
+    assert len(detail.data["history"]) == 3
+
+
+def test_case_list_out_of_scope_reviewer_sees_nothing(adj_world):
+    outsider = User.objects.create_user("outsider-r05")
+    assert client(outsider).get("/api/decision-cases/").status_code == 403

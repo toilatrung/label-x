@@ -60,11 +60,26 @@ def _validate_rule(rule_id: object, issue: Issue) -> str:
     return rule_id_clean
 
 
+PUBLIC_GUIDELINE_GAP = "guideline_gap"
+LEGACY_GUIDELINE_MISSING = DecisionCase.Outcome.GUIDELINE_MISSING.value
+PUBLIC_OUTCOMES = (
+    DecisionCase.Outcome.CONFIRM.value,
+    DecisionCase.Outcome.REJECT.value,
+    PUBLIC_GUIDELINE_GAP,
+)
+CASE_PAGE_SIZE = 50
+
+
+def public_outcome(stored: str) -> str:
+    """Rows are append-only; legacy ``guideline_missing`` is mapped to the public enum on read."""
+    return PUBLIC_GUIDELINE_GAP if stored == LEGACY_GUIDELINE_MISSING else stored
+
+
 def _case_payload(case: DecisionCase) -> dict[str, Any]:
     return {
         "id": case.pk,
         "issue_id": case.issue_id,
-        "outcome": case.outcome,
+        "outcome": public_outcome(case.outcome),
         "actor_user_id": case.actor_id,
         "rule_id": case.rule_id,
         "correct_label": case.correct_label,
@@ -292,15 +307,11 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
 
     # 6. Body fields validation
     outcome = body.get("outcome")
-    if outcome not in (
-        DecisionCase.Outcome.CONFIRM,
-        DecisionCase.Outcome.REJECT,
-        DecisionCase.Outcome.GUIDELINE_MISSING,
-    ):
+    if outcome not in PUBLIC_OUTCOMES:
         raise ApiError(
             status.HTTP_400_BAD_REQUEST,
             "VALIDATION_ERROR",
-            "Outcome không hợp lệ; chỉ chấp nhận confirm, reject, guideline_missing.",
+            "Outcome không hợp lệ; chỉ chấp nhận confirm, reject, guideline_gap.",
         )
 
     rule_id = _validate_rule(body.get("rule_id"), issue)
@@ -341,7 +352,7 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
         issue.state = Issue.State.CONFIRMED
     elif outcome == DecisionCase.Outcome.REJECT:
         issue.state = Issue.State.REJECTED
-    elif outcome == DecisionCase.Outcome.GUIDELINE_MISSING:
+    elif outcome == PUBLIC_GUIDELINE_GAP:
         # Keep escalated waiting for new guideline version (FR-ESC-05 deferred)
         issue.state = Issue.State.ESCALATED
 
@@ -387,8 +398,21 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
     return _case_payload(case)
 
 
+def _case_scope(user: User) -> tuple[bool, set[int]]:
+    assignments = list(RoleAssignment.objects.filter(user=user))
+    has_global = any(
+        a.role in (Role.SUPER_ADMIN, Role.QC_ADMIN) and a.dataset_id is None for a in assignments
+    )
+    allowed = {
+        a.dataset_id
+        for a in assignments
+        if a.role in (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN) and a.dataset_id is not None
+    }
+    return has_global, allowed
+
+
 def get_decision_case(*, request: Request, case_id: int) -> dict[str, Any]:
-    """GET /api/decision-cases/{id}/ - Retrieve a versioned DecisionCase by ID (UC-12)."""
+    """GET /api/decision-cases/{id}/ - one version plus the append-only history of its issue."""
     user = _actor(request)
     case = (
         DecisionCase.objects.select_related("issue__frame_review__run").filter(pk=case_id).first()
@@ -397,50 +421,84 @@ def get_decision_case(*, request: Request, case_id: int) -> dict[str, Any]:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "DecisionCase không tồn tại.")
 
     dataset_id = case.issue.frame_review.run.dataset_id
-    assignments = list(RoleAssignment.objects.filter(user=user))
-    has_global = any(
-        a.role in (Role.SUPER_ADMIN, Role.QC_ADMIN) and a.dataset_id is None for a in assignments
-    )
-    has_scoped = any(
-        a.role in (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN) and a.dataset_id == dataset_id
-        for a in assignments
-    )
-    if not has_global and not has_scoped:
+    has_global, allowed = _case_scope(user)
+    if not has_global and dataset_id not in allowed:
         raise ApiError(status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Ngoài phạm vi dataset.")
 
-    return _case_payload(case)
-
-
-def list_decision_cases(request: Request) -> list[dict[str, Any]]:
-    """GET /api/decision-cases/ - Query decision cases by rule_id or issue (UC-12)."""
-    user = _actor(request)
-    assignments = list(RoleAssignment.objects.filter(user=user))
-    has_global = any(
-        a.role in (Role.SUPER_ADMIN, Role.QC_ADMIN) and a.dataset_id is None for a in assignments
-    )
-    allowed_dataset_ids = {
-        a.dataset_id
-        for a in assignments
-        if a.role in (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN) and a.dataset_id is not None
+    history = DecisionCase.objects.filter(issue_id=case.issue_id).order_by("pk")
+    return {
+        **_case_payload(case),
+        "history": [
+            {
+                "id": row.pk,
+                "case_version": row.case_version,
+                "outcome": public_outcome(row.outcome),
+                "actor_user_id": row.actor_id,
+                "created_at": row.created_at.isoformat(),
+            }
+            for row in history
+        ],
     }
-    if not has_global and not allowed_dataset_ids:
+
+
+def list_decision_cases(request: Request) -> dict[str, Any]:
+    """GET /api/decision-cases/ - filtered, cursor-paginated, scope-limited (UC-12)."""
+    user = _actor(request)
+    has_global, allowed = _case_scope(user)
+    if not has_global and not allowed:
         raise ApiError(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "Không có quyền đọc Decision Case.")
 
     qs = DecisionCase.objects.select_related("issue__frame_review__run")
     if not has_global:
-        qs = qs.filter(issue__frame_review__run__dataset_id__in=allowed_dataset_ids)
+        qs = qs.filter(issue__frame_review__run__dataset_id__in=allowed)
+
+    params: dict[str, str] = {}
+
+    def _positive(name: str) -> int | None:
+        raw = request.query_params.get(name)
+        if raw is None:
+            return None
+        if not raw.isdigit() or int(raw) <= 0:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", f"{name} không hợp lệ.")
+        params[name] = raw
+        return int(raw)
 
     rule_param = request.query_params.get("rule_id")
-    if rule_param:
+    if rule_param and rule_param.strip():
         qs = qs.filter(rule_id=rule_param.strip())
+        params["rule_id"] = rule_param.strip()
 
-    issue_param = request.query_params.get("issue")
-    if issue_param and issue_param.isdigit():
-        qs = qs.filter(issue_id=int(issue_param))
+    issue_id = _positive("issue")
+    if issue_id is not None:
+        qs = qs.filter(issue_id=issue_id)
 
     version_param = request.query_params.get("version")
-    if version_param:
+    if version_param and version_param.strip():
         qs = qs.filter(case_version=version_param.strip())
+        params["version"] = version_param.strip()
 
-    cases = list(qs.order_by("created_at", "pk")[:100])
-    return [_case_payload(c) for c in cases]
+    outcome_param = request.query_params.get("outcome")
+    if outcome_param is not None:
+        if outcome_param not in PUBLIC_OUTCOMES:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "outcome không hợp lệ.")
+        stored = (
+            [PUBLIC_GUIDELINE_GAP, LEGACY_GUIDELINE_MISSING]
+            if outcome_param == PUBLIC_GUIDELINE_GAP
+            else [outcome_param]
+        )
+        qs = qs.filter(outcome__in=stored)
+        params["outcome"] = outcome_param
+
+    after = request.query_params.get("cursor")
+    if after:
+        if not after.isdigit():
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Cursor không hợp lệ.")
+        qs = qs.filter(pk__gt=int(after))
+
+    rows = list(qs.order_by("pk")[: CASE_PAGE_SIZE + 1])
+    page = rows[:CASE_PAGE_SIZE]
+    next_url: str | None = None
+    if len(rows) > CASE_PAGE_SIZE:
+        query = "&".join(f"{k}={v}" for k, v in {**params, "cursor": page[-1].pk}.items())
+        next_url = request.build_absolute_uri(f"/api/decision-cases/?{query}")
+    return {"next": next_url, "previous": None, "results": [_case_payload(c) for c in page]}
