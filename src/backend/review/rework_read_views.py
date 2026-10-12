@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from django.db.models import Count, Q, QuerySet
 from django.http import HttpRequest, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
@@ -154,9 +153,17 @@ class ReworkDetailView(APIView):
         return Response(rework_detail(rework))
 
 
-@csrf_exempt
-def rework_collection(request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
-    """Same route, method-specific view: GET lists, POST creates (T-040)."""
+class ReworkCollectionView(APIView):
+    """One route, two behaviours: GET lists (D04), POST creates (T-040).
 
-    view = ReworkListView if request.method == "GET" else ReworkCreateView
-    return view.as_view()(request, *args, **kwargs)
+    `dispatch` hands the raw request to the method-specific view so permissions and
+    behaviour stay exactly those views'. `get`/`post` exist only so drf-spectacular sees
+    both operations; a plain function route made /api/rework/ vanish from the schema.
+    """
+
+    get = ReworkListView.get
+    post = ReworkCreateView.post
+
+    def dispatch(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
+        view = ReworkListView if request.method == "GET" else ReworkCreateView
+        return view.as_view()(request, *args, **kwargs)
