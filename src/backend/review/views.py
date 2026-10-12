@@ -44,6 +44,9 @@ class QueueNextView(APIView):
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
+            # BUSINESS_RULE_UNMET: a candidate's family/anchor is outside the review contract
+            # (review/decision_source.py materialize_candidate_issue).
+            422: ErrorSerializer,
         },
         tags=["review"],
     )

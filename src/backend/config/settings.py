@@ -177,6 +177,8 @@ SPECTACULAR_SETTINGS = {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
+        "ReworkVerificationOutcomeEnum": ["pass", "fail"],
+        "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
         "PersistedIssueDecisionActionEnum": [
             "confirm",
             "reject",
