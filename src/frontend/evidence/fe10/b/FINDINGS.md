@@ -45,4 +45,4 @@ Nền: `origin/develop-fe` tại `2387fca` (đã gồm #183). Chỉ evidence, kh
 ## Danh sách ảnh (20)
 
 `escalations-gaps-1440`, `escalations-adjudication-1440`, `escalations-390`, `calibration-performance-1440`, `calibration-performance-390`, `calibration-benchmark-1440`, `calibration-audit-sampling-1440`, `calibration-audit-sampling-390`, `calibration-calibration-1440`, `reports-1440`, `reports-390`, `reports-gate-1440`, `reports-gate-390`, `reports-releases-1440`, `configuration-1440`, `configuration-390`, `configuration-rules-thresholds-1440`, `configuration-rules-thresholds-390`, `configuration-guidelines-1440`, `configuration-guidelines-versions-1440`.
-Ghi chú: ảnh 1440 của `/reports*` rộng hơn 1440 px vì chính lỗi X-1; ảnh `calibration-audit-sampling-390` chụp ở lượt chuẩn nhưng chưa được xem kỹ.
+Ghi chú: ảnh 1440 của `/reports*` rộng hơn 1440 px vì chính lỗi X-1. Tab "Lấy mẫu theo rủi ro", "Hiệu chỉnh mô hình" của `/calibration/*` và hai tab còn lại của `/reports` (chụp ở bước phụ, không đưa vào 20 ảnh) chỉ được kiểm bằng mã nguồn và log số cảnh báo (1 mỗi tab), chưa xem ảnh.
