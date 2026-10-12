@@ -1,0 +1,13 @@
+import type { ApiEndpoint } from '../types';
+import { configVersion } from '../examples';
+
+export const CONFIGURATION_ENDPOINTS = [
+  { id: 'config_versions_list', method: 'GET', path: '/api/config-versions/', group: 'Configuration', summary: 'Danh sách phiên bản cấu hình', connection: 'backend', responseStatus: 200, response: { next: null, previous: null, results: [configVersion] } },
+  { id: 'config_versions_create', method: 'POST', path: '/api/config-versions/', group: 'Configuration', summary: 'Tạo phiên bản cấu hình nháp', connection: 'backend', responseStatus: 201, response: { ...configVersion, status: 'draft', published_at: null } },
+  { id: 'config_versions_publish', method: 'POST', path: '/api/config-versions/{id}/publish/', group: 'Configuration', summary: 'Publish phiên bản cấu hình', connection: 'backend', responseStatus: 200, response: configVersion },
+  { id: 'review_policies_retrieve', method: 'GET', path: '/api/config/review-policies/', group: 'Configuration', summary: 'Chính sách lease và effort đã duyệt', connection: 'mock', origin: 'design', responseStatus: 200, response: { version: 'review-policy-v1', lease_seconds: 900, renew_before_seconds: 180, idle_timeout_seconds: 120, effective_at: '2026-10-12T00:00:00Z' } },
+  { id: 'workflow_rule_update', method: 'PATCH', path: '/api/auth/workflow-permissions/rules/{rule}/', group: 'Configuration', summary: 'Bật hoặc tắt quy tắc workflow', connection: 'mock', origin: 'design', responseStatus: 200, response: { rule: 'anti_self_review', enforced: true, updated_by: 7, updated_at: '2026-10-12T06:00:00Z' } },
+  { id: 'models_list', method: 'GET', path: '/api/models/', group: 'Configuration', summary: 'Danh sách model và artifact version', connection: 'mock', origin: 'design', responseStatus: 200, response: { results: [{ id: 5, name: 'Detector', version: 'v2.3', role: 'object_detection', taxonomy_version: 'v3', confidence_threshold: 0.6, status: 'active' }] } },
+  { id: 'models_update', method: 'PATCH', path: '/api/models/{id}/', group: 'Configuration', summary: 'Cập nhật cấu hình model', connection: 'mock', origin: 'design', responseStatus: 200, response: { id: 5, name: 'Detector', version: 'v2.3', confidence_threshold: 0.65, status: 'active', updated_by: 7 } },
+  { id: 'config_version_rules', method: 'GET', path: '/api/config-versions/{id}/rules/', group: 'Configuration', summary: 'Rule, ngưỡng gate và chính sách lấy mẫu', connection: 'mock', origin: 'design', responseStatus: 200, response: { config_version_id: 4, rules: [{ id: 'G-014', enabled: true, severity: 'major', minimum_area: 24 }], gate_thresholds: { coverage: 0.95, agreement: 0.9 }, sampling: { random_rate: 0.08, risk_rate: 0.15 } } },
+] satisfies ApiEndpoint[];

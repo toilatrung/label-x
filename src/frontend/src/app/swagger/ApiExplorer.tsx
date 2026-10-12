@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { API_ENDPOINTS, type ApiConnection, type ApiEndpoint } from '@/lib/api-explorer/catalog';
+import { API_ENDPOINTS, API_NAVIGATION, type ApiConnection, type ApiEndpoint } from '@/lib/api-explorer/catalog';
 import styles from './swagger.module.css';
 
 type StatusFilter = 'all' | ApiConnection;
@@ -58,10 +58,16 @@ export function ApiExplorer() {
   const normalizedQuery = query.trim().toLocaleLowerCase('vi');
   const filtered = API_ENDPOINTS.filter(endpoint => {
     const matchesStatus = status === 'all' || endpoint.connection === status;
-    const haystack = `${endpoint.method} ${endpoint.path} ${endpoint.group} ${endpoint.summary} ${endpoint.id}`.toLocaleLowerCase('vi');
+    const haystack = `${endpoint.method} ${endpoint.path} ${endpoint.group} ${endpoint.section ?? ''} ${endpoint.summary} ${endpoint.id}`.toLocaleLowerCase('vi');
     return matchesStatus && (!normalizedQuery || haystack.includes(normalizedQuery));
   });
-  const groups = [...new Set(filtered.map(endpoint => endpoint.group))];
+  const groups = API_NAVIGATION.map(group => ({
+    ...group,
+    sections: group.sections.map(currentSection => ({
+      ...currentSection,
+      endpoints: filtered.filter(endpoint => endpoint.group === group.label && endpoint.section === currentSection.label),
+    })).filter(currentSection => currentSection.endpoints.length > 0),
+  })).filter(group => group.sections.length > 0);
 
   return <main className={styles.shell}>
     <header className={styles.topbar}>
@@ -104,16 +110,26 @@ export function ApiExplorer() {
     <div className={styles.content}>
       <aside className={styles.sidebar} aria-label="Nhóm API">
         <p>Nhóm API</p>
-        {groups.map(group => <a key={group} href={`#group-${group.toLowerCase()}`}>
-          <span>{group}</span><b>{filtered.filter(endpoint => endpoint.group === group).length}</b>
-        </a>)}
+        {groups.map(group => <div className={styles.sidebarGroup} key={group.key}>
+          <a href={`#group-${group.key}`}>
+            <span>{group.label}</span><b>{group.sections.reduce((total, currentSection) => total + currentSection.endpoints.length, 0)}</b>
+          </a>
+          {group.sections.length > 1 && <div className={styles.sidebarSections}>
+            {group.sections.map(currentSection => <a key={currentSection.key} href={`#section-${group.key}-${currentSection.key}`}>
+              <span>{currentSection.label}</span><b>{currentSection.endpoints.length}</b>
+            </a>)}
+          </div>}
+        </div>)}
       </aside>
 
       <section className={styles.catalog} aria-live="polite">
-        {groups.map(group => <section className={styles.group} key={group} id={`group-${group.toLowerCase()}`}>
-          <div className={styles.groupTitle}><h2>{group}</h2><span>{filtered.filter(endpoint => endpoint.group === group).length} operations</span></div>
-          <div className={styles.endpointList}>{filtered.filter(endpoint => endpoint.group === group)
-            .map(endpoint => <EndpointCard endpoint={endpoint} key={endpoint.id} />)}</div>
+        {groups.map(group => <section className={styles.group} key={group.key} id={`group-${group.key}`}>
+          <div className={styles.groupTitle}><h2>{group.label}</h2><span>{group.sections.reduce((total, currentSection) => total + currentSection.endpoints.length, 0)} operations</span></div>
+          {group.sections.map(currentSection => <section className={styles.section} key={currentSection.key} id={`section-${group.key}-${currentSection.key}`}>
+            {group.sections.length > 1 && <div className={styles.sectionTitle}><h3>{currentSection.label}</h3><span>{currentSection.endpoints.length} operations</span></div>}
+            <div className={styles.endpointList}>{currentSection.endpoints
+              .map(endpoint => <EndpointCard endpoint={endpoint} key={endpoint.id} />)}</div>
+          </section>)}
         </section>)}
         {!filtered.length && <div className={styles.empty}><strong>Không tìm thấy API phù hợp</strong><span>Thử đổi từ khóa hoặc bộ lọc trạng thái.</span></div>}
       </section>

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ApiExplorer } from '@/app/swagger/ApiExplorer';
-import { API_ENDPOINTS } from '@/lib/api-explorer/catalog';
+import { API_ENDPOINTS, API_NAVIGATION } from '@/lib/api-explorer/catalog';
 
 describe('API Explorer', () => {
   it('shows contract operations with backend and mock states', () => {
@@ -26,8 +26,28 @@ describe('API Explorer', () => {
 
   it('keeps exactly one sample response for every operation', () => {
     const ids = new Set(API_ENDPOINTS.map(endpoint => endpoint.id));
+    expect(API_ENDPOINTS).toHaveLength(77);
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
+  });
+
+  it('groups APIs by the product navigation shown in the design', () => {
+    expect(API_NAVIGATION.map(group => group.label)).toEqual([
+      'Overview',
+      'Quality Analysis',
+      'Review Center',
+      'Escalations',
+      'Calibration & Audit',
+      'Reports & Releases',
+      'Configuration',
+    ]);
+    expect(API_NAVIGATION.find(group => group.label === 'Overview')?.sections.map(item => item.label))
+      .toEqual(['Quality Control Home', 'Quality Summary']);
+    expect(API_NAVIGATION.find(group => group.label === 'Calibration & Audit')?.sections.map(item => item.label))
+      .toEqual(['Performance Evaluation', 'Ground Truth Benchmark', 'Audit Sampling', 'Calibration']);
+    expect(API_NAVIGATION.find(group => group.label === 'Configuration')?.sections.map(item => item.label))
+      .toEqual(['Rules & Thresholds', 'Models & Guidelines', 'Workflow & Permissions']);
+    expect(API_ENDPOINTS.every(endpoint => endpoint.section)).toBe(true);
   });
 
   it('includes backend-only and design-driven operations outside the OpenAPI baseline', () => {
