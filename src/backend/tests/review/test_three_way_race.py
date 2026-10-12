@@ -32,7 +32,14 @@ from audit.models import AuditEvent
 from audit.services import append_audit_event
 from review import finalization_service, issue_service, rework_service
 from review.finalization_service import complete_scope_frames
-from review.models import FrameReview, Issue, Lease, ReviewDecision, ReworkRequest, ReworkVerification
+from review.models import (
+    FrameReview,
+    Issue,
+    Lease,
+    ReviewDecision,
+    ReworkRequest,
+    ReworkVerification,
+)
 from tests.review.test_final_source_guard import _complete_final, final_world  # noqa: F401
 from tests.review.test_frame_followup_flow import (  # noqa: F401
     _complete,
@@ -44,7 +51,12 @@ from tests.review.test_frame_followup_flow import (  # noqa: F401
     storage_url,
 )
 from tests.review.test_issues_decisions import decide, manual
-from tests.review.test_rework import _submit, _verify, changed_snapshot, second_snapshot  # noqa: F401
+from tests.review.test_rework import (  # noqa: F401
+    _submit,
+    _verify,
+    changed_snapshot,
+    second_snapshot,
+)
 
 pytest_plugins = ["tests.review.test_queue_lease", "tests.review.test_final_source_guard"]
 
@@ -232,9 +244,12 @@ def _assert_invariants(rw, results, *, passed):
         assert issue.state == Issue.State.RESOLVED
     # 2. audit / verification rows: exactly one verify, no duplicated completion
     outcome = "pass" if passed else "fail"
-    assert AuditEvent.objects.filter(
-        action=f"rework.verify_{outcome}", object_id=str(rework.pk)
-    ).count() == 1
+    assert (
+        AuditEvent.objects.filter(
+            action=f"rework.verify_{outcome}", object_id=str(rework.pk)
+        ).count()
+        == 1
+    )
     assert ReworkVerification.objects.filter(rework=rework).count() == 1
     assert _completion_audits(rw.frame_id) <= 1
     if results["complete"] == 200:
