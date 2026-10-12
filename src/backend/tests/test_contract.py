@@ -368,3 +368,64 @@ def test_bodyless_endpoints_match_contract(spec, path, method):
     assert "requestBody" not in static
     assert "requestBody" not in generated
     assert set(static["responses"]) <= set(generated["responses"])
+
+
+def test_decision_cases_endpoints_contract_and_schema(spec: dict[str, Any]) -> None:
+    """M03-D03 / T-032 / T-038: Chuẩn hóa GET decision-cases list và detail vào OpenAPI contract."""
+    # 1. GET /api/decision-cases/ (list)
+    assert "/api/decision-cases/" in spec["paths"], "Thiếu /api/decision-cases/ trong OpenAPI"
+    list_op = spec["paths"]["/api/decision-cases/"]["get"]
+    assert list_op["operationId"] == "decision_cases_list"
+    assert list_op["tags"] == ["review"]
+    assert set(list_op["x-labelx-roles"]) == {"reviewer", "qa_lead", "super_admin"}
+    assert set(list_op["x-labelx-trace"]) == {"UC-12", "FR-ESC-04"}
+
+    query_param_names = [p["name"] for p in list_op.get("parameters", []) if "name" in p]
+    assert {"rule_id", "issue", "version"} <= set(query_param_names)
+
+    assert set(list_op["responses"]) == {"200", "403"}
+    assert "400" not in list_op["responses"]
+    list_schema = list_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert list_schema["type"] == "array"
+    assert list_schema["items"]["$ref"] == "#/components/schemas/DecisionCase"
+
+    # 2. GET /api/decision-cases/{id}/ (detail)
+    assert "/api/decision-cases/{id}/" in spec["paths"], (
+        "Thiếu /api/decision-cases/{id}/ trong OpenAPI"
+    )
+    detail_op = spec["paths"]["/api/decision-cases/{id}/"]["get"]
+    assert detail_op["operationId"] == "decision_cases_retrieve"
+    assert detail_op["tags"] == ["review"]
+    assert set(detail_op["x-labelx-roles"]) == {"reviewer", "qa_lead", "super_admin"}
+    assert set(detail_op["x-labelx-trace"]) == {"UC-12", "FR-ESC-04"}
+
+    path_params = [
+        p
+        for p in detail_op.get("parameters", [])
+        if p.get("$ref") == "#/components/parameters/Id" or p.get("name") == "id"
+    ]
+    assert path_params, "GET /api/decision-cases/{id}/ phải khai báo Id parameter"
+
+    assert set(detail_op["responses"]) == {"200", "403", "404"}
+    assert "400" not in detail_op["responses"]
+    detail_schema = detail_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert detail_schema["$ref"] == "#/components/schemas/DecisionCase"
+
+    # 3. DecisionCase schema
+    assert "DecisionCase" in spec["components"]["schemas"], (
+        "Thiếu DecisionCase schema trong components"
+    )
+    dc_schema = spec["components"]["schemas"]["DecisionCase"]
+    assert set(dc_schema["required"]) == {
+        "id",
+        "issue_id",
+        "outcome",
+        "actor_user_id",
+        "rule_id",
+        "correct_label",
+        "reason",
+        "case_version",
+        "created_at",
+    }
+    assert dc_schema["properties"]["outcome"]["enum"] == ["confirm", "reject", "guideline_missing"]
+    assert dc_schema["properties"]["correct_label"].get("nullable") is True

@@ -663,9 +663,10 @@
     {
       "id": "M03-D03",
       "capability": "Versioned Decision Case lookup",
-      "current_source": "POST adjudication returns case_version; no Decision Case read operation exists",
+      "current_source": "GET /api/decision-cases/ and GET /api/decision-cases/{id}/ implemented in runtime (review/adjudication_views.py) and standardized in OpenAPI (docs/04-api/openapi.yaml)",
       "proposed_operation": {"method": "get", "path": "/api/decision-cases/{id}/"},
-      "implementation_owner": "T-038 backend; T-039 consumer",
+      "additional_proposed_operation": {"method": "get", "path": "/api/decision-cases/"},
+      "implementation_owner": "T-038 backend; T-039/T-043 consumer",
       "decision_owner": "Product Owner",
       "decision_status": "requires_approved_change_request",
       "approved": false

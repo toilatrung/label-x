@@ -846,6 +846,59 @@ paths:
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
 
+  /api/decision-cases/:
+    get:
+      operationId: decision_cases_list
+      tags: [review]
+      summary: Danh sách Decision Case có version
+      description: |
+        Tra cứu danh sách Decision Case theo rule_id, issue hoặc version trong phạm vi dataset được phép.
+        Mỗi phần tử chứa kết luận phân xử, rule, nhãn đúng và version (UC-12, FR-ESC-04).
+      x-labelx-trace: [UC-12, FR-ESC-04]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - name: rule_id
+          in: query
+          description: Lọc theo rule ID được phân xử
+          schema: { type: string }
+        - name: issue
+          in: query
+          description: Lọc theo issue ID
+          schema: { type: integer }
+        - name: version
+          in: query
+          description: Lọc theo case_version (ví dụ v1, v2)
+          schema: { type: string }
+      responses:
+        "200":
+          description: Danh sách Decision Case phù hợp điều kiện lọc, tối đa 100 bản ghi
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DecisionCase" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/decision-cases/{id}/:
+    get:
+      operationId: decision_cases_retrieve
+      tags: [review]
+      summary: Chi tiết Decision Case theo ID
+      description: |
+        Tra cứu bản ghi Decision Case có version đã phân xử theo ID trong phạm vi dataset được phép (UC-12, FR-ESC-04).
+      x-labelx-trace: [UC-12, FR-ESC-04]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Chi tiết Decision Case có version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DecisionCase" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/rework/:
     post:
       operationId: rework_create
@@ -2183,6 +2236,33 @@ components:
         reason: { type: string }
         case_version: { type: string }
         created_at: { type: string, format: date-time }
+    DecisionCase:
+      type: object
+      description: Bản ghi Decision Case có version phân xử người (UC-12, FR-ESC-04).
+      required: [id, issue_id, outcome, actor_user_id, rule_id, correct_label, reason, case_version, created_at]
+      properties:
+        id: { type: integer }
+        issue_id: { type: integer }
+        outcome:
+          type: string
+          enum: [confirm, reject, guideline_missing]
+          description: Kết luận phân xử (UC-12, FR-ESC-04).
+        actor_user_id: { type: integer }
+        rule_id: { type: string }
+        correct_label:
+          type: string
+          nullable: true
+          description: Nhãn đúng do người phân xử cung cấp; có thể null.
+        reason:
+          type: string
+          description: Giải trình lý do phân xử.
+        case_version:
+          type: string
+          description: Phiên bản phân xử của issue (v1, v2, ...).
+        created_at:
+          type: string
+          format: date-time
+
     ReworkCreate:
       type: object
       required: [issue_id, instruction, annotator_user_id, due_at, severity, cvat_deep_link]

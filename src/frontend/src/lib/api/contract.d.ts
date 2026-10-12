@@ -638,6 +638,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-cases/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách Decision Case có version
+         * @description Tra cứu danh sách Decision Case theo rule_id, issue hoặc version trong phạm vi dataset được phép.
+         *     Mỗi phần tử chứa kết luận phân xử, rule, nhãn đúng và version (UC-12, FR-ESC-04).
+         */
+        get: operations["decision_cases_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/decision-cases/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết Decision Case theo ID
+         * @description Tra cứu bản ghi Decision Case có version đã phân xử theo ID trong phạm vi dataset được phép (UC-12, FR-ESC-04).
+         */
+        get: operations["decision_cases_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rework/": {
         parameters: {
             query?: never;
@@ -1535,6 +1576,26 @@ export interface components {
             rule_id: string;
             correct_label?: string | null;
             reason: string;
+            case_version: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @description Bản ghi Decision Case có version phân xử người (UC-12, FR-ESC-04). */
+        DecisionCase: {
+            id: number;
+            issue_id: number;
+            /**
+             * @description Kết luận phân xử (UC-12, FR-ESC-04).
+             * @enum {string}
+             */
+            outcome: "confirm" | "reject" | "guideline_missing";
+            actor_user_id: number;
+            rule_id: string;
+            /** @description Nhãn đúng do người phân xử cung cấp; có thể null. */
+            correct_label: string | null;
+            /** @description Giải trình lý do phân xử. */
+            reason: string;
+            /** @description Phiên bản phân xử của issue (v1, v2, ...). */
             case_version: string;
             /** Format: date-time */
             created_at: string;
@@ -2839,6 +2900,58 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    decision_cases_list: {
+        parameters: {
+            query?: {
+                /** @description Lọc theo rule ID được phân xử */
+                rule_id?: string;
+                /** @description Lọc theo issue ID */
+                issue?: number;
+                /** @description Lọc theo case_version (ví dụ v1, v2) */
+                version?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Danh sách Decision Case phù hợp điều kiện lọc, tối đa 100 bản ghi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionCase"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    decision_cases_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Chi tiết Decision Case có version */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionCase"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     rework_create: {
