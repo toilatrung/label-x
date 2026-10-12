@@ -25,4 +25,26 @@ describe('Dataset context', () => {
     const chip = screen.getByText('Dataset:').closest('div')!;
     expect(within(chip).getByText('Dataset mẫu #1')).toBeDefined();
   });
+
+  it('shows Phạm vi once a dataset is selected and keeps the Snapshot chip locked', async () => {
+    const api = installMockAuthApi();
+    await api.signIn('reviewer');
+    render(<AuthProvider><ContextBar snapshotName="SNP-011" snapshotRevision="rev f02a6d" /></AuthProvider>);
+    await screen.findByText('Reviewer');
+    expect(screen.getByText('Phạm vi:')).toBeDefined();
+    expect(screen.getByText('Toàn dataset')).toBeDefined();
+    expect(screen.getByText('rev f02a6d')).toBeDefined();
+    expect(screen.getByRole('img', { name: 'Đã khoá' })).toBeDefined();
+  });
+
+  it('marks the Quality Control Run state with a labelled dot and shows the read-only tag', async () => {
+    const api = installMockAuthApi();
+    await api.signIn('reviewer');
+    render(<AuthProvider><ContextBar activeRun="#QC-077" runState="partial" isReadOnly /></AuthProvider>);
+    await screen.findByText('Reviewer');
+    expect(screen.getByRole('img', { name: 'Trạng thái run: Partial' })).toBeDefined();
+    expect(screen.getByText('read-only')).toBeDefined();
+    expect(screen.getByText('Guideline:')).toBeDefined();
+    expect(screen.getByText('Taxonomy:')).toBeDefined();
+  });
 });
