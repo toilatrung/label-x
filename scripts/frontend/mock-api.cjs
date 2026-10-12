@@ -148,20 +148,130 @@ const mappings = [['E1', 'car', 'truck', 'VEH-02'], ['E1', 'truck', 'car', 'VEH-
   .map(([error_group, class_name, paired_class, rule_id]) => ({ error_group, class_name, paired_class, rule_id, guideline_version: 'gl-2.1' }));
 
 const ROLES = ['annotator', 'reviewer', 'qa_lead', 'qc_admin', 'super_admin', 'product_owner', 'data_model_owner'];
-const perm = (allowed) => Object.fromEntries(ROLES.map((r) => [r, allowed.includes(r) ? 'Được phép' : 'Không']));
+// Ma trận quyền và quy tắc quy trình phản chiếu ROLE_MATRIX và WORKFLOW_RULES của src/backend/accounts/views.py (mã quyền theo hợp đồng).
 const matrix = [
-  ['Xem Snapshot và lịch sử', ['qa_lead', 'qc_admin', 'super_admin']],
-  ['Tạo Snapshot', ['qa_lead', 'super_admin']],
-  ['Tạo QC run', ['qa_lead', 'super_admin']],
-  ['Phát hành cấu hình engine', ['qc_admin', 'super_admin']],
-  ['Kiểm tra và ra quyết định issue', ['reviewer', 'qa_lead', 'super_admin']],
-  ['Phán quyết issue đã chuyển cấp', ['qa_lead', 'super_admin']],
-  ['Xem báo cáo hiệu quả và cổng phát hành', ['qa_lead', 'qc_admin', 'super_admin', 'product_owner', 'data_model_owner']],
-].map(([fn, allowed]) => ({ function: fn, roles: perm(allowed) }));
+  {
+    "function": "Datasets",
+    "roles": {
+      "annotator": "view_assigned",
+      "reviewer": "view_assigned",
+      "qa_lead": "view_assigned",
+      "qc_admin": "view_all",
+      "super_admin": "view_all",
+      "product_owner": "view_assigned",
+      "data_model_owner": "view_assigned"
+    }
+  },
+  {
+    "function": "Quality Analysis",
+    "roles": {
+      "annotator": "none",
+      "reviewer": "none",
+      "qa_lead": "run_view",
+      "qc_admin": "configure",
+      "super_admin": "run_configure",
+      "product_owner": "view_kpi",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Review Queues & Workspace",
+    "roles": {
+      "annotator": "none",
+      "reviewer": "review",
+      "qa_lead": "review_monitor",
+      "qc_admin": "view",
+      "super_admin": "review_monitor",
+      "product_owner": "none",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Rework",
+    "roles": {
+      "annotator": "execute",
+      "reviewer": "request_verify",
+      "qa_lead": "request_monitor",
+      "qc_admin": "none",
+      "super_admin": "execute_verify",
+      "product_owner": "none",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Adjudication",
+    "roles": {
+      "annotator": "none",
+      "reviewer": "none",
+      "qa_lead": "yes",
+      "qc_admin": "none",
+      "super_admin": "override_with_reason",
+      "product_owner": "none",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Calibration & Audit",
+    "roles": {
+      "annotator": "participate",
+      "reviewer": "participate",
+      "qa_lead": "manage",
+      "qc_admin": "configure",
+      "super_admin": "manage_configure",
+      "product_owner": "none",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Phê duyệt phát hành",
+    "roles": {
+      "annotator": "none",
+      "reviewer": "none",
+      "qa_lead": "authorized",
+      "qc_admin": "none",
+      "super_admin": "override_with_reason",
+      "product_owner": "none",
+      "data_model_owner": "none"
+    }
+  },
+  {
+    "function": "Configuration",
+    "roles": {
+      "annotator": "none",
+      "reviewer": "none",
+      "qa_lead": "limited",
+      "qc_admin": "yes",
+      "super_admin": "full_including_permissions",
+      "product_owner": "none",
+      "data_model_owner": "lock_detector_artifact"
+    }
+  }
+];
 const workflowRules = [
-  { rule: 'R-01', name: 'Không tự duyệt', description: 'Người gán nhãn không được duyệt chính nhãn của mình.', enforced: true },
-  { rule: 'R-02', name: 'Lease frame', description: 'Mỗi frame chỉ một người kiểm tra tại một thời điểm.', enforced: true },
-  { rule: 'R-03', name: 'Adapter CVAT chỉ đọc', description: 'Sửa annotation bằng deep link sang CVAT.', enforced: true },
+  {
+    "rule": "anti_self_review",
+    "name": "Reviewer không review annotation của chính mình",
+    "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
+    "enforced": false
+  },
+  {
+    "rule": "super_admin_override_reason",
+    "name": "Ghi đè của Super Admin phải có lý do",
+    "description": "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline",
+    "enforced": false
+  },
+  {
+    "rule": "audit_logging",
+    "name": "Mọi thao tác ghi nhật ký kiểm toán",
+    "description": "Gắn nhãn Super Admin khi dùng quyền ghi đè; ghi sự kiện từ chối",
+    "enforced": true
+  },
+  {
+    "rule": "separation_of_duties",
+    "name": "Người duyệt khác người yêu cầu",
+    "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
+    "enforced": false
+  }
 ];
 
 const decisionCases = [

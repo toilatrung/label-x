@@ -17,6 +17,7 @@ import {
   type EscalationIssue,
 } from '@/lib/escalations/api';
 import { DecisionCaseLookup } from './DecisionCaseLookup';
+import { AdjudicationEmptyDetail } from './AdjudicationEmptyDetail';
 
 type Outcome = AdjudicationInput['outcome'];
 
@@ -37,6 +38,13 @@ const DECISION_LABELS: Record<string, string> = {
 };
 const issueCode = (id: number) => `QC-${String(id).padStart(5, '0')}`;
 const familyLabel = (family: string) => FAMILY_LABELS[family] ?? family;
+// Nhãn tiếng Việt cho mức độ, nguồn và trạng thái issue; giá trị lạ giữ nguyên để không che dữ liệu thật.
+const SEVERITY_LABELS: Record<string, string> = { critical: 'Nghiêm trọng', high: 'Cao', medium: 'Trung bình', minor: 'Nhẹ', low: 'Thấp' };
+const ORIGIN_LABELS: Record<string, string> = { engine: 'Máy', reviewer: 'Reviewer' };
+const STATE_LABELS: Record<string, string> = { escalated: 'Đã chuyển cấp', confirmed: 'Đã xác nhận', rejected: 'Đã bác bỏ', open: 'Đang mở' };
+const severityLabel = (severity: string) => SEVERITY_LABELS[severity] ?? severity;
+const originLabel = (origin: string) => ORIGIN_LABELS[origin] ?? origin;
+const stateLabel = (state: string) => STATE_LABELS[state] ?? state;
 
 function makeRequestKey(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -360,9 +368,9 @@ export function EscalationsWorkspace() {
                         {lastEscalation?.decision === 'uncertain' ? 'Chưa chắc chắn' : 'Chuyển cấp trên'}
                       </span>
                     </div>
-                    <div className="lx-cell__main lx-mt-1">{familyLabel(issue.family)} · {issue.severity || 'Chưa xếp mức'}</div>
+                    <div className="lx-cell__main lx-mt-1">{familyLabel(issue.family)} · {issue.severity ? severityLabel(issue.severity) : 'Chưa xếp mức'}</div>
                     <div className="lx-cell__sub">
-                      {issue.origin} · {issue.state} · Rule {issue.rule_ids?.join(', ') || '—'} · {issue.evidence.length} bằng chứng · {issue.review_decisions.length} quyết định
+                      {originLabel(issue.origin)} · {stateLabel(issue.state)} · Rule {issue.rule_ids?.join(', ') || '—'} · {issue.evidence.length} bằng chứng · {issue.review_decisions.length} quyết định
                     </div>
                     <button className="lx-btn lx-btn--sm lx-mt-1" type="button" onClick={() => selectIssue(issue)}>
                       {selected?.id === issue.id ? 'Đang mở' : 'Mở phân xử'}
@@ -411,11 +419,7 @@ export function EscalationsWorkspace() {
             </div>
           )}
 
-          {!selected && (
-            <section className="lx-card" aria-label="Chi tiết phân xử">
-              <div className="lx-card__body lx-muted">Chọn một issue ở danh sách bên trái để xem bằng chứng và phân xử.</div>
-            </section>
-          )}
+          {!selected && <AdjudicationEmptyDetail />}
 
           {selected && (
             <>
