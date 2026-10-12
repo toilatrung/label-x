@@ -28,7 +28,7 @@ export default function SnapshotHistoryPage() {
   const items = datasets.data?.pages.flatMap(page => page.results) ?? [];
   const selectedDataset = items.find(item => item.id === datasetId);
   const history = useSnapshotHistory(session?.user.id, canRead ? datasetId : null);
-  const runs = useDatasetRuns(session?.user.id, datasetId, canRead);
+  const runs = useDatasetRuns(session?.user.id, datasetId, canRead && !datasets.isError);
   const latestRuns = React.useMemo(() => latestRunBySnapshot(runs.data ?? []), [runs.data]);
   const snapshots = history.data?.pages.flatMap(page => page.results) ?? [];
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
