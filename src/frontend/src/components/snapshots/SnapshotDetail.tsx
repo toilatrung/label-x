@@ -16,7 +16,7 @@ function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean 
     <td>Job #{job.cvat_job_id}{drift && <span className="lx-badge lx-badge--danger">Drift</span>}</td>
     <td>Task #{job.cvat_task_id}</td>
     <td>{job.assignee_user_id === null ? 'Chưa gán' : `User #${job.assignee_user_id}`}</td>
-    <td className="lx-mono" style={{ overflowWrap: 'anywhere' }}>{job.job_hash || 'Chưa có'}</td>
+    <td className="lx-mono lx-wrap-any">{job.job_hash || 'Chưa có'}</td>
     <td>{jobUrl ? <a href={jobUrl} target="_blank" rel="noopener noreferrer">Mở Job CVAT</a> : 'Liên kết không hợp lệ'}</td>
     <td>{job.frames.length > 0 ? <div className="lx-row">
       <select className="lx-select" aria-label={`Frame Job ${job.cvat_job_id}`} value={safeIndex}
@@ -38,7 +38,7 @@ export function SnapshotDetail({ item }: { item: Snapshot }) {
     <div className="lx-card__body lx-stack">
       <dl className="lx-kv">
         <dt>Dataset</dt><dd>#{item.dataset_id}</dd>
-        <dt>Hash tổng</dt><dd className="lx-mono" style={{ overflowWrap: 'anywhere' }}>{item.revision_hash || 'Chưa có'}</dd>
+        <dt>Hash tổng</dt><dd className="lx-mono lx-wrap-any">{item.revision_hash || 'Chưa có'}</dd>
         <dt>Snapshot cha</dt><dd>{item.parent_snapshot_id ? <Link href={`/analysis?snapshotId=${item.parent_snapshot_id}`}>
           SNP-{item.parent_snapshot_id}</Link> : 'Không có'}</dd>
         <dt>Shape bị bỏ qua</dt><dd>{item.out_of_scope_shapes ?? 'Chưa có dữ liệu'}</dd>
