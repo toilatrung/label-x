@@ -13,7 +13,9 @@ from review.issue_service import _positive_int, complete_frame, create_manual_is
 from review.models import FrameReview, Issue
 from review.serialization import (
     decision_response,
+    frame_annotations,
     frame_engines,
+    frame_predictions,
     frame_summary,
     issue_response,
 )
@@ -48,6 +50,10 @@ class FrameIssuesView(_ReviewView):
             {
                 "frame": frame_summary(frame),
                 "guideline_version": frame.run.snapshot.guideline_version,
+                # Server-derived from the run's locked snapshot; never taken from the client.
+                "snapshot_revision": frame.run.snapshot.revision_sha256,
+                "annotations": frame_annotations(frame),
+                "predictions": frame_predictions(frame),
                 "engines": frame_engines(frame),
                 "issues": [issue_response(issue) for issue in issues.order_by("pk")],
             }

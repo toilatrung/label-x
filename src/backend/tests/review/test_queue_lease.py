@@ -6,6 +6,7 @@ from threading import Barrier
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.files.storage import storages
 from django.db import connection, connections
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
@@ -548,3 +549,24 @@ def test_ranking_filter_covers_terminal_states_and_rejects_invalid(world):
         assert ranking_rows(api, run_id, review_state="unreviewed") == []
     bad = api.get(f"/api/runs/{run_id}/ranking/", {"review_state": "bogus"})
     assert bad.status_code == 400
+
+
+@pytest.mark.django_db
+def test_frame_issues_serves_locked_revision_full_annotations_and_scope(world, monkeypatch):
+    monkeypatch.setattr(storages["snapshots"], "url", lambda name: f"https://storage.test/{name}")
+    api = client(world["reviewer"])
+    claim = api.post(next_url(), {"run_id": world["run"].pk}, format="json")
+    frame_id = claim.data["frame"]["id"]
+    response = api.get(f"/api/frames/{frame_id}/issues/")
+    assert response.status_code == 200, response.data
+    assert response.data["snapshot_revision"] == world["run"].snapshot.revision_sha256
+    # The shape has no engine candidate yet is still delivered, with class and bbox.
+    assert response.data["predictions"] == []
+    (annotation,) = response.data["annotations"]
+    assert annotation["id"] == "shape:91" and annotation["label_id"] == 1
+    assert annotation["bbox"] == {"x1": 1, "y1": 1, "x2": 10, "y2": 10}
+    assert response.data["issues"] == []  # read never auto-creates/confirms issues
+    # Authorization boundary is unchanged: author (annotator) and out-of-scope users are denied.
+    assert client(world["author"]).get(f"/api/frames/{frame_id}/issues/").status_code == 403
+    outsider = User.objects.create_user("outsider-r03")
+    assert client(outsider).get(f"/api/frames/{frame_id}/issues/").status_code == 403

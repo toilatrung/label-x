@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from django.contrib.auth.models import User
-from django.db.models import CharField, Case, Exists, F, OuterRef, Subquery, Value, When
+from django.db.models import Case, CharField, Exists, F, OuterRef, Subquery, Value, When
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
