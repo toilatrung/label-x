@@ -1,1 +1,0 @@
-{"group":"B","state":"DONE","commit":"8284fb2852a399b96a90d48d842604b8ab68d6f8","tests":"91 passed; ruff pass; mypy pass","failure":"none after fix (race test earlier failed due to test_queue_lease leaving schema at 0002; fixed)","nextAction":"coordinator integrate/QC; không push"}

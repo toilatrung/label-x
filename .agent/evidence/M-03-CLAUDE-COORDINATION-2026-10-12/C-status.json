@@ -1,1 +1,0 @@
-{"group":"C","pid":4360,"state":"WAVE2_DONE_PENDING_INTEGRATION","commit":"22a4e11d2f1262bf16b3aedeaa80219b939383b6","tests":"ruff/format/mypy clean; pytest tests/effort tests/review: 102 passed","failure":null,"nextAction":"coordinator applies urls/settings/OpenAPI patches in C-wave2-result.json; no further coding by C until instructed","detail":"C-wave2-result.json"}
