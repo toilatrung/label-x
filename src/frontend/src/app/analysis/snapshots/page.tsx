@@ -30,7 +30,7 @@ export default function SnapshotHistoryPage() {
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
-  if (!canEnter) return <ForbiddenView requiredPermission="QA Lead / QC Admin / Super Admin" />;
+  if (!canEnter) return <ForbiddenView requiredPermission="Quality Assurance Lead / Quality Control Admin / Super Admin" />;
   const loadFailed = datasets.isError || history.isError;
   const sample = loadFailed;
   const hint = sample ? `${SAMPLE_HISTORY_ROWS.length} snapshot` : `${snapshots.length} snapshot đã tải`;

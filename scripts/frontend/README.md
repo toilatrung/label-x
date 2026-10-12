@@ -14,6 +14,7 @@ scripts/frontend/dev.sh -p 3200 --role reviewer
   `admin`, `qalead`, `qcadmin`, `reviewer`, `annotator`, `productowner`, `modelowner`.
 - Script in URL của từng route M-FE01. `--role` chỉ in sẵn tài khoản cần đăng nhập.
 - Mặc định bật **API giả lập** (`mock-api.cjs`) nên các màn gọi API thật cũng có dữ liệu: Dataset, Snapshot, cấu hình, QC run, ranking, candidate, escalation, guideline, quyền workflow. Số liệu theo bộ chuẩn: 12,500 frame (3 task), coverage 92.4%, 384 candidate.
+- Mặc định chỉ nghe `localhost`. `-H` khác (ví dụ `0.0.0.0`) bị từ chối trừ khi thêm `--i-know-lan`, vì mock auth (mật khẩu `password123`) và API giả sẽ mở ra cả mạng.
 - `--no-api` bỏ API giả lập: chỉ `/api/auth/*` hoạt động, các trang gọi API khác báo lỗi kết nối (đúng hành vi khi chưa có backend).
 - API giả lập chỉ để dev: ghi (POST) trả thành công giả và không lưu trạng thái; không nằm trong bundle production.
 
