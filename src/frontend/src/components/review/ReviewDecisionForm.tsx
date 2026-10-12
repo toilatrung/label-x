@@ -10,6 +10,18 @@ type Lease = components['schemas']['Lease'];
 type IssueFamily = components['schemas']['IssueFamily'];
 type Severity = components['schemas']['Severity'];
 
+export const ISSUE_STATE_LABELS: Record<string, string> = {
+  pending_review: 'Chờ review',
+  in_review: 'Đang review',
+  confirmed: 'Đã xác nhận',
+  rejected: 'Đã bác bỏ',
+  escalated: 'Đã chuyển cấp trên',
+  fix_pending: 'Chờ sửa',
+  recheck_pending: 'Chờ kiểm tra lại',
+  resolved: 'Đã xử lý',
+  reopened: 'Mở lại',
+};
+
 export type DirectDecisionAction = 'confirm' | 'reject' | 'uncertain' | 'escalate';
 
 export interface ReviewDecisionFormProps {
@@ -184,12 +196,12 @@ export function ReviewDecisionForm({
     if (!hasVerifiedRevision) {
       return (
         revisionUnavailableReason ||
-        'Thiếu snapshot revision đã xác thực từ context (T-035). Quyết định chưa thể gửi do thiếu thông tin revision bắt buộc.'
+        'Chưa có revision của Snapshot đã xác thực nên chưa thể gửi quyết định.'
       );
     }
 
     if (issue.state !== 'in_review') {
-      return `Issue đang ở trạng thái "${issue.state}". Chỉ issue có trạng thái "in_review" mới có thể lưu quyết định trực tiếp.`;
+      return `Issue đang ở trạng thái "${ISSUE_STATE_LABELS[issue.state] ?? issue.state}". Chỉ issue ở trạng thái "Đang review" mới lưu được quyết định trực tiếp.`;
     }
 
     if (['reject', 'uncertain', 'escalate'].includes(action)) {
@@ -459,7 +471,7 @@ export function ReviewDecisionForm({
         <div className="lx-callout lx-callout--warning lx-callout--compact lx-text-12" role="alert">
           <span className="lx-callout__text">
             {revisionUnavailableReason ||
-              'Chưa có snapshot revision đã xác thực từ context (T-035 interface gap). Chức năng lưu quyết định tạm khóa.'}
+              'Chưa có revision của Snapshot đã xác thực. Chức năng lưu quyết định tạm khoá.'}
           </span>
         </div>
       )}
@@ -467,7 +479,7 @@ export function ReviewDecisionForm({
       {issue.state !== 'in_review' && (
         <div className="lx-callout lx-callout--info lx-callout--compact lx-text-12" role="status">
           <span className="lx-callout__text">
-            Issue đang ở trạng thái {issue.state}. Chỉ issue có trạng thái in_review mới có thể lưu quyết định trực tiếp. Lịch sử quyết định trước đó vẫn được bảo toàn đầy đủ.
+            Issue đang ở trạng thái {ISSUE_STATE_LABELS[issue.state] ?? issue.state}. Chỉ issue ở trạng thái Đang review mới lưu được quyết định trực tiếp. Lịch sử quyết định trước đó vẫn được bảo toàn đầy đủ.
           </span>
         </div>
       )}
@@ -565,7 +577,7 @@ export function ReviewDecisionForm({
           </label>
           <label
             className="lx-choice lx-choice--disabled"
-            title="Yêu cầu sửa (request_fix) được thực hiện qua atomic POST /api/rework/ thuộc luồng T-040 sau khi confirm, không gửi qua POST decisions."
+            title="Yêu cầu sửa được tạo ở luồng Rework sau khi xác nhận lỗi, không gửi cùng quyết định này."
           >
             <input
               type="radio"

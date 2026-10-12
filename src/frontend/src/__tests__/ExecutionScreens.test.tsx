@@ -111,17 +111,53 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByText(/Applicability version: 2026.10/)).toBeDefined();
     expect(screen.getByText('worker timeout')).toBeDefined();
     expect(screen.getByText(/disabled/)).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Chạy lại shard lỗi' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Quality Control Run' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Snapshot' })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Chạy phân tích mới' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
+    expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
+    expect(screen.getByText(/Không cộng Coverage giữa các engine/)).toBeDefined();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Chạy lại shard lỗi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chạy lại engine lỗi' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(true));
   });
 
   it('keeps QC admin read-only on the config screen', async () => {
     const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
     expect(await screen.findByRole('option', { name: /Published config/ })).toBeDefined();
-    expect((screen.getByRole('button', { name: 'Tạo QC run' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Lấy mẫu')).toBeDefined();
+    expect(screen.getByText('Sẵn sàng chạy')).toBeDefined();
+    expect(screen.getAllByText(/Chức năng vẫn chưa được kết nối với server/)).toHaveLength(2);
+    expect(screen.getByRole('link', { name: 'Xem chi tiết lấy mẫu' }).getAttribute('href')).toBe('/calibration/audit-sampling');
+    expect(screen.getByText('Thời gian dự kiến')).toBeDefined();
     expect(calls.some((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/runs/')).toBe(false);
+  });
+
+  it('keeps Review Queues navigation visible for QC admin while write actions stay hidden', async () => {
+    searchParamsState.current = 'run=12';
+    const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    fireEvent.change(await screen.findByLabelText('Dataset'), { target: { value: '1' } });
+
+    expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Chạy lại engine lỗi' })).toBeNull();
+    expect(calls.some((request) => request.method === 'POST')).toBe(false);
+  });
+
+  it('drops a URL-selected run when a global user changes Dataset context', async () => {
+    searchParamsState.current = 'run=12';
+    const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    const dataset = await screen.findByLabelText('Dataset');
+    fireEvent.change(dataset, { target: { value: '1' } });
+    expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
+    const detailCallsBefore = calls.filter((request) => new URL(request.url).pathname === '/api/runs/12/').length;
+
+    fireEvent.change(screen.getByLabelText('Dataset'), { target: { value: '2' } });
+
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Mở Review Queues →' })).toBeNull());
+    expect(calls.filter((request) => new URL(request.url).pathname === '/api/runs/12/').length).toBe(detailCallsBefore);
   });
 
   it('creates and publishes a version through the real config endpoints', async () => {
@@ -157,9 +193,9 @@ describe('Execution screens on real API contract', () => {
     expect(await screen.findByText('Chưa chọn phiên bản cấu hình')).toBeDefined();
     fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
     expect(await screen.findByText('Duplicate / Overlap')).toBeDefined();
-    expect(screen.getByText('Ngưỡng kiểm tra engine')).toBeDefined();
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
-    expect(screen.getByText('Bật trong config')).toBeDefined();
+    expect(screen.getByText('Engine kiểm tra')).toBeDefined();
+    expect(screen.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
+    expect((screen.getByRole('checkbox', { name: 'Duplicate / Overlap: bật' }) as HTMLInputElement).checked).toBe(true);
     expect(screen.getByLabelText('Ngưỡng và model tham chiếu').textContent).toContain('"tau_loc": 0.55');
     expect(screen.getByLabelText('Ngưỡng và model tham chiếu').textContent).toContain('detector-v2');
     const configCall = calls.find((r) => new URL(r.url).pathname === '/api/config-versions/' && r.method === 'GET');
@@ -204,7 +240,7 @@ describe('Execution screens on real API contract', () => {
     await screen.findByRole('option', { name: /Different Config v9/ });
     expect(screen.getByText('Selected Config v7')).toBeDefined();
     expect(screen.queryByText('Different Config v9')).toBeNull();
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
+    expect(screen.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
     expect(screen.queryByText(/Ngưỡng tin cậy ≥ 0.9/)).toBeNull();
     // Dropdown preserves option for the selected config
     expect(screen.getByRole('option', { name: /Selected Config v7 · v7 \(đang chọn\)/ })).toBeDefined();
@@ -256,7 +292,7 @@ describe('Execution screens on real API contract', () => {
   it('does not fetch candidates when no run is selected, and fetches only after run is selected', async () => {
     searchParamsState.current = '';
     const { calls } = await setup('qalead', <ExecutionHistoryPage />);
-    await screen.findByText('QC-12');
+    await screen.findByText('#QC-12');
     expect(calls.some((r) => new URL(r.url).pathname.includes('/candidates/'))).toBe(false);
     expect(screen.queryByText('Candidate nghi vấn & Evidence')).toBeNull();
 

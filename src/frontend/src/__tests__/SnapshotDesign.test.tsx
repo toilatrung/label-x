@@ -52,7 +52,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(screen.getByLabelText('Mã hạt giống lấy mẫu (seed)')).toBeDefined();
     expect((screen.getByLabelText('Annotation revision') as HTMLSelectElement).disabled).toBe(true);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
-    expect(await side.findByText('sha256:abc')).toBeDefined();
+    expect(await side.findByText('abc')).toBeDefined();
     expect(side.getByText('Đã khoá')).toBeDefined();
     expect(side.getByText('Mô hình độc lập')).toBeDefined();
     expect(side.getAllByText('Dữ liệu minh họa').length).toBe(1);
@@ -82,15 +82,28 @@ describe('Snapshot create form scope', () => {
     show();
     expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
+    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
     expect(screen.getByText(/Hiện chọn 1 task · 1 job · 12 frame\./)).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
   });
 
+  it('lists only Task rows by default and reveals Job rows on demand with thousands separators', () => {
+    show();
+    expect(screen.queryByRole('checkbox', { name: 'Chọn Job 17' })).toBeNull();
+    expect(screen.getByRole('checkbox', { name: 'Chọn Task 9' })).toBeDefined();
+    const toggle = screen.getByRole('button', { name: /2 Job/ });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('checkbox', { name: 'Chọn Job 17' })).toBeDefined();
+  });
+
   it('shows the stage column placeholder next to the assignee', () => {
     show();
     expect(screen.getByRole('columnheader', { name: 'Người thực hiện · Giai đoạn' })).toBeDefined();
+    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 17' }).closest('tr') as HTMLElement).getByText(/3 · —/)).toBeDefined();
   });
 
@@ -113,10 +126,10 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     expect(screen.getByRole('link', { name: 'Về Snapshot' }).getAttribute('href')).toBe('/analysis');
     const headers = (await screen.findAllByRole('columnheader')).map(th => th.textContent);
     expect(headers).toEqual(['Snapshot', 'Dataset', 'Revision', 'Frame', 'Quality Control Run', 'Trạng thái']);
-    expect(screen.getByRole('link', { name: 'SNP-7' }).getAttribute('href')).toBe('/analysis?snapshotId=7');
-    const row = within(screen.getByRole('link', { name: 'SNP-7' }).closest('tr') as HTMLElement);
+    expect(screen.getByRole('link', { name: 'SNP-007' }).getAttribute('href')).toBe('/analysis?snapshotId=7');
+    const row = within(screen.getByRole('link', { name: 'SNP-007' }).closest('tr') as HTMLElement);
     expect(row.getByText('Urban')).toBeDefined();
-    expect(row.getByText('sha256:abc')).toBeDefined();
+    expect(row.getByText('abc')).toBeDefined();
     expect(row.getByText('2')).toBeDefined();
     expect(row.getByText('Đã khóa')).toBeDefined();
     expect(screen.getAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(1);

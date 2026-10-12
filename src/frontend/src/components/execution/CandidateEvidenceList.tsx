@@ -146,7 +146,7 @@ export function CandidateEvidenceList({
                           )}
                           {ev.iou !== undefined && ev.iou !== null && (
                             <div>
-                              <strong>IoU: </strong>
+                              <strong>Intersection over Union (IoU): </strong>
                               <span className="lx-mono">{(ev.iou as number).toFixed(4)}</span>
                             </div>
                           )}
