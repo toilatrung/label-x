@@ -7,6 +7,7 @@ import type { MockUserRecord } from '@/lib/auth/mock-users';
 import { ROLE_LABELS } from '@/lib/auth/roles';
 import { apiBaseUrl, isMockAuth } from '@/lib/auth/config';
 import { FALLBACK_ERROR_MESSAGE } from '@/lib/api/errors';
+import { BrandMark } from '@/components/ui/BrandMark';
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading, authError } = useAuth();
@@ -57,9 +58,7 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--canvas)', padding: 'var(--space-4)' }}>
       <div className="lx-card" style={{ width: '100%', maxWidth: '440px', padding: 'var(--space-6)' }}>
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--ink)' }}>
-            Label<span style={{ color: 'var(--brand)' }}>X</span>
-          </div>
+          <BrandMark large />
           <div style={{ fontSize: '13px', color: 'var(--ink-muted)', marginTop: '4px' }}>
             Hệ thống Kiểm soát Chất lượng Annotation CVAT
           </div>

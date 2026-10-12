@@ -36,6 +36,11 @@
   background: var(--surface); border-bottom: 1px solid var(--border); }
 .lx-logo { font: 600 20px/1 var(--font-sans); letter-spacing: -.02em; color: var(--ink); text-decoration: none; }
 .lx-logo b { color: var(--brand); font-weight: 800; }
+.lx-brandmark { --mark-width: 112px; display: inline-block; position: relative; flex: none; vertical-align: middle; width: var(--mark-width); height: calc(var(--mark-width) * .19702); overflow: hidden; }
+.lx-brandmark--large { --mark-width: 180px; }
+.lx-brandmark__image { position: absolute; display: block; width: calc(var(--mark-width) * 1.02881); height: auto; max-width: none; left: calc(var(--mark-width) * -.02418); top: calc(var(--mark-width) * -.39918); }
+.lx-brandmark--inverse .lx-brandmark__image { filter: brightness(0) invert(1); }
+.lx-brandmark--inverse .lx-brandmark__red { filter: none; clip-path: inset(0 0 0 71.5%); }
 .lx-nav { display: flex; height: 100%; gap: var(--space-1); flex: 1; }
 .lx-nav a { position: relative; display: flex; align-items: center; padding: 0 var(--space-3); color: var(--ink-muted);
   font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap; }
