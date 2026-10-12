@@ -58,7 +58,7 @@ Giao diện **luôn hoàn thiện**, kể cả khi backend chưa có. Với mọ
 
 ## Tiêu chí không đạt (reviewer phải chặn PR)
 
-- Màu, bo góc, bóng, cỡ chữ hard-code thay vì token; bo tròn ở card/bảng/nút/input (chỉ badge 4px, chip pill, switch, avatar, dot, dropdown 6px).
+- Màu, bo góc, bóng, cỡ chữ hard-code thay vì token; card/panel/workspace không dùng `radius-lg` 5px, hoặc nút/input không dùng `radius-md` 5px.
 - Dùng thư viện UI khác (MUI, shadcn, Ant, Tailwind component) hoặc class tự đặt thay cho `lx-*`.
 - Thiếu thanh điều hướng graphite, context bar, FlowNav ở bước của flow, hoặc thêm hàng điều hướng thứ hai.
 - Trạng thái chỉ bằng màu/chấm (trừ dot của Quality Control Run), viết tắt QC/IoU/GT, dấu chấm than, emoji, gradient, glow.

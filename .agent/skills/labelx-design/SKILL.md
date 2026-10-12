@@ -21,7 +21,7 @@ LabelX is an enterprise Quality Control module that runs around CVAT. Users are 
 2. Red is for the logo X (`brand`) and blocking states (`danger`) only.
 3. State is always a word: use `StatusBadge` with text. The one exception is the Quality Control Run dot, which carries a tooltip and aria-label.
 4. Context is always visible: every screen sits under the context bar (Dataset, Quality Control Run, Snapshot, Phạm vi, Guideline, Taxonomy). Dataset, Run and Phạm vi open selection menus and update the other chips.
-5. Square by default: cards, tables, panels, buttons, inputs are square. Only small elements are rounded: badges and tags (4px), context chips (pill), switches, avatar, status dots, floating dropdown cards (6px).
+5. Content frames, buttons and inputs use subtle 5px corners: `radius-lg` for cards, panels and the workspace; `radius-md` for controls. Badges and tags use 4px, context chips are pill-shaped, and floating dropdown cards use 6px.
 6. Borders, not shadows: 1px `border`; shadow only on dropdown cards.
 7. Row actions are borderless icon buttons (`lx-iconbtn`) with `data-tip` and `aria-label` carrying the same Vietnamese verb phrase. Page-level actions use boxed `lx-btn`; one primary per region.
 8. Rebalance content: each screen is neither crowded nor empty. Related lists become tabs inside one page; a history or log opens from a button on its own page.
@@ -73,5 +73,5 @@ Pass or done = success; partial or needs attention = warning; blocking = danger;
 1. Pick the module and decide: independent screen (dropdown item) or a step (add to a flow) or a tab inside an existing page.
 2. Build with `TopBar` (active, active-item) and, if a step, `FlowNav` (flow, step).
 3. Use only DS tokens and `lx-*` classes; add a new class to the Design System first if one is missing.
-4. Check: square corners, state as words, row actions as icon buttons with tooltips, no abbreviations, numbers consistent with the data above, all states of the context bar still correct.
+4. Check: frames and controls use their rounded tokens, state as words, row actions as icon buttons with tooltips, no abbreviations, numbers consistent with the data above, all states of the context bar still correct.
 5. Reply to review comments in the thread and resolve them when done.
