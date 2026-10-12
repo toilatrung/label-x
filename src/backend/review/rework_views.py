@@ -10,6 +10,7 @@ from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope
 from config.serializers import ErrorSerializer
 from review.api_serializers import (
+    IDEMPOTENCY_KEY_PARAM,
     ReworkCreateRequestSerializer,
     ReworkRequestSerializer,
     ReworkSubmissionRequestSerializer,
@@ -40,6 +41,7 @@ class ReworkCreateView(APIView):
 
     @extend_schema(
         operation_id="rework_create",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=ReworkCreateRequestSerializer,
         responses={
             201: ReworkRequestSerializer,
@@ -71,6 +73,7 @@ class ReworkSubmittedView(APIView):
 
     @extend_schema(
         operation_id="rework_submitted",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=ReworkSubmissionRequestSerializer,
         responses={
             202: ReworkRequestSerializer,
@@ -108,6 +111,7 @@ class ReworkVerifyView(APIView):
 
     @extend_schema(
         operation_id="rework_verify",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
         request=ReworkVerifyRequestSerializer,
         responses={
             200: ReworkRequestSerializer,
@@ -115,7 +119,6 @@ class ReworkVerifyView(APIView):
             403: ErrorSerializer,
             404: ErrorSerializer,
             409: ErrorSerializer,
-            422: ErrorSerializer,
         },
         tags=["rework"],
     )
