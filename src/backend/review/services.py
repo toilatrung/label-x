@@ -123,7 +123,9 @@ def _close_expired(lease: Lease, now: datetime) -> None:
     lease.save(update_fields=["closed_at"])
     if frame.state != FrameReview.State.IN_REVIEW:
         # The frame moved on while the lease stayed open (e.g. rework verified ->
-        # awaiting_followup, or reviewed/completed): expiry must not rewrite its state.
+        # awaiting_followup, or reviewed/completed): expiry must not rewrite its state, but
+        # issues the holder never decided still go back to the queue.
+        decision_source.reset_undecided_issues(frame)
         return
     saved = decision_source.has_persisted_decision(frame)
     frame.state = FrameReview.State.INCOMPLETE if saved else FrameReview.State.UNREVIEWED

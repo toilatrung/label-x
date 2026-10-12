@@ -4,18 +4,28 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
-from threading import Barrier
+from threading import Event
 
 import pytest
 from django.db import connection, connections, transaction
 from django.utils import timezone
 
+from review import rework_service, services
 from review.finalization_service import complete_scope_frames
-from review.models import FrameReview, Lease
+from review.models import FrameReview, Issue, Lease, ReworkRequest
 from runs.models import QCRun
 from tests.review.test_final_source_guard import _complete_final, final_world  # noqa: F401
 from tests.review.test_issues_decisions import claim, decide, manual
 from tests.review.test_queue_lease import client, next_url
+from tests.review.test_rework import (  # noqa: F401
+    _run_for,
+    _submit,
+    _verify,
+    changed_snapshot,
+    confirmed,
+    create_request,
+    cvat_base_url,
+)
 
 pytest_plugins = ["tests.review.test_queue_lease"]
 
@@ -90,53 +100,154 @@ def test_in_review_expiry_with_saved_decision_is_incomplete_and_resumes(world):
     _expire(lease_id)
     # materialization happens when another caller touches the run: it must read incomplete
     other = client(world["other"]).post(next_url(), {"run_id": world["run"].pk}, format="json")
-    assert other.status_code in (200, 204, 404)
+    assert other.status_code == 204  # frame is reserved for the previous reviewer
     frame = FrameReview.objects.get(pk=frame_id)
-    assert frame.state in (FrameReview.State.INCOMPLETE, FrameReview.State.IN_REVIEW)
+    assert frame.state == FrameReview.State.INCOMPLETE
+    assert frame.previous_reviewer_id == world["reviewer"].pk
     resumed = _claim_again(world)
     assert resumed.status_code == 200 and resumed.data["frame"]["id"] == frame_id
     assert resumed.data["resumed"] is True
 
 
+@pytest.mark.django_db
+def test_undecided_issue_is_requeued_when_frame_already_left_in_review(world):
+    """R1: expiry closes the lease and requeues undecided issues without touching the frame."""
+
+    lease_id, frame_id = claim(world)
+    decided, _ = manual(world, lease_id, frame_id)
+    undecided, _ = manual(world, lease_id, frame_id)
+    assert decide(world, lease_id, decided).status_code in (200, 201)
+    assert Issue.objects.get(pk=undecided).state == Issue.State.IN_REVIEW
+    FrameReview.objects.filter(pk=frame_id).update(state=FrameReview.State.AWAITING_FOLLOWUP)
+    _expire(lease_id)
+
+    assert (
+        client(world["other"])
+        .post(next_url(), {"run_id": world["run"].pk}, format="json")
+        .status_code
+        == 204
+    )
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
+    assert Issue.objects.get(pk=decided).state == Issue.State.CONFIRMED
+    assert Issue.objects.get(pk=undecided).state == Issue.State.PENDING_REVIEW
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+
+
+@pytest.mark.django_db
+def test_expiry_after_real_verify_rework_keeps_awaiting_followup(confirmed, world, monkeypatch):  # noqa: F811
+    """Same F1 path, but the frame leaves in_review through the real verify_rework."""
+
+    frame = confirmed.frame_review
+    frame.state = FrameReview.State.IN_REVIEW
+    frame.save(update_fields=["state"])
+    lease = Lease.objects.create(
+        frame_review=frame,
+        holder=world["reviewer"],
+        queue_source="risk",
+        expires_at=timezone.now() - timedelta(seconds=1),
+    )
+    rework = ReworkRequest.objects.get(pk=create_request(confirmed, world).data["id"])
+    snapshot = changed_snapshot(world)
+    run = _run_for(world, snapshot)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (snapshot, run))
+    assert _submit(world, rework, snapshot).status_code == 202
+    assert _verify(world, rework, snapshot, True).status_code == 200
+    frame.refresh_from_db()
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP and lease.closed_at is None
+
+    _claim_again(world)
+    frame.refresh_from_db()
+    lease.refresh_from_db()
+    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+    assert lease.closed_at is not None
+    assert frame.previous_reviewer_id is None and frame.incomplete_since is None
+
+
+def _hold_run_lock_then_verify(run_id, frame_id, entered: Event, release: Event):
+    connections.close_all()
+    try:
+        with transaction.atomic():
+            QCRun.objects.select_for_update().get(pk=run_id)  # same lock as verify_rework
+            entered.set()
+            assert release.wait(timeout=15)
+            FrameReview.objects.filter(pk=frame_id).update(
+                state=FrameReview.State.AWAITING_FOLLOWUP
+            )
+    finally:
+        connections.close_all()
+
+
+def _claim_in_thread(world, run_id):
+    connections.close_all()
+    try:
+        return client(world["reviewer"]).post(next_url(), {"run_id": run_id}, format="json")
+    finally:
+        connections.close_all()
+
+
 @pytest.mark.django_db(transaction=True)
-def test_postgres_race_verify_vs_claim_keeps_awaiting_followup(world):
+def test_postgres_verify_holds_run_lock_first_claim_then_sees_awaiting_followup(world):
+    """Order 1 (forced): verify owns the run lock; the claim waits, then must not rewrite."""
+
     assert connection.vendor == "postgresql"
     lease_id, frame_id = claim(world)
     _expire(lease_id)
     run_id = world["run"].pk
-    barrier = Barrier(2)
+    entered, release = Event(), Event()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        verifier = pool.submit(_hold_run_lock_then_verify, run_id, frame_id, entered, release)
+        assert entered.wait(timeout=15)
+        claimer = pool.submit(_claim_in_thread, world, run_id)
+        claim_blocked = not claimer.done()
+        release.set()
+        verifier.result(timeout=30)
+        response = claimer.result(timeout=30)
+    assert claim_blocked  # the claim really queued behind the verify transaction
+    assert response.status_code == 204
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert Lease.objects.get(pk=lease_id).closed_at is not None
 
-    def verify_side() -> None:
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_claim_holds_run_lock_first_verify_then_wins(world, monkeypatch):
+    """Order 2 (forced): the claim materializes expiry under the run lock; verify waits."""
+
+    assert connection.vendor == "postgresql"
+    lease_id, frame_id = claim(world)
+    _expire(lease_id)
+    run_id = world["run"].pk
+    inside_claim, release = Event(), Event()
+    real_close = services._close_expired
+
+    def paused_close(lease, now):
+        real_close(lease, now)
+        inside_claim.set()
+        assert release.wait(timeout=15)
+
+    monkeypatch.setattr(services, "_close_expired", paused_close)
+    verify_done = Event()
+
+    def verify_side():
         connections.close_all()
         try:
-            barrier.wait(timeout=15)
             with transaction.atomic():
-                QCRun.objects.select_for_update().get(pk=run_id)  # same lock as verify_rework
+                QCRun.objects.select_for_update().get(pk=run_id)
                 FrameReview.objects.filter(pk=frame_id).update(
                     state=FrameReview.State.AWAITING_FOLLOWUP
                 )
-        finally:
-            connections.close_all()
-
-    def claim_side() -> int:
-        connections.close_all()
-        try:
-            barrier.wait(timeout=15)
-            return (
-                client(world["reviewer"])
-                .post(next_url(), {"run_id": run_id}, format="json")
-                .status_code
-            )
+            verify_done.set()
         finally:
             connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        verifier, claimer = pool.submit(verify_side), pool.submit(claim_side)
-        verifier.result()
-        claim_status = claimer.result()
-    assert claim_status in (200, 204)
-    frame = FrameReview.objects.get(pk=frame_id)
-    # Either order must end awaiting_followup, or (claim first) a fresh in_review lease that
-    # verify then overwrote; never a lost update to incomplete/unreviewed.
-    assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
+        claimer = pool.submit(_claim_in_thread, world, run_id)
+        assert inside_claim.wait(timeout=15)
+        verifier = pool.submit(verify_side)
+        verify_blocked = not verify_done.wait(timeout=1.0)
+        release.set()
+        response = claimer.result(timeout=30)
+        verifier.result(timeout=30)
+    assert verify_blocked  # verify waited for the claim's run lock
+    assert response.status_code == 200  # claim won: frame was in_review, now re-leased
+    assert FrameReview.objects.get(pk=frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
     assert Lease.objects.get(pk=lease_id).closed_at is not None
