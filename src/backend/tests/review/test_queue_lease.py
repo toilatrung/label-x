@@ -365,6 +365,9 @@ def test_migration_upgrade_from_baseline_schema():
     assert {"frame_review", "review_lease", "review_issue", "review_decision"} <= set(
         connection.introspection.table_names()
     )
+    # Leave the shared test database at the latest schema for later transactional tests.
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
 
 
 @pytest.mark.django_db(transaction=True)
