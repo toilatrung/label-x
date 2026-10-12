@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from django.core.files.storage import storages
 from django.test import override_settings
 
 from accounts.models import Role
@@ -15,6 +16,16 @@ from tests.effort.test_effort_events import _client, _frame, _payload, _user
 
 pytestmark = pytest.mark.django_db(transaction=True)
 pytest_plugins = ["tests.review.test_queue_lease"]
+
+
+@pytest.fixture(autouse=True)
+def snapshot_storage_mock(monkeypatch):
+    monkeypatch.setattr(
+        storages["snapshots"],
+        "url",
+        lambda name: f"https://storage.test/{name}",
+    )
+
 
 T0 = datetime(2026, 10, 11, 2, 0, tzinfo=UTC)
 POLICY = {
