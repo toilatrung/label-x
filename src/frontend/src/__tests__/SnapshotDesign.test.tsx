@@ -78,6 +78,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     wrap(<AnalysisPage />);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
     expect(await side.findByText('Dữ liệu minh họa')).toBeDefined();
+    expect(side.getByText(/Không tải được Quality Control Run của Snapshot/)).toBeDefined();
     expect(side.getByText('Detector v2.3 · Classifier v1.8')).toBeDefined();
   });
 
