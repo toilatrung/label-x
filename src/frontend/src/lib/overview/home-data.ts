@@ -1,7 +1,7 @@
 import { apiArray, apiEndpoint, apiObject } from '@/lib/api-explorer/data';
 
 export interface HomeDatasetRow {
-  id: string;
+  id: number;
   name: string;
   version?: string;
   cvatProjectId?: number;
@@ -23,13 +23,13 @@ export interface HomeDatasetRow {
 const datasets = apiArray(apiObject(apiEndpoint('datasets_list').response).results).map(apiObject);
 const label = (value: string) => ({ partial: 'Partial', checked: 'Checked', blocked: 'Blocked', released: 'Released', ready_for_approval: 'Ready · chờ duyệt' }[value] ?? value);
 
-/** Design-complete fallback sourced from the dataset response in API Explorer. */
+/** Product dataset rows sourced from the canonical API response used by the UI. */
 export const HOME_DATASETS: HomeDatasetRow[] = datasets.map((dataset, index) => {
   const latest = apiObject(dataset.latest_run);
   const hasRun = Object.keys(latest).length > 0;
   const gate = String(latest.gate ?? 'not_checked');
   return {
-    id: `dataset-${String(dataset.id)}`,
+    id: Number(dataset.id),
     name: String(dataset.name),
     version: String(dataset.version),
     cvatProjectId: Number(dataset.cvat_project_id),

@@ -13,8 +13,9 @@ interface QualitySummaryProps {
   onTaskScopeChange?: (task: string | null) => void;
 }
 
-function percent(value: number | null) {
-  return value === null ? '—' : `${(value * 100).toFixed(1)}%`;
+function percent(value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  return `${(value * 100).toFixed(1)}%`;
 }
 
 function badgeTone(status: string) {

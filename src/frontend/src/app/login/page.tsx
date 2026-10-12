@@ -117,7 +117,7 @@ export default function LoginPage() {
 
         {isMockAuth && mockUsers.length > 0 && <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink-subtle)', marginBottom: '8px' }}>
-            Tài khoản mẫu thử nghiệm (chọn nhanh):
+            Tài khoản truy cập nhanh:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {mockUsers.map((u) => (

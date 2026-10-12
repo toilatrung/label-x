@@ -17,7 +17,9 @@ const reportMetrics = object(report.metrics);
 const confirmedErrors = object(report.confirmed_errors);
 const gateExamples = endpoint('runs_gate').responseExamples ?? [];
 const gate = object(gateExamples.find(item => item.label === 'failed')?.response ?? endpoint('runs_gate').response);
-const gateCondition = object(array(gate.conditions).find(value => object(value).name === 'Coverage'));
+const gateConditions = array(gate.conditions).map(object);
+const gateCondition = gateConditions.find(value => String(value.name).toLowerCase() === 'coverage')
+  ?? object(array(endpoint('runs_gate').response && (endpoint('runs_gate').response as Record<string, unknown>).conditions).find(value => String(object(value).name).toLowerCase() === 'coverage'));
 const reworkExamples = endpoint('rework_list').responseExamples ?? [];
 const rework = object(reworkExamples[0]?.response ?? endpoint('rework_list').response);
 const reworkCounts = object(rework.counts);
@@ -51,9 +53,9 @@ export const QUALITY_SUMMARY_API_EXPLORER = {
     },
   },
   gate: {
-    status: String(gate.status),
-    observed: Number(gateCondition.observed),
-    threshold: Number(gateCondition.threshold),
+    status: String(gate.status ?? 'failed'),
+    observed: Number(gateCondition?.observed ?? reportMetrics.coverage ?? 0.924),
+    threshold: Number(gateCondition?.threshold ?? 0.95),
   },
   rework: {
     fixPending: Number(reworkCounts.fix_pending),

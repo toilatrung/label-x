@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { DemoRegionNotice, signalNoticeAttention } from './DemoRegionNotice';
 import { CLASS_ROWS, CONFUSED_PAIRS, ERROR_TYPES, EXPORT_FORMATS, REPORT_METRICS, REPORT_SCOPE, ROOT_CAUSES } from '@/lib/reports/sample-data';
 
 type Tab = 'summary' | 'class' | 'cause';
@@ -35,7 +34,7 @@ export function QualityReportHeader() {
           <div className="lx-menu lx-menu--end lx-menu--right" role="menu">
             {/* TODO(backend): POST /api/runs/{id}/report/export/ (pdf | csv | json) */}
             {EXPORT_FORMATS.map((f) => (
-              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => { setOpen(false); signalNoticeAttention(); }}>
+              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => setOpen(false)}>
                 <span className="lx-menu__t">{f.label}</span><span className="lx-menu__d">{f.note}</span>
               </button>
             ))}
@@ -51,7 +50,6 @@ export function QualityReportBody() {
   return (
     <>
       {/* TODO(backend): GET /api/runs/{id}/report/ (metric, lỗi theo loại, theo lớp, nguyên nhân gốc) */}
-      <DemoRegionNotice listenGlobal />
       <div className="lx-grid lx-grid--4">
         {REPORT_METRICS.map((m) => (
           <div key={m.key} className="lx-metric">

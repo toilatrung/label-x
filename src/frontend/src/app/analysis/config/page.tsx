@@ -53,8 +53,8 @@ function ConfigContent() {
     const value = rawEngines[engine];
     return typeof value === 'object' && value !== null && (value as Record<string, unknown>).enabled === true;
   }).length;
-  const frameCount = selectedSnapshot?.jobs.reduce((total, job) => total + job.frames.length, 0) ?? 0;
-  const taskCount = selectedSnapshot ? new Set(selectedSnapshot.jobs.map((job) => job.cvat_task_id)).size : 0;
+  const frameCount = selectedSnapshot?.jobs?.reduce((total, job) => total + (job.frames?.length ?? 0), 0) ?? 0;
+  const taskCount = selectedSnapshot?.jobs ? new Set(selectedSnapshot.jobs.map((job) => job.cvat_task_id)).size : 0;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -165,7 +165,7 @@ function ConfigContent() {
           {(snapshots.data?.next || configs.data?.next) && <div className="lx-actions">{snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang Snapshot tiếp</button>}{configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang phiên bản tiếp</button>}</div>}
           <dl className="lx-kv">
             <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `${snapshotCode(selectedSnapshot.id)} · ${shortRevision(selectedSnapshot.revision_hash)}` : '—'}</dd>
-            <dt>Phạm vi</dt><dd>{selectedSnapshot ? `${taskCount} task · ${selectedSnapshot.jobs.length} job · ${formatCount(frameCount)} frame` : '—'}</dd>
+            <dt>Phạm vi</dt><dd>{selectedSnapshot ? `${taskCount} task · ${selectedSnapshot.jobs?.length ?? 0} job · ${formatCount(frameCount)} frame` : '—'}</dd>
             <dt>Engine</dt><dd>{activeConfig ? `${enabledEngineCount} bật · ${ENGINES.length - enabledEngineCount} tắt` : '—'}</dd>
             <dt>Thời gian dự kiến</dt><dd>—</dd>
           </dl>

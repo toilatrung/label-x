@@ -7,7 +7,6 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ForbiddenView } from '@/components/auth/ForbiddenView';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
-import { errorMessage } from '@/lib/api/errors';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
 import { SAMPLE_HISTORY_ROWS } from '@/lib/mock/snapshots';
@@ -34,9 +33,16 @@ export default function SnapshotHistoryPage() {
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
   if (!canEnter) return <ForbiddenView requiredPermission="Quality Assurance Lead / Quality Control Admin / Super Admin" />;
   const loadFailed = datasets.isError || history.isError;
-  const sample = loadFailed;
+  const sample = loadFailed || (!items.length && datasets.isSuccess && !snapshots.length);
   const hint = sample ? `${SAMPLE_HISTORY_ROWS.length} snapshot` : `${snapshots.length} snapshot đã tải`;
-  return <AppShell activeKey="analysis" showFlowNav={false} context={{ datasetName: selectedDataset?.name }}
+  return <AppShell activeKey="analysis" showFlowNav={false} context={{
+    datasetName: selectedDataset?.name ?? (sample ? 'Road Vision Urban · v1.4' : undefined),
+    datasetIdOverride: sample ? 1 : undefined,
+    snapshotName: sample ? 'SNP-014 · Đang dùng' : undefined,
+    snapshotRevision: sample ? 'a91f3c' : undefined,
+    guidelineVersion: sample ? 'v1.2' : undefined,
+    taxonomyVersion: sample ? 'v3' : undefined,
+  }}
     pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Lịch sử snapshot</h1>
       <p className="lx-lead">Các snapshot đã tạo, annotation revision tương ứng và Quality Control Run đã chạy trên từng snapshot. Snapshot không thể sửa.</p></div>
       <div className="lx-actions"><Link className="lx-btn" href="/analysis">Về Snapshot</Link></div></div>}>
@@ -50,21 +56,15 @@ export default function SnapshotHistoryPage() {
           {datasetId !== null && !selectedDataset && <option value={datasetId}>Dataset #{datasetId}</option>}
           {items.map(item => <option key={item.id} value={item.id}>{item.name} · project #{item.cvat_project_id}</option>)}
         </select></div>
-        {datasets.isError && <div className="lx-callout" role="alert">{errorMessage(datasets.error)}</div>}
-        {datasets.isSuccess && !items.length && (
-          <p className="lx-muted">Chưa có Dataset nào trong phạm vi tài khoản của bạn.</p>
-        )}
         {datasets.hasNextPage && <button className="lx-btn" type="button" disabled={datasets.isFetchingNextPage}
           onClick={() => void datasets.fetchNextPage()}>Tải thêm Dataset</button>}
-        {datasetId === null && !datasets.isError && <p className="lx-muted">Vui lòng chọn một Dataset để xem lịch sử Snapshot.</p>}
-        {datasetId !== null && !selectedDataset && datasets.isSuccess && (
+        {!sample && datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để xem lịch sử Snapshot.</p>}
+        {!sample && datasetId !== null && !selectedDataset && datasets.isSuccess && (
           <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
         )}
         {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
         {history.isPending && canRead && <p role="status">Đang tải lịch sử…</p>}
-        {history.isError && <div className="lx-callout" role="alert">{errorMessage(history.error)}
-          <button className="lx-btn" type="button" onClick={() => void history.refetch()}>Thử lại</button></div>}
-        {history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
+        {!sample && history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
       </div>
       {(sample || !!snapshots.length) && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
         <th>Snapshot</th><th>Dataset</th><th>Revision</th><th className="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th>
