@@ -1,0 +1,38 @@
+{
+  "source": "User message in this session, round 3",
+  "received_date": "2026-10-12",
+  "decision_maker": "Trịnh Quang Trung (@toilatrung), Product Owner",
+  "answers": [
+    {
+      "id": "D01",
+      "selection": "A · đội hiện tại (đề xuất)",
+      "comment": "Đội hiện tại theo đề xuất"
+    },
+    {
+      "id": "D03",
+      "selection": "Chưa chốt",
+      "comment": "Tạm thời chỉ thực hiện frames ảnh thôi chứ đụng tới Video"
+    },
+    {
+      "id": "D04",
+      "selection": "Duyệt 0,50 / 0,30 sau review",
+      "comment": "Ghi quyết định cụ thể, người xác nhận và evidence..."
+    },
+    {
+      "id": "D05-QA",
+      "selection": "QA xác nhận policy đã chỉnh",
+      "comment": "Ghi quyết định cụ thể, người xác nhận và evidence..."
+    },
+    {
+      "id": "D06",
+      "selection": "Duyệt đề xuất sau thống kê",
+      "comment": "Ghi quyết định cụ thể, người xác nhận và evidence..."
+    },
+    {
+      "id": "D09",
+      "selection": "Giữ baseline + giao nguồn lực",
+      "comment": ""
+    }
+  ],
+  "placeholder_comments_are_not_evidence": true
+}

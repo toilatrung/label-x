@@ -1,0 +1,47 @@
+{
+  "source_audit": "passed; all raw source files verified by SHA-256; 588 images decoded; 4414 valid boxes",
+  "existing_cvat_manifest_validation": {
+    "status": "passed",
+    "image_count": 588
+  },
+  "cli_dry_run": {
+    "status": "blocked",
+    "reason": "Existing CLI requires --bdd100k-images-root for BDD100K; no official image tree configured in this worktree. No membership workaround or live CVAT import."
+  },
+  "qa_yaml_structural_checks": "passed; draft and lock-disabled, thresholds consistent; QA review for unknown metadata",
+  "html_checks": {
+    "status": "passed",
+    "links": 28,
+    "unique_ids": 15,
+    "work_packages": 17,
+    "decision_forms": 6
+  },
+  "javascript_form": "PASS: 6 forms, incomplete-value guard, count update, Unicode export with actual line breaks, filename/download, no JS errors in jsdom",
+  "make_validate_kit": "FRAMEWORK_VALIDATION_PASS",
+  "make_check": {
+    "first_attempt": "interrupted with exit 143 after repeated backend setup errors; PostgreSQL/Redis/SeaweedFS were not running",
+    "completed_before_interruption": [
+      "Ruff and format (175 files)",
+      "ESLint",
+      "mypy (125 source files)",
+      "frontend typecheck"
+    ],
+    "infra_up": "exit 0; PostgreSQL, Redis and SeaweedFS healthy; bucket init completed",
+    "backend_smoke_after_infra": "1 passed in 33.71s",
+    "remaining_targets": {
+      "backend_pytest": "533 passed, 1 skipped in 158.07s",
+      "frontend_vitest_default_threads": "188 passed across 20 files; 1 unhandled startup error for auth.test.ts; make test exit 2",
+      "frontend_error": "vitest-pool-runner timeout waiting for threads worker to respond",
+      "detector_lint": "passed; 10 files already formatted",
+      "detector_pytest": "10 passed in 4.38s",
+      "framework": "FRAMEWORK_VALIDATION_PASS",
+      "auth_forks_diagnostic": "7 passed, 1 file passed in 63.50s; command uses --pool=forks --maxWorkers=1 --no-file-parallelism; not a full-suite pass"
+    },
+    "overall": "not_passed: default frontend run has one unhandled worker startup timeout despite 188 passing tests; all other recorded checks passed"
+  },
+  "image_hash_uniqueness": {
+    "distinct_images": 588,
+    "duplicate_hashes": 0
+  },
+  "shared_detector_environment": "editable package restored to /mnt/h/label-x/src/detector_worker after verification"
+}

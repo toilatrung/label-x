@@ -1,0 +1,54 @@
+{
+  "source": "User message containing exported M-04 decision form",
+  "baseline_report": "34bbbf7 / develop-demo / 2026-10-11",
+  "exported_at": "2026-10-12T04:47:23.952Z",
+  "received_date": "2026-10-12",
+  "decision_maker": "Product Owner — Trịnh Quang Trung (@toilatrung)",
+  "answers": [
+    {
+      "id": "D01",
+      "selection": "Duyệt đề xuất kèm giá trị",
+      "comment": "Trình bày rõ hơn về vấn đề này vào report sau"
+    },
+    {
+      "id": "D02",
+      "selection": "Cam kết bàn giao",
+      "comment": "Đã có bàn giao rồi mà, H:\\labelx-docs\\LEARNER_EXPORTS hãy đưa vào source"
+    },
+    {
+      "id": "D03",
+      "selection": "CHƯA CHỐT — thiếu lựa chọn hoặc nội dung cụ thể",
+      "comment": "Trình bày rõ hơn về vấn đề này vào report sau"
+    },
+    {
+      "id": "D04",
+      "selection": "CHƯA CHỐT — thiếu lựa chọn hoặc nội dung cụ thể",
+      "comment": "(chưa có giá trị / owner / ngày)"
+    },
+    {
+      "id": "D05",
+      "selection": "Duyệt policy cụ thể",
+      "comment": "Đưa vào config để QA xác nhận và điều chỉnh theo polyci, còn mặc định thì để giá trị theo đề xuất"
+    },
+    {
+      "id": "D06",
+      "selection": "CHƯA CHỐT — thiếu lựa chọn hoặc nội dung cụ thể",
+      "comment": "Trình bày rõ hơn về vấn đề này vào report sau"
+    },
+    {
+      "id": "D07",
+      "selection": "CHƯA CHỐT — thiếu lựa chọn hoặc nội dung cụ thể",
+      "comment": "(chưa có giá trị / owner / ngày)"
+    },
+    {
+      "id": "D08",
+      "selection": "A · duyệt CR-111 + đồng bộ scope",
+      "comment": "BE xong đến đâu thực hiện nối FE đến đó"
+    },
+    {
+      "id": "D09",
+      "selection": "CHƯA CHỐT — thiếu lựa chọn hoặc nội dung cụ thể",
+      "comment": "(chưa có giá trị / owner / ngày)"
+    }
+  ]
+}
