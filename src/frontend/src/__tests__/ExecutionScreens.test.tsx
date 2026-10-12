@@ -115,7 +115,7 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('columnheader', { name: 'Quality Control Run' })).toBeDefined();
     expect(screen.getByRole('columnheader', { name: 'Snapshot' })).toBeDefined();
     expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Chạy phân tích mới' })).toBeDefined();
+    expect(screen.queryByRole('link', { name: 'Chạy phân tích mới' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
     expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);

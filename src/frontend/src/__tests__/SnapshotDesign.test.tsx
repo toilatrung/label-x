@@ -56,7 +56,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
   it('lays out the design regions around the real data', async () => {
     wrap(<AnalysisPage />);
     expect(await screen.findByRole('heading', { name: 'Snapshot' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Lịch sử snapshot' }).getAttribute('href')).toBe('/analysis/snapshots');
+    expect(screen.queryByRole('link', { name: 'Lịch sử snapshot' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Tạo snapshot mới' })).toBeDefined();
     expect(screen.getByRole('heading', { name: 'Snapshot đang dùng' })).toBeDefined();
     expect(screen.getByLabelText('Annotation revision')).toBeDefined();

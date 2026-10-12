@@ -110,9 +110,9 @@
 
 /* ---- Tabs ---- */
 .lx-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.lx-tab { appearance: none; background: none; border: 0; padding: 10px 12px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 -2px 0 transparent; }
-.lx-tab:hover { color: var(--ink); }
-.lx-tab.is-active { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); }
+.lx-tab { appearance: none; background: none; border: 0; padding: 10px 12px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 -2px 0 transparent; text-decoration: none; }
+.lx-tab:hover, .lx-tab:focus { color: var(--ink); text-decoration: none; }
+.lx-tab.is-active { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); text-decoration: none; }
 .lx-count { font-size: 12px; font-weight: 600; color: var(--ink-subtle); font-variant-numeric: tabular-nums; }
 
 /* ---- Metric tile, progress, callout ---- */

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
+import { FlowNav } from '@/components/layout/FlowNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
@@ -120,13 +121,14 @@ function ConfigContent() {
     finally { setConfigBusy(false); }
   }
 
-  return <AppShell activeKey="analysis" flowStep={2} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div></div>}>
+  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div></div>}>
     <form onSubmit={submit} className="lx-cols">
       <div className="lx-main lx-stack">
         <div className="lx-execution-config">
           <EngineThresholdsTable
             config={activeConfig}
             layout="analysis"
+            topSlot={<FlowNav flow="analysis" currentStep={2} variant="tabs" />}
             isLoading={configs.isPending}
             error={configs.isError ? errorMessage(configs.error) : null}
             emptyTitle={configs.data?.results.length === 0 ? 'Chưa có cấu hình đã phát hành' : 'Chưa chọn phiên bản cấu hình'}

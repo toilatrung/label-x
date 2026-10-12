@@ -37,11 +37,40 @@ function Arrow({ step, direction }: { step?: FlowStep; direction: 'prev' | 'next
   return <Link className="lx-iconbtn lx-flow__arrow" href={step.href} aria-label={tip} data-tip={tip}>{icon}</Link>;
 }
 
-export function FlowNav({ flow, currentStep = 1 }: { flow: FlowModule; currentStep?: number }) {
+export function FlowNav({
+  flow,
+  currentStep = 1,
+  variant = 'stepper',
+}: {
+  flow: FlowModule;
+  currentStep?: number;
+  variant?: 'stepper' | 'tabs';
+}) {
   const { hasPermission } = useAuth();
   const definition = FLOWS[flow];
   if (!hasPermission(definition.permission, flow === 'review')) return null;
   const index = Math.min(Math.max(currentStep, 1), definition.steps.length) - 1;
+
+  if (variant === 'tabs') {
+    return (
+      <nav className="lx-tabs lx-tabs--inset" role="tablist" aria-label={definition.title}>
+        {definition.steps.map((step, i) => (
+          <Link
+            key={step.href}
+            href={step.href}
+            role="tab"
+            aria-selected={i === index}
+            aria-current={i === index ? 'step' : undefined}
+            className={`lx-tab${i === index ? ' is-active' : ''}`}
+            style={{ textDecoration: 'none' }}
+          >
+            {step.title}
+          </Link>
+        ))}
+      </nav>
+    );
+  }
+
   return <nav className="lx-flow" aria-label={definition.title}>
     <Arrow direction="prev" step={definition.steps[index - 1]} />
     <ol className="lx-flow__steps">
