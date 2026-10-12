@@ -10,8 +10,6 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
-import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { SAMPLE_HISTORY_ROWS } from '@/lib/mock/snapshots';
 import { useDatasetRuns, useDatasets, useSnapshotHistory } from '@/lib/snapshots/queries';
 import { latestRunBySnapshot } from '@/lib/snapshots/runs';
@@ -67,8 +65,6 @@ export default function SnapshotHistoryPage() {
         {history.isError && <div className="lx-callout" role="alert">{errorMessage(history.error)}
           <button className="lx-btn" type="button" onClick={() => void history.refetch()}>Thử lại</button></div>}
         {history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
-        {sample && <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail="Không tải được lịch sử thật; bảng dưới là dữ liệu minh họa theo thiết kế" /></div>}
-        {!sample && !!snapshots.length && runs.isError && <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail={`Không tải được danh sách Quality Control Run nên cột Quality Control Run chưa có dữ liệu. ${errorMessage(runs.error)}`} /></div>}
       </div>
       {(sample || !!snapshots.length) && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
         <th>Snapshot</th><th>Dataset</th><th>Revision</th><th className="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th>

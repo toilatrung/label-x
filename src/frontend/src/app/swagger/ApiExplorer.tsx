@@ -8,8 +8,8 @@ import styles from './swagger.module.css';
 type StatusFilter = 'all' | ApiConnection;
 
 const STATUS_LABEL: Record<ApiConnection, string> = {
-  backend: 'Đã kết nối BE',
-  mock: 'Mockup · Chưa nối BE',
+  backend: 'Backend API',
+  mock: 'Contract API',
 };
 
 const ORIGIN_LABEL = { openapi: 'OpenAPI', design: 'Design' } as const;
@@ -90,12 +90,12 @@ export function ApiExplorer() {
       <div>
         <p className={styles.eyebrow}>LABELX API · OPENAPI + DESIGN INVENTORY</p>
         <h1>API Explorer</h1>
-        <p className={styles.intro}>Theo dõi mức độ triển khai backend ngay trong frontend. Danh mục hợp nhất OpenAPI contract và nhu cầu từ các màn hình design; API có state machine cung cấp response mẫu cho đầy đủ trạng thái.</p>
+        <p className={styles.intro}>Danh mục hợp nhất OpenAPI contract và nhu cầu từ các màn hình design; API có state machine cung cấp response mẫu cho đầy đủ trạng thái.</p>
       </div>
       <div className={styles.metrics} aria-label="Tổng quan API">
         <div><strong>{API_ENDPOINTS.length}</strong><span>Operations</span></div>
-        <div><strong className={styles.good}>{connectedCount}</strong><span>Đã có BE</span></div>
-        <div><strong className={styles.warn}>{mockCount}</strong><span>Đang mockup</span></div>
+        <div><strong className={styles.good}>{connectedCount}</strong><span>Backend API</span></div>
+        <div><strong className={styles.warn}>{mockCount}</strong><span>Contract API</span></div>
       </div>
     </section>
 
@@ -106,11 +106,11 @@ export function ApiExplorer() {
         <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm theo path, operation hoặc nhóm..." />
         {query && <button type="button" onClick={() => setQuery('')} aria-label="Xóa từ khóa">×</button>}
       </label>
-      <div className={styles.filters} role="group" aria-label="Lọc theo trạng thái kết nối">
+      <div className={styles.filters} role="group" aria-label="Lọc theo nguồn API">
         {([
           ['all', `Tất cả ${API_ENDPOINTS.length}`],
-          ['backend', `Đã kết nối ${connectedCount}`],
-          ['mock', `Chưa nối BE ${mockCount}`],
+          ['backend', `Backend API ${connectedCount}`],
+          ['mock', `Contract API ${mockCount}`],
         ] as const).map(([value, label]) => <button key={value} type="button" className={status === value ? styles.activeFilter : ''}
           aria-pressed={status === value} onClick={() => setStatus(value)}>{label}</button>)}
       </div>

@@ -287,7 +287,7 @@ describe('Escalations UI (T-039)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     const before = calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect(screen.getByText(/Chức năng vẫn chưa được kết nối với server/)).toBeDefined();
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     expect(calls.length).toBe(before);
   });
 
@@ -296,7 +296,7 @@ describe('Escalations UI (T-039)', () => {
     fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
     expect(screen.getByText('GAP-012')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
     expect(screen.getByText('CASE-040')).toBeDefined();
     expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();

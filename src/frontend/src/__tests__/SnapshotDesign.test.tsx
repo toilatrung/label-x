@@ -73,13 +73,12 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(side.queryByText('Dữ liệu minh họa')).toBeNull();
   });
 
-  it('falls back to labelled sample values when the runs cannot be read', async () => {
+  it('falls back to design values when the runs cannot be read', async () => {
     vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
     wrap(<AnalysisPage />);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
-    expect(await side.findByText('Dữ liệu minh họa')).toBeDefined();
-    expect(side.getByText(/Không tải được Quality Control Run của Snapshot/)).toBeDefined();
-    expect(side.getByText('Detector v2.3 · Classifier v1.8')).toBeDefined();
+    expect(side.queryByText(/kết nối với server/)).toBeNull();
+    expect(await side.findByText('Detector v2.3 · Classifier v1.8')).toBeDefined();
   });
 
   it('says so when the locked snapshot has no run yet', async () => {
@@ -96,7 +95,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(await screen.findByText('SNP-014')).toBeDefined();
     expect(screen.getByText('T-119 · Urban night')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
-    expect(screen.getByRole('region', { name: 'Tạo snapshot mới' }).textContent).toContain('Thao tác "Tạo snapshot và cấu hình" chưa được thực hiện');
+    expect(screen.queryByRole('status')).toBeNull();
     expect(api.postSnapshot).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -170,11 +169,11 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     expect(screen.queryAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(0);
   });
 
-  it('keeps the run column empty with one notice when the runs cannot be read', async () => {
+  it('keeps the run column empty when the runs cannot be read', async () => {
     vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
     wrap(<SnapshotHistoryPage />);
     const row = within((await screen.findByRole('link', { name: 'SNP-007' })).closest('tr') as HTMLElement);
-    await waitFor(() => expect(screen.getAllByRole('status').filter(node => node.textContent?.includes('chưa được kết nối')).length).toBe(1));
+    expect(screen.queryByRole('status')).toBeNull();
     expect(row.queryByRole('link', { name: /Run #/ })).toBeNull();
   });
 
@@ -183,7 +182,7 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     wrap(<SnapshotHistoryPage />);
     expect(await screen.findByText('SNP-014')).toBeDefined();
     expect(screen.getByText('#QC-091')).toBeDefined();
-    expect(screen.getByText('Dữ liệu minh họa')).toBeDefined();
+    expect(screen.queryByRole('status')).toBeNull();
     expect(screen.getByText('4 snapshot')).toBeDefined();
   });
 });

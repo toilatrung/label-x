@@ -4,10 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { ReviewWorkspaceSample } from '@/components/review/ReviewWorkspaceSample';
 
 describe('ReviewWorkspaceSample (thiết kế ReviewWorkspace.dc.html)', () => {
-  it('shows sample badge, not-connected notice and all five decisions', () => {
+  it('shows all five decisions without implementation notices', () => {
     render(<ReviewWorkspaceSample />);
-    expect(screen.getByText('Dữ liệu minh họa')).toBeTruthy();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByRole('status')).toBeNull();
     const labels = screen.getAllByRole('radio').map((r) => r.parentElement?.textContent);
     expect(labels).toEqual(['Xác nhận lỗi', 'Bác bỏ', 'Chưa chắc chắn', 'Yêu cầu sửa', 'Chuyển cấp trên']);
     expect(screen.getByLabelText('Loại lỗi đã xác nhận')).toBeTruthy();
@@ -27,21 +26,18 @@ describe('ReviewWorkspaceSample (thiết kế ReviewWorkspace.dc.html)', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     render(<ReviewWorkspaceSample />);
     fireEvent.click(screen.getByRole('button', { name: /Lưu và chuyển issue tiếp/ }));
-    expect(screen.getByRole('status').textContent).toContain('chưa được lưu');
+    expect(screen.queryByRole('status')).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 
-  it('gives each blocked button its own message', () => {
+  it('does not expose implementation messages for workspace actions', () => {
     render(<ReviewWorkspaceSample />);
-    const status = () => screen.getByRole('status').textContent;
     fireEvent.click(screen.getByRole('button', { name: 'Mở trong CVAT' }));
-    expect(status()).toContain('chưa mở được CVAT');
-    expect(status()).not.toContain('Quyết định');
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Frame sau/ }));
-    expect(status()).toContain('Chưa chuyển frame');
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Issue trước/ }));
-    expect(status()).toContain('Chưa chuyển issue');
-    expect(status()).not.toContain('Quyết định');
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

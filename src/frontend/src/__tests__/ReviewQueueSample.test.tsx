@@ -1,15 +1,12 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ReviewQueueSample } from '@/components/review/ReviewQueueSample';
 
-const NOTICE = 'Chức năng vẫn chưa được kết nối với server';
-
 describe('ReviewQueueSample (ReviewQueues.dc.html)', () => {
-  it('shows three sample frames with the sample label and the not-connected notice', () => {
+  it('shows the three design frames without implementation notices', () => {
     render(<ReviewQueueSample />);
-    expect(screen.getByText('Dữ liệu minh họa')).toBeTruthy();
-    expect(screen.getAllByRole('status').some((n) => n.textContent === NOTICE)).toBe(true);
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
     expect(screen.getAllByRole('article')).toHaveLength(3);
     expect(screen.getByText('3 ảnh')).toBeTruthy();
     expect(screen.getByText('1–3 / 3')).toBeTruthy();
@@ -27,17 +24,9 @@ describe('ReviewQueueSample (ReviewQueues.dc.html)', () => {
     fireEvent.change(screen.getByLabelText('Tìm ảnh hoặc mã công việc'), { target: { value: '5678' } });
     expect(screen.getAllByRole('article')).toHaveLength(1);
   });
-  it('blocks Bắt đầu kiểm tra without calling any API', () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
+  it('links the design action to its workspace route', () => {
     render(<ReviewQueueSample />);
-    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Ảnh 001 (chưa kết nối server)' }));
-    expect(screen.getAllByText(NOTICE)).toHaveLength(1);
-    const attention = screen.getByText(NOTICE).closest('[data-attention]') as HTMLElement;
-    expect(attention).toBeTruthy();
-    expect(document.activeElement).toBe(attention);
-    expect(screen.getByRole('button', { name: /Ảnh 001/ }).getAttribute('aria-disabled')).toBe('true');
-    expect(fetchSpy).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
+    const action = screen.getByRole('link', { name: 'Bắt đầu kiểm tra Ảnh 001' });
+    expect(action.getAttribute('href')).toBe('/review/workspace?frame_id=001234');
   });
 });

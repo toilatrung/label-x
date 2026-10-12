@@ -142,13 +142,12 @@ describe('Guidelines page', () => {
 });
 
 describe('Models và Guidelines design regions (FE-09)', () => {
-  it('shows sample models, the guideline version tab and the not-connected notice', async () => {
+  it('shows all design models and guideline versions without implementation notices', async () => {
     await setup('qalead', () => json({ next: null, previous: null, results: [] }), false);
     expect(await screen.findByText('Classifier')).toBeDefined();
-    expect(screen.getByText('Dữ liệu minh họa')).toBeDefined();
-    expect(screen.getAllByRole('status')[0].textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh mô hình' })[0]);
-    expect(screen.getAllByRole('status')[0].textContent).toContain('Thao tác "Chỉnh mô hình" chưa được thực hiện');
+    expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'Phiên bản guideline' }));
     expect(screen.getByText('Guideline v1.3')).toBeDefined();
     expect(screen.getByText('Road Vision Urban v1.3 – v1.4')).toBeDefined();
