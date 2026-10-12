@@ -111,6 +111,8 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     wrap(<SnapshotHistoryPage />);
     expect(await screen.findByRole('heading', { name: 'Lịch sử snapshot' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Về Snapshot' }).getAttribute('href')).toBe('/analysis');
+    // SnapshotHistory.dc.html không có FlowNav: trang này mở bằng nút từ Snapshot, không phải một bước.
+    expect(screen.queryByRole('navigation', { name: 'Quy trình phân tích' })).toBeNull();
     const headers = (await screen.findAllByRole('columnheader')).map(th => th.textContent);
     expect(headers).toEqual(['Snapshot', 'Dataset', 'Revision', 'Frame', 'Quality Control Run', 'Trạng thái']);
     expect(screen.getByRole('link', { name: 'SNP-7' }).getAttribute('href')).toBe('/analysis?snapshotId=7');

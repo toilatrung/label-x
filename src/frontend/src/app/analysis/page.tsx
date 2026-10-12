@@ -118,6 +118,9 @@ function SnapshotWorkspace() {
       datasetName: displayDatasetName,
       datasetIdOverride: item?.dataset_id,
       snapshotName: item ? `SNP-${item.id} · ${item.status}` : undefined,
+      snapshotRevision: item?.revision_hash ? item.revision_hash.slice(0, 7) : undefined,
+      isReadOnly: item?.status === 'locked',
+      scopeName: 'Toàn dataset',
       guidelineVersion: displayGuideline,
       taxonomyVersion: displayTaxonomy,
     }}
