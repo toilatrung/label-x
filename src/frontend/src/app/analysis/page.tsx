@@ -187,7 +187,7 @@ function SnapshotWorkspace() {
           <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
           <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
         </dl>
-          {datasetRuns.isError ? <SnapshotInUseExtra /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
+          {datasetRuns.isError ? <SnapshotInUseExtra error={errorMessage(datasetRuns.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
             <dt>Mô hình độc lập</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
             <dt>Cấu hình kiểm tra</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
             <dt>Seed lấy mẫu</dt><dd className="lx-mono">{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>

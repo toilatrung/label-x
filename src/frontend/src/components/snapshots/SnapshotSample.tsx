@@ -6,10 +6,10 @@ import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { SAMPLE_IN_USE, SAMPLE_IN_USE_EXTRA, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
 
 /** Ba trường của Snapshot đang dùng chưa có API; luôn là dữ liệu minh họa, một cảnh báo cho cả khối. */
-export function SnapshotInUseExtra() {
+export function SnapshotInUseExtra({ error }: { error?: string }) {
   return (
     <div className="lx-stack lx-stack--divider">
-      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail="Mô hình độc lập, cấu hình kiểm tra và seed lấy mẫu chưa có trên Snapshot API" /></div>
+      <div className="lx-row"><SampleDataBadge /><NotConnectedNotice detail={error ? `Không tải được Quality Control Run của Snapshot nên mô hình, cấu hình và seed là dữ liệu minh họa. ${error}` : 'Mô hình độc lập, cấu hình kiểm tra và seed lấy mẫu chưa có trên Snapshot API'} /></div>
       <dl className="lx-kv">
         {SAMPLE_IN_USE_EXTRA.map(([label, value, mono]) => (
           <React.Fragment key={label}><dt>{label}</dt><dd className={mono ? 'lx-mono' : undefined}>{value}</dd></React.Fragment>
