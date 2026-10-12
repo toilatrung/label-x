@@ -474,7 +474,6 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-table--min-900 { min-width: 900px; }
 .lx-table--sm { font-size: 12px; }
 .lx-side--list { flex: 1 1 380px; max-width: 460px; }
-.lx-row--between { justify-content: space-between; }
 .lx-actions--end { justify-content: flex-end; }
 .lx-stack--tight { gap: 6px; }
 .lx-table--min-680 { min-width: 680px; }
@@ -484,6 +483,13 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-row--nowrap { flex-wrap: nowrap; }
 .lx-mt-1 { margin-top: 4px; }
 .lx-text-13 { font-size: 13px; }
+
+.lx-list > li[aria-current="true"] { background: var(--surface-selected); }
+
+/* Escalations adjudication workspace */
+.lx-escalation-run-filter { flex: 1 1 240px; min-width: 0; }
+.lx-decision { border: 1px solid var(--border); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.lx-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 
 /* Utilities for Review Workspace (FE-05 follow-up): thay toàn bộ style inline. Đặt cuối file để thắng class nền. */
 .lx-gap-1 { gap: var(--space-1); }
@@ -538,7 +544,6 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 
 /* Layout modifiers used by Calibration & Audit (replace inline styles) */
 .lx-table--min-520 { min-width: 520px; }
-.lx-table--min-760 { min-width: 760px; }
 .lx-callout--flush { border-radius: 0; }
 .lx-mt-6 { margin-top: 6px; }
 

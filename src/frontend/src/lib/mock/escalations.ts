@@ -1,14 +1,14 @@
 /**
  * Dữ liệu minh họa của Escalations, lấy từ docs/design/screens/Escalations.dc.html.
- * TODO(backend): GET /api/guideline-gaps/, GET /api/decision-cases/, GET /api/escalations/ (hàng chờ phân xử).
+ * TODO(backend): GET /api/guideline-gaps/, GET /api/decision-cases/.
  */
 export type EscalationsTabKey = 'gaps' | 'cases' | 'adj';
 export type Tone = 'info' | 'warning' | 'success' | '';
 
-export const ESCALATION_TABS: { key: EscalationsTabKey; label: string; count: number }[] = [
+export const ESCALATION_TABS: { key: EscalationsTabKey; label: string; count: number | null }[] = [
   { key: 'gaps', label: 'Guideline Gaps', count: 6 },
   { key: 'cases', label: 'Decision Cases', count: 38 },
-  { key: 'adj', label: 'Adjudication', count: 18 },
+  { key: 'adj', label: 'Adjudication', count: null },
 ];
 
 export const LIST_TIP = 'Phân xử các case liên quan';
@@ -36,10 +36,3 @@ export const CASES = {
     { a: 'CASE-009', b: 'Xe đạp dựng sát tường', c: 'VEH-01', d: 'Không gán nhãn', e: 'Guideline v1.1', tone: '' },
   ] as ListRow[],
 };
-
-export const PENDING = [
-  { id: 'QC-00098', badge: 'Chuyển cấp trên', title: 'Sai nhãn · Frame 00212 · #04', sub: 'Reviewer bất đồng · quy tắc VEH-03' },
-  { id: 'QC-00104', badge: 'Chưa chắc chắn', title: 'Hình học · Frame 00255 · #09', sub: 'Quy tắc G-014 chưa nói rõ về vật bị che' },
-  { id: 'QC-00112', badge: 'Chưa chắc chắn', title: 'Thuộc tính · Frame 00310 · #14', sub: 'Quy tắc A-003' },
-  { id: 'QC-00115', badge: 'Chuyển cấp trên', title: 'Sai nhãn · Frame 00366 · #02', sub: 'Quy tắc VEH-03' },
-];
