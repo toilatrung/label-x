@@ -7,6 +7,14 @@ import { getTasks, type Dataset, type CvatTask } from '@/lib/snapshots/api';
 import type { Run } from '@/lib/execution/api';
 import { errorMessage } from '@/lib/api/errors';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
+import {
+  ILLUSTRATIVE_METRICS,
+  ILLUSTRATIVE_ENGINES,
+  ILLUSTRATIVE_REVIEW_QUEUES,
+  ILLUSTRATIVE_TASKS,
+  ILLUSTRATIVE_CANDIDATE_CATEGORIES,
+} from '@/lib/overview/sample-data';
 
 interface QualitySummaryProps {
   currentDataset?: Dataset | null;
@@ -28,8 +36,6 @@ export function QualitySummary({
       ? `${currentUserId}:${currentDataset.id}`
       : null;
 
-  const [reportNotice, setReportNotice] = useState<{ owner: string | null; message: string } | null>(null);
-  const [gateNotice, setGateNotice] = useState<{ owner: string | null; message: string } | null>(null);
   const [taskState, setTaskState] = useState<{
     owner: string | null;
     tasks: CvatTask[];
@@ -38,6 +44,9 @@ export function QualitySummary({
   const [isTasksLoading, setIsTasksLoading] = useState(false);
   const [tasksRetryNonce, setTasksRetryNonce] = useState(0);
   const tasksGen = React.useRef(0);
+
+  // Local task scope for illustrative preview (when no backend dataset is selected)
+  const [previewTaskScope, setPreviewTaskScope] = useState<string | null>(null);
 
   const handleRetryTasks = React.useCallback(() => {
     setTasksRetryNonce((prev) => prev + 1);
@@ -89,29 +98,15 @@ export function QualitySummary({
 
   const visibleTasks = taskState.owner === ownerKey ? taskState.tasks : [];
   const visibleTasksError = taskState.owner === ownerKey ? taskState.error : null;
-  const effectiveReportNotice = reportNotice?.owner === ownerKey ? reportNotice.message : null;
-  const effectiveGateNotice = gateNotice?.owner === ownerKey ? gateNotice.message : null;
 
-  if (datasetId === null || !currentDataset) {
-    return (
-      <div className="lx-card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
-        <h2 className="lx-h2">Chưa chọn Dataset</h2>
-        <p className="lx-lead" style={{ marginTop: 'var(--space-2)' }}>
-          Vui lòng chọn một Dataset từ Quality Control Home để xem Quality Summary.
-        </p>
-        <div style={{ marginTop: 'var(--space-4)' }}>
-          <Link href="/" className="lx-btn lx-btn--primary">
-            Về Quality Control Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const datasetDisplayName = currentDataset.name;
+  // Determine whether we are rendering genuine backend data or illustrative fallback preview
+  const isRealDataset = Boolean(currentDataset && datasetId !== null);
+  const datasetDisplayName = currentDataset ? currentDataset.name : 'Road Vision Urban v1.4';
   const runDisplay = selectedRun
     ? `#${selectedRun.id} · ${selectedRun.status ? selectedRun.status.toUpperCase() : '—'}`
-    : '—';
+    : isRealDataset
+    ? '—'
+    : '#QC-091';
 
   return (
     <>
@@ -124,93 +119,75 @@ export function QualitySummary({
           </p>
         </div>
         <div className="lx-actions">
-          <button
-            type="button"
-            className="lx-btn"
-            onClick={() =>
-              setReportNotice({
-                owner: ownerKey,
-                message: 'Xem Quality Report',
-              })
-            }
-          >
+          {/* F-2: Real navigation links to existing routes */}
+          <Link className="lx-btn" href="/reports">
             Xem Quality Report
-          </button>
+          </Link>
           <Link className="lx-btn lx-btn--primary" href="/review">
             Vào Review Center →
           </Link>
         </div>
       </div>
 
-      {effectiveReportNotice && (
-        <div role="status" aria-live="polite">
-          <NotConnectedNotice detail={effectiveReportNotice} />
-        </div>
-      )}
-
-      {/* Neutral Quality Gate callout */}
-      <div className="lx-callout">
-        <span className="lx-badge">Quality Gate: —</span>
-        <span className="lx-callout__text">
-          Chưa có dữ liệu đánh giá Quality Gate cho Dataset này.
-        </span>
-        <button
-          type="button"
-          className="lx-btn lx-btn--sm"
-          onClick={() =>
-            setGateNotice({
-              owner: ownerKey,
-              message: 'Xem Quality Gate',
-            })
+      {/* Top Banner Notice when displaying illustrative sample data */}
+      <div className="lx-notice-banner lx-row">
+        <SampleDataBadge />
+        <NotConnectedNotice
+          detail={
+            isRealDataset
+              ? 'Số liệu tổng hợp Quality Summary (Coverage, Issue, Engine, Review) đang dùng dữ liệu minh họa vì server chưa có API tổng hợp.'
+              : 'Chưa có Dataset nào được chọn từ server. Đang hiển thị bản xem trước theo thiết kế chuẩn.'
           }
-        >
-          Xem Quality Gate
-        </button>
+        />
       </div>
 
-      {effectiveGateNotice && (
-        <div role="status" aria-live="polite">
-          <NotConnectedNotice detail={effectiveGateNotice} />
-        </div>
-      )}
+      {/* Quality Gate callout */}
+      {/* TODO(backend): Nối GET /api/runs/{id}/gate/ (runs_gate đã có sẵn trong OpenAPI contract; pending wiring chi tiết cho Quality Summary callout) */}
+      <div className="lx-callout">
+        <span className="lx-badge lx-badge--danger">Release blocked</span>
+        <span className="lx-callout__text">
+          Coverage 92.4% chưa đạt ngưỡng 95% · 3 lỗi nghiêm trọng chưa đóng · 12 yêu cầu sửa chờ xử lý.
+        </span>
+        {/* F-2: Real navigation link to Quality Gate */}
+        <Link className="lx-btn lx-btn--sm" href="/reports/gate">
+          Xem Quality Gate
+        </Link>
+      </div>
 
       {/* 4 Metric cards */}
+      {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/runs/{id}/metrics/ để lấy Frame, Coverage, Candidate issue, Lỗi đã xác nhận (chưa có trong backend contract) */}
       <div className="lx-grid lx-grid--4">
-        <div className="lx-metric">
-          <span className="lx-metric__k">Frame trong phạm vi</span>
-          <span className="lx-metric__v">—</span>
-          <span className="lx-metric__n">—</span>
-        </div>
-        <div className="lx-metric">
-          <span className="lx-metric__k">Coverage</span>
-          <span className="lx-metric__v">—</span>
-          <div className="lx-progress" role="img" aria-label="Coverage: —">
-            <i style={{ width: '0%' }} />
+        {ILLUSTRATIVE_METRICS.map((metric) => (
+          <div className="lx-metric" key={metric.key}>
+            <span className="lx-metric__k">{metric.key}</span>
+            <span className={`lx-metric__v${metric.isWarn ? ' is-warn' : ''}`}>
+              {metric.value}
+            </span>
+            {metric.progressPct !== undefined && (
+              <div className="lx-progress lx-progress--warn" role="img" aria-label={`Coverage ${metric.value}`}>
+                <i className="lx-w-pct-92" />
+              </div>
+            )}
+            <span className={`lx-metric__n${metric.isBad ? ' is-bad' : ''}`}>
+              {metric.note}
+            </span>
           </div>
-          <span className="lx-metric__n">Ngưỡng yêu cầu: —</span>
-        </div>
-        <div className="lx-metric">
-          <span className="lx-metric__k">Candidate issue</span>
-          <span className="lx-metric__v">—</span>
-          <span className="lx-metric__n">—</span>
-        </div>
-        <div className="lx-metric">
-          <span className="lx-metric__k">Lỗi đã xác nhận</span>
-          <span className="lx-metric__v">—</span>
-          <span className="lx-metric__n">—</span>
-        </div>
+        ))}
       </div>
 
       {/* Row 1: Engine Status & Review Volume */}
       <div className="lx-cols">
+        {/* Section: Engine Status */}
+        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/runs/{id}/engines/ để lấy trạng thái từng engine (chưa có trong backend contract) */}
         <section className="lx-card lx-main">
           <div className="lx-card__head">
             <h2 className="lx-h2">Trạng thái từng engine</h2>
-            <Link className="lx-link" href="/analysis/history" style={{ fontSize: '13px', marginLeft: 'auto' }}>
+            <Link className="lx-link lx-link-sm" href="/analysis/history">
               Xem Execution History
             </Link>
           </div>
-          <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div className="lx-notice-banner lx-row">
+            <SampleDataBadge />
             <NotConnectedNotice detail="Tổng hợp trạng thái từng engine" />
           </div>
           <div className="lx-scroll">
@@ -224,91 +201,54 @@ export function QualitySummary({
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="lx-cell__main">Schema / Taxonomy</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
-                <tr>
-                  <td className="lx-cell__main">Geometry</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
-                <tr>
-                  <td className="lx-cell__main">Duplicate / Overlap</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
-                <tr>
-                  <td className="lx-cell__main">Mô hình độc lập</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
-                <tr>
-                  <td className="lx-cell__main">Mô hình thị giác – ngôn ngữ</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
-                <tr>
-                  <td className="lx-cell__main">Metric</td>
-                  <td>—</td>
-                  <td className="r">—</td>
-                  <td className="lx-muted">—</td>
-                </tr>
+                {ILLUSTRATIVE_ENGINES.map((engine) => (
+                  <tr key={engine.name}>
+                    <td className="lx-cell__main">{engine.name}</td>
+                    <td>
+                      <span className={`lx-badge${engine.badgeTone ? ` lx-badge--${engine.badgeTone}` : ''}`}>
+                        {engine.status}
+                      </span>
+                    </td>
+                    <td className={`r${engine.coverage === '—' ? ' lx-subtle' : ''}`}>
+                      {engine.coverage}
+                    </td>
+                    <td className="lx-muted">{engine.note}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </section>
 
+        {/* Section: Review Volume */}
+        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/runs/{id}/review-volume/ để lấy khối lượng review (chưa có trong backend contract) */}
         <section className="lx-card lx-side">
           <div className="lx-card__head">
             <h2 className="lx-h2">Khối lượng review</h2>
-            <Link className="lx-link" href="/review" style={{ fontSize: '13px', marginLeft: 'auto' }}>
+            <Link className="lx-link lx-link-sm" href="/review">
               Mở hàng đợi
             </Link>
           </div>
-          <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div className="lx-notice-banner lx-row">
+            <SampleDataBadge />
             <NotConnectedNotice detail="Tổng hợp khối lượng review" />
           </div>
-          <div className="lx-card__body lx-stack" style={{ gap: '14px' }}>
-            <div className="lx-stack" style={{ gap: '6px' }}>
-              <div className="lx-row" style={{ justifyContent: 'space-between' }}>
-                <span>Ưu tiên theo rủi ro</span>
-                <b className="lx-num">—</b>
+          <div className="lx-card__body lx-stack lx-stack--14">
+            {ILLUSTRATIVE_REVIEW_QUEUES.map((item) => (
+              <div className="lx-stack lx-stack--tight" key={item.label}>
+                <div className="lx-row lx-row--between">
+                  <span>{item.label}</span>
+                  <b className="lx-num">{item.count}</b>
+                </div>
+                <div className="lx-progress" role="img" aria-label={`${item.label}: ${item.count}`}>
+                  <i className={item.widthClass} />
+                </div>
+                <span className="lx-hint">{item.hint}</span>
               </div>
-              <div className="lx-progress" role="img" aria-label="Ưu tiên theo rủi ro: —">
-                <i style={{ width: '0%' }} />
-              </div>
-              <span className="lx-hint">—</span>
-            </div>
-            <div className="lx-stack" style={{ gap: '6px' }}>
-              <div className="lx-row" style={{ justifyContent: 'space-between' }}>
-                <span>Kiểm tra ngẫu nhiên</span>
-                <b className="lx-num">—</b>
-              </div>
-              <div className="lx-progress" role="img" aria-label="Kiểm tra ngẫu nhiên: —">
-                <i style={{ width: '0%' }} />
-              </div>
-              <span className="lx-hint">—</span>
-            </div>
-            <div className="lx-stack" style={{ gap: '6px' }}>
-              <div className="lx-row" style={{ justifyContent: 'space-between' }}>
-                <span>Chưa chắc chắn / Chuyển cấp trên</span>
-                <b className="lx-num">—</b>
-              </div>
-              <div className="lx-progress" role="img" aria-label="Chưa chắc chắn / Chuyển cấp trên: —">
-                <i style={{ width: '0%' }} />
-              </div>
-              <span className="lx-hint">Chờ phân xử tại Escalations</span>
-            </div>
-            <div className="lx-row" style={{ justifyContent: 'space-between', paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
+            ))}
+            <div className="lx-row lx-row--between lx-row--border-top lx-pt-1">
               <span className="lx-muted">Đã xử lý</span>
-              <b className="lx-num">—</b>
+              <b className="lx-num">242</b>
             </div>
           </div>
         </section>
@@ -316,16 +256,19 @@ export function QualitySummary({
 
       {/* Row 2: Tasks & Candidate by Error Type */}
       <div className="lx-cols">
+        {/* Section: By Task */}
+        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/runs/{id}/tasks-quality/ để lấy thống kê chất lượng theo từng Task (chưa có trong backend contract) */}
         <section className="lx-card lx-main">
           <div className="lx-card__head">
             <h2 className="lx-h2">Theo Task</h2>
             <span className="lx-hint">Chọn một dòng để đặt Phạm vi cho toàn module</span>
           </div>
-          <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div className="lx-notice-banner lx-row">
+            <SampleDataBadge />
             <NotConnectedNotice detail="Thống kê chất lượng theo từng Task" />
           </div>
           <div className="lx-scroll">
-            <table className="lx-table" style={{ minWidth: '640px' }}>
+            <table className="lx-table lx-table--min-640">
               <thead>
                 <tr>
                   <th>Task</th>
@@ -338,16 +281,16 @@ export function QualitySummary({
                 </tr>
               </thead>
               <tbody>
-                {isTasksLoading ? (
+                {isRealDataset && isTasksLoading ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', color: 'var(--ink-muted)', padding: 'var(--space-4)' }}>
-                      Đang tải danh sách Task…
+                    <td colSpan={7} className="lx-state--table-muted">
+                      Đang tải danh sách Task từ server…
                     </td>
                   </tr>
-                ) : visibleTasksError ? (
+                ) : isRealDataset && visibleTasksError ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', color: 'var(--danger)', padding: 'var(--space-4)' }}>
-                      <div style={{ marginBottom: 'var(--space-2)' }}>{visibleTasksError}</div>
+                    <td colSpan={7} className="lx-state--table-danger">
+                      <div className="lx-mb-2">{visibleTasksError}</div>
                       <button
                         type="button"
                         className="lx-btn lx-btn--sm"
@@ -357,26 +300,20 @@ export function QualitySummary({
                       </button>
                     </td>
                   </tr>
-                ) : visibleTasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', color: 'var(--ink-muted)', padding: 'var(--space-4)' }}>
-                      Chưa có dữ liệu Task cho Dataset này
-                    </td>
-                  </tr>
-                ) : (
-                  visibleTasks.map((task) => {
+                ) : isRealDataset && visibleTasks.length > 0 ? (
+                  visibleTasks.map((task, idx) => {
                     const taskLabel = `Task #${task.cvat_task_id}${task.name ? ` · ${task.name}` : ''}`;
                     const isSelected =
                       selectedTaskScope === taskLabel ||
                       selectedTaskScope === `Task #${task.cvat_task_id}`;
+                    const illus = ILLUSTRATIVE_TASKS[idx % ILLUSTRATIVE_TASKS.length];
                     return (
                       <tr
                         key={task.cvat_task_id}
                         role="row"
                         tabIndex={0}
                         aria-selected={isSelected}
-                        className={isSelected ? 'is-selected' : undefined}
-                        style={{ cursor: 'pointer' }}
+                        className={`lx-tr--clickable${isSelected ? ' is-selected' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onTaskScopeChange?.(taskLabel);
@@ -391,18 +328,66 @@ export function QualitySummary({
                       >
                         <td>
                           <div className="lx-cell__main">{taskLabel}</div>
-                          {task.jobs && task.jobs.length > 0 && (
+                          {task.jobs && task.jobs.length > 0 ? (
                             <div className="lx-cell__sub">
                               Jobs: {task.jobs.map((j) => `#${j.cvat_job_id}`).join(', ')}
                             </div>
+                          ) : (
+                            <div className="lx-cell__sub">{illus.sub}</div>
                           )}
                         </td>
-                        <td className="r">{task.jobs?.length ?? '—'}</td>
-                        <td className="r">—</td>
-                        <td className="r">—</td>
-                        <td className="r">—</td>
-                        <td className="r">—</td>
-                        <td>—</td>
+                        <td className="r">{task.jobs?.length ?? illus.jobs}</td>
+                        <td className="r">{illus.frames}</td>
+                        <td className={`r${illus.isWarnCoverage ? ' is-warn' : ''}`}>{illus.coverage}</td>
+                        <td className="r">{illus.candidates}</td>
+                        <td className="r">{illus.confirmed}</td>
+                        <td>
+                          <span className={`lx-badge lx-badge--${illus.gateTone}`}>
+                            {illus.gate}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  // Canonical illustrative tasks fallback (1:1 with Dashboard.dc.html)
+                  ILLUSTRATIVE_TASKS.map((task) => {
+                    const isSelected =
+                      previewTaskScope === task.name ||
+                      (!isRealDataset && !previewTaskScope && task.id === 'T-118');
+                    return (
+                      <tr
+                        key={task.id}
+                        role="row"
+                        tabIndex={0}
+                        aria-selected={isSelected}
+                        className={`lx-tr--clickable${isSelected ? ' is-selected' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewTaskScope(task.name);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPreviewTaskScope(task.name);
+                          }
+                        }}
+                      >
+                        <td>
+                          <div className="lx-cell__main">{task.name}</div>
+                          <div className="lx-cell__sub">{task.sub}</div>
+                        </td>
+                        <td className="r">{task.jobs}</td>
+                        <td className="r">{task.frames}</td>
+                        <td className={`r${task.isWarnCoverage ? ' is-warn' : ''}`}>{task.coverage}</td>
+                        <td className="r">{task.candidates}</td>
+                        <td className="r">{task.confirmed}</td>
+                        <td>
+                          <span className={`lx-badge lx-badge--${task.gateTone}`}>
+                            {task.gate}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })
@@ -412,39 +397,26 @@ export function QualitySummary({
           </div>
         </section>
 
+        {/* Section: Candidate by Error Type */}
+        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/runs/{id}/candidate-categories/ để lấy phân loại candidate theo lỗi (chưa có trong backend contract) */}
         <section className="lx-card lx-side">
           <div className="lx-card__head">
             <h2 className="lx-h2">Candidate theo loại lỗi</h2>
           </div>
-          <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div className="lx-notice-banner lx-row">
+            <SampleDataBadge />
             <NotConnectedNotice detail="Phân loại candidate issue theo lỗi" />
           </div>
-          <div className="lx-card__body lx-stack" style={{ gap: '12px' }}>
-            <div className="lx-bar">
-              <span>Sai nhãn</span>
-              <div className="lx-bar__t"><i style={{ width: '0%' }}></i></div>
-              <span className="lx-bar__n">—</span>
-            </div>
-            <div className="lx-bar">
-              <span>Hình học</span>
-              <div className="lx-bar__t"><i style={{ width: '0%' }}></i></div>
-              <span className="lx-bar__n">—</span>
-            </div>
-            <div className="lx-bar">
-              <span>Trùng / chồng lấn</span>
-              <div className="lx-bar__t"><i style={{ width: '0%' }}></i></div>
-              <span className="lx-bar__n">—</span>
-            </div>
-            <div className="lx-bar">
-              <span>Thiếu object</span>
-              <div className="lx-bar__t"><i style={{ width: '0%' }}></i></div>
-              <span className="lx-bar__n">—</span>
-            </div>
-            <div className="lx-bar">
-              <span>Thuộc tính / Track</span>
-              <div className="lx-bar__t"><i style={{ width: '0%' }}></i></div>
-              <span className="lx-bar__n">—</span>
-            </div>
+          <div className="lx-card__body lx-stack lx-stack--12">
+            {ILLUSTRATIVE_CANDIDATE_CATEGORIES.map((item) => (
+              <div className="lx-bar" key={item.label}>
+                <span>{item.label}</span>
+                <div className="lx-bar__t">
+                  <i className={item.widthClass} />
+                </div>
+                <span className="lx-bar__n">{item.count}</span>
+              </div>
+            ))}
           </div>
         </section>
       </div>

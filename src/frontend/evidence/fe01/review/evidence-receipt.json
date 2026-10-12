@@ -1,54 +1,645 @@
 {
-  "issue": "FE-01 (#147)",
-  "title": "Quality Control Home and Quality Summary",
-  "branch": "feat/feat/FE-01-home-quality-summary",
-  "base": "develop-fe",
-  "baseline_sha": "9a214fb8e0d3409d4c3e52e548fa3fdb7ea02e61",
-  "browser_run": {
-    "timestamp": "2026-10-11T22:47:08.420Z",
-    "duration_seconds": 36,
-    "unintended_writes_count": 0,
-    "accounts_tested": [
-      "fe01_qalead",
-      "fe01_no_dataset"
-    ],
-    "viewports": [
-      1440,
-      390
-    ],
-    "total_actions": 47,
-    "total_network_requests": 649,
-    "error_findings_count": 0
+  "timestamp": "2026-10-12T03:56:46.937Z",
+  "buildId": "GmKVNBuw8zXZSOEkYyyNB",
+  "durationSeconds": 23,
+  "unintendedWritesCount": 0,
+  "unintendedWrites": [],
+  "actionsCount": 46,
+  "requestsCount": 1152,
+  "networkEvents": [
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 403
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/csrf/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/csrf/",
+      "status": 204
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "POST",
+      "path": "/api/auth/login/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/login/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/2/tasks/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/2/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/runs/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 403
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/csrf/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/csrf/",
+      "status": 204
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "POST",
+      "path": "/api/auth/login/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/login/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/2/tasks/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/2/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/runs/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 200
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/1/tasks/"
+    },
+    {
+      "context": "live-qalead-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/1/tasks/",
+      "status": 200
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 403
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/csrf/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/csrf/",
+      "status": 204
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "POST",
+      "path": "/api/auth/login/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/login/",
+      "status": 200
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 403
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/csrf/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/csrf/",
+      "status": 204
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "POST",
+      "path": "/api/auth/login/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/login/",
+      "status": 200
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/auth/session/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/auth/session/",
+      "status": 200
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    }
+  ],
+  "taskEvidence": [
+    {
+      "viewport": 1440,
+      "path": "/api/datasets/2/tasks/",
+      "status": 200,
+      "taskId": 1,
+      "state": "settled real row"
+    },
+    {
+      "viewport": 390,
+      "path": "/api/datasets/2/tasks/",
+      "status": 200,
+      "taskId": 1,
+      "state": "settled real row"
+    }
+  ],
+  "screenshots": {
+    "liveHome1440": "live-home-1440.png",
+    "liveSummary1440": "live-summary-1440.png",
+    "liveHome390": "live-home-390.png",
+    "liveSummary390": "live-summary-390.png",
+    "previewHome1440": "preview-home-1440.png",
+    "previewSummary1440": "preview-summary-1440.png",
+    "previewHome390": "preview-home-390.png",
+    "previewSummary390": "preview-summary-390.png"
   },
-  "data_context": {
-    "dataset_id": 2,
-    "dataset_name": "BDD100K 100-frame validation subset",
-    "project_id": 2,
-    "task_id": 1,
-    "job_id": 1,
-    "frames": 100,
-    "annotations": 2006,
-    "user_account": "fe01_qalead",
-    "user_role": "qa_lead"
+  "passedAssertions": [
+    "Verified runtime BUILD_ID: GmKVNBuw8zXZSOEkYyyNB",
+    "Real datasets GET returned 200 at desktop",
+    "Login and redirect to Home at desktop",
+    "Authenticated BDD dataset 2 row loaded at desktop",
+    "Search results match query \"BDD\" (1 rows) before clearing at desktop",
+    "Reacquired authentic BDD dataset 2 row after clearing search at desktop",
+    "Repeated sync retains exactly 1 warning notice with badge in region at desktop",
+    "Home row selection sets aria-selected=\"true\" at desktop",
+    "Navigation via row arrow button to Summary at desktop",
+    "Canonical 4 metrics (12,500, 92.4%, 384, 126) at desktop",
+    "6 Engine status rows at desktop",
+    "Review volume side card at desktop",
+    "Task table and Candidate categories at desktop",
+    "Quality Gate callout at desktop",
+    "Authentic Task #1 settled with Dataset 2 Tasks GET 200 at desktop",
+    "Report link clicked and URL changed to /reports at desktop",
+    "Gate link clicked and URL changed to /reports/gate at desktop",
+    "History link clicked and URL changed to /analysis/history at desktop",
+    "Verified Review Center link presence at desktop",
+    "Closed isolated browser context at desktop",
+    "Real datasets GET returned 200 at mobile",
+    "Login and redirect to Home at mobile",
+    "Authenticated BDD dataset 2 row loaded at mobile",
+    "Search results match query \"BDD\" (1 rows) before clearing at mobile",
+    "Reacquired authentic BDD dataset 2 row after clearing search at mobile",
+    "Repeated sync retains exactly 1 warning notice with badge in region at mobile",
+    "Home row selection sets aria-selected=\"true\" at mobile",
+    "No horizontal page overflow at mobile on Home",
+    "Navigation via row arrow button to Summary at mobile",
+    "Canonical 4 metrics (12,500, 92.4%, 384, 126) at mobile",
+    "6 Engine status rows at mobile",
+    "Review volume side card at mobile",
+    "Task table and Candidate categories at mobile",
+    "Quality Gate callout at mobile",
+    "No horizontal page overflow at mobile on Summary",
+    "Authentic Task #1 settled with Dataset 2 Tasks GET 200 at mobile",
+    "Report link clicked and URL changed to /reports at mobile",
+    "Gate link clicked and URL changed to /reports/gate at mobile",
+    "History link clicked and URL changed to /analysis/history at mobile",
+    "Verified Review Center link presence at mobile",
+    "Closed isolated browser context at mobile",
+    "Full canonical Home 4 illustrative rows under API 503 at desktop",
+    "SampleDataBadge and NotConnectedNotice with exact prefix under API 503 at desktop",
+    "Full canonical illustrative Summary under API 503 at desktop",
+    "Full canonical Home 4 illustrative rows under API 503 at mobile",
+    "SampleDataBadge and NotConnectedNotice with exact prefix under API 503 at mobile",
+    "Full canonical illustrative Summary under API 503 at mobile"
+  ],
+  "status": "PASS",
+  "screenshotSha256": {
+    "live-home-1440.png": "080f93f694e06af5124bbfc6b2ce703ffc06e7fdeaa4238a815ba84a281f5b6e",
+    "live-summary-1440.png": "f5976b16005f581c665c111573403f1b1ce31c5e8fb3f8f48d898e91e7ae78c1",
+    "live-home-390.png": "a95f046923b0740d66989f9214f890fc15f55efca9c2d1cfe65edc6d298a7f69",
+    "live-summary-390.png": "42561ff6b9dee79a04295266661a3145e74d886625fc97601c4461a5d4af1330",
+    "preview-home-1440.png": "c316f08d1e4eec4064be7accb0db0d207eda7b04fdb5612fc110336321386c53",
+    "preview-summary-1440.png": "c0727009ddbecf2bf3486566f5e39bae846bc0920a5a54e751e2be8636d67803",
+    "preview-home-390.png": "1449842aee73d0a4a1602b77df88265bc68d95c2e56db279c0fa589f4112f4d2",
+    "preview-summary-390.png": "91fba49904f6132f653807e1feb3af2b87e6d4abc5b155c1d711996451c23645"
   },
-  "verification_suite": {
-    "make_check": "exit 0",
-    "backend_tests": "603 passed, 1 skipped",
-    "frontend_tests": "355 passed across 34 files",
-    "detector_tests": "10 passed",
-    "framework_status": "FRAMEWORK_VALIDATION_PASS",
-    "production_build": "BUILD_ID=FZ6rgrLJq52_4Vl4-MCJL"
+  "executor": "Codex CLI",
+  "scope": "Final repair handoff evidence; leader QA acceptance and pixel 1:1 verification pending",
+  "phaseDefinitions": {
+    "live": "Real auth and Dataset/Task reads; quality aggregates are labeled canonical illustration",
+    "preview": "Separate authenticated contexts; Dataset GET paths intercepted with HTTP 503; canonical illustrative preview"
   },
-  "review_artifacts": [
-    "ref-home-1440.png",
-    "ref-home-390.png",
-    "ref-summary-1440.png",
-    "ref-summary-390.png",
-    "live-home-1440.png",
-    "live-home-390.png",
-    "live-summary-1440.png",
-    "live-summary-390.png",
-    "menu-proof-1440.png",
-    "menu-proof-390.png"
-  ]
+  "networkEventsScope": "/api/ paths only; static asset events omitted; requestsCount remains all request + response events",
+  "networkEventsFilteredCount": 90
 }

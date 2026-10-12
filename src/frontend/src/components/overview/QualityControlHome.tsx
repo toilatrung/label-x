@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import { useAuth } from '@/lib/auth/auth-context';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
+import { ILLUSTRATIVE_HOME_DATASETS } from '@/lib/overview/sample-data';
 
 interface QualityControlHomeProps {
   onDatasetSelect?: (dataset: Dataset) => void;
@@ -157,10 +160,10 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     setSearchQuery(e.target.value);
   };
 
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || isLoadingMore || isLoading || isScanningSearch || inFlightCursorRef.current) return;
+  const loadMore = useCallback(async (overrideCursor?: string) => {
+    const targetCursor = overrideCursor || nextCursor;
+    if (!targetCursor || isLoadingMore || isLoading || isScanningSearch || inFlightCursorRef.current) return;
     const gen = currentGen.current;
-    const targetCursor = nextCursor;
 
     if (seenCursorsRef.current.has(targetCursor)) {
       setPaginationError('Phát hiện vòng lặp phân trang từ server.');
@@ -205,12 +208,12 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
 
   const handleRetryPagination = useCallback(() => {
     setPaginationError(null);
-    seenCursorsRef.current = new Set();
     const retryCursor = nextCursor || lastAttemptedCursorRef.current;
     if (retryCursor) {
-      setNextCursor(retryCursor);
+      seenCursorsRef.current.delete(retryCursor);
+      void loadMore(retryCursor);
     }
-  }, [nextCursor]);
+  }, [nextCursor, loadMore]);
 
   const filteredDatasets = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -225,6 +228,17 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     });
   }, [datasets, searchQuery]);
 
+  const filteredIllustrativeDatasets = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return ILLUSTRATIVE_HOME_DATASETS;
+    return ILLUSTRATIVE_HOME_DATASETS.filter((d) => {
+      const matchName = d.name.toLowerCase().includes(q);
+      const matchVersion = d.version ? d.version.toLowerCase().includes(q) : false;
+      const matchProject = d.cvatProjectId ? `cvat project #${d.cvatProjectId}`.toLowerCase().includes(q) : false;
+      return matchName || matchVersion || matchProject;
+    });
+  }, [searchQuery]);
+
   const handleSelectDataset = (ds: Dataset) => {
     setDatasetId(ds.id);
     onDatasetSelect?.(ds);
@@ -236,6 +250,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     router.push('/?view=summary');
   };
 
+  // F-1: Clicking sync updates the single regional notice without creating duplicates or calling fake APIs
   const handleSync = () => {
     setSyncNotice('Đồng bộ danh sách Dataset từ CVAT qua Webhook/Sync worker chưa được kích hoạt');
   };
@@ -254,6 +269,14 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  // F-5: Helper to render non-empty version tag, never rendering an empty "—" chip
+  const renderVersionTag = (version?: string | null) => {
+    if (!version || version.trim() === '' || version.trim() === '—') return null;
+    return <span className="lx-tag">{version}</span>;
+  };
+
+  const isRealDataActive = datasets.length > 0;
+
   return (
     <>
       {/* Header */}
@@ -265,18 +288,14 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
           </p>
         </div>
         <div className="lx-actions">
-          <span className="lx-hint">Đồng bộ CVAT —</span>
+          <span className="lx-hint">
+            {isRealDataActive ? 'Đồng bộ CVAT —' : 'Đồng bộ CVAT 2 phút trước'}
+          </span>
           <button type="button" className="lx-btn" onClick={handleSync}>
             Đồng bộ lại
           </button>
         </div>
       </div>
-
-      {syncNotice && (
-        <div style={{ marginBottom: 'var(--space-4)' }} role="status" aria-live="polite">
-          <NotConnectedNotice detail={syncNotice} />
-        </div>
-      )}
 
       {/* Main card */}
       <section className="lx-card">
@@ -296,67 +315,171 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
             />
           </label>
           <span className="lx-hint">
-            {isScanningSearch
-              ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
-              : `${filteredDatasets.length} / ${datasets.length} dataset`}
+            {isRealDataActive ? (
+              isScanningSearch
+                ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
+                : `${filteredDatasets.length} / ${datasets.length} dataset`
+            ) : (
+              `${filteredIllustrativeDatasets.length} / ${ILLUSTRATIVE_HOME_DATASETS.length} dataset`
+            )}
           </span>
         </div>
 
-        {/* Region-level notice for unaggregated fields in table, preserving canonical table cell density */}
-        <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
-          <NotConnectedNotice detail="Các trường Task/Job, Frame, QC Run và Quality Gate chưa có API tổng hợp" />
+        {/* F-1 & M-1: Exactly ONE single regional notice banner per region */}
+        {/* TODO(backend): Đề xuất endpoint tổng hợp GET /api/datasets/summary/ để lấy số liệu tổng hợp cho bảng Dataset (chưa có trong backend contract) */}
+        <div className="lx-notice-banner lx-row">
+          <SampleDataBadge />
+          <NotConnectedNotice
+            detail={
+              syncNotice
+                ? syncNotice
+                : !isRealDataActive && error
+                ? `Server API chưa kết nối (${error.message}). Hiển thị bản xem trước theo thiết kế.`
+                : !isRealDataActive && !isLoading
+                ? 'Chưa có Dataset trên server. Hiển thị bản xem trước theo thiết kế.'
+                : 'Các trường Task/Job, Frame, Quality Control Run và Quality Gate chưa có API tổng hợp'
+            }
+          />
         </div>
 
-        {/* Table content / Loading / Error states */}
+        {/* Localized loading / error / empty state info when backend is failing or empty */}
         {isLoading ? (
-          <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink-muted)' }}>
+          <div className="lx-state--card-muted">
             Đang tải danh sách Dataset từ server...
           </div>
-        ) : error ? (
-          <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink)' }}>
-            <div style={{ color: 'var(--danger)', marginBottom: 'var(--space-3)' }}>{error.message}</div>
+        ) : error && !isRealDataActive ? (
+          <div className="lx-state--card">
+            <div className="lx-text-danger lx-mb-3">{error.message}</div>
             {!error.isForbidden && (
               <button type="button" className="lx-btn lx-btn--sm" onClick={handleRetryInitial}>
-                Thử lại
+                Thử lại kết nối API
               </button>
             )}
           </div>
-        ) : datasets.length === 0 ? (
-          <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink-muted)' }}>
-            Chưa có Dataset nào được phân quyền cho tài khoản này.
-          </div>
-        ) : filteredDatasets.length === 0 ? (
-          paginationError ? (
-            <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink)' }}>
-              <div style={{ color: 'var(--danger)', marginBottom: 'var(--space-3)' }}>{paginationError}</div>
-              <button
-                type="button"
-                className="lx-btn lx-btn--sm"
-                onClick={handleRetryPagination}
-              >
-                Thử lại tải trang
-              </button>
-            </div>
-          ) : isScanningSearch ? (
-            <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink-muted)' }}>
-              Đang tìm kiếm thêm trên các trang tiếp theo…
-            </div>
+        ) : null}
+
+        {/* Real datasets table when connected */}
+        {isRealDataActive && !isLoading && (
+          filteredDatasets.length === 0 ? (
+            paginationError ? (
+              <div className="lx-state--card">
+                <div className="lx-text-danger lx-mb-3">{paginationError}</div>
+                <button
+                  type="button"
+                  className="lx-btn lx-btn--sm"
+                  onClick={handleRetryPagination}
+                >
+                  Thử lại tải trang
+                </button>
+              </div>
+            ) : isScanningSearch ? (
+              <div className="lx-state--card-muted">
+                Đang tìm kiếm thêm trên các trang tiếp theo…
+              </div>
+            ) : (
+              <div className="lx-state--card-muted">
+                <div>Không tìm thấy Dataset phù hợp với từ khóa &ldquo;{searchQuery}&rdquo;.</div>
+                <button
+                  type="button"
+                  className="lx-btn lx-btn--sm lx-mt-3"
+                  onClick={() => setSearchQuery('')}
+                >
+                  Xóa bộ lọc tìm kiếm
+                </button>
+              </div>
+            )
           ) : (
-            <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink-muted)' }}>
-              <div>Không tìm thấy Dataset phù hợp với từ khóa &ldquo;{searchQuery}&rdquo;.</div>
-              <button
-                type="button"
-                className="lx-btn lx-btn--sm"
-                style={{ marginTop: 'var(--space-3)' }}
-                onClick={() => setSearchQuery('')}
-              >
-                Xóa bộ lọc tìm kiếm
-              </button>
+            <div className="lx-scroll">
+              <table className="lx-table lx-table--min-1040">
+                <thead>
+                  <tr>
+                    <th>Dataset</th>
+                    <th className="r">Task / Job</th>
+                    <th className="r">Frame</th>
+                    <th>Quality Control Run gần nhất</th>
+                    <th className="r">Coverage</th>
+                    <th className="r">Issue đang mở</th>
+                    <th>Gate</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDatasets.map((ds, idx) => {
+                    const isSelected = ds.id === datasetId;
+                    // Provide illustrative canonical preview values for unaggregated metrics
+                    const illus = ILLUSTRATIVE_HOME_DATASETS[idx % ILLUSTRATIVE_HOME_DATASETS.length];
+                    return (
+                      <tr
+                        key={ds.id}
+                        aria-selected={isSelected ? 'true' : undefined}
+                        onClick={() => handleSelectDataset(ds)}
+                        className="lx-tr--clickable"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault();
+                            handleSelectDataset(ds);
+                          }
+                        }}
+                      >
+                        <td>
+                          <div className="lx-cell__main">
+                            {ds.name}
+                            {isSelected && <span className="lx-hint"> · Đang chọn</span>}
+                          </div>
+                          <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
+                        </td>
+                        <td className="r">{illus.tasksJobs}</td>
+                        <td className="r">{illus.frames}</td>
+                        <td>
+                          {illus.qcRunStatus ? (
+                            <>
+                              <span className="lx-mono">{illus.qcRun}</span>{' '}
+                              <span className={`lx-badge${illus.qcRunTone ? ` lx-badge--${illus.qcRunTone}` : ''}`}>
+                                {illus.qcRunStatus}
+                              </span>
+                              {illus.qcRunTime && <div className="lx-cell__sub">{illus.qcRunTime}</div>}
+                            </>
+                          ) : (
+                            <span className="lx-subtle">{illus.qcRun}</span>
+                          )}
+                        </td>
+                        <td className="r">{illus.coverage}</td>
+                        <td className="r">{illus.openIssues}</td>
+                        <td>
+                          <span className={`lx-badge${illus.gateTone ? ` lx-badge--${illus.gateTone}` : ''}`}>
+                            {illus.gate}
+                          </span>
+                        </td>
+                        <td className="r">
+                          <button
+                            type="button"
+                            className="lx-iconbtn"
+                            data-tip="Tiếp tục làm việc với Dataset này"
+                            aria-label="Tiếp tục làm việc với Dataset này"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectAndOpenSummary(ds);
+                            }}
+                          >
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
+                              <path d="M3 8h10M9 4l4 4-4 4" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )
-        ) : (
+        )}
+
+        {/* Canonical illustrative preview table: ALWAYS visible when no backend datasets or API error */}
+        {!isRealDataActive && !isLoading && (
           <div className="lx-scroll">
-            <table className="lx-table" style={{ minWidth: '1040px' }}>
+            <table className="lx-table lx-table--min-1040">
               <thead>
                 <tr>
                   <th>Dataset</th>
@@ -370,51 +493,87 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                 </tr>
               </thead>
               <tbody>
-                {filteredDatasets.map((ds) => {
-                  const isSelected = ds.id === datasetId;
+                {filteredIllustrativeDatasets.map((ds, idx) => {
+                  const isSelected = idx === 0;
                   return (
                     <tr
                       key={ds.id}
                       aria-selected={isSelected ? 'true' : undefined}
-                      onClick={() => handleSelectDataset(ds)}
-                      style={{ cursor: 'pointer' }}
+                      className="lx-tr--clickable"
                       tabIndex={0}
+                      onClick={() => {
+                        // Local illustration view navigation only; fixture IDs MUST NOT enter auth state
+                        if (ds.actionHref.includes('summary')) {
+                          router.push('/?view=summary');
+                        } else {
+                          router.push(ds.actionHref);
+                        }
+                      }}
                       onKeyDown={(e) => {
-                        // Separate row activation from child button click
                         if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                           e.preventDefault();
-                          handleSelectDataset(ds);
+                          if (ds.actionHref.includes('summary')) {
+                            router.push('/?view=summary');
+                          } else {
+                            router.push(ds.actionHref);
+                          }
                         }
                       }}
                     >
                       <td>
                         <div className="lx-cell__main">
-                          {ds.name} <span className="lx-tag" title="API chưa cung cấp trường dataset version">—</span>
+                          {ds.name} {renderVersionTag(ds.version)}
                           {isSelected && <span className="lx-hint"> · Đang chọn</span>}
                         </div>
-                        <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
+                        <div className="lx-cell__sub">
+                          {ds.subLabel || (ds.cvatProjectId ? `CVAT project #${ds.cvatProjectId}` : '')}
+                        </div>
                       </td>
-                      <td className="r">—</td>
-                      <td className="r">—</td>
-                      <td>—</td>
-                      <td className="r">—</td>
-                      <td className="r">—</td>
-                      <td>—</td>
+                      <td className="r">{ds.tasksJobs}</td>
+                      <td className="r">{ds.frames}</td>
+                      <td>
+                        {ds.qcRunStatus ? (
+                          <>
+                            <span className="lx-mono">{ds.qcRun}</span>{' '}
+                            <span className={`lx-badge${ds.qcRunTone ? ` lx-badge--${ds.qcRunTone}` : ''}`}>
+                              {ds.qcRunStatus}
+                            </span>
+                            {ds.qcRunTime && <div className="lx-cell__sub">{ds.qcRunTime}</div>}
+                          </>
+                        ) : (
+                          <span className="lx-subtle">{ds.qcRun}</span>
+                        )}
+                      </td>
+                      <td className="r">{ds.coverage}</td>
+                      <td className="r">{ds.openIssues}</td>
+                      <td>
+                        <span className={`lx-badge${ds.gateTone ? ` lx-badge--${ds.gateTone}` : ''}`}>
+                          {ds.gate}
+                        </span>
+                      </td>
                       <td className="r">
-                        <button
-                          type="button"
+                        <Link
+                          href={ds.actionHref}
                           className="lx-iconbtn"
-                          data-tip="Tiếp tục làm việc với Dataset này"
-                          aria-label="Tiếp tục làm việc với Dataset này"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectAndOpenSummary(ds);
-                          }}
+                          data-tip={ds.actionTip}
+                          aria-label={ds.actionTip}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" style={{ width: 16, height: 16 }}>
-                            <path d="M3 8h10M9 4l4 4-4 4" />
-                          </svg>
-                        </button>
+                          {ds.actionHref.includes('releases') ? (
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
+                              <circle cx="8" cy="8" r="5.5" />
+                              <path d="M8 5v3.5l2 1.5" />
+                            </svg>
+                          ) : ds.actionHref.includes('snapshots') ? (
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
+                              <path d="M8 3v10M3 8h10" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
+                              <path d="M3 8h10M9 4l4 4-4 4" />
+                            </svg>
+                          )}
+                        </Link>
                       </td>
                     </tr>
                   );
@@ -426,8 +585,8 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
 
         {/* Pagination error and working retry */}
         {paginationError && filteredDatasets.length > 0 && (
-          <div style={{ padding: 'var(--space-3)', textAlign: 'center', background: 'var(--surface-sunken)', borderTop: '1px solid var(--border)' }}>
-            <span style={{ color: 'var(--danger)', marginRight: 'var(--space-3)' }}>{paginationError}</span>
+          <div className="lx-pagination-retry">
+            <span className="lx-text-danger lx-mr-3">{paginationError}</span>
             <button
               type="button"
               className="lx-btn lx-btn--sm"
@@ -441,7 +600,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
 
         {/* Pagination if more available */}
         {nextCursor && !isLoading && !paginationError && (
-          <div style={{ padding: 'var(--space-3)', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
+          <div className="lx-pagination-more">
             <button
               type="button"
               className="lx-btn lx-btn--sm"

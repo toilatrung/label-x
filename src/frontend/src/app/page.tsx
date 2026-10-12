@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
+import { ContextBar } from '@/components/layout/ContextBar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth/auth-context';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
@@ -41,17 +42,6 @@ function OverviewContent() {
     runSelection.userId === currentUserId && runSelection.datasetId === datasetId
       ? runSelection.run
       : null;
-
-  const handleSetSelectedRun = useCallback(
-    (run: Run | null) => {
-      setRunSelection({
-        userId: currentUserId,
-        datasetId,
-        run,
-      });
-    },
-    [currentUserId, datasetId]
-  );
 
   // Resolution state keyed strictly to requested datasetId AND current auth user
   const [resolution, setResolution] = useState<DatasetResolution>(() => {
@@ -252,77 +242,62 @@ function OverviewContent() {
     setRetryNonce((prev) => prev + 1);
   };
 
-  const handleScopeChange = useCallback(
-    (newScope: string) => {
-      if (newScope === 'Toàn dataset') {
-        handleSetTaskScope(null);
-      } else {
-        handleSetTaskScope(newScope);
-      }
-    },
-    [handleSetTaskScope]
-  );
-
-  // ContextBar props: canonical TopBar DS structure with interactive chips and scope
-  const contextProps = {
+  // ContextBar props conforming strictly to restored ContextBarProps baseline
+  const contextProps: React.ComponentProps<typeof ContextBar> = {
     datasetName: currentDataset?.name,
     datasetIdOverride: datasetId ?? undefined,
     guidelineVersion: currentDataset?.guideline_version ?? '—',
     taxonomyVersion: currentDataset?.taxonomy_version ?? '—',
     activeRun: effectiveSelectedRun
       ? `#${effectiveSelectedRun.id} · ${effectiveSelectedRun.status ? effectiveSelectedRun.status.toUpperCase() : '—'}`
-      : '—',
-    snapshotName: effectiveSelectedRun?.snapshot_id ? `#${effectiveSelectedRun.snapshot_id}` : '—',
-    scopeName: effectiveTaskScope ?? 'Toàn dataset',
-    onScopeChange: handleScopeChange,
-    onDatasetSelect: handleDatasetSelect,
-    onRunSelect: handleSetSelectedRun,
-    selectedRun: effectiveSelectedRun,
-    isOverview: true,
+      : 'Chưa chọn',
+    snapshotName: effectiveSelectedRun?.snapshot_id ? `#${effectiveSelectedRun.snapshot_id}` : 'Chưa chọn',
   };
 
   return (
-    <AppShell
-      activeKey="overview"
-      activeItem={isSummary ? 'summary' : 'home'}
-      context={contextProps}
-    >
+    <AppShell activeKey="overview" context={contextProps}>
       {isSummary ? (
         datasetId === null ? (
           <QualitySummary currentDataset={null} />
         ) : effectiveStatus === 'loading' ? (
-          <div className="lx-card" style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--ink-muted)' }}>
+          <div className="lx-card lx-state--card-muted">
             Đang xác minh thông tin Dataset #{datasetId}...
           </div>
         ) : effectiveStatus === 'revoked' ? (
-          <div className="lx-card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
-            <h2 className="lx-h2">Dataset không khả dụng</h2>
-            <p className="lx-lead" style={{ marginTop: 'var(--space-2)' }}>
-              Dataset đã chọn không tồn tại hoặc tài khoản của bạn không còn quyền truy cập trong phạm vi này.
-            </p>
-            <div style={{ marginTop: 'var(--space-4)' }}>
-              <button type="button" className="lx-btn lx-btn--primary" onClick={handleSelectAnother}>
-                Chọn Dataset khác
-              </button>
-            </div>
-          </div>
-        ) : effectiveStatus === 'error' && resolution.status === 'error' ? (
-          <div className="lx-card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
-            <h2 className="lx-h2" style={{ color: 'var(--danger)' }}>Lỗi kiểm tra quyền Dataset</h2>
-            <p className="lx-lead" style={{ marginTop: 'var(--space-2)' }}>
-              {resolution.message}
-            </p>
-            <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', justifyContent: 'center' }}>
-              {!resolution.isForbidden && (
-                <button type="button" className="lx-btn" onClick={handleRetry}>
-                  Thử lại
+          <>
+            <div className="lx-card lx-state--card lx-mb-4">
+              <h2 className="lx-h2">Dataset không khả dụng</h2>
+              <p className="lx-lead lx-mt-2">
+                Dataset đã chọn không tồn tại hoặc tài khoản của bạn không còn quyền truy cập trong phạm vi này.
+              </p>
+              <div className="lx-mt-4">
+                <button type="button" className="lx-btn lx-btn--primary" onClick={handleSelectAnother}>
+                  Chọn Dataset khác
                 </button>
-              )}
-              <button type="button" className="lx-btn lx-btn--primary" onClick={handleSelectAnother}>
-                Về danh sách Dataset
-              </button>
+              </div>
             </div>
-          </div>
+            <QualitySummary currentDataset={null} />
+          </>
+        ) : effectiveStatus === 'error' && resolution.status === 'error' ? (
+          <>
+            <div className="lx-card lx-state--card lx-mb-4">
+              <h2 className="lx-h2 lx-text-danger">Lỗi kiểm tra quyền Dataset</h2>
+              <p className="lx-lead lx-mt-2">
+                {resolution.message}
+              </p>
+              <div className="lx-mt-4 lx-row lx-justify-center">
+                {!resolution.isForbidden && (
+                  <button type="button" className="lx-btn lx-mr-3" onClick={handleRetry}>
+                    Thử lại
+                  </button>
+                )}
+                <button type="button" className="lx-btn lx-btn--primary" onClick={handleSelectAnother}>
+                  Về danh sách Dataset
+                </button>
+              </div>
+            </div>
+            <QualitySummary currentDataset={null} />
+          </>
         ) : (
           <QualitySummary
             key={currentUserId !== null && currentDataset?.id ? `${currentUserId}:${currentDataset.id}` : (currentDataset?.id ?? 'none')}
@@ -344,7 +319,7 @@ export default function Home() {
     <AuthGuard>
       <Suspense
         fallback={
-          <div className="lx" style={{ minHeight: '100vh', background: 'var(--canvas)', padding: 'var(--space-6)' }}>
+          <div className="lx lx-minh-screen lx-bg-canvas lx-p-6">
             <span className="lx-hint">Đang tải...</span>
           </div>
         }
