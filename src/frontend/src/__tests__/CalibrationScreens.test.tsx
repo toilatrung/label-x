@@ -31,7 +31,8 @@ describe('Benchmark', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Tạo benchmark' }));
     expect(screen.queryByText(/thành công|đã tạo/i)).toBeNull();
-    expect(screen.getAllByRole('status')).toHaveLength(2);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
   });
 });
 
@@ -46,14 +47,16 @@ describe('Audit Sampling', () => {
 });
 
 describe('Write actions without a server', () => {
-  it('shows the notice when Tạo mẫu mới or Giao bài hiệu chỉnh is pressed', () => {
-    const { unmount } = render(<AuditSamplingHeader />);
+  it('emphasizes the existing notice when Tạo mẫu mới or Giao bài hiệu chỉnh is pressed', () => {
+    const { unmount } = render(<><AuditSamplingHeader /><AuditSamplingBody /></>);
     fireEvent.click(screen.getByRole('button', { name: 'Tạo mẫu mới' }));
-    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(document.activeElement).toBe(screen.getByRole('status').closest('[data-attention]'));
     unmount();
-    render(<CalibrationHeader />);
+    render(<><CalibrationHeader /><CalibrationBody /></>);
     fireEvent.click(screen.getByRole('button', { name: 'Giao bài hiệu chỉnh' }));
-    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
   });
 });
 

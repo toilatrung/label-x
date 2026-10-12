@@ -29,12 +29,15 @@ describe('Quality Report', () => {
     expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toHaveLength(3);
     expect(screen.queryByText(/thành công/i)).toBeNull();
   });
-  it('shows the not-connected notice when an export format is chosen', () => {
-    render(<QualityReportHeader />);
-    expect(screen.queryByRole('status')).toBeNull();
+  it('emphasizes the existing notice when an export format is chosen, without adding a second one', () => {
+    render(<><QualityReportHeader /><QualityReportBody /></>);
+    expect(screen.getAllByText(NOTICE)).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: /Xuất báo cáo/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /PDF/ }));
-    expect(screen.getByRole('status').textContent).toBe(NOTICE);
+    expect(screen.getAllByText(NOTICE)).toHaveLength(1);
+    const wrapper = screen.getByText(NOTICE).closest('[data-attention]') as HTMLElement;
+    expect(wrapper).toBeTruthy();
+    expect(document.activeElement).toBe(wrapper);
     expect(screen.queryByRole('menu')).toBeNull();
   });
   it('closes the export menu on Escape and on an outside click', () => {
@@ -63,7 +66,8 @@ describe('Quality Gate', () => {
     fireEvent.change(screen.getByLabelText('Lý do (bắt buộc)'), { target: { value: 'x' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gửi xin waiver' }));
     expect(screen.queryByText(/đã gửi|thành công/i)).toBeNull();
-    expect(screen.getAllByText(NOTICE)).toHaveLength(3);
+    expect(screen.getAllByText(NOTICE)).toHaveLength(2);
+    expect(screen.getAllByText(NOTICE).map((n) => n.closest('[data-attention]')).filter(Boolean)).toHaveLength(1);
   });
 });
 
@@ -75,6 +79,7 @@ describe('Release History', () => {
     expect(screen.getByText('SNP-011')).toBeTruthy();
     expect(screen.getAllByRole('status').length).toBe(2);
     fireEvent.click(screen.getByRole('button', { name: 'Tải manifest (JSON)' }));
-    expect(screen.getAllByRole('status').length).toBe(3);
+    expect(screen.getAllByRole('status').length).toBe(2);
+    expect(document.querySelectorAll('[data-attention]')).toHaveLength(1);
   });
 });
