@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from orchestration.models import CandidateRecord
+from review.lineage import run_lineage_fields
 from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
 
 
@@ -75,6 +78,42 @@ class RunSerializer(serializers.ModelSerializer[Any]):
                 }
             )
         return results
+
+
+class RunDetailSerializer(RunSerializer):
+    """GET /api/runs/{id}/: Run plus final-run lineage and operational source (D05)."""
+
+    verification_lineage = serializers.SerializerMethodField()
+    selected_final_sources = serializers.SerializerMethodField()
+    operational_source = serializers.SerializerMethodField()
+
+    class Meta(RunSerializer.Meta):
+        fields = [
+            *RunSerializer.Meta.fields,
+            "verification_lineage",
+            "selected_final_sources",
+            "operational_source",
+        ]
+        read_only_fields = fields
+
+    def _lineage(self, obj: QCRun) -> dict[str, object]:
+        cached = getattr(obj, "_lineage_fields", None)
+        if cached is None:
+            cached = run_lineage_fields(obj)
+            obj._lineage_fields = cached  # type: ignore[attr-defined]
+        return cast(dict[str, object], cached)
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_verification_lineage(self, obj: QCRun) -> object:
+        return self._lineage(obj)["verification_lineage"]
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_selected_final_sources(self, obj: QCRun) -> object:
+        return self._lineage(obj)["selected_final_sources"]
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_operational_source(self, obj: QCRun) -> object:
+        return self._lineage(obj)["operational_source"]
 
 
 class PaginatedRunListSerializer(serializers.Serializer[Any]):
@@ -256,11 +295,13 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     def get_queue(self, obj: RunRankingEntry) -> str:
         return "random" if obj.ranking.source == "random_audit" else "risk"
 
-    def get_review_state(self, _obj: RunRankingEntry) -> str:
-        return "unreviewed"
+    def get_review_state(self, obj: RunRankingEntry) -> str:
+        # Annotated by RunRankingView from persisted FrameReview/Lease rows (expiry-aware).
+        return str(getattr(obj, "effective_review_state", None) or "unreviewed")
 
-    def get_lease_holder_user_id(self, _obj: RunRankingEntry) -> int | None:
-        return None
+    def get_lease_holder_user_id(self, obj: RunRankingEntry) -> int | None:
+        holder = getattr(obj, "active_lease_holder_id", None)
+        return int(holder) if holder is not None else None
 
 
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):

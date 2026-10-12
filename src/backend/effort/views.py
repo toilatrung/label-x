@@ -14,7 +14,11 @@ from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from effort.serializers import EffortEventBatchSerializer, EffortEventReceiptSerializer
-from effort.services import EffortEventConflictError, ingest_effort_events
+from effort.services import (
+    EffortEventConflictError,
+    EffortPolicyError,
+    ingest_effort_events,
+)
 from review.models import FrameReview
 
 
@@ -86,6 +90,8 @@ class EffortEventCollectionView(APIView):
             )
         except FrameReview.DoesNotExist as exc:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Frame not found.") from exc
+        except EffortPolicyError as exc:
+            raise ApiError(status.HTTP_409_CONFLICT, exc.code, str(exc)) from exc
         except EffortEventConflictError as exc:
             raise ApiError(
                 status.HTTP_409_CONFLICT,

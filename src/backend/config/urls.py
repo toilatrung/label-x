@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/issues/", include("review.issue_urls")),
     path("api/rework/", include("review.rework_urls")),
     path("api/effort-events/", include("effort.urls")),
+    path("api/review-policy/", include("review.policy_urls")),
     path("api/escalations/", EscalationsListView.as_view(), name="escalations-list"),
     path("api/decision-cases/", DecisionCaseListView.as_view(), name="decision-cases-list"),
     path(

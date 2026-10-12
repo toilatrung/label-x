@@ -10,7 +10,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from review.finalization_service import FinalRunNotReady, build_final_run
+from review.finalization_service import (
+    FinalRunNotReady,
+    build_final_run,
+    complete_scope_frames,
+)
 from review.models import ReworkRequest
 from runs.models import QCRun
 
@@ -75,4 +79,25 @@ def sweep_ready_final_runs() -> int:
     for run in candidates:
         enqueue_final_run(run.pk, run.created_by_id)
         queued += 1
+    complete_scope_frames_sweep()
     return queued
+
+
+@shared_task(name="review.complete_scope_frames")
+def complete_scope_frames_sweep() -> int:
+    """Complete frames of origin runs whose final run is now a valid operational source.
+
+    Idempotent: only AWAITING_FOLLOWUP frames of fully resolved scopes change state.
+    """
+
+    origin_ids = (
+        QCRun.objects.filter(
+            is_final=False,
+            origin_run__isnull=True,
+            rework_runs__is_final=True,
+            rework_runs__status=QCRun.Status.COMPLETED,
+        )
+        .values_list("pk", flat=True)
+        .distinct()
+    )
+    return sum(complete_scope_frames(origin_id) for origin_id in origin_ids)

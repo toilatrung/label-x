@@ -6,6 +6,7 @@ from threading import Barrier
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.files.storage import storages
 from django.db import connection, connections
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
@@ -364,6 +365,9 @@ def test_migration_upgrade_from_baseline_schema():
     assert {"frame_review", "review_lease", "review_issue", "review_decision"} <= set(
         connection.introspection.table_names()
     )
+    # Leave the shared test database at the latest schema for later transactional tests.
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
 
 
 @pytest.mark.django_db(transaction=True)
@@ -480,3 +484,92 @@ def test_postgresql_barrier_claim_same_frame_once(world):
         results = list(pool.map(race, [world["reviewer"], world["other"]]))
     assert sorted(results) == [200, 204]
     assert Lease.objects.filter(closed_at__isnull=True).count() == 1
+
+
+def ranking_rows(api, run_id, queue="risk", **params):
+    response = api.get(f"/api/runs/{run_id}/ranking/", {"queue": queue, **params})
+    assert response.status_code == 200, response.data
+    return response.data["results"]
+
+
+@pytest.mark.django_db
+def test_ranking_reports_persisted_state_holder_and_filters(world, monkeypatch):
+    clock = [timezone.now()]
+    monkeypatch.setattr("review.services._now", lambda: clock[0])
+    api = client(world["reviewer"])
+    run_id = world["run"].pk
+    (row,) = ranking_rows(api, run_id)
+    assert row["review_state"] == "unreviewed" and row["lease_holder_user_id"] is None
+
+    claim = api.post(next_url(), {"run_id": run_id}, format="json")
+    assert claim.status_code == 200
+    for queue in ("risk", "random"):  # one frame state shared; queues keep their own entries
+        (row,) = ranking_rows(api, run_id, queue)
+        assert row["review_state"] == "in_review"
+        assert row["lease_holder_user_id"] == world["reviewer"].pk
+        assert ranking_rows(api, run_id, queue, review_state="in_review") == [row]
+        for other in ("unreviewed", "incomplete", "reviewed", "awaiting_followup", "completed"):
+            assert ranking_rows(api, run_id, queue, review_state=other) == []
+
+    # Expiry is shown without any write from a GET: no decision -> unreviewed.
+    lease = Lease.objects.get(pk=claim.data["lease"]["id"])
+    clock[0] = lease.expires_at
+    (row,) = ranking_rows(api, run_id)
+    assert row["review_state"] == "unreviewed" and row["lease_holder_user_id"] is None
+    assert len(ranking_rows(api, run_id, review_state="unreviewed")) == 1
+    lease.refresh_from_db()
+    assert lease.closed_at is None
+
+
+@pytest.mark.django_db
+def test_ranking_expired_lease_with_saved_decision_is_incomplete_then_resumes(world, monkeypatch):
+    clock = [timezone.now()]
+    monkeypatch.setattr("review.services._now", lambda: clock[0])
+    api = client(world["reviewer"])
+    run_id = world["run"].pk
+    claim = api.post(next_url(), {"run_id": run_id}, format="json")
+    lease = Lease.objects.get(pk=claim.data["lease"]["id"])
+    persist_manual_decision(world, lease.pk)
+    clock[0] = lease.expires_at
+    (row,) = ranking_rows(api, run_id, review_state="incomplete")
+    assert row["review_state"] == "incomplete" and row["lease_holder_user_id"] is None
+    assert ranking_rows(api, run_id, review_state="in_review") == []
+    resumed = api.post(next_url(), {"run_id": run_id}, format="json")
+    assert resumed.data["resumed"] is True
+    (row,) = ranking_rows(api, run_id, review_state="in_review")
+    assert row["lease_holder_user_id"] == world["reviewer"].pk
+
+
+@pytest.mark.django_db
+def test_ranking_filter_covers_terminal_states_and_rejects_invalid(world):
+    api = client(world["reviewer"])
+    run_id = world["run"].pk
+    frame_review = FrameReview.objects.create(run=world["run"], snapshot_frame=world["frame"])
+    for state in ("reviewed", "awaiting_followup", "completed"):
+        frame_review.state = state
+        frame_review.save(update_fields=["state"])
+        assert [r["review_state"] for r in ranking_rows(api, run_id, review_state=state)] == [state]
+        assert ranking_rows(api, run_id, review_state="unreviewed") == []
+    bad = api.get(f"/api/runs/{run_id}/ranking/", {"review_state": "bogus"})
+    assert bad.status_code == 400
+
+
+@pytest.mark.django_db
+def test_frame_issues_serves_locked_revision_full_annotations_and_scope(world, monkeypatch):
+    monkeypatch.setattr(storages["snapshots"], "url", lambda name: f"https://storage.test/{name}")
+    api = client(world["reviewer"])
+    claim = api.post(next_url(), {"run_id": world["run"].pk}, format="json")
+    frame_id = claim.data["frame"]["id"]
+    response = api.get(f"/api/frames/{frame_id}/issues/")
+    assert response.status_code == 200, response.data
+    assert response.data["snapshot_revision"] == world["run"].snapshot.revision_sha256
+    # The shape has no engine candidate yet is still delivered, with class and bbox.
+    assert response.data["predictions"] == []
+    (annotation,) = response.data["annotations"]
+    assert annotation["id"] == "shape:91" and annotation["label_id"] == 1
+    assert annotation["bbox"] == {"x1": 1, "y1": 1, "x2": 10, "y2": 10}
+    assert response.data["issues"] == []  # read never auto-creates/confirms issues
+    # Authorization boundary is unchanged: author (annotator) and out-of-scope users are denied.
+    assert client(world["author"]).get(f"/api/frames/{frame_id}/issues/").status_code == 403
+    outsider = User.objects.create_user("outsider-r03")
+    assert client(outsider).get(f"/api/frames/{frame_id}/issues/").status_code == 403

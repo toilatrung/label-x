@@ -1,9 +1,11 @@
 """T-040 rework API, lineage, idempotency and transaction evidence."""
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from uuid import uuid4
 
 import pytest
-from django.db import DatabaseError, connection, transaction
+from django.db import DatabaseError, connection, connections, transaction
 from django.utils import timezone
 
 from audit.models import AuditEvent
@@ -250,6 +252,9 @@ def test_verify_requires_completed_recheck_and_separate_person(confirmed, world,
     assert verified.status_code == 200, verified.data
     assert verified.data["status"] == "resolved"
     assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.RESOLVED
+    assert FrameReview.objects.get(pk=confirmed.frame_review_id).state == (
+        FrameReview.State.AWAITING_FOLLOWUP
+    )
     verification = ReworkVerification.objects.get(rework=rework)
     assert verification.outcome == ReworkVerification.Outcome.PASS
     assert verification.recheck_run == run
@@ -304,6 +309,359 @@ def test_verify_fail_reopens_issue(confirmed, world, monkeypatch):
         format="json",
     )
     assert failed.status_code == 200, failed.data
-    assert failed.data["status"] == "reopened"
-    assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.REOPENED
+    assert failed.data["status"] == "fix_pending"
+    assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.FIX_PENDING
     assert ReworkVerification.objects.get(rework=rework).outcome == "fail"
+    actions = list(
+        AuditEvent.objects.filter(object_type="rework", object_id=str(rework.pk)).values_list(
+            "action", flat=True
+        )
+    )
+    assert "rework.verify_fail" in actions
+    assert AuditEvent.objects.filter(
+        action="issue.reopen_fix", object_id=str(confirmed.pk), reason="Still wrong"
+    ).exists()
+
+
+def second_snapshot(world):
+    return create_locked_snapshot(
+        dataset_id=42,
+        created_by=world["author"],
+        taxonomy_version="tax",
+        guideline_version="guide",
+        parent_snapshot=world["run"].snapshot,
+        jobs=[
+            JobExport(
+                cvat_job_id=100,
+                cvat_task_id=200,
+                assignee_cvat_user_id=702,
+                assignee_user_id=world["author"].pk,
+                source_updated_at="2026-10-11T12:00:00Z",
+                annotations={
+                    "shapes": [
+                        {
+                            "id": 92,
+                            "type": "rectangle",
+                            "frame": 0,
+                            "label_id": 1,
+                            "points": [2, 2, 20, 20],
+                        }
+                    ],
+                    "tracks": [],
+                },
+                frames=[
+                    FrameExport(
+                        frame_index=0,
+                        file_name="0.jpg",
+                        width=100,
+                        height=100,
+                        media_bytes=b"frame-0",
+                        media_storage_key="rework/0.jpg",
+                    )
+                ],
+            )
+        ],
+    )
+
+
+def _run_for(world, snapshot):
+    return QCRun.objects.create(
+        snapshot=snapshot,
+        config_version=world["run"].config_version,
+        seed=1,
+        status=QCRun.Status.COMPLETED,
+        origin_run=world["run"],
+        dataset_id=42,
+        scope_hash=snapshot.revision_sha256,
+        created_by=world["author"],
+    )
+
+
+def _submit(world, rework, snapshot, **extra):
+    return client(world["author"]).post(
+        f"/api/rework/{rework.pk}/submitted/",
+        {"cvat_revision": snapshot.revision_sha256},
+        format="json",
+        **extra,
+    )
+
+
+def _verify(world, rework, snapshot, passed, **extra):
+    body = {"passed": passed, "revision": snapshot.revision_sha256}
+    if not passed:
+        body["reason"] = "Still wrong"
+    return client(world["other"]).post(
+        f"/api/rework/{rework.pk}/verify/", body, format="json", **extra
+    )
+
+
+@pytest.mark.django_db
+def test_verify_failure_can_be_submitted_again(confirmed, world, monkeypatch):
+    """Two rounds: unchanged revision 409, fail -> fix again -> pass, append-only lineage."""
+
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first, second = changed_snapshot(world), second_snapshot(world)
+    assert first.revision_sha256 != second.revision_sha256
+    runs = {first.pk: _run_for(world, first), second.pk: _run_for(world, second)}
+    current = {"snapshot": first}
+    monkeypatch.setattr(
+        rework_service,
+        "_build_recheck_artifacts",
+        lambda **_kwargs: (current["snapshot"], runs[current["snapshot"].pk]),
+    )
+
+    assert _submit(world, rework, first).status_code == 202
+    failed = _verify(world, rework, first, False)
+    assert failed.status_code == 200 and failed.data["status"] == "fix_pending"
+
+    # the failed revision (and the original one) are not a new fix
+    again = _submit(world, rework, first)
+    assert again.status_code == 409 and again.data["code"] == "REVISION_UNCHANGED"
+    again = _submit(world, rework, world["run"].snapshot)
+    assert again.status_code == 409 and again.data["code"] == "REVISION_UNCHANGED"
+
+    current["snapshot"] = second
+    submitted = _submit(world, rework, second)
+    assert submitted.status_code == 202, submitted.data
+    assert submitted.data["status"] == "recheck_pending"
+    assert submitted.data["recheck_run_id"] == runs[second.pk].pk
+    assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.RECHECK_PENDING
+
+    passed = _verify(world, rework, second, True)
+    assert passed.status_code == 200 and passed.data["status"] == "resolved"
+    assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.RESOLVED
+
+    rechecks = list(rework.rechecks.order_by("round"))
+    assert [(r.round, r.revision) for r in rechecks] == [
+        (1, first.revision_sha256),
+        (2, second.revision_sha256),
+    ]
+    outcomes = list(rework.verifications.order_by("pk").values_list("outcome", "revision"))
+    assert outcomes == [("fail", first.revision_sha256), ("pass", second.revision_sha256)]
+    assert (
+        AuditEvent.objects.filter(action="rework.submitted", object_id=str(rework.pk)).count() == 2
+    )
+    assert AuditEvent.objects.filter(action="issue.reopen_fix").count() == 1
+
+
+@pytest.mark.django_db
+def test_multi_round_replays_do_not_duplicate_results(confirmed, world, monkeypatch):
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first, second = changed_snapshot(world), second_snapshot(world)
+    runs = {first.pk: _run_for(world, first), second.pk: _run_for(world, second)}
+    current = {"snapshot": first}
+    monkeypatch.setattr(
+        rework_service,
+        "_build_recheck_artifacts",
+        lambda **_kwargs: (current["snapshot"], runs[current["snapshot"].pk]),
+    )
+    submit_key, verify_key = str(uuid4()), str(uuid4())
+    assert _submit(world, rework, first, HTTP_IDEMPOTENCY_KEY=submit_key).status_code == 202
+    assert _verify(world, rework, first, False, HTTP_IDEMPOTENCY_KEY=verify_key).status_code == 200
+
+    # retry of round 1 submit/verify after the issue is already back to fix_pending
+    replay = _submit(world, rework, first, HTTP_IDEMPOTENCY_KEY=submit_key)
+    assert replay.status_code == 202
+    replay = _verify(world, rework, first, False, HTTP_IDEMPOTENCY_KEY=verify_key)
+    assert replay.status_code == 200
+    assert rework.rechecks.count() == 1 and rework.verifications.count() == 1
+
+    # same key for a different revision is key reuse, not a new round
+    current["snapshot"] = second
+    reused = _submit(world, rework, second, HTTP_IDEMPOTENCY_KEY=submit_key)
+    assert reused.status_code == 409 and reused.data["code"] == "IDEMPOTENCY_KEY_REUSED"
+    assert rework.rechecks.count() == 1
+
+    new_key = str(uuid4())
+    assert _submit(world, rework, second, HTTP_IDEMPOTENCY_KEY=new_key).status_code == 202
+    assert _submit(world, rework, second, HTTP_IDEMPOTENCY_KEY=new_key).status_code == 202
+    assert rework.rechecks.count() == 2
+    # a second verifier request with a fresh key cannot double-record the same round
+    assert _verify(world, rework, second, True).status_code == 200
+    late = _verify(world, rework, second, True)
+    assert late.status_code == 409
+    assert rework.verifications.count() == 2
+
+
+@pytest.mark.django_db
+def test_failed_round_blocks_verify_by_annotator_and_wrong_actor(confirmed, world, monkeypatch):
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first = changed_snapshot(world)
+    run = _run_for(world, first)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (first, run))
+    assert _submit(world, rework, first).status_code == 202
+    assert _verify(world, rework, first, False).status_code == 200
+    # nothing to verify until a new revision is submitted
+    pending = _verify(world, rework, first, True)
+    assert pending.status_code == 409
+    stranger = client(world["reviewer"]).post(
+        f"/api/rework/{rework.pk}/submitted/",
+        {"cvat_revision": "f" * 64},
+        format="json",
+    )
+    assert stranger.status_code == 403
+
+
+def _thread_post(barrier, user, path, body):
+    connections.close_all()
+    try:
+        barrier.wait(timeout=15)
+        response = client(user).post(path, body, format="json")
+        return response.status_code
+    finally:
+        connections.close_all()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_verify_records_single_result(confirmed, world, monkeypatch):
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first = changed_snapshot(world)
+    run = _run_for(world, first)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (first, run))
+    assert _submit(world, rework, first).status_code == 202
+
+    barrier = Barrier(2)
+    body = {"passed": False, "revision": first.revision_sha256, "reason": "Still wrong"}
+    path = f"/api/rework/{rework.pk}/verify/"
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(_thread_post, barrier, world["other"], path, body) for _ in "ab"]
+        codes = sorted(future.result() for future in futures)
+    assert codes == [200, 409]
+    assert rework.verifications.count() == 1
+    assert AuditEvent.objects.filter(action="issue.reopen_fix").count() == 1
+    assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.FIX_PENDING
+
+
+def _first_round_failed(confirmed, world, monkeypatch):
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first, second = changed_snapshot(world), second_snapshot(world)
+    run = _run_for(world, first)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (first, run))
+    assert _submit(world, rework, first).status_code == 202
+    assert _verify(world, rework, first, False).status_code == 200
+    return rework, first, second, run
+
+
+def _state(rework, confirmed):
+    return (
+        ReworkRequest.objects.get(pk=rework.pk).status,
+        ReworkRequest.objects.get(pk=rework.pk).submitted_revision,
+        Issue.objects.get(pk=confirmed.pk).state,
+        ReworkRecheck.objects.filter(rework=rework).count(),
+        AuditEvent.objects.filter(action="rework.submitted").count(),
+    )
+
+
+@pytest.mark.django_db
+def test_recheck_reusing_same_snapshot_is_409_without_db_change(confirmed, world, monkeypatch):
+    rework, first, second, run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    # CVAT handed back the snapshot of round 1 again although a new revision was claimed
+    reused = _submit(world, rework, second)
+    assert reused.status_code == 409, reused.data
+    assert reused.data["code"] == "REVISION_UNCHANGED"
+    assert reused.data["details"] == {"rework_id": rework.pk, "snapshot_id": first.pk}
+    assert (
+        _state(rework, confirmed)
+        == before
+        == ("fix_pending", first.revision_sha256, "fix_pending", 1, 1)
+    )
+
+
+@pytest.mark.django_db
+def test_recheck_snapshot_race_integrity_error_becomes_409(confirmed, world, monkeypatch):
+    rework, first, second, run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    real_create = ReworkRecheck.objects.create
+
+    def lose_race(**kwargs):
+        # a concurrent request committed the same snapshot after our pre-check
+        real_create(**{**kwargs, "round": 99, "idempotency_key": None})
+        return real_create(**kwargs)
+
+    monkeypatch.setattr(ReworkRecheck.objects, "create", lose_race)
+    raced = _submit(world, rework, second)
+    assert raced.status_code == 409, raced.data
+    assert raced.data["code"] == "REVISION_UNCHANGED"
+    monkeypatch.undo()
+    assert _state(rework, confirmed) == before
+
+
+def _threaded_submits(world, rework, calls):
+    """Fire the given (key, snapshot) submissions together from separate DB connections."""
+
+    barrier = Barrier(len(calls))
+    path = f"/api/rework/{rework.pk}/submitted/"
+
+    def run(key, snapshot):
+        connections.close_all()
+        try:
+            barrier.wait(timeout=15)
+            extra = {"HTTP_IDEMPOTENCY_KEY": key} if key else {}
+            response = client(world["author"]).post(
+                path, {"cvat_revision": snapshot.revision_sha256}, format="json", **extra
+            )
+            return response.status_code, response.data
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=len(calls)) as pool:
+        futures = [pool.submit(run, key, snapshot) for key, snapshot in calls]
+        return [future.result() for future in futures]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_same_snapshot_distinct_keys(confirmed, world, monkeypatch):
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    run2 = _run_for(world, second)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (second, run2))
+    results = _threaded_submits(world, rework, [(str(uuid4()), second), (str(uuid4()), second)])
+    codes = sorted(code for code, _ in results)
+    assert codes == [202, 409], results
+    loser = next(data for code, data in results if code == 409)
+    assert loser["code"] == "INVALID_TRANSITION"  # row lock: loser sees recheck_pending
+    assert _state(rework, confirmed) == (
+        "recheck_pending",
+        second.revision_sha256,
+        "recheck_pending",
+        2,
+        2,
+    )
+    assert list(rework.rechecks.values_list("round", flat=True).order_by("round")) == [1, 2]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_same_key_replays_once(confirmed, world, monkeypatch):
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    run2 = _run_for(world, second)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (second, run2))
+    key = str(uuid4())
+    results = _threaded_submits(world, rework, [(key, second), (key, second)])
+    assert [code for code, _ in results] == [202, 202], results
+    assert _state(rework, confirmed) == (
+        "recheck_pending",
+        second.revision_sha256,
+        "recheck_pending",
+        2,
+        2,
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_reused_snapshot_never_500(confirmed, world, monkeypatch):
+    """Both threads claim a new revision but CVAT hands back round 1's snapshot again."""
+
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    results = _threaded_submits(world, rework, [(str(uuid4()), second), (str(uuid4()), second)])
+    assert [code for code, _ in results] == [409, 409], results
+    assert {data["code"] for _, data in results} == {"REVISION_UNCHANGED"}
+    assert _state(rework, confirmed) == before

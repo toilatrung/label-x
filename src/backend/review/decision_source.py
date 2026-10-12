@@ -24,6 +24,34 @@ def claim_undecided_issues(frame: FrameReview) -> None:
     )
 
 
+def materialize_candidate_issue(
+    frame: FrameReview, candidate: CandidateRecord
+) -> tuple[Issue, bool]:
+    """Create (once) the pending issue for one immutable engine candidate."""
+    anchor = candidate.anchor
+    if candidate.family not in Issue.Family.values or not isinstance(anchor, dict):
+        raise ApiError(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "BUSINESS_RULE_UNMET",
+            "Candidate family/anchor không thuộc contract review.",
+        )
+    objects = anchor.get("objects", [])
+    count = max(len(objects) - 1, 1) if candidate.family == Issue.Family.E3 else 1
+    rule = anchor.get("rule_id")
+    return Issue.objects.get_or_create(
+        candidate=candidate,
+        defaults={
+            "frame_review": frame,
+            "family": candidate.family,
+            "origin": Issue.Origin.ENGINE,
+            "state": Issue.State.PENDING_REVIEW,
+            "anchor": anchor,
+            "n_i": count,
+            "rule_ids": [rule] if isinstance(rule, str) and rule else [],
+        },
+    )
+
+
 def materialize_candidate_issues(frame: FrameReview) -> None:
     """Create one issue per immutable engine candidate, only under the run row lock."""
     source = frame.snapshot_frame
@@ -31,25 +59,4 @@ def materialize_candidate_issues(frame: FrameReview) -> None:
     for candidate in CandidateRecord.objects.filter(
         run_id=frame.run_id, cvat_task_id=job.cvat_task_id, frame_number=source.frame_index
     ).order_by("pk"):
-        anchor = candidate.anchor
-        if candidate.family not in Issue.Family.values or not isinstance(anchor, dict):
-            raise ApiError(
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                "BUSINESS_RULE_UNMET",
-                "Candidate family/anchor không thuộc contract review.",
-            )
-        objects = anchor.get("objects", []) if isinstance(anchor, dict) else []
-        count = max(len(objects) - 1, 1) if candidate.family == Issue.Family.E3 else 1
-        rule = anchor.get("rule_id") if isinstance(anchor, dict) else None
-        Issue.objects.get_or_create(
-            candidate=candidate,
-            defaults={
-                "frame_review": frame,
-                "family": candidate.family,
-                "origin": Issue.Origin.ENGINE,
-                "state": Issue.State.PENDING_REVIEW,
-                "anchor": anchor,
-                "n_i": count,
-                "rule_ids": [rule] if isinstance(rule, str) and rule else [],
-            },
-        )
+        materialize_candidate_issue(frame, candidate)
