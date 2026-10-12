@@ -21,7 +21,8 @@ Khi bản thiết kế và code khác nhau, **bản thiết kế đúng**, trừ
 | Thiết kế (`.dc.html`) | Route frontend | Ghi chú |
 | --- | --- | --- |
 | Main, Dashboard | `/` | Quality Control Home, Quality Summary |
-| Snapshot, SnapshotHistory | `/analysis/snapshots` | bước 1; lịch sử mở bằng nút |
+| Snapshot | `/analysis` | bước 1 của flow Quality Analysis |
+| SnapshotHistory | `/analysis/snapshots` | không phải bước của flow; mở bằng nút từ trang Snapshot |
 | AnalysisConfig | `/analysis/config` | bước 2 |
 | ExecutionHistory | `/analysis/history` | bước 3 |
 | ReviewQueues | `/review` | bước 1 |
