@@ -16,14 +16,14 @@ export interface EngineThresholdsTableProps {
   layout?: 'thresholds' | 'analysis';
 }
 
-interface EngineMeta {
+export interface EngineMeta {
   key: string;
   name: string;
   sub: string;
   formatParams: (params: Record<string, unknown>) => string | null;
 }
 
-const ENGINES_META: EngineMeta[] = [
+export const ENGINES_META: EngineMeta[] = [
   {
     key: 'schema',
     name: 'Schema / Taxonomy',
@@ -193,7 +193,7 @@ export function EngineThresholdsTable({
           <span className="lx-subtle">Chỉ đọc</span>
         </header>
         <div className="lx-card__body">
-          <div className="lx-callout" role="status">
+          <div className="lx-callout lx-callout--neutral" role="status">
             <strong>{emptyTitle ?? 'Chưa có cấu hình đã phát hành'}</strong>
             <div>
               {emptyDescription ??
@@ -250,7 +250,7 @@ export function EngineThresholdsTable({
               const configuration = meta.key === 'metric' && !hasParams
                 ? <span className="lx-badge lx-badge--warning">Chưa có Ground Truth</span>
                 : effectiveThreshold
-                  ? <><div className="lx-cell__main">{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
+                  ? <><div className={layout === 'analysis' ? 'lx-muted' : 'lx-cell__main'}>{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && layout !== 'analysis' && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
                   : hasParams
                     ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div>
                     : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;
