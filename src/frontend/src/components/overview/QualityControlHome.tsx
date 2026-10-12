@@ -564,7 +564,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                               <circle cx="8" cy="8" r="5.5" />
                               <path d="M8 5v3.5l2 1.5" />
                             </svg>
-                          ) : ds.actionHref.includes('snapshots') ? (
+                          ) : ds.actionHref === '/analysis' ? (
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
                               <path d="M8 3v10M3 8h10" />
                             </svg>

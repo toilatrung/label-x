@@ -99,7 +99,7 @@ export const ILLUSTRATIVE_HOME_DATASETS: IllustrativeHomeDataset[] = [
     openIssues: '—',
     gate: 'Not checked',
     gateTone: null,
-    actionHref: '/analysis/snapshots',
+    actionHref: '/analysis',
     actionTip: 'Tạo snapshot đầu tiên',
   },
 ];

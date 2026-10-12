@@ -207,6 +207,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(screen.getByText('11,800')).toBeDefined();
       expect(screen.getByText('5,600')).toBeDefined();
       expect(screen.getByText('3,000')).toBeDefined();
+      expect(screen.getByRole('link', { name: 'Tạo snapshot đầu tiên' }).getAttribute('href')).toBe('/analysis');
 
       // Clicking row in illustrative preview navigates to local summary preview without mutating auth state
       const firstRow = screen.getAllByRole('row')[1];

@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-10-12T03:56:46.937Z",
-  "buildId": "GmKVNBuw8zXZSOEkYyyNB",
+  "timestamp": "2026-10-12T04:25:41.623Z",
+  "buildId": "PwTBS3cAI9RPUzGOrXGDm",
   "durationSeconds": 23,
   "unintendedWritesCount": 0,
   "unintendedWrites": [],
-  "actionsCount": 46,
-  "requestsCount": 1152,
+  "actionsCount": 48,
+  "requestsCount": 1160,
   "networkEvents": [
     {
       "context": "live-qalead-desktop",
@@ -443,6 +443,24 @@
       "context": "mock-preview-desktop",
       "direction": "REQUEST",
       "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/snapshots/"
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-desktop",
+      "direction": "REQUEST",
+      "method": "GET",
       "path": "/api/auth/session/"
     },
     {
@@ -527,6 +545,24 @@
       "context": "mock-preview-mobile",
       "direction": "REQUEST",
       "method": "GET",
+      "path": "/api/datasets/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
+      "path": "/api/snapshots/"
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "RESPONSE",
+      "path": "/api/datasets/",
+      "status": 503
+    },
+    {
+      "context": "mock-preview-mobile",
+      "direction": "REQUEST",
+      "method": "GET",
       "path": "/api/auth/session/"
     },
     {
@@ -575,7 +611,7 @@
     "previewSummary390": "preview-summary-390.png"
   },
   "passedAssertions": [
-    "Verified runtime BUILD_ID: GmKVNBuw8zXZSOEkYyyNB",
+    "Verified runtime BUILD_ID: PwTBS3cAI9RPUzGOrXGDm",
     "Real datasets GET returned 200 at desktop",
     "Login and redirect to Home at desktop",
     "Authenticated BDD dataset 2 row loaded at desktop",
@@ -618,9 +654,11 @@
     "Closed isolated browser context at mobile",
     "Full canonical Home 4 illustrative rows under API 503 at desktop",
     "SampleDataBadge and NotConnectedNotice with exact prefix under API 503 at desktop",
+    "First Snapshot link clicked and URL changed to /analysis at desktop",
     "Full canonical illustrative Summary under API 503 at desktop",
     "Full canonical Home 4 illustrative rows under API 503 at mobile",
     "SampleDataBadge and NotConnectedNotice with exact prefix under API 503 at mobile",
+    "First Snapshot link clicked and URL changed to /analysis at mobile",
     "Full canonical illustrative Summary under API 503 at mobile"
   ],
   "status": "PASS",
@@ -634,12 +672,13 @@
     "preview-home-390.png": "1449842aee73d0a4a1602b77df88265bc68d95c2e56db279c0fa589f4112f4d2",
     "preview-summary-390.png": "91fba49904f6132f653807e1feb3af2b87e6d4abc5b155c1d711996451c23645"
   },
+  "networkEventsFilteredCount": 96,
+  "networkEventsScope": "/api/ paths only; static asset events omitted; requestsCount remains all request + response events",
   "executor": "Codex CLI",
+  "baseCommit": "e358c8be661ed4eb6eb37fdf13626bac4172d0f2",
   "scope": "Final repair handoff evidence; leader QA acceptance and pixel 1:1 verification pending",
   "phaseDefinitions": {
     "live": "Real auth and Dataset/Task reads; quality aggregates are labeled canonical illustration",
     "preview": "Separate authenticated contexts; Dataset GET paths intercepted with HTTP 503; canonical illustrative preview"
-  },
-  "networkEventsScope": "/api/ paths only; static asset events omitted; requestsCount remains all request + response events",
-  "networkEventsFilteredCount": 90
+  }
 }
