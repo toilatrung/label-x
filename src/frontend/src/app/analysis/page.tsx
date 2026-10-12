@@ -125,6 +125,11 @@ function SnapshotWorkspace() {
       datasetName: displayDatasetName,
       datasetIdOverride: item?.dataset_id,
       snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : undefined,
+<<<<<<< HEAD
+=======
+      snapshotRevision: item?.revision_hash ? shortRevision(item.revision_hash) : undefined,
+      isReadOnly: item?.status === 'locked',
+>>>>>>> origin/develop-fe
       guidelineVersion: displayGuideline,
       taxonomyVersion: displayTaxonomy,
     }}
