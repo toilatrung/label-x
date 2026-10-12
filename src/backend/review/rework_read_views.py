@@ -53,6 +53,8 @@ def rework_read(rework: ReworkRequest) -> dict[str, object]:
 def _sees_all(user_id: int | None, dataset_id: int) -> bool:
     """Reviewer/QA Lead in the dataset, or Super Admin, read beyond their own assignments."""
 
+    if user_id is None:
+        return False
     return (
         RoleAssignment.objects.filter(user_id=user_id)
         .filter(
