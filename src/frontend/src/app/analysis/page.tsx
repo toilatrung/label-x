@@ -127,7 +127,6 @@ function SnapshotWorkspace() {
       snapshotName: item ? `${snapshotCode(item.id)} · ${item.status}` : undefined,
       snapshotRevision: item?.revision_hash ? shortRevision(item.revision_hash) : undefined,
       isReadOnly: item?.status === 'locked',
-      scopeName: 'Toàn dataset',
       guidelineVersion: displayGuideline,
       taxonomyVersion: displayTaxonomy,
     }}
