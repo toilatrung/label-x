@@ -148,6 +148,20 @@ describe('Execution screens on real API contract', () => {
     expect(calls.some((request) => request.method === 'POST')).toBe(false);
   });
 
+  it('uses the shared display formats and design labels on Execution History', async () => {
+    await setup('qalead', <ExecutionHistoryPage />);
+    const table = within(await screen.findByRole('region', { name: 'Các lần chạy' }));
+    expect(table.queryByText('Dữ liệu thật từ LabelX API')).toBeNull();
+    // Snapshot code is padded (SNP-004) and the start time is YYYY-MM-DD HH:mm.
+    expect((await table.findAllByText('SNP-004')).length).toBeGreaterThan(0);
+    const start = new Date('2026-10-09T00:00:00Z');
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(table.getByText(`${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())} ${pad(start.getHours())}:${pad(start.getMinutes())}`)).toBeDefined();
+    // The Dataset picker lives inside the runs card instead of floating above the layout.
+    expect(table.getByLabelText('Dataset')).toBeDefined();
+    expect(screen.queryByText(/Config v7|kết quả QC/)).toBeNull();
+  });
+
   it('drops a URL-selected run when a global user changes Dataset context', async () => {
     searchParamsState.current = 'run=12';
     const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
