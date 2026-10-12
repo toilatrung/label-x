@@ -23,7 +23,7 @@ export function ReviewDatasetPicker({ onChange }: { onChange?: () => void }) {
   return (
     <div className="lx-field">
       <label htmlFor="review-dataset" className="lx-label">
-        Bộ dữ liệu (Dataset)
+        Dataset
       </label>
       {global ? (
         <input

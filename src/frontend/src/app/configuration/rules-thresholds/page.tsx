@@ -89,7 +89,8 @@ function RulesThresholds() {
         </div>
       </div>
 
-      <RulesPolicyCard blockedAction={blockedAction} onBlocked={setBlockedAction} canWrite={canViewConfig} />
+      <RulesPolicyCard blockedAction={blockedAction} onBlocked={setBlockedAction} canWrite={canViewConfig}
+        rulesExtra={<>
 
       {mappingFailure && (
         <div className="lx-callout" role="alert">
@@ -180,6 +181,7 @@ function RulesThresholds() {
           </nav>
         </footer>
       </section>
+        </>} />
     </div>
   );
 }

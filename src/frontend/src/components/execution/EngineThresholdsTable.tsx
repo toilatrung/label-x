@@ -216,7 +216,7 @@ export function EngineThresholdsTable({
       <header className="lx-card__head">
         {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div className="lx-row"><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint">Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
       </header>
-      {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
+      {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout lx-callout--info" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi Quality Control Run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
       <div className="lx-scroll">
         <table className="lx-table lx-table--min-700">
           <thead>

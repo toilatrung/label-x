@@ -532,7 +532,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(claimBtn);
 
       // Now switch dataset from 1 to 2 via ReviewDatasetPicker
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -603,7 +603,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(claimBtn);
 
       // Switch dataset from 1 to 2 via ReviewDatasetPicker while claim is pending
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -702,7 +702,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       const callsBeforeSwitch = calls.length;
 
       // 2. Switch dataset selector from 1 to 2
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -711,7 +711,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(screen.queryByRole('table', { name: /Bảng danh sách frame xếp hạng/i })).toBeNull();
       expect(screen.queryByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeNull();
       expect(
-        screen.getByText(/Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra/i)
+        screen.getByText(/Nhập mã Quality Control Run để tải hàng đợi kiểm tra/i)
       ).toBeDefined();
 
       // No new ranking or claim requests for run 12 sent under dataset 2
@@ -721,7 +721,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(newCallsForRun12).toHaveLength(0);
 
       // 4. Select a new run explicitly for dataset 2 (Run 99)
-      const runInput = screen.getByLabelText(/Mã QC Run/i);
+      const runInput = screen.getByLabelText(/Mã Quality Control Run/i);
       fireEvent.change(runInput, { target: { value: '99' } });
       const submitBtn = screen.getByRole('button', { name: /Tải hàng đợi/i });
       fireEvent.click(submitBtn);

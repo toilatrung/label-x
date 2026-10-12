@@ -17,6 +17,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   const [taskIds, setTaskIds] = React.useState<Set<number>>(new Set());
   const [jobIds, setJobIds] = React.useState<Set<number>>(new Set());
   const [note, setNote] = React.useState('');
+  const [expanded, setExpanded] = React.useState<Set<number>>(new Set());
   const [pending, setPending] = React.useState<{ body: SnapshotCreate; key: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [failure, setFailure] = React.useState<string | null>(null);
@@ -104,15 +105,18 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
         <tbody>{tasks.map(task => <React.Fragment key={task.cvat_task_id}>
           <tr><td><input type="checkbox" className="lx-check-accent" aria-label={`Chọn Task ${task.cvat_task_id}`} disabled={all || !task.jobs.length}
             checked={all || taskIds.has(task.cvat_task_id)} onChange={() => toggleTask(task)} /></td>
-            <td className="lx-cell__main">Task {task.cvat_task_id} · {task.name}</td><td className="lx-muted">{task.jobs.length} Job</td>
+            <td className="lx-cell__main">Task {task.cvat_task_id} · {task.name}</td>
+            <td className="lx-muted">{task.jobs.length ? <button type="button" className="lx-btn lx-btn--ghost lx-btn--sm" aria-expanded={expanded.has(task.cvat_task_id)}
+              onClick={() => setExpanded(current => { const next = new Set(current); if (!next.delete(task.cvat_task_id)) next.add(task.cvat_task_id); return next; })}>
+              {expanded.has(task.cvat_task_id) ? '▾' : '▸'} {task.jobs.length} Job</button> : '0 Job'}</td>
             <td className="r">{frameText(knownFrames(task.jobs))}</td></tr>
-          {task.jobs.map(job => <tr key={job.cvat_job_id}><td><input type="checkbox" className="lx-check-accent" aria-label={`Chọn Job ${job.cvat_job_id}`}
+          {expanded.has(task.cvat_task_id) && task.jobs.map(job => <tr key={job.cvat_job_id}><td><input type="checkbox" className="lx-check-accent" aria-label={`Chọn Job ${job.cvat_job_id}`}
             disabled={all || taskIds.has(task.cvat_task_id)}
             checked={isSelected(task, job)}
             onChange={() => toggleJob(job.cvat_job_id)} /></td>
-            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'} · {/* TODO(backend): CvatJob chưa có giai đoạn */}—</td><td className="r">{job.frame_count ?? '—'}</td></tr>)}
+            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'} · {/* TODO(backend): CvatJob chưa có giai đoạn */}—</td><td className="r">{frameText(job.frame_count ?? null)}</td></tr>)}
         </React.Fragment>)}</tbody></table></div></div>
-      <p className="lx-hint">Chọn cả Task hoặc từng Job. {all ? `Toàn Dataset · ${tasks.length} task · ${jobCount} job · ${frameText(knownFrames(tasks.flatMap(task => task.jobs)))} frame.`
+      <p className="lx-hint">Chọn cả Task, hoặc mở số Job của Task để chọn từng Job. {all ? `Toàn Dataset · ${tasks.length} task · ${jobCount} job · ${frameText(knownFrames(tasks.flatMap(task => task.jobs)))} frame.`
         : `Hiện chọn ${selectedTaskCount} task · ${selectedCount} job · ${frameText(selectedFrames)} frame.`}</p>
       {!jobCount && <p>Dataset chưa có Job để tạo Snapshot.</p>}
     </fieldset>

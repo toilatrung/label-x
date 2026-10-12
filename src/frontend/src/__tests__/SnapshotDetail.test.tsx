@@ -42,7 +42,7 @@ describe('Snapshot detail', () => {
     render(<SnapshotDetail item={item} />);
     expect(screen.getByText('Job có drift: 17')).toBeDefined();
     expect(screen.getByText('7')).toBeDefined();
-    expect(screen.getByRole('link', { name: 'SNP-4' }).getAttribute('href')).toBe('/analysis?snapshotId=4');
+    expect(screen.getByRole('link', { name: 'SNP-004' }).getAttribute('href')).toBe('/analysis?snapshotId=4');
     expect(screen.getByRole('link', { name: 'Mở Job CVAT' }).getAttribute('href')).toContain('/tasks/9/jobs/17');
     fireEvent.change(screen.getByRole('combobox', { name: 'Frame Job 17' }), { target: { value: '1' } });
     expect(screen.getByRole('link', { name: 'Mở Frame' }).getAttribute('href')).toContain('frame=1');

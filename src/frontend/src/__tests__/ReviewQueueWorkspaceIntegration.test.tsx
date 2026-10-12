@@ -261,7 +261,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
     });
 
     // Submit new run input
-    const runInput = screen.getByPlaceholderText(/Nhập ID Run/i);
+    const runInput = screen.getByPlaceholderText(/Nhập mã/i);
     fireEvent.change(runInput, { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: /Tải hàng đợi/i }));
 
@@ -337,8 +337,8 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
 
     // Verify Read-Only Notice
     await waitFor(() => {
-      expect(screen.getByText(/Chế độ xem kiểm tra \(Read-only\)/i)).toBeInTheDocument();
-      expect(screen.getByText(/Frame được mở trực tiếp không kèm LeaseGrant/i)).toBeInTheDocument();
+      expect(screen.getByText(/Chế độ chỉ xem/i)).toBeInTheDocument();
+      expect(screen.getByText(/Frame được mở trực tiếp, không đi từ hàng đợi/i)).toBeInTheDocument();
     });
 
     // Decision form actions are disabled in read-only mode
