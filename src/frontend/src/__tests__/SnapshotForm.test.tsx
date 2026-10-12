@@ -31,10 +31,11 @@ describe('Snapshot create form', () => {
   it('sends selected Task and Job to the real snapshot contract', async () => {
     post.mockResolvedValue({ id: 101, status: 'locked' });
     show();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task 9' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 22' }));
     fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: '  QA pass  ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo Snapshot' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     expect(post.mock.calls[0][0]).toEqual({ dataset_id: 42,
       scope: { cvat_task_ids: [9], cvat_job_ids: [22] }, note: 'QA pass' });
@@ -44,7 +45,7 @@ describe('Snapshot create form', () => {
 
   it('blocks creation for a read-only QC Admin', () => {
     show(false);
-    expect((screen.getByRole('button', { name: 'Tạo Snapshot' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(true);
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -52,7 +53,7 @@ describe('Snapshot create form', () => {
     post.mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce({ id: 102, status: 'locked' });
     show();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo Snapshot' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     expect(await screen.findByRole('button', { name: 'Gửi lại cùng yêu cầu' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Gửi lại cùng yêu cầu' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2));

@@ -556,3 +556,9 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-chip__rev { font-size: 12px; color: var(--ink-muted); }
 .lx-chip--role { margin-left: auto; }
 .lx-chip__v--primary { color: var(--primary); }
+
+/* Layout modifiers used by Snapshot and Snapshot history (FE-02) */
+.lx-card--inner { border-color: var(--border); }
+.lx-th--check { width: 40px; }
+.lx-check-accent { accent-color: var(--primary); }
+.lx-wrap-any { overflow-wrap: anywhere; }

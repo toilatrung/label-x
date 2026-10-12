@@ -31,11 +31,12 @@ describe('ReviewQueueSample (ReviewQueues.dc.html)', () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
     render(<ReviewQueueSample />);
-    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Ảnh 001' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Ảnh 001 (chưa kết nối server)' }));
     expect(screen.getAllByText(NOTICE)).toHaveLength(1);
     const attention = screen.getByText(NOTICE).closest('[data-attention]') as HTMLElement;
     expect(attention).toBeTruthy();
     expect(document.activeElement).toBe(attention);
+    expect(screen.getByRole('button', { name: /Ảnh 001/ }).getAttribute('aria-disabled')).toBe('true');
     expect(fetchSpy).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
