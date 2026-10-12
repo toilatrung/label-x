@@ -590,3 +590,78 @@ def test_recheck_snapshot_race_integrity_error_becomes_409(confirmed, world, mon
     assert raced.data["code"] == "REVISION_UNCHANGED"
     monkeypatch.undo()
     assert _state(rework, confirmed) == before
+
+
+def _threaded_submits(world, rework, calls):
+    """Fire the given (key, snapshot) submissions together from separate DB connections."""
+
+    barrier = Barrier(len(calls))
+    path = f"/api/rework/{rework.pk}/submitted/"
+
+    def run(key, snapshot):
+        connections.close_all()
+        try:
+            barrier.wait(timeout=15)
+            extra = {"HTTP_IDEMPOTENCY_KEY": key} if key else {}
+            response = client(world["author"]).post(
+                path, {"cvat_revision": snapshot.revision_sha256}, format="json", **extra
+            )
+            return response.status_code, response.data
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=len(calls)) as pool:
+        futures = [pool.submit(run, key, snapshot) for key, snapshot in calls]
+        return [future.result() for future in futures]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_same_snapshot_distinct_keys(confirmed, world, monkeypatch):
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    run2 = _run_for(world, second)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (second, run2))
+    results = _threaded_submits(world, rework, [(str(uuid4()), second), (str(uuid4()), second)])
+    codes = sorted(code for code, _ in results)
+    assert codes == [202, 409], results
+    loser = next(data for code, data in results if code == 409)
+    assert loser["code"] == "INVALID_TRANSITION"  # row lock: loser sees recheck_pending
+    assert _state(rework, confirmed) == (
+        "recheck_pending",
+        second.revision_sha256,
+        "recheck_pending",
+        2,
+        2,
+    )
+    assert list(rework.rechecks.values_list("round", flat=True).order_by("round")) == [1, 2]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_same_key_replays_once(confirmed, world, monkeypatch):
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    run2 = _run_for(world, second)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (second, run2))
+    key = str(uuid4())
+    results = _threaded_submits(world, rework, [(key, second), (key, second)])
+    assert [code for code, _ in results] == [202, 202], results
+    assert _state(rework, confirmed) == (
+        "recheck_pending",
+        second.revision_sha256,
+        "recheck_pending",
+        2,
+        2,
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_submit_reused_snapshot_never_500(confirmed, world, monkeypatch):
+    """Both threads claim a new revision but CVAT hands back round 1's snapshot again."""
+
+    assert connection.vendor == "postgresql"
+    rework, first, second, _run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    results = _threaded_submits(world, rework, [(str(uuid4()), second), (str(uuid4()), second)])
+    assert [code for code, _ in results] == [409, 409], results
+    assert {data["code"] for _, data in results} == {"REVISION_UNCHANGED"}
+    assert _state(rework, confirmed) == before
