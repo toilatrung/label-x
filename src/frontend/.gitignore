@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ảnh chụp giao diện do scripts/frontend/screenshot.sh tạo (không commit)
+/evidence/shots/
