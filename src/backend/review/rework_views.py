@@ -1,6 +1,6 @@
 """HTTP endpoints for the approved T-040 rework contract."""
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -77,7 +77,13 @@ class ReworkSubmittedView(APIView):
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
-            409: ErrorSerializer,
+            409: OpenApiResponse(
+                ErrorSerializer,
+                description=(
+                    "INVALID_TRANSITION | IDEMPOTENCY_KEY_REUSED | REVISION_UNCHANGED "
+                    "(revision or snapshot already used by the original or an earlier round)."
+                ),
+            ),
         },
         tags=["rework"],
     )

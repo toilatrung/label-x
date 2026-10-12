@@ -339,6 +339,17 @@ def _build_recheck_artifacts(
     return snapshot, run
 
 
+def _snapshot_reused_error(snapshot: Snapshot, rework: ReworkRequest) -> ApiError:
+    """Same snapshot = same revision content already re-checked: a business conflict, not a 500."""
+
+    return ApiError(
+        status.HTTP_409_CONFLICT,
+        "REVISION_UNCHANGED",
+        "Snapshot re-check đã được dùng cho một vòng trước của rework này.",
+        {"rework_id": rework.pk, "snapshot_id": snapshot.pk},
+    )
+
+
 def _known_revisions(rework: ReworkRequest) -> set[str]:
     """Revisions already seen by this rework: the reviewed one and every submitted round."""
 
@@ -436,6 +447,8 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
             return replay
         if rework.status != ReworkRequest.Status.FIX_PENDING:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework không chờ sửa.")
+        if rework.rechecks.filter(snapshot=snapshot).exists():
+            raise _snapshot_reused_error(snapshot, rework)
         before = {"status": rework.status, "issue_state": rework.issue.state}
         round_number = rework.rechecks.count() + 1
         rework.status = ReworkRequest.Status.RECHECK_PENDING
@@ -460,15 +473,21 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         issue = Issue.objects.select_for_update().get(pk=rework.issue_id)
         issue.state = Issue.State.RECHECK_PENDING
         issue.save(update_fields=["state"])
-        ReworkRecheck.objects.create(
-            rework=rework,
-            round=round_number,
-            snapshot=snapshot,
-            run=run,
-            revision=claimed_revision,
-            idempotency_key=key,
-            request_hash=request_hash,
-        )
+        try:
+            with transaction.atomic():
+                ReworkRecheck.objects.create(
+                    rework=rework,
+                    round=round_number,
+                    snapshot=snapshot,
+                    run=run,
+                    revision=claimed_revision,
+                    idempotency_key=key,
+                    request_hash=request_hash,
+                )
+        except IntegrityError as exc:
+            if rework.rechecks.filter(snapshot=snapshot).exists():
+                raise _snapshot_reused_error(snapshot, rework) from exc
+            raise
         append_audit_event(
             actor=user,
             action="rework.submitted",

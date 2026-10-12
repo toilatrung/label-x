@@ -534,3 +534,59 @@ def test_concurrent_verify_records_single_result(confirmed, world, monkeypatch):
     assert rework.verifications.count() == 1
     assert AuditEvent.objects.filter(action="issue.reopen_fix").count() == 1
     assert Issue.objects.get(pk=confirmed.pk).state == Issue.State.FIX_PENDING
+
+
+def _first_round_failed(confirmed, world, monkeypatch):
+    created = create_request(confirmed, world)
+    rework = ReworkRequest.objects.get(pk=created.data["id"])
+    first, second = changed_snapshot(world), second_snapshot(world)
+    run = _run_for(world, first)
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: (first, run))
+    assert _submit(world, rework, first).status_code == 202
+    assert _verify(world, rework, first, False).status_code == 200
+    return rework, first, second, run
+
+
+def _state(rework, confirmed):
+    return (
+        ReworkRequest.objects.get(pk=rework.pk).status,
+        ReworkRequest.objects.get(pk=rework.pk).submitted_revision,
+        Issue.objects.get(pk=confirmed.pk).state,
+        ReworkRecheck.objects.filter(rework=rework).count(),
+        AuditEvent.objects.filter(action="rework.submitted").count(),
+    )
+
+
+@pytest.mark.django_db
+def test_recheck_reusing_same_snapshot_is_409_without_db_change(confirmed, world, monkeypatch):
+    rework, first, second, run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    # CVAT handed back the snapshot of round 1 again although a new revision was claimed
+    reused = _submit(world, rework, second)
+    assert reused.status_code == 409, reused.data
+    assert reused.data["code"] == "REVISION_UNCHANGED"
+    assert reused.data["details"] == {"rework_id": rework.pk, "snapshot_id": first.pk}
+    assert (
+        _state(rework, confirmed)
+        == before
+        == ("fix_pending", first.revision_sha256, "fix_pending", 1, 1)
+    )
+
+
+@pytest.mark.django_db
+def test_recheck_snapshot_race_integrity_error_becomes_409(confirmed, world, monkeypatch):
+    rework, first, second, run = _first_round_failed(confirmed, world, monkeypatch)
+    before = _state(rework, confirmed)
+    real_create = ReworkRecheck.objects.create
+
+    def lose_race(**kwargs):
+        # a concurrent request committed the same snapshot after our pre-check
+        real_create(**{**kwargs, "round": 99, "idempotency_key": None})
+        return real_create(**kwargs)
+
+    monkeypatch.setattr(ReworkRecheck.objects, "create", lose_race)
+    raced = _submit(world, rework, second)
+    assert raced.status_code == 409, raced.data
+    assert raced.data["code"] == "REVISION_UNCHANGED"
+    monkeypatch.undo()
+    assert _state(rework, confirmed) == before
