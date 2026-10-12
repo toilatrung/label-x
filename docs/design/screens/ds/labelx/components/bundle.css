@@ -231,6 +231,7 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-flow__arrow:hover { background: var(--surface-sunken); }
 .lx-flow__arrow.is-off { opacity: .35; pointer-events: none; }
 .lx-flow__arrow::after { bottom: auto; top: calc(100% + 4px); right: auto; left: 0; }
+.lx-flow__arrow:last-child::after { left: auto; right: 0; }
 .lx-flow__steps { flex: 1; display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: 0; list-style: none; overflow: hidden; }
 .lx-flow__step a { display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 var(--space-3); color: var(--ink-muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
 .lx-flow__step a:hover { background: var(--surface-sunken); color: var(--ink); }
@@ -409,6 +410,10 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
  .lx-flow__steps { gap: var(--space-2); }
  .lx-flow__step a { gap: var(--space-1); font-size: 12px; padding-right: 0; }
  .lx-flow__n { width: 24px; height: 24px; }
+ .lx-flow__step { flex: none; }
+ .lx-flow__step.is-active { flex: 1 1 auto; min-width: 0; }
+ .lx-flow__step:not(.is-active) a > span:last-child { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+ .lx-flow__step a { padding-left: 0; }
  .lx-toolbar { flex-wrap: wrap; }
  .lx-search { min-width: 0; }
  .lx-topnav .lx-nav__group:nth-last-child(-n+3) .lx-menu { left: auto; right: 0; }
