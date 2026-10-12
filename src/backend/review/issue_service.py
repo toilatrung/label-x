@@ -10,6 +10,7 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.request import Request
 
+from accounts.permissions import record_rejection_audit
 from audit.models import AuditEvent
 from audit.services import append_audit_event
 from config.exceptions import ApiError
@@ -161,15 +162,34 @@ def create_manual_issue(*, request: Request) -> Issue:
     return issue
 
 
-def _already_completed(frame: FrameReview) -> bool:
-    if frame.state == FrameReview.State.REVIEWED:
-        return True
-    return (
-        frame.state == FrameReview.State.AWAITING_FOLLOWUP
-        and AuditEvent.objects.filter(
-            action="frame.complete", object_type="frame", object_id=str(frame.pk)
-        ).exists()
+_PAST_REVIEW_STATES = (
+    FrameReview.State.REVIEWED,
+    FrameReview.State.AWAITING_FOLLOWUP,
+    FrameReview.State.COMPLETED,
+)
+
+
+def _record_completion_once(user: User, frame: FrameReview) -> None:
+    """Audit frame.complete for a retry whose first completion left no event (hand-over)."""
+
+    if AuditEvent.objects.filter(
+        action="frame.complete", object_type="frame", object_id=str(frame.pk)
+    ).exists():
+        return
+    append_audit_event(
+        actor=user,
+        action="frame.complete",
+        object_type="frame",
+        object_id=frame.pk,
+        before={"state": frame.state},
+        after={"state": frame.state},
+        revision=frame.run.snapshot.revision_sha256,
+        reason="Review completed (lease already closed by hand-over)",
     )
+
+
+def _conflict_details(frame: FrameReview) -> dict[str, object]:
+    return {"frame_state": frame.state}
 
 
 @transaction.atomic
@@ -190,9 +210,43 @@ def complete_frame(*, request: Request, frame_id: int) -> FrameReview:
     identity = _reviewer_identity(request, action="frames.complete")
     _deny_frame_ineligible(request, identity, frame, "frames.complete")
     lease = Lease.objects.filter(pk=lease_id, frame_review=frame, holder=user).first()
-    if lease is not None and lease.closed_at and _already_completed(frame):
-        return frame  # Idempotent retry: no second audit, lease closure, or effort effect.
-    _owned_lease(request, frame=frame, lease_id=lease_id, action="frames.complete")
+    if (
+        lease is not None
+        and lease.closed_at is not None
+        and frame.state in _PAST_REVIEW_STATES
+        and not decision_source.undecided_issue_ids(frame)
+    ):
+        # Idempotent retry by the former holder: the frame already left review (completed by
+        # this call earlier, handed over by a verify, or finished by the final scope). No state,
+        # lease or effort effect; the completion audit is written once.
+        _record_completion_once(user, frame)
+        return frame
+    if frame.state != FrameReview.State.IN_REVIEW:
+        record_rejection_audit(
+            request=request,
+            code="LEASE_CONFLICT",
+            object_type="lease",
+            object_id=lease_id,
+            action="frames.complete",
+            message="Frame is no longer in review.",
+        )
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            "LEASE_CONFLICT",
+            "Frame không còn ở trạng thái đang review nên không thể hoàn tất bằng lease này.",
+            _conflict_details(frame),
+        )
+    try:
+        _owned_lease(request, frame=frame, lease_id=lease_id, action="frames.complete")
+    except ApiError as exc:
+        if exc.error_code != "LEASE_CONFLICT":
+            raise
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            "LEASE_CONFLICT",
+            "Lease không còn hợp lệ.",
+            _conflict_details(frame),
+        ) from exc
     undecided = decision_source.undecided_issue_ids(frame)
     if undecided:
         raise ApiError(

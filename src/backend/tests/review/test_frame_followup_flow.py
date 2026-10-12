@@ -76,6 +76,10 @@ def _stub_recheck(monkeypatch, world, snapshots):
     monkeypatch.setattr(rework_service, "_build_recheck_artifacts", build)
 
 
+def _completion_audits(frame_id):
+    return AuditEvent.objects.filter(action="frame.complete", object_id=str(frame_id)).count()
+
+
 def _frame(frame_id):
     return FrameReview.objects.get(pk=frame_id)
 
@@ -121,6 +125,10 @@ def test_undecided_issue_flow_to_scope_completion(world, monkeypatch):
     _complete_final(final)
     assert complete_scope_frames(world["run"].pk) == 1
     assert _frame(frame_id).state == FrameReview.State.COMPLETED
+    retry = _complete(world, new_lease, frame_id)  # sweeper already finished the scope
+    assert retry.status_code == 200
+    assert _frame(frame_id).state == FrameReview.State.COMPLETED
+    assert _completion_audits(frame_id) == 1
 
 
 @pytest.mark.django_db
@@ -258,7 +266,7 @@ def test_postgres_race_complete_holds_lock_first_then_verify(world, monkeypatch)
 
 @pytest.mark.django_db(transaction=True)
 def test_postgres_race_verify_holds_lock_first_then_complete(world, monkeypatch):
-    """(e) order 2: verify owns the run lock and hands the frame over; complete is refused."""
+    """(e) order 2: verify owns the lock and hands the frame over; complete -> idempotent 200."""
 
     assert connection.vendor == "postgresql"
     lease_id, frame_id, rework, snapshot = _race_setup(world, monkeypatch)
@@ -292,10 +300,11 @@ def test_postgres_race_verify_holds_lock_first_then_complete(world, monkeypatch)
         completed = completer.result(timeout=30)
     assert complete_blocked
     assert verified.status_code == 200
-    assert completed.status_code == 409  # lease was closed by the hand-over
+    assert completed.status_code == 200  # idempotent: the hand-over already moved the frame
     assert ReworkRequest.objects.get(pk=rework.pk).status == ReworkRequest.Status.RESOLVED
     assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
     assert Lease.objects.get(pk=lease_id).closed_at is not None
+    assert _completion_audits(frame_id) == 1
 
 
 @pytest.mark.django_db
@@ -344,3 +353,84 @@ def test_complete_frame_with_escalated_issue_is_not_blocked(world):
     done = _complete(world, lease_id, frame_id)
     assert done.status_code == 200, done.data  # not 422 undecided_issue_ids
     assert _frame(frame_id).state == FrameReview.State.REVIEWED
+
+
+@pytest.mark.django_db
+def test_complete_after_verify_handover_is_idempotent_200(world, monkeypatch):
+    lease_id, frame_id = claim(world)
+    rework = _rework(world, _confirmed_issue(world, lease_id, frame_id))
+    snapshot = changed_snapshot(world)
+    _stub_recheck(monkeypatch, world, [snapshot])
+    _verified(world, rework, snapshot)  # hands the frame over and closes the lease
+    assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert _completion_audits(frame_id) == 0
+
+    first = _complete(world, lease_id, frame_id)
+    again = _complete(world, lease_id, frame_id)
+
+    assert first.status_code == 200 and again.status_code == 200
+    assert _frame(frame_id).state == FrameReview.State.AWAITING_FOLLOWUP
+    assert _completion_audits(frame_id) == 1
+
+
+@pytest.mark.django_db
+def test_complete_by_another_reviewer_stays_a_conflict_with_frame_state(world, monkeypatch):
+    lease_id, frame_id = claim(world)
+    rework = _rework(world, _confirmed_issue(world, lease_id, frame_id))
+    snapshot = changed_snapshot(world)
+    _stub_recheck(monkeypatch, world, [snapshot])
+    _verified(world, rework, snapshot)
+
+    response = client(world["other"]).post(
+        f"/api/frames/{frame_id}/complete/", {"lease_id": lease_id}, format="json"
+    )
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert response.data["details"] == {"frame_state": "awaiting_followup"}
+    assert "không còn ở trạng thái đang review" in response.data["message"]
+    assert _completion_audits(frame_id) == 0
+
+
+@pytest.mark.django_db
+def test_complete_with_undecided_issue_never_gets_the_idempotent_200(world):
+    lease_id, frame_id = claim(world)
+    _confirmed_issue(world, lease_id, frame_id)
+    manual(world, lease_id, frame_id)  # B stays undecided
+    Lease.objects.filter(pk=lease_id).update(expires_at=timezone.now() - timedelta(seconds=1))
+    client(world["reviewer"]).post(next_url(), {"run_id": world["run"].pk}, format="json")
+    FrameReview.objects.filter(pk=frame_id).update(state=FrameReview.State.INCOMPLETE)
+
+    response = _complete(world, lease_id, frame_id)  # old, closed lease; frame not past review
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert response.data["details"]["frame_state"] in {"incomplete", "in_review"}
+    assert _completion_audits(frame_id) == 0
+
+
+@pytest.mark.django_db
+def test_complete_with_stale_lease_on_in_review_frame_keeps_generic_conflict(world):
+    lease_id, frame_id = claim(world)
+    _confirmed_issue(world, lease_id, frame_id)
+    Lease.objects.filter(pk=lease_id).update(expires_at=timezone.now() - timedelta(seconds=1))
+
+    response = _complete(world, lease_id, frame_id)
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert response.data["message"] == "Lease không còn hợp lệ."
+    assert response.data["details"] == {"frame_state": "in_review"}
+
+
+@pytest.mark.django_db
+def test_idempotent_200_needs_every_issue_decided_even_on_a_handed_over_frame(world):
+    """Legacy/odd state: awaiting_followup with an undecided issue never gets the 200."""
+
+    lease_id, frame_id = claim(world)
+    _confirmed_issue(world, lease_id, frame_id)
+    manual(world, lease_id, frame_id)  # undecided
+    Lease.objects.filter(pk=lease_id).update(closed_at=timezone.now())
+    FrameReview.objects.filter(pk=frame_id).update(state=FrameReview.State.AWAITING_FOLLOWUP)
+
+    response = _complete(world, lease_id, frame_id)
+
+    assert response.status_code == 409 and response.data["code"] == "LEASE_CONFLICT"
+    assert _completion_audits(frame_id) == 0
