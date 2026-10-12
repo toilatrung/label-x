@@ -39,29 +39,34 @@ const GATE = [
  * TODO(backend): GET /api/config-versions/{id}/rules/ (bảng quy tắc), GET/PATCH ngưỡng phát hành và chính sách lấy mẫu,
  * POST /api/config-versions/ (lưu thành phiên bản mới).
  */
-export function RulesPolicyCard() {
+export function RulesPolicyCard({ blockedAction, onBlocked, canWrite, rulesExtra }: {
+  blockedAction: string | null; onBlocked: (action: string) => void; canWrite: boolean;
+  /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Quy tắc kiểm tra, ngoài thẻ ba tab của thiết kế. */
+  rulesExtra?: React.ReactNode;
+}) {
   const [tab, setTab] = useState<TabKey>('rules');
   return (
+    <>
     <section className="lx-card" aria-label="Cấu hình quy tắc và ngưỡng">
       <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Cấu hình quy tắc và ngưỡng" />
-      <div className="lx-card__body"><NotConnectedNotice /></div>
+      <div className="lx-card__body"><NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} /></div>
 
       {tab === 'rules' && (
         <div className="lx-scroll">
-          <table className="lx-table" style={{ minWidth: 760 }}>
+          <table className="lx-table lx-table--min-760">
             <thead><tr>
-              <th style={{ width: 64 }}>Bật</th><th>Mã</th><th>Quy tắc</th><th>Nhóm</th><th>Ngưỡng</th><th>Mức độ</th><th></th>
+              <th className="lx-th--toggle">Bật</th><th>Mã</th><th>Quy tắc</th><th>Nhóm</th><th>Ngưỡng</th><th>Mức độ</th><th></th>
             </tr></thead>
             <tbody>
               {RULES.map(rule => (
                 <tr key={rule.id}>
-                  <td><label className="lx-switch"><input type="checkbox" defaultChecked={rule.on} aria-label={rule.id} /><span></span></label></td>
+                  <td><label className="lx-switch"><input type="checkbox" checked={rule.on} disabled readOnly aria-label={rule.id} /><span></span></label></td>
                   <td className="lx-mono">{rule.id}</td>
                   <td className="lx-cell__main">{rule.name}</td>
                   <td className="lx-muted">{rule.group}</td>
                   <td className="lx-muted">{rule.threshold}</td>
                   <td><span className={rule.severity.badge}>{rule.severity.label}</span></td>
-                  <td className="r"><EditIconButton label="Chỉnh quy tắc" /></td>
+                  <td className="r"><EditIconButton label="Chỉnh quy tắc" disabled={!canWrite} onBlocked={() => onBlocked('Chỉnh quy tắc')} /></td>
                 </tr>
               ))}
             </tbody>
@@ -74,7 +79,7 @@ export function RulesPolicyCard() {
           {GATE.map(field => (
             <div className="lx-field" key={field.id}>
               <label className="lx-label" htmlFor={field.id}>{field.label}</label>
-              <input id={field.id} className="lx-input" defaultValue={field.value} />
+              <input id={field.id} className="lx-input" value={field.value} readOnly />
             </div>
           ))}
         </div>
@@ -84,19 +89,21 @@ export function RulesPolicyCard() {
         <div className="lx-card__body lx-grid lx-grid--3">
           <div className="lx-field">
             <label className="lx-label" htmlFor="s1">Kiểm tra ngẫu nhiên · tỷ lệ frame</label>
-            <input id="s1" className="lx-input" defaultValue="0.8%" />
+            <input id="s1" className="lx-input" value="0.8%" readOnly />
             <span className="lx-hint">Tối thiểu 100 frame mỗi lần chạy</span>
           </div>
           <div className="lx-field">
             <label className="lx-label" htmlFor="s2">Lấy mẫu theo rủi ro · tỷ lệ frame</label>
-            <input id="s2" className="lx-input" defaultValue="0.8%" />
+            <input id="s2" className="lx-input" value="0.8%" readOnly />
           </div>
           <div className="lx-field">
             <label className="lx-label" htmlFor="s3">Cách chọn seed</label>
-            <select id="s3" className="lx-select"><option>Tự sinh và lưu vào manifest</option><option>Nhập thủ công</option></select>
+            <select id="s3" className="lx-select" disabled><option>Tự sinh và lưu vào manifest</option><option>Nhập thủ công</option></select>
           </div>
         </div>
       )}
     </section>
+    {tab === 'rules' && rulesExtra}
+    </>
   );
 }

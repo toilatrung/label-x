@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAuth } from '@/lib/auth/auth-context';
+import { canAccessConfiguration } from '@/lib/auth/roles';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
@@ -30,20 +32,27 @@ const GUIDELINES = [
  * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
  * GET /api/guidelines/versions/ (hiệu lực guideline, taxonomy và Dataset áp dụng).
  */
-export function ModelsGuidelinesCard() {
+export function ModelsGuidelinesCard({ guidelineExtra }: {
+  /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Phiên bản guideline, ngoài thẻ hai tab của thiết kế. */
+  guidelineExtra?: React.ReactNode;
+} = {}) {
+  const { hasPermission } = useAuth();
+  const canWrite = hasPermission(canAccessConfiguration);
   const [tab, setTab] = useState<TabKey>('models');
+  const [blockedAction, setBlockedAction] = useState<string | null>(null);
   return (
+    <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
       <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
       <div className="lx-card__body lx-row">
         <SampleDataBadge />
-        <NotConnectedNotice />
+        <NotConnectedNotice detail={blockedAction ? `Thao tác "${blockedAction}" chưa được thực hiện` : undefined} />
       </div>
 
       {tab === 'models' && (
         <>
           <div className="lx-scroll">
-            <table className="lx-table" style={{ minWidth: 760 }}>
+            <table className="lx-table lx-table--min-760">
               <thead><tr>
                 <th>Mô hình</th><th>Vai trò</th><th>Phiên bản</th><th>Ánh xạ lớp</th><th className="r">Ngưỡng tin cậy</th><th>Trạng thái</th><th></th>
               </tr></thead>
@@ -56,7 +65,7 @@ export function ModelsGuidelinesCard() {
                     <td className="lx-muted">{model.mapping}</td>
                     <td className={model.confidence ? 'r' : 'r lx-subtle'}>{model.confidence ?? '—'}</td>
                     <td><span className={model.badge}>{model.status}</span></td>
-                    <td className="r"><EditIconButton label="Chỉnh mô hình" /></td>
+                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={!canWrite} onBlocked={() => setBlockedAction('Chỉnh mô hình')} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -68,7 +77,7 @@ export function ModelsGuidelinesCard() {
 
       {tab === 'guideline' && (
         <div className="lx-scroll">
-          <table className="lx-table" style={{ minWidth: 680 }}>
+          <table className="lx-table lx-table--min-680">
             <thead><tr><th>Guideline</th><th>Taxonomy</th><th>Áp dụng cho Dataset</th><th>Hiệu lực từ</th><th>Trạng thái</th></tr></thead>
             <tbody>
               {GUIDELINES.map(guideline => (
@@ -85,5 +94,7 @@ export function ModelsGuidelinesCard() {
         </div>
       )}
     </section>
+    {tab === 'guideline' && guidelineExtra}
+    </>
   );
 }

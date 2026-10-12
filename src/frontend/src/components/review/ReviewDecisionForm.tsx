@@ -10,6 +10,18 @@ type Lease = components['schemas']['Lease'];
 type IssueFamily = components['schemas']['IssueFamily'];
 type Severity = components['schemas']['Severity'];
 
+export const ISSUE_STATE_LABELS: Record<string, string> = {
+  pending_review: 'Chờ review',
+  in_review: 'Đang review',
+  confirmed: 'Đã xác nhận',
+  rejected: 'Đã bác bỏ',
+  escalated: 'Đã chuyển cấp trên',
+  fix_pending: 'Chờ sửa',
+  recheck_pending: 'Chờ kiểm tra lại',
+  resolved: 'Đã xử lý',
+  reopened: 'Mở lại',
+};
+
 export type DirectDecisionAction = 'confirm' | 'reject' | 'uncertain' | 'escalate';
 
 export interface ReviewDecisionFormProps {
@@ -184,12 +196,12 @@ export function ReviewDecisionForm({
     if (!hasVerifiedRevision) {
       return (
         revisionUnavailableReason ||
-        'Thiếu snapshot revision đã xác thực từ context (T-035). Quyết định chưa thể gửi do thiếu thông tin revision bắt buộc.'
+        'Chưa có revision của Snapshot đã xác thực nên chưa thể gửi quyết định.'
       );
     }
 
     if (issue.state !== 'in_review') {
-      return `Issue đang ở trạng thái "${issue.state}". Chỉ issue có trạng thái "in_review" mới có thể lưu quyết định trực tiếp.`;
+      return `Issue đang ở trạng thái "${ISSUE_STATE_LABELS[issue.state] ?? issue.state}". Chỉ issue ở trạng thái "Đang review" mới lưu được quyết định trực tiếp.`;
     }
 
     if (['reject', 'uncertain', 'escalate'].includes(action)) {
@@ -438,7 +450,7 @@ export function ReviewDecisionForm({
 
   return (
     <div className="lx-ws__decide">
-      <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="lx-row lx-row--between lx-items-center">
         <span className="lx-label">Quyết định review</span>
         {issue.review_decisions.length > 0 && (
           <span className="lx-badge lx-badge--info">
@@ -448,7 +460,7 @@ export function ReviewDecisionForm({
       </div>
 
       {revisionLoading && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ padding: '8px 12px', fontSize: '12px' }}>
+        <div className="lx-callout lx-callout--info lx-callout--compact lx-text-12" role="status">
           <span className="lx-callout__text">
             Đang xác thực snapshot revision từ máy chủ...
           </span>
@@ -456,35 +468,34 @@ export function ReviewDecisionForm({
       )}
 
       {!hasVerifiedRevision && !revisionLoading && (
-        <div className="lx-callout lx-callout--warning" role="alert" style={{ padding: '8px 12px', fontSize: '12px' }}>
+        <div className="lx-callout lx-callout--warning lx-callout--compact lx-text-12" role="alert">
           <span className="lx-callout__text">
             {revisionUnavailableReason ||
-              'Chưa có snapshot revision đã xác thực từ context (T-035 interface gap). Chức năng lưu quyết định tạm khóa.'}
+              'Chưa có revision của Snapshot đã xác thực. Chức năng lưu quyết định tạm khoá.'}
           </span>
         </div>
       )}
 
       {issue.state !== 'in_review' && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ padding: '8px 12px', fontSize: '12px' }}>
+        <div className="lx-callout lx-callout--info lx-callout--compact lx-text-12" role="status">
           <span className="lx-callout__text">
-            Issue đang ở trạng thái {issue.state}. Chỉ issue có trạng thái in_review mới có thể lưu quyết định trực tiếp. Lịch sử quyết định trước đó vẫn được bảo toàn đầy đủ.
+            Issue đang ở trạng thái {ISSUE_STATE_LABELS[issue.state] ?? issue.state}. Chỉ issue ở trạng thái Đang review mới lưu được quyết định trực tiếp. Lịch sử quyết định trước đó vẫn được bảo toàn đầy đủ.
           </span>
         </div>
       )}
 
       {formError && (
-        <div className="lx-callout" role="alert" style={{ padding: '8px 12px', fontSize: '13px' }}>
+        <div className="lx-callout lx-callout--compact lx-text-13" role="alert">
           <span className="lx-callout__text">{formError}</span>
         </div>
       )}
 
       {successMessage && (
         <div
-          className="lx-callout lx-callout--info"
+          className="lx-callout lx-callout--info lx-callout--compact lx-text-13 lx-callout--success"
           role="status"
-          style={{ padding: '8px 12px', fontSize: '13px', background: 'var(--success-soft)' }}
         >
-          <span className="lx-callout__text" style={{ color: 'var(--success)' }}>
+          <span className="lx-callout__text lx-text-success">
             {successMessage}
           </span>
         </div>
@@ -493,42 +504,34 @@ export function ReviewDecisionForm({
       {/* Real POST server receipt: displayed when save succeeded on server but GET reconciliation is pending */}
       {savedReceipt && (
         <div
-          className="lx-card"
+          className="lx-card lx-card--receipt"
           role="status"
-          style={{
-            padding: '10px 12px',
-            fontSize: '12px',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderLeft: '4px solid var(--info, #2563eb)',
-          }}
         >
-          <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="lx-label" style={{ fontSize: '11px', color: 'var(--info, #2563eb)' }}>
+          <div className="lx-row lx-row--between lx-items-center">
+            <span className="lx-label lx-text-11 lx-text-info">
               Biên nhận máy chủ (POST Receipt #{savedReceipt.id})
             </span>
-            <span className="lx-subtle" style={{ fontSize: '11px' }}>
+            <span className="lx-subtle lx-text-11">
               {savedReceipt.created_at}
             </span>
           </div>
-          <div className="lx-stack" style={{ gap: '2px', marginTop: '4px' }}>
+          <div className="lx-stack lx-gap-1 lx-mt-1">
             <div>
               <b>Hành động đã lưu:</b> {savedReceipt.action}
             </div>
             <div>
               <b>Revision snapshot:</b> <code>{savedReceipt.revision}</code>
             </div>
-            <div className="lx-subtle" style={{ fontSize: '11px' }}>
+            <div className="lx-subtle lx-text-11">
               Thời điểm máy chủ ghi nhận: {savedReceipt.created_at}
             </div>
           </div>
-          <div style={{ marginTop: '8px' }}>
+          <div className="lx-mt-2">
             <button
               type="button"
-              className="lx-btn"
+              className="lx-btn lx-btn--xs lx-text-12"
               disabled={isRefreshingIssue}
               onClick={handleRetryRefresh}
-              style={{ fontSize: '12px', padding: '4px 8px' }}
             >
               {isRefreshingIssue ? 'Đang làm mới...' : 'Thử làm mới lại dữ liệu issue'}
             </button>
@@ -536,7 +539,7 @@ export function ReviewDecisionForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="lx-stack" style={{ gap: '12px' }}>
+      <form onSubmit={handleSubmit} className="lx-stack lx-gap-3">
         {/* Choices radio group: 4 direct actions + 1 disabled rework placeholder */}
         <div className="lx-choices" role="radiogroup" aria-label="Loại quyết định">
           <label className="lx-choice">
@@ -574,7 +577,7 @@ export function ReviewDecisionForm({
           </label>
           <label
             className="lx-choice lx-choice--disabled"
-            title="Yêu cầu sửa (request_fix) được thực hiện qua atomic POST /api/rework/ thuộc luồng T-040 sau khi confirm, không gửi qua POST decisions."
+            title="Yêu cầu sửa được tạo ở luồng Rework sau khi xác nhận lỗi, không gửi cùng quyết định này."
           >
             <input
               type="radio"
@@ -660,7 +663,7 @@ export function ReviewDecisionForm({
         {/* Reason field */}
         <div className="lx-field">
           <label className="lx-label" htmlFor="decision-reason">
-            Lý do {['reject', 'uncertain', 'escalate'].includes(action) && <span style={{ color: 'var(--danger)' }}>*</span>}
+            Lý do {['reject', 'uncertain', 'escalate'].includes(action) && <span className="lx-text-danger">*</span>}
           </label>
           <textarea
             id="decision-reason"
@@ -678,9 +681,9 @@ export function ReviewDecisionForm({
 
         {/* Super Admin override: mandatory reason for Super Admin */}
         {isSuperAdmin && (
-          <div className="lx-field" style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px' }}>
+          <div className="lx-field lx-field--divider">
             <label className="lx-label" htmlFor="override-reason">
-              Lý do Super Admin can thiệp (Bắt buộc) <span style={{ color: 'var(--danger)' }}>*</span>
+              Lý do Super Admin can thiệp (Bắt buộc) <span className="lx-text-danger">*</span>
             </label>
             <input
               id="override-reason"
@@ -695,7 +698,7 @@ export function ReviewDecisionForm({
         )}
 
         {/* Action buttons */}
-        <div className="lx-row" style={{ justifyContent: 'space-between', marginTop: '6px' }}>
+        <div className="lx-row lx-row--between lx-mt-2">
           <button
             type="button"
             className="lx-btn lx-btn--ghost"
@@ -704,7 +707,7 @@ export function ReviewDecisionForm({
           >
             ‹ Issue trước
           </button>
-          <div className="lx-row" style={{ gap: '8px' }}>
+          <div className="lx-row lx-gap-2">
             {hasNext && (
               <button
                 type="submit"
@@ -739,24 +742,23 @@ export function ReviewDecisionForm({
 
       {/* Decision history list */}
       {issue.review_decisions.length > 0 && (
-        <div className="lx-stack" style={{ gap: '6px', marginTop: '10px', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
-          <span className="lx-label" style={{ fontSize: '11px' }}>
+        <div className="lx-stack lx-gap-2 lx-mt-3 lx-stack--divider">
+          <span className="lx-label lx-text-11">
             Lịch sử quyết định đã lưu trên server:
           </span>
-          <div className="lx-stack" style={{ gap: '4px' }}>
+          <div className="lx-stack lx-gap-1">
             {issue.review_decisions.map((dec, idx) => (
               <div
                 key={`hist-${dec.id || idx}`}
-                className="lx-card"
-                style={{ padding: '6px 10px', fontSize: '12px', background: 'var(--surface)' }}
+                className="lx-card lx-card--compact lx-text-12"
               >
-                <div className="lx-row" style={{ justifyContent: 'space-between' }}>
+                <div className="lx-row lx-row--between">
                   <b>{dec.decision}</b>
-                  <span className="lx-subtle" style={{ fontSize: '11px' }}>
+                  <span className="lx-subtle lx-text-11">
                     {new Date(dec.recorded_at).toLocaleTimeString('vi-VN')}
                   </span>
                 </div>
-                {dec.reason && <p className="lx-muted" style={{ margin: '2px 0 0' }}>{dec.reason}</p>}
+                {dec.reason && <p className="lx-muted lx-mt-1">{dec.reason}</p>}
               </div>
             ))}
           </div>

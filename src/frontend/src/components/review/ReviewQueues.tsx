@@ -22,6 +22,9 @@ import type {
 } from '@/lib/review/types';
 import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
+import { ReviewQueueSample } from './ReviewQueueSample';
+import { Icon } from '@/components/ui/Icon';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
 export interface ReviewQueuesProps {
@@ -389,9 +392,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   return (
     <div className="lx-stack">
       {/* Context Bar / Controls */}
-      <div className="lx-card lx-card__body lx-stack">
-        <div className="lx-cols" style={{ alignItems: 'flex-end' }}>
-          <div style={{ flex: '1 1 250px' }}>
+      <div className="lx-card lx-card--compact lx-stack">
+        <div className="lx-cols lx-review-controls">
+          <div className="lx-review-controls__dataset">
             <ReviewDatasetPicker
               onChange={() => {
                 setCursor(null);
@@ -399,20 +402,17 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             />
           </div>
 
-          <form
-            onSubmit={handleRunSubmit}
-            style={{ flex: '2 1 300px', display: 'flex', gap: '8px', alignItems: 'flex-end' }}
-          >
-            <div className="lx-field" style={{ flex: 1 }}>
+          <form onSubmit={handleRunSubmit} className="lx-review-controls__run">
+            <div className="lx-field">
               <label htmlFor="review-run-id" className="lx-label">
-                Mã QC Run (Run ID)
+                Mã Quality Control Run
               </label>
               <input
                 id="review-run-id"
                 className="lx-input"
                 type="number"
                 min={1}
-                placeholder="Nhập ID Run (vd: 12)"
+                placeholder="Nhập mã (ví dụ 12)"
                 value={runInput}
                 onChange={(e) => setRunInput(e.target.value)}
               />
@@ -431,7 +431,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         {!datasetId && (
           <div role="status" className="lx-callout lx-callout--info">
             <div className="lx-callout__text">
-              Vui lòng chọn bộ dữ liệu (dataset) để xem hàng đợi kiểm tra.
+              Chọn Dataset để xem hàng đợi kiểm tra.
             </div>
           </div>
         )}
@@ -439,7 +439,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         {datasetId && !effectiveRunId && (
           <div role="status" className="lx-callout lx-callout--info">
             <div className="lx-callout__text">
-              Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra.
+              Nhập mã Quality Control Run để tải hàng đợi kiểm tra.
             </div>
           </div>
         )}
@@ -456,15 +456,11 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       {/* Claim / Active Lease Context Banner */}
       {activeGrant && effectiveRunId && (
         <section
-          className="lx-card"
-          style={{ borderColor: isLeaseConflict ? 'var(--danger)' : 'var(--primary)' }}
+          className={`lx-card ${isLeaseConflict ? 'lx-card--lease-conflict' : 'lx-card--lease'}`}
           aria-label="Khung ngữ cảnh kiểm tra hiện tại"
         >
           <div
-            className="lx-card__head"
-            style={{
-              background: isLeaseConflict ? 'var(--danger-soft)' : 'var(--surface-selected)',
-            }}
+            className={`lx-card__head ${isLeaseConflict ? 'lx-card__head--lease-conflict' : 'lx-card__head--lease'}`}
           >
             <div className="lx-row">
               <strong>Phiên kiểm tra đang giữ (Active Lease)</strong>
@@ -514,7 +510,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               </div>
             )}
 
-            <div className="lx-row" style={{ justifyContent: 'space-between' }}>
+            <div className="lx-row lx-row--between">
               <div className="lx-row">
                 {activeGrant.frame.cvat_deep_link && !isLeaseConflict && (
                   <a
@@ -555,7 +551,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                 )}
               </div>
               <span className="lx-hint">
-                Ngữ cảnh lease đã sẵn sàng cho không gian làm việc T-037.
+                Lease đã sẵn sàng cho màn kiểm tra.
               </span>
             </div>
           </div>
@@ -577,13 +573,13 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           <div className="lx-callout__text">
             <strong>Không thể nhận frame:</strong> {claimError.message}
             {claimError.code && (
-              <span className="lx-badge lx-badge--danger" style={{ marginLeft: '8px' }}>
+              <span className="lx-badge lx-badge--danger">
                 {claimError.code}
               </span>
             )}
             {claimError.code === 'LEASE_CONFLICT' && (
-              <div style={{ marginTop: '6px' }}>
-                <p style={{ margin: '0 0 6px', fontSize: '13px' }}>
+              <div className="lx-mt-1">
+                <p className="lx-review-note">
                   Quyền giữ frame đã hết hạn hoặc thuộc người khác (409 LEASE_CONFLICT). Thao tác với lease cũ đã bị khóa.
                 </p>
                 <button
@@ -601,8 +597,8 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
 
       {/* Review Workspace inline view or Review Queues Panel */}
       {isWorkspaceOpen && activeGrant && effectiveRunId ? (
-        <section className="lx-stack" aria-label="Không gian kiểm tra Review Workspace" style={{ gap: '16px' }}>
-          <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <section className="lx-stack lx-stack--4" aria-label="Không gian kiểm tra Review Workspace">
+          <div className="lx-row lx-row--between lx-row--center">
             <button
               type="button"
               className="lx-btn"
@@ -610,7 +606,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             >
               ← Quay lại danh sách hàng đợi
             </button>
-            <div className="lx-row" style={{ gap: '8px', alignItems: 'center' }}>
+            <div className="lx-row lx-row--center">
               <span className="lx-badge lx-badge--info">
                 Frame #{activeGrant.frame.id}
               </span>
@@ -672,7 +668,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           />
         </section>
       ) : (
-        datasetId && effectiveRunId && runQuery.isSuccess && (
+        !datasetId || !effectiveRunId ? (
+          <ReviewQueueSample />
+        ) : runQuery.isSuccess && (
           <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
           {/* Queue Selection Tabs */}
           <div className="lx-tabs" role="tablist" aria-label="Các hàng đợi kiểm tra">
@@ -703,81 +701,69 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           </div>
 
           {/* Filters Bar & Claim Action */}
-          <div className="lx-toolbar" style={{ flexWrap: 'wrap', justifyContent: 'space-between' }}>
-            <div className="lx-row" style={{ flexWrap: 'wrap' }}>
-              <div className="lx-field">
-                <select
-                  id="filter-family"
-                  aria-label="Lọc theo nhóm lỗi (family)"
-                  className="lx-select lx-select--inline"
-                  value={filters.family ?? ''}
-                  onChange={(e) =>
-                    handleFilterChange({
-                      family: (e.target.value as IssueFamily) || undefined,
-                    })
-                  }
-                >
-                  <option value="">-- Nhóm lỗi (Family) --</option>
-                  <option value="E1">E1 (Thiếu nhãn)</option>
-                  <option value="E2">E2 (Sai lớp)</option>
-                  <option value="E3">E3 (Trùng nhãn)</option>
-                  <option value="structural">Cấu trúc (structural)</option>
-                </select>
-              </div>
-
-              <div className="lx-field">
-                <select
-                  id="filter-origin"
-                  aria-label="Lọc theo nguồn gốc (origin)"
-                  className="lx-select lx-select--inline"
-                  value={filters.origin ?? ''}
-                  onChange={(e) =>
-                    handleFilterChange({
-                      origin: (e.target.value as IssueOrigin) || undefined,
-                    })
-                  }
-                >
-                  <option value="">-- Nguồn gốc (Origin) --</option>
-                  <option value="engine">Máy (engine)</option>
-                  <option value="reviewer">Reviewer</option>
-                </select>
-              </div>
-
-              <div className="lx-field">
-                <select
-                  id="filter-review-state"
-                  aria-label="Lọc theo trạng thái review (review_state)"
-                  className="lx-select lx-select--inline"
-                  value={filters.review_state ?? ''}
-                  onChange={(e) =>
-                    handleFilterChange({
-                      review_state: (e.target.value as FrameReviewState) || undefined,
-                    })
-                  }
-                >
-                  <option value="">-- Trạng thái (Review State) --</option>
-                  <option value="unreviewed">Chưa review (unreviewed)</option>
-                  <option value="in_review">Đang review (in_review)</option>
-                  <option value="incomplete">Đang dở (incomplete)</option>
-                  <option value="reviewed">Đã review (reviewed)</option>
-                  <option value="awaiting_followup">Chờ theo dõi (awaiting_followup)</option>
-                  <option value="completed">Hoàn tất (completed)</option>
-                </select>
-              </div>
-
+          <div className="lx-review-filters lx-review-filters--4">
+            {/* TODO(backend): tìm kiếm theo tên/mã ảnh và mức ưu tiên chưa có ở GET /api/runs/{id}/frames/ */}
+            <label className="lx-field">Tìm kiếm
+              <span className="lx-search">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
+                <input type="search" disabled placeholder="Tìm ảnh hoặc mã công việc" aria-label="Tìm ảnh hoặc mã công việc" />
+              </span>
+            </label>
+            <label className="lx-field">Nhóm lỗi
+              <select
+                id="filter-family"
+                aria-label="Lọc theo nhóm lỗi (family)"
+                className="lx-select"
+                value={filters.family ?? ''}
+                onChange={(e) => handleFilterChange({ family: (e.target.value as IssueFamily) || undefined })}
+              >
+                <option value="">-- Nhóm lỗi (Family) --</option>
+                <option value="E1">E1 (Thiếu nhãn)</option>
+                <option value="E2">E2 (Sai lớp)</option>
+                <option value="E3">E3 (Trùng nhãn)</option>
+                <option value="structural">Cấu trúc (structural)</option>
+              </select>
+            </label>
+            <label className="lx-field">Nguồn
+              <select
+                id="filter-origin"
+                aria-label="Lọc theo nguồn gốc (origin)"
+                className="lx-select"
+                value={filters.origin ?? ''}
+                onChange={(e) => handleFilterChange({ origin: (e.target.value as IssueOrigin) || undefined })}
+              >
+                <option value="">-- Nguồn gốc (Origin) --</option>
+                <option value="engine">Máy (engine)</option>
+                <option value="reviewer">Reviewer</option>
+              </select>
+            </label>
+            <label className="lx-field">Trạng thái
+              <select
+                id="filter-review-state"
+                aria-label="Lọc theo trạng thái review"
+                className="lx-select"
+                value={filters.review_state ?? ''}
+                onChange={(e) => handleFilterChange({ review_state: (e.target.value as FrameReviewState) || undefined })}
+              >
+                <option value="">-- Trạng thái review --</option>
+                <option value="unreviewed">Chưa review</option>
+                <option value="in_review">Đang review</option>
+                <option value="incomplete">Đang dở</option>
+                <option value="reviewed">Đã review</option>
+                <option value="awaiting_followup">Chờ theo dõi</option>
+                <option value="completed">Hoàn tất</option>
+              </select>
+            </label>
+          </div>
+          <NotConnectedNotice detail="Tìm kiếm và mức ưu tiên chờ API" />
+          <div className="lx-card__head">
+            <strong>Ảnh cần kiểm tra</strong>
+            <div className="lx-actions">
               {(filters.family || filters.origin || filters.review_state) && (
-                <button
-                  type="button"
-                  className="lx-btn lx-btn--ghost lx-btn--sm"
-                  onClick={handleResetFilters}
-                >
+                <button type="button" className="lx-btn lx-btn--ghost lx-btn--sm" onClick={handleResetFilters}>
                   Xóa bộ lọc
                 </button>
               )}
-            </div>
-
-            {/* Action: Claim next frame */}
-            <div>
               <button
                 type="button"
                 className="lx-btn lx-btn--primary"
@@ -808,8 +794,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               </div>
               <button
                 type="button"
-                className="lx-btn lx-btn--sm"
-                style={{ marginTop: '8px' }}
+                className="lx-btn lx-btn--sm lx-mt-1"
                 onClick={() => rankingQuery.refetch()}
               >
                 Thử lại
@@ -820,8 +805,8 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           {rankingQuery.isSuccess && (
             <>
               {rankingQuery.data.results.length === 0 ? (
-                <div className="lx-card__body lx-stack" style={{ textAlign: 'center', padding: '32px' }}>
-                  <p className="lx-muted">
+                <div className="lx-review-empty">
+                  <p>
                     Không có frame nào khớp với điều kiện lọc trong hàng đợi {activeQueue}.
                   </p>
                   {(filters.family || filters.origin || filters.review_state) && (
@@ -837,117 +822,57 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                   )}
                 </div>
               ) : (
-                <div className="lx-scroll">
-                  <table className="lx-table" aria-label="Bảng danh sách frame xếp hạng">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '60px' }}>Rank</th>
-                        <th>Frame Key</th>
-                        <th>Điểm s(f) / h(f)</th>
-                        <th>Nhóm lỗi (Issue counts)</th>
-                        <th>Nguồn</th>
-                        <th>Trạng thái</th>
-                        <th>Người giữ (Holder)</th>
-                        <th>Giải thích thứ hạng</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rankingQuery.data.results.map((frame: RankedFrame) => (
-                        <tr
-                          key={`${frame.frame_key.cvat_task_id}-${frame.frame_key.frame_number}`}
-                        >
-                          <td className="lx-num">
-                            <strong>#{frame.rank}</strong>
-                          </td>
-                          <td>
-                            <div className="lx-cell__main">
-                              Task #{frame.frame_key.cvat_task_id} • Frame #
-                              {frame.frame_key.frame_number}
-                            </div>
-                            <div className="lx-cell__sub lx-mono">
-                              Frame ID: {frame.frame_id}
-                              {frame.missing_evidence && (
-                                <span
-                                  className="lx-badge lx-badge--warning"
-                                  style={{ marginLeft: '6px' }}
-                                >
-                                  Thiếu bằng chứng
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="lx-num">
-                            <div>{frame.score.toFixed(3)}</div>
-                            <div className="lx-cell__sub">
-                              Nền: {frame.baseline_score.toFixed(3)}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="lx-row">
-                              {frame.issue_counts &&
-                              Object.keys(frame.issue_counts).length > 0 ? (
-                                Object.entries(frame.issue_counts).map(([fam, count]) => (
-                                  <span key={fam} className="lx-tag">
-                                    {fam}: {count}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="lx-subtle">0 issue</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <span
-                              className={`lx-badge ${
-                                frame.source === 'risk'
-                                  ? 'lx-badge--danger'
-                                  : 'lx-badge--info'
-                              }`}
-                            >
-                              {frame.source}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="lx-badge lx-badge--neutral">
-                              {frame.review_state}
-                            </span>
-                          </td>
-                          <td>
-                            {frame.lease_holder_user_id ? (
-                              <span className="lx-mono">
-                                User #{frame.lease_holder_user_id}
+                <div className="lx-review-queue" role="list" aria-label="Danh sách frame xếp hạng">
+                  {rankingQuery.data.results.map((frame: RankedFrame) => (
+                    <article
+                      key={`${frame.frame_key.cvat_task_id}-${frame.frame_key.frame_number}`}
+                      className="lx-review-row"
+                      role="listitem"
+                    >
+                      <span className="lx-review-rank"><strong>#{frame.rank}</strong></span>
+                      {/* TODO(backend): ảnh thu nhỏ của frame chưa có ở API ranking */}
+                      <span className="lx-review-thumb lx-review-thumb--empty" aria-hidden="true"><Icon name="image" className="lx-review-icon" /></span>
+                      <div className="lx-review-info">
+                        <div className="lx-review-title">
+                          <h2 className="lx-h2">
+                            Task #{frame.frame_key.cvat_task_id} • Frame #{frame.frame_key.frame_number}
+                          </h2>
+                          {frame.issue_counts && Object.keys(frame.issue_counts).length > 0 ? (
+                            Object.entries(frame.issue_counts).map(([fam, count]) => (
+                              <span key={fam} className="lx-review-badge">
+                                <Icon name="alert" className="lx-review-icon" />{fam}: {count}
                               </span>
-                            ) : (
-                              <span className="lx-subtle">Chưa có</span>
-                            )}
-                          </td>
-                          <td>
-                            {frame.explanation && (
-                              <details>
-                                <summary style={{ cursor: 'pointer', fontSize: '12px' }}>
-                                  Chi tiết điểm
-                                </summary>
-                                <pre
-                                  className="lx-mono"
-                                  style={{
-                                    fontSize: '11px',
-                                    margin: '4px 0 0',
-                                    padding: '4px',
-                                    background: 'var(--surface-sunken)',
-                                    borderRadius: '4px',
-                                    maxWidth: '240px',
-                                    overflowX: 'auto',
-                                  }}
-                                >
-                                  {JSON.stringify(frame.explanation, null, 2)}
-                                </pre>
-                              </details>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            ))
+                          ) : (
+                            <span className="lx-subtle">0 issue</span>
+                          )}
+                          <span className={`lx-review-badge${frame.source === 'risk' ? ' lx-review-badge--danger' : ''}`}>
+                            {frame.source}
+                          </span>
+                          {frame.missing_evidence && (
+                            <span className="lx-badge lx-badge--warning">Thiếu bằng chứng</span>
+                          )}
+                        </div>
+                        <div className="lx-mono lx-subtle">Frame ID: {frame.frame_id}</div>
+                        <div className="lx-review-meta">
+                          <span>{frame.score.toFixed(3)}</span>
+                          <span className="lx-subtle">Nền: {frame.baseline_score.toFixed(3)}</span>
+                          <span className="lx-badge lx-badge--neutral">{frame.review_state}</span>
+                          {frame.lease_holder_user_id ? (
+                            <span className="lx-mono">User #{frame.lease_holder_user_id}</span>
+                          ) : (
+                            <span className="lx-subtle">Chưa có</span>
+                          )}
+                        </div>
+                        {frame.explanation && (
+                          <details>
+                            <summary className="lx-review-explain-toggle">Chi tiết điểm</summary>
+                            <pre className="lx-mono lx-review-explain">{JSON.stringify(frame.explanation, null, 2)}</pre>
+                          </details>
+                        )}
+                      </div>
+                    </article>
+                  ))}
                 </div>
               )}
 

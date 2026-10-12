@@ -48,6 +48,7 @@ function RulesThresholds() {
   const { hasPermission } = useAuth();
   const canViewConfig = hasPermission(canAccessConfiguration);
 
+  const [blockedAction, setBlockedAction] = useState<string | null>(null);
   const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const pageIndex = cursors.length - 1;
   const cursor = cursors[pageIndex];
@@ -84,11 +85,12 @@ function RulesThresholds() {
           <SampleDataBadge />
           <span className="lx-hint">Cấu hình hiện tại v7</span>
           {/* TODO(backend): POST /api/config-versions/ (lưu thành phiên bản mới); nút chặn, không gọi API giả */}
-          <button type="button" className="lx-btn lx-btn--primary">Lưu thành v8</button>
+          <button type="button" className="lx-btn lx-btn--primary" disabled={!canViewConfig} onClick={() => setBlockedAction("Lưu thành v8")}>Lưu thành v8</button>
         </div>
       </div>
 
-      <RulesPolicyCard />
+      <RulesPolicyCard blockedAction={blockedAction} onBlocked={setBlockedAction} canWrite={canViewConfig}
+        rulesExtra={<>
 
       {mappingFailure && (
         <div className="lx-callout" role="alert">
@@ -129,7 +131,7 @@ function RulesThresholds() {
                     Đang tải…
                   </td>
                 </tr>
-              ) : mappings.length === 0 ? (
+              ) : mappingFailure ? null : mappings.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="c lx-subtle">
                     Chưa có mapping guideline.
@@ -179,6 +181,7 @@ function RulesThresholds() {
           </nav>
         </footer>
       </section>
+        </>} />
     </div>
   );
 }

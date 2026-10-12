@@ -4,12 +4,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import { ROLE_LABELS, canAccessAnalysis, canAccessReview, canAccessEscalations,
+import { ROLE_LABELS, canAccessAnalysis, canAccessReview, canAccessEscalations, canAccessCalibration,
   canAccessReports, canAccessConfiguration, canAccessGuidelines } from '@/lib/auth/roles';
 import { Icon } from '@/components/ui/Icon';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 
-interface MenuItem { label: string; icon: string; href?: string; }
+interface MenuItem { label: string; icon: string; href?: string; desc?: string; }
 interface Module { key: string; label: string; href?: string; items?: MenuItem[]; }
 
 export function TopBar({ activeKey }: { activeKey?: string }) {
@@ -31,24 +31,27 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
 
   const configItems: MenuItem[] = [];
   if (hasPermission(canAccessGuidelines)) configItems.push(
-    { label: 'Rules & Thresholds', icon: 'rules', href: '/configuration/rules-thresholds' },
-    { label: 'Models & Guidelines', icon: 'model', href: '/configuration/guidelines' });
+    { label: 'Rules & Thresholds', icon: 'rules', href: '/configuration/rules-thresholds', desc: 'Quy tắc kiểm tra và chính sách lấy mẫu' },
+    { label: 'Models & Guidelines', icon: 'model', href: '/configuration/guidelines', desc: 'Cấu hình mô hình và ánh xạ phiên bản guideline' });
   if (hasPermission(canAccessConfiguration)) configItems.push(
-    { label: 'Workflow & Permissions', icon: 'users', href: '/configuration' });
+    { label: 'Workflow & Permissions', icon: 'users', href: '/configuration', desc: 'Quy trình làm việc và phân quyền theo vai trò' });
   const modules: Module[] = [
-    { key: 'overview', label: 'Overview', items: [{ label: 'Quality Control Home', icon: 'home', href: '/' },
-      { label: 'Quality Summary', icon: 'chart' }] },
+    { key: 'overview', label: 'Overview', items: [{ label: 'Quality Control Home', icon: 'home', href: '/', desc: 'Chọn Dataset và Version để làm việc' },
+      { label: 'Quality Summary', icon: 'chart', href: '/?view=summary', desc: 'Tình trạng chất lượng, coverage, khối lượng review' }] },
     ...(hasPermission(canAccessAnalysis) ? [{ key: 'analysis', label: 'Quality Analysis', href: '/analysis' }] : []),
     ...(hasPermission(canAccessReview, true) ? [{ key: 'review', label: 'Review Center', href: '/review' }] : []),
     ...(hasPermission(canAccessEscalations, true) ? [{ key: 'escalations', label: 'Escalations', href: '/escalations' }] : []),
-    { key: 'calibration', label: 'Calibration & Audit', items: [
-      { label: 'Performance Evaluation', icon: 'chart' }, { label: 'Ground Truth Benchmark', icon: 'target' },
-      { label: 'Audit Sampling', icon: 'check' }, { label: 'Calibration', icon: 'scale' }] },
-    ...(hasPermission(canAccessReports) ? [{ key: 'reports', label: 'Reports & Releases' }] : []),
+    ...(hasPermission(canAccessCalibration) ? [{ key: 'calibration', label: 'Calibration & Audit', items: [
+      { label: 'Performance Evaluation', icon: 'chart', href: '/calibration/performance', desc: 'Đánh giá chất lượng của chính quy trình kiểm tra' },
+      { label: 'Ground Truth Benchmark', icon: 'target', href: '/calibration/benchmark', desc: 'Tập chuẩn đã được chuyên gia khoá' },
+      { label: 'Audit Sampling', icon: 'check', href: '/calibration/audit-sampling', desc: 'Lấy mẫu ngẫu nhiên và lấy mẫu theo rủi ro' },
+      { label: 'Calibration', icon: 'scale', href: '/calibration/calibration', desc: 'Hiệu chỉnh reviewer và mô hình' }] }] : []),
+    ...(hasPermission(canAccessReports) ? [{ key: 'reports', label: 'Reports & Releases', href: '/reports' }] : []),
     ...(configItems.length ? [{ key: 'configuration', label: 'Configuration', items: configItems }] : []),
   ];
   const active = pathname.startsWith('/configuration') ? 'configuration' : pathname.startsWith('/escalations') ? 'escalations' : pathname.startsWith('/review') ? 'review'
-    : pathname.startsWith('/analysis') ? 'analysis' : activeKey || 'overview';
+    : pathname.startsWith('/analysis') ? 'analysis' : pathname.startsWith('/calibration') ? 'calibration'
+    : pathname.startsWith('/reports') ? 'reports' : activeKey || 'overview';
   function toggle(key: string, event: React.MouseEvent<HTMLButtonElement>) {
     trigger.current = event.currentTarget;
     setOpenMenu(openMenu === key ? null : key);
@@ -78,11 +81,13 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
             {module.label}<Icon name="chevron" />
           </button>
           {openMenu === module.key && <div className="lx-menu" role="menu" id={`nav-menu-${module.key}`} onKeyDown={menuKey}>
-            {module.items.map(item => item.href ? <Link key={item.label} href={item.href} role="menuitem"
+            {module.items.map(item => item.href ? <Link key={item.label} href={item.href} role="menuitem" aria-label={item.label}
               className={`lx-menu__item${pathname === item.href ? ' is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined}
-              onClick={closeAll}><span className="lx-menu__t">{item.label}</span><Icon name={item.icon} /></Link>
-              : <button key={item.label} className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
-                <span className="lx-menu__t">{item.label}</span><Icon name={item.icon} /></button>)}
+              onClick={closeAll}><span className="lx-menu__t">{item.label}</span><Icon name={item.icon} />
+                {item.desc && <span className="lx-menu__d">{item.desc}</span>}</Link>
+              : <button key={item.label} className="lx-menu__item" type="button" role="menuitem" aria-label={item.label} disabled title="Chưa khả dụng">
+                <span className="lx-menu__t">{item.label}</span><Icon name={item.icon} />
+                {item.desc && <span className="lx-menu__d">{item.desc}</span>}</button>)}
           </div>}
         </> : module.href ? <Link href={module.href} onClick={closeAll}
           className={`lx-navbtn${active === module.key ? ' is-active' : ''}`} aria-current={active === module.key ? 'page' : undefined}>{module.label}</Link>
@@ -97,6 +102,12 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
         <Icon name="chevron" />
       </button>
       {openMenu === 'user' && <div className="lx-menu lx-menu--user" id="nav-menu-user" role="menu" onKeyDown={menuKey}>
+        <button className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
+          <Icon name="user" /><span className="lx-menu__t">Hồ sơ</span>
+        </button>
+        <button className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
+          <Icon name="settings" /><span className="lx-menu__t">Cài đặt</span>
+        </button>
         <button className="lx-menu__item" type="button" role="menuitem" onClick={() => { void logout(); closeAll(); }}>
           <Icon name="logout" /><span className="lx-menu__t">Đăng xuất</span>
         </button>

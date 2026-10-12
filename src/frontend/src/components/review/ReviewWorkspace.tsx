@@ -11,7 +11,7 @@ import { useEffortCollector } from './useEffortCollector';
 import { ReviewCanvas } from './ReviewCanvas';
 import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
-import { ReviewDecisionForm } from './ReviewDecisionForm';
+import { ReviewDecisionForm, ISSUE_STATE_LABELS } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup';
@@ -27,18 +27,6 @@ const SEVERITY_LABELS: Record<string, string> = {
   critical: 'Cao',
   medium: 'Trung bình',
   minor: 'Nhẹ',
-};
-
-const ISSUE_STATE_LABELS: Record<string, string> = {
-  pending_review: 'Chờ review',
-  in_review: 'Đang review',
-  confirmed: 'Đã xác nhận',
-  rejected: 'Đã bác bỏ',
-  escalated: 'Đã chuyển cấp trên',
-  fix_pending: 'Chờ sửa',
-  recheck_pending: 'Chờ kiểm tra lại',
-  resolved: 'Đã xử lý',
-  reopened: 'Mở lại',
 };
 
 export interface ReviewWorkspaceProps {
@@ -92,7 +80,7 @@ export function resolveAnchorPolicy(
   if (!issues || issues.length === 0) {
     return {
       policy: null,
-      error: 'Tạo manual issue tạm khóa: Thiếu anchor policy_version đã duyệt từ T-035 (zero-issue gap).',
+      error: 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo đã duyệt (frame chưa có issue để lấy phiên bản).',
     };
   }
 
@@ -100,7 +88,7 @@ export function resolveAnchorPolicy(
   if (!firstPolicy || firstPolicy !== SUPPORTED_POLICY) {
     return {
       policy: null,
-      error: `Tạo manual issue tạm khóa: Thiếu anchor policy_version đã duyệt từ T-035 (server: ${firstPolicy || 'none'}).`,
+      error: `Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo đã duyệt (server: ${firstPolicy || 'chưa có'}).`,
     };
   }
 
@@ -108,7 +96,7 @@ export function resolveAnchorPolicy(
   if (!allMatch) {
     return {
       policy: null,
-      error: 'Tạo manual issue tạm khóa: Thiếu anchor policy_version đã duyệt từ T-035 (xung đột policy).',
+      error: 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo đã duyệt (xung đột phiên bản chính sách).',
     };
   }
 
@@ -444,7 +432,7 @@ export function ReviewWorkspace({
       setRevisionLoading(false);
       setRevisionError(null);
       setRevisionUnavailableReason(
-        'Chưa có snapshot revision đã xác thực từ context: Plain Reviewer chưa có nguồn snapshot revision được cấp quyền từ API (GET /api/snapshots/{id}/ chỉ cho phép qa_lead/qc_admin/super_admin). Quyết định review tạm khóa.'
+        'Chưa có revision của Snapshot đã xác thực: tài khoản Reviewer chưa được cấp quyền đọc Snapshot từ server. Quyết định review tạm khoá.'
       );
     } else if (boundRunId) {
       setResolvedRevision(null);
@@ -684,7 +672,7 @@ export function ReviewWorkspace({
 
   if (loading) {
     return (
-      <div className="lx-card lx-card__body" style={{ textAlign: 'center', padding: '48px' }}>
+      <div className="lx-card lx-card__body lx-state--center">
         <p className="lx-muted">Đang tải dữ liệu khung hình và issue từ API thật...</p>
       </div>
     );
@@ -692,11 +680,11 @@ export function ReviewWorkspace({
 
   if (forbiddenCode || errorMsg) {
     return (
-      <div className="lx-callout" role="alert" style={{ margin: '24px 0' }}>
+      <div className="lx-callout lx-callout--spaced" role="alert">
         <span className="lx-callout__text">
           <b>Truy cập bị chặn ({forbiddenCode || 'Lỗi'}):</b> {errorMsg}
         </span>
-        <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+        <div className="lx-row lx-mt-3">
           {!forbiddenCode && (
             <button onClick={retryLoad} className="lx-btn">
               Thử lại
@@ -718,9 +706,9 @@ export function ReviewWorkspace({
 
   if (!data) {
     return (
-      <div className="lx-callout" role="alert" style={{ margin: '24px 0' }}>
+      <div className="lx-callout lx-callout--spaced" role="alert">
         <span className="lx-callout__text">Không tìm thấy dữ liệu khung hình.</span>
-        <button onClick={retryLoad} className="lx-btn" style={{ marginTop: '12px' }}>
+        <button onClick={retryLoad} className="lx-btn lx-mt-3">
           Thử lại
         </button>
       </div>
@@ -742,23 +730,23 @@ export function ReviewWorkspace({
   );
 
   return (
-    <div className="lx-stack" style={{ gap: '16px' }}>
+    <div className="lx-stack lx-gap-4">
       {/* Read-Only Notice if accessed without LeaseGrant handoff */}
       {isReadOnly && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ background: 'var(--neutral-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--ink)' }}>
-            <b>Chế độ xem kiểm tra (Read-only):</b> Frame được mở trực tiếp không kèm LeaseGrant từ hàng đợi ReviewQueues (T-034 handoff). Bạn có thể xem hình ảnh, annotation và bằng chứng nhưng thao tác lưu quyết định và hoàn tất bị khóa.
+        <div className="lx-callout lx-callout--info lx-callout--neutral" role="status">
+          <span className="lx-callout__text lx-text-ink">
+            <b>Chế độ chỉ xem:</b> Frame được mở trực tiếp, không đi từ hàng đợi Review Queues nên chưa có lease. Bạn xem được hình ảnh, annotation và bằng chứng nhưng không lưu quyết định hoặc hoàn tất frame.
           </span>
         </div>
       )}
 
       {/* Lease Status Banner if expired or holder mismatch */}
       {!isReadOnly && (isExpired || isHolderMismatch || leaseError || forcedLeaseInvalidated) && (
-        <div className="lx-callout" role="alert" style={{ background: 'var(--warning-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--warning-strong, #854d0e)' }}>
+        <div className="lx-callout lx-callout--warning" role="alert">
+          <span className="lx-callout__text lx-text-warning">
             <b>Cảnh báo Lease:</b> {leaseError || 'Xung đột lease (409 Conflict): Quyền giữ frame đã hết hạn hoặc thuộc người khác.'} Quyền ghi đã bị khóa để bảo toàn dữ liệu. Các quyết định đã lưu trên server trước đó vẫn được giữ nguyên.
           </span>
-          <button onClick={renewLease} className="lx-btn lx-btn--sm" style={{ marginLeft: '12px' }}>
+          <button onClick={renewLease} className="lx-btn lx-btn--sm lx-ml-3">
             Thử gia hạn lease
           </button>
         </div>
@@ -766,11 +754,11 @@ export function ReviewWorkspace({
 
       {/* Frame Completion Banner */}
       {isCompleted && (
-        <div className="lx-callout lx-callout--info" role="status" style={{ background: 'var(--success-soft)' }}>
-          <span className="lx-callout__text" style={{ color: 'var(--success)' }}>
+        <div className="lx-callout lx-callout--info lx-callout--success" role="status">
+          <span className="lx-callout__text lx-text-success">
             Khung hình đã hoàn tất kiểm tra review thành công. Lease đã được trả lại.
           </span>
-          <Link href="/review" className="lx-btn lx-btn--sm" style={{ marginLeft: '12px' }}>
+          <Link href="/review" className="lx-btn lx-btn--sm lx-ml-3">
             Về hàng đợi
           </Link>
         </div>
@@ -781,8 +769,8 @@ export function ReviewWorkspace({
         <div className="lx-callout" role="alert">
           <span className="lx-callout__text">{completeError}</span>
           {undecidedIssueIds.length > 0 && (
-            <div className="lx-row" style={{ gap: '6px', marginTop: '6px' }}>
-              <span className="lx-subtle" style={{ fontSize: '12px' }}>Chuyển đến issue chưa quyết định:</span>
+            <div className="lx-row lx-gap-2 lx-mt-2">
+              <span className="lx-subtle lx-text-12">Chuyển đến issue chưa quyết định:</span>
               {undecidedIssueIds.map((uId) => (
                 <button
                   key={`undecided-${uId}`}
@@ -828,15 +816,14 @@ export function ReviewWorkspace({
 
             {/* Lease countdown & manual renew while valid (follow-up-22) */}
             {lease && !isExpired && !forcedLeaseInvalidated && (
-              <span className="lx-row" style={{ gap: '6px', alignItems: 'center' }}>
-                <span className="lx-subtle" style={{ color: remainingSeconds < 60 ? 'var(--warning)' : '#a1a8b3' }}>
+              <span className="lx-row lx-gap-2 lx-items-center">
+                <span className={`lx-subtle ${remainingSeconds < 60 ? 'lx-text-warning' : 'lx-stage__muted'}`}>
                   · Lease: {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}
                 </span>
                 <button
                   type="button"
                   onClick={renewLease}
-                  className="lx-btn lx-btn--ghost lx-btn--sm"
-                  style={{ padding: '2px 6px', fontSize: '11px' }}
+                  className="lx-btn lx-btn--ghost lx-btn--sm lx-btn--xs"
                   title="Gia hạn lease thủ công trong khi vẫn còn hiệu lực"
                 >
                   Thử gia hạn lease
@@ -865,7 +852,7 @@ export function ReviewWorkspace({
             </label>
 
             {/* Zoom controls */}
-            <div className="lx-row" style={{ gap: '4px' }}>
+            <div className="lx-row lx-gap-1">
               <button
                 type="button"
                 className="lx-ghostbtn"
@@ -874,7 +861,7 @@ export function ReviewWorkspace({
               >
                 +
               </button>
-              <span style={{ fontSize: '11px', minWidth: '36px', textAlign: 'center' }}>
+              <span className="lx-stage__zoom">
                 {Math.round(zoom * 100)}%
               </span>
               <button
@@ -904,13 +891,12 @@ export function ReviewWorkspace({
                 href={cvatDeepLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="lx-ghostbtn"
-                style={{ textDecoration: 'none' }}
+                className="lx-ghostbtn lx-link--plain"
               >
                 Mở trong CVAT ↗
               </a>
             ) : (
-              <span className="lx-subtle" style={{ fontSize: '11px' }}>
+              <span className="lx-subtle lx-text-11">
                 CVAT link: Chưa có từ API
               </span>
             )}
@@ -952,7 +938,7 @@ export function ReviewWorkspace({
               type="button"
               className="lx-ghostbtn"
               disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi ReviewQueues (LeaseGrant handoff); không tự động nhận frame kế tiếp."
+              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
             >
               ‹ Frame trước
             </button>
@@ -960,12 +946,12 @@ export function ReviewWorkspace({
               type="button"
               className="lx-ghostbtn"
               disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi ReviewQueues (LeaseGrant handoff); không tự động nhận frame kế tiếp."
+              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
             >
               Frame sau ›
             </button>
 
-            <span className="lx-subtle" style={{ margin: '0 4px' }}>|</span>
+            <span className="lx-subtle lx-ws__sep">|</span>
 
             {/* In-frame issue navigation */}
             <button
@@ -996,8 +982,8 @@ export function ReviewWorkspace({
             {reviewMode === 'frame' ? (
               <span>
                 {effectivePolicy
-                  ? 'Nhấn vào đối tượng cvat_shape hoặc kéo vẽ vùng để tạo manual issue.'
-                  : (policyError || 'Tạo manual issue tạm khóa: Thiếu anchor policy_version (anchor-v1) đã duyệt từ T-035.')}
+                  ? 'Nhấn vào đối tượng trên ảnh hoặc kéo vẽ vùng để tạo issue thủ công.'
+                  : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
               </span>
             ) : (
               <span>Đường liền: vùng neo của Issue · Đường đứt: đề xuất của mô hình</span>
@@ -1011,12 +997,12 @@ export function ReviewWorkspace({
             <>
               {/* Issue Header Section */}
               <div className="lx-ws__sec">
-                <div className="lx-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="lx-row lx-row--between lx-items-center">
                   <span>
                     <b className="lx-mono">QC-{String(activeIssue.id).padStart(5, '0')}</b>
                     <span className="lx-hint"> · Issue {currentIssueIndex + 1} / {totalIssues}</span>
                   </span>
-                  <div className="lx-row" style={{ gap: '6px' }}>
+                  <div className="lx-row lx-gap-2">
                     {activeIssue.severity && (
                       <span
                         className={`lx-badge ${
@@ -1056,7 +1042,7 @@ export function ReviewWorkspace({
                     {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor.objects?.[0]?.id ?? 'N/A'}
                   </dd>
                   <dt>Annotation hiện tại</dt>
-                  <dd>{activeIssue.evidence?.[0]?.actual || 'Chưa cung cấp nhãn từ API (T-035 gap)'}</dd>
+                  <dd>{activeIssue.evidence?.[0]?.actual || 'Server chưa cung cấp nhãn'}</dd>
                   <dt>Nguồn</dt>
                   <dd>
                     {activeIssue.origin === 'engine' ? 'Mô hình tự động' : 'Reviewer tạo thủ công'}
@@ -1064,7 +1050,7 @@ export function ReviewWorkspace({
                       <span> · revision <span className="lx-mono">{resolvedRevision.slice(0, 7)}</span></span>
                     ) : ''}
                   </dd>
-                  <dt>Loại neo (Anchor)</dt>
+                  <dt>Loại neo</dt>
                   <dd>{activeIssue.anchor.kind}</dd>
                 </dl>
               </div>
@@ -1088,9 +1074,9 @@ export function ReviewWorkspace({
                     Case tương tự đã phân xử ({activeIssue.links?.length || 0})
                   </summary>
                   {activeIssue.links && activeIssue.links.length > 0 ? (
-                    <div style={{ marginTop: '6px' }}>
+                    <div className="lx-mt-2">
                       {activeIssue.links.map((link, idx) => (
-                        <p key={`link-${idx}`} className="lx-muted" style={{ margin: '4px 0', fontSize: '13px' }}>
+                        <p key={`link-${idx}`} className="lx-muted lx-ws__note--tight">
                           Issue #{link.issue_id} · {link.kind === 'recurrence_of' ? 'Tái diễn (recurrence)' : 'Gợi ý tái diễn (suggested recurrence)'}
                           {link.run_id != null ? ` · Run #${link.run_id}` : ''}
                         </p>
@@ -1102,7 +1088,7 @@ export function ReviewWorkspace({
                   )}
                 </details>
 
-                <div style={{ marginTop: '12px' }}>
+                <div className="lx-mt-3">
                   <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
                 </div>
               </div>
@@ -1130,7 +1116,7 @@ export function ReviewWorkspace({
               />
             </>
           ) : (
-            <div className="lx-ws__sec" style={{ textAlign: 'center', padding: '32px' }}>
+            <div className="lx-ws__sec lx-state--center">
               <p className="lx-muted">Khung hình này không có issue tự động nào.</p>
               {effectivePolicy && !isMutationBlocked ? (
                 <button
@@ -1144,19 +1130,18 @@ export function ReviewWorkspace({
                   + Tạo issue thủ công
                 </button>
               ) : (
-                <p className="lx-subtle" style={{ fontSize: '12px' }}>
-                  {policyError || 'Chức năng tạo issue thủ công tạm khóa do thiếu anchor policy_version.'}
+                <p className="lx-subtle lx-text-12">
+                  {policyError || 'Chức năng tạo issue thủ công tạm khoá do thiếu phiên bản chính sách neo.'}
                 </p>
               )}
             </div>
           )}
 
           {/* Complete Frame Action Footer */}
-          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <div className="lx-ws__foot">
             <button
               type="button"
-              className="lx-btn lx-btn--primary"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="lx-btn lx-btn--primary lx-btn--fill"
               disabled={isCompleting || isMutationBlocked}
               onClick={handleCompleteFrame}
             >

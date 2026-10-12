@@ -16,14 +16,14 @@ export interface EngineThresholdsTableProps {
   layout?: 'thresholds' | 'analysis';
 }
 
-interface EngineMeta {
+export interface EngineMeta {
   key: string;
   name: string;
   sub: string;
   formatParams: (params: Record<string, unknown>) => string | null;
 }
 
-const ENGINES_META: EngineMeta[] = [
+export const ENGINES_META: EngineMeta[] = [
   {
     key: 'schema',
     name: 'Schema / Taxonomy',
@@ -193,7 +193,7 @@ export function EngineThresholdsTable({
           <span className="lx-subtle">Chỉ đọc</span>
         </header>
         <div className="lx-card__body">
-          <div className="lx-callout" role="status">
+          <div className="lx-callout lx-callout--neutral" role="status">
             <strong>{emptyTitle ?? 'Chưa có cấu hình đã phát hành'}</strong>
             <div>
               {emptyDescription ??
@@ -216,7 +216,7 @@ export function EngineThresholdsTable({
       <header className="lx-card__head">
         {layout === 'analysis' ? <><h2 className="lx-h2">Engine kiểm tra</h2><span className="lx-hint">{enabledCount} / {ENGINES_META.length} engine đang bật · <span className="lx-mono">{config.name}</span> (#{config.id})</span></> : <><div className="lx-row"><span className="lx-cell__main">Ngưỡng kiểm tra engine</span><span className="lx-hint">Phiên bản phát hành: <strong className="lx-mono">{config.name}</strong> (#{config.id})</span></div><span className="lx-subtle">Chỉ đọc · Giá trị trong cấu hình published</span></>}
       </header>
-      {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi QC run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
+      {layout === 'thresholds' && <div className="lx-card__body"><div className="lx-callout lx-callout--info" role="note"><strong>Trạng thái trong cấu hình</strong><div>Bảng này hiển thị bản cấu hình đã phát hành do API trả về. Mỗi Quality Control Run dùng một config version riêng; trạng thái của một run cần xem theo phiên bản gắn với run đó.</div></div></div>}
       <div className="lx-scroll">
         <table className="lx-table lx-table--min-700">
           <thead>
@@ -250,7 +250,7 @@ export function EngineThresholdsTable({
               const configuration = meta.key === 'metric' && !hasParams
                 ? <span className="lx-badge lx-badge--warning">Chưa có Ground Truth</span>
                 : effectiveThreshold
-                  ? <><div className="lx-cell__main">{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
+                  ? <><div className={layout === 'analysis' ? 'lx-muted' : 'lx-cell__main'}>{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && layout !== 'analysis' && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
                   : hasParams
                     ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div>
                     : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;

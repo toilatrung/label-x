@@ -16,13 +16,14 @@ const DECISIONS = ['Xác nhận lỗi', 'Bác bỏ', 'Chưa chắc chắn', 'Yê
 export function ReviewWorkspaceSample() {
   const [mode, setMode] = useState<Mode>('issue');
   const [decision, setDecision] = useState(DECISIONS[0]);
-  const [blockedAttempt, setBlockedAttempt] = useState(false);
+  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
 
   // TODO(backend): GET /api/frames/{id}/issues/ — nạp issue thật cho khung hình
   // TODO(backend): POST /api/issues/{id}/decisions/ — lưu quyết định
-  const blockWrite = (event: React.FormEvent | React.MouseEvent) => {
+  // TODO(backend): GET /api/queues/{name}/next/ — chuyển frame qua hàng đợi
+  const block = (message: string) => (event: React.FormEvent | React.MouseEvent) => {
     event.preventDefault();
-    setBlockedAttempt(true);
+    setBlockedMessage(message);
   };
 
   return (
@@ -55,7 +56,7 @@ export function ReviewWorkspaceSample() {
               <input type="checkbox" defaultChecked />
               <span>Đề xuất mô hình</span>
             </label>
-            <button type="button" className="lx-ghostbtn" onClick={blockWrite}>
+            <button type="button" className="lx-ghostbtn" onClick={block('Chưa có liên kết CVAT thật, chưa mở được CVAT')}>
               Mở trong CVAT
             </button>
           </div>
@@ -86,8 +87,8 @@ export function ReviewWorkspaceSample() {
           </div>
 
           <div className="lx-stage__bar lx-stage__bar--foot">
-            <button type="button" className="lx-ghostbtn" onClick={blockWrite}>‹ Frame trước</button>
-            <button type="button" className="lx-ghostbtn" onClick={blockWrite}>Frame sau ›</button>
+            <button type="button" className="lx-ghostbtn" onClick={block('Chưa chuyển frame vì chưa có hàng đợi thật')}>‹ Frame trước</button>
+            <button type="button" className="lx-ghostbtn" onClick={block('Chưa chuyển frame vì chưa có hàng đợi thật')}>Frame sau ›</button>
             <span className="lx-grow" />
             {mode === 'frame' ? (
               <span>Nhấn vào một object để tạo issue mới.</span>
@@ -147,10 +148,8 @@ export function ReviewWorkspaceSample() {
             </details>
           </div>
 
-          <form className="lx-ws__decide" onSubmit={blockWrite}>
-            <NotConnectedNotice
-              detail={blockedAttempt ? 'Quyết định chưa được lưu và chưa gửi tới server' : undefined}
-            />
+          <form className="lx-ws__decide" onSubmit={block('Quyết định chưa được lưu và chưa gửi tới server')}>
+            <NotConnectedNotice detail={blockedMessage ?? undefined} />
             <span className="lx-label" id="sample-decision-label">Quyết định</span>
             <div className="lx-choices" role="radiogroup" aria-labelledby="sample-decision-label">
               {DECISIONS.map((label) => (
@@ -192,7 +191,7 @@ export function ReviewWorkspaceSample() {
               />
             </div>
             <div className="lx-row lx-row--between">
-              <button type="button" className="lx-btn lx-btn--ghost" onClick={blockWrite}>‹ Issue trước</button>
+              <button type="button" className="lx-btn lx-btn--ghost" onClick={block('Chưa chuyển issue vì chưa có danh sách issue thật')}>‹ Issue trước</button>
               <button type="submit" className="lx-btn lx-btn--primary">Lưu và chuyển issue tiếp ›</button>
             </div>
           </form>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import ExecutionHistoryPage from '@/app/analysis/history/page';
@@ -40,6 +40,7 @@ async function setup(
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
     calls.push(request);
+    if (path === '/api/datasets/') return Response.json({ next: null, previous: null, results: [{ id: 1, name: 'Urban', cvat_project_id: 31 }, { id: 2, name: 'Highway', cvat_project_id: 32 }] });
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
     if (path === '/api/runs/12/') return Response.json(run);
     if (path === '/api/runs/13/') return Response.json(run13);
@@ -139,6 +140,7 @@ describe('Execution screens on real API contract', () => {
   it('keeps Review Queues navigation visible for QC admin while write actions stay hidden', async () => {
     searchParamsState.current = 'run=12';
     const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    await screen.findByRole('option', { name: /Urban/ });
     fireEvent.change(await screen.findByLabelText('Dataset'), { target: { value: '1' } });
 
     expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
@@ -146,9 +148,24 @@ describe('Execution screens on real API contract', () => {
     expect(calls.some((request) => request.method === 'POST')).toBe(false);
   });
 
+  it('uses the shared display formats and design labels on Execution History', async () => {
+    await setup('qalead', <ExecutionHistoryPage />);
+    const table = within(await screen.findByRole('region', { name: 'Các lần chạy' }));
+    expect(table.queryByText('Dữ liệu thật từ LabelX API')).toBeNull();
+    // Snapshot code is padded (SNP-004) and the start time is YYYY-MM-DD HH:mm.
+    expect((await table.findAllByText('SNP-004')).length).toBeGreaterThan(0);
+    const start = new Date('2026-10-09T00:00:00Z');
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(table.getByText(`${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())} ${pad(start.getHours())}:${pad(start.getMinutes())}`)).toBeDefined();
+    // The Dataset picker lives inside the runs card instead of floating above the layout.
+    expect(table.getByLabelText('Dataset')).toBeDefined();
+    expect(screen.queryByText(/Config v7|kết quả QC/)).toBeNull();
+  });
+
   it('drops a URL-selected run when a global user changes Dataset context', async () => {
     searchParamsState.current = 'run=12';
     const { calls } = await setup('qcadmin', <ExecutionHistoryPage />);
+    await screen.findByRole('option', { name: /Urban/ });
     const dataset = await screen.findByLabelText('Dataset');
     fireEvent.change(dataset, { target: { value: '1' } });
     expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
@@ -164,7 +181,7 @@ describe('Execution screens on real API contract', () => {
     const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
     await screen.findByRole('option', { name: /Published config/ });
     fireEvent.change(screen.getByLabelText('Tên cấu hình'), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo và publish config' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
     const create = calls.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/config-versions/');
     expect(create?.headers.get('Idempotency-Key')).toBeTruthy();
@@ -175,16 +192,16 @@ describe('Execution screens on real API contract', () => {
     await setup('qcadmin', <AnalysisConfigPage />, { publishFails: true });
     await screen.findByRole('option', { name: /Published config/ });
     fireEvent.change(screen.getByLabelText('Tên cấu hình'), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo và publish config' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     expect(await screen.findByText(/Mã yêu cầu: cfg-publish-503/)).toBeDefined();
-    expect(screen.getByText(/Config v8 đã được tạo nhưng chưa xác nhận publish/)).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Thử publish lại' })).toBeDefined();
+    expect(screen.getByText(/Phiên bản v8 đã được tạo nhưng chưa xác nhận phát hành/)).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Thử phát hành lại' })).toBeDefined();
   });
 
   it('displays prompt state in EngineThresholdsTable on AnalysisConfig when no config has been chosen yet (T-029 / F-1)', async () => {
     await setup('qalead', <AnalysisConfigPage />);
     expect(await screen.findByText('Chưa chọn phiên bản cấu hình')).toBeDefined();
-    expect(screen.getByText(/Vui lòng chọn một phiên bản cấu hình đã phát hành từ danh sách phía trên/)).toBeDefined();
+    expect(screen.getByText(/Chọn một phiên bản cấu hình đã phát hành ở cột "Sẵn sàng chạy"/)).toBeDefined();
     expect(screen.queryByText('Duplicate / Overlap')).toBeNull();
   });
 
@@ -201,6 +218,35 @@ describe('Execution screens on real API contract', () => {
     const configCall = calls.find((r) => new URL(r.url).pathname === '/api/config-versions/' && r.method === 'GET');
     expect(configCall).toBeDefined();
     expect(new URL(configCall!.url).searchParams.get('status')).toBe('published');
+  });
+
+  it('lays out Analysis Configuration like the design: engine table and sampling on the left, readiness on the right', async () => {
+    await setup('qcadmin', <AnalysisConfigPage />);
+    expect(await screen.findByRole('heading', { name: 'Analysis Configuration' })).toBeDefined();
+    // The design has no header action and no "real data" label; sample data is only on the sampling region.
+    expect(screen.queryByRole('link', { name: 'Lịch sử thực thi' })).toBeNull();
+    expect(screen.queryByText('Dữ liệu thật từ LabelX API')).toBeNull();
+    expect(screen.getAllByText('Dữ liệu minh họa')).toHaveLength(1);
+    const ready = within(screen.getByRole('complementary'));
+    expect(ready.getByRole('heading', { name: 'Sẵn sàng chạy' })).toBeDefined();
+    // Dataset is a select (also for a global role), not a bare number input.
+    const dataset = await screen.findByLabelText('Dataset');
+    expect(dataset.tagName).toBe('SELECT');
+    expect(await ready.findByRole('option', { name: /Urban · project #31/ })).toBeDefined();
+    // Empty state is neutral, not a red callout.
+    fireEvent.change(await ready.findByLabelText('Phiên bản cấu hình'), { target: { value: '' } });
+    const empty = await screen.findByText('Chưa chọn phiên bản cấu hình');
+    expect(empty.closest('.lx-callout')?.className).toContain('lx-callout--neutral');
+  });
+
+  it('shows the create-version form with one labelled switch per engine in its own row', async () => {
+    await setup('qcadmin', <AnalysisConfigPage />);
+    const form = within(await screen.findByRole('region', { name: 'Tạo phiên bản cấu hình' }));
+    for (const name of ['Schema / Taxonomy', 'Geometry', 'Duplicate / Overlap', 'Mô hình độc lập (Detector)', 'Mô hình thị giác – ngôn ngữ (VLM)', 'Metric']) {
+      const toggle = form.getByRole('checkbox', { name });
+      expect(toggle.closest('tr')?.textContent).toContain(name);
+    }
+    expect(form.getAllByRole('checkbox')).toHaveLength(6);
   });
 
   it('preserves chosen config in EngineThresholdsTable and does not silently switch to results[0] when paginating away (T-029 / F-1)', async () => {
@@ -234,7 +280,7 @@ describe('Execution screens on real API contract', () => {
     expect(await screen.findByText('Duplicate / Overlap')).toBeDefined();
 
     // Click next page button
-    fireEvent.click(screen.getByRole('button', { name: 'Trang config tiếp' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Trang phiên bản tiếp' }));
 
     // Page 2 loaded Different Config v9 as results[0]. UI must NOT silently switch to it.
     await screen.findByRole('option', { name: /Different Config v9/ });
