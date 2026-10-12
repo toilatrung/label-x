@@ -1,0 +1,3764 @@
+{
+  "schema_version": "labelx.m04.reference-contract.v1",
+  "fixture_id": "m04-reference-contract-v1",
+  "baseline": {
+    "git_sha": "d06eddf905dd624ca74a59463bd2d6c624de4a81",
+    "purpose": "Synthetic interface examples only. Hashes are well-formed placeholders, not real BDD100K evidence. Error responses specify expected T-052/T-054 behavior; they do not prove endpoints are implemented.",
+    "approved_decisions": [
+      "CR-101",
+      "DEC-013"
+    ],
+    "pending_gates": [
+      "T-051 split/N/seed/manifest",
+      "T-055 matching 0.50/0.30 and eligibility QA",
+      "DEC-015/016/017 remain drafts until merged"
+    ]
+  },
+  "roles": [
+    {
+      "user_id": 701,
+      "person_id": "person-preparer",
+      "role": "data_model_owner",
+      "dataset_id": 42
+    },
+    {
+      "user_id": 703,
+      "person_id": "person-reviewer",
+      "role": "qa_lead",
+      "dataset_id": 42
+    },
+    {
+      "user_id": 704,
+      "person_id": "person-outside",
+      "role": "qa_lead",
+      "dataset_id": 99
+    },
+    {
+      "user_id": 706,
+      "person_id": "person-preparer",
+      "role": "super_admin",
+      "dataset_id": null
+    },
+    {
+      "user_id": 707,
+      "person_id": "person-review-only",
+      "role": "reviewer",
+      "dataset_id": 42
+    },
+    {
+      "user_id": 708,
+      "person_id": "person-admin-only",
+      "role": "qc_admin",
+      "dataset_id": 42
+    },
+    {
+      "user_id": 709,
+      "person_id": null,
+      "role": "qa_lead",
+      "dataset_id": 42
+    }
+  ],
+  "requests": [
+    {
+      "id": "create-draft",
+      "actor_user_id": 701,
+      "precondition": null,
+      "request": {
+        "method": "post",
+        "path": "/api/references/",
+        "headers": {
+          "Idempotency-Key": "fixture-create-draft",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "preparer_user_ids": [
+            701
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "draft",
+          "review_status": "not_started",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "not_started",
+            "matched_count": 0,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 0,
+            "reviewed_by": null,
+            "reviewed_at": null,
+            "records": [],
+            "errors": []
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": false,
+            "training_overlap_status": "not_checked",
+            "training_overlap_checksum": null,
+            "reviewed_case_count": 0,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": null,
+            "checked_by": null,
+            "checked_at": null
+          },
+          "versions": [],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": null,
+          "locked_version": null
+        }
+      }
+    },
+    {
+      "id": "derive-version",
+      "actor_user_id": 701,
+      "precondition": "draft",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/derive/",
+        "headers": {
+          "Idempotency-Key": "fixture-derive-version",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "learner_snapshot_id": 320,
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "reason": "Initial derivation",
+          "parent_version": null
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "derived",
+          "review_status": "pending",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "pending",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": null,
+            "reviewed_at": null,
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 0,
+            "unresolved_case_count": 3,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": null,
+            "checked_by": null,
+            "checked_at": null
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "derived",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": null,
+              "approved_at": null,
+              "locked_by": null,
+              "locked_at": null,
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 0,
+                "unresolved_case_count": 3,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": null,
+                "checked_by": null,
+                "checked_at": null
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "pending",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": null,
+                "reviewed_at": null,
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": null
+        }
+      }
+    },
+    {
+      "id": "approve-mapping",
+      "actor_user_id": 703,
+      "precondition": "derived",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-approve-mapping",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "decision": "approve",
+          "reason": "Reviewed all three derived errors",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "approved",
+          "review_status": "approved",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "approved",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": 703,
+            "reviewed_at": "2026-10-12T08:20:00Z",
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "approved",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": 703,
+              "approved_at": "2026-10-12T08:20:00Z",
+              "locked_by": null,
+              "locked_at": null,
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": null
+        }
+      }
+    },
+    {
+      "id": "lock-reference",
+      "actor_user_id": 703,
+      "precondition": "approved",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-reference",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "locked",
+          "review_status": "approved",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "approved",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": 703,
+            "reviewed_at": "2026-10-12T08:20:00Z",
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "locked",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": 703,
+              "approved_at": "2026-10-12T08:20:00Z",
+              "locked_by": 703,
+              "locked_at": "2026-10-12T08:25:00Z",
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": "v1"
+        }
+      }
+    },
+    {
+      "id": "list-visible",
+      "actor_user_id": 701,
+      "precondition": null,
+      "request": {
+        "method": "get",
+        "path": "/api/references/",
+        "headers": {}
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "next": null,
+          "previous": null,
+          "results": [
+            {
+              "id": 5001,
+              "dataset_id": 42,
+              "snapshot_id": 320,
+              "purpose": "calibration",
+              "status": "locked",
+              "review_status": "approved",
+              "ground_truth": {
+                "source": "synthetic-bdd100k-contract-fixture",
+                "format": "bdd100k_json",
+                "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "item_count": 3,
+                "annotation_version": "fixture-v1",
+                "learner_independent": true,
+                "source_groups": [
+                  {
+                    "id": "source-fixture-a",
+                    "name": "synthetic group A",
+                    "image_count": 2,
+                    "frame_count": 2,
+                    "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+                  },
+                  {
+                    "id": "source-fixture-b",
+                    "name": "synthetic group B",
+                    "image_count": 1,
+                    "frame_count": 1,
+                    "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+                  }
+                ]
+              },
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "versions": [
+                {
+                  "version": "v1",
+                  "status": "locked",
+                  "snapshot_id": 320,
+                  "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                  "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                  "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                  "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                  "created_by": 701,
+                  "created_at": "2026-10-12T08:05:00Z",
+                  "approved_by": 703,
+                  "approved_at": "2026-10-12T08:20:00Z",
+                  "locked_by": 703,
+                  "locked_at": "2026-10-12T08:25:00Z",
+                  "parent_version": null,
+                  "reason": "Initial derivation",
+                  "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  "policy": {
+                    "matching_threshold": 0.5,
+                    "ambiguous_threshold": 0.3,
+                    "minimum_area": 24,
+                    "mapping_version": "mapping-v1",
+                    "algorithm_version": "hungarian-iou-v1",
+                    "confidence_threshold": null,
+                    "precision": 6,
+                    "epsilon": 0.01,
+                    "eligibility_config_version": "eligibility-fixture-v1",
+                    "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  },
+                  "evidence": {
+                    "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                    "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                    "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                    "split_verified": true,
+                    "training_overlap_status": "passed",
+                    "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                    "reviewed_case_count": 3,
+                    "unresolved_case_count": 0,
+                    "source_group_count": 2,
+                    "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                    "split_seed": 42,
+                    "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                    "checked_by": 703,
+                    "checked_at": "2026-10-12T08:20:00Z"
+                  },
+                  "mapping": {
+                    "version": "mapping-v1",
+                    "status": "approved",
+                    "matched_count": 2,
+                    "ambiguous_count": 0,
+                    "ignored_count": 0,
+                    "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                    "error_count": 3,
+                    "reviewed_by": 703,
+                    "reviewed_at": "2026-10-12T08:20:00Z",
+                    "records": [
+                      {
+                        "frame_id": 0,
+                        "gt_object_id": "g1",
+                        "annotation_id": null,
+                        "kind": "unmatched_gt",
+                        "iou": null,
+                        "reason": null
+                      },
+                      {
+                        "frame_id": 1,
+                        "gt_object_id": "g2",
+                        "annotation_id": "a2",
+                        "kind": "matched",
+                        "iou": 0.5,
+                        "reason": null
+                      },
+                      {
+                        "frame_id": 2,
+                        "gt_object_id": "g3",
+                        "annotation_id": "a3",
+                        "kind": "matched",
+                        "iou": 1,
+                        "reason": null
+                      },
+                      {
+                        "frame_id": 2,
+                        "gt_object_id": "g3",
+                        "annotation_id": "a4",
+                        "kind": "unmatched_annotation",
+                        "iou": 0.9,
+                        "reason": "duplicate of primary association"
+                      }
+                    ],
+                    "errors": [
+                      {
+                        "id": "e1-g1",
+                        "frame_id": 0,
+                        "family": "E1",
+                        "gt_object_id": "g1",
+                        "annotation_id": null,
+                        "mapping_version": "mapping-v1"
+                      },
+                      {
+                        "id": "e2-g2",
+                        "frame_id": 1,
+                        "family": "E2",
+                        "gt_object_id": "g2",
+                        "annotation_id": "a2",
+                        "mapping_version": "mapping-v1"
+                      },
+                      {
+                        "id": "e3-a4",
+                        "frame_id": 2,
+                        "family": "E3",
+                        "gt_object_id": "g3",
+                        "annotation_id": "a4",
+                        "mapping_version": "mapping-v1"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "created_by": 701,
+              "created_at": "2026-10-12T08:00:00Z",
+              "updated_at": "2026-10-12T08:25:00Z",
+              "preparer_user_ids": [
+                701
+              ],
+              "active_version": "v1",
+              "locked_version": "v1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "read-locked",
+      "actor_user_id": 701,
+      "precondition": null,
+      "request": {
+        "method": "get",
+        "path": "/api/references/{id}/",
+        "headers": {},
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "locked",
+          "review_status": "approved",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "approved",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": 703,
+            "reviewed_at": "2026-10-12T08:20:00Z",
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "locked",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": 703,
+              "approved_at": "2026-10-12T08:20:00Z",
+              "locked_by": 703,
+              "locked_at": "2026-10-12T08:25:00Z",
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": "v1"
+        }
+      }
+    },
+    {
+      "id": "replay-lock",
+      "actor_user_id": 703,
+      "precondition": "locked",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-reference",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "locked",
+          "review_status": "approved",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "approved",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": 703,
+            "reviewed_at": "2026-10-12T08:20:00Z",
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "locked",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": 703,
+              "approved_at": "2026-10-12T08:20:00Z",
+              "locked_by": 703,
+              "locked_at": "2026-10-12T08:25:00Z",
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": "v1"
+        }
+      }
+    },
+    {
+      "id": "reject-mapping",
+      "actor_user_id": 703,
+      "precondition": "derived",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-reject-mapping",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "decision": "reject",
+          "reason": "Mapping correction needed",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "rejected",
+          "review_status": "rejected",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "rejected",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "error_count": 3,
+            "reviewed_by": 703,
+            "reviewed_at": "2026-10-12T08:20:00Z",
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 0,
+            "unresolved_case_count": 3,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": null,
+            "checked_by": null,
+            "checked_at": null
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "rejected",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": null,
+              "approved_at": null,
+              "locked_by": null,
+              "locked_at": null,
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 0,
+                "unresolved_case_count": 3,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": null,
+                "checked_by": null,
+                "checked_at": null
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "rejected",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:25:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v1",
+          "locked_version": null
+        }
+      }
+    },
+    {
+      "id": "correct-locked-parent",
+      "actor_user_id": 701,
+      "precondition": "locked",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/derive/",
+        "headers": {
+          "Idempotency-Key": "fixture-correct-locked-parent",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "learner_snapshot_id": 320,
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "reason": "Correct reviewed mapping",
+          "parent_version": "v1"
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": 5001,
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "status": "derived",
+          "review_status": "pending",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "mapping": {
+            "version": "mapping-v1",
+            "status": "pending",
+            "matched_count": 2,
+            "ambiguous_count": 0,
+            "ignored_count": 0,
+            "mapping_checksum": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "error_count": 3,
+            "reviewed_by": null,
+            "reviewed_at": null,
+            "records": [
+              {
+                "frame_id": 0,
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "kind": "unmatched_gt",
+                "iou": null,
+                "reason": null
+              },
+              {
+                "frame_id": 1,
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "kind": "matched",
+                "iou": 0.5,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a3",
+                "kind": "matched",
+                "iou": 1,
+                "reason": null
+              },
+              {
+                "frame_id": 2,
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "kind": "unmatched_annotation",
+                "iou": 0.9,
+                "reason": "duplicate of primary association"
+              }
+            ],
+            "errors": [
+              {
+                "id": "e1-g1",
+                "frame_id": 0,
+                "family": "E1",
+                "gt_object_id": "g1",
+                "annotation_id": null,
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e2-g2",
+                "frame_id": 1,
+                "family": "E2",
+                "gt_object_id": "g2",
+                "annotation_id": "a2",
+                "mapping_version": "mapping-v1"
+              },
+              {
+                "id": "e3-a4",
+                "frame_id": 2,
+                "family": "E3",
+                "gt_object_id": "g3",
+                "annotation_id": "a4",
+                "mapping_version": "mapping-v1"
+              }
+            ]
+          },
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 0,
+            "unresolved_case_count": 3,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": null,
+            "checked_by": null,
+            "checked_at": null
+          },
+          "versions": [
+            {
+              "version": "v1",
+              "status": "locked",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:05:00Z",
+              "approved_by": 703,
+              "approved_at": "2026-10-12T08:20:00Z",
+              "locked_by": 703,
+              "locked_at": "2026-10-12T08:25:00Z",
+              "parent_version": null,
+              "reason": "Initial derivation",
+              "error_set_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 3,
+                "unresolved_case_count": 0,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+                "checked_by": 703,
+                "checked_at": "2026-10-12T08:20:00Z"
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "approved",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                "error_count": 3,
+                "reviewed_by": 703,
+                "reviewed_at": "2026-10-12T08:20:00Z",
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            },
+            {
+              "version": "v2",
+              "status": "derived",
+              "snapshot_id": 320,
+              "ground_truth_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+              "mapping_checksum": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+              "evidence_checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "created_by": 701,
+              "created_at": "2026-10-12T08:30:00Z",
+              "approved_by": null,
+              "approved_at": null,
+              "locked_by": null,
+              "locked_at": null,
+              "parent_version": "v1",
+              "reason": "Correct reviewed mapping",
+              "error_set_checksum": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "policy": {
+                "matching_threshold": 0.5,
+                "ambiguous_threshold": 0.3,
+                "minimum_area": 24,
+                "mapping_version": "mapping-v1",
+                "algorithm_version": "hungarian-iou-v1",
+                "confidence_threshold": null,
+                "precision": 6,
+                "epsilon": 0.01,
+                "eligibility_config_version": "eligibility-fixture-v1",
+                "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "evidence": {
+                "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "evidence_checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "split_verified": true,
+                "training_overlap_status": "passed",
+                "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+                "reviewed_case_count": 0,
+                "unresolved_case_count": 3,
+                "source_group_count": 2,
+                "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "split_seed": 42,
+                "reviewer_evidence_checksum": null,
+                "checked_by": null,
+                "checked_at": null
+              },
+              "mapping": {
+                "version": "mapping-v1",
+                "status": "pending",
+                "matched_count": 2,
+                "ambiguous_count": 0,
+                "ignored_count": 0,
+                "mapping_checksum": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "error_count": 3,
+                "reviewed_by": null,
+                "reviewed_at": null,
+                "records": [
+                  {
+                    "frame_id": 0,
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "kind": "unmatched_gt",
+                    "iou": null,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 1,
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "kind": "matched",
+                    "iou": 0.5,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a3",
+                    "kind": "matched",
+                    "iou": 1,
+                    "reason": null
+                  },
+                  {
+                    "frame_id": 2,
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "kind": "unmatched_annotation",
+                    "iou": 0.9,
+                    "reason": "duplicate of primary association"
+                  }
+                ],
+                "errors": [
+                  {
+                    "id": "e1-g1",
+                    "frame_id": 0,
+                    "family": "E1",
+                    "gt_object_id": "g1",
+                    "annotation_id": null,
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e2-g2",
+                    "frame_id": 1,
+                    "family": "E2",
+                    "gt_object_id": "g2",
+                    "annotation_id": "a2",
+                    "mapping_version": "mapping-v1"
+                  },
+                  {
+                    "id": "e3-a4",
+                    "frame_id": 2,
+                    "family": "E3",
+                    "gt_object_id": "g3",
+                    "annotation_id": "a4",
+                    "mapping_version": "mapping-v1"
+                  }
+                ]
+              }
+            }
+          ],
+          "created_by": 701,
+          "created_at": "2026-10-12T08:00:00Z",
+          "updated_at": "2026-10-12T08:30:00Z",
+          "preparer_user_ids": [
+            701
+          ],
+          "active_version": "v2",
+          "locked_version": "v1"
+        }
+      }
+    },
+    {
+      "id": "wrong-dataset",
+      "actor_user_id": 704,
+      "precondition": "dataset 42 not assigned",
+      "request": {
+        "method": "post",
+        "path": "/api/references/",
+        "headers": {
+          "Idempotency-Key": "fixture-wrong-dataset",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "preparer_user_ids": [
+            701
+          ]
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "OUT_OF_SCOPE",
+          "message": "Synthetic failure fixture: OUT_OF_SCOPE",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "same-person-approval",
+      "actor_user_id": 701,
+      "precondition": "derived; actor is preparer",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-same-person-approval",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "decision": "approve",
+          "reason": "Reviewed all three derived errors",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "SAME_REQUESTER_APPROVER",
+          "message": "Synthetic failure fixture: SAME_REQUESTER_APPROVER",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "same-person-lock",
+      "actor_user_id": 701,
+      "precondition": "approved; actor is preparer",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-same-person-lock",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "SAME_REQUESTER_APPROVER",
+          "message": "Synthetic failure fixture: SAME_REQUESTER_APPROVER",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "alias-person-lock",
+      "actor_user_id": 706,
+      "precondition": "approved; 706 maps to preparer 701 natural person",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-alias-person-lock",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "SAME_REQUESTER_APPROVER",
+          "message": "Synthetic failure fixture: SAME_REQUESTER_APPROVER",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "lock-before-review",
+      "actor_user_id": 703,
+      "precondition": "derived",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-before-review",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_REVIEW_REQUIRED",
+          "message": "Synthetic failure fixture: REFERENCE_REVIEW_REQUIRED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "lock-unverified-split",
+      "actor_user_id": 703,
+      "precondition": "approved",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-unverified-split",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": false,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_SPLIT_UNVERIFIED",
+          "message": "Synthetic failure fixture: REFERENCE_SPLIT_UNVERIFIED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "lock-training-overlap",
+      "actor_user_id": 703,
+      "precondition": "approved",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-training-overlap",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "failed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_TRAINING_OVERLAP",
+          "message": "Synthetic failure fixture: REFERENCE_TRAINING_OVERLAP",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "lock-unresolved-cases",
+      "actor_user_id": 703,
+      "precondition": "approved",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-unresolved-cases",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 1,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_REVIEW_REQUIRED",
+          "message": "Synthetic failure fixture: REFERENCE_REVIEW_REQUIRED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "lock-missing-policy-qa",
+      "actor_user_id": 703,
+      "precondition": "approved; stored policy QA evidence absent",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-missing-policy-qa",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_REVIEW_REQUIRED",
+          "message": "Synthetic failure fixture: REFERENCE_REVIEW_REQUIRED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "heldout-group-overlap",
+      "actor_user_id": 703,
+      "precondition": "approved; groups overlap calibration",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-heldout-group-overlap",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_SPLIT_UNVERIFIED",
+          "message": "Synthetic failure fixture: REFERENCE_SPLIT_UNVERIFIED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "stale-approval",
+      "actor_user_id": 703,
+      "precondition": "derived v1",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-stale-approval",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v0",
+          "decision": "approve",
+          "reason": "Reviewed all three derived errors",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "code": "REFERENCE_VERSION_CONFLICT",
+          "message": "Synthetic failure fixture: REFERENCE_VERSION_CONFLICT",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "locked-version-write",
+      "actor_user_id": 703,
+      "precondition": "locked v1",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-locked-version-write",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "decision": "approve",
+          "reason": "Reviewed all three derived errors",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "code": "REFERENCE_LOCKED",
+          "message": "Synthetic failure fixture: REFERENCE_LOCKED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "checksum-mismatch",
+      "actor_user_id": 701,
+      "precondition": "uploaded GT content differs from declared checksum",
+      "request": {
+        "method": "post",
+        "path": "/api/references/",
+        "headers": {
+          "Idempotency-Key": "fixture-checksum-mismatch",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "preparer_user_ids": [
+            701
+          ]
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_SOURCE_CHECKSUM_MISMATCH",
+          "message": "Synthetic failure fixture: REFERENCE_SOURCE_CHECKSUM_MISMATCH",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "scope-mismatch",
+      "actor_user_id": 701,
+      "precondition": "snapshot 320 belongs to dataset 99",
+      "request": {
+        "method": "post",
+        "path": "/api/references/",
+        "headers": {
+          "Idempotency-Key": "fixture-scope-mismatch",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "preparer_user_ids": [
+            701
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "code": "REFERENCE_SCOPE_MISMATCH",
+          "message": "Synthetic failure fixture: REFERENCE_SCOPE_MISMATCH",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "invalid-policy-order",
+      "actor_user_id": 701,
+      "precondition": "draft",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/derive/",
+        "headers": {
+          "Idempotency-Key": "fixture-invalid-policy-order",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "learner_snapshot_id": 320,
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.6,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "reason": "Initial derivation",
+          "parent_version": null
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_MAPPING_INVALID",
+          "message": "Synthetic failure fixture: REFERENCE_MAPPING_INVALID",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "idempotency-conflict",
+      "actor_user_id": 703,
+      "precondition": "reuse fixture-lock-reference with different body",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-lock-reference",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v2",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "code": "IDEMPOTENCY_KEY_REUSED",
+          "message": "Synthetic failure fixture: IDEMPOTENCY_KEY_REUSED",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "missing-required-version",
+      "actor_user_id": 703,
+      "precondition": "approved",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-missing-required-version",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 400,
+        "body": {
+          "code": "VALIDATION_ERROR",
+          "message": "Synthetic failure fixture: VALIDATION_ERROR",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "reference-not-found",
+      "actor_user_id": 703,
+      "precondition": "unknown reference ID",
+      "request": {
+        "method": "get",
+        "path": "/api/references/{id}/",
+        "headers": {},
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 404,
+        "body": {
+          "code": "NOT_FOUND",
+          "message": "Synthetic failure fixture: NOT_FOUND",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "read-outside-dataset",
+      "actor_user_id": 704,
+      "precondition": "dataset 42 not assigned",
+      "request": {
+        "method": "get",
+        "path": "/api/references/{id}/",
+        "path_parameters": {
+          "id": 5001
+        },
+        "headers": {
+          "Idempotency-Key": "fixture-read-outside-dataset"
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "OUT_OF_SCOPE",
+          "message": "Synthetic failure fixture: OUT_OF_SCOPE",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "wrong-role-create",
+      "actor_user_id": 707,
+      "precondition": "reviewer role only",
+      "request": {
+        "method": "post",
+        "path": "/api/references/",
+        "headers": {
+          "Idempotency-Key": "fixture-wrong-role-create",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "dataset_id": 42,
+          "snapshot_id": 320,
+          "purpose": "calibration",
+          "ground_truth": {
+            "source": "synthetic-bdd100k-contract-fixture",
+            "format": "bdd100k_json",
+            "checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "item_count": 3,
+            "annotation_version": "fixture-v1",
+            "learner_independent": true,
+            "source_groups": [
+              {
+                "id": "source-fixture-a",
+                "name": "synthetic group A",
+                "image_count": 2,
+                "frame_count": 2,
+                "checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "id": "source-fixture-b",
+                "name": "synthetic group B",
+                "image_count": 1,
+                "frame_count": 1,
+                "checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              }
+            ]
+          },
+          "policy": {
+            "matching_threshold": 0.5,
+            "ambiguous_threshold": 0.3,
+            "minimum_area": 24,
+            "mapping_version": "mapping-v1",
+            "algorithm_version": "hungarian-iou-v1",
+            "confidence_threshold": null,
+            "precision": 6,
+            "epsilon": 0.01,
+            "eligibility_config_version": "eligibility-fixture-v1",
+            "qa_evidence_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "preparer_user_ids": [
+            701
+          ]
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "FORBIDDEN",
+          "message": "Synthetic failure fixture: FORBIDDEN",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "wrong-role-approve",
+      "actor_user_id": 701,
+      "precondition": "derived; data_model_owner cannot approve",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/approve/",
+        "headers": {
+          "Idempotency-Key": "fixture-wrong-role-approve",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "decision": "approve",
+          "reason": "Reviewed all three derived errors",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "FORBIDDEN",
+          "message": "Synthetic failure fixture: FORBIDDEN",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "wrong-role-lock",
+      "actor_user_id": 708,
+      "precondition": "approved; qc_admin role only",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-wrong-role-lock",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "FORBIDDEN",
+          "message": "Synthetic failure fixture: FORBIDDEN",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "identity-missing-lock",
+      "actor_user_id": 709,
+      "precondition": "approved; person identity missing",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-identity-missing-lock",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "code": "IDENTITY_MAPPING_MISSING",
+          "message": "Synthetic failure fixture: IDENTITY_MAPPING_MISSING",
+          "request_id": "fixture-request-1"
+        }
+      }
+    },
+    {
+      "id": "training-check-not-run",
+      "actor_user_id": 703,
+      "precondition": "approved; training manifest not checked",
+      "request": {
+        "method": "post",
+        "path": "/api/references/{id}/lock/",
+        "headers": {
+          "Idempotency-Key": "fixture-training-check-not-run",
+          "X-CSRFToken": "fixture-csrf"
+        },
+        "body": {
+          "version": "v1",
+          "evidence": {
+            "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "evidence_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "split_verified": true,
+            "training_overlap_status": "passed",
+            "training_overlap_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "reviewed_case_count": 3,
+            "unresolved_case_count": 0,
+            "source_group_count": 2,
+            "split_manifest_checksum": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "split_seed": 42,
+            "reviewer_evidence_checksum": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "checked_by": 703,
+            "checked_at": "2026-10-12T08:20:00Z"
+          }
+        },
+        "path_parameters": {
+          "id": 5001
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "code": "REFERENCE_TRAINING_OVERLAP",
+          "message": "Synthetic failure fixture: REFERENCE_TRAINING_OVERLAP",
+          "request_id": "fixture-request-1"
+        }
+      }
+    }
+  ],
+  "boundaries": [
+    {
+      "name": "matching-equality",
+      "iou": 0.5,
+      "expected": "matched"
+    },
+    {
+      "name": "matching-below",
+      "iou": 0.499999,
+      "expected": "ambiguous"
+    },
+    {
+      "name": "ambiguous-equality",
+      "iou": 0.3,
+      "expected": "ambiguous"
+    },
+    {
+      "name": "ambiguous-below",
+      "iou": 0.299999,
+      "expected": "unmatched"
+    },
+    {
+      "name": "area-equality",
+      "area": 24,
+      "expected": "eligible"
+    },
+    {
+      "name": "area-below",
+      "area": 23.999999,
+      "expected": "ignored"
+    }
+  ]
+}

@@ -700,13 +700,89 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * List reference sessions visible in the caller dataset scope
+         * @description Returns reference metadata only. This response never includes ranking,
+         *     risk score, candidate, or detector output for a preparation-only actor.
+         */
+        get: operations["references_list"];
+        put?: never;
+        /**
+         * Create a draft reference session and register its GT manifest
+         * @description Creates a draft only. It does not derive errors, approve a mapping, or
+         *     lock a version. The caller must be within the dataset scope.
+         *     The server verifies manifest hashes and independent official BDD100K
+         *     provenance; client evidence is a claim, not a bypass of server checks.
+         */
+        post: operations["references_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read reference metadata, provenance, mapping and evidence
+         * @description A preparation-only actor may read reference metadata but never receives
+         *     ranking, risk score, candidate, or detector output for this dataset.
+         */
+        get: operations["references_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/{id}/derive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
         /**
-         * Tạo phiên reference và nhập GT
-         * @description Pilot nhập một GT BDD100K với checksum; hai GT độc lập dành cho giai đoạn sau (CR-101).
+         * Derive reference error set and mapping from GT and learner snapshot
+         * @description Derivation is deterministic and creates a new reference version. The
+         *     source snapshot, split metadata, mapping policy and input hashes are
+         *     recorded in the response. No error can be removed directly; a mapping
+         *     correction creates another derived version.
+         *     A locked parent remains unchanged. A correction supplies its locked
+         *     version and a reason; the new version starts derived/pending again.
          */
-        post: operations["references_create"];
+        post: operations["references_derive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve or reject a derived reference mapping
+         * @description Approval is a human review step and is separate from locking. The
+         *     approver must be a different natural person from the creator/preparer.
+         *     version is an optimistic concurrency guard; stale reviews return 409.
+         */
+        post: operations["references_approve"];
         delete?: never;
         options?: never;
         head?: never;
@@ -723,8 +799,16 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Khoá reference và provenance
-         * @description Người khoá khác người lập GT; chỉ khoá sau khi bất đồng đã phân xử.
+         * Lock an approved reference version and its provenance
+         * @description Lock is immutable. The API rejects a draft/derived reference, an
+         *     unreviewed mapping, an unverified split/source group, a training-overlap
+         *     finding, or a locker who is the creator/preparer or learner annotator.
+         *     The approver may also lock: both must differ from the preparer as a
+         *     natural person, even when that person has multiple accounts.
+         *     Evidence is reverified by the server and bound to the reviewed version.
+         *     Identical Idempotency-Key replay returns the original result; conflicting
+         *     payload returns 409 IDEMPOTENCY_KEY_REUSED. Consumers use the exact locked
+         *     version, never a mutable latest alias.
          */
         post: operations["references_lock"];
         delete?: never;
@@ -875,7 +959,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "REFERENCE_SCOPE_MISMATCH" | "REFERENCE_SOURCE_CHECKSUM_MISMATCH" | "REFERENCE_MAPPING_INVALID" | "REFERENCE_REVIEW_REQUIRED" | "REFERENCE_SPLIT_UNVERIFIED" | "REFERENCE_TRAINING_OVERLAP" | "REFERENCE_LOCKED" | "REFERENCE_VERSION_CONFLICT";
         /**
          * @example {
          *       "code": "LEASE_CONFLICT",
@@ -1559,31 +1643,199 @@ export interface components {
             /** Format: uri */
             cvat_deep_link?: string;
         };
-        ReferenceCreate: {
-            snapshot_id: number;
-            /** @description Pilot dùng tệp nhãn gốc BDD100K */
-            gt_source: string;
-            /** @description SHA-256 của GT đầu vào */
-            gt_checksum: string;
+        /**
+         * @description calibration is for fitting/selection; held_out is evaluation-only.
+         * @enum {string}
+         */
+        ReferencePurpose: "calibration" | "held_out";
+        /** @enum {string} */
+        ReferenceStatus: "draft" | "derived" | "approved" | "rejected" | "locked";
+        /** @enum {string} */
+        ReferenceReviewStatus: "not_started" | "pending" | "approved" | "rejected";
+        ReferenceSourceGroup: {
+            id: string;
+            name: string;
+            image_count: number;
+            frame_count: number;
+            checksum: string;
+        };
+        GroundTruthManifest: {
+            source: string;
+            /** @enum {string} */
+            format: "bdd100k_json";
+            /** @description SHA-256 of the immutable GT manifest. */
+            checksum: string;
+            item_count: number;
+            source_groups: components["schemas"]["ReferenceSourceGroup"][];
+            annotation_version: string;
+            /** @enum {boolean} */
+            learner_independent: true;
+        };
+        /**
+         * @description 0 <= ambiguous_threshold <= matching_threshold <= 1; ignore area is
+         *     strictly below minimum_area. Thresholds/eligibility require T-055 QA
+         *     evidence before lock; no proposed value is an approved default.
+         *     Matching is class-independent, max cardinality then max total IoU,
+         *     ties by stable object ID. Ambiguous is [ambiguous_threshold, matching_threshold).
+         *     precision=6 and epsilon=0.01 follow DEC-013.
+         */
+        ReferencePolicy: {
+            matching_threshold: number;
+            ambiguous_threshold: number;
+            minimum_area: number;
             mapping_version: string;
-            matching_threshold?: number;
-            minimum_area?: number;
-            algorithm_version?: string;
+            algorithm_version: string;
+            confidence_threshold?: number | null;
+            /** @enum {integer} */
+            precision: 6;
+            /** @enum {number} */
+            epsilon: 0.01;
+            eligibility_config_version: string;
+            qa_evidence_checksum: string | null;
+        };
+        /**
+         * @description Server verifies group-disjoint split, official GT independence and model
+         *     training manifest overlap. Missing/not_checked evidence cannot pass lock.
+         *     checked_by/time are server-authored; requests cannot self-attest a lock.
+         */
+        ReferenceEvidence: {
+            manifest_checksum: string;
+            policy_checksum: string;
+            evidence_checksum: string;
+            split_verified: boolean;
+            /** @enum {string} */
+            training_overlap_status: "not_checked" | "passed" | "failed";
+            training_overlap_checksum: string | null;
+            reviewed_case_count: number;
+            unresolved_case_count: number;
+            source_group_count: number;
+            split_manifest_checksum: string;
+            split_seed: number;
+            reviewer_evidence_checksum: string | null;
+            checked_by: number | null;
+            /** Format: date-time */
+            checked_at: string | null;
+        };
+        /** @description Full GT-to-learner mapping, including ignored and unmatched items; never Detector candidates. */
+        ReferenceMapping: {
+            version: string;
+            status: components["schemas"]["ReferenceReviewStatus"];
+            matched_count: number;
+            ambiguous_count: number;
+            ignored_count: number;
+            mapping_checksum: string;
+            error_count: number;
+            reviewed_by: number | null;
+            /** Format: date-time */
+            reviewed_at: string | null;
+            records: components["schemas"]["ReferenceAssociation"][];
+            errors: components["schemas"]["ReferenceError"][];
+        };
+        ReferenceAssociation: {
+            frame_id: number;
+            gt_object_id: string | null;
+            annotation_id: string | null;
+            /** @enum {string} */
+            kind: "matched" | "ambiguous" | "ignored" | "unmatched_gt" | "unmatched_annotation";
+            iou: number | null;
+            reason: string | null;
+        };
+        /**
+         * @description Stable ID per object/family. E1/E2 attach to GT; E3 attaches to the
+         *     surplus annotation and its primary matched GT. No ignore item or
+         *     BR-06 unmatched extra box enters the KPI denominator.
+         */
+        ReferenceError: {
+            id: string;
+            frame_id: number;
+            /** @enum {string} */
+            family: "E1" | "E2" | "E3";
+            gt_object_id: string | null;
+            annotation_id: string | null;
+            mapping_version: string;
+        };
+        ReferenceCreate: {
+            dataset_id: number;
+            snapshot_id: number;
+            purpose: components["schemas"]["ReferencePurpose"];
+            ground_truth: components["schemas"]["GroundTruthManifest"];
+            policy: components["schemas"]["ReferencePolicy"];
+            evidence?: components["schemas"]["ReferenceEvidence"];
+            preparer_user_ids: number[];
+            note?: string;
+        };
+        ReferenceDeriveRequest: {
+            learner_snapshot_id: number;
+            policy: components["schemas"]["ReferencePolicy"];
+            mapping_override_checksum?: string | null;
+            evidence?: components["schemas"]["ReferenceEvidence"];
+            reason: string;
+            parent_version?: string | null;
+        };
+        ReferenceApprovalRequest: {
+            /** @enum {string} */
+            decision: "approve" | "reject";
+            reason: string;
+            evidence: components["schemas"]["ReferenceEvidence"];
+            version: string;
+        };
+        ReferenceLockRequest: {
+            version: string;
+            evidence: components["schemas"]["ReferenceEvidence"];
+        };
+        /**
+         * @description Immutable locked bundle; consumers bind snapshot/version and every hash.
+         *     No candidate/ranking/detector prediction is part of this reference.
+         */
+        ReferenceVersion: {
+            version: string;
+            status: components["schemas"]["ReferenceStatus"];
+            snapshot_id: number;
+            ground_truth_checksum: string;
+            mapping_checksum: string;
+            policy_checksum: string;
+            evidence_checksum: string;
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+            approved_by: number | null;
+            /** Format: date-time */
+            approved_at: string | null;
+            locked_by: number | null;
+            /** Format: date-time */
+            locked_at: string | null;
+            parent_version: string | null;
+            reason: string;
+            error_set_checksum: string;
+            policy: components["schemas"]["ReferencePolicy"];
+            evidence: components["schemas"]["ReferenceEvidence"];
+            mapping: components["schemas"]["ReferenceMapping"];
         };
         Reference: {
             id: number;
+            dataset_id: number;
             snapshot_id: number;
-            gt_checksum: string;
-            mapping_version: string;
-            matching_threshold?: number;
-            minimum_area?: number;
-            algorithm_version?: string;
-            /** @enum {string} */
-            status: "draft" | "locked";
+            purpose: components["schemas"]["ReferencePurpose"];
+            status: components["schemas"]["ReferenceStatus"];
+            review_status: components["schemas"]["ReferenceReviewStatus"];
+            ground_truth: components["schemas"]["GroundTruthManifest"];
+            policy: components["schemas"]["ReferencePolicy"];
+            mapping: components["schemas"]["ReferenceMapping"];
+            evidence: components["schemas"]["ReferenceEvidence"];
+            versions: components["schemas"]["ReferenceVersion"][];
             created_by: number;
-            locked_by?: number | null;
             /** Format: date-time */
-            locked_at?: string | null;
+            created_at: string;
+            /** Format: date-time */
+            updated_at?: string;
+            preparer_user_ids: number[];
+            active_version: string | null;
+            locked_version: string | null;
+        };
+        PaginatedReferenceList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Reference"][];
         };
         EffortEventBatch: {
             events: components["schemas"]["EffortEvent"][];
@@ -2933,6 +3185,34 @@ export interface operations {
             409: components["responses"]["Conflict"];
         };
     };
+    references_list: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+                dataset_id?: number;
+                purpose?: components["schemas"]["ReferencePurpose"];
+                status?: components["schemas"]["ReferenceStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reference sessions in dataset scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedReferenceList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     references_create: {
         parameters: {
             query?: never;
@@ -2965,6 +3245,105 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    references_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reference session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reference"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    references_derive: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceDeriveRequest"];
+            };
+        };
+        responses: {
+            /** @description Derived reference version awaiting approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reference"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    references_approve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Reference review result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reference"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     references_lock: {
@@ -2982,7 +3361,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceLockRequest"];
+            };
+        };
         responses: {
             /** @description Reference đã khoá */
             200: {
@@ -2993,6 +3376,7 @@ export interface operations {
                     "application/json": components["schemas"]["Reference"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];

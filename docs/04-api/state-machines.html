@@ -197,4 +197,19 @@ ul.dir{columns:2;font-size:14px}
 <li>SRS <code>05-dynamics.tex</code> định nghĩa transition sang <code>incomplete</code> khi lease hết hạn sau khi đã lưu quyết định, và resume bằng lease mới (BLOCKER-008).</li>
 <li>Operation ghi quyết định, phân xử, rework (<code>issues_decide</code>, <code>issues_adjudicate</code>, <code>rework_*</code>) có trong bảng transition nhưng chưa có trong <a href="openapi.yaml">openapi.yaml</a>; bổ sung trong task M-03.</li>
 </ul>
+<h2 id="reference">5. Reference</h2>
+<p>The M-04 reference is versioned and immutable after lock. Draft/config metadata
+is separate from derived mapping, human approval and the locked version.</p>
+<table>
+<thead><tr><th>Event</th><th>From</th><th>To</th><th>Actor</th><th>Guard</th><th>API</th><th>Reject</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><code>reference.create</code></td><td>—</td><td><code>draft</code></td><td>QA Lead, Super Admin, Data/Model Owner</td><td>Dataset scope; independent official BDD100K checksum; purpose and explicit policy</td><td><code>references_create</code></td><td>403 OUT_OF_SCOPE; 409 REFERENCE_SCOPE_MISMATCH; 422 REFERENCE_SOURCE_CHECKSUM_MISMATCH</td><td>UC-08; FR-EVL-01, FR-EVL-02; PO #196</td></tr>
+<tr><td><code>reference.derive</code></td><td><code>draft</code>, <code>derived</code>, <code>rejected</code>, <code>approved</code> hoặc locked parent</td><td>new <code>derived</code> version</td><td>QA Lead, Super Admin, Data/Model Owner</td><td>GT and learner snapshot immutable; split/source groups declared; policy versioned; correction has parent_version + reason. Existing locked version remains unchanged</td><td><code>references_derive</code></td><td>409 REFERENCE_VERSION_CONFLICT; 422 REFERENCE_MAPPING_INVALID</td><td>UC-08; FR-EVL-03, FR-EVL-04, FR-EVL-05; BR-01…BR-07, BR-13, BR-14</td></tr>
+<tr><td><code>reference.approve</code></td><td><code>derived</code></td><td><code>approved</code> / <code>rejected</code></td><td>QA Lead, Super Admin</td><td>Review evidence is present; approver is a different natural person from creator/preparer; reject requires reason</td><td><code>references_approve</code></td><td>403 SAME_REQUESTER_APPROVER; 422 REFERENCE_REVIEW_REQUIRED</td><td>UC-08; FR-EVL-03, FR-EVL-04; BR-12, BR-13, BR-14</td></tr>
+<tr><td><code>reference.lock</code></td><td><code>approved</code></td><td><code>locked</code></td><td>QA Lead, Super Admin</td><td>Split verified; training overlap passed; no unresolved cases; GT/mapping/policy/evidence hashes are recorded</td><td><code>references_lock</code></td><td>409 REFERENCE_LOCKED; 422 REFERENCE_REVIEW_REQUIRED, REFERENCE_SPLIT_UNVERIFIED, REFERENCE_TRAINING_OVERLAP</td><td>UC-08; FR-EVL-04, FR-EVL-05; BR-10, BR-13, BR-16</td></tr>
+</tbody>
+</table>
+<p>A locked version cannot be edited. A mapping correction must derive a new version
+with a new mapping/evidence checksum; it must not delete an error directly.</p>
+<p>Approval/lock bind the exact version; stale version → 409 REFERENCE_VERSION_CONFLICT. Approver may lock but both differ from creator/preparer and learner annotator (natural-person identity). Same-key identical replay returns original result; different payload → 409 IDEMPOTENCY_KEY_REUSED (existing baseline code). Rejected versions require a fresh derivation before approval. Client evidence never overrides server validation.</p>
 </article></main></body></html>

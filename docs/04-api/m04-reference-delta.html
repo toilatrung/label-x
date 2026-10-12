@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-050 — Bàn giao contract reference M-04</title>
+<meta name="labelx:id" content="m04-reference-delta">
+<meta name="labelx:title" content="T-050 — Contract reference M-04 và API delta">
+<meta name="labelx:type" content="reference"><meta name="labelx:domain" content="api">
+<meta name="labelx:module" content="evaluation"><meta name="labelx:tags" content="[T-050, M-04, reference, contract]">
+<meta name="labelx:priority" content="1">
+<style>body{font:16px/1.6 system-ui,sans-serif;max-width:1100px;margin:32px auto;padding:0 20px;color:#202530}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #ddd;padding:9px;text-align:left;vertical-align:top}th,code{background:#f1f4f7}a{color:#155ca3}h2{margin-top:30px}.note{background:#fff3d7;padding:14px}pre{overflow:auto;background:#f1f4f7;padding:16px}</style>
+</head><body>
+<h1>T-050: GT → derive → approve → lock</h1>
+<p>Reference là đáp án chuẩn và tập lỗi suy ra từ GT độc lập so với annotation learner. Người chuẩn bị tạo draft và suy lỗi; QA khác người đó duyệt mapping rồi khóa một version. Detector và bảng điểm chỉ tiêu thụ version đã khóa.</p>
+<p>Baseline: <code>d06eddf905dd624ca74a59463bd2d6c624de4a81</code> trên <code>develop</code>. Nguồn: <a href="https://github.com/toilatrung/label-x/issues/197">#197</a>, <a href="https://github.com/toilatrung/label-x/issues/196">PO #196</a>, CR-101, DEC-013, FR-EVL-01…05, FR-SEC-04, BR-01…07 và BR-10…17. <a href="openapi.yaml">OpenAPI</a> là schema wire; <a href="../../src/backend/fixtures/m04_reference_contract_v1.json">fixture</a> chứa JSON request/response mẫu.</p>
+<div class="note">Đây là contract để review, chưa cài endpoint/model/importer. Fixture hoàn toàn tổng hợp, 3 frame, hash giả đúng định dạng; không phải receipt BDD100K, evidence QA hoặc chứng nhận lock dữ liệu thật. DEC-015/016/017 chưa merge không được coi là quyết định đã duyệt.</div>
+<h2>Delta so với baseline</h2>
+<table><thead><tr><th>API/schema</th><th>Thay đổi</th><th>Ảnh hưởng consumer</th></tr></thead><tbody>
+<tr><td>POST /api/references/</td><td>Giữ route và operationId references_create. Thay body scalar GT cũ bằng dataset, snapshot, purpose, manifest GT, policy và preparer IDs. Trả draft.</td><td>GT cũ gt_source/gt_checksum → ground_truth.source/checksum; mapping_version và ngưỡng → policy. Chưa có endpoint reference runtime trong baseline nên T-052/T-054 triển khai schema mới trực tiếp.</td></tr>
+<tr><td>POST /api/references/{id}/lock/</td><td>Giữ route và operationId references_lock. Bổ sung body version + evidence, 400 validation; giữ 403/404/409/422.</td><td>Phải gửi version chính xác; không lock draft. Actor/time được server ghi.</td></tr>
+<tr><td>GET /api/references/ và /{id}/</td><td>Thêm list có cursor, lọc dataset/purpose/status và detail gồm versions.</td><td>FE đọc metadata từ API, không suy ra thành công từ dữ liệu fixture.</td></tr>
+<tr><td>POST /{id}/derive/ và /{id}/approve/</td><td>Thêm derive với snapshot/policy/reason/parent_version; approve/reject với version/reason/evidence.</td><td>Đầu ra dùng chung Reference; correction tạo version mới và reset approval, không xóa lỗi.</td></tr>
+<tr><td>Reference</td><td>Draft/config ở policy cấp session; active_version và locked_version tách biệt. versions chứa bundle snapshot/GT/mapping/policy/evidence/error-set hash và actor/time.</td><td>Consumer dùng locked_version cụ thể; session có draft mới không làm thay đổi version cũ đang được dùng.</td></tr>
+<tr><td>Type FE</td><td>contract.d.ts sinh từ static OpenAPI. schema.d.ts runtime chỉ chứa endpoint đã cài.</td><td>gen:api:contract dùng cho seam tương lai; gen:api giữ schema API hiện chạy. Không quảng bá endpoint chưa cài là hoạt động.</td></tr>
+</tbody></table>
+<h2>Seam bàn giao</h2>
+<table><thead><tr><th>Task</th><th>Input</th><th>Output/trách nhiệm</th></tr></thead><tbody>
+<tr><td>T-052 importer/model</td><td>ReferenceCreate + GroundTruthManifest; official BDD100K JSON và learner snapshot khóa, source-group stable IDs/checksum.</td><td>Kiểm checksum bytes thật, nguồn GT chính thức/độc lập, frame membership/coverage và dataset. Tạo draft; server ghi actor/time. Không tạo GT từ learner hoặc Detector.</td></tr>
+<tr><td>T-053 derive</td><td>ReferenceDeriveRequest + GT độc lập + snapshot annotation.</td><td>ReferenceAssociation và ReferenceError E1/E2/E3 theo BR-01…07; ổn định ID, hash mapping/error-set, không phụ thuộc class khi matching. Sửa mapping phải suy lại và ghi lý do.</td></tr>
+<tr><td>T-054 approve/lock</td><td>ReferenceApprovalRequest/ReferenceLockRequest, dataset role assignments và identity mapping.</td><td>Kiểm exact version, tự duyệt theo natural person, QA review và split/leakage, atomic lock/idempotency. Persist bundle bất biến. Audit append-only ghi actor/time/hash.</td></tr>
+<tr><td>T-055 policy QA</td><td>Policy draft với ngưỡng matching/ambiguous, eligibility version.</td><td>QA evidence checksum và boundary review; không tự chốt các giá trị đề xuất.</td></tr>
+<tr><td>T-057 Detector</td><td>Exact locked reference version và GT manifest hash; model/training manifest hash.</td><td>Registry/runtime/ledger vẫn theo baseline. Chỉ calibration được học ngưỡng; held_out bị từ chối. Matching metric Detector có thể riêng theo BR-17; Detector không làm trọng tài GT.</td></tr>
+<tr><td>T-065 FE</td><td>List/detail Reference, versions và lỗi code/message/request_id.</td><td>Hiển thị draft/derived/approved/rejected/locked, actor/time/evidence và chọn version; action chỉ bật theo quyền/state. Deep link CVAT để sửa annotation.</td></tr>
+</tbody></table>
+<h2>RBAC và trust boundary</h2>
+<p>Data/Model Owner, QA Lead, Super Admin được chuẩn bị theo dataset; QA Lead/Super Admin được approve/lock. Người approve có thể là người lock, nhưng phải khác creator/preparer/learner annotator về người thật. Role toàn hệ thống cũng phải qua gate self-review và evidence. Server hợp nhất preparer_user_ids khai báo với creator, tác giả manifest, lịch sử import và annotator snapshot; không tin client để bỏ bớt người chuẩn bị. Thiếu identity/provenance phải từ chối, không tự suy rằng hai account là hai người.</p>
+<p>Scope lấy từ bản ghi và role assignment; dataset_id do client gửi không cấp quyền. Evidence checksum chỉ là tham chiếu: server nạp artifact, tính lại hash và kiểm nội dung/split, không cho boolean split_verified hay checked_by client bỏ qua kiểm chứng. Những người lập/xác minh GT vẫn bị chặn ranking/risk/candidate và engine output theo FR-EVL-02 tại cả API liên quan; GET reference chỉ trả mapping GT–learner độc lập.</p>
+<h2>Lỗi và guard</h2>
+<table><thead><tr><th>HTTP/code</th><th>Điều kiện</th></tr></thead><tbody>
+<tr><td>400 VALIDATION_ERROR</td><td>Body/query/enum thiếu hoặc sai định dạng.</td></tr>
+<tr><td>403 OUT_OF_SCOPE / FORBIDDEN</td><td>Dataset hoặc vai trò không cho phép; không trả reference ngoài scope.</td></tr>
+<tr><td>403 SAME_REQUESTER_APPROVER / SELF_REVIEW_FORBIDDEN / IDENTITY_MAPPING_MISSING</td><td>Cùng người với preparer hoặc tự review learner; thiếu identity mapping đáng tin cậy.</td></tr>
+<tr><td>404 NOT_FOUND</td><td>Reference/version không tồn tại.</td></tr>
+<tr><td>409 REFERENCE_SCOPE_MISMATCH</td><td>Snapshot/manifest không thuộc dataset yêu cầu.</td></tr>
+<tr><td>409 REFERENCE_VERSION_CONFLICT / REFERENCE_LOCKED</td><td>Version cũ hoặc ghi đè version khóa. Correction hợp lệ đi qua derive tạo version mới.</td></tr>
+<tr><td>409 IDEMPOTENCY_KEY_REUSED</td><td>Reuse key với payload khác; replay cùng payload trả kết quả gốc, không ghi duplicate audit/version.</td></tr>
+<tr><td>422 REFERENCE_SOURCE_CHECKSUM_MISMATCH</td><td>Hash manifest/source không khớp nội dung.</td></tr>
+<tr><td>422 REFERENCE_MAPPING_INVALID</td><td>Mapping/policy sai, ambiguous_threshold &gt; matching_threshold, input không hợp lệ.</td></tr>
+<tr><td>422 REFERENCE_REVIEW_REQUIRED</td><td>Chưa approve, còn unresolved case, thiếu QA policy/review evidence hoặc artifact không khớp version.</td></tr>
+<tr><td>422 REFERENCE_SPLIT_UNVERIFIED</td><td>Thiếu split/group evidence, group chồng calibration/held-out, hoặc guideline case nằm trong held-out.</td></tr>
+<tr><td>422 REFERENCE_TRAINING_OVERLAP</td><td>Không có training manifest/check hoặc có ảnh trùng Detector training; Not checked không được pass.</td></tr>
+</tbody></table>
+<h2>Gate chưa được tự chốt</h2>
+<p>T-051: source-group, split/N/seed/manifest và disposition missing labels. T-055: matching 0.50/0.30 và eligibility QA evidence. T-057: model checksum/training manifest và GPU. T-061: n_min 50 / 5 folds cần thống kê. Precision 6 / epsilon 0.01 theo DEC-013; VLM off theo DEC-002. Held-out chỉ là schema dự phòng cho M-05, chưa mở KPI/crossover trong M-04.</p>
+<p>Boundary bàn giao T-053/T-055: IoU = tau_m có thể matched; IoU trong [tau_amb,tau_m) ambiguous; area = a_min không ignore, area &lt; a_min ignore. Fixture boundary là ví dụ phải được runtime upstream và QA kiểm chứng, không chứng minh implementation matching đã hoàn tất.</p>
+</body></html>

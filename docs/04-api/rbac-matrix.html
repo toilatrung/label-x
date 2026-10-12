@@ -116,4 +116,17 @@ ul.dir{columns:2;font-size:14px}
 <li>Product Owner và Data/Model Owner không thao tác review và không là reviewer trong thí nghiệm mình thiết kế.</li>
 <li>Worker Detector không gọi được API ghi quyết định (rest-api.html §6).</li>
 </ul>
+<h2 id="m04-reference-rbac">M-04 reference contract</h2>
+<p>Reference actions are dataset-scoped. A preparation-only actor may read
+reference metadata but cannot read ranking, risk score, candidate, or detector
+output for that dataset.</p>
+<table>
+<thead><tr><th>Operation</th><th>Allowed roles</th><th>Required guard</th><th>Trace</th></tr></thead>
+<tbody>
+<tr><td><code>references_list</code>, <code>references_retrieve</code></td><td>QA Lead, QC Admin, Super Admin, Product Owner, Data/Model Owner</td><td>Dataset scope; preparation-only responses exclude ranking/candidate data</td><td>FR-EVL-01, FR-EVL-02</td></tr>
+<tr><td><code>references_create</code>, <code>references_derive</code></td><td>QA Lead, Super Admin, Data/Model Owner</td><td>Dataset scope; locked learner snapshot; official independent BDD100K manifest; versioned policy. Người chuẩn bị không xem ranking/candidate.</td><td>FR-EVL-01, FR-EVL-02, FR-EVL-03, FR-EVL-04; PO #196</td></tr>
+<tr><td><code>references_approve</code>, <code>references_lock</code></td><td>QA Lead, Super Admin</td><td>Khác người tạo/chuẩn bị/gán learner về natural-person identity, kể cả tài khoản khác. Người approve có thể lock. Role toàn hệ thống không bỏ qua self-review, review, split hoặc leakage gate.</td><td>FR-EVL-04, FR-EVL-05, FR-SEC-04</td></tr>
+</tbody>
+</table>
+<p>Kiểm dataset ở API từ bản ghi, không tin dataset_id trong body. Dataset scope lệch → 403 OUT_OF_SCOPE; người không được phép không thấy dữ liệu reference. QA/QC/PO/Model Owner ngoài scope cũng bị chặn. Mutation cần session/CSRF và Idempotency-Key theo contract chung. Chỉ metadata reference được đọc; FR-EVL-02 vẫn chặn ranking, risk score, candidate và engine evidence của người chuẩn bị/xác minh.</p>
 </article></main></body></html>

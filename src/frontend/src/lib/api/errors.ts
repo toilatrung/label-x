@@ -21,6 +21,14 @@ export const ERROR_MESSAGES = {
   ISSUE_EXISTS: 'Issue đã tồn tại cho annotation và rule này. Vui lòng kiểm tra Issue hiện có.',
   BUSINESS_RULE_UNMET: 'Chưa đủ điều kiện thực hiện thao tác. Vui lòng kiểm tra các yêu cầu liên quan.',
   INSUFFICIENT_SAMPLE: 'Chưa đủ mẫu để đánh giá. Vui lòng bổ sung mẫu và thử lại.',
+  REFERENCE_SCOPE_MISMATCH: 'Snapshot và nguồn GT phải thuộc cùng dataset.',
+  REFERENCE_SOURCE_CHECKSUM_MISMATCH: 'Tệp GT không khớp mã kiểm tra. Vui lòng kiểm tra nguồn tệp.',
+  REFERENCE_MAPPING_INVALID: 'Mapping hoặc cấu hình matching không hợp lệ. Vui lòng kiểm tra lại.',
+  REFERENCE_REVIEW_REQUIRED: 'Reference chưa đủ bằng chứng duyệt. Vui lòng hoàn tất review trước khi khóa.',
+  REFERENCE_SPLIT_UNVERIFIED: 'Phân chia dữ liệu chưa được xác minh hoặc có nhóm nguồn trùng nhau.',
+  REFERENCE_TRAINING_OVERLAP: 'Chưa chứng minh dữ liệu độc lập với tập huấn luyện Detector.',
+  REFERENCE_LOCKED: 'Version reference đã khóa. Muốn sửa, hãy tạo version mới.',
+  REFERENCE_VERSION_CONFLICT: 'Version reference đã thay đổi. Vui lòng tải lại trước khi duyệt hoặc khóa.',
 } satisfies Record<ErrorCode, string>;
 
 export const CSRF_ERROR_MESSAGE = 'Mã bảo vệ của phiên không hợp lệ hoặc đã bị thay thế (ví dụ do cookie của ứng dụng khác cùng host). Vui lòng tải lại trang và thử lại.';
