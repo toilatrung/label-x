@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { ROLE_LABELS, canAccessAnalysis, canAccessReview, canAccessEscalations, canAccessCalibration,
   canAccessReports, canAccessConfiguration, canAccessGuidelines } from '@/lib/auth/roles';
 import { Icon } from '@/components/ui/Icon';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 interface MenuItem { label: string; icon: string; href?: string; desc?: string; }
 interface Module { key: string; label: string; href?: string; items?: MenuItem[]; }
@@ -70,7 +71,7 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
     requestAnimationFrame(() => root.current?.querySelector<HTMLElement>(`#nav-menu-${key} [role="menuitem"]:not(:disabled)`)?.focus());
   }
   return <header className="lx-topnav" ref={root}>
-    <Link className="lx-logo" href="/" aria-label="Về Quality Control Home" onClick={closeAll}>Label<b>X</b></Link>
+    <Link className="lx-logo" href="/" aria-label="Về Quality Control Home" onClick={closeAll}><BrandLogo /></Link>
     <nav className="lx-nav" aria-label="Quality Control Navigation">
       {modules.map(module => <div className="lx-nav__group" key={module.key}>
         {module.items ? <>
