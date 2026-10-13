@@ -21,7 +21,7 @@ urlpatterns = [
     path("api/datasets/", include("snapshots.dataset_urls")),
     path("api/runs/", include("runs.urls")),
     path("api/candidates/", include("orchestration.candidate_urls")),
-    path("api/evaluations/", include("orchestration.evaluation_urls")),
+    path("api/candidate-evaluations/", include("orchestration.evaluation_urls")),
     path("api/queues/", include("review.queue_urls")),
     path("api/leases/", include("review.lease_urls")),
     path("api/frames/", include("review.frame_urls")),

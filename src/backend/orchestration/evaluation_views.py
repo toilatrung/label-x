@@ -1,4 +1,4 @@
-"""Evaluation API (M04C-02): POST /api/candidates/{id}/evaluations/ và GET /api/evaluations/{id}/.
+"""Evaluation API (M04C-02): POST candidates/{id}/evaluations/, GET candidate-evaluations/{id}/.
 
 POST trả 202 + `poll_url`/`Location` (kết quả chạy bất đồng bộ); 409 khi revision cũ hoặc
 Idempotency-Key đã dùng cho payload/người khác; không ghi đè evidence/decision cũ. Chỉ
@@ -27,7 +27,7 @@ from orchestration.evaluation_guard import (
     StaleRevisionError,
 )
 from orchestration.evaluation_read import evaluation_read
-from orchestration.evaluation_serializers import EvaluationCreateSerializer
+from orchestration.evaluation_serializers import CandidateEvaluationCreateSerializer
 from orchestration.evaluation_service import (
     EvaluationNotAllowedError,
     create_manual_evaluation,
@@ -39,7 +39,7 @@ from runs.serializers import CandidateVlmSerializer
 _ROLES = (Role.REVIEWER, Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
 
 
-class EvaluationPolicySerializer(serializers.Serializer[object]):
+class CandidateEvaluationPolicySerializer(serializers.Serializer[object]):
     name = serializers.CharField()
     version = serializers.CharField()
     score_threshold = serializers.FloatField()
@@ -50,7 +50,7 @@ class EvaluationPolicySerializer(serializers.Serializer[object]):
     policy_sha256 = serializers.CharField()
 
 
-class EvaluationSerializer(serializers.Serializer[object]):
+class CandidateEvaluationSerializer(serializers.Serializer[object]):
     """Evaluation: quyết định định tuyến + trạng thái chạy Qwen (chỉ là đề xuất AI)."""
 
     id = serializers.IntegerField()
@@ -67,7 +67,7 @@ class EvaluationSerializer(serializers.Serializer[object]):
     reasons = serializers.ListField(child=serializers.CharField())
     review_required = serializers.BooleanField()
     call_qwen = serializers.BooleanField()
-    policy = EvaluationPolicySerializer()
+    policy = CandidateEvaluationPolicySerializer()
     checkpoint_status = serializers.CharField(allow_null=True)
     snapshot_revision = serializers.CharField()
     requested_by_user_id = serializers.IntegerField(allow_null=True)
@@ -93,10 +93,10 @@ class CandidateEvaluationCreateView(APIView):
 
     @extend_schema(
         operation_id="candidates_evaluate",
-        request=EvaluationCreateSerializer,
+        request=CandidateEvaluationCreateSerializer,
         parameters=[OpenApiParameter("Idempotency-Key", str, OpenApiParameter.HEADER, True)],
         responses={
-            202: EvaluationSerializer,
+            202: CandidateEvaluationSerializer,
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -106,7 +106,7 @@ class CandidateEvaluationCreateView(APIView):
         tags=["runs"],
     )
     def post(self, request: Request, pk: int) -> Response:
-        body = EvaluationCreateSerializer(data=request.data)
+        body = CandidateEvaluationCreateSerializer(data=request.data)
         body.is_valid(raise_exception=True)
         data = body.validated_data
         try:
@@ -157,9 +157,9 @@ class EvaluationDetailView(APIView):
         return QCRun.objects.filter(pk=run_id).values_list("dataset_id", flat=True).first()
 
     @extend_schema(
-        operation_id="evaluations_read",
+        operation_id="candidate_evaluations_read",
         responses={
-            200: EvaluationSerializer,
+            200: CandidateEvaluationSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
         },

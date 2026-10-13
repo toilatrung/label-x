@@ -1,4 +1,4 @@
-"""URL đọc Evaluation: /api/evaluations/."""
+"""URL đọc Evaluation: /api/candidate-evaluations/."""
 
 from django.urls import path
 

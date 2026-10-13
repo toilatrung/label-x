@@ -223,7 +223,9 @@ def start_vlm_stage(run_id: int) -> int:
     prepare = getattr(provider, "prepare", None)
     if prepare is not None:
         prepare([c for c, d in routed if d.call_qwen])  # nạp trước để identity() không N+1
-    created = create_auto_evaluations(run, routed, config)
+    # Điểm nối là nguồn quyết định cuối cùng: chỉ candidate nó chọn mới có VlmUnit.
+    selected = {c.pk for c in select_candidates_for_vlm(run)}
+    created = create_auto_evaluations(run, routed, config, selected_ids=selected)
     if VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists():
         transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
     return created

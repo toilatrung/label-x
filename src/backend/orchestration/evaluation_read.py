@@ -68,5 +68,5 @@ def evaluation_read(evaluation: Evaluation) -> dict[str, Any]:
         "note": evaluation.note or None,
         "vlm": vlm,
         "created_at": evaluation.created_at,
-        "poll_url": f"/api/evaluations/{evaluation.pk}/",
+        "poll_url": f"/api/candidate-evaluations/{evaluation.pk}/",
     }

@@ -485,7 +485,7 @@ paths:
       description: |
         Tạo một Evaluation mới (generation tiếp theo) cho candidate: định tuyến lại bằng policy
         `classification-routing-v0` với lý do `manual_recheck`, rồi (nếu policy cho phép) xếp một lượt Qwen.
-        Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/evaluations/{id}/`).
+        Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/candidate-evaluations/{id}/`).
         Cùng `Idempotency-Key` + cùng payload + cùng người → trả lại Evaluation cũ (không tạo mới, không tính budget
         lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
         `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
@@ -506,7 +506,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/EvaluationCreate" }
+            schema: { $ref: "#/components/schemas/CandidateEvaluationCreate" }
       responses:
         "202":
           description: Đã nhận; đọc kết quả tại poll_url
@@ -516,15 +516,15 @@ paths:
               schema: { type: string }
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Evaluation" }
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
-  /api/evaluations/{id}/:
+  /api/candidate-evaluations/{id}/:
     get:
-      operationId: evaluations_read
+      operationId: candidate_evaluations_read
       tags: [runs]
       summary: Đọc Evaluation (poll kết quả định tuyến/Qwen)
       description: |
@@ -543,7 +543,7 @@ paths:
           description: Evaluation
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Evaluation" }
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/ranking/:
@@ -2144,7 +2144,7 @@ components:
           description: smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy
         class_map_version: { type: string }
         snapshot_revision: { type: string }
-    EvaluationCreate:
+    CandidateEvaluationCreate:
       type: object
       required: [reason, expected_revision]
       additionalProperties: false
@@ -2158,7 +2158,7 @@ components:
           type: string
           maxLength: 128
           description: revision_sha256 của snapshot mà client đang xem
-    EvaluationPolicy:
+    CandidateEvaluationPolicy:
       type: object
       required: [name, version, score_threshold, margin_threshold, threshold_semantics, policy_sha256]
       properties:
@@ -2168,7 +2168,7 @@ components:
         margin_threshold: { type: number }
         threshold_semantics: { type: string, description: "routing_temporary: không phải ngưỡng calibration" }
         policy_sha256: { type: string }
-    Evaluation:
+    CandidateEvaluation:
       type: object
       description: Một lượt đánh giá logic của candidate; AI chỉ là đề xuất.
       required: [id, candidate_id, run_id, generation, source, status, reason_code, reasons, review_required, call_qwen, policy, snapshot_revision, created_at, poll_url]
@@ -2183,7 +2183,7 @@ components:
         reasons: { type: array, items: { type: string } }
         review_required: { type: boolean }
         call_qwen: { type: boolean }
-        policy: { $ref: "#/components/schemas/EvaluationPolicy" }
+        policy: { $ref: "#/components/schemas/CandidateEvaluationPolicy" }
         checkpoint_status: { type: string, nullable: true, description: "trained | smoke_only | null" }
         snapshot_revision: { type: string }
         requested_by_user_id: { type: integer, nullable: true }

@@ -166,7 +166,11 @@ def _evaluation_fields(decision: RoutingDecision, revision: str) -> dict[str, An
 
 
 def create_auto_evaluations(
-    run: QCRun, routed: list[tuple[CandidateRecord, RoutingDecision]], config: Any
+    run: QCRun,
+    routed: list[tuple[CandidateRecord, RoutingDecision]],
+    config: Any,
+    *,
+    selected_ids: set[int],
 ) -> int:
     """Tạo Evaluation generation 1 (và VlmUnit nếu cần Qwen); idempotent theo (candidate, gen).
 
@@ -180,7 +184,7 @@ def create_auto_evaluations(
         ).exists():
             continue
         unit: VlmUnit | None = None
-        if decision.call_qwen:
+        if decision.call_qwen and candidate.pk in selected_ids:
             unit = _vlm_unit_for(candidate, run, config, EVALUATION_GENERATION)
             unit, was_created = _get_or_create_unit(unit)
             created_units += int(was_created)
