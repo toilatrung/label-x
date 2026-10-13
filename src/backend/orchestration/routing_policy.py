@@ -200,6 +200,11 @@ def _trigger_reasons(policy: RoutingPolicy, data: RoutingInput) -> list[RoutingR
 def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     """Quyết định có gọi Qwen hay không; hàm thuần, tất định.
 
+    LƯU Ý: route() tin `RoutingInput` đã chuẩn hoá. Gọi trực tiếp với nhãn sai kiểu (chuỗi, bool,
+    float) thì phép so conflict BỎ QUA (không báo conflict giả nhưng cũng không báo lỗi). Mọi đường
+    vào phải đi qua `routing_input_from_candidate`, hàm này biến dữ liệu sai kiểu thành
+    classifier_unavailable.
+
     Unknown (abstention) do policy quyết: contract classifier luôn trả classifier_unknown=false,
     nên adapter coi "completed mà predicted_class_id null" là unknown (xem
     routing_input_from_candidate). Không có lớp thứ 11.

@@ -326,3 +326,14 @@ def test_unknown_classifier_with_null_scores_goes_to_qwen():
         ),
     )
     assert d.primary is RoutingReason.UNKNOWN and d.call_qwen
+
+
+def test_route_called_directly_skips_conflict_for_wrong_typed_labels_so_use_the_adapter():
+    """Khoá hành vi đã ghi trong docstring: route() trực tiếp bỏ qua conflict khi nhãn sai kiểu;
+    đường đúng là adapter, nơi dữ liệu sai kiểu thành classifier_unavailable."""
+    direct = decide(predicted_class_id="2", annotated_class_id=3)
+    assert RoutingReason.LABEL_CONFLICT not in direct.reasons
+    via_adapter = route(
+        POLICY, routing_input_from_candidate(_clf(predicted_class_id="2", annotated_class_id=3))
+    )
+    assert via_adapter.primary is RoutingReason.CLASSIFIER_UNAVAILABLE
