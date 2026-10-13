@@ -3102,6 +3102,35 @@ export interface components {
             lease?: components["schemas"]["Lease"] | null;
             queue?: components["schemas"]["QueueName"] | null;
             undecided_issue_count?: number;
+            /** @description Đề xuất AI mới nhất cho từng issue có candidate (MBE-01); chỉ đọc, không phải quyết định review. */
+            ai_evidence?: components["schemas"]["WorkspaceAiEvidence"][];
+        };
+        /** @description Evaluation mới nhất (generation lớn nhất) của candidate gắn với issue. Qwen chỉ đề xuất, không tạo ReviewDecision hay Adjudication; issue thủ công không có mục. */
+        WorkspaceAiEvidence: {
+            issue_id: number;
+            candidate_id: number;
+            evaluation_id: number;
+            generation: number;
+            /** @description auto | manual */
+            evaluation_source: string;
+            /** @description pending | running | completed | failed | cancelled */
+            status: string;
+            /** @description classifier (định tuyến đủ tin cậy, không gọi Qwen) | qwen */
+            source: string;
+            reason_code: string | null;
+            reasons: string[];
+            review_required: boolean;
+            /** @description Đề xuất của Qwen: status (checked | uncertain | failed), class_name, rationale (lời giải thích của model, không phải bằng chứng đã xác minh) */
+            suggestion: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Tham chiếu VlmEvidence: evidence_id, unit_id, crop_sha256, crop, request_id, model, prompt_version, policy_version, snapshot_revision */
+            evidence_refs: {
+                [key: string]: unknown;
+            } | null;
+            snapshot_revision: string;
+            /** @description GET /api/candidate-evaluations/{id}/ */
+            poll_url: string;
         };
         GuidelineGapCreate: {
             issue_id?: number | null;

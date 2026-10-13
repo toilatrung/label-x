@@ -128,3 +128,40 @@ def run_lineage_fields(run: QCRun) -> dict[str, object]:
         "selected_final_sources": selected_final_sources(run),
         "operational_source": operational_source(run),
     }
+
+
+def run_lineage(run: QCRun) -> dict[str, object]:
+    """Chuỗi run gốc → rework verification → run cuối (GET /api/runs/{id}/lineage/)."""
+
+    origin = QCRun.objects.get(pk=run.origin_run_id) if run.origin_run_id is not None else run
+    rework_by_run = dict(
+        ReworkVerification.objects.filter(recheck_run__origin_run=origin).values_list(
+            "recheck_run_id", "rework_id"
+        )
+    )
+    chain: list[dict[str, object]] = [
+        {
+            "run_id": origin.pk,
+            "kind": "original",
+            "snapshot_id": origin.snapshot_id,
+            "rework_id": None,
+            "created_at": origin.created_at.isoformat(),
+        }
+    ]
+    for item in QCRun.objects.filter(origin_run=origin).order_by("is_final", "created_at", "pk"):
+        chain.append(
+            {
+                "run_id": item.pk,
+                "kind": "final" if item.is_final else "rework_verification",
+                "snapshot_id": item.snapshot_id,
+                "rework_id": None if item.is_final else rework_by_run.get(item.pk),
+                "created_at": item.created_at.isoformat(),
+            }
+        )
+    source, reason, _attempts, _blockers = evaluate_operational_source(origin)
+    return {
+        "run_id": run.pk,
+        "origin_run_id": run.origin_run_id,
+        "final_run_id": source.pk if reason == "selected_final" else None,
+        "chain": chain,
+    }

@@ -533,3 +533,18 @@ class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
     results = RankedFrameResponseSerializer(many=True)
+
+
+class RunLineageNodeSerializer(serializers.Serializer[Any]):
+    run_id = serializers.IntegerField()
+    kind = serializers.ChoiceField(choices=["original", "rework_verification", "final"])
+    snapshot_id = serializers.IntegerField()
+    rework_id = serializers.IntegerField(allow_null=True)
+    created_at = serializers.DateTimeField()
+
+
+class RunLineageSerializer(serializers.Serializer[Any]):
+    run_id = serializers.IntegerField()
+    origin_run_id = serializers.IntegerField(allow_null=True)
+    final_run_id = serializers.IntegerField(allow_null=True)
+    chain = RunLineageNodeSerializer(many=True)

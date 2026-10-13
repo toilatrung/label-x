@@ -22,9 +22,7 @@ ACCEPTED_CODE_DIFFS: dict[tuple[str, str], tuple[list[str], list[str]]] = {}
 
 # Operation đã có trong contract (MBE-00, CR-118) nhưng runtime do task sau làm. Mỗi mục ghi task
 # chủ; test fail khi mục đó đã có runtime để danh sách không bị bỏ quên.
-PENDING_RUNTIME: dict[tuple[str, str], str] = {
-    ("get", "/api/frames/{id}/workspace/"): "MBE-01",
-}
+PENDING_RUNTIME: dict[tuple[str, str], str] = {}
 
 
 # Query param đã có trong contract (CR-118) nhưng runtime do task sau làm; cùng quy tắc tự hết hạn.
