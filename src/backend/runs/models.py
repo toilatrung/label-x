@@ -87,6 +87,37 @@ class ModelArtifact(dj_models.Model):
         return f"{self.name}:{self.version} ({self.checksum[:8]})"
 
 
+class ModelKind(dj_models.TextChoices):
+    VLM = "vlm", "vlm"
+    DETECTOR = "detector", "detector"
+    EMBEDDING = "embedding", "embedding"
+    OTHER = "other", "other"
+
+
+class AIModel(dj_models.Model):
+    """Model registry theo contract MBE-05 (FR-ENG-01, FR-SEC-05)."""
+
+    name = dj_models.CharField(max_length=128)
+    kind = dj_models.CharField(max_length=32, choices=ModelKind.choices, default=ModelKind.OTHER)
+    version = dj_models.CharField(max_length=64)
+    enabled = dj_models.BooleanField(default=True)
+    revision = dj_models.PositiveIntegerField(default=1)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+    updated_at = dj_models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ai_model"
+        ordering = ["-id"]
+        constraints = [
+            dj_models.UniqueConstraint(
+                fields=["name", "version"], name="ai_model_unique_name_version"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name}:{self.version} ({self.kind}, rev={self.revision})"
+
+
 class QCRun(dj_models.Model):
     """Aggregate root for a QC inspection run (FR-ENG-01, FR-AGG-02, state-machines §2)."""
 

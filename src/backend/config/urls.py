@@ -9,7 +9,13 @@ from review.adjudication_views import (
     EscalationsListView,
 )
 from review.gap_views import GuidelineGapCollectionView
-from runs.views import ConfigVersionListView, ConfigVersionPublishView
+from runs.views import (
+    ConfigVersionListView,
+    ConfigVersionPublishView,
+    ConfigVersionRulesView,
+    ModelListView,
+    ModelUpdateView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -44,4 +50,11 @@ urlpatterns = [
         ConfigVersionPublishView.as_view(),
         name="config-versions-publish",
     ),
+    path(
+        "api/config-versions/<int:pk>/rules/",
+        ConfigVersionRulesView.as_view(),
+        name="config-versions-rules",
+    ),
+    path("api/models/", ModelListView.as_view(), name="models-list"),
+    path("api/models/<int:pk>/", ModelUpdateView.as_view(), name="models-update"),
 ]

@@ -14,7 +14,14 @@ from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
 from runs.config_guard import validate_config_safety
-from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
+from runs.models import (
+    AIModel,
+    ConfigVersion,
+    ModelArtifact,
+    QCRun,
+    RunRankingEntry,
+    WorkUnit,
+)
 from runs.routing_config import validate_routing_thresholds
 from runs.vlm_read import build_vlm_view, run_vlm_engine_state
 from vlm.config import validate_vlm_config
@@ -166,11 +173,67 @@ class ConfigVersionSerializer(serializers.ModelSerializer[Any]):
         read_only_fields = fields
 
 
+@extend_schema_serializer(component_name="Model")
+class ModelSerializer(serializers.ModelSerializer[AIModel]):
+    class Meta:
+        model = AIModel
+        fields = [
+            "id",
+            "name",
+            "kind",
+            "version",
+            "enabled",
+            "revision",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "revision", "updated_at"]
+
+
+class ModelPatchSerializer(serializers.Serializer[Any]):
+    expected_revision = serializers.IntegerField(required=True)
+    enabled = serializers.BooleanField(required=False)
+    version = serializers.CharField(required=False, max_length=64)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if "enabled" not in attrs and "version" not in attrs:
+            raise serializers.ValidationError(
+                "Cần cung cấp ít nhất một trường 'enabled' hoặc 'version'."
+            )
+        return attrs
+
+
+@extend_schema_serializer(component_name="PaginatedModelList")
+class PaginatedModelListSerializer(serializers.Serializer[Any]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = ModelSerializer(many=True)
+
+
+@extend_schema_serializer(component_name="ConfigRule")
+class ConfigRuleSerializer(serializers.Serializer[Any]):
+    rule_id = serializers.CharField()
+    name = serializers.CharField()
+    enabled = serializers.BooleanField()
+    parameters = serializers.DictField(required=False, default=dict)
+
+
+@extend_schema_serializer(component_name="ConfigVersionRules")
+class ConfigVersionRulesSerializer(serializers.Serializer[Any]):
+    config_version_id = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=["draft", "published"])
+    rules = ConfigRuleSerializer(many=True)
+    release_thresholds = serializers.DictField()
+    sampling_policy = serializers.DictField()
+
+
 class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
     name = serializers.CharField(max_length=128)
     engines = serializers.DictField()
     thresholds = serializers.DictField(required=False, default=dict)
     models = serializers.DictField(required=False, default=dict)
+    rules = serializers.ListField(child=serializers.DictField(), required=False, default=list)
+    release_thresholds = serializers.DictField(required=False, default=dict)
+    sampling_policy = serializers.DictField(required=False, default=dict)
 
     def validate_engines(self, value: dict[str, Any]) -> dict[str, Any]:
         allowed = {

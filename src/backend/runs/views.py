@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import Case, CharField, Exists, F, OuterRef, Q, Subquery, Value, When
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
@@ -15,6 +16,7 @@ from rest_framework.views import APIView
 
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
+from audit.services import append_audit_event
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from engines.interface import EngineStatus, public_status
@@ -23,14 +25,18 @@ from orchestration.services import ledger_counts
 from review import services as review_services
 from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
-from runs.models import ConfigVersion, QCRun, RunRanking, WorkUnit
+from runs.models import AIModel, ConfigVersion, ModelKind, QCRun, RunRanking, WorkUnit
 from runs.serializers import (
     CandidateSerializer,
     ConfigVersionCreateSerializer,
+    ConfigVersionRulesSerializer,
     ConfigVersionSerializer,
     LedgerEntrySerializer,
+    ModelPatchSerializer,
+    ModelSerializer,
     PaginatedCandidateListSerializer,
     PaginatedConfigVersionSerializer,
+    PaginatedModelListSerializer,
     PaginatedRankedFrameListSerializer,
     PaginatedRunListSerializer,
     PaginatedWorkUnitSerializer,
@@ -150,6 +156,240 @@ class ConfigVersionPublishView(APIView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY, "BUSINESS_RULE_UNMET", str(exc)
             ) from exc
         return Response(ConfigVersionSerializer(config).data)
+
+
+class ConfigVersionRulesView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles: tuple[Role, ...] = (
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.PRODUCT_OWNER,
+        Role.DATA_MODEL_OWNER,
+    )
+    action_name = "config_versions.rules"
+    object_type = "config_version"
+    requires_dataset = False
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="config_versions_rules",
+        tags=["config"],
+        summary="Rule, ngưỡng phát hành và chính sách lấy mẫu của config version",
+        responses={
+            200: ConfigVersionRulesSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        config = ConfigVersion.objects.filter(pk=pk).first()
+        if config is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Config version {pk} không tồn tại."
+            )
+
+        payload = config.payload or {}
+        rules_data = payload.get("rules")
+        if not rules_data:
+            rules_data = []
+            for eng_name, eng_val in (config.engines or {}).items():
+                enabled = (
+                    eng_val.get("enabled", True) if isinstance(eng_val, dict) else bool(eng_val)
+                )
+                params = (
+                    {k: v for k, v in eng_val.items() if k != "enabled"}
+                    if isinstance(eng_val, dict)
+                    else {}
+                )
+                rules_data.append(
+                    {
+                        "rule_id": f"engine-{eng_name}",
+                        "name": f"Engine {eng_name}",
+                        "enabled": enabled,
+                        "parameters": params,
+                    }
+                )
+
+        release_thresholds = (
+            (config.thresholds or {}).get("release_thresholds")
+            or payload.get("release_thresholds")
+            or (config.thresholds or {}).get("release")
+            or {}
+        )
+        sampling_policy = (
+            payload.get("sampling_policy") or (config.thresholds or {}).get("sampling_policy") or {}
+        )
+
+        return Response(
+            {
+                "config_version_id": config.pk,
+                "status": config.status,
+                "rules": rules_data,
+                "release_thresholds": release_thresholds,
+                "sampling_policy": sampling_policy,
+            }
+        )
+
+
+class ModelListView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles: tuple[Role, ...] = (
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.DATA_MODEL_OWNER,
+    )
+    action_name = "models.list"
+    object_type = "model"
+    requires_dataset = False
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="models_list",
+        parameters=[
+            OpenApiParameter("kind", str, required=False, enum=[k.value for k in ModelKind]),
+            OpenApiParameter("cursor", str, required=False),
+        ],
+        responses={
+            200: PaginatedModelListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+        },
+        tags=["config"],
+        summary="Danh sách model",
+    )
+    def get(self, request: Request) -> Response:
+        queryset = AIModel.objects.all().order_by("-id")
+        kind_param = request.query_params.get("kind")
+        if kind_param:
+            valid_kinds = {k.value for k in ModelKind}
+            if kind_param not in valid_kinds:
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST,
+                    "VALIDATION_ERROR",
+                    f"Kind không hợp lệ. Cho phép: {sorted(valid_kinds)}",
+                )
+            queryset = queryset.filter(kind=kind_param)
+
+        paginator = RunCursorPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        return paginator.get_paginated_response(ModelSerializer(page, many=True).data)
+
+
+class ModelUpdateView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles: tuple[Role, ...] = (Role.QC_ADMIN, Role.SUPER_ADMIN, Role.DATA_MODEL_OWNER)
+    action_name = "models.update"
+    object_type = "model"
+    requires_dataset = False
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="models_update",
+        request=ModelPatchSerializer,
+        responses={
+            200: ModelSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+            422: ErrorSerializer,
+        },
+        tags=["config"],
+        summary="Bật/tắt hoặc đổi phiên bản model",
+    )
+    def patch(self, request: Request, pk: int) -> Response:
+        serializer = ModelPatchSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        with transaction.atomic():
+            model = AIModel.objects.select_for_update().filter(pk=pk).first()
+            if model is None:
+                raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Model {pk} không tồn tại.")
+
+            if data["expected_revision"] != model.revision:
+                raise ApiError(
+                    status.HTTP_409_CONFLICT,
+                    "INVALID_TRANSITION",
+                    "expected_revision không khớp revision hiện tại.",
+                )
+
+            if self._is_model_attached_to_published_config(model):
+                raise ApiError(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    "BUSINESS_RULE_UNMET",
+                    "Không đổi model đã gắn config version đã publish.",
+                )
+
+            before = {
+                "name": model.name,
+                "kind": model.kind,
+                "version": model.version,
+                "enabled": model.enabled,
+                "revision": model.revision,
+            }
+
+            update_fields = ["revision", "updated_at"]
+            if "enabled" in data:
+                model.enabled = data["enabled"]
+                update_fields.append("enabled")
+            if "version" in data:
+                model.version = data["version"]
+                update_fields.append("version")
+
+            model.revision += 1
+            model.save(update_fields=update_fields)
+
+            after = {
+                "name": model.name,
+                "kind": model.kind,
+                "version": model.version,
+                "enabled": model.enabled,
+                "revision": model.revision,
+            }
+
+            append_audit_event(
+                actor=cast(User, request.user),
+                action="model.update",
+                object_type="model",
+                object_id=str(model.id),
+                before=before,
+                after=after,
+                revision=str(model.revision),
+            )
+
+            return Response(ModelSerializer(model).data)
+
+    def _is_model_attached_to_published_config(self, model: AIModel) -> bool:
+        published_configs = ConfigVersion.objects.filter(status=ConfigVersion.Status.PUBLISHED)
+        for cfg in published_configs:
+            cfg_models = cfg.models or (cfg.payload or {}).get("models", {})
+            if isinstance(cfg_models, dict):
+                if cfg_models.get("model_id") == model.pk or cfg_models.get("id") == model.pk:
+                    return True
+                if (
+                    cfg_models.get("name") == model.name
+                    and cfg_models.get("version") == model.version
+                ):
+                    return True
+                for _k, v in cfg_models.items():
+                    if isinstance(v, dict):
+                        if v.get("model_id") == model.pk or v.get("id") == model.pk:
+                            return True
+                        if v.get("name") == model.name and v.get("version") == model.version:
+                            return True
+                        if v.get("model") == model.name:
+                            return True
+            elif isinstance(cfg_models, list):
+                for item in cfg_models:
+                    if isinstance(item, dict):
+                        if item.get("model_id") == model.pk or item.get("id") == model.pk:
+                            return True
+                        if item.get("name") == model.name and item.get("version") == model.version:
+                            return True
+        return False
 
 
 class RunCollectionView(APIView):
