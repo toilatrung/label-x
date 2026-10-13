@@ -180,7 +180,11 @@ function SnapshotWorkspace() {
         {recentLocked && !recent.isError && !datasetQuery.isError && <span className="lx-badge lx-badge--success">Đã khoá</span>}</div>
         <div className="lx-card__body">{datasetQuery.isError ? <p className="lx-muted">Không thể tải Snapshot đang dùng khi chưa xác minh được Dataset.</p>
         : recent.isError ? <div className="lx-callout" role="alert">{errorMessage(recent.error)}
-          <button className="lx-btn" type="button" onClick={() => void recent.refetch()}>Thử lại lịch sử Snapshot</button></div>
+          <button className="lx-btn" type="button" onClick={() => {
+            visitedCursorsRef.current.clear();
+            setPaginationError(null);
+            void recent.refetch();
+          }}>Thử lại lịch sử Snapshot</button></div>
         : paginationError ? <div className="lx-callout" role="alert">{paginationError}</div>
         : recentLocked ? <div className="lx-stack"><dl className="lx-kv">
           <dt>Mã snapshot</dt><dd className="lx-mono"><Link href={`/analysis?snapshotId=${recentLocked.id}`}>{snapshotCode(recentLocked.id)}</Link></dd>

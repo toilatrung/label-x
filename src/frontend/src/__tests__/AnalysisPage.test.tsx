@@ -318,6 +318,54 @@ describe('AnalysisPage regression tests (R-1, F-1, F-2)', () => {
       expect(callCount).toBeLessThanOrEqual(3);
     });
 
+    it('retries a transient next-page failure instead of reporting a cursor loop', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+      vi.mocked(api.getDatasets).mockResolvedValue({
+        results: [{ id: 42, cvat_project_id: 42, name: 'Urban', taxonomy_version: 'v1', guideline_version: 'v1' }],
+        next: null,
+        previous: null,
+      });
+
+      let nextPageAttempts = 0;
+      vi.mocked(api.getSnapshots).mockImplementation(async (_datasetId, cursor) => {
+        if (!cursor) {
+          return {
+            results: [],
+            next: 'http://localhost/api/snapshots/?dataset_id=42&cursor=next',
+            previous: null,
+          };
+        }
+        nextPageAttempts++;
+        if (nextPageAttempts === 1) throw new Error('temporary page failure');
+        return {
+          results: [{
+            id: 421,
+            dataset_id: 42,
+            status: 'locked' as const,
+            failure_reason: null,
+            revision_hash: 'retry-success',
+            parent_snapshot_id: null,
+            drift_jobs: [],
+            out_of_scope_shapes: 0,
+            taxonomy_version: 'v1',
+            guideline_version: 'v1',
+            created_by: 1,
+            created_at: '2026-10-09T08:00:00Z',
+            jobs: [],
+          }],
+          next: null,
+          previous: null,
+        };
+      });
+
+      renderWithClient();
+      fireEvent.click(await screen.findByRole('button', { name: 'Thử lại lịch sử Snapshot' }));
+
+      await waitFor(() => expect(screen.getByText('SNP-421')).toBeDefined());
+      expect(screen.queryByText('Phát hiện vòng lặp cursor từ máy chủ.')).toBeNull();
+      expect(nextPageAttempts).toBe(2);
+    });
+
     it('displays "Chưa có Snapshot đã khóa." only after all pages are exhausted without finding locked snapshot', async () => {
       mockSearchParams.mockReturnValue(new URLSearchParams(''));
 
