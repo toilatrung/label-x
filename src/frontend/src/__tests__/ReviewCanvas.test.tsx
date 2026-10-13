@@ -150,7 +150,7 @@ describe('ReviewCanvas (T-037 Canvas & Coordinate Transformation)', () => {
         />
       );
 
-      expect(screen.getByText(/Không có image_url từ API/)).toBeDefined();
+      expect(screen.getByText('Nguồn ảnh hiện không khả dụng')).toBeDefined();
     });
 
     it('toggles visibility of issue anchor layer and prediction layer', () => {

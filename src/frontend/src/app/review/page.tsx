@@ -37,9 +37,9 @@ export default function ReviewPage() {
   ) : (
     <div className="lx-head">
       <div className="lx-head__text">
-        <h1 className="lx-h1">Trung tâm kiểm tra (Review Queues)</h1>
+        <h1 className="lx-h1">Trung tâm kiểm tra</h1>
         <p className="lx-lead">
-          Hàng đợi kiểm duyệt ưu tiên frame theo rủi ro và mẫu kiểm định ngẫu nhiên.
+          Ưu tiên ảnh cần kiểm tra. Chọn một ảnh để mở màn kiểm tra riêng.
         </p>
       </div>
     </div>

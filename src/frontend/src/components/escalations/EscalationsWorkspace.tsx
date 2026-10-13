@@ -2,6 +2,7 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { ApiRequestError } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -15,18 +16,34 @@ import {
   type EscalationIssue,
 } from '@/lib/escalations/api';
 import { DecisionCaseLookup } from './DecisionCaseLookup';
+import { AdjudicationEmptyDetail } from './AdjudicationEmptyDetail';
 
 type Outcome = AdjudicationInput['outcome'];
 
 const OUTCOMES: { value: Outcome; label: string; note: string }[] = [
   { value: 'confirm', label: 'Xác nhận lỗi', note: 'Issue chuyển sang confirmed.' },
-  { value: 'reject', label: 'Bác bỏ lỗi', note: 'Issue chuyển sang rejected.' },
+  { value: 'reject', label: 'Bác bỏ', note: 'Issue chuyển sang rejected.' },
   {
     value: 'guideline_gap',
-    label: 'Thiếu guideline',
+    label: 'Guideline còn thiếu',
     note: 'Issue tiếp tục ở trạng thái escalated để chờ guideline mới.',
   },
 ];
+
+const FAMILY_LABELS: Record<string, string> = { E1: 'Thiếu box', E2: 'Sai nhãn', E3: 'Trùng box', structural: 'Cảnh báo cấu trúc' };
+const DECISION_LABELS: Record<string, string> = {
+  confirm: 'Xác nhận lỗi', reject: 'Bác bỏ', uncertain: 'Chưa chắc chắn', escalate: 'Chuyển cấp trên', request_fix: 'Yêu cầu sửa',
+  adjudicate_confirm: 'Phân xử: xác nhận lỗi', adjudicate_reject: 'Phân xử: bác bỏ', adjudicate_guideline_gap: 'Phân xử: guideline còn thiếu',
+};
+const issueCode = (id: number) => `QC-${String(id).padStart(5, '0')}`;
+const familyLabel = (family: string) => FAMILY_LABELS[family] ?? family;
+// Nhãn tiếng Việt cho mức độ, nguồn và trạng thái issue; giá trị lạ giữ nguyên để không che dữ liệu thật.
+const SEVERITY_LABELS: Record<string, string> = { critical: 'Nghiêm trọng', high: 'Cao', medium: 'Trung bình', minor: 'Nhẹ', low: 'Thấp' };
+const ORIGIN_LABELS: Record<string, string> = { engine: 'Máy', reviewer: 'Reviewer' };
+const STATE_LABELS: Record<string, string> = { escalated: 'Đã chuyển cấp', confirmed: 'Đã xác nhận', rejected: 'Đã bác bỏ', open: 'Đang mở' };
+const severityLabel = (severity: string) => SEVERITY_LABELS[severity] ?? severity;
+const originLabel = (origin: string) => ORIGIN_LABELS[origin] ?? origin;
+const stateLabel = (state: string) => STATE_LABELS[state] ?? state;
 
 function makeRequestKey(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -37,6 +54,41 @@ function formatValue(value: string | number | null | undefined): string {
   return value === null || value === undefined || value === '' ? '—' : String(value);
 }
 
+/** Hàng 3 cột của thiết kế: Quyết định của reviewer, Bằng chứng, Hướng dẫn liên quan (dữ liệu thật từ issue). */
+function EscalationSummary({ issue }: { issue: EscalationIssue }) {
+  const ruleIds = [...new Set([...(issue.rule_ids ?? []), ...issue.evidence.flatMap((item) => (item.rule_id ? [item.rule_id] : []))])];
+  return (
+    <div className="lx-grid lx-grid--3">
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Quyết định của reviewer</span>
+        {issue.review_decisions.length === 0 ? <div className="lx-muted lx-text-13">Chưa có quyết định.</div> : (
+          <table className="lx-table lx-table--sm"><tbody>
+            {issue.review_decisions.map((decision) => (
+              <tr key={decision.id}><td>User #{decision.actor_user_id}</td><td><span className="lx-badge">{DECISION_LABELS[decision.decision] ?? decision.decision}</span></td></tr>
+            ))}
+          </tbody></table>
+        )}
+      </div>
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Bằng chứng</span>
+        {issue.evidence.length === 0 ? <div className="lx-muted lx-text-13">Issue chưa có bằng chứng.</div> : (
+          <div className="lx-muted lx-text-13">
+            {issue.evidence.map((item, index) => (
+              <div key={`${item.engine}:${item.rule_id ?? index}`}>
+                {item.engine}: {formatValue(item.prediction_class ?? item.actual)}{item.confidence != null ? ` · ${item.confidence}` : ''}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="lx-stack lx-stack--tight"><span className="lx-label">Hướng dẫn liên quan</span>
+        <div className="lx-muted lx-text-13">
+          {ruleIds.length === 0 ? 'Issue chưa gắn quy tắc.' : <>Quy tắc: <span className="lx-mono">{ruleIds.join(', ')}</span></>}
+          <br /><Link className="lx-link" href="/configuration/guidelines">Tra cứu Models và Guidelines</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EscalationDetail({ issue }: { issue: EscalationIssue }) {
   return (
     <div className="lx-stack">
@@ -44,21 +96,21 @@ function EscalationDetail({ issue }: { issue: EscalationIssue }) {
         <header className="lx-card__head">
           <h2 className="lx-h2">Bằng chứng</h2>
           <span className="lx-hint">
-            Anchor: <span className="lx-mono">{issue.anchor.kind}</span> · Policy:{' '}
+            Vị trí neo: <span className="lx-mono">{issue.anchor.kind}</span> · Chính sách neo:{' '}
             <span className="lx-mono">{issue.anchor.policy_version}</span>
           </span>
         </header>
         {issue.evidence.length === 0 ? (
-          <div className="lx-card__body lx-muted">Issue chưa có evidence.</div>
+          <div className="lx-card__body lx-muted">Issue chưa có bằng chứng.</div>
         ) : (
           <div className="lx-scroll">
-            <table className="lx-table" aria-label="Evidence của escalation">
+            <table className="lx-table" aria-label="Bằng chứng của escalation">
               <thead>
                 <tr>
-                  <th>Engine / Rule</th>
-                  <th>Expected / Actual</th>
-                  <th>Prediction</th>
-                  <th>Confidence / IoU</th>
+                  <th>Engine / Quy tắc</th>
+                  <th>Kỳ vọng / Thực tế</th>
+                  <th>Dự đoán</th>
+                  <th>Độ tin cậy / Intersection over Union</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,7 +132,7 @@ function EscalationDetail({ issue }: { issue: EscalationIssue }) {
                     </td>
                     <td className="lx-num">
                       {formatValue(item.confidence)}
-                      <div className="lx-cell__sub">IoU: {formatValue(item.iou)}</div>
+                      <div className="lx-cell__sub">Intersection over Union: {formatValue(item.iou)}</div>
                     </td>
                   </tr>
                 ))}
@@ -245,239 +297,248 @@ export function EscalationsWorkspace() {
 
   return (
     <div className="lx-stack">
-      <section className="lx-card" aria-label="Danh sách escalation" aria-busy={listQuery.isFetching}>
-        <header className="lx-card__head">
-          <div>
-            <h2 className="lx-h2">Issue chờ phân xử</h2>
-            <div className="lx-hint">Dữ liệu thật từ API, sắp xếp issue cũ nhất trước.</div>
+      <div className="lx-cols">
+        <section className="lx-card lx-side--list" aria-label="Danh sách escalation" aria-busy={listQuery.isFetching}>
+          <div className="lx-card__head">
+            <h2 className="lx-h2">Chờ phân xử</h2>
+            <span className="lx-hint">{issues.length} case</span>
           </div>
-          <span className="lx-count">Trang {cursors.length}</span>
-        </header>
-        <form className="lx-toolbar" onSubmit={applyRunFilter}>
-          <div className="lx-field lx-escalation-run-filter">
-            <label className="lx-label" htmlFor="escalation-run">Lọc theo QC Run ID</label>
-            <input
-              id="escalation-run"
-              className="lx-input lx-mono"
-              inputMode="numeric"
-              value={runDraft}
-              onChange={(event) => setRunDraft(event.target.value)}
-              placeholder="Tất cả run trong scope"
-            />
-          </div>
-          <button className="lx-btn lx-btn--primary" type="submit">Áp dụng</button>
-          {runId && (
-            <button
-              className="lx-btn"
-              type="button"
-              onClick={() => {
-                setRunDraft('');
-                setRunId(undefined);
-                setCursors([null]);
-                setSelectedId(null);
-              }}
-            >
-              Xoá bộ lọc
-            </button>
-          )}
-          {filterError && <span className="lx-hint is-bad" role="alert">{filterError}</span>}
-        </form>
-
-        {listQuery.isPending ? (
-          <div className="lx-card__body lx-muted" role="status">Đang tải danh sách escalation…</div>
-        ) : listQuery.isError ? (
-          <div className="lx-card__body">
-            <div className="lx-callout" role="alert">
-              <div className="lx-callout__text">
-                <strong>Không tải được danh sách escalation.</strong>
-                <div>{errorMessage(listQuery.error)}</div>
-              </div>
-              <button className="lx-btn lx-btn--sm" type="button" onClick={() => listQuery.refetch()}>
-                Thử lại
-              </button>
+          <form className="lx-toolbar" onSubmit={applyRunFilter}>
+            <div className="lx-field lx-escalation-run-filter">
+              <label className="lx-label" htmlFor="escalation-run">Lọc theo Quality Control Run ID</label>
+              <input
+                id="escalation-run"
+                className="lx-input lx-mono"
+                inputMode="numeric"
+                value={runDraft}
+                onChange={(event) => setRunDraft(event.target.value)}
+                placeholder="Tất cả run trong scope"
+              />
             </div>
-          </div>
-        ) : issues.length === 0 ? (
-          <div className="lx-card__body lx-review-empty">
-            {runId ? `Không có escalation trong Run #${runId}.` : 'Không có issue nào đang chờ phân xử.'}
-          </div>
-        ) : (
-          <div className="lx-scroll">
-            <table className="lx-table lx-escalation-table" aria-label="Issue đang chờ phân xử">
-              <thead>
-                <tr>
-                  <th>Issue</th>
-                  <th>Family / Severity</th>
-                  <th>Rule</th>
-                  <th>Evidence</th>
-                  <th>Quyết định reviewer</th>
-                  <th aria-label="Thao tác" />
-                </tr>
-              </thead>
-              <tbody>
-                {issues.map((issue) => (
-                  <tr key={issue.id} aria-selected={selected?.id === issue.id}>
-                    <td>
-                      <strong className="lx-mono">#{issue.id}</strong>
-                      <div className="lx-cell__sub">{issue.origin} · {issue.state}</div>
-                    </td>
-                    <td>
-                      <span className="lx-badge lx-badge--warning">{issue.family}</span>
-                      <div className="lx-cell__sub">{issue.severity || 'Chưa xếp mức'}</div>
-                    </td>
-                    <td className="lx-mono">{issue.rule_ids?.join(', ') || '—'}</td>
-                    <td className="lx-num">{issue.evidence.length}</td>
-                    <td className="lx-num">{issue.review_decisions.length}</td>
-                    <td className="r">
-                      <button className="lx-btn lx-btn--sm" type="button" onClick={() => selectIssue(issue)}>
-                        {selected?.id === issue.id ? 'Đang mở' : 'Mở phân xử'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <footer className="lx-card__foot">
-          <span>{issues.length} issue trên trang hiện tại.</span>
-          <nav className="lx-pager" aria-label="Phân trang escalation">
-            <button
-              className="lx-btn lx-btn--sm"
-              type="button"
-              disabled={cursors.length === 1 || listQuery.isFetching}
-              onClick={() => {
-                setCursors((current) => current.slice(0, -1));
-                setSelectedId(null);
-              }}
-            >
-              Trang trước
-            </button>
-            <button
-              className="lx-btn lx-btn--sm"
-              type="button"
-              disabled={!nextCursor || listQuery.isFetching}
-              onClick={() => {
-                if (nextCursor) setCursors((current) => [...current, nextCursor]);
-                setSelectedId(null);
-              }}
-            >
-              Trang sau
-            </button>
-          </nav>
-        </footer>
-      </section>
+            <button className="lx-btn lx-btn--primary" type="submit">Áp dụng</button>
+            {runId && (
+              <button
+                className="lx-btn"
+                type="button"
+                onClick={() => {
+                  setRunDraft('');
+                  setRunId(undefined);
+                  setCursors([null]);
+                  setSelectedId(null);
+                }}
+              >
+                Xoá bộ lọc
+              </button>
+            )}
+            {filterError && <span className="lx-hint is-bad" role="alert">{filterError}</span>}
+          </form>
 
-      {savedCase && (
-        <div className="lx-callout lx-callout--info" role="status">
-          <div className="lx-callout__text">
-            <strong>Đã lưu Decision Case #{savedCase.id}</strong> · Issue #{savedCase.issue_id} ·{' '}
-            <span className="lx-mono">{savedCase.case_version}</span>
-          </div>
-        </div>
-      )}
+          {listQuery.isPending ? (
+            <div className="lx-card__body lx-muted" role="status">Đang tải danh sách escalation…</div>
+          ) : listQuery.isError ? (
+            <div className="lx-card__body">
+              <div className="lx-callout" role="alert">
+                <div className="lx-callout__text">
+                  <strong>Không tải được danh sách escalation.</strong>
+                  <div>{errorMessage(listQuery.error)}</div>
+                </div>
+                <button className="lx-btn lx-btn--sm" type="button" onClick={() => listQuery.refetch()}>
+                  Thử lại
+                </button>
+              </div>
+            </div>
+          ) : issues.length === 0 ? (
+            <div className="lx-card__body lx-review-empty">
+              {runId ? `Không có escalation trong Run #${runId}.` : 'Không có issue nào đang chờ phân xử.'}
+            </div>
+          ) : (
+            <ul className="lx-list" aria-label="Issue đang chờ phân xử">
+              {issues.map((issue) => {
+                const lastEscalation = issue.review_decisions
+                  .filter((decision) => decision.decision === 'escalate' || decision.decision === 'uncertain')
+                  .at(-1);
+                return (
+                  <li key={issue.id} aria-current={selected?.id === issue.id ? 'true' : undefined}>
+                    <div className="lx-row lx-row--between">
+                      <b className="lx-mono">{issueCode(issue.id)}</b>
+                      <span className="lx-badge lx-badge--warning">
+                        {lastEscalation?.decision === 'uncertain' ? 'Chưa chắc chắn' : 'Chuyển cấp trên'}
+                      </span>
+                    </div>
+                    <div className="lx-cell__main lx-mt-1">{familyLabel(issue.family)} · {issue.severity ? severityLabel(issue.severity) : 'Chưa xếp mức'}</div>
+                    <div className="lx-cell__sub">
+                      {originLabel(issue.origin)} · {stateLabel(issue.state)} · Rule {issue.rule_ids?.join(', ') || '—'} · {issue.evidence.length} bằng chứng · {issue.review_decisions.length} quyết định
+                    </div>
+                    <button className="lx-btn lx-btn--sm lx-mt-1" type="button" onClick={() => selectIssue(issue)}>
+                      {selected?.id === issue.id ? 'Đang mở' : 'Mở phân xử'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <footer className="lx-card__foot">
+            <span>Hiển thị {issues.length} case · Trang {cursors.length}</span>
+            <nav className="lx-pager" aria-label="Phân trang escalation">
+              <button
+                className="lx-btn lx-btn--sm"
+                type="button"
+                disabled={cursors.length === 1 || listQuery.isFetching}
+                onClick={() => {
+                  setCursors((current) => current.slice(0, -1));
+                  setSelectedId(null);
+                }}
+              >
+                Trang trước
+              </button>
+              <button
+                className="lx-btn lx-btn--sm"
+                type="button"
+                disabled={!nextCursor || listQuery.isFetching}
+                onClick={() => {
+                  if (nextCursor) setCursors((current) => [...current, nextCursor]);
+                  setSelectedId(null);
+                }}
+              >
+                Trang sau
+              </button>
+            </nav>
+          </footer>
+        </section>
 
-      {selected && (
-        <div className="lx-cols lx-escalation-workspace">
-          <main className="lx-main">
-            <EscalationDetail issue={selected} />
-          </main>
-          <aside className="lx-side lx-stack">
-            <section className="lx-card" aria-label={`Form phân xử issue ${selected.id}`}>
-              <header className="lx-card__head">
-                <div>
-                  <h2 className="lx-h2">Phân xử Issue #{selected.id}</h2>
+        <div className="lx-main lx-stack">
+          {savedCase && (
+            <div className="lx-callout lx-callout--info" role="status">
+              <div className="lx-callout__text">
+                <strong>Đã lưu Decision Case #{savedCase.id}</strong> · Issue #{savedCase.issue_id} ·{' '}
+                <span className="lx-mono">{savedCase.case_version}</span>
+              </div>
+            </div>
+          )}
+
+          {!selected && <AdjudicationEmptyDetail />}
+
+          {selected && (
+            <>
+              <section className="lx-card" aria-label={`Form phân xử issue ${selected.id}`}>
+                <div className="lx-card__head">
+                  <h2 className="lx-h2"><span className="lx-mono">{issueCode(selected.id)}</span> · {familyLabel(selected.family)}</h2>
+                  <Link className="lx-link lx-text-13" href="/review/workspace">Mở trong Review Workspace</Link>
+                </div>
+                <form className="lx-card__body lx-stack" onSubmit={submitAdjudication}>
+                  <EscalationSummary issue={selected} />
                   <div className="lx-hint">Backend kiểm tra role, scope, định danh và separation of duties.</div>
-                </div>
-              </header>
-              <form className="lx-card__body lx-stack" onSubmit={submitAdjudication}>
-                {isOwnEscalation && (
-                  <div className="lx-callout" role="alert">
-                    Người dùng hiện tại đã chuyển cấp issue này và không được tự phân xử.
+                  {isOwnEscalation && (
+                    <div className="lx-callout" role="alert">
+                      Người dùng hiện tại đã chuyển cấp issue này và không được tự phân xử.
+                    </div>
+                  )}
+                  <fieldset className="lx-fieldset">
+                    <legend className="lx-label">Kết luận phân xử</legend>
+                    <div className="lx-choices">
+                      {OUTCOMES.map((option) => (
+                        <label className="lx-choice" key={option.value} title={option.note}>
+                          <input
+                            type="radio"
+                            name="outcome"
+                            value={option.value}
+                            checked={outcome === option.value}
+                            onChange={() => setOutcome(option.value)}
+                          />
+                          <span>{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="lx-hint">{OUTCOMES.find((option) => option.value === outcome)?.note}</div>
+                  </fieldset>
+                  <div className="lx-grid lx-grid--3">
+                    <div className="lx-field">
+                      <label className="lx-label" htmlFor="adjudication-rule">Quy tắc áp dụng *</label>
+                      {/* TODO(backend): danh sách quy tắc để dùng dropdown như thiết kế; hiện nhập tay kèm gợi ý từ issue */}
+                      <input
+                        id="adjudication-rule"
+                        className="lx-input lx-mono"
+                        list="adjudication-rule-options"
+                        value={ruleId}
+                        onChange={(event) => setRuleId(event.target.value)}
+                        required
+                      />
+                      <datalist id="adjudication-rule-options">
+                        {[...new Set([...(selected.rule_ids ?? []), ...selected.evidence.flatMap((item) => (item.rule_id ? [item.rule_id] : []))])].map((id) => <option key={id} value={id} />)}
+                      </datalist>
+                    </div>
+                    <div className="lx-field">
+                      <label className="lx-label" htmlFor="adjudication-label">Nhãn đúng</label>
+                      <input
+                        id="adjudication-label"
+                        className="lx-input"
+                        value={correctLabel}
+                        onChange={(event) => setCorrectLabel(event.target.value)}
+                        list="adjudication-label-options"
+                        maxLength={64}
+                        placeholder="Để trống nếu không đổi nhãn"
+                      />
+                      <datalist id="adjudication-label-options">
+                        {[...new Set(selected.evidence.flatMap((item) => (item.prediction_class ? [item.prediction_class] : [])))].map((label) => <option key={label} value={label} />)}
+                      </datalist>
+                    </div>
+                    <div className="lx-field">
+                      <label className="lx-label" htmlFor="adjudication-after">Sau khi phân xử</label>
+                      <select id="adjudication-after" className="lx-select" disabled value="record" onChange={() => undefined}>
+                        <option value="rework">Tạo yêu cầu sửa cho annotator</option>
+                        <option value="record">Chỉ ghi nhận quyết định</option>
+                      </select>
+                    </div>
                   </div>
-                )}
-                <fieldset className="lx-fieldset">
-                  <legend className="lx-label">Kết luận</legend>
-                  <div className="lx-choices">
-                    {OUTCOMES.map((option) => (
-                      <label className="lx-choice" key={option.value} title={option.note}>
-                        <input
-                          type="radio"
-                          name="outcome"
-                          value={option.value}
-                          checked={outcome === option.value}
-                          onChange={() => setOutcome(option.value)}
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="lx-hint">{OUTCOMES.find((option) => option.value === outcome)?.note}</div>
-                </fieldset>
-                <div className="lx-field">
-                  <label className="lx-label" htmlFor="adjudication-rule">Rule ID *</label>
-                  <input
-                    id="adjudication-rule"
-                    className="lx-input lx-mono"
-                    value={ruleId}
-                    onChange={(event) => setRuleId(event.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lx-field">
-                  <label className="lx-label" htmlFor="adjudication-label">Nhãn đúng</label>
-                  <input
-                    id="adjudication-label"
-                    className="lx-input"
-                    value={correctLabel}
-                    onChange={(event) => setCorrectLabel(event.target.value)}
-                    maxLength={64}
-                    placeholder="Để trống nếu không đổi nhãn"
-                  />
-                </div>
-                <div className="lx-field">
-                  <label className="lx-label" htmlFor="adjudication-reason">Lý do *</label>
-                  <textarea
-                    id="adjudication-reason"
-                    className="lx-textarea"
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                    required
-                  />
-                </div>
-                {requiresOverride && (
                   <div className="lx-field">
-                    <label className="lx-label" htmlFor="adjudication-override">Lý do override *</label>
+                    <label className="lx-label" htmlFor="adjudication-reason">Lý do phân xử *</label>
                     <textarea
-                      id="adjudication-override"
+                      id="adjudication-reason"
                       className="lx-textarea"
-                      value={overrideReason}
-                      onChange={(event) => setOverrideReason(event.target.value)}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value)}
+                      placeholder="Nêu căn cứ để các case tương tự có thể tham chiếu."
                       required
                     />
                   </div>
-                )}
-                {formError && <div className="lx-callout" role="alert">{formError}</div>}
-                {mutation.isError && (
-                  <div className="lx-callout" role="alert">
-                    <div className="lx-callout__text">
-                      <strong>Không thể lưu phân xử{mutationCode ? ` (${mutationCode})` : ''}.</strong>
-                      <div>{errorMessage(mutation.error)}</div>
+                  {requiresOverride && (
+                    <div className="lx-field">
+                      <label className="lx-label" htmlFor="adjudication-override">Lý do ghi đè *</label>
+                      <textarea
+                        id="adjudication-override"
+                        className="lx-textarea"
+                        value={overrideReason}
+                        onChange={(event) => setOverrideReason(event.target.value)}
+                        required
+                      />
                     </div>
+                  )}
+                  {formError && <div className="lx-callout" role="alert">{formError}</div>}
+                  {mutation.isError && (
+                    <div className="lx-callout" role="alert">
+                      <div className="lx-callout__text">
+                        <strong>Không thể lưu phân xử{mutationCode ? ` (${mutationCode})` : ''}.</strong>
+                        <div>{errorMessage(mutation.error)}</div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="lx-actions lx-actions--end">
+                    <button className="lx-btn" type="button" onClick={() => setOutcome('guideline_gap')}>Tạo Guideline Gap</button>
+                    <button
+                      className="lx-btn lx-btn--primary"
+                      type="submit"
+                      disabled={mutation.isPending || isOwnEscalation}
+                    >
+                      {mutation.isPending ? 'Đang lưu…' : 'Lưu phân xử'}
+                    </button>
                   </div>
-                )}
-                <button
-                  className="lx-btn lx-btn--primary"
-                  type="submit"
-                  disabled={mutation.isPending || isOwnEscalation}
-                >
-                  {mutation.isPending ? 'Đang lưu…' : 'Lưu kết luận phân xử'}
-                </button>
-              </form>
-            </section>
-          </aside>
+                </form>
+              </section>
+              <EscalationDetail issue={selected} />
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       <DecisionCaseLookup initialIssueId={selected?.id ?? savedCase?.issue_id} />
     </div>

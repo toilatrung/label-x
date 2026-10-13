@@ -142,20 +142,6 @@ export function ReviewGuidelineLookup({
         </div>
       </details>
 
-      {/* Case Lookup Accordion (Approved API check & explicit limitation) */}
-      <details>
-        <summary style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
-          Case tương tự đã phân xử
-        </summary>
-        <div style={{ marginTop: '8px' }}>
-          <p className="lx-muted" style={{ margin: '4px 0', fontSize: '12px' }}>
-            Chức năng tra cứu Case tương tự hiện chưa khả dụng (API chưa có endpoint tìm kiếm Case).
-          </p>
-          <span className="lx-subtle" style={{ fontSize: '11px' }}>
-            Hệ thống không giả lập dữ liệu Case khi thiếu API đã được duyệt (DEC-T037).
-          </span>
-        </div>
-      </details>
     </div>
   );
 }

@@ -12,6 +12,7 @@ const proxyTimeout = Number(process.env.LABELX_API_PROXY_TIMEOUT_MS) || 300_000;
 
 const nextConfig: NextConfig = {
   experimental: { proxyTimeout },
+  devIndicators: false,
   // Contract paths end in a slash; POST requests must not redirect.
   skipTrailingSlashRedirect: true,
   // Dev: mở LabelX qua 127.0.0.1 để cookie phiên tách khỏi CVAT (localhost:8080 dùng cùng tên
