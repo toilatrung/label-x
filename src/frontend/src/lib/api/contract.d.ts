@@ -1767,7 +1767,7 @@ export interface components {
             selected_final_sources: {
                 [key: string]: unknown;
             };
-            /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) */
+            /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) — mảng đầy đủ mọi lý do đang chặn nguồn, không trùng, sắp xếp cố định, rỗng khi scope_complete */
             operational_source: {
                 [key: string]: unknown;
             };
