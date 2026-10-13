@@ -28,7 +28,7 @@ def approved_test_policy(settings):
     settings.REVIEW_INCOMPLETE_RESERVATION_SECONDS = 120
 
 
-pytestmark = pytest.mark.usefixtures("approved_test_policy")
+pytestmark = pytest.mark.usefixtures("approved_test_policy", "snapshot_media_urls")
 
 
 @pytest.fixture
@@ -217,6 +217,36 @@ def test_claim_two_tab_renew_expiry_resume_and_204(world):
         client(world["other"]).post(next_url(), {"run_id": run_id}, format="json").status_code
         == 204
     )
+
+
+@pytest.mark.django_db
+def test_queue_summary_and_specific_frame_claim(world):
+    api = client(world["reviewer"])
+    summary = api.get(f"/api/queues/risk/?run_id={world['run'].pk}")
+    assert summary.status_code == 200, summary.data
+    assert summary.data["total"] == 1
+    assert summary.data["counts"][FrameReview.State.UNREVIEWED] == 1
+
+    claimed = api.post(
+        next_url(),
+        {"run_id": world["run"].pk, "frame_id": world["frame"].pk},
+        format="json",
+    )
+    assert claimed.status_code == 200, claimed.data
+    assert claimed.data["frame"]["frame_key"] == {
+        "cvat_task_id": 200,
+        "frame_number": 0,
+    }
+    after = api.get(f"/api/queues/risk/?run_id={world['run'].pk}")
+    assert after.data["counts"][FrameReview.State.IN_REVIEW] == 1
+
+    wrong = client(world["other"]).post(
+        next_url(),
+        {"run_id": world["run"].pk, "frame_id": world["frame"].pk + 999},
+        format="json",
+    )
+    assert wrong.status_code == 409
+    assert wrong.data["code"] == "LEASE_CONFLICT"
 
 
 @pytest.mark.django_db

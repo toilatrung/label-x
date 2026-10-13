@@ -26,6 +26,7 @@ from tests.review.test_final_source_guard import _complete_final
 from tests.review.test_queue_lease import client, next_url
 
 pytest_plugins = ["tests.review.test_queue_lease", "tests.review.test_final_source_guard"]
+pytestmark = pytest.mark.usefixtures("snapshot_media_urls")
 
 
 # --------------------------------------------------------------------------- #238 AC2

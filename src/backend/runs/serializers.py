@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from django.core.files.storage import storages
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
 
 from orchestration.models import CandidateRecord
@@ -388,6 +389,8 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     lease_holder_user_id = serializers.SerializerMethodField()
     issue_counts = IssueCountsField(read_only=True)
     explanation = ExplanationField(read_only=True)
+    priority = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = RunRankingEntry
@@ -405,6 +408,8 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
             "issue_counts",
             "explanation",
             "lease_holder_user_id",
+            "priority",
+            "thumbnail_url",
         ]
         read_only_fields = fields
 
@@ -435,6 +440,28 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         holder = getattr(obj, "active_lease_holder_id", None)
         return int(holder) if holder is not None else None
 
+    @extend_schema_field(serializers.ChoiceField(choices=["high", "medium", "low"]))
+    def get_priority(self, obj: RunRankingEntry) -> str:
+        total = max(int(self.context.get("ranking_total", 0)), 1)
+        if obj.rank <= (total + 2) // 3:
+            return "high"
+        if obj.rank <= (total * 2 + 2) // 3:
+            return "medium"
+        return "low"
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_thumbnail_url(self, obj: RunRankingEntry) -> str | None:
+        key = obj.snapshot_frame.media_storage_key
+        return storages["snapshots"].url(key) if key else None
+
+
+@extend_schema_serializer(component_name="RankedFrame")
+class RankedFrameResponseSerializer(RankedFrameSerializer):
+    """Describe optional contract additions without marking method fields required."""
+
+    priority: Any = serializers.ChoiceField(choices=["high", "medium", "low"], required=False)
+    thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
+
 
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     next = serializers.CharField(allow_null=True)
@@ -442,4 +469,4 @@ class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     source: Any = serializers.ChoiceField(choices=["risk", "random_audit"])
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
-    results = RankedFrameSerializer(many=True)
+    results = RankedFrameResponseSerializer(many=True)

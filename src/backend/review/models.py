@@ -281,6 +281,55 @@ class DecisionCase(models.Model):
         raise ValueError("DecisionCase is append-only")
 
 
+class GuidelineGap(models.Model):
+    """A guideline ambiguity reported either independently or during adjudication."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        RESOLVED = "resolved", "Resolved"
+
+    issue = models.ForeignKey(
+        Issue,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="guideline_gaps",
+    )
+    rule_id = models.CharField(max_length=32)
+    description = models.TextField()
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
+    guideline_version = models.CharField(max_length=128, null=True, blank=True)  # noqa: DJ001
+    resolved_in_version = models.CharField(max_length=128, null=True, blank=True)  # noqa: DJ001
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=36, null=True, blank=True)  # noqa: DJ001
+    request_hash = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "review_guideline_gap"
+        ordering = ["-created_at", "-pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issue", "rule_id"],
+                condition=Q(status="open", issue__isnull=False),
+                name="guideline_gap_one_open_issue_rule",
+            ),
+            models.UniqueConstraint(
+                fields=["rule_id"],
+                condition=Q(status="open", issue__isnull=True),
+                name="guideline_gap_one_open_independent_rule",
+            ),
+            models.UniqueConstraint(
+                fields=["created_by", "idempotency_key"],
+                condition=Q(idempotency_key__isnull=False),
+                name="guideline_gap_create_idempotency",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"GuidelineGap {self.pk} ({self.rule_id}, {self.status})"
+
+
 class ReworkRequest(models.Model):
     """Mutable rework projection; immutable decisions and verifications keep its history."""
 

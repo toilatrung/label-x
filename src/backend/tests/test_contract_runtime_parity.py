@@ -20,6 +20,21 @@ CONTRACT = ROOT / "docs" / "04-api" / "openapi.yaml"
 ACCEPTED_CODE_DIFFS: dict[tuple[str, str], tuple[list[str], list[str]]] = {}
 
 
+# Operation đã có trong contract (MBE-00, CR-118) nhưng runtime do task sau làm. Mỗi mục ghi task
+# chủ; test fail khi mục đó đã có runtime để danh sách không bị bỏ quên.
+PENDING_RUNTIME: dict[tuple[str, str], str] = {
+    ("get", "/api/frames/{id}/workspace/"): "MBE-01",
+}
+
+
+# Query param đã có trong contract (CR-118) nhưng runtime do task sau làm; cùng quy tắc tự hết hạn.
+PENDING_RUNTIME_PARAMS: dict[tuple[str, str], tuple[list[tuple[str, str]], str]] = {}
+
+
+# MBE-02 fields now have runtime implementations and must match without exemptions.
+PENDING_RUNTIME_SHAPES: list[tuple[object, ...]] = []
+
+
 def _generate(tmp_path: Path) -> Path:
     """Run the same command CI runs; a warning or error makes it exit non-zero."""
     out = tmp_path / "runtime.yaml"
@@ -57,12 +72,21 @@ def test_m03_contract_matches_runtime_schema(tmp_path):
     ]
     assert len(in_scope) >= 20, in_scope
 
-    assert result["onlyDocs"] == [], "contract operations missing in runtime"
+    only_docs = set(result["onlyDocs"])
+    stale = set(PENDING_RUNTIME) - only_docs
+    assert not stale, f"đã có runtime, bỏ khỏi PENDING_RUNTIME: {sorted(stale)}"
+    assert sorted(only_docs - set(PENDING_RUNTIME)) == [], "contract operations missing in runtime"
     assert result["onlyRuntime"] == [], "runtime operations missing in contract"
     assert result["opId"] == []
-    assert result["params"] == []
+    param_diffs = {
+        entry[0]: (entry[2], entry[4]) for entry in result["params"]
+    }  # (docs_only, runtime_only)
+    expected = {key: (sorted(docs), []) for key, (docs, _owner) in PENDING_RUNTIME_PARAMS.items()}
+    assert param_diffs == expected, param_diffs
     assert result["body"] == []
-    assert result["shapes"] == [], "\n".join(map(str, result["shapes"]))
+    assert sorted(map(str, result["shapes"])) == sorted(map(str, PENDING_RUNTIME_SHAPES)), (
+        "\n".join(map(str, result["shapes"]))
+    )
 
     seen = {}
     for entry in result["codes"]:

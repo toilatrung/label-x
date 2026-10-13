@@ -205,8 +205,9 @@ def test_fixture_scenarios_only_use_current_contract_operations(
         assert operation["method"] in path_item, scenario["id"]
 
 
-# Deltas approved by DEC-019 / CR-113 (P02…P07). Anything else stays unapproved and absent.
-CR_113_APPROVED = {"M03-D02", "M03-D03", "M03-D04", "M03-D05", "M03-D06"}
+# Deltas approved by DEC-019 / CR-113 (P02…P07) and, for D01, by CR-118 (MBE-00). Anything else
+# stays unapproved and absent.
+CR_113_APPROVED = {"M03-D01", "M03-D02", "M03-D03", "M03-D04", "M03-D05", "M03-D06"}
 
 
 def _proposed(gap: dict[str, Any]) -> list[dict[str, str]]:
@@ -229,7 +230,10 @@ def test_read_deltas_are_approved_only_when_listed_in_cr_113(
         if gap["approved"]:
             assert gap["id"] in CR_113_APPROVED
             assert gap["decision_status"] == "approved_by_change_request"
-            assert {"DEC-019", "CR-113"} <= set(gap["approval_ref"]), gap["id"]
+            refs = set(gap["approval_ref"])
+            assert refs & {"CR-113", "CR-118"}, gap["id"]
+            if "CR-113" in refs:
+                assert "DEC-019" in refs, gap["id"]
             approved = gap["approved_operations"]
             assert approved, gap["id"]
             for operation in approved:
