@@ -25,7 +25,7 @@ FAMILIES = Issue.Family.values
 SEVERITIES = Issue.Severity.values
 # Mirror of the contract enums (docs/04-api/openapi.yaml); documentation-only.
 FRAME_STATES = FrameReview.State.values
-ENGINE_NAMES = ["schema", "geometry", "duplicate", "detector", "metric", "vlm"]
+ENGINE_NAMES = ["schema", "geometry", "duplicate", "detector", "metric", "vlm", "classifier"]
 ENGINE_STATUSES = ["running", "checked", "partial", "failed", "not_checked"]
 NOT_CHECKED_REASONS = ["disabled", "no_model", "no_reference", "not_applicable", "not_triggered"]
 DECISION_ACTIONS = [
