@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04B Implementation Report — LabelX</title>
+<meta name="labelx:id" content="M04B-classifier-implementation-@label-x-47">
+<meta name="labelx:title" content="M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[report, implementation, m-04, m04b, classifier]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / M04B-classifier-@label-x-47</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>M04B-classifier-implementation-@label-x-47</span><b>title</b><span>M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</span><b>type</b><span>report</span><b>domain</b><span>governance</span><b>module</b><span>reports</span><b>tags</b><span>[report, implementation, m-04, m04b, classifier]</span><b>priority</b><span>2</span></div>
+<h1 id="M04B-classifier-implementation">M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo triển khai pha B của M-04 (ConvNeXt Tiny 10 lớp, crop 224×224): bằng chứng thật, giới hạn và phần chưa kiểm chứng. <strong>Checkpoint duy nhất tồn tại là <code>smoke_only</code> trên dữ liệu tổng hợp; chưa có huấn luyện thật (BLOCKER-032).</strong></p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04B-classifier-implementation-@label-x-47</code></li>
+<li><strong>Title</strong>: <code>M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung (PO, chủ task M04B-01…04)</code></li>
+<li><strong>Executor</strong>: <code>phiên Claude label-x-47, điều phối bởi label-x-m04-5a</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>M04B-01, M04B-02, M04B-03, M04B-04 (issue #284, #285, #286, #287)</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<p><strong>Implemented</strong> (nhánh <code>feat/M-04-b-classifier</code>):</p>
+<ul>
+<li>M04B-01 (#284): crop 224×224 giữ tỉ lệ + padding (có geometry map ngược), dataset từ snapshot <code>labelx.snapshot.v1</code> với provenance snapshot→job→frame→annotation, split theo source group băm sha256 (held_out mặc định 0, không bao giờ đọc để fit), nhãn ngoài class map bị reject có lý do, manifest có <code>manifest_sha256</code>, build idempotent.</li>
+<li>M04B-02 (#285): worker package riêng <code>src/classifier_worker</code> (<code>labelx_classifier</code>): fine-tune ConvNeXt Tiny (init ImageNet torchvision), đóng gói checkpoint + <code>classifier-manifest.json</code> (sha256, input 224, mean/std, labels), nạp <code>weights_only=True</code> sau khi kiểm sha256, inference top-3/score/margin chưa calibrate, CLI build-dataset/train/verify/predict/predict-batch.</li>
+<li>M04B-03 (#286): <code>models.classifier</code> → <code>ModelArtifact</code> (400 khi sai schema, 422 khi publish thiếu manifest/class map), <code>ClassifierUnit</code> + migration, stage sau candidate chạy batch qua worker tách tiến trình, <code>EngineResult</code> classifier, field <code>classifier</code> trên Candidate API (openapi + contract.d.ts).</li>
+<li>M04B-04 (#287): smoke CLI end-to-end với trọng số ImageNet thật trên fixture tổng hợp; smoke backend→worker thật→checkpoint <code>smoke_only</code> (test bỏ qua mặc định, bật bằng biến môi trường); bảng bàn giao API đợt 2 bên dưới.</li>
+</ul>
+<p><strong>Phạm vi PR này (nhánh cổng)</strong>: chỉ phần worker M04B-01/02 và BLOCKER-032/report. <strong>M04B-03 backend</strong> (<code>src/backend/**</code>, migration, <code>docs/04-api/openapi.yaml</code>, <code>contract.d.ts</code>) nằm ở <code>feat/M-04-b-classifier</code>, <strong>KHÔNG vào PR này</strong> vì phụ thuộc PR pha A; bảng Changes Made bên dưới liệt kê cả phần đó để bàn giao, đánh dấu M04B-03.</p>
+<p><strong>Not Implemented</strong>: huấn luyện/đánh giá trên dữ liệu thật (BLOCKER-032); crop thật từ snapshot/CVAT (phụ thuộc M04A-04/#282, hiện dùng <code>NoCropProvider</code> mặc định ⇒ <code>invalid_crop</code> hiện rõ); policy định tuyến classifier–Qwen (pha C); calibration/KPI (ngoài phạm vi M-04); job CI cho <code>src/classifier_worker</code> (đề xuất, thuộc PO); đánh số lại migration và rebase lên A tại cổng.</p>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>src/classifier_worker/labelx_classifier/{taxonomy,crops,dataset}.py</code></td><td>10 lớp bdd100k-det-10-v1, letterbox crop, builder dataset có provenance/split/manifest, từ chối input sai kiểu/ảnh bomb, chỉ xoá crop do chính tool tạo</td><td>M04B-01</td></tr>
+<tr><td><code>src/classifier_worker/labelx_classifier/{model,artifact,train,infer,cli}.py</code></td><td>ConvNeXt Tiny 10 lớp, đóng gói + verify checkpoint, train chỉ trên split train, status suy từ điều kiện thật, predict-batch an toàn (image-root, chunk, id duy nhất, mã lý do ổn định)</td><td>M04B-02</td></tr>
+<tr><td><code>src/classifier_worker/{pyproject.toml,uv.lock,.gitignore,tests/**}</code></td><td>Lock riêng ghim torch 2.14.1+cpu / torchvision 0.29.1+cpu (không đụng pyproject/uv.lock của backend); 79 test</td><td>M04B-02</td></tr>
+<tr><td><code>src/backend/classifier/{config,errors,runner}.py</code></td><td>Schema models.classifier, kiểm ModelArtifact, runner subprocess (lệnh từ settings, không shell, timeout, mã lý do ổn định)</td><td>M04B-03</td></tr>
+<tr><td><code>src/backend/orchestration/{classifier_stage.py,models.py,runsync.py,dispatch.py,tasks.py,migrations/0005_classifier_unit.py}</code></td><td>ClassifierUnit, stage idempotent, lease/sweeper, EngineResult; migration số tạm 0005 (đánh số lại ở cổng)</td><td>M04B-03</td></tr>
+<tr><td><code>src/backend/runs/{services,serializers,config_versions}.py</code>, <code>review/api_serializers.py</code></td><td>Engine classifier trong allowlist/descriptor, validate 400/422, field classifier trên Candidate</td><td>M04B-03</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td>ClassifierEvidence/ClassifierTopK, EngineName thêm classifier, mô tả publish 422 (contract.d.ts +33/−2, sinh bằng npm run gen:api:contract)</td><td>M04B-03</td></tr>
+<tr><td><code>src/backend/tests/classifier/**</code></td><td>56 test + 1 smoke e2e (bỏ qua mặc định)</td><td>M04B-03, M04B-04</td></tr>
+<tr><td><code>.agent/governance/blockers/BLOCKER-032.html</code></td><td>Blocker thiếu crop nhãn thật và GPU</td><td>M04B-02</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/m04/M04B-01.html … M04B-04.html</code></li>
+<li><strong>Context Packages</strong>: <code>.agent/planning/M-04-ABC-implementation-2026-10-13.html; .agent/planning/M-04-dispatch-2026-10-13.html</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code> (không sửa trong báo cáo này)</li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không sửa)</li>
+<li><strong>Decisions</strong>: <code>DEC-021</code></li>
+<li><strong>Change Requests</strong>: <code>CR-115, CR-116</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-032.html</code></li>
+<li><strong>Review Request</strong>: <code>cross-review chỉ đọc bởi label-x-e4 (đã làm 3 vòng cho worker; #286 đang chờ)</code></li>
+<li><strong>Commits</strong> (nhánh cổng <code>feat/M-04-b-gate</code>): <code>7942d63, df23e26, 23a1f0e, 0ebaee0, 00867cf, 3dcbd25, 16653d6, ae99f9d</code> (+ commit report này). Backend M04B-03 ở <code>feat/M-04-b-classifier</code> (3a9ca08, 8f8c0f2, 9d26d77), không thuộc PR này.</li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>uv run pytest tests</code> (src/classifier_worker, CPU, dữ liệu tổng hợp)</td><td><code>passed</code></td><td>79 passed</td></tr>
+<tr><td><code>uv run ruff check . ; ruff format --check .</code> (worker và backend)</td><td><code>passed</code></td><td>All checks passed; 280 files formatted (backend)</td></tr>
+<tr><td><code>uv run --frozen mypy config effort classifier</code> (backend)</td><td><code>passed</code></td><td>Success: no issues found in 23 source files</td></tr>
+<tr><td><code>uv run pytest tests/classifier</code> (backend)</td><td><code>passed</code></td><td>56 passed (+1 smoke e2e bỏ qua mặc định)</td></tr>
+<tr><td><code>uv run pytest tests/orchestration tests/runs tests/vlm tests/classifier tests/engines</code></td><td><code>passed</code></td><td>320 passed (cần Redis; chạy Redis cô lập)</td></tr>
+<tr><td><code>uv run pytest tests/test_contract.py tests/test_contract_runtime_parity.py tests/test_openapi_schema_clean.py</code></td><td><code>passed</code></td><td>24 passed</td></tr>
+<tr><td><code>manage.py spectacular --validate --fail-on-warn</code></td><td><code>passed</code></td><td>exit 0</td></tr>
+<tr><td><code>manage.py makemigrations --check --dry-run</code></td><td><code>passed</code></td><td>No changes detected</td></tr>
+<tr><td><code>uv run pytest tests</code> backend FULL trên <code>8f8c0f2</code></td><td><code>partial</code></td><td>Lần chạy FULL gần nhất (trên 3a9ca08, A cũ 3f18565): 1020 passed, 1 failed (thiếu x-labelx-trace cho Candidate.classifier — đã sửa), 2 skipped, 7:54. FULL trên cây gộp A gate (871bf10) + backend B, nhánh <code>wip/m04-ab-merged</code> @e4fa5ee: <strong>1187 passed, 2 skipped</strong> (6:44, DB/Redis cô lập, CORS_ALLOWED_ORIGINS=http://localhost:3000), migration classifier 0007; chỉ chạy hẹp trên cây gộp thử A@39adf66+B: tests/classifier orchestration runs vlm engines test_engine_interface contract/parity/openapi = 533 passed, 1 skipped</td></tr>
+<tr><td><code>LABELX_CLASSIFIER_E2E_ROOT=… pytest tests/classifier/test_e2e_real_worker.py</code></td><td><code>passed</code></td><td>1 passed in 128.79 s: backend→SubprocessClassifierRunner→worker thật→checkpoint smoke_only; 2 unit completed, 1 unit failed/invalid_crop</td></tr>
+<tr><td>Cây gộp thử A@39adf66+B (cục bộ): ruff, format, mypy <code>config effort classifier</code>, <code>makemigrations --check</code>, <code>spectacular --validate --fail-on-warn</code></td><td><code>passed</code></td><td>sạch / exit 0; migration classifier = <code>0007_classifier_unit</code> sau 0006 của A; ledger classifier qua <code>orchestration.services.ledger_counts</code> theo quy ước A</td></tr>
+<tr><td><code>make validate-kit</code></td><td><code>passed</code></td><td>FRAMEWORK_VALIDATION_PASS (chạy khi thêm báo cáo)</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>M04B-01 AC1: mỗi crop truy về snapshot/annotation; nhãn ngoài class map bị từ chối; split ghi rõ, chưa là calibration</td><td><code>passed</code></td><td><code>test_dataset.py</code>, <code>test_hardening.py</code> (provenance, class_outside_taxonomy, label_not_in_label_map, split theo nhóm, held_out không đọc để fit, manifest có note "technical partition only"). Dữ liệu tổng hợp.</td></tr>
+<tr><td>M04B-02 AC1: load checkpoint xác minh checksum; smoke inference top-3/score/margin; không ghi điểm là probability calibrated</td><td><code>passed</code></td><td>Smoke CLI (trọng số ImageNet torchvision thật, CPU, fixture tổng hợp 24 crop, 2 epoch): <code>verify</code> trả verified=true, status=smoke_only (lý do: dataset_origin_is_not_real, epochs_below_3, classes_without_train_samples); <code>predict</code> trả top3 [car 0.650, pedestrian 0.090, traffic sign 0.084], margin 0.560, calibrated=false. Đây là kiểm cơ chế, KHÔNG phải accuracy.</td></tr>
+<tr><td>M04B-03 AC1: publish không cho classifier bật khi thiếu manifest/class map</td><td><code>passed</code></td><td><code>tests/classifier/test_config.py</code> (422 BUSINESS_RULE_UNMET, 400 khi sai schema)</td></tr>
+<tr><td>M04B-03 AC2: crop lỗi trả reason rõ; model version hiển thị qua API</td><td><code>passed</code> (mock/fixture)</td><td><code>test_stage.py</code>: invalid_crop, box_too_small, checksum_mismatch, timeout…; field <code>classifier</code> trên Candidate có checkpoint_version/sha256/class_map_version. Runner giả; KHÔNG phải runtime pass.</td></tr>
+<tr><td>M04B-04 AC1: inference trên crop fixture chạy end-to-end</td><td><code>passed</code> (smoke_only)</td><td>Smoke e2e ở trên; crop là PNG tổng hợp, không phải crop được phép/thật.</td></tr>
+<tr><td>Mutation worker/stage</td><td><code>passed</code> (số tự đo)</td><td>Tôi chạy: worker 8/8, 9/9, 10/10 mutant bị bắt (mỗi vòng sửa); backend 12 mutant, 3 mutant ban đầu sống sót (thứ tự top3, killpg, prefetch) được bổ sung test rồi bị bắt. Số của e4 khác (13/16 vòng 1, 19/20 vòng sau): chưa đối chiếu từng mutant, nên ghi nhận là chưa khớp phép đo độc lập.</td></tr>
+<tr><td>Cross-review (QA kỹ thuật, không phải QC CR-102)</td><td><code>passed</code> worker; <code>partial</code> backend</td><td>label-x-e4: worker 3 vòng, mọi mục đã đóng; cổng B @39b0aa4 ĐẠT (79 pass, --image-root đã đóng). Backend #286 @3a9ca080: e4 nêu A–F — A cancel ClassifierUnit, B/C chuỗi và đầu ra worker không được tin (độ dài/enum, tên lớp từ CLASSES, sắp xếp/miền score), D env tối thiểu + process group, E kiểm artifact_key/manifest, F N+1 — đã sửa ở 8f8c0f2 (cộng ledger classifier theo ClassifierUnit và trace OpenAPI); e4 CHƯA kiểm lại 8f8c0f2/9d26d77. Mục còn mở: không có mục nào đã biết; chưa có xác nhận độc lập.</td></tr>
+</tbody></table>
+<h2 id="deviations">Deviations</h2>
+<p><strong>Plan Deviations</strong>: (1) nhánh B chứa merge commit của A (b27aaf6, A @3f18565) để lấy ConfigVersion/vlm_stage; nhánh cổng sạch cherry-pick các commit B sẽ bỏ merge này (đã thống nhất với điều phối). (2) <code>annotated_class_id</code> suy từ <code>snapshot.normalized_json</code> + taxonomy của engine schema, chỉ kiểm bằng unit test.</p>
+<p><strong>Approved By</strong>: <code>not-applicable</code> (chưa có review/QC độc lập)</p>
+<p><strong>Known Limitations</strong>:</p>
+<ul>
+<li><strong>Chưa huấn luyện thật</strong>: không có crop nhãn thật/snapshot+ảnh thật trong repo; chỉ có torch CPU (CUDA không dùng được trong WSL) — BLOCKER-032. Mọi checkpoint hiện tạo ra là <code>smoke_only</code>; mọi số đo là kiểm cơ chế, không có accuracy đáng tin, không dùng held-out.</li>
+<li><code>training.status = trained</code> chỉ chứng minh điều kiện kỹ thuật (data_origin khai báo là real, ImageNet pretrained, ≥3 epoch, val không rỗng, đủ 10 lớp); <code>data_origin</code> do người chạy khai và không được tool xác minh.</li>
+<li>Pin: Python 3.12.15, torch 2.14.1+cpu, torchvision 0.29.1+cpu (index PyTorch CPU) trong <code>src/classifier_worker/uv.lock</code> — PO xem lại khi duyệt PR (thêm phụ thuộc lớn ~800 MB venv).</li>
+<li>Trọng số ImageNet tải từ <code>download.pytorch.org</code> lúc chạy smoke (≈109 MB, mất ~10 phút trên máy này); checkpoint smoke 111,372,631 byte nằm ngoài git.</li>
+<li>Crop thật cho classifier phụ thuộc <code>CropProvider</code> của M04A-04 (#282); mặc định <code>NoCropProvider</code> ⇒ mọi candidate <code>failed/invalid_crop</code>.</li>
+<li>Throughput: mỗi batch khởi động một tiến trình worker (import torch + nạp checkpoint, ~vài giây); chưa đo tải/độ trễ (ngoài phạm vi M-04).</li>
+<li>CI cho <code>src/classifier_worker</code>: do PR #307 (Hà, ci.yml job <code>classifier</code>) xử lý; báo cáo này không sửa <code>.github</code>.</li>
+<li>Phần backend #286 PHỤ THUỘC PR pha A (dùng <code>vlm_stage.crop_provider</code>, ConfigVersion/validate, ledger convention): <strong>không</strong> áp được lên <code>feat/M-04-backend</code> khi chưa có A (cherry-pick xung đột 9 file). Nhánh cổng <code>feat/M-04-b-gate</code> chỉ chứa phần worker độc lập; phần backend nằm ở <code>feat/M-04-b-classifier</code> (3a9ca08, 8f8c0f2) và bản đã giải xung đột với A@39adf66 (migration 0007, ledger, contract.d.ts sinh lại) ở cây gộp thử cục bộ — cần áp lại sau khi A vào.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[ ] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[ ] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="api-handoff-batch-2">API handoff đợt 2 (M04B-04)</h2>
+<p>Field <code>classifier</code> trên mỗi Candidate (additive, <code>null</code> nếu chưa chạy/engine tắt). FE chỉ cần parse các field dưới đây; không cần hiểu checkpoint nội bộ.</p>
+<table><thead><tr><th>Field</th><th>Kiểu</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>status</code></td><td>pending | running | completed | failed | cancelled</td><td>Trạng thái lượt classifier</td></tr>
+<tr><td><code>reason_code</code></td><td>string</td><td>Rỗng khi completed; khi failed: invalid_crop, box_too_small, checkpoint_unavailable, checksum_mismatch, not_configured, timeout, inference_error</td></tr>
+<tr><td><code>crop_valid</code></td><td>boolean</td><td>false khi invalid_crop/box_too_small</td></tr>
+<tr><td><code>crop_sha256</code></td><td>string</td><td>sha256 crop đã gửi (rỗng nếu chưa có)</td></tr>
+<tr><td><code>predicted_class_id</code>, <code>predicted_class_name</code></td><td>integer|null, string</td><td>Lớp top-1 (0–9, bdd100k-det-10-v1)</td></tr>
+<tr><td><code>annotated_class_id</code></td><td>integer|null</td><td>Lớp theo nhãn gốc của annotation; null nếu không truy ra hoặc ngoài class map</td></tr>
+<tr><td><code>score</code>, <code>margin</code></td><td>number|null</td><td>Softmax top-1 (CHƯA calibrate, không phải xác suất đúng) và top-1 trừ top-2</td></tr>
+<tr><td><code>top3</code></td><td>[{class_id, class_name, score}]</td><td>Tối đa 3 phần tử, giảm dần</td></tr>
+<tr><td><code>classifier_unknown</code></td><td>boolean</td><td>Mặc định false; abstention theo ngưỡng do policy định tuyến tính từ score/margin; unknown không phải lớp thứ 11</td></tr>
+<tr><td><code>checkpoint_version</code>, <code>checkpoint_sha256</code>, <code>checkpoint_status</code></td><td>string</td><td>Phiên bản/sha256 checkpoint; status smoke_only hoặc trained</td></tr>
+<tr><td><code>class_map_version</code>, <code>snapshot_revision</code></td><td>string</td><td>bdd100k-det-10-v1; revision snapshot khoá</td></tr>
+</tbody></table>
+<p>Ví dụ (giá trị từ smoke thật trên fixture tổng hợp, KHÔNG phải kết quả huấn luyện thật):</p>
+<pre><code>{"status":"completed","reason_code":"","crop_valid":true,"crop_sha256":"…","predicted_class_id":2,"predicted_class_name":"car","annotated_class_id":2,"score":0.650,"margin":0.560,"top3":[{"class_id":2,"class_name":"car","score":0.650},{"class_id":0,"class_name":"pedestrian","score":0.090},{"class_id":9,"class_name":"traffic sign","score":0.084}],"classifier_unknown":false,"checkpoint_version":"smoke-imagenet-synthetic","checkpoint_sha256":"17ae221e…","checkpoint_status":"smoke_only","class_map_version":"bdd100k-det-10-v1","snapshot_revision":"…"}</code></pre>
+<p>Cấu hình: <code>engines.classifier.enabled=true</code> + <code>models.classifier={"model_artifact_id": &lt;id&gt;}</code>; publish trả 422 BUSINESS_RULE_UNMET nếu ModelArtifact thiếu checksum/artifact_key hoặc class map sai. Biến môi trường runtime: <code>CLASSIFIER_WORKER_COMMAND</code> (list), <code>CLASSIFIER_ARTIFACT_ROOT</code>, <code>CLASSIFIER_TIMEOUT_SECONDS</code>, <code>CLASSIFIER_BATCH_SIZE</code>.</p>
+<h2 id="not-verified">NOT VERIFIED</h2>
+<ul>
+<li>Độ chính xác/hành vi của classifier trên dữ liệu thật; hiệu quả của fine-tune; GPU.</li>
+<li>Crop thật từ snapshot/CVAT qua CropProvider của A; luồng đầy đủ run→candidate→classifier→Qwen.</li>
+<li>Annotated_class_id với annotation thật (chỉ unit test).</li>
+<li>Hiệu năng/độ trễ/tải, chạy nhiều worker đồng thời.</li>
+<li>Windows/CI runner cho worker (chưa có job CI).</li>
+</ul>
+<h2 id="handover">Bàn giao</h2>
+<table><thead><tr><th>Việc còn lại</th><th>Lệnh / ghi chú</th></tr></thead><tbody>
+<tr><td>Huấn luyện thật (BLOCKER-032)</td><td>Cần PO/Data Owner xác nhận quyền dữ liệu + snapshot khoá + ảnh + label map. Chạy: <code>cd src/classifier_worker &amp;&amp; uv run labelx-classifier build-dataset --snapshot S.json --label-map L.json --image-root IMG --out DS --revision-sha256 R --data-origin real --group-by task --val-fraction 0.2</code> rồi <code>uv run labelx-classifier train --dataset DS --out MODEL --version V --epochs 3+</code>; kiểm: <code>verify --manifest MODEL/classifier-manifest.json</code>. status trained chỉ khi đủ điều kiện (xem status_reasons).</td></tr>
+<tr><td>Áp backend #286 sau khi A vào</td><td>Cherry-pick 3a9ca08 + 8f8c0f2 từ <code>feat/M-04-b-classifier</code> lên nền có A, giải xung đột (openapi/serializers/models/services/config_versions/runsync/dispatch/tasks), đổi migration thành 0007 phụ thuộc 0006 của A, chuyển ledger classifier vào <code>orchestration.services.ledger_counts</code>, sinh lại <code>contract.d.ts</code> bằng <code>npm run gen:api:contract</code> (không gỡ xung đột tay).</td></tr>
+<tr><td>Pytest FULL backend</td><td><code>cd src/backend &amp;&amp; uv run pytest tests</code> trên DB/Redis cô lập (Postgres + Redis riêng). Chưa chạy lại sau sửa review.</td></tr>
+<tr><td>Smoke worker thật qua backend</td><td><code>LABELX_CLASSIFIER_E2E_ROOT=&lt;dir model&gt; LABELX_CLASSIFIER_E2E_CMD="uv run --project &lt;dir src/classifier_worker&gt; labelx-classifier" uv run pytest tests/classifier/test_e2e_real_worker.py</code> (đã pass 1 lần với checkpoint smoke_only trên crop PNG tổng hợp); crop thật cần <code>CropProvider</code> của M04A-04.</td></tr>
+<tr><td>Worker tests</td><td><code>cd src/classifier_worker &amp;&amp; uv sync --extra dev &amp;&amp; uv run pytest tests</code> (79 pass trên nhánh cổng)</td></tr>
+<tr><td>Mutation (tham khảo)</td><td>worker 8+9+10 mutant, backend 12 mutant đều bị bắt sau khi bổ sung test (script nằm ngoài repo)</td></tr>
+</tbody></table>
+<p>Ghi chú: hậu tố <code>-@label-x-47</code> của tên file do integrator gộp sau theo CR-100; giữ nguyên.</p>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>
