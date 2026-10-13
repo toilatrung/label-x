@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import timedelta
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Case, FloatField, Q, Value, When
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.request import Request
 
@@ -16,7 +20,8 @@ from accounts.permissions import record_rejection_audit
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from guideline.models import GuidelineRule
-from review.models import DecisionCase, Issue, ReviewDecision
+from review.models import DecisionCase, GuidelineGap, Issue, ReviewDecision, ReworkRequest
+from review.rework_service import create_rework
 from review.serialization import issue_response
 from runs.models import QCRun
 
@@ -294,7 +299,14 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
                     "IDEMPOTENCY_KEY_REUSED",
                     "Idempotency-Key đã dùng với body khác.",
                 )
-            return _case_payload(old_case)
+            rework_id = (
+                ReworkRequest.objects.filter(
+                    issue=issue, created_by=user, create_idempotency_key=key
+                )
+                .values_list("pk", flat=True)
+                .first()
+            )
+            return {**_case_payload(old_case), "rework_id": rework_id}
 
     # 5. Transition state check: must be ESCALATED
     if issue.state != Issue.State.ESCALATED:
@@ -312,6 +324,20 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
             status.HTTP_400_BAD_REQUEST,
             "VALIDATION_ERROR",
             "Outcome không hợp lệ; chỉ chấp nhận confirm, reject, guideline_gap.",
+        )
+
+    after_adjudication = body.get("after_adjudication", "none")
+    if after_adjudication not in {"none", "request_rework"}:
+        raise ApiError(
+            status.HTTP_400_BAD_REQUEST,
+            "VALIDATION_ERROR",
+            "after_adjudication không hợp lệ.",
+        )
+    if after_adjudication == "request_rework" and outcome != DecisionCase.Outcome.CONFIRM:
+        raise ApiError(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "BUSINESS_RULE_UNMET",
+            "request_rework chỉ hợp lệ khi outcome là confirm.",
         )
 
     rule_id = _validate_rule(body.get("rule_id"), issue)
@@ -395,7 +421,53 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
         request_hash=request_hash,
     )
 
-    return _case_payload(case)
+    if outcome == PUBLIC_GUIDELINE_GAP:
+        GuidelineGap.objects.get_or_create(
+            issue=issue,
+            rule_id=rule_id,
+            status=GuidelineGap.Status.OPEN,
+            defaults={
+                "description": reason,
+                "guideline_version": issue.frame_review.run.snapshot.guideline_version,
+                "created_by": user,
+            },
+        )
+
+    rework_id = None
+    if after_adjudication == "request_rework":
+        job = issue.frame_review.snapshot_frame.snapshot_job
+        if job.assignee_user_id is None:
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "BUSINESS_RULE_UNMET",
+                "Snapshot job chưa ánh xạ annotator để tạo rework.",
+            )
+        if issue.severity not in Issue.Severity.values:
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "BUSINESS_RULE_UNMET",
+                "Issue chưa có severity để tạo rework.",
+            )
+        due_hours = int(settings.REWORK_DEFAULT_DUE_HOURS)
+        deep_link = (
+            f"{settings.CVAT_BASE_URL.rstrip('/')}"
+            f"/tasks/{job.cvat_task_id}/jobs/{job.cvat_job_id}"
+            f"?frame={issue.frame_review.snapshot_frame.frame_index}"
+        )
+        rework = create_rework(
+            request=request,
+            body_override={
+                "issue_id": issue.pk,
+                "instruction": reason,
+                "annotator_user_id": job.assignee_user_id,
+                "due_at": (timezone.now() + timedelta(hours=due_hours)).isoformat(),
+                "severity": issue.severity,
+                "cvat_deep_link": deep_link,
+            },
+        )
+        rework_id = rework.pk
+
+    return {**_case_payload(case), "rework_id": rework_id}
 
 
 def _case_scope(user: User) -> tuple[bool, set[int]]:
@@ -502,3 +574,30 @@ def list_decision_cases(request: Request) -> dict[str, Any]:
         query = "&".join(f"{k}={v}" for k, v in {**params, "cursor": page[-1].pk}.items())
         next_url = request.build_absolute_uri(f"/api/decision-cases/?{query}")
     return {"next": next_url, "previous": None, "results": [_case_payload(c) for c in page]}
+
+
+def similar_case_queryset(*, issue_id: int) -> tuple[Issue, Any]:
+    """Rank prior adjudications by exact rule and family overlap."""
+
+    issue = Issue.objects.select_related("frame_review__run").filter(pk=issue_id).first()
+    if issue is None:
+        raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
+    rule_ids = [str(item) for item in issue.rule_ids if str(item).strip()]
+    same_rule = Q(rule_id__in=rule_ids) if rule_ids else Q(pk__in=[])
+    same_family = Q(issue__family=issue.family)
+    queryset = (
+        DecisionCase.objects.select_related("issue__frame_review__run")
+        .filter(issue__frame_review__run__dataset_id=issue.frame_review.run.dataset_id)
+        .exclude(issue_id=issue.pk)
+        .filter(same_rule | same_family)
+        .annotate(
+            similarity=Case(
+                When(same_rule & same_family, then=Value(1.0)),
+                When(same_rule, then=Value(0.75)),
+                default=Value(0.5),
+                output_field=FloatField(),
+            )
+        )
+        .order_by("-similarity", "-pk")
+    )
+    return issue, queryset

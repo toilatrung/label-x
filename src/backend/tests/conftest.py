@@ -1,4 +1,5 @@
 import pytest
+from django.core.files.storage import storages
 from django.db.backends.signals import connection_created
 
 
@@ -7,6 +8,12 @@ def _no_auto_dispatch(settings):
     """Test không có broker: tắt tự xếp shard vào Celery khi tạo run (T-025)."""
     settings.ORCHESTRATION_AUTO_DISPATCH = False
     settings.FINAL_RUN_AUTO_DISPATCH = False
+
+
+@pytest.fixture
+def snapshot_media_urls(monkeypatch):
+    """API unit tests isolate URL signing; S3 integration uses the real backend separately."""
+    monkeypatch.setattr(storages["snapshots"], "url", lambda key: f"https://storage.test/{key}")
 
 
 def _allow_evidence_truncate(sender, connection, **kwargs):
