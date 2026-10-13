@@ -197,16 +197,10 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     )
 
 
-# Adapter tạm: tên field theo đề xuất của #286 (feat/M-04-b-classifier @2638e3d3),
-# chưa là hợp đồng; chỉ sửa bảng này, không đụng route().
-CANDIDATE_FIELD_MAP = {
-    "crop_valid": "crop_valid",
-    "classifier_unknown": "classifier_unknown",
-    "predicted_class_id": "predicted_class_id",
-    "annotated_class_id": "annotated_class_id",
-    "score": "score",
-    "margin": "margin",
-}
+# Adapter theo contract classifier chính thức của #286 (feat/M-04-b-classifier @3a9ca080):
+# `Candidate.classifier` là object|null. Chỉ sửa phần này khi contract đổi, không đụng route().
+CLASSIFIER_KEY = "classifier"
+ANNOTATED_CLASS_KEY = "annotated_class_id"
 
 
 def routing_input_from_candidate(
@@ -215,15 +209,26 @@ def routing_input_from_candidate(
     manual_recheck: bool = False,
     budget_exhausted: bool = False,
 ) -> RoutingInput:
-    """Dựng RoutingInput từ dict candidate; field thiếu → giá trị an toàn (không đủ tin cậy)."""
-    get = {key: candidate.get(name) for key, name in CANDIDATE_FIELD_MAP.items()}
+    """Dựng RoutingInput từ candidate; thiếu dữ liệu → không đủ tin cậy (gọi Qwen), không đoán.
+
+    - `classifier` null/không phải object, hoặc chưa completed: score/margin = None → low_score.
+    - `crop_valid` chỉ False khi classifier báo rõ False; không có classifier thì không giả định
+      crop hỏng.
+    - Contract luôn trả `classifier_unknown=false`; abstention do policy quyết: classifier completed
+      mà không có lớp dự đoán (`predicted_class_id` null) được coi là unknown.
+    """
+    raw = candidate.get(CLASSIFIER_KEY)
+    clf: Mapping[str, Any] = raw if isinstance(raw, Mapping) else {}
+    completed = clf.get("status") == "completed"
+    predicted = clf.get("predicted_class_id") if completed else None
+    annotated = clf.get(ANNOTATED_CLASS_KEY, candidate.get(ANNOTATED_CLASS_KEY))
     return RoutingInput(
-        crop_valid=get["crop_valid"] is not False,
-        classifier_unknown=bool(get["classifier_unknown"]),
-        predicted_class_id=get["predicted_class_id"],
-        annotated_class_id=get["annotated_class_id"],
-        score=get["score"],
-        margin=get["margin"],
+        crop_valid=clf.get("crop_valid") is not False,
+        classifier_unknown=bool(clf.get("classifier_unknown")) or (completed and predicted is None),
+        predicted_class_id=predicted,
+        annotated_class_id=annotated,
+        score=clf.get("score") if completed else None,
+        margin=clf.get("margin") if completed else None,
         manual_recheck=manual_recheck,
         budget_exhausted=budget_exhausted,
     )
