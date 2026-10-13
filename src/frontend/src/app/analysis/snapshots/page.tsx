@@ -7,9 +7,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ForbiddenView } from '@/components/auth/ForbiddenView';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
+import { errorMessage } from '@/lib/api/errors';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
-import { SAMPLE_HISTORY_ROWS } from '@/lib/mock/snapshots';
 import { useDatasetRuns, useDatasets, useSnapshotHistory } from '@/lib/snapshots/queries';
 import { latestRunBySnapshot } from '@/lib/snapshots/runs';
 
@@ -25,23 +25,19 @@ export default function SnapshotHistoryPage() {
   const items = datasets.data?.pages.flatMap(page => page.results) ?? [];
   const selectedDataset = items.find(item => item.id === datasetId);
   const history = useSnapshotHistory(session?.user.id, canRead ? datasetId : null);
-  const runs = useDatasetRuns(session?.user.id, datasetId, canRead && !datasets.isError);
+  const runs = useDatasetRuns(session?.user.id, datasetId, canRead);
   const latestRuns = React.useMemo(() => latestRunBySnapshot(runs.data ?? []), [runs.data]);
   const snapshots = history.data?.pages.flatMap(page => page.results) ?? [];
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
   if (!canEnter) return <ForbiddenView requiredPermission="Quality Assurance Lead / Quality Control Admin / Super Admin" />;
-  const loadFailed = datasets.isError || history.isError;
-  const sample = loadFailed || (!items.length && datasets.isSuccess && !snapshots.length);
-  const hint = sample ? `${SAMPLE_HISTORY_ROWS.length} snapshot` : `${snapshots.length} snapshot đã tải`;
+  // Dataset và Snapshot đã có API: lỗi thì báo lỗi kèm "Thử lại", không thay bằng dữ liệu minh họa.
+  const hint = `${snapshots.length} snapshot đã tải`;
   return <AppShell activeKey="analysis" showFlowNav={false} context={{
-    datasetName: selectedDataset?.name ?? (sample ? 'Road Vision Urban · v1.4' : undefined),
-    datasetIdOverride: sample ? 1 : undefined,
-    snapshotName: sample ? 'SNP-014 · Đang dùng' : undefined,
-    snapshotRevision: sample ? 'a91f3c' : undefined,
-    guidelineVersion: sample ? 'v1.2' : undefined,
-    taxonomyVersion: sample ? 'v3' : undefined,
+    datasetName: selectedDataset?.name,
+    guidelineVersion: selectedDataset?.guideline_version ?? undefined,
+    taxonomyVersion: selectedDataset?.taxonomy_version ?? undefined,
   }}
     pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Lịch sử snapshot</h1>
       <p className="lx-lead">Các snapshot đã tạo, annotation revision tương ứng và Quality Control Run đã chạy trên từng snapshot. Snapshot không thể sửa.</p></div>
@@ -58,21 +54,22 @@ export default function SnapshotHistoryPage() {
         </select></div>
         {datasets.hasNextPage && <button className="lx-btn" type="button" disabled={datasets.isFetchingNextPage}
           onClick={() => void datasets.fetchNextPage()}>Tải thêm Dataset</button>}
-        {!sample && datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để xem lịch sử Snapshot.</p>}
-        {!sample && datasetId !== null && !selectedDataset && datasets.isSuccess && (
+        {datasets.isError && <div className="lx-callout" role="alert">{errorMessage(datasets.error)}
+          <button className="lx-btn" type="button" onClick={() => void datasets.refetch()}>Thử lại</button></div>}
+        {datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để xem lịch sử Snapshot.</p>}
+        {datasetId !== null && !selectedDataset && datasets.isSuccess && (
           <div className="lx-callout" role="alert">Dataset không tồn tại hoặc bạn không có quyền truy cập.</div>
         )}
         {selectedDataset && !canRead && <div className="lx-callout" role="alert">Bạn không có quyền xem Dataset này.</div>}
         {history.isPending && canRead && <p role="status">Đang tải lịch sử…</p>}
-        {!sample && history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
+        {history.isError && <div className="lx-callout" role="alert">{errorMessage(history.error)}
+          <button className="lx-btn" type="button" onClick={() => void history.refetch()}>Thử lại</button></div>}
+        {history.isSuccess && !snapshots.length && <p className="lx-muted">Chưa có Snapshot trong Dataset này.</p>}
       </div>
-      {(sample || !!snapshots.length) && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
+      {!!snapshots.length && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
         <th>Snapshot</th><th>Dataset</th><th>Revision</th><th className="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th>
       </tr></thead><tbody>
-        {sample ? SAMPLE_HISTORY_ROWS.map(row => <tr key={row.id} aria-selected={row.selected || undefined}>
-          <td className="lx-mono">{row.id}</td><td>{row.dataset}</td><td className="lx-mono">{row.revision}</td><td className="r">{row.frames}</td>
-          <td className="lx-mono">{row.run}</td><td><span className={`lx-badge${row.tone ? ` lx-badge--${row.tone}` : ''}`}>{row.status}</span></td>
-        </tr>) : snapshots.map(item => <tr key={item.id}>
+        {snapshots.map(item => <tr key={item.id}>
           <td className="lx-mono"><Link href={`/analysis?snapshotId=${item.id}`}>{snapshotCode(item.id)}</Link></td>
           <td>{selectedDataset?.name ?? `Dataset #${item.dataset_id}`}</td>
           <td className="lx-mono" title={item.revision_hash ?? undefined}>{shortRevision(item.revision_hash)}</td>
