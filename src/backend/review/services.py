@@ -199,7 +199,9 @@ def _ranking_entry(run_id: int, frame_id: int, source: str) -> RunRankingEntry:
 
 
 @transaction.atomic
-def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object] | None:
+def claim_next(
+    *, request: Request, run_id: int, queue: str, frame_id: int | None = None
+) -> dict[str, object] | None:
     if queue not in {"risk", "random"}:
         raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Queue không hợp lệ.")
     ttl = _policy_seconds("REVIEW_LEASE_TTL_SECONDS")
@@ -250,9 +252,20 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
         .select_related("snapshot_frame__snapshot_job")
         .order_by("rank", "pk")
     )
+    if frame_id is not None and not any(entry.snapshot_frame_id == frame_id for entry in entries):
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            "LEASE_CONFLICT",
+            "Frame không thuộc hàng đợi đã chọn.",
+        )
+
     eligible = []
     for entry in entries:
-        if _ineligibility_code(identity, entry) is not None:
+        if frame_id is not None and entry.snapshot_frame_id != frame_id:
+            continue
+        if frame_id is not None:
+            _deny_ineligible(request, identity, entry, "queues.next")
+        elif _ineligibility_code(identity, entry) is not None:
             continue
         frame, _ = FrameReview.objects.get_or_create(run=run, snapshot_frame=entry.snapshot_frame)
         open_lease = (
@@ -277,6 +290,12 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
         ):
             continue
         eligible.append((entry, frame))
+    if not eligible and frame_id is not None:
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            "LEASE_CONFLICT",
+            "Frame không còn khả dụng trong hàng đợi.",
+        )
     if not eligible:
         return None
     # Prefer the holder's unfinished frame before rank order; preserve source provenance.
@@ -324,6 +343,46 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
             return _grant_payload(existing, entry, resumed=True)
         return None
     return _grant_payload(lease, entry, resumed=resumed)
+
+
+def queue_summary(*, run_id: int, queue: str) -> dict[str, object]:
+    """Return an expiry-aware, read-only count of persisted queue entries by frame state."""
+
+    if queue not in {"risk", "random"}:
+        raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Queue không hợp lệ.")
+    if not QCRun.objects.filter(pk=run_id).exists():
+        raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
+    source = RunRanking.Source.RISK if queue == "risk" else RunRanking.Source.RANDOM_AUDIT
+    ranking = RunRanking.objects.filter(run_id=run_id, source=source).first()
+    if ranking is None:
+        raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run chưa có queue đã lưu.")
+
+    entries = list(ranking.entries.values_list("snapshot_frame_id", flat=True))
+    frames = {
+        frame.snapshot_frame_id: frame
+        for frame in FrameReview.objects.filter(
+            run_id=run_id, snapshot_frame_id__in=entries
+        ).prefetch_related("leases", "issues__review_decisions")
+    }
+    counts = {state: 0 for state in FrameReview.State.values}
+    now = _now()
+    for snapshot_frame_id in entries:
+        frame = frames.get(snapshot_frame_id)
+        effective: str = FrameReview.State.UNREVIEWED
+        if frame is not None:
+            effective = frame.state
+            if effective == FrameReview.State.IN_REVIEW:
+                active = any(
+                    lease.closed_at is None and lease.expires_at > now
+                    for lease in frame.leases.all()
+                )
+                if not active:
+                    decided = any(issue.review_decisions.all() for issue in frame.issues.all())
+                    effective = (
+                        FrameReview.State.INCOMPLETE if decided else FrameReview.State.UNREVIEWED
+                    )
+        counts[str(effective)] += 1
+    return {"name": queue, "run_id": run_id, "total": len(entries), "counts": counts}
 
 
 @transaction.atomic

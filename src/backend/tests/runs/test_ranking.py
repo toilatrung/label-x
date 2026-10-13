@@ -25,6 +25,7 @@ from snapshots.normalization import FrameExport, JobExport
 from snapshots.services import create_locked_snapshot
 
 BDD100K_FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "normalized-snapshot-v1.json"
+pytestmark = pytest.mark.usefixtures("snapshot_media_urls")
 
 
 @pytest.fixture
@@ -220,6 +221,15 @@ def test_ranking_endpoint_serves_risk_and_random_with_scope_protection(
     assert len(risk.data["results"]) == 3
     assert risk.data["results"][0]["score_version"] == SCORE_V0
     assert risk.data["results"][0]["explanation"]["contributions"]
+    assert risk.data["results"][0]["priority"] == "high"
+    assert risk.data["results"][0]["thumbnail_url"] == "https://storage.test/frames/0.jpg"
+
+    searched = client.get(f"/api/runs/{run.pk}/ranking/", {"q": "9:0"})
+    assert searched.status_code == 200
+    assert len(searched.data["results"]) == 1
+    assert searched.data["results"][0]["frame_key"]["frame_number"] == 0
+    assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "high"}).data["results"]
+    assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "urgent"}).status_code == 400
 
     random_queue = client.get(f"/api/runs/{run.pk}/ranking/", {"queue": "random"})
     assert random_queue.status_code == 200
@@ -399,6 +409,8 @@ def test_runtime_ranking_schema_matches_static_contract_types() -> None:
 
     assert set(operation["responses"]) == {"200", "400", "403", "404"}
     assert parameters["cursor"]["schema"]["type"] == "string"
+    assert set(parameters["priority"]["schema"]["enum"]) == {"high", "medium", "low"}
+    assert parameters["q"]["schema"]["type"] == "string"
     assert set(parameters["family"]["schema"]["enum"]) == {
         "E1",
         "E2",
