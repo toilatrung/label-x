@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04C pha C — Policy routing và Evaluation API — LabelX</title>
+<meta name="labelx:id" content="M04C-phase-C-@codex">
+<meta name="labelx:title" content="M04C pha C — Policy routing và Evaluation API">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[implementation, report, m04, routing]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / M04C-phase-C-@codex</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>M04C-phase-C-@codex</span><b>title</b><span>M04C pha C — Policy routing và Evaluation API</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>m04</span><b>tags</b><span>[implementation, report, m04, routing]</span><b>priority</b><span>2</span></div>
+<h1 id="m04c">M04C pha C — Policy routing và Evaluation API</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo và bàn giao pha C của M-04 (#288 xong, #289 làm tới mức test được, #290 và #291 chưa làm). Kết quả dùng mock/fixture: <strong>không phải runtime pass</strong> với Qwen hay checkpoint thật.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>M04C-phase-C</code></li><li><strong>Title</strong>: M04C pha C</li><li><strong>Owner</strong>: <code>@toilatrung (PO)</code></li><li><strong>Executor</strong>: <code>Claude (phiên Kênh liên lạc phiên codex)</code></li><li><strong>Status</strong>: <code>blocked</code></li><li><strong>Task ID</strong>: <code>M04C-01 #288, M04C-02 #289, M04C-03 #290, M04C-04 #291</code></li><li><strong>Epic ID</strong>: <code>E-12</code></li><li><strong>Report Date</strong>: <code>2026-10-13</code></li></ul>
+<p>Trạng thái <code>blocked</code> vì #290, #291 chưa làm và phần tích hợp phụ thuộc PR pha A và B.</p>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: #288 policy classification-routing-v0 (hàm thuần, adapter classifier, ngưỡng 0,85/0,15 chỉ là routing tạm); #289 guard idempotency/revision, serializer request, model Evaluation, POST và GET, nối policy vào stage VLM, unit manual chạy sau khi run kết thúc, ledger chỉ tính generation mới nhất.</li><li><strong>Not Implemented</strong>: #290 (nối evaluation vào workspace candidate/frame/issue: reason code, evidence refs, review_required ở serializer issue/frame); #291 (test tích hợp 7 nhánh có classifier thật trong luồng, E2E candidate đến reviewer, bảng API đợt 3 đầy đủ). Calibration, KPI, load test ngoài phạm vi M-04.</li></ul>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td><code>src/backend/orchestration/routing_policy.py</code></td><td>route() thuần; RoutingReason; adapter routing_input_from_candidate theo contract #286; classifier_untrusted/unavailable; ClassifierNotReadyError</td><td>M04C-01</td></tr><tr><td><code>src/backend/orchestration/evaluation_guard.py, evaluation_serializers.py</code></td><td>Guard stale revision/key reuse; serializer chỉ nhận reason + expected_revision</td><td>M04C-02</td></tr><tr><td><code>tests/orchestration/test_routing_policy.py, test_routing_scenarios.py, test_evaluation_guard.py</code></td><td>121 test thuần (không DB)</td><td>M04C-01/02</td></tr><tr><td><code>src/backend/orchestration/models.py, migrations/0008_evaluation.py</code></td><td>Model Evaluation (chỉ ở nhánh wip; số migration tạm)</td><td>M04C-02</td></tr><tr><td><code>orchestration/evaluation_service.py, evaluation_read.py, evaluation_views.py, candidate_urls.py, evaluation_urls.py, config/urls.py</code></td><td>Tạo evaluation tự động/thủ công, read model, POST 202 + poll, GET (chỉ ở nhánh wip)</td><td>M04C-02</td></tr><tr><td><code>orchestration/vlm_stage.py, runsync.py, dispatch.py, services.py</code></td><td>Nối policy vào start_vlm_stage qua select_candidates_for_vlm; unit manual chạy sau khi run kết thúc; sweeper; ledger/EngineResult tính generation mới nhất (chỉ ở nhánh wip)</td><td>M04C-02</td></tr><tr><td><code>docs/04-api/openapi.yaml, src/frontend/src/lib/api/contract.d.ts</code></td><td>Hai path candidates/{id}/evaluations/ và candidate-evaluations/{id}/, schema CandidateEvaluation* (chỉ ở nhánh wip)</td><td>M04C-02</td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Task Records</strong>: <code>.agent/execution/m04/M04C-01..04.html</code></li><li><strong>Context Packages</strong>: <code>.agent/planning/M-04-ABC-implementation-2026-10-13.html, M-04-dispatch-2026-10-13.html</code></li><li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code> (chưa cập nhật)</li><li><strong>Decisions</strong>: <code>DEC-021</code></li><li><strong>Change Requests</strong>: <code>CR-115, CR-116</code></li><li><strong>Risks or Blockers</strong>: pha C phụ thuộc PR pha A và B chưa gộp</li><li><strong>Review Request</strong>: <code>e4 đã review chéo C-01/C-02 @96b9832; các sửa nằm trong 480b796</code></li><li><strong>Commits</strong>: nhánh cổng <code>feat/M-04-c-gate @44bf3b0</code>; nhánh đầy đủ A+B+C <code>wip/m04-c-evaluation @7aef2f4</code>; <code>feat/M-04-c-routing @bcf5019</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td><code>git checkout feat/M-04-c-gate; pytest test_routing_policy.py test_routing_scenarios.py test_evaluation_guard.py</code></td><td>passed</td><td>121 passed; ruff check sạch (44bf3b0, DATABASE_URL giả, không DB)</td></tr><tr><td><code>pytest tests/vlm tests/classifier tests/orchestration tests/runs tests/test_contract.py tests/test_contract_runtime_parity.py tests/test_openapi_schema_clean.py (nhánh wip, Postgres/Redis riêng)</code></td><td>passed</td><td>582 passed trong 180 giây (trước commit 8cb7776; sau đó chỉ sửa một dòng docstring)</td></tr><tr><td><code>pytest tests/orchestration/test_evaluation_api.py (nhánh wip)</code></td><td>passed</td><td>18 passed: 202 + poll, replay, key mới tạo generation mới, 409 key reuse, 409 stale, 400, 403/404, 422, budget, race 6 luồng, không ghi đè evidence cũ</td></tr><tr><td><code>manage.py makemigrations --check (nhánh wip)</code></td><td>passed</td><td>No changes detected</td></tr><tr><td><code>openapi-typescript docs/04-api/openapi.yaml -o contract.d.ts</code></td><td>passed</td><td>sinh lại, không sửa tay</td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>ruff check, ruff format --check, mypy orchestration</td><td>passed</td><td>sạch trên nhánh wip</td></tr><tr><td>pytest FULL</td><td>not-run</td><td>chưa xin slot; chỉ chạy các nhóm nêu trên</td></tr><tr><td>make check, make validate-kit</td><td>not-run</td><td>chưa chạy; report này chưa qua validate-kit</td></tr><tr><td>Review chéo</td><td>partial</td><td>e4 review C-01/C-02; chưa ai review phần Evaluation API</td></tr></tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: (1) tài nguyên đặt tên <code>/api/candidate-evaluations/{id}/</code> và schema <code>CandidateEvaluation</code> thay vì <code>/api/evaluations/{id}/</code> vì path và schema <code>Evaluation</code> đã thuộc tài nguyên KPI (E-17) trong OpenAPI; cần coordinator xác nhận. (2) Stale revision trả 409 <code>BUSINESS_RULE_UNMET</code> kèm <code>details.reason_code=stale_revision</code> (không thêm ErrorCode mới, tránh đụng errors.ts của FE); do coordinator chấp nhận. (3) smoke_only/rỗng ⇒ <code>classifier_untrusted</code> ép gọi Qwen và human_review_required (PO chưa phản hồi, đảo lại được). (4) Hai reason_code mới ngoài payload FE v0: <code>classifier_untrusted</code>, <code>classifier_unavailable</code> cần ghi vào #278.</li><li><strong>Approved By</strong>: các điểm (2) chấp nhận bởi label-x-m04-5a; (1), (3), (4) chưa có xác nhận của PO</li><li><strong>Known Limitations</strong>: unknown do policy quyết (completed mà predicted_class_id null) vì classifier_unknown luôn false; policy_version của VlmUnit/evidence nay là classification-routing-v0 (đổi từ vlm-trigger-v0 của pha A, đã sửa 4 test của A); budget 0 không tạo VlmUnit nào nên engine vlm là not_checked; số migration tạm 0008; endpoint chưa có throttle; GET evaluation chỉ kiểm quyền theo dataset của run.</li></ul>
+<h2 id="fe-note">Ghi chú cho FE và #278</h2>
+<p>Hai <code>reason_code</code> mới ngoài payload FE v0: <code>classifier_untrusted</code>, <code>classifier_unavailable</code>. Cần cập nhật FE và ghi vào #278. Ngoài ra <code>route()</code> gọi trực tiếp với nhãn sai kiểu sẽ bỏ qua conflict; mọi đường vào phải qua <code>routing_input_from_candidate</code>.</p>
+<h2 id="classifier-deps">Chỗ phụ thuộc classifier cần đổi nếu CR-117 bỏ ConvNeXt (chỉ liệt kê, chưa đổi code)</h2>
+<p>PO đề xuất bỏ classifier khỏi M-04 (CR-117 chờ duyệt, PR #314). Khi CR được duyệt, nguồn của <code>routing_input_from_candidate</code> chuyển sang detector. Danh sách theo file, trên nhánh cổng <code>feat/M-04-c-gate</code>:</p>
+<table><thead><tr><th>File / hàm</th><th>Phụ thuộc classifier</th><th>Việc cần làm</th></tr></thead><tbody>
+<tr><td><code>orchestration/routing_policy.py</code>: <code>routing_input_from_candidate</code>, <code>CLASSIFIER_KEY</code>, <code>ClassifierNotReadyError</code></td><td>Đọc <code>Candidate.classifier</code> (status, crop_valid, predicted_class_id, score, margin, checkpoint_status); chờ khi pending/running</td><td>Đổi nguồn và tên trường sang detector (đề xuất: đổi tên hàm thành adapter chung); giữ <code>route()</code> nếu RoutingInput giữ nguyên</td></tr>
+<tr><td><code>RoutingInput</code>: <code>classifier_unknown</code>, <code>classifier_available</code>, <code>checkpoint_status</code>, <code>margin</code></td><td>Khái niệm của classifier: margin top-1/top-2, unknown, checkpoint_status</td><td>Quyết định detector có margin/unknown/trạng thái checkpoint không; nếu không, bỏ <code>margin</code> và <code>checkpoint_status</code>, thay low_margin bằng ngưỡng khác do PO chốt</td></tr>
+<tr><td><code>RoutingReason</code>: <code>CLASSIFIER_ONLY</code>, <code>CLASSIFIER_UNTRUSTED</code>, <code>CLASSIFIER_UNAVAILABLE</code>, <code>LOW_MARGIN</code>, <code>UNKNOWN</code></td><td>reason_code gắn tên classifier (payload FE v0 có <code>classifier_only</code>, <code>source: "classifier"</code>)</td><td>Đổi tên hoặc giữ tương thích với FE; báo #278 và FE (#213) vì đổi tên trường payload</td></tr>
+<tr><td><code>route()</code> và hằng <code>TRUSTED_CHECKPOINT</code>, <code>_trigger_reasons</code></td><td>Quy tắc "checkpoint khác trained ⇒ ép Qwen và human review"; thứ tự ưu tiên có classifier_*</td><td>Bỏ hoặc thay bằng quy tắc cho detector (vd độ tin cậy detector); cập nhật thứ tự ưu tiên và docstring</td></tr>
+<tr><td><code>RoutingPolicy</code> / <code>as_record()</code> / policy_sha256 / tên <code>classification-routing-v0</code></td><td>Tên policy và ngưỡng score/margin 0,85/0,15 gắn với classifier</td><td>Nếu ngưỡng đổi nghĩa thì đổi version policy (không giữ v0), giữ chú thích "routing tạm"</td></tr>
+<tr><td><code>tests/orchestration/test_routing_policy.py</code>, <code>test_routing_scenarios.py</code></td><td>Fixture <code>_clf</code>/<code>candidate</code> dựng đối tượng <code>classifier</code>; test untrusted/unavailable/pending</td><td>Viết lại fixture theo schema detector; xoá hoặc đổi test checkpoint_status và ClassifierNotReadyError</td></tr>
+<tr><td>Nhánh <code>wip/m04-c-evaluation</code>: <code>orchestration/evaluation_service.py</code> (<code>classifier_payload</code>, <code>route_candidates</code>), <code>vlm_stage._classifier_pending</code>, <code>runsync</code> gọi stage classifier, serializer <code>classifier</code></td><td>Đọc <code>ClassifierUnit</code> của B; VLM stage chờ classifier xong</td><td>Thay nguồn bằng detector; bỏ bước chờ classifier nếu detector có sẵn ở candidate; migration phụ thuộc <code>0007_classifier_unit</code> sẽ không còn</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>: <code>CandidateEvaluation</code> (<code>checkpoint_status</code>, mô tả reason_code classifier_*)</td><td>Mô tả và trường gắn classifier (chỉ ở nhánh wip)</td><td>Cập nhật mô tả/trường; sinh lại <code>contract.d.ts</code> bằng openapi-typescript</td></tr>
+</tbody></table>
+<p>Các phần không phụ thuộc classifier và giữ nguyên: <code>evaluation_guard.py</code> (idempotency, stale revision), <code>evaluation_serializers.py</code>, Evaluation model/API, ledger generation mới nhất, nối vào stage VLM qua <code>select_candidates_for_vlm</code>.</p>
+<h2 id="not-verified">NOT VERIFIED</h2>
+<ul><li>Gọi Qwen/cổng thật, checkpoint classifier thật (mọi kết quả là mock/FakeClient, không phải runtime).</li><li>Celery worker và Redis thật (test gọi hàm trực tiếp, không qua worker).</li><li>Hành vi khi A và B bị sửa thêm sau 2240aca/3a9ca08.</li><li>Race giữa auto-evaluation và manual trên cùng candidate; sweeper cho unit manual chỉ có test gián tiếp.</li><li>Frontend (contract.d.ts chỉ sinh lại, chưa chạy typecheck/test FE).</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] #288: policy versioned, conflict ưu tiên score cao, ngưỡng không gọi là calibration; test đạt.</li><li>[ ] #289: AC "lưu theo evaluation" có (model, test), chưa review độc lập.</li><li>[ ] #290 chưa làm.</li><li>[ ] #291 chưa làm.</li><li>[ ] Build, lint, test: một phần; pytest FULL và make check chưa chạy.</li><li>[ ] Reviewer độc lập cho Evaluation API: chưa.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không coi report này là review hay approval; không đóng issue; không ghi mock thành runtime pass.</li></ul>
+<h2 id="handoff">Bàn giao cho agent tiếp theo</h2>
+<p><strong>Phụ thuộc PR pha A và B.</strong> Nhánh cổng chỉ chứa phần C độc lập (policy, guard, serializer, test): chạy được trên <code>origin/feat/M-04-backend</code> mà chưa cần A/B. Phần tích hợp Evaluation cần A (migration 0004–0006, VlmUnit/Evidence) và B (ClassifierUnit, migration 0005 thành 0007).</p>
+<h3 id="order">Việc còn lại, theo thứ tự</h3>
+<ol>
+<li>Chờ PR pha A và B gộp vào <code>feat/M-04-backend</code>.</li>
+<li>Trên nhánh mới từ <code>origin/feat/M-04-backend</code>: gộp <code>feat/M-04-c-gate</code>, rồi áp phần Evaluation: <code>git cherry-pick 6dc3b52 8cb7776 7aef2f4</code> (nguồn: <code>wip/m04-c-evaluation</code>, gốc là merge 92d2d23 của A@2240aca + B@3a9ca08). Sẽ xung đột ở models.py, serializers, openapi.yaml, contract.d.ts nếu A/B đã đổi: gỡ tay phần code, riêng contract.d.ts sinh lại bằng openapi-typescript.</li>
+<li>Đánh số lại migration <code>0008_evaluation.py</code> sau migration cuối của A và B (<code>makemigrations --check</code>, không giữ số tạm).</li>
+<li>Chạy lại: <code>pytest tests/vlm tests/classifier tests/orchestration tests/runs tests/test_contract.py tests/test_contract_runtime_parity.py tests/test_openapi_schema_clean.py</code> (cần Postgres và Redis riêng, đặt DATABASE_URL, CELERY_BROKER_URL); sau đó xin slot cho pytest FULL và <code>make check</code>.</li>
+<li>Xác nhận với PO: đặt tên candidate-evaluations; hai reason_code mới (ghi vào #278); smoke_only ép review.</li>
+<li>#290: thêm vào serializer frame issues/issue detail các trường reason_code, evidence refs, review_required lấy từ Evaluation mới nhất; Qwen không tạo ReviewDecision/Adjudication; test quyền reviewer/QA.</li>
+<li>#291: test tích hợp 7 nhánh với assert API/DB/ledger (đã có nhiều ở test_evaluation_api.py), bổ sung nhánh có ClassifierUnit thật (classifier-only, trigger, conflict, uncertain, provider failure) và một E2E từ candidate đến reviewer; ghi rõ mock; viết bảng API đợt 3.</li>
+<li>Review chéo độc lập, rồi PR do coordinator mở (base <code>feat/M-04-backend</code>).</li>
+</ol>
+<p>Nhánh: <code>feat/M-04-c-gate</code> (44bf3b0, cổng), <code>wip/m04-c-evaluation</code> (7aef2f4, A+B+C đầy đủ, KHÔNG phải nhánh cổng), <code>feat/M-04-c-routing</code> (bcf5019).</p>
+</article></main></body></html>
