@@ -20,13 +20,13 @@ from review.models import Issue, ReworkRequest
 from tests.review.test_frame_followup_flow import (  # noqa: F401
     _confirmed_issue,
     _rework,
-    _stub_recheck,
     approved_test_policy,
     storage_url,
 )
 from tests.review.test_issues_decisions import claim
 from tests.review.test_queue_lease import client
 from tests.review.test_rework import (  # noqa: F401
+    _run_for,
     changed_snapshot,
     create_body,
     cvat_base_url,
@@ -46,7 +46,8 @@ def scene(world, monkeypatch):  # noqa: F811
     rework_a = _rework(world, issue_a)
     issue_b = _confirmed_issue(world, lease_id, frame_id)
     snapshot = changed_snapshot(world)
-    _stub_recheck(monkeypatch, world, [snapshot])
+    pair = (snapshot, _run_for(world, snapshot))
+    monkeypatch.setattr(rework_service, "_build_recheck_artifacts", lambda **_kw: pair)
     return SimpleNamespace(world=world, rework_a=rework_a, issue_b=issue_b, snapshot=snapshot)
 
 
