@@ -214,3 +214,23 @@ def test_http_create_accepts_openai_compatible_gateway_config() -> None:
     assert client.post(f"/api/config-versions/{resp.data['id']}/publish/").status_code == 200
     bad = _post(client, "gw-2", models={"vlm": {**vlm, "base_url": "https://api.shopaikey.com/v2"}})
     assert bad.status_code == 400
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "vlm",
+    [
+        {
+            **VALID,
+            "provider": "openai_compatible",
+            "base_url": "https://api.shopaikey.com/v1",
+            "api_key_env": "DASHSCOPE_API_KEY",
+        },
+        {**VALID, "api_key_env": "VLM_API_KEY"},
+        {**VALID, "provider": "openai_compatible"},
+        {**VALID, "provider": "dashscope", "base_url": "https://api.shopaikey.com/v1"},
+    ],
+)
+def test_http_rejects_key_provider_host_mismatch_both_ways(vlm: dict[str, Any]) -> None:
+    resp = _post(_actor(Role.QC_ADMIN), f"b-{id(vlm)}", models={"vlm": vlm})
+    assert resp.status_code == 400 and not ConfigVersion.objects.exists()

@@ -41,6 +41,7 @@ def _ok(label: str = "bus") -> httpx.Response:
 @pytest.fixture(autouse=True)
 def _key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VLM_API_KEY", SECRET)
+    monkeypatch.setenv("DASHSCOPE_API_KEY", SECRET)
 
 
 def _client(handler: Any) -> DashScopeClient:
@@ -172,6 +173,7 @@ def test_invalid_crop_never_calls_provider() -> None:
 
 def test_missing_api_key_is_auth_failure_without_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("VLM_API_KEY")
+    monkeypatch.delenv("DASHSCOPE_API_KEY")
     calls = []
     result = run_vlm_unit(_req(), _client(lambda r: calls.append(1) or _ok()), CounterBudget(3))
     assert result.reason_code is VlmReasonCode.PROVIDER_ERROR and not calls
@@ -326,20 +328,55 @@ def test_openai_compatible_gateway_provenance_and_request_shape() -> None:
     assert SECRET not in repr(result)
 
 
-def test_gateway_key_env_default_is_vlm_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_key_env_follows_host(monkeypatch: pytest.MonkeyPatch) -> None:
     assert parse_vlm_config(SHOPAI).api_key_env == "VLM_API_KEY"
-    monkeypatch.setenv("DASHSCOPE_API_KEY", "other-key")
+    assert parse_vlm_config(VALID).api_key_env == "DASHSCOPE_API_KEY"
     monkeypatch.delenv("VLM_API_KEY")
-    auth: list[str] = []
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "dash-key")
+    requests: list[httpx.Request] = []
+    req = VlmRequest(
+        CropInput(PNG, "image/png"), TAXONOMY, CandidateContext("c", "r"), parse_vlm_config(SHOPAI)
+    )
+    result = run_vlm_unit(req, _client(lambda r: requests.append(r) or _ok()), CounterBudget(2))
+    assert result.status is VlmStatus.FAILED and requests == []  # cổng chỉ dùng VLM_API_KEY
+
+
+def test_client_refuses_key_to_wrong_host_both_directions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import dataclasses
+
+    monkeypatch.setenv("VLM_API_KEY", "gw-key")
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "dash-key")
+    seen: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
-        auth.append(request.headers["authorization"])
+        seen.append(request.headers["authorization"])
         return _ok()
 
-    legacy = parse_vlm_config({**SHOPAI, "api_key_env": "DASHSCOPE_API_KEY"})
-    req = VlmRequest(CropInput(PNG, "image/png"), TAXONOMY, CandidateContext("c", "r"), legacy)
-    assert run_vlm_unit(req, _client(handler), CounterBudget(2)).status is VlmStatus.CHECKED
-    assert auth == ["Bearer other-key"]
+    client = _client(handler)
+    gw = parse_vlm_config(SHOPAI)
+    dash = parse_vlm_config(VALID)
+    crop = CropInput(PNG, "image/png")
+    ctx = CandidateContext("c", "r")
+    cases = [
+        dataclasses.replace(gw, api_key_env="DASHSCOPE_API_KEY"),  # key DashScope → cổng
+        dataclasses.replace(dash, api_key_env="VLM_API_KEY"),  # key cổng → DashScope
+        dataclasses.replace(gw, provider="dashscope"),  # provider không khớp host
+        dataclasses.replace(dash, provider="openai_compatible"),
+    ]
+    for bad in cases:
+        request = VlmRequest(crop, TAXONOMY, ctx, bad)
+        with pytest.raises(VlmProviderError):
+            client.preflight(request)
+        with pytest.raises(VlmProviderError):
+            client.complete(request)
+    assert seen == []
+    ok = run_vlm_unit(VlmRequest(crop, TAXONOMY, ctx, gw), client, CounterBudget(2))
+    assert ok.status is VlmStatus.CHECKED and seen == ["Bearer gw-key"]
+    seen.clear()
+    ok2 = run_vlm_unit(VlmRequest(crop, TAXONOMY, ctx, dash), client, CounterBudget(2))
+    assert ok2.status is VlmStatus.CHECKED and seen == ["Bearer dash-key"]
 
 
 def test_redirects_are_not_followed() -> None:

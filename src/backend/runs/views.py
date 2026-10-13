@@ -51,6 +51,7 @@ from runs.services import (
     create_qc_run,
     retry_failed_qc_run,
 )
+from runs.vlm_read import load_candidate_units
 from snapshots.models import Snapshot
 
 
@@ -560,7 +561,11 @@ class RunCandidateListView(RunScopedReadView):
 
         paginator = CandidateCursorPagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        serializer = CandidateSerializer(page, many=True)
+        serializer = CandidateSerializer(
+            page,
+            many=True,
+            context={"vlm_units": load_candidate_units(c.pk for c in page or [])},
+        )
         response = paginator.get_paginated_response(serializer.data)
         response.data.update(raw_count=None, dedup_count=dedup_count)
         return response

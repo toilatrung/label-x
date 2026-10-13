@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from vlm.config import ALLOWED_API_KEY_ENVS
+from vlm.config import ALLOWED_API_KEY_ENVS, binding_error
 from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
 
@@ -98,6 +98,9 @@ class DashScopeClient:
         if cfg.api_key_env not in ALLOWED_API_KEY_ENVS:
             # Phòng thủ thêm: không bao giờ đọc biến môi trường ngoài allowlist.
             raise VlmProviderError(VlmProviderFailure.AUTH, "api_key_env không được phép")
+        if binding_error(cfg.provider, cfg.host, cfg.api_key_env) is not None:
+            # Key của nhà cung cấp này không được gửi tới host của nhà khác.
+            raise VlmProviderError(VlmProviderFailure.AUTH, "api_key_env không khớp host")
         api_key = os.environ.get(cfg.api_key_env, "")
         if not api_key:
             # Thiếu credential: lỗi xác thực cố định, không retry và không gọi mạng.

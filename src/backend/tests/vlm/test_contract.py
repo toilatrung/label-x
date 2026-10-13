@@ -109,6 +109,15 @@ def test_valid_config_parses_and_public_dict_has_no_secret() -> None:
         {"base_url": "https://dashscope.aliyuncs.com/../v1"},
         {"base_url": "https://dashscope.aliyuncs.com"},
         {"base_url": "https://dashscope.aliyuncs.com/v1;x"},
+        # Ràng provider ↔ host ↔ key env (N1): key không được sang host nhà khác.
+        {"api_key_env": "VLM_API_KEY"},  # dashscope host + key cổng
+        {"provider": "openai_compatible"},  # provider cổng + host DashScope
+        {"provider": "dashscope", "base_url": "https://api.shopaikey.com/v1"},
+        {
+            "provider": "openai_compatible",
+            "base_url": "https://api.shopaikey.com/v1",
+            "api_key_env": "DASHSCOPE_API_KEY",
+        },  # key DashScope → cổng (probe của codex)
         {"api_key_env": "DJANGO_SECRET_KEY"},
         {"api_key_env": "DATABASE_URL"},
         {"api_key_env": "ＤＡＳＨＳＣＯＰＥ_API_KEY"},
@@ -149,7 +158,11 @@ def test_boundaries_accepted() -> None:
         {"max_attempts": 1},
         {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/"},
         {"api_key_env": "DASHSCOPE_API_KEY"},
-        {"api_key_env": "VLM_API_KEY"},
+        {
+            "provider": "openai_compatible",
+            "base_url": "https://api.shopaikey.com/v1",
+            "api_key_env": "VLM_API_KEY",
+        },
         {"provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1"},
         {"provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1/"},
     ):
@@ -158,12 +171,13 @@ def test_boundaries_accepted() -> None:
 
 def test_default_key_env_and_providers() -> None:
     cfg = parse_vlm_config(VALID)
-    assert cfg.api_key_env == "VLM_API_KEY" and cfg.host == "dashscope-intl.aliyuncs.com"
+    assert cfg.api_key_env == "DASHSCOPE_API_KEY" and cfg.host == "dashscope-intl.aliyuncs.com"
     assert cfg.as_public_dict()["host"] == "dashscope-intl.aliyuncs.com"
     gateway = parse_vlm_config(
         {**VALID, "provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1"}
     )
     assert gateway.provider == "openai_compatible" and gateway.host == "api.shopaikey.com"
+    assert gateway.api_key_env == "VLM_API_KEY"
 
 
 def test_allowlist_contains_only_instruct_default() -> None:

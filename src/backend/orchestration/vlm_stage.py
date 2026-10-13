@@ -34,7 +34,13 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 
 from engines.registration import taxonomy_from_params
-from orchestration.models import CandidateRecord, VlmAttempt, VlmBudget, VlmUnit
+from orchestration.models import (
+    CandidateRecord,
+    VlmAttempt,
+    VlmBudget,
+    VlmEvidence,
+    VlmUnit,
+)
 from runs.models import QCRun
 from vlm.client import DashScopeClient
 from vlm.config import VlmConfig, parse_vlm_config, validate_vlm_config
@@ -74,7 +80,7 @@ class CropProvider(Protocol):
 
 
 class NoCropProvider:
-    """Mặc định khi chưa cấu hình nguồn crop: mọi candidate thành failed/invalid_crop (hiện rõ)."""
+    """Nguồn crop rỗng (test/tắt): mọi candidate thành failed/invalid_crop, hiện rõ."""
 
     def identity(self, candidate: CandidateRecord) -> str:
         return ""
@@ -84,7 +90,7 @@ class NoCropProvider:
 
 
 def crop_provider() -> CropProvider:
-    path = getattr(settings, "VLM_CROP_PROVIDER", "orchestration.vlm_stage.NoCropProvider")
+    path = getattr(settings, "VLM_CROP_PROVIDER", "orchestration.vlm_crops.SnapshotCropProvider")
     provider: CropProvider = import_string(path)()
     return provider
 
@@ -313,24 +319,65 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
         return unit, token, VlmUnit.Status.RUNNING
 
 
-def _settle_unit(unit: VlmUnit, token: str, result: dict[str, Any]) -> bool:
+def _settle_unit(
+    unit: VlmUnit,
+    token: str,
+    result: dict[str, Any],
+    *,
+    config: dict[str, Any] | None = None,
+    revision: str = "",
+    class_name: str = "",
+    crop_origin: dict[str, Any] | None = None,
+) -> bool:
+    """Chốt unit và ghi evidence append-only trong cùng một transaction (chỉ chủ lease)."""
     ok = result["status"] in (VlmStatus.CHECKED.value, VlmStatus.UNCERTAIN.value)
     with transaction.atomic():
         QCRun.objects.select_for_update().only("id").get(pk=unit.run_id)
-        return bool(
-            VlmUnit.objects.filter(
-                pk=unit.pk, status=VlmUnit.Status.RUNNING, lease_token=token
-            ).update(
-                status=VlmUnit.Status.COMPLETED if ok else VlmUnit.Status.FAILED,
-                reason_code=result.get("reason_code") or "",
-                result=result,
-                attempts=result["attempts"],
-                finished_at=timezone.now(),
-            )
+        updated = VlmUnit.objects.filter(
+            pk=unit.pk, status=VlmUnit.Status.RUNNING, lease_token=token
+        ).update(
+            status=VlmUnit.Status.COMPLETED if ok else VlmUnit.Status.FAILED,
+            reason_code=result.get("reason_code") or "",
+            result=result,
+            attempts=result["attempts"],
+            finished_at=timezone.now(),
         )
+        if not updated:
+            return False
+        VlmEvidence.objects.create(
+            unit=unit,
+            run_id=unit.run_id,
+            candidate_id=unit.candidate_id,
+            status=result["status"],
+            label_class_id=result.get("label") or "",
+            class_name=class_name,
+            rationale=result.get("rationale") or "",
+            reason_code=result.get("reason_code") or "",
+            attempts=result["attempts"],
+            provider=result.get("provider") or (config or {}).get("provider", ""),
+            provider_host=result.get("provider_host") or (config or {}).get("host", ""),
+            response_model=result.get("response_model") or "",
+            model=unit.model,
+            prompt_version=unit.prompt_version,
+            policy_version=unit.policy_version,
+            snapshot_revision=revision,
+            crop_sha256=result.get("crop_sha256") or "",
+            crop_origin=crop_origin,
+            request_id=result.get("request_id") or "",
+            config=config or {},
+        )
+        return True
 
 
-def _fail(unit: VlmUnit, token: str, reason: VlmReasonCode, attempts: int = 0) -> dict[str, Any]:
+def _fail(
+    unit: VlmUnit,
+    token: str,
+    reason: VlmReasonCode,
+    attempts: int = 0,
+    *,
+    revision: str = "",
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     result = {
         "status": VlmStatus.FAILED.value,
         "label": None,
@@ -340,12 +387,12 @@ def _fail(unit: VlmUnit, token: str, reason: VlmReasonCode, attempts: int = 0) -
         "request_id": None,
         "model": unit.model,
         "response_model": None,
-        "provider": None,
-        "provider_host": None,
+        "provider": (config or {}).get("provider"),
+        "provider_host": (config or {}).get("host"),
         "prompt_version": unit.prompt_version,
         "crop_sha256": None,
     }
-    _settle_unit(unit, token, result)
+    _settle_unit(unit, token, result, config=config, revision=revision)
     return result
 
 
@@ -360,39 +407,47 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
             refresh_run(run_id)  # worker chết sau settle nhưng trước refresh: chốt nốt
         return current
     run = QCRun.objects.select_related("config_version", "snapshot").get(pk=unit.run_id)
-    candidate = CandidateRecord.objects.get(pk=unit.candidate_id)
+    candidate = CandidateRecord.objects.select_related("run").get(pk=unit.candidate_id)
+    revision = run.snapshot.revision_sha256 or str(run.snapshot_id)
     raw = run_vlm_config(run)
     taxonomy = _taxonomy_for_run(run)
     if raw is None or taxonomy is None:
-        _fail(unit, token, VlmReasonCode.PROVIDER_ERROR)
+        _fail(unit, token, VlmReasonCode.PROVIDER_ERROR, revision=revision)
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
+    public = config.as_public_dict()
     try:
         crop = crop_provider().load(candidate)
     except VlmError as exc:
-        _fail(unit, token, exc.reason_code)
+        _fail(unit, token, exc.reason_code, revision=revision, config=public)
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     except Exception:
         logger.exception("vlm crop load failed", extra={"vlm_unit_id": unit.pk})
-        _fail(unit, token, VlmReasonCode.INVALID_CROP)
+        _fail(unit, token, VlmReasonCode.INVALID_CROP, revision=revision, config=public)
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     request = VlmRequest(
         crop=crop,
         taxonomy=taxonomy,
-        context=CandidateContext(
-            candidate_id=candidate.dedup_key,
-            snapshot_revision=run.snapshot.revision_sha256 or str(run.snapshot_id),
-        ),
+        context=CandidateContext(candidate_id=candidate.dedup_key, snapshot_revision=revision),
         config=config,
     )
     gate = DbBudgetGate(unit)
     result = result_to_dict(
         run_vlm_unit(request, client or DashScopeClient(), gate, attempts_done=gate.attempts_done)
     )
-    _settle_unit(unit, token, result)
+    names = {t.class_id: t.class_name for t in taxonomy}
+    _settle_unit(
+        unit,
+        token,
+        result,
+        config=public,
+        revision=revision,
+        class_name=names.get(result.get("label") or "", ""),
+        crop_origin=crop.origin,
+    )
     refresh_run(unit.run_id)
     unit.refresh_from_db(fields=["status"])
     return str(unit.status)

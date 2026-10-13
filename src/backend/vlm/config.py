@@ -43,6 +43,39 @@ ALLOWED_BASE_URLS: dict[str, frozenset[str]] = {
 }
 ALLOWED_BASE_URL_HOSTS = frozenset(ALLOWED_BASE_URLS)
 
+# Ràng provider ↔ host ↔ biến chứa key: key của một nhà cung cấp không bao giờ được gửi tới host của
+# nhà khác (ví dụ DASHSCOPE_API_KEY tới cổng bên thứ ba).
+HOST_PROVIDER: dict[str, str] = {
+    "dashscope.aliyuncs.com": PROVIDER_DASHSCOPE,
+    "dashscope-intl.aliyuncs.com": PROVIDER_DASHSCOPE,
+    "dashscope-us.aliyuncs.com": PROVIDER_DASHSCOPE,
+    "api.shopaikey.com": PROVIDER_OPENAI_COMPATIBLE,
+}
+HOST_KEY_ENV: dict[str, str] = {
+    "dashscope.aliyuncs.com": "DASHSCOPE_API_KEY",
+    "dashscope-intl.aliyuncs.com": "DASHSCOPE_API_KEY",
+    "dashscope-us.aliyuncs.com": "DASHSCOPE_API_KEY",
+    "api.shopaikey.com": DEFAULT_API_KEY_ENV,
+}
+
+
+def binding_error(provider: str, host: str, api_key_env: str) -> str | None:
+    """Lỗi nếu (provider, host, api_key_env) không khớp nhau; None nếu hợp lệ."""
+    if HOST_PROVIDER.get(host) != provider:
+        return "models.vlm.provider không khớp host của base_url."
+    if HOST_KEY_ENV.get(host) != api_key_env:
+        return (
+            "models.vlm.api_key_env không khớp host của base_url "
+            "(key không được gửi sang host khác)."
+        )
+    return None
+
+
+def default_api_key_env(base_url: str) -> str:
+    """Biến key mặc định theo host (cổng → VLM_API_KEY; DashScope → DASHSCOPE_API_KEY)."""
+    return HOST_KEY_ENV.get(urlparse(base_url).hostname or "", DEFAULT_API_KEY_ENV)
+
+
 PROMPT_VERSIONS = frozenset({"vlm-prompt-v0"})
 
 MAX_ATTEMPTS_LIMIT = 3  # tối đa 3 attempts/lượt logic (M04A-03)
@@ -186,11 +219,20 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
         or not 0 <= max_calls <= MAX_BUDGET_CALLS
     ):
         errors.append(f"models.vlm.budget phải là {{max_calls: số nguyên 0..{MAX_BUDGET_CALLS}}}.")
-    env_name = raw.get("api_key_env", DEFAULT_API_KEY_ENV)
+    env_name = raw.get(
+        "api_key_env",
+        default_api_key_env(raw["base_url"]) if isinstance(raw.get("base_url"), str) else None,
+    )
     if not isinstance(env_name, str) or env_name not in ALLOWED_API_KEY_ENVS:
         errors.append(
             f"models.vlm.api_key_env phải thuộc allowlist: {sorted(ALLOWED_API_KEY_ENVS)}."
         )
+    base_ok = isinstance(raw.get("base_url"), str) and not _base_url_errors(raw["base_url"])
+    if base_ok and isinstance(provider, str) and isinstance(env_name, str):
+        host = urlparse(raw["base_url"]).hostname or ""
+        mismatch = binding_error(provider, host, env_name)
+        if mismatch and provider in ALLOWED_PROVIDERS and env_name in ALLOWED_API_KEY_ENVS:
+            errors.append(mismatch)
     return errors
 
 
@@ -207,5 +249,5 @@ def parse_vlm_config(raw: Mapping[str, Any]) -> VlmConfig:
         timeout_seconds=float(raw["timeout_seconds"]),
         max_attempts=int(raw["max_attempts"]),
         budget=VlmBudget(max_calls=int(raw["budget"]["max_calls"])),
-        api_key_env=raw.get("api_key_env", DEFAULT_API_KEY_ENV),
+        api_key_env=raw.get("api_key_env") or default_api_key_env(raw["base_url"]),
     )

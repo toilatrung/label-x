@@ -92,6 +92,9 @@ def _make_run(
     vlm: dict[str, Any] | None = None,
     with_taxonomy: bool = True,
     vlm_enabled: bool = True,
+    frame_media: dict[int, bytes] | None = None,
+    frame_size: tuple[int, int] = (10, 10),
+    raw_shapes: list[dict[str, Any]] | None = None,
 ) -> QCRun:
     user, _ = User.objects.get_or_create(username="qa")
     frames = tuple(
@@ -99,9 +102,9 @@ def _make_run(
             frame_index=i,
             source_frame_id=1000 + i,
             file_name=f"{i}.jpg",
-            width=10,
-            height=10,
-            media_bytes=f"frame-{i}".encode(),
+            width=frame_size[0],
+            height=frame_size[1],
+            media_bytes=(frame_media or {}).get(i, f"frame-{i}".encode()),
             media_storage_key=f"snapshots/vlm/{i}.jpg",
         )
         for i in range(3)
@@ -110,7 +113,7 @@ def _make_run(
         cvat_job_id=5,
         cvat_task_id=9,
         source_updated_at="2026-10-09T07:05:45Z",
-        annotations={"shapes": [], "tracks": []},
+        annotations={"shapes": raw_shapes or [], "tracks": []},
         frames=frames,
         assignee_cvat_user_id=None,
     )
@@ -143,6 +146,7 @@ def _env(settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     settings.VLM_CROP_PROVIDER = "tests.orchestration.test_vlm_stage.FixtureCrops"
     settings.ORCHESTRATION_AUTO_DISPATCH = False
     monkeypatch.setenv("VLM_API_KEY", "sk-test-not-real")
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "sk-test-not-real")
 
     def runner(inp: EngineInput) -> EngineOutput:
         candidates = tuple(
@@ -321,6 +325,7 @@ def test_missing_api_key_costs_no_budget_and_makes_no_request(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("VLM_API_KEY")
+    monkeypatch.delenv("DASHSCOPE_API_KEY")
     run = _make_run(vlm={**VALID, "budget": {"max_calls": 3}})
     _run_shards(run)
     requests: list[Any] = []
