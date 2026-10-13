@@ -147,23 +147,63 @@ def test_from_config_rejects_invalid(config):
         RoutingPolicy.from_config(config)
 
 
-def test_adapter_builds_input_and_missing_fields_are_not_confident():
-    full = routing_input_from_candidate(
-        {"predicted_class_id": 3, "annotated_class_id": 3, "score": 0.9, "margin": 0.3}
-    )
-    assert route(POLICY, full).primary is RoutingReason.CLASSIFIER_ONLY
-    empty = routing_input_from_candidate({}, manual_recheck=True, budget_exhausted=True)
-    assert empty.manual_recheck and empty.budget_exhausted
-    assert route(POLICY, routing_input_from_candidate({})).call_qwen
-    assert not routing_input_from_candidate({"crop_valid": False}).crop_valid
+def _clf(**kw):
+    base = {
+        "status": "completed",
+        "crop_valid": True,
+        "predicted_class_id": 3,
+        "annotated_class_id": 3,
+        "score": 0.9,
+        "margin": 0.3,
+        "classifier_unknown": False,
+    }
+    return {"classifier": {**base, **kw}}
 
 
-def test_adapter_integer_class_ids_conflict_and_unknown_field():
-    conflict = routing_input_from_candidate(
-        {"predicted_class_id": 3, "annotated_class_id": 4, "score": 0.99, "margin": 0.9}
+def test_adapter_confident_classifier_only():
+    data = routing_input_from_candidate(_clf())
+    assert route(POLICY, data).primary is RoutingReason.CLASSIFIER_ONLY
+
+
+def test_adapter_conflict_with_integer_ids_beats_high_score():
+    data = routing_input_from_candidate(_clf(annotated_class_id=4, score=0.99, margin=0.9))
+    assert route(POLICY, data).primary is RoutingReason.LABEL_CONFLICT
+
+
+def test_adapter_missing_or_null_classifier_is_not_confident_nor_invalid_crop():
+    for cand in ({}, {"classifier": None}, {"classifier": "x"}):
+        data = routing_input_from_candidate(cand)
+        assert data.crop_valid
+        decision = route(POLICY, data)
+        assert decision.call_qwen and decision.primary is RoutingReason.LOW_SCORE
+
+
+@pytest.mark.parametrize("status", ["pending", "running", "failed", "cancelled"])
+def test_adapter_unfinished_classifier_ignores_stale_scores(status):
+    data = routing_input_from_candidate(_clf(status=status, score=0.99, margin=0.9))
+    assert data.score is None and data.predicted_class_id is None
+    assert route(POLICY, data).call_qwen
+
+
+def test_adapter_crop_invalid_never_calls_qwen():
+    data = routing_input_from_candidate(_clf(status="failed", crop_valid=False, score=None))
+    decision = route(POLICY, data)
+    assert decision.primary is RoutingReason.INVALID_CROP and not decision.call_qwen
+
+
+def test_adapter_completed_without_prediction_is_unknown_even_if_flag_false():
+    data = routing_input_from_candidate(
+        _clf(predicted_class_id=None, score=None, margin=None, classifier_unknown=False)
     )
-    assert route(POLICY, conflict).primary is RoutingReason.LABEL_CONFLICT
-    unknown = routing_input_from_candidate(
-        {"classifier_unknown": True, "predicted_class_id": None, "annotated_class_id": 4}
-    )
-    assert route(POLICY, unknown).primary is RoutingReason.UNKNOWN
+    assert data.classifier_unknown
+    assert route(POLICY, data).primary is RoutingReason.UNKNOWN
+
+
+def test_adapter_null_score_or_margin_is_low_confidence():
+    assert route(POLICY, routing_input_from_candidate(_clf(score=None))).call_qwen
+    assert route(POLICY, routing_input_from_candidate(_clf(margin=None))).call_qwen
+
+
+def test_adapter_flags_pass_through():
+    data = routing_input_from_candidate(_clf(), manual_recheck=True, budget_exhausted=True)
+    assert data.manual_recheck and data.budget_exhausted
