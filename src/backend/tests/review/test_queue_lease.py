@@ -20,10 +20,15 @@ from snapshots.normalization import FrameExport, JobExport
 from snapshots.services import create_locked_snapshot
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def approved_test_policy(settings):
+    """Short TTLs for the T-033 lock tests only; every other module sees the pilot defaults."""
+
     settings.REVIEW_LEASE_TTL_SECONDS = 60
     settings.REVIEW_INCOMPLETE_RESERVATION_SECONDS = 120
+
+
+pytestmark = pytest.mark.usefixtures("approved_test_policy")
 
 
 @pytest.fixture
