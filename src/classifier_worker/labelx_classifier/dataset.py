@@ -12,7 +12,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import shutil
 from collections import Counter
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -96,10 +95,23 @@ def parse_label_map(raw: Mapping[str, str]) -> dict[int, str]:
     return result
 
 
-def iter_candidates(snapshot: Mapping[str, Any]) -> Iterator[tuple[dict, dict, dict]]:
+def iter_candidates(
+    snapshot: Mapping[str, Any], rejected: list[dict[str, Any]]
+) -> Iterator[tuple[Mapping[str, Any], Mapping[str, Any], Any]]:
+    """Walk jobs/frames/shapes; structurally wrong nodes become ``malformed_*`` rejections."""
+
     for job in snapshot.get("jobs", []):
-        for frame in job.get("frames", []):
-            for shape in frame.get("shapes", []):
+        if not isinstance(job, Mapping) or not isinstance(job.get("frames"), list):
+            rejected.append(_reject("malformed_job", _safe(job), {}, {}, "job must hold frames[]"))
+            continue
+        for frame in job["frames"]:
+            if not isinstance(frame, Mapping) or not isinstance(frame.get("shapes"), list):
+                rejected.append(_reject("malformed_frame", job, _safe(frame), {}, "frame/shapes"))
+                continue
+            for shape in frame["shapes"]:
+                if not isinstance(shape, Mapping):
+                    rejected.append(_reject("malformed_shape", job, frame, {}, "shape"))
+                    continue
                 yield job, frame, shape
 
 
@@ -142,6 +154,39 @@ def _parse_shape(shape: Mapping[str, Any]) -> tuple[int, list[float], float, dic
     return label_id, box, rotation, {"kind": source["kind"], "id": source_id}
 
 
+def _remove_previous_crops(out_dir: Path, crops_dir: Path) -> None:
+    """Drop only crops a previous build of this tool wrote; never a user's own files.
+
+    The previous ``dataset-manifest.json`` lists those files. Without such a manifest a
+    non-empty ``crops`` directory is refused rather than emptied.
+    """
+
+    if not crops_dir.exists():
+        return
+    previous = out_dir / "dataset-manifest.json"
+    listed: list[str] = []
+    if previous.is_file():
+        try:
+            data = json.loads(previous.read_text(encoding="utf-8"))
+            if data.get("schema_version") == SCHEMA_VERSION:
+                listed = [str(record["path"]) for record in data.get("crops", [])]
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            listed = []
+    if not listed and any(crops_dir.iterdir()):
+        raise DatasetError(
+            f"{crops_dir} is not empty and has no dataset-manifest.json from this tool; "
+            "refusing to modify it. Use an empty out_dir."
+        )
+    root = out_dir.resolve()
+    for relative in listed:
+        path = (out_dir / relative).resolve()
+        if root in path.parents and path.is_file():
+            path.unlink()
+    for directory in sorted((p for p in crops_dir.rglob("*") if p.is_dir()), reverse=True):
+        if not any(directory.iterdir()):
+            directory.rmdir()
+
+
 def build_dataset(
     snapshot: Mapping[str, Any],
     *,
@@ -167,13 +212,12 @@ def build_dataset(
     split = split or SplitConfig()
     snapshot_sha = sha256_hex(canonical_json(snapshot))
     crops_dir = out_dir / "crops"
-    if crops_dir.exists():
-        shutil.rmtree(crops_dir)  # no stale crops from an earlier build into the same out_dir
+    _remove_previous_crops(out_dir, crops_dir)
     records: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     image_cache: dict[tuple[int, int], Image.Image | None] = {}
 
-    for job, frame, shape in iter_candidates(snapshot):
+    for job, frame, shape in iter_candidates(snapshot, rejected):
         try:
             record = _process_shape(
                 job,
@@ -207,6 +251,7 @@ def build_dataset(
         "class_mapping": {"version": MAPPING_VERSION, "classes": list(CLASSES)},
         "input_size": INPUT_SIZE,
         "data_origin": data_origin,
+        "data_origin_note": "declared by the operator; not verified by this tool",
         "snapshot": {
             "sha256": snapshot_sha,
             "revision_sha256": snapshot_revision_sha256,
@@ -264,7 +309,10 @@ def _process_shape(
 ) -> dict[str, Any]:
     """Return a crop record, or a rejection dict (has ``reason``)."""
 
-    if shape.get("outside") is True:
+    outside = shape.get("outside", False)
+    if not isinstance(outside, bool):
+        raise ValueError("outside must be a boolean")
+    if outside:
         return _reject("outside_shape", job, frame, shape)
     points = shape.get("points")
     if isinstance(points, list | tuple) and len(points) != 4:

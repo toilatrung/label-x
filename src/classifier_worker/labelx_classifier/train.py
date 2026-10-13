@@ -209,6 +209,10 @@ def train_classifier(
         "status": status,
         "status_reasons": status_reasons,
         "data_origin": manifest["data_origin"],
+        "data_origin_note": (
+            "declared by the operator when building the dataset; status trained does not prove "
+            "the data is real"
+        ),
         "dataset_manifest_sha256": manifest["manifest_sha256"],
         "snapshot_sha256": manifest["snapshot"]["sha256"],
         "fit_split": "train",
