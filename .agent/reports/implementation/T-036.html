@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>T-036 Implementation Report — LabelX</title>
-<meta name="labelx:id" content="T-036-Vietanhhhhhh2003">
+<meta name="labelx:id" content="implementation-t-036">
 <meta name="labelx:title" content="T-036 Effort events and activity collector">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
 <meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, effort, idempotency, collector, t-036]">
@@ -11,7 +11,7 @@
 <h2>Usage Purpose</h2>
 <p>Bằng chứng triển khai issue <a href="https://github.com/toilatrung/label-x/issues/103">#103</a> trên baseline <code>origin/integration/m03</code>: API ghi effort event idempotent, provenance policy, kiểm quyền/scope/identity và collector frontend loại thời gian không hoạt động.</p>
 <h2>Record Metadata</h2><ul>
-<li><strong>Report ID</strong>: <code>T-036-@Vietanhhhhhh2003</code></li><li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task State</strong>: <code>review</code></li><li><strong>Independent Review / QA</strong>: <code>pending</code></li><li><strong>Task</strong>: <code>T-036 / M-03 P05 / GitHub #103</code></li><li><strong>Baseline</strong>: <code>origin/integration/m03 @ 7326af3</code> (gồm T-033 và T-035)</li><li><strong>Branch</strong>: <code>feat/T-036-e14-effort-events</code></li><li><strong>Report Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Report ID</strong>: <code>T-036</code></li><li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>complete</code></li><li><strong>Task State</strong>: <code>review</code></li><li><strong>Independent Review / QA</strong>: <code>pending</code></li><li><strong>Task</strong>: <code>T-036 / M-03 P05 / GitHub #103</code></li><li><strong>Baseline</strong>: <code>origin/integration/m03 @ 7326af3</code> (gồm T-033 và T-035)</li><li><strong>Branch</strong>: <code>feat/T-036-e14-effort-events</code></li><li><strong>Report Date</strong>: <code>2026-10-11</code></li>
 </ul>
 <h2>Changes Made</h2><table><thead><tr><th>Area</th><th>Implementation</th><th>Evidence</th></tr></thead><tbody>
 <tr><td>Backend model/migration</td><td><code>EffortEvent</code> lưu UUID duy nhất, actor, <code>review.FrameReview</code> thật từ lease grant, dataset, activity, timeline, <code>active_ms</code>, policy source/snapshot và server receive time.</td><td><code>src/backend/effort/models.py</code>, migration <code>0001</code>.</td></tr>

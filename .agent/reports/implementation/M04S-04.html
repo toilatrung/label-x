@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>M04S-04 — Dữ liệu crop có nhãn thật cho classifier — LabelX</title>
-<meta name="labelx:id" content="implementation-m04s-04-vietanhhhhhh2003">
+<meta name="labelx:id" content="implementation-m04s-04">
 <meta name="labelx:title" content="M04S-04 — Dữ liệu crop có nhãn thật cho classifier">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
 <meta name="labelx:module" content="classifier"><meta name="labelx:tags" content="[implementation, m04s-04, bdd100k, classifier, dataset, blocked]">
@@ -35,7 +35,7 @@
 
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
-<tr><td><code>.agent/reports/implementation/M04S-04-@Vietanhhhhhh2003.html</code></td><td>Ghi nguồn ứng viên, bằng chứng quyền hiện có, gate bị chặn, số mẫu bằng 0 và handoff để xuất dataset sau khi PO phê duyệt.</td><td>M04S-04</td></tr>
+<tr><td><code>.agent/reports/implementation/M04S-04.html</code></td><td>Ghi nguồn ứng viên, bằng chứng quyền hiện có, gate bị chặn, số mẫu bằng 0 và handoff để xuất dataset sau khi PO phê duyệt.</td><td>M04S-04</td></tr>
 </tbody></table>
 
 <h2 id="source-baseline">Source Baseline and Integrity</h2>
@@ -150,6 +150,6 @@
 <ul><li>Không tải, crop, commit hoặc gửi ảnh ra ngoài khi chưa có quyền.</li><li>Không dùng BDD100K validation/held-out để fit.</li><li>Không dùng prediction locator #293 làm nhãn thật.</li><li>Không chạy huấn luyện hoặc tuyên bố accuracy.</li><li>Không tự đánh dấu <code>BLOCKER-030</code> resolved hay tự đóng issue.</li></ul>
 
 <h2 id="output-requirements">Output Requirements</h2>
-<p>Output duy nhất trong repository: <code>.agent/reports/implementation/M04S-04-@Vietanhhhhhh2003.html</code>. Dataset/crop output: <strong>không có</strong>. Trạng thái <code>blocked</code> cho đến khi PO/Data Owner ghi bằng chứng quyền và cung cấp input khóa. Report không chứa secret, API key hoặc byte ảnh.</p>
+<p>Output duy nhất trong repository: <code>.agent/reports/implementation/M04S-04.html</code>. Dataset/crop output: <strong>không có</strong>. Trạng thái <code>blocked</code> cho đến khi PO/Data Owner ghi bằng chứng quyền và cung cấp input khóa. Report không chứa secret, API key hoặc byte ảnh.</p>
 <div class="note"><strong>Handoff PO:</strong> vui lòng comment tại #301 theo bốn mục trong “Bằng chứng cần để mở gate”. Sau đó executor có thể materialize ngoài repo, chạy builder với <code>--data-origin real</code>, điền số lớp/source group và SHA manifest/crop mà không cần thay đổi code của nhánh BE.</div>
 </article></main></body></html>

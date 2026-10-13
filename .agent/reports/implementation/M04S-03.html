@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>M04S-03 — Checklist smoke A/B/C và API handoff</title>
-<meta name="labelx:id" content="implementation-m04s-03-duy12345-6789">
+<meta name="labelx:id" content="implementation-m04s-03">
 <meta name="labelx:title" content="M04S-03 — Checklist smoke A/B/C và API handoff">
 <meta name="labelx:type" content="report">
 <meta name="labelx:domain" content="development">
@@ -18,7 +18,7 @@
 <p>Chuẩn bị input, expected API/DB/ledger và evidence cần thu cho 7 nhánh A/B/C, cùng bảng handoff cuốn chiếu. Report hỗ trợ độc lập, không là dependency/gate của việc PO code BE.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
-<li><strong>Report ID</strong>: <code>M04S-03-@duy12345-6789</code></li>
+<li><strong>Report ID</strong>: <code>M04S-03</code></li>
 <li><strong>Title</strong>: <code>Checklist smoke A/B/C và API handoff</code></li>
 <li><strong>Owner</strong>: <code>@duy12345-6789</code></li>
 <li><strong>Executor</strong>: <code>Codex, thực hiện theo yêu cầu owner</code></li>
@@ -68,7 +68,7 @@
 <h3>Evidence manifest tối thiểu khi chạy sau này</h3>
 <p>Mỗi nhánh lưu: scenario ID; fixture hay model thật; SHA BE/worker; config/policy/prompt/checkpoint/class-map versions; candidate/run/evaluation/evidence/unit/attempt IDs; crop hash + revision (không đính ảnh chưa được phép); request/response actual HTTP đã redacted; ledger và budget trước/sau; expected/actual/result; path artifact. Nếu chưa chạy ghi <code>NOT RUN</code>; thiếu credential/checkpoint/quota/quyền dữ liệu ghi <code>NOT VERIFIED</code> + lý do, không tạo Actual Response giả.</p>
 <h2 id="changes-made">Changes Made</h2>
-<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td><code>.agent/reports/implementation/M04S-03-@duy12345-6789.html</code></td><td>Checklist 7 nhánh, bảng handoff 0–3, nguồn pinned SHA và giới hạn kiểm chứng.</td><td>M04S-03</td></tr></tbody></table>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td><code>.agent/reports/implementation/M04S-03.html</code></td><td>Checklist 7 nhánh, bảng handoff 0–3, nguồn pinned SHA và giới hạn kiểm chứng.</td><td>M04S-03</td></tr></tbody></table>
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/294">#294</a>; parent <a href="https://github.com/toilatrung/label-x/issues/278">#278</a>.</li>
@@ -116,5 +116,5 @@
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Không ghi mock/fixture thành model runtime thật; không tạo Actual Response hay PASS giả.</li><li>Không sửa BE/worker/OpenAPI/migrations/dependencies/CI/compose hoặc commit lên feat/M-04-backend.</li><li>Không tự đổi contract, threshold chất lượng, roadmap hoặc quyền; không tự approve/merge/đóng issue.</li><li>Không đưa secret, API key, signed URL hoặc ảnh chưa được phép vào report/repository.</li></ul>
 <h2 id="output-requirements">Output Requirements</h2>
-<ul><li>Output duy nhất: <code>.agent/reports/implementation/M04S-03-@duy12345-6789.html</code>.</li><li>Nhánh docs/M04S-03-smoke-checklist → PR develop, chờ review độc lập. Report complete chỉ mô tả tài liệu đã hoàn thành, không là trạng thái done của issue hoặc M-04.</li><li>Giữ heading/table column theo template; chỉ cập nhật kết quả validation sau khi có evidence.</li></ul>
+<ul><li>Output duy nhất: <code>.agent/reports/implementation/M04S-03.html</code>.</li><li>Nhánh docs/M04S-03-smoke-checklist → PR develop, chờ review độc lập. Report complete chỉ mô tả tài liệu đã hoàn thành, không là trạng thái done của issue hoặc M-04.</li><li>Giữ heading/table column theo template; chỉ cập nhật kết quả validation sau khi có evidence.</li></ul>
 </article></main></body></html>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>M04S-02 — Đối chiếu class map BDD100K và crop mẫu — LabelX</title>
-<meta name="labelx:id" content="implementation-m04s-02-vietanhhhhhh2003">
+<meta name="labelx:id" content="implementation-m04s-02">
 <meta name="labelx:title" content="M04S-02 — Đối chiếu class map BDD100K và crop mẫu">
 <meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
 <meta name="labelx:module" content="classifier"><meta name="labelx:tags" content="[implementation, m04s-02, bdd100k, classifier, inventory]">
@@ -35,7 +35,7 @@
 
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
-<tr><td><code>.agent/reports/implementation/M04S-02-@vietanhhhhhh2003.html</code></td><td>Tạo inventory class map, provenance, locator và giới hạn kiểm chứng; không nhúng hay xuất ảnh.</td><td>M04S-02</td></tr>
+<tr><td><code>.agent/reports/implementation/M04S-02.html</code></td><td>Tạo inventory class map, provenance, locator và giới hạn kiểm chứng; không nhúng hay xuất ảnh.</td><td>M04S-02</td></tr>
 </tbody></table>
 
 <h2 id="source-baseline">Source Baseline and Integrity</h2>
@@ -159,6 +159,6 @@
 <ul><li>Không dùng prediction locator làm ground truth.</li><li>Không ghi mock/inventory thành runtime model pass.</li><li>Không fine-tune, sửa taxonomy hoặc gửi ảnh ra dịch vụ từ report này.</li><li>Không tự đóng issue hay tự duyệt report.</li></ul>
 
 <h2 id="output-requirements">Output Requirements</h2>
-<p>Output duy nhất: <code>.agent/reports/implementation/M04S-02-@vietanhhhhhh2003.html</code>. Baseline nguồn: <code>a2e01954e44a9ae7bbed14f8db718a3c8fc45f1d</code>. Commit SHA và kết quả WSL validation được ghi ở PR/issue vì không thể nhúng SHA commit chứa chính file vào nội dung file trước khi commit.</p>
+<p>Output duy nhất: <code>.agent/reports/implementation/M04S-02.html</code>. Baseline nguồn: <code>a2e01954e44a9ae7bbed14f8db718a3c8fc45f1d</code>. Commit SHA và kết quả WSL validation được ghi ở PR/issue vì không thể nhúng SHA commit chứa chính file vào nội dung file trước khi commit.</p>
 <div class="ok"><strong>Kết luận:</strong> class map runtime đủ 10 lớp; evidence có locator tham khảo cho 9/10 lớp. Input để xây dataset classifier vẫn thiếu annotation/snapshot revision và mẫu <code>train</code>, nên PO cần xác minh/materialize trong M04B-01; task này không tạo dependency chặn.</div>
 </article></main></body></html>

@@ -57,10 +57,10 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="current-state">Current State</h2>
 <ul>
-<li><strong>Context Revision</strong>: <code>19</code></li>
+<li><strong>Context Revision</strong>: <code>20</code></li>
 <li><strong>Context Status</strong>: <code>current</code></li>
 <li><strong>Last Updated</strong>: <code>2026-10-13</code></li>
-<li><strong>Updated By</strong>: <code>Codex cho PO @toilatrung — phân công M-04 DEC-021</code></li>
+<li><strong>Updated By</strong>: <code>Codex cho PO @toilatrung (integrator) — gộp file riêng M-03/M-04 theo CR-100</code></li>
 <li><strong>Update Trigger</strong>: <code>DEC-019 / CR-113: P01…P09 A, 900/300/120 s pilot, toàn bộ Backend PO, FE develop-fe; runtime input pending</code></li>
 <li><strong>Planning Roadmap ID</strong>: <code>R-001</code></li>
 <li><strong>Planning Roadmap Status</strong>: <code>ROADMAP_ACTIVE</code> (từ 2026-10-08)</li>
@@ -119,6 +119,23 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>T-030</td><td>E-11</td><td>@vietanhhhhhh2003</td><td><code>feat/T-030-e11-score-v0</code></td><td>—</td><td>review (PR #85)</td></tr>
 <tr><td>T-031</td><td>E-11</td><td>@vietanhhhhhh2003 / @tdt2112</td><td><code>feat/T-031-e11-random-control-ranking</code></td><td>—</td><td>review (PR #92)</td></tr>
 <tr><td>T-032</td><td>E-13…E-16</td><td>@duy12345-6789</td><td><code>feat/T-032-m03-contract-fixtures</code></td><td>—</td><td>review (PR #111)</td></tr>
+</tbody></table>
+<h2 id="wave-4-integration">Wave 4 Integration</h2>
+<p>Gộp ngày 2026-10-13 theo CR-100 (integrator @toilatrung) từ 4 file <code>task-board-@&lt;user&gt;.html</code>, 14 báo cáo implementation (T-033, T-035…T-041, T-044…T-046, M04S-02, M04S-03, M04S-04; T-040 có hai bản gộp thành một) và 1 báo cáo review M03-R06 (các tệp riêng đã xoá). Hàng task M-03 mới vào task board; các hàng cũ trong file riêng không khác bản chính nên giữ nguyên. Không task nào được chuyển <code>done</code>: còn thiếu review/QA độc lập. M04S-04 ở trạng thái <code>blocked</code> trong báo cáo (chờ xác nhận quyền dữ liệu, BLOCKER-030 chưa gỡ) và chưa đăng ký task board vì chưa được duyệt. Branch và Base Commit để <code>—</code> vì file riêng không ghi.</p>
+<table><thead><tr><th>Task</th><th>Epic</th><th>Owner</th><th>Branch</th><th>Base Commit</th><th>Status</th></tr></thead><tbody>
+<tr><td>T-033</td><td>E-13</td><td>@DucHa180104</td><td>—</td><td>—</td><td>in-progress</td></tr>
+<tr><td>T-035</td><td>E-14</td><td>@DucHa180104</td><td>—</td><td>—</td><td>in-progress</td></tr>
+<tr><td>T-036</td><td>E-14</td><td>@Vietanhhhhhh2003</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-037</td><td>E-14</td><td>@tdt2112</td><td>—</td><td>—</td><td>blocked</td></tr>
+<tr><td>T-038</td><td>E-15</td><td>@DucHa180104</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-039</td><td>E-15</td><td>@Vietanhhhhhh2003</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-040</td><td>E-16</td><td>@Vietanhhhhhh2003 (tiếp quản từ @duy12345-6789)</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-041</td><td>E-16</td><td>@Vietanhhhhhh2003</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-044</td><td>E-13</td><td>@DucHa180104</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-045</td><td>E-13</td><td>@DucHa180104</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>T-046</td><td>E-17</td><td>@DucHa180104</td><td>—</td><td>—</td><td>review</td></tr>
+<tr><td>M04S-02</td><td>E-12</td><td>@Vietanhhhhhh2003</td><td>—</td><td>—</td><td>review (report complete, chờ review/QC độc lập)</td></tr>
+<tr><td>M04S-03</td><td>E-12</td><td>@duy12345-6789</td><td>—</td><td>—</td><td>review (report complete, chờ review/QC độc lập)</td></tr>
 </tbody></table>
 <h2 id="carried-notes">Carried Notes</h2>
 <p>Ghi chú còn hiệu lực chép từ file riêng (bỏ hướng dẫn quy trình đã lỗi thời như "mở PR vào <code>main</code>").</p>
