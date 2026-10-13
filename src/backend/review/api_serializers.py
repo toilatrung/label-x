@@ -269,10 +269,11 @@ class AiEvidenceSerializer(serializers.Serializer[Any]):
 
 
 class FrameWorkspaceSerializer(FrameIssuesSerializer):
-    lease = LeaseSerializer(allow_null=True)
-    queue = serializers.ChoiceField(choices=["risk", "random"], allow_null=True)
-    undecided_issue_count = serializers.IntegerField()
-    ai_evidence = AiEvidenceSerializer(many=True)
+    # Luôn được gửi; để optional như contract FrameWorkspace (giống snapshot_revision).
+    lease = LeaseSerializer(allow_null=True, required=False)
+    queue = serializers.ChoiceField(choices=["risk", "random"], allow_null=True, required=False)
+    undecided_issue_count = serializers.IntegerField(required=False)
+    ai_evidence = AiEvidenceSerializer(many=True, required=False)
 
 
 class ManualIssueCreateSerializer(serializers.Serializer[Any]):

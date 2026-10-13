@@ -1,6 +1,6 @@
 """Approved T-035 review endpoints from docs/04-api/openapi.yaml."""
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -96,6 +96,18 @@ class FrameWorkspaceView(_ReviewView):
 
     @extend_schema(
         operation_id="frames_workspace",
+        parameters=[
+            OpenApiParameter(
+                "version",
+                str,
+                OpenApiParameter.QUERY,
+                required=False,
+                description=(
+                    "Guideline version tag client đang dùng; guideline_version trả về luôn là "
+                    "version của snapshot đã khoá (server cấp)."
+                ),
+            )
+        ],
         responses={
             200: FrameWorkspaceSerializer,
             403: ErrorSerializer,
