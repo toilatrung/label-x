@@ -133,6 +133,7 @@ class ConfigVersionPublishView(APIView):
             403: ErrorSerializer,
             404: ErrorSerializer,
             409: ErrorSerializer,
+            422: ErrorSerializer,
         },
         tags=["config"],
     )
@@ -143,6 +144,10 @@ class ConfigVersionPublishView(APIView):
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", str(exc)) from exc
         except InvalidTransitionError as exc:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", str(exc)) from exc
+        except BusinessRuleUnmetError as exc:
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, "BUSINESS_RULE_UNMET", str(exc)
+            ) from exc
         return Response(ConfigVersionSerializer(config).data)
 
 

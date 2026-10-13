@@ -89,3 +89,95 @@ class LedgerUnit(models.Model):
         return (
             f"{self.engine} run={self.run_id} {self.kind}:{self.cvat_task_id}/{self.frame_number}"
         )
+
+
+class VlmBudget(models.Model):
+    """Ngân sách lần gọi provider của một run (M04A-03). Có dòng = stage VLM của run đã khởi động.
+
+    Chỉ tăng `used_calls` bằng UPDATE có điều kiện `used_calls < max_calls` (nguyên tử); CHECK ở
+    DB chặn vượt ngân sách kể cả khi code sai.
+    """
+
+    run = models.OneToOneField(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
+    max_calls = models.PositiveIntegerField()
+    used_calls = models.PositiveIntegerField(default=0)
+    skipped_reason = models.CharField(max_length=32, blank=True, default="")
+    started_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(used_calls__lte=models.F("max_calls")),
+                name="vlm_budget_used_within_max",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"VlmBudget run={self.run_id} {self.used_calls}/{self.max_calls}"
+
+
+class VlmUnit(models.Model):
+    """Một lượt VLM logic cho một candidate (đơn vị VLM = candidate, không phải frame).
+
+    Khoá idempotency gồm evaluation generation, candidate, crop identity, snapshot revision,
+    policy, model và prompt version: tạo lại cùng khoá là no-op, không nhân unit/evidence/budget.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        RUNNING = "running", "Running"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
+    candidate = models.ForeignKey(CandidateRecord, on_delete=models.PROTECT, related_name="+")
+    idempotency_key = models.CharField(max_length=64)
+    evaluation_generation = models.PositiveIntegerField(default=1)
+    policy_version = models.CharField(max_length=32)
+    model = models.CharField(max_length=64)
+    prompt_version = models.CharField(max_length=32)
+    crop_identity = models.CharField(max_length=64, blank=True, default="")
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    reason_code = models.CharField(max_length=24, blank=True, default="")
+    result = models.JSONField(null=True, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    lease_token = models.CharField(max_length=32, blank=True, default="")
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["run", "idempotency_key"], name="uniq_vlm_unit_key_per_run"
+            ),
+            models.UniqueConstraint(
+                fields=["run", "candidate", "evaluation_generation"],
+                name="uniq_vlm_unit_candidate_generation",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"VlmUnit run={self.run_id} candidate={self.candidate_id} [{self.status}]"
+
+
+class VlmAttempt(models.Model):
+    """Attempt gửi provider đã được tính budget. Unique (unit, attempt_no): giao lại cùng attempt
+    không tính budget lần hai."""
+
+    unit = models.ForeignKey(VlmUnit, on_delete=models.CASCADE, related_name="attempt_rows")
+    attempt_no = models.PositiveSmallIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["unit", "attempt_no"], name="uniq_vlm_attempt_no")
+        ]
+
+    def __str__(self) -> str:
+        return f"VlmAttempt unit={self.unit_id} #{self.attempt_no}"

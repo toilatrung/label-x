@@ -13,6 +13,8 @@ from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
 from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
+from runs.routing_config import validate_routing_thresholds
+from vlm.config import validate_vlm_config
 
 
 class RunCreateSerializer(serializers.Serializer[Any]):
@@ -163,6 +165,20 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
             )
         if not any(config["enabled"] for config in value.values()):
             raise serializers.ValidationError("Cần bật ít nhất một engine.")
+        return value
+
+    def validate_thresholds(self, value: dict[str, Any]) -> dict[str, Any]:
+        errors = validate_routing_thresholds(value)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
+    def validate_models(self, value: dict[str, Any]) -> dict[str, Any]:
+        """models.vlm phải đúng schema Qwen (M04A-01): allowlist model/host, không secret/prompt."""
+        if "vlm" in value:
+            errors = validate_vlm_config(value["vlm"])
+            if errors:
+                raise serializers.ValidationError(errors)
         return value
 
 

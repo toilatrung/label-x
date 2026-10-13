@@ -210,7 +210,7 @@ export interface paths {
         put?: never;
         /**
          * Publish config version
-         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. models.vlm hoặc thresholds.classification_routing sai schema trả 422 BUSINESS_RULE_UNMET. Ghi audit cùng transaction.
          */
         post: operations["config_versions_publish"];
         delete?: never;
@@ -2031,10 +2031,11 @@ export interface components {
             engines: {
                 [key: string]: unknown;
             };
+            /** @description Khoá classification_routing (M04C-01, tên classification-routing-v0) gồm score_threshold và margin_threshold trong [0, 1]; đây là ngưỡng định tuyến tạm, không phải ngưỡng quality hay calibration. */
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (dashscope), model (allowlist, mặc định qwen3-vl-plus), base_url (https, host trong allowlist), prompt_version, timeout_seconds, max_attempts (1 đến 3) và budget {max_calls}. Không nhận api_key hay prompt; API key chỉ ở biến môi trường runtime. */
             models?: {
                 [key: string]: unknown;
             };
@@ -2519,6 +2520,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     runs_list: {
