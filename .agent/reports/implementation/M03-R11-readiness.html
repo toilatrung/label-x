@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-03 R11 — Readiness môi trường E2E — LabelX</title>
+<meta name="labelx:id" content="M03-R11-readiness">
+<meta name="labelx:title" content="M-03 R11 — Readiness môi trường E2E">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="m-03">
+<meta name="labelx:tags" content="[m-03, readiness, e2e]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / M03-R11-readiness</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>M03-R11-readiness</span><b>title</b><span>M-03 R11 — Readiness môi trường E2E</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>m-03</span><b>tags</b><span>[m-03, readiness, e2e]</span><b>priority</b><span>2</span></div>
+<h1 id="m03-r11-readiness">M-03 R11 — Readiness môi trường E2E</h1>
+<p>Issue #247 (M03-R11). Hướng dẫn chạy script kiểm tra sẵn sàng (chỉ đọc) và danh sách đầu vào cần PO/Hà cung cấp. Script <strong>không</strong> tạo tài khoản/dữ liệu, không ghi DB/CVAT/storage, không in token hay mật khẩu.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>M03-R11</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-12</code></li>
+</ul>
+<h2 id="run">Cách chạy</h2>
+<pre><code>make infra-up
+uv run --project src/backend python scripts/development/m03_readiness.py --out readiness.json</code></pre>
+<p>Script đọc <code>src/backend/.env</code> (và biến môi trường), chạy các kiểm tra rồi xuất JSON. Mã thoát: <code>0</code> = READY (mọi kiểm tra PASS); <code>1</code> = NOT_READY (có FAIL); <code>2</code> = BLOCKED (không FAIL nhưng còn BLOCKED/UNKNOWN). Tuỳ chọn <code>--timeout</code> (giây, mặc định 5).</p>
+<h2 id="checks">Các kiểm tra</h2>
+<table><thead><tr><th>Kiểm tra</th><th>Cách đọc</th><th>Ý nghĩa trạng thái</th></tr></thead><tbody>
+<tr><td><code>env_vars</code></td><td>Chỉ in tên biến thiếu/rỗng/placeholder (<code>change-me</code>)</td><td>Chỉ thiếu <code>CVAT_SERVICE_TOKEN</code> = BLOCKED; thiếu biến khác = FAIL</td></tr>
+<tr><td><code>postgres</code>, <code>migrations</code></td><td><code>SELECT 1</code>; so kế hoạch migration với <code>django_migrations</code></td><td>Migration chờ = FAIL</td></tr>
+<tr><td><code>redis</code>, <code>celery_worker</code></td><td>PING broker; <code>inspect().ping()</code></td><td>Không worker trả lời = FAIL</td></tr>
+<tr><td><code>celery_beat</code></td><td>Suy ra từ <code>last_run_at</code> của PeriodicTask đang bật (heuristic, 1 giờ)</td><td>Không có dấu hiệu = UNKNOWN (không bao giờ giả PASS); cần xác nhận thủ công tiến trình beat</td></tr>
+<tr><td><code>object_storage</code></td><td><code>list_objects_v2(MaxKeys=1)</code> trên các bucket cấu hình</td><td>Bucket không đọc được = FAIL</td></tr>
+<tr><td><code>cvat_reachable</code></td><td><code>GET /api/server/about</code> (không token)</td><td>Khác HTTP 200 = FAIL; chưa có <code>CVAT_BASE_URL</code> = BLOCKED</td></tr>
+<tr><td><code>cvat_token</code></td><td>Báo có/không cấu hình; nếu có thì <code>GET /api/users/self</code></td><td>Chưa cấu hình = BLOCKED; bị từ chối = FAIL</td></tr>
+<tr><td><code>cvat_job_readable</code></td><td>GET job đầu tiên, <code>data/meta</code>, <code>annotations</code> qua <code>CvatReadClient</code> (chặn mọi method ngoài GET/HEAD); chỉ báo có assignee/revision, số frame</td><td>Không có job = BLOCKED</td></tr>
+<tr><td><code>review_policy</code></td><td><code>current_review_policy()</code> (cùng nguồn với <code>GET /api/review-policy/</code>) so với 900/300/120/<code>pilot-1</code></td><td>Lệch = FAIL</td></tr>
+<tr><td><code>guideline</code></td><td>Guideline mới nhất đã nạp và số rule</td><td>Chưa nạp = BLOCKED</td></tr>
+<tr><td><code>taxonomy_version</code></td><td>Các <code>taxonomy_version</code> trên snapshot</td><td>Chưa có = BLOCKED</td></tr>
+</tbody></table>
+<h2 id="inputs">Đầu vào CẦN PO/Hà cung cấp</h2>
+<p>Agent không tự tạo hoặc đoán các mục sau; kết quả của chúng ở trạng thái <strong>BLOCKED</strong> cho đến khi được cấp. Không giả PASS.</p>
+<table><thead><tr><th>#</th><th>Đầu vào</th><th>Trạng thái</th><th>Liên quan kiểm tra</th></tr></thead><tbody>
+<tr><td>1</td><td>Tài khoản cho đủ 7 vai trò với identity đã xác minh</td><td>BLOCKED — chờ PO/Hà</td><td>Ngoài phạm vi script (không tạo tài khoản)</td></tr>
+<tr><td>2</td><td>Taxonomy chính thức (và file guideline chính thức để <code>load_guideline</code>)</td><td>BLOCKED — chờ PO</td><td><code>guideline</code>, <code>taxonomy_version</code></td></tr>
+<tr><td>3</td><td>CVAT job/assignee thật (đúng người, đúng trạng thái)</td><td>BLOCKED — chờ PO/Hà</td><td><code>cvat_job_readable</code></td></tr>
+<tr><td>4</td><td>Dữ liệu M-02 có provenance (snapshot/run nguồn)</td><td>BLOCKED — chờ PO/Hà</td><td><code>taxonomy_version</code></td></tr>
+<tr><td>5</td><td>URL CVAT và token đọc-chỉ (<code>CVAT_BASE_URL</code>, <code>CVAT_SERVICE_TOKEN</code>), cấu hình storage thật</td><td>BLOCKED — chờ PO/Hà</td><td><code>env_vars</code>, <code>cvat_*</code>, <code>object_storage</code></td></tr>
+</tbody></table>
+<h2 id="limits">Hạn chế</h2>
+<ul>
+<li>Readiness PASS không chứng minh E2E đạt; chỉ cho biết môi trường đủ điều kiện chạy.</li>
+<li>Celery beat không có API ping nên chỉ suy ra gián tiếp (UNKNOWN nếu không có dấu hiệu).</li>
+<li>Kiểm tra token CVAT dùng <code>GET /api/users/self</code>; không xác minh được token chỉ có quyền đọc — PO/Hà phải xác nhận.</li>
+<li>Test của script dùng mock (<code>src/backend/tests/test_m03_readiness_script.py</code>), chưa chạy với dịch vụ thật trong phiên này.</li>
+</ul>
+</article></main></body></html>

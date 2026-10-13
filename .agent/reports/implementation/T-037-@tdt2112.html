@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo triển khai — T-037 ReviewWorkspace UI (Partial Draft) — LabelX</title>
+<meta name="labelx:id" content="implementation-t-037-@tdt2112">
+<meta name="labelx:title" content="Implementation Report — T-037 ReviewWorkspace UI (Partial Draft)">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[implementation, review, frontend, t-037, t-035-integration]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / T-037-@tdt2112</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>implementation-t-037-@tdt2112</span><b>title</b><span>Implementation Report — T-037 ReviewWorkspace UI (Partial Draft)</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, review, frontend, t-037, t-035-integration]</span><b>priority</b><span>2</span></div>
+<h1 id="implementation-report-t037">Implementation Report — T-037 ReviewWorkspace UI &amp; In-Memory Queue Handoff</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Auditable record of feasible independent frontend UI implementation for T-037 under Revision 2 partial draft PR boundary, consuming verified T-035 PR130 interfaces (HEAD <code>2afb6a1</code>). Demonstrates consumption of delivered baseline (T-032 #99, T-034 #101, T-033 backend queue/lease API), in-memory queue handoff to ReviewWorkspace, compliance with PO decision on request_fix rework routing (T-040), 409 conflict differentiation, canonical RFC 4122 v4 UUID idempotency, role-based snapshot revision lookup, truthful gap notices for hard dependencies (T-035, T-036), local integration test evidence, and explicit BLOCKED status for overall live integration.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>T-037-@tdt2112</code></li>
+<li><strong>Title</strong>: <code>T-037 ReviewWorkspace UI &amp; In-Memory Queue Integration (Partial Draft)</code></li>
+<li><strong>Owner</strong>: <code>tdt2112</code></li>
+<li><strong>Status</strong>: <code>blocked</code></li>
+<li><strong>Status Note</strong>: Partial implementation draft PR prepared; overall integration BLOCKED pending live backend services, live T-040 rework runtime, live CVAT/T-046, and interactive evaluation. T-036 lifecycle adapter integrated via useEffortCollector.ts; idle cutoff policy awaiting PO approval (TBD-09; idleAfterMs: null).</li>
+<li><strong>Task ID</strong>: <code>T-037</code> (Issue #104)</li>
+<li><strong>Epic ID</strong>: <code>E-14</code> (Package P06, Refs #97)</li>
+<li><strong>Baseline SHA</strong>: <code>7effc8ed4ef1dbe644b177a21051e855405f8c95</code> (origin/integration/m03)</li>
+<li><strong>Dependency PR130 Status</strong>: <code>MERGED</code> (Merge SHA <code>7326af39f5c531a72144eb08c070b5cf3877a084</code>)</li>
+<li><strong>Dependency PR133 Status</strong>: <code>MERGED</code> (Merge SHA <code>7effc8ed4ef1dbe644b177a21051e855405f8c95</code>)</li>
+<li><strong>Report Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Governance Gap Note</strong>: Owner acceptance comment is currently not present in Issue #104. Preparation proceeds under user's explicit directive without impersonating owner.</li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>:
+  <ul>
+    <li>Preserved delivered baseline from T-032 (#99 / PR111 auth/session) and T-034 (#101 / PR129 ReviewQueues, dataset/run selection, risk/random queues).</li>
+    <li>Integrated in-memory queue handoff in <code>ReviewQueues</code>: renders <code>ReviewWorkspace</code> inline inside the AppShell upon valid active grant, passing <code>activeGrant.frame.id</code>, <code>activeGrant.lease</code>, <code>effectiveRunId</code>, and <code>datasetId</code> without extra claim requests or query credentials.</li>
+    <li>Strict grant validation: checks <code>frame.run_id === effectiveRunId</code>, <code>lease.frame_id === frame.id</code>, <code>holder_user_id === currentUserId</code>, finite future expiry, and no conflict.</li>
+    <li>Context reset guards: dataset, run, or user changes immediately close workspace and clear active lease.</li>
+    <li>Completion callback: invalidates ranking cache and clears active lease.</li>
+    <li>Preserve view on expiry: lease expiry locks mutation actions via hook while keeping saved decisions and evidence visible in read-only mode.</li>
+    <li>Standalone route <code>/review/workspace?frame_id=&lt;id&gt;</code> operates in safe read-only inspection mode without fabricated lease credentials.</li>
+    <li>Mapped T-035 PR130 payload: <code>GET /api/frames/{id}/issues/</code> image media, width, height, CVAT deep link, engine run statuses, pinned guideline, and issue anchors.</li>
+    <li>Frame payload validation: verifies <code>frame.id === targetFrameId</code> and <code>frame.run_id === runId</code>; mismatched payloads never render editable state.</li>
+    <li>Decision controls: implements the 4 direct actions (<code>confirm</code>, <code>reject</code>, <code>uncertain</code>, <code>escalate</code>). <code>confirm</code> validates that family strictly equals <code>issue.family</code>. Super Admin requires mandatory <code>override_reason</code>.</li>
+    <li>State machine enforcement (Follow-Up 18): only <code>issue.state === 'in_review'</code> can submit direct decisions. Non-in_review states (<code>confirmed</code>, <code>rejected</code>, <code>escalated</code>, <code>resolved</code>, <code>pending_review</code>, <code>fix_pending</code>) display informative callouts, lock form inputs, and strictly forbid POST decisions. Authoritative history (<code>issue.review_decisions</code>) is preserved across all states.</li>
+    <li>Save &amp; Next navigation: "Lưu và chuyển issue tiếp ›" advances to next issue only after successful authoritative save and reconciliation; failed saves never advance.</li>
+    <li>PO Decision Compliance: <code>request_fix</code> is rendered disabled with clear T-040 atomic rework indication (per Issue #102 PO decision comment 6106568257) and is never dispatched to POST decisions.</li>
+    <li>409 Conflict Differentiation: <code>LEASE_CONFLICT</code> invalidates lease, whereas <code>INVALID_TRANSITION</code>, <code>IDEMPOTENCY_KEY_REUSED</code>, and <code>ISSUE_EXISTS</code> do not invalidate lease and preserve saved decisions.</li>
+    <li>Canonical UUID Idempotency: generates RFC 4122 v4 canonical UUIDs for <code>Idempotency-Key</code> headers; reuses key on uncertain network retries.</li>
+    <li>Anchor Policy Resolution: <code>resolveAnchorPolicy</code> infers <code>anchor-v1</code> from consistent server issues; locks manual creation on zero-issue frames or conflicting policies without hardcoded fallbacks.</li>
+    <li>Manual Issue Modal: enforces description &le; 2000 chars, restricts objects to <code>namespace: 'cvat_shape'</code>, validates finite in-bounds bboxes, and relies on server-allocated <code>reviewer_region</code> UUIDs. Unmount/context guards verify matching frame and lease IDs.</li>
+    <li>Role-based Snapshot Revision Lookup: eligible roles (<code>qa_lead</code>, <code>super_admin</code>) retrieve locked revision via <code>GET /api/runs/{id}/</code> and <code>GET /api/snapshots/{id}/</code>; plain <code>reviewer</code> cannot access snapshot endpoint and is disabled with a clear notice without bypassing RBAC.</li>
+    <li>Design mock alignment (<code>docs/design/screens/ReviewWorkspace.dc.html</code>): added <code>lx-head</code> with context details and "Về hàng đợi" action, 3-step <code>lx-flow</code> navigation, <code>lx-ws lx-ws--reference</code> responsive grid, disabled frame navigation explaining queue-only lease handoff, dynamic findings title, annotation class (with honest gap notice), revision hash, and similar cases / lineage links details.</li>
+    <li>T-036 Effort Collector lifecycle adapter: implemented in <code>useEffortCollector.ts</code> consuming upstream <code>ReviewEffortSession</code> and <code>EffortCollector</code>; strictly binds positive integer user identity and grant holder, wraps storage access safely with per-user key (<code>labelx:pending-effort-events:u${userId}:v1</code>), triggers terminal loss of lease on actual expiry, preserves session across legitimate same-lease renewals, handles 409 LEASE_CONFLICT vs non-lease 409, and records transitions between <code>view_frame</code> and <code>review_issue</code>.</li>
+  </ul>
+</li>
+<li><strong>Not Implemented (Deferred / Blocked)</strong>:
+  <ul>
+    <li>Plain Reviewer revision source: API owner proposal submitted (see Section 4).</li>
+    <li>Full annotation shapes: Not serialized at top level in <code>GET /api/frames/{id}/issues/</code>.</li>
+    <li>T-036 (#103) deployment idle threshold policy: awaiting PO approval (TBD-09; configured with <code>idleAfterMs: null</code>).</li>
+    <li>T-040: Atomic rework runtime (<code>POST /api/rework/</code>).</li>
+    <li>T-046 (#125): Live cross-role verification, live CVAT container routing, and final user demo.</li>
+    <li>Full live integration acceptance (A1–A12): All 12 criteria require live services, live CVAT/T-046 stack, and interactive reviewer evaluation.</li>
+  </ul>
+</li>
+</ul>
+<h2 id="contract-proposal">Actionable Contract Proposal for API Owner</h2>
+<blockquote>
+<p><strong>Proposal</strong>: Include <code>snapshot_revision: string</code> directly in the <code>FrameSummary</code> schema (returned by <code>GET /api/frames/{id}/issues/</code> and <code>LeaseGrant.frame</code>).</p>
+<p><strong>Rationale</strong>: <code>POST /api/issues/{id}/decisions/</code> requires an exact snapshot revision SHA. Currently, this revision is only obtainable from <code>GET /api/snapshots/{id}/</code>, which is restricted to QA Lead / Admin roles. Including <code>snapshot_revision</code> on the frame allows plain Reviewers to submit decisions without granting broad snapshot inspection permissions.</p>
+</blockquote>
+<h2 id="stable-matrix">Stable A1–A12 Requirements Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Live Integration Status</th>
+<th>Local Evidence &amp; Blockers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A1</strong></td>
+<td>Real auth queue lease binding</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewQueueWorkspaceIntegration.test.tsx</code>; live backend unverified.</td>
+</tr>
+<tr>
+<td><strong>A2</strong></td>
+<td>Modes / layers / zoom / pan</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewCanvas.test.tsx</code>; live media pending T-035.</td>
+</tr>
+<tr>
+<td><strong>A3</strong></td>
+<td>Evidence / engine / pinned guideline / Case</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspaceT035Integration.test.tsx</code>; Case unavailable on contract.</td>
+</tr>
+<tr>
+<td><strong>A4</strong></td>
+<td>Five decisions validation persisted</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspaceT035Integration.test.tsx</code> (4 direct + request_fix T-040 rework indicator); live endpoint unverified.</td>
+</tr>
+<tr>
+<td><strong>A5</strong></td>
+<td>Manual object / region</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewManualIssueModal</code> (cvat_shape validation, canonical UUID, 2000 char limit); pending live anchor-v1.</td>
+</tr>
+<tr>
+<td><strong>A6</strong></td>
+<td>Complete / undecided</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspace.test.tsx</code> (422 handling with undecided IDs); live complete endpoint unverified.</td>
+</tr>
+<tr>
+<td><strong>A7</strong></td>
+<td>Lease races saved decisions retained</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspaceT035Integration.test.tsx</code> (409 LEASE_CONFLICT vs INVALID_TRANSITION); live concurrency unverified.</td>
+</tr>
+<tr>
+<td><strong>A8</strong></td>
+<td>Role / scope / identity / self-review</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspace.test.tsx</code> (403 error parsing) &amp; role snapshot resolution; live audit unverified.</td>
+</tr>
+<tr>
+<td><strong>A9</strong></td>
+<td>Actual CVAT job / frame</td>
+<td><strong>BLOCKED</strong></td>
+<td>Component renders genuine <code>cvat_deep_link</code>; live CVAT stack pending T-046.</td>
+</tr>
+<tr>
+<td><strong>A10</strong></td>
+<td>Collector lifecycle</td>
+<td><strong>BLOCKED</strong></td>
+<td>Lifecycle adapter integrated in <code>useEffortCollector.ts</code> consuming upstream T-036 module; tested locally in <code>ReviewEffortIntegration.test.tsx</code>; live API ingest and PO idle threshold policy unverified.</td>
+</tr>
+<tr>
+<td><strong>A11</strong></td>
+<td>Error / loading / empty / stale / retry</td>
+<td><strong>BLOCKED</strong></td>
+<td>Tested in <code>ReviewWorkspaceT035Integration.test.tsx</code> (UUID retry reuse, stale response discard); live network unverified.</td>
+</tr>
+<tr>
+<td><strong>A12</strong></td>
+<td>Final clean production reproduction</td>
+<td><strong>BLOCKED</strong></td>
+<td>Local unit/integration tests and build verified; live user demonstration pending.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="reproduction">Reproduction Commands</h2>
+<pre><code>cd src/frontend
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build</code></pre>
+</article></main></body></html>

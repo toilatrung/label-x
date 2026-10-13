@@ -657,8 +657,11 @@
       "proposed_operation": {"method": "get", "path": "/api/frames/{id}/workspace/"},
       "implementation_owner": "T-035 backend; T-037 consumer",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_approved_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["DEC-019", "CR-113"],
+      "approved_operations": [{"method": "get", "path": "/api/frames/{id}/issues/"}],
+      "approval_note": "Approved as extension of existing FrameIssues (snapshot_revision, annotations[], predictions[]); the proposed /workspace/ path is NOT adopted.",
+      "approved": true
     },
     {
       "id": "M03-D03",
@@ -667,8 +670,11 @@
       "proposed_operation": {"method": "get", "path": "/api/decision-cases/{id}/"},
       "implementation_owner": "T-038 backend; T-039 consumer",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_approved_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["DEC-019", "CR-113"],
+      "approved_operations": [{"method": "get", "path": "/api/decision-cases/"}, {"method": "get", "path": "/api/decision-cases/{id}/"}],
+      "approval_note": "Approved: list/detail/version/filter/pagination, public enum guideline_gap, immutable history.",
+      "approved": true
     },
     {
       "id": "M03-D04",
@@ -678,8 +684,11 @@
       "additional_proposed_operation": {"method": "get", "path": "/api/rework/{id}/"},
       "implementation_owner": "T-040 backend; T-042 consumer",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_approved_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["DEC-019", "CR-113"],
+      "approved_operations": [{"method": "get", "path": "/api/rework/"}, {"method": "get", "path": "/api/rework/{id}/"}],
+      "approval_note": "Approved: scoped GET list/detail (404 foreign-assigned object, 403 missing dataset scope), counts/cursor.",
+      "approved": true
     },
     {
       "id": "M03-D05",
@@ -688,8 +697,11 @@
       "proposed_operation": {"method": "get", "path": "/api/runs/{id}/lineage/"},
       "implementation_owner": "T-041 backend; T-042 consumer",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_approved_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["DEC-019", "CR-113"],
+      "approved_operations": [{"method": "get", "path": "/api/runs/{id}/"}],
+      "approval_note": "Approved as three fields on GET /api/runs/{id}/ (verification_lineage, selected_final_sources, operational_source); the proposed /lineage/ path is NOT adopted.",
+      "approved": true
     },
     {
       "id": "M03-D06",
@@ -698,8 +710,11 @@
       "proposed_operation": {"method": "get", "path": "/api/config/review-policies/"},
       "implementation_owner": "T-033 lease policy; T-036 effort policy",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_product_owner_decision_then_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["DEC-019", "CR-113"],
+      "approved_operations": [{"method": "get", "path": "/api/review-policy/"}],
+      "approval_note": "Approved as GET /api/review-policy/ (pilot values only); the proposed /api/config/review-policies/ path is NOT adopted.",
+      "approved": true
     }
   ]
 }

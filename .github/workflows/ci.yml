@@ -2,7 +2,7 @@ name: LabelX CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, integration/m03]
   workflow_dispatch:
 permissions:
   contents: read
@@ -121,7 +121,7 @@ jobs:
         run: |
           uv run --frozen ruff check .
           uv run --frozen ruff format --check .
-          uv run --frozen mypy config
+          uv run --frozen mypy config effort
       - name: Django and migrations
         run: |
           mkdir -p ../../.ci-artifacts

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Board — @vietanhhhhhh2003 — LabelX</title>
+<meta name="labelx:id" content="task-board-vietanhhhhhh2003">
+<meta name="labelx:title" content="Task Board — @vietanhhhhhh2003">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="execution">
+<meta name="labelx:tags" content="[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040, t-041]">
+<meta name="labelx:priority" content="2">
+</head><body><main><article>
+<div class="meta"><b>id</b><span>task-board-vietanhhhhhh2003</span><b>title</b><span>Task Board — @vietanhhhhhh2003</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>execution</span><b>tags</b><span>[execution, per-user, t-014, t-030, t-031, t-036, t-039, t-040, t-041]</span><b>priority</b><span>2</span></div>
+<h1 id="task-board-vietanhhhhhh2003">Task Board — @vietanhhhhhh2003</h1>
+<h2 id="purpose">Purpose</h2>
+<p>File riêng của Nguyễn Xuân Việt Anh (@vietanhhhhhh2003) theo CR-100. Integrator gộp thay đổi này vào <code>.agent/execution/task-board.html</code>.</p>
+<ul><li><strong>Base Commit</strong>: <code>cc5ac12</code> (<code>origin/develop</code> including merged T-024 / PR #89)</li></ul>
+<h2 id="status-model">Status Model</h2>
+<ul><li><strong>Valid Statuses</strong>: <code>pending | in-progress | blocked | review | done | cancelled</code></li></ul>
+<h2 id="task-records">Task Records</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Blocker IDs</th><th>Evidence Links</th><th>Updated Date</th></tr></thead><tbody>
+<tr><td>T-014</td><td>E-02</td><td>Lớp Object Storage: blob theo hash nội dung trước, metadata sau</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-001 (satisfied)</td><td>none</td><td><a href="../reports/implementation/T-014-@vietanhhhhhh2003.html">implementation report</a>; commit <code>78af2d2</code></td><td>2026-10-08</td></tr>
+<tr><td>T-030</td><td>E-11</td><td>score_v0 cho mọi frame, score version bất biến, tie-break hash tất định</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td><td>review</td><td>T-027/T-028 contract (soft)</td><td>none</td><td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/72">#72</a>; <a href="../reports/implementation/T-030-@vietanhhhhhh2003.html">implementation report</a>; branch <code>feat/T-030-e11-score-v0</code></td><td>2026-10-09</td></tr>
+<tr><td>T-031</td><td>E-11</td><td>Random slice, control ranking, giải thích điểm + AuditSampling, E2E M-02</td><td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003), @tdt2112</td><td>review</td><td>T-030 (satisfied); T-024 / PR #89 (satisfied)</td><td>none</td><td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/73">#73</a>; <a href="../reports/implementation/T-031-@vietanhhhhhh2003.html">implementation report</a>; branch <code>feat/T-031-e11-random-control-ranking</code></td><td>2026-10-10</td></tr>
+</tbody></table>
+<h2 id="t-030-acceptance-criteria">T-030 Acceptance Criteria</h2>
+<ul><li>[x] Mọi frame có score, kể cả frame không có candidate hoặc thiếu evidence; frame thiếu evidence có flag.</li><li>[x] Hai lần chạy cùng input, score version và seed cho cùng thứ tự và ranking hash.</li><li>[x] Mỗi kết quả lưu điểm nền, anchor counts và đóng góp <code>n_i * q_i</code>.</li><li>[x] Score version và kết quả trả về là bất biến.</li></ul>
+<h2 id="t-031-acceptance-criteria">T-031 Acceptance Criteria</h2>
+<ul><li>[x] Lát audit ngẫu nhiên chọn <code>ceil(r% × N)</code> bằng seed cố định, độc lập thứ tự risk.</li><li>[x] Random control, annotation-count heuristic và max-confidence heuristic có source, thứ tự và content hash riêng.</li><li>[x] Component giải thích điểm trả JSON-safe score, baseline, issue counts và từng đóng góp.</li><li>[x] Hai run cùng snapshot/config/seed/version cho cùng content hash và ranking hash.</li><li>[x] Seam E2E fixture BDD100K chạy snapshot → duplicate engine → score/control; full <code>make check</code> xanh.</li><li>[x] Persistence bất biến và HTTP <code>/api/runs/{id}/ranking/</code> đã nối vào runs domain T-024, có RBAC/scope và queue risk/random.</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Every acceptance criterion has automated evidence.</li><li>[x] Required implementation report is stored in <code>.agent/reports/implementation/</code>.</li><li>[x] Per-user task board is in <code>review</code>.</li><li>[ ] Independent review and PR approval remain pending.</li></ul>
+<h2 id="t-036-task-record">T-036 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-036</td><td>E-14</td><td>Effort events idempotent và client collector theo hoạt động</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-032 satisfied; T-033/T-035 integrated on <code>integration/m03@7326af3</code></td><td><a href="../reports/implementation/T-036-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/103">issue #103</a>; branch <code>feat/T-036-e14-effort-events</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-036-acceptance-criteria">T-036 Acceptance Criteria</h2><ul>
+<li>[x] Retry cùng <code>client_event_id</code> không ghi trùng; UUID trùng nhưng payload/actor khác trả conflict.</li>
+<li>[x] Collector batch/retry giữ UUID, persist queue, loại idle/mất focus/pause/complete/mất lease.</li>
+<li>[x] Backend kiểm role, server-derived dataset scope, CVAT identity, frame và timeline.</li>
+<li>[x] Event lưu actor/frame/activity/timeline/active milliseconds và snapshot nguồn policy; mặc định <code>t_idle=null</code>.</li>
+<li>[x] PostgreSQL 17 migration/full backend suite, runtime DB-role check, S3 integration và các job CI cục bộ đều đạt.</li>
+<li>[x] Frontend full test/production build, detector, framework, bootstrap-Windows, lint, mypy và typecheck đạt.</li>
+<li>[x] Test tích hợp API thật chạy claim lease → manual Issue → ReviewDecision → effort event → complete frame.</li>
+<li>[ ] Review/QA độc lập và GitHub Actions trên PR head còn chờ trước khi done.</li>
+</ul>
+<h2 id="t-039-task-record">T-039 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-039</td><td>E-15</td><td>Escalations UI và tra cứu Decision Case dùng lại Workspace</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-037/T-038 integrated at <code>integration/m03@3a42998</code></td><td><a href="../reports/implementation/T-039-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/106">issue #106</a>; <a href="https://github.com/toilatrung/label-x/pull/138">PR #138</a>; branch <code>feat/T-039-e15-escalations-ui</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-039-acceptance-criteria">T-039 Acceptance Criteria</h2><ul>
+<li>[x] UI đọc/ghi API T-038, hiển thị evidence và toàn bộ reviewer decisions; không dùng fixture runtime.</li>
+<li>[x] Guard QA Lead/Super Admin, chặn cùng tài khoản chuyển cấp ở UI; lỗi role/scope/separation từ backend được hiển thị theo error code.</li>
+<li>[x] Form outcome/rule/label/reason và override reason khớp validation; Decision Case lookup lọc issue/rule/version.</li>
+<li>[x] Cursor pagination đi qua trang đầu, cùng loading/empty/error/retry.</li>
+<li>[x] Frontend full suite <code>29 files / 307 tests</code>, lint, typecheck và production build đạt.</li>
+<li>[x] Browser role matrix/API environment: Edge + Next.js + Django + PostgreSQL cô lập trong Docker/WSL, 11 checks/58 API calls/0 page error; gồm Decision Case lookup trong Review Workspace; evidence tại <code>src/frontend/evidence/t039/</code>.</li>
+<li>[ ] Independent review/QA và GitHub Actions trên PR head còn chờ trước khi done.</li>
+</ul>
+<h2 id="t-040-task-record">T-040 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-040</td><td>E-16</td><td>Rework API, snapshot revision mới, re-check và verify</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-035/T-038 satisfied; implementation gốc PR #136 integrated; T-045 PostgreSQL evidence integrated</td><td><a href="../reports/implementation/T-040-@Vietanhhhhhh2003.html">takeover implementation report</a>; <a href="../reports/implementation/T-040-@duy12345-6789.html">original implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/107">issue #107</a>; <a href="https://github.com/toilatrung/label-x/pull/142">PR #142</a>; branch <code>feat/T-040-e16-rework-recheck-verify-vietanh</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-040-acceptance-criteria">T-040 Acceptance Criteria</h2><ul>
+<li>[x] Tiếp quản implementation đã merge từ PR #136, giữ nguyên tác giả và evidence cũ.</li>
+<li>[x] Retry submit cùng <code>Idempotency-Key</code> và cùng body trả lại kết quả; cùng key nhưng body khác trả <code>409 IDEMPOTENCY_KEY_REUSED</code>.</li>
+<li>[x] PostgreSQL focused test <code>5 passed</code>; toàn bộ review regression <code>62 passed</code>; Django check, migration check và Ruff đều đạt.</li>
+<li>[ ] M03-D04 GET list/detail vẫn chờ PO/CR; không tự mở rộng contract.</li>
+<li>[ ] Independent review/QC và GitHub Actions trên PR head cần hoàn tất trước khi done.</li>
+</ul>
+<h2 id="t-041-task-record">T-041 Task Record</h2>
+<table><thead><tr><th>Task ID</th><th>Epic ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Dependencies</th><th>Evidence</th><th>Updated</th></tr></thead><tbody>
+<tr><td>T-041</td><td>E-16</td><td>Snapshot toàn phạm vi, final QC run và verification lineage</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-040/PR #142 integrated; T-045 backend environment available</td><td><a href="../reports/implementation/T-041-@Vietanhhhhhh2003.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/108">issue #108</a>; <a href="https://github.com/toilatrung/label-x/pull/159">PR #159</a>; branch <code>feat/T-041-e16-final-run-lineage</code></td><td>2026-10-11</td></tr>
+</tbody></table>
+<h2 id="t-041-acceptance-criteria">T-041 Acceptance Criteria</h2><ul>
+<li>[x] Trigger lặp và hai transaction đồng thời chỉ tạo một final run active; terminal Partial/Failed/Cancelled có thể tạo retry mới.</li>
+<li>[x] Snapshot final đọc toàn bộ CVAT job scope và fail closed nếu job hash không khớp revision re-check đã verify.</li>
+<li>[x] Final run liên kết append-only tới verification; run/snapshot/evidence gốc không bị sửa.</li>
+<li>[x] Nguồn vận hành chỉ chọn final Completed có required-engine ledger đầy đủ; issue mới hoặc ledger thiếu giữ run gốc.</li>
+<li>[x] PostgreSQL focused concurrency/regression, Ruff, mypy và migration drift check đạt.</li>
+<li>[ ] M03-D05 lineage read endpoint vẫn chờ PO/CR; không tự mở rộng REST contract.</li>
+<li>[ ] CVAT/browser E2E thật theo T-045/T-046 và independent review/QC còn chờ.</li>
+</ul>
+</article></main></body></html>

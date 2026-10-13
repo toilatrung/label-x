@@ -567,6 +567,8 @@ export interface paths {
          * @description Lease còn hạn và đúng người giữ; kiểm lại assignee tại snapshot để chặn self-review.
          *     confirm yêu cầu family và severity; reject/uncertain/escalate yêu cầu reason.
          *     Super Admin ghi đè cần override_reason và vẫn chịu kiểm self-review.
+         *     Không nhận request_fix: /api/rework/ thực hiện nguyên tử tạo rework,
+         *     append ReviewDecision(request_fix), chuyển fix_pending và ghi audit (T-040).
          */
         post: operations["issues_decide"];
         delete?: never;
@@ -643,10 +645,75 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Danh sách yêu cầu sửa trong dataset (D04, chỉ đọc)
+         * @description Annotator chỉ thấy rework được giao; Reviewer/QA Lead trong dataset và Super Admin thấy
+         *     toàn dataset. `counts` đếm theo status trong phạm vi nhìn thấy (không theo bộ lọc status).
+         */
+        get: operations["rework_list"];
         put?: never;
-        /** Tạo yêu cầu sửa cho issue confirmed */
+        /**
+         * Tạo yêu cầu sửa cho issue confirmed
+         * @description Một transaction tạo rework, append ReviewDecision(request_fix),
+         *     chuyển issue sang fix_pending và ghi audit. Nghiệp vụ endpoint thuộc T-040.
+         */
         post: operations["rework_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rework/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết rework kèm timeline các vòng (D04, chỉ đọc)
+         * @description Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+         *     `timeline` liệt kê từng vòng recheck/verification theo thứ tự; `review_state` là trạng thái frame.
+         */
+        get: operations["rework_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rework/{id}/current-revision/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revision CVAT hiện tại của job rework (chỉ đọc)
+         * @description Trả `revision_sha256` mà `POST /api/rework/{id}/submitted/` sẽ nhận làm `cvat_revision` nếu gửi ngay:
+         *     backend đọc CVAT (chỉ GET) và băm bằng đúng hàm chuẩn hóa snapshot một-job mà recheck dùng, nhưng
+         *     không tạo snapshot/run/audit, không upload object storage và không đọc lại để kiểm drift
+         *     (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
+         *     `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
+         *     Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+         *     CVAT không đọc được (hoặc trả dữ liệu thiếu/sai) trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại
+         *     (8+N request, N = số frame; không cache nội dung) nên giới hạn 6 lần/phút/người dùng, vượt trả 429
+         *     `BUSINESS_RULE_UNMET` kèm header `Retry-After` và `details.retry_after_seconds`.
+         *
+         *     Hạn chế ngữ nghĩa:
+         *     - `unchanged` chỉ có ý nghĩa khi `rework_status` là `fix_pending`.
+         *     - `original_revision` là revision của snapshot gốc (có thể nhiều job) còn `revision_sha256` là của snapshot
+         *       một job, nên `unchanged` chỉ đáng tin khi snapshot gốc một job.
+         *     - Revision phụ thuộc `guideline_version` và `taxonomy_version` hiện hành.
+         *     - `unchanged=false` không có nghĩa annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift).
+         */
+        get: operations["rework_current_revision"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -665,6 +732,8 @@ export interface paths {
         /**
          * Annotator báo đã sửa trên CVAT
          * @description Chỉ assignee được báo đã sửa; revision mới phải khác revision gốc, sau đó tạo snapshot job mới.
+         *     409: INVALID_TRANSITION | IDEMPOTENCY_KEY_REUSED | REVISION_UNCHANGED (revision hoặc snapshot đã được
+         *     rework gốc hoặc một vòng trước dùng).
          */
         post: operations["rework_submitted"];
         delete?: never;
@@ -733,6 +802,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-cases/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tra cứu Decision Case theo rule/issue/version/outcome (UC-12)
+         * @description Cursor pagination theo id, giới hạn theo dataset scope; chỉ đọc, lịch sử append-only.
+         */
+        get: operations["decision_cases_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/decision-cases/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Một version Decision Case kèm lịch sử các version của issue */
+        get: operations["decision_cases_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/review-policy/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Policy lease/idle đang áp dụng (read-only, có version)
+         * @description Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+         *     `dataset_id` là tùy chọn: nếu có, caller phải có scope dataset đó (thiếu scope → 403 `OUT_OF_SCOPE`,
+         *     giá trị không hợp lệ → 400); nếu không có, hành vi như trước (chỉ kiểm vai trò). Policy pilot trả như nhau.
+         */
+        get: operations["review_policy_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/effort-events/": {
         parameters: {
             query?: never;
@@ -744,7 +872,9 @@ export interface paths {
         put?: never;
         /**
          * Ghi batch effort event từ client
-         * @description client_event_id chống ghi trùng; khoảng idle quá t_idle không tính vào effort.
+         * @description client_event_id chống ghi trùng. Server tự tính active time từ started_at/ended_at trừ các `gaps`
+         *     (idle chỉ bị loại nếu vượt t_idle; blur/hidden/pause loại ngay; chồng lấn tính một lần).
+         *     409: replay với gaps khác, POLICY_VERSION_MISMATCH, POLICY_NOT_CONFIGURED.
          */
         post: operations["effort_events_create"];
         delete?: never;
@@ -875,7 +1005,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "POLICY_NOT_CONFIGURED" | "POLICY_VERSION_MISMATCH";
         /**
          * @example {
          *       "code": "LEASE_CONFLICT",
@@ -1082,15 +1212,15 @@ export interface components {
             /** @description QC run cuối sau rework (FR-RWK-06) hoặc run gốc khi không có rework (BLOCKER-011) */
             is_final: boolean;
             /** @description Run gốc mà run cuối này nối verification về (DEC-005) */
-            origin_run_id?: number | null;
-            score_version?: string | null;
-            model_artifact?: components["schemas"]["ModelArtifact"] | null;
+            origin_run_id: number | null;
+            score_version: string | null;
+            model_artifact: components["schemas"]["ModelArtifact"] | null;
             engines: components["schemas"]["EngineRunStatus"][];
             created_by: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
-            finished_at?: string | null;
+            finished_at: string | null;
         };
         RunShard: {
             id: number;
@@ -1278,7 +1408,7 @@ export interface components {
             explanation: {
                 [key: string]: unknown;
             };
-            lease_holder_user_id?: number | null;
+            lease_holder_user_id: number | null;
         };
         GuidelineRule: {
             /** @example VEH-03 */
@@ -1457,9 +1587,47 @@ export interface components {
         };
         FrameIssues: {
             frame: components["schemas"]["FrameSummary"];
-            guideline_version?: string | null;
+            guideline_version: string | null;
+            /** @description Revision snapshot đã khoá của run, do server cấp (không lấy từ client) */
+            snapshot_revision?: string;
+            /** @description Mọi annotation của frame trong snapshot, kể cả object không có candidate */
+            annotations?: components["schemas"]["FrameAnnotation"][];
+            /** @description Output engine bất biến của run cho frame */
+            predictions?: components["schemas"]["FramePrediction"][];
             engines: components["schemas"]["EngineRunStatus"][];
             issues: components["schemas"]["Issue"][];
+        };
+        FrameAnnotation: {
+            /** @description <source.kind>:<source.id> */
+            id: string;
+            source: {
+                kind: string;
+                id: number;
+            };
+            label_id: number;
+            bbox: {
+                x1: number;
+                y1: number;
+                x2: number;
+                y2: number;
+            } | null;
+            rotation?: number;
+            occluded?: boolean;
+            outside?: boolean;
+            z_order?: number;
+            attributes?: {
+                [key: string]: unknown;
+            }[];
+        };
+        FramePrediction: {
+            candidate_id: number;
+            engine: string;
+            engine_version: string;
+            family: string;
+            anchor: {
+                [key: string]: unknown;
+            };
+            evidence: unknown;
         };
         FrameCompleteRequest: {
             lease_id: number;
@@ -1472,11 +1640,19 @@ export interface components {
             anchor: components["schemas"]["Anchor"];
             description?: string;
         };
-        /** @enum {string} */
-        IssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix";
+        /**
+         * @description Chỉ các action được nhận tại POST /api/issues/{id}/decisions/.
+         * @enum {string}
+         */
+        IssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate";
+        /**
+         * @description Action được lưu/trả về; request_fix do POST /api/rework/ tạo nguyên tử.
+         * @enum {string}
+         */
+        PersistedIssueDecisionAction: "confirm" | "reject" | "uncertain" | "escalate" | "request_fix";
         /**
          * @description confirm bắt buộc family và severity. reject/uncertain/escalate bắt buộc reason.
-         *     request_fix chỉ sau confirmed; chi tiết yêu cầu sửa gửi tới /api/rework/.
+         *     request_fix không được nhận ở endpoint decisions; gửi chi tiết yêu cầu sửa tới /api/rework/.
          *     override_reason bắt buộc nếu Super Admin dùng quyền ghi đè.
          */
         IssueDecisionCreate: {
@@ -1493,13 +1669,13 @@ export interface components {
         IssueDecision: {
             id: number;
             issue_id: number;
-            action: components["schemas"]["IssueDecisionAction"];
+            action: components["schemas"]["PersistedIssueDecisionAction"];
             actor_user_id: number;
             revision: string;
-            family?: components["schemas"]["IssueFamily"];
-            severity?: components["schemas"]["Severity"];
-            reason?: string | null;
-            rule_id?: string | null;
+            family: components["schemas"]["IssueFamily"];
+            severity: components["schemas"]["Severity"] | null;
+            reason: string | null;
+            rule_id: string | null;
             /** Format: date-time */
             created_at: string;
             audit_event_id?: number;
@@ -1519,7 +1695,7 @@ export interface components {
             outcome: "confirm" | "reject" | "guideline_gap";
             actor_user_id: number;
             rule_id: string;
-            correct_label?: string | null;
+            correct_label: string | null;
             reason: string;
             case_version: string;
             /** Format: date-time */
@@ -1552,12 +1728,12 @@ export interface components {
             /** @enum {string} */
             status: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
             original_revision: string;
-            submitted_revision?: string | null;
-            recheck_run_id?: number | null;
+            submitted_revision: string | null;
+            recheck_run_id: number | null;
             /** Format: date-time */
             due_at: string;
             /** Format: uri */
-            cvat_deep_link?: string;
+            cvat_deep_link: string;
         };
         ReferenceCreate: {
             snapshot_id: number;
@@ -1598,6 +1774,142 @@ export interface components {
             started_at: string;
             /** Format: date-time */
             ended_at: string;
+            gaps?: components["schemas"]["EffortGap"][];
+            policy_version?: string;
+        };
+        /** @description Khoảng trong event mà người dùng không làm việc. */
+        EffortGap: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string;
+            /** @enum {string} */
+            reason: "idle" | "blur" | "hidden" | "pause";
+        };
+        ReviewPolicy: {
+            policy_version: string;
+            source: string;
+            decision_status: string;
+            lease_ttl_seconds: number;
+            resume_reservation_seconds: number;
+            idle_threshold_seconds: number;
+            idle_gap_rule: string;
+            immediate_exclusion_reasons: string[];
+            renew_on: string;
+        };
+        RunDetail: components["schemas"]["Run"] & {
+            verification_lineage: {
+                [key: string]: unknown;
+            };
+            selected_final_sources: {
+                [key: string]: unknown;
+            };
+            /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) — mảng đầy đủ mọi lý do đang chặn nguồn, không trùng, sắp xếp cố định, rỗng khi scope_complete */
+            operational_source: {
+                [key: string]: unknown;
+            };
+        };
+        DecisionCase: {
+            id: number;
+            issue_id: number;
+            /** @enum {string} */
+            outcome: "confirm" | "reject" | "guideline_gap";
+            actor_user_id: number;
+            rule_id: string;
+            correct_label: string | null;
+            reason: string;
+            case_version: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        DecisionCaseHistoryItem: {
+            id: number;
+            case_version: string;
+            /** @enum {string} */
+            outcome: "confirm" | "reject" | "guideline_gap";
+            actor_user_id: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        DecisionCaseDetail: components["schemas"]["DecisionCase"] & {
+            history: components["schemas"]["DecisionCaseHistoryItem"][];
+        };
+        PaginatedDecisionCaseList: {
+            next: string | null;
+            previous: string | null;
+            results: components["schemas"]["DecisionCase"][];
+        };
+        ReworkRead: {
+            id: number;
+            dataset_id: number;
+            issue_id: number;
+            frame_id: number;
+            annotator_user_id: number;
+            created_by_user_id: number;
+            /** @enum {string} */
+            status: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+            instruction: string;
+            severity: components["schemas"]["Severity"];
+            original_revision: string;
+            submitted_revision: string | null;
+            recheck_run_id: number | null;
+            /** Format: date-time */
+            due_at: string;
+            cvat_deep_link: string;
+            /** Format: date-time */
+            submitted_at: string | null;
+            /** Format: date-time */
+            resolved_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            round_count: number;
+        };
+        ReworkDetail: components["schemas"]["ReworkRead"] & {
+            /** @enum {string} */
+            review_state: "unreviewed" | "in_review" | "incomplete" | "reviewed" | "awaiting_followup" | "completed";
+            timeline: components["schemas"]["ReworkRound"][];
+        };
+        ReworkCurrentRevision: {
+            rework_id: number;
+            cvat_job_id: number;
+            revision_sha256: string;
+            original_revision: string;
+            unchanged: boolean;
+            /** @enum {string} */
+            rework_status?: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+            /** Format: date-time */
+            read_at: string;
+        };
+        ReworkRound: {
+            round: number;
+            revision: string;
+            snapshot_id: number;
+            recheck_run_id: number;
+            recheck_run_status: string;
+            /** Format: date-time */
+            submitted_at: string | null;
+            verification: {
+                id: number;
+                /** @enum {string} */
+                outcome: "pass" | "fail";
+                verifier_user_id: number;
+                reason: string;
+                /** Format: date-time */
+                verified_at: string;
+            } | null;
+            /** @enum {string} */
+            result_status: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+        };
+        PaginatedReworkList: {
+            next: string | null;
+            previous: string | null;
+            results: components["schemas"]["ReworkRead"][];
+            /** @description Số rework theo status trong phạm vi nhìn thấy */
+            counts: {
+                [key: string]: number;
+            };
         };
         EffortEventReceipt: {
             accepted: number;
@@ -1753,8 +2065,8 @@ export interface components {
             results: components["schemas"]["ConfigVersion"][];
         };
         PaginatedIssueList: {
-            next?: string | null;
-            previous?: string | null;
+            next: string | null;
+            previous: string | null;
             results: components["schemas"]["Issue"][];
         };
         PaginatedRunList: {
@@ -1763,8 +2075,8 @@ export interface components {
             results: components["schemas"]["Run"][];
         };
         PaginatedRankedFrameList: {
-            next?: string | null;
-            previous?: string | null;
+            next: string | null;
+            previous: string | null;
             /** @enum {string} */
             source: "risk" | "random_audit";
             /** @description SHA-256 nội dung chuẩn hoá của snapshot/config/seed/version và candidate */
@@ -1785,6 +2097,16 @@ export interface components {
         };
     };
     responses: {
+        /** @description Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds) */
+        TooManyRequests: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
         BadGateway: {
             headers: {
@@ -1839,6 +2161,15 @@ export interface components {
         };
         /** @description Không đủ điều kiện nghiệp vụ (BUSINESS_RULE_UNMET, INSUFFICIENT_SAMPLE) */
         Unprocessable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Policy chưa được cấu hình (POLICY_NOT_CONFIGURED) */
+        Unavailable: {
             headers: {
                 [name: string]: unknown;
             };
@@ -2262,13 +2593,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Run */
+            /** @description Run kèm lineage verification và nguồn vận hành (D05, DEC-019 P07) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Run"];
+                    "application/json": components["schemas"]["RunDetail"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -2700,6 +3031,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
         };
@@ -2787,7 +3119,9 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedIssueList"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     issues_adjudicate: {
@@ -2827,6 +3161,32 @@ export interface operations {
             422: components["responses"]["Unprocessable"];
         };
     };
+    rework_list: {
+        parameters: {
+            query: {
+                dataset_id: number;
+                status?: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang rework kèm counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedReworkList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     rework_create: {
         parameters: {
             query?: never;
@@ -2859,6 +3219,56 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    rework_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rework chi tiết */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkDetail"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    rework_current_revision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision hiện tại */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkCurrentRevision"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            502: components["responses"]["BadGateway"];
         };
     };
     rework_submitted: {
@@ -2997,6 +3407,83 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    decision_cases_list: {
+        parameters: {
+            query?: {
+                rule_id?: string;
+                issue?: number;
+                version?: string;
+                outcome?: "confirm" | "reject" | "guideline_gap";
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang Decision Case */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDecisionCaseList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    decision_cases_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decision Case và history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionCaseDetail"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    review_policy_retrieve: {
+        parameters: {
+            query?: {
+                dataset_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Policy hiện hành */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPolicy"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            503: components["responses"]["Unavailable"];
         };
     };
     effort_events_create: {
