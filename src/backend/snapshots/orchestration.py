@@ -16,9 +16,16 @@ from cvat_adapter.client import CvatReadClient
 from cvat_adapter.hashing import canonicalize_job_annotations
 from guideline.models import get_latest_guideline_version
 from snapshots.models import Snapshot
-from snapshots.normalization import SCHEMA_VERSION, FrameExport, JobExport, sha256_json
+from snapshots.normalization import (
+    SCHEMA_VERSION,
+    FrameExport,
+    JobExport,
+    normalize_job,
+    normalize_snapshot,
+    sha256_json,
+)
 from snapshots.services import create_locked_snapshot
-from storage.client import Blob, ObjectStorage
+from storage.client import Blob, ObjectStorage, content_key
 
 
 class SnapshotRequestConflict(ValueError):
@@ -244,6 +251,93 @@ def _failed_drift_snapshot(
         )
 
 
+def _read_job_export(
+    cvat: CvatReadClient,
+    storage: SnapshotStorage,
+    *,
+    dataset_id: int,
+    job_id: int,
+) -> tuple[JobExport, SourceRevision]:
+    """Authoritative first read of one job: the exact input of its snapshot normalization."""
+
+    # Collection responses can lag behind the object endpoint. Use an
+    # authoritative first read so the later drift comparison is fair.
+    job = cvat.get_job(job_id)
+    task_id = _job_task_id(job)
+    if _project_id(cvat.get_task(task_id)) != dataset_id:
+        raise SnapshotSourceError(f"CVAT job {job_id} moved outside dataset {dataset_id}")
+    annotations = cvat.get_job_annotations(job_id)
+    revision = _source_revision(cvat, job_id, job=job, annotations=annotations)
+    assignee_cvat_id = _assignee_id(job)
+    assignee_user_id = None
+    if assignee_cvat_id is not None:
+        assignee_user_id = (
+            CvatIdentity.objects.filter(cvat_user_id=assignee_cvat_id)
+            .values_list("user_id", flat=True)
+            .first()
+        )
+    export = JobExport(
+        cvat_job_id=job_id,
+        cvat_task_id=task_id,
+        source_updated_at=revision.updated_date,
+        annotations=annotations,
+        frames=_frame_exports(cvat, storage, job_id=job_id, job=job),
+        assignee_cvat_user_id=assignee_cvat_id,
+        assignee_user_id=assignee_user_id,
+    )
+    return export, revision
+
+
+class _HashOnlyStorage:
+    """Returns the content-addressed key `ObjectStorage.put` would use, without any I/O."""
+
+    def put(
+        self,
+        content: bytes,
+        *,
+        extension: str | None = None,
+        content_type: str = "application/octet-stream",
+    ) -> Blob:
+        key, digest = content_key(content, extension)
+        return Blob("", key, digest, len(content), created=False)
+
+
+def compute_job_revision(
+    *, dataset_id: int, cvat_job_id: int, client: CvatReadClient | None = None
+) -> str:
+    """Revision a one-job re-check snapshot would get now; reads CVAT only, writes nothing.
+
+    Same normalization and hash as `create_snapshot_from_cvat` (same helpers, same
+    content-addressed media keys), minus persistence, object-storage upload and the
+    drift re-read. A drifting job therefore yields a revision the later submit rejects.
+    """
+
+    owns_client = client is None
+    cvat = client or CvatReadClient(settings.CVAT_BASE_URL, settings.CVAT_SERVICE_TOKEN)
+    try:
+        selected = _selected_jobs(
+            cvat, dataset_id=dataset_id, scope=SnapshotScope(cvat_job_ids=(cvat_job_id,))
+        )
+        taxonomy_version = _taxonomy_version(cvat, dataset_id)
+        guideline_version = _guideline_version()
+        export, _ = _read_job_export(
+            cvat,
+            _HashOnlyStorage(),
+            dataset_id=dataset_id,
+            job_id=_positive_int(selected[0].get("id"), field="job.id"),
+        )
+        _, digest = normalize_snapshot(
+            dataset_id=dataset_id,
+            jobs=[normalize_job(export)],
+            taxonomy_version=taxonomy_version,
+            guideline_version=guideline_version,
+        )
+        return digest
+    finally:
+        if owns_client:
+            cvat.close()
+
+
 def create_snapshot_from_cvat(
     *,
     dataset_id: int,
@@ -279,35 +373,10 @@ def create_snapshot_from_cvat(
         initial_revisions: dict[int, SourceRevision] = {}
         for selected_job in selected:
             job_id = _positive_int(selected_job.get("id"), field="job.id")
-            # Collection responses can lag behind the object endpoint. Use an
-            # authoritative first read so the later drift comparison is fair.
-            job = cvat.get_job(job_id)
-            task_id = _job_task_id(job)
-            if _project_id(cvat.get_task(task_id)) != dataset_id:
-                raise SnapshotSourceError(f"CVAT job {job_id} moved outside dataset {dataset_id}")
-            annotations = cvat.get_job_annotations(job_id)
-            initial_revisions[job_id] = _source_revision(
-                cvat, job_id, job=job, annotations=annotations
+            export, initial_revisions[job_id] = _read_job_export(
+                cvat, media_storage, dataset_id=dataset_id, job_id=job_id
             )
-            assignee_cvat_id = _assignee_id(job)
-            assignee_user_id = None
-            if assignee_cvat_id is not None:
-                assignee_user_id = (
-                    CvatIdentity.objects.filter(cvat_user_id=assignee_cvat_id)
-                    .values_list("user_id", flat=True)
-                    .first()
-                )
-            exports.append(
-                JobExport(
-                    cvat_job_id=job_id,
-                    cvat_task_id=task_id,
-                    source_updated_at=initial_revisions[job_id].updated_date,
-                    annotations=annotations,
-                    frames=_frame_exports(cvat, media_storage, job_id=job_id, job=job),
-                    assignee_cvat_user_id=assignee_cvat_id,
-                    assignee_user_id=assignee_user_id,
-                )
-            )
+            exports.append(export)
 
         drift_jobs = [
             job_id

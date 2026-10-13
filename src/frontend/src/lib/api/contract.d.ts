@@ -685,6 +685,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rework/{id}/current-revision/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revision CVAT hiện tại của job rework (chỉ đọc)
+         * @description Trả `revision_sha256` mà `POST /api/rework/{id}/submitted/` sẽ nhận làm `cvat_revision` nếu gửi ngay:
+         *     backend đọc CVAT (chỉ GET) và băm bằng đúng hàm chuẩn hóa snapshot một-job mà recheck dùng, nhưng
+         *     không tạo snapshot/run/audit, không upload object storage và không đọc lại để kiểm drift
+         *     (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
+         *     `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
+         *     Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+         *     CVAT không đọc được (hoặc trả dữ liệu thiếu/sai) trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại
+         *     (8+N request, N = số frame; không cache nội dung) nên giới hạn 6 lần/phút/người dùng, vượt trả 429
+         *     `BUSINESS_RULE_UNMET` kèm header `Retry-After` và `details.retry_after_seconds`.
+         *
+         *     Hạn chế ngữ nghĩa:
+         *     - `unchanged` chỉ có ý nghĩa khi `rework_status` là `fix_pending`.
+         *     - `original_revision` là revision của snapshot gốc (có thể nhiều job) còn `revision_sha256` là của snapshot
+         *       một job, nên `unchanged` chỉ đáng tin khi snapshot gốc một job.
+         *     - Revision phụ thuộc `guideline_version` và `taxonomy_version` hiện hành.
+         *     - `unchanged=false` không có nghĩa annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift).
+         */
+        get: operations["rework_current_revision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rework/{id}/submitted/": {
         parameters: {
             query?: never;
@@ -1834,6 +1869,17 @@ export interface components {
             review_state: "unreviewed" | "in_review" | "incomplete" | "reviewed" | "awaiting_followup" | "completed";
             timeline: components["schemas"]["ReworkRound"][];
         };
+        ReworkCurrentRevision: {
+            rework_id: number;
+            cvat_job_id: number;
+            revision_sha256: string;
+            original_revision: string;
+            unchanged: boolean;
+            /** @enum {string} */
+            rework_status?: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+            /** Format: date-time */
+            read_at: string;
+        };
         ReworkRound: {
             round: number;
             revision: string;
@@ -2049,6 +2095,16 @@ export interface components {
         };
     };
     responses: {
+        /** @description Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds) */
+        TooManyRequests: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
         BadGateway: {
             headers: {
@@ -3185,6 +3241,32 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    rework_current_revision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision hiện tại */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkCurrentRevision"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            502: components["responses"]["BadGateway"];
         };
     };
     rework_submitted: {

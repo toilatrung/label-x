@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import URLValidator
@@ -37,7 +38,12 @@ from review.services import _actor, _reviewer_identity
 from runs.models import QCRun
 from runs.services import create_qc_run
 from snapshots.models import Snapshot
-from snapshots.orchestration import SnapshotScope, create_snapshot_from_cvat
+from snapshots.orchestration import (
+    SnapshotScope,
+    SnapshotSourceError,
+    compute_job_revision,
+    create_snapshot_from_cvat,
+)
 
 
 def _body(request: Request) -> dict[str, Any]:
@@ -356,6 +362,37 @@ def _known_revisions(rework: ReworkRequest) -> set[str]:
     """Revisions already seen by this rework: the reviewed one and every submitted round."""
 
     return {rework.original_revision, *rework.rechecks.values_list("revision", flat=True)}
+
+
+def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
+    """Revision `submitted` would claim right now. Reads CVAT only; persists nothing."""
+
+    frame = rework.issue.frame_review
+    job_id = frame.snapshot_frame.snapshot_job.cvat_job_id
+    try:
+        revision = compute_job_revision(dataset_id=frame.run.dataset_id, cvat_job_id=job_id)
+    except (
+        httpx.HTTPError,
+        SnapshotSourceError,
+        LookupError,
+        AttributeError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+    ) as exc:
+        raise ApiError(
+            status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được job CVAT."
+        ) from exc
+    return {
+        "rework_id": rework.pk,
+        "cvat_job_id": job_id,
+        "revision_sha256": revision,
+        "original_revision": rework.original_revision,
+        "unchanged": revision in _known_revisions(rework),
+        "rework_status": rework.status,
+        "read_at": timezone.now().isoformat(),
+    }
 
 
 def _existing_submission(
