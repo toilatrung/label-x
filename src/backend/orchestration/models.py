@@ -300,3 +300,59 @@ class ClassifierUnit(models.Model):
 
     def __str__(self) -> str:
         return f"ClassifierUnit run={self.run_id} candidate={self.candidate_id} [{self.status}]"
+
+
+class Evaluation(models.Model):
+    """Một lượt đánh giá logic của candidate (M04C-02): quyết định định tuyến + (nếu cần) VlmUnit.
+
+    Mỗi (candidate, generation) đúng một dòng; `source="auto"` là lượt đầu do stage tạo, `manual`
+    là re-evaluate do reviewer/QA yêu cầu với Idempotency-Key mới. Policy được LƯU THEO evaluation
+    (`policy` kèm sha256) để đọc lại đúng ngưỡng đã dùng; ngưỡng chỉ là routing tạm, không phải
+    calibration. Bản ghi bất biến sau khi tạo: không ghi đè evidence hay quyết định cũ; trạng thái
+    chạy luôn suy ra từ `vlm_unit`. `note` là ghi chú tự do của người dùng, chỉ để audit và KHÔNG
+    bao giờ đi vào prompt VLM. Không có quan hệ tới ReviewDecision/Adjudication.
+    """
+
+    class Source(models.TextChoices):
+        AUTO = "auto", "Auto"
+        MANUAL = "manual", "Manual"
+
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
+    candidate = models.ForeignKey(CandidateRecord, on_delete=models.PROTECT, related_name="+")
+    generation = models.PositiveIntegerField()
+    source = models.CharField(max_length=8, choices=Source.choices)
+    idempotency_key = models.CharField(max_length=128, blank=True, default="")
+    request_sha256 = models.CharField(max_length=64, blank=True, default="")
+    requested_by = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    note = models.CharField(max_length=500, blank=True, default="")
+    expected_revision = models.CharField(max_length=128, blank=True, default="")
+    snapshot_revision = models.CharField(max_length=128)
+    primary_reason = models.CharField(max_length=24)
+    reasons = models.JSONField(default=list)
+    call_qwen = models.BooleanField()
+    human_review_required = models.BooleanField()
+    policy = models.JSONField()
+    checkpoint_status = models.CharField(max_length=16, blank=True, default="")
+    vlm_unit = models.OneToOneField(
+        VlmUnit, null=True, blank=True, on_delete=models.PROTECT, related_name="evaluation"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["candidate", "generation"], name="uniq_evaluation_candidate_generation"
+            ),
+            models.UniqueConstraint(
+                fields=["idempotency_key"],
+                condition=~models.Q(idempotency_key=""),
+                name="uniq_evaluation_idempotency_key",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Evaluation candidate={self.candidate_id} gen={self.generation} [{self.source}]"

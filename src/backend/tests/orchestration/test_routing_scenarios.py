@@ -28,7 +28,7 @@ def candidate(**classifier):
         "score": 0.95,
         "margin": 0.5,
         "classifier_unknown": False,
-        "checkpoint_status": "smoke_only",
+        "checkpoint_status": "trained",
     }
     return {"classifier": {**base, **classifier}}
 
@@ -40,7 +40,7 @@ def test_branch_1_classifier_only():
         False,
         False,
     )
-    assert d.checkpoint_status == "smoke_only"  # nguồn smoke vẫn hiện trong evidence
+    assert d.checkpoint_status == "trained"
 
 
 def test_branch_2_trigger_low_score_and_margin():
@@ -88,3 +88,10 @@ def test_branch_7_stale_revision_is_rejected_before_any_routing():
 def test_manual_recheck_new_logical_evaluation_triggers_even_when_confident():
     d = route(POLICY, routing_input_from_candidate(candidate(), manual_recheck=True))
     assert d.primary is RoutingReason.MANUAL_RECHECK and d.call_qwen
+
+
+def test_smoke_only_checkpoint_never_passes_review_as_classifier_only():
+    d = route(POLICY, routing_input_from_candidate(candidate(checkpoint_status="smoke_only")))
+    assert d.primary is RoutingReason.CLASSIFIER_UNTRUSTED
+    assert d.call_qwen and d.human_review_required
+    assert d.checkpoint_status == "smoke_only"
