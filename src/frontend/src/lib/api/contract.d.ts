@@ -1797,13 +1797,26 @@ export interface components {
             immediate_exclusion_reasons: string[];
             renew_on: string;
         };
+        VerificationLineageItem: {
+            verification_id: number;
+            rework_id: number;
+            recheck_run_id: number;
+            /** @enum {string} */
+            outcome: "pass" | "fail";
+            revision: string;
+            /** Format: date-time */
+            verified_at: string;
+        };
+        SelectedFinalSource: {
+            cvat_job_id: number;
+            rework_id: number;
+            verification_id: number;
+            source_run_id: number;
+            source_revision: string;
+        };
         RunDetail: components["schemas"]["Run"] & {
-            verification_lineage: {
-                [key: string]: unknown;
-            };
-            selected_final_sources: {
-                [key: string]: unknown;
-            };
+            verification_lineage: components["schemas"]["VerificationLineageItem"][];
+            selected_final_sources: components["schemas"]["SelectedFinalSource"][];
             /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) — mảng đầy đủ mọi lý do đang chặn nguồn, không trùng, sắp xếp cố định, rỗng khi scope_complete */
             operational_source: {
                 [key: string]: unknown;

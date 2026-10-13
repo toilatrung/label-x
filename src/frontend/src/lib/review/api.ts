@@ -1,4 +1,5 @@
 import { apiClient, ApiRequestError } from '@/lib/api/client';
+import type { components } from '@/lib/api/contract';
 import type {
   QueueName,
   IssueFamily,
@@ -7,7 +8,6 @@ import type {
   PaginatedRankedFrameList,
   LeaseGrant,
   Lease,
-  Run,
 } from './types';
 
 function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
@@ -33,7 +33,7 @@ async function csrf() {
   }
 }
 
-export async function getRunDetails(runId: number, signal?: AbortSignal): Promise<Run> {
+export async function getRunDetails(runId: number, signal?: AbortSignal): Promise<components['schemas']['RunDetail']> {
   const result = await apiClient.GET('/api/runs/{id}/', {
     params: { path: { id: runId } },
     signal,

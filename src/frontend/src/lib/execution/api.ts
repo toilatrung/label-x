@@ -5,6 +5,7 @@ export type Snapshot = components['schemas']['Snapshot'];
 export type ConfigVersion = components['schemas']['ConfigVersion'];
 export type ConfigVersionCreate = components['schemas']['ConfigVersionCreate'];
 export type Run = components['schemas']['Run'];
+export type RunDetail = components['schemas']['RunDetail'];
 export type LedgerEntry = components['schemas']['LedgerEntry'];
 export type RunShard = components['schemas']['RunShard'];
 export type RunCreate = components['schemas']['RunCreate'];
@@ -34,7 +35,7 @@ export async function listRuns(datasetId: number, cursor: string | null, signal?
   return unwrap(await apiClient.GET('/api/runs/', { params: { query: { dataset: datasetId, ...(cursor ? { cursor } : {}) } }, signal }));
 }
 
-export async function getRun(id: number, signal?: AbortSignal) {
+export async function getRun(id: number, signal?: AbortSignal): Promise<RunDetail> {
   return unwrap(await apiClient.GET('/api/runs/{id}/', { params: { path: { id } }, signal }));
 }
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SAMPLE_IN_USE, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 
 /** Lỗi tải API Quality Control Run thật; không thay bằng mock vì endpoint này đã có. */
 export function SnapshotInUseExtra({ error }: { error?: string }) {
@@ -27,23 +28,25 @@ export function SnapshotInUseSample() {
   );
 }
 
-/** Revision và seed chưa có API, dùng dữ liệu sketchup và giữ read-only. */
+/** Preserve Sketchup fields without presenting design fixtures as CVAT data. */
 export function SnapshotRevisionFields({ dataset }: { dataset: React.ReactNode }) {
-  const f = SAMPLE_SNAPSHOT_FORM;
   return (
     <>
       <div className="lx-grid lx-grid--3">
         {dataset}
         <div className="lx-field">
           <label className="lx-label" htmlFor="snapshot-revision">Annotation revision</label>
-          <select id="snapshot-revision" className="lx-select" disabled>{f.revisions.map(item => <option key={item}>{item}</option>)}</select>
+          <select id="snapshot-revision" className="lx-select" disabled><option>Chốt từ CVAT khi tạo Snapshot</option></select>
         </div>
         <div className="lx-field">
           <label className="lx-label" htmlFor="snapshot-seed">Mã hạt giống lấy mẫu (seed)</label>
-          <input id="snapshot-seed" className="lx-input" value={f.seed} readOnly disabled />
+          <input id="snapshot-seed" className="lx-input" value="—" readOnly disabled />
           <span className="lx-hint">Giữ nguyên để tái lập mẫu</span>
         </div>
       </div>
+      {/* TODO(backend): SnapshotCreate has no manual revision/seed parameters. */}
+      <NotConnectedNotice />
+      <p className="lx-hint">Chọn revision và seed thủ công chưa có trong API tạo Snapshot. Revision được khóa từ CVAT; seed được cấu hình ở bước tạo Quality Control Run.</p>
     </>
   );
 }

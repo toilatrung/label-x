@@ -2506,14 +2506,37 @@ components:
         idle_gap_rule: { type: string }
         immediate_exclusion_reasons: { type: array, items: { type: string } }
         renew_on: { type: string }
+    VerificationLineageItem:
+      type: object
+      required: [verification_id, rework_id, recheck_run_id, outcome, revision, verified_at]
+      properties:
+        verification_id: { type: integer }
+        rework_id: { type: integer }
+        recheck_run_id: { type: integer }
+        outcome: { type: string, enum: [pass, fail] }
+        revision: { type: string }
+        verified_at: { type: string, format: date-time }
+    SelectedFinalSource:
+      type: object
+      required: [cvat_job_id, rework_id, verification_id, source_run_id, source_revision]
+      properties:
+        cvat_job_id: { type: integer }
+        rework_id: { type: integer }
+        verification_id: { type: integer }
+        source_run_id: { type: integer }
+        source_revision: { type: string }
     RunDetail:
       allOf:
         - $ref: "#/components/schemas/Run"
         - type: object
           required: [verification_lineage, selected_final_sources, operational_source]
           properties:
-            verification_lineage: { type: object, additionalProperties: true }
-            selected_final_sources: { type: object, additionalProperties: true }
+            verification_lineage:
+              type: array
+              items: { $ref: "#/components/schemas/VerificationLineageItem" }
+            selected_final_sources:
+              type: array
+              items: { $ref: "#/components/schemas/SelectedFinalSource" }
             operational_source:
               type: object
               additionalProperties: true

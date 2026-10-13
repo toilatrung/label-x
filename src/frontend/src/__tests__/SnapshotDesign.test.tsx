@@ -88,14 +88,17 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(await side.findByText(/chưa có Quality Control Run nên chưa có mô hình/)).toBeDefined();
   });
 
-  it('shows the whole design with sample data and a blocked write when datasets cannot be loaded', async () => {
+  it('preserves the design regions but shows an API error instead of a locked sample', async () => {
     vi.mocked(api.getDatasets).mockRejectedValue(new Error('down'));
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     wrap(<AnalysisPage />);
-    expect(await screen.findByText('SNP-014')).toBeDefined();
-    expect(screen.getByText('T-119 · Urban night')).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Tạo snapshot mới' })).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Snapshot đang dùng' })).toBeDefined();
+    expect(screen.queryByText('SNP-014')).toBeNull();
+    expect(screen.queryByText('T-119 · Urban night')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Tạo snapshot và cấu hình →' })).toBeNull();
+    expect(screen.getByText('Chức năng vẫn chưa được kết nối với server')).toBeDefined();
     expect(api.postSnapshot).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -177,12 +180,13 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     expect(row.queryByRole('link', { name: /Run #/ })).toBeNull();
   });
 
-  it('keeps the design table as labelled sample data when the history cannot be loaded', async () => {
+  it('keeps the design columns with error and retry, not sample rows, when history fails', async () => {
     vi.mocked(api.getSnapshots).mockRejectedValue(new Error('down'));
     wrap(<SnapshotHistoryPage />);
-    expect(await screen.findByText('SNP-014')).toBeDefined();
-    expect(screen.getByText('#QC-091')).toBeDefined();
+    expect(await screen.findByRole('button', { name: 'Thử lại lịch sử Snapshot' })).toBeDefined();
+    expect(screen.queryByText('SNP-014')).toBeNull();
+    expect(screen.queryByText('#QC-091')).toBeNull();
     expect(screen.queryByRole('status')).toBeNull();
-    expect(screen.getByText('4 snapshot')).toBeDefined();
+    expect(screen.getAllByRole('columnheader')).toHaveLength(6);
   });
 });
