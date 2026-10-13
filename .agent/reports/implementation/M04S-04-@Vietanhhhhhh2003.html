@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M04S-04 — Dữ liệu crop có nhãn thật cho classifier — LabelX</title>
+<meta name="labelx:id" content="implementation-m04s-04-vietanhhhhhh2003">
+<meta name="labelx:title" content="M04S-04 — Dữ liệu crop có nhãn thật cho classifier">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="classifier"><meta name="labelx:tags" content="[implementation, m04s-04, bdd100k, classifier, dataset, blocked]">
+<meta name="labelx:priority" content="1">
+<style>:root{--bg:#f6f7f9;--card:#fff;--border:#dfe3e8;--ink:#18202a;--muted:#586273;--brand:#d1202d;--head:#1f2933;--warn:#fff4d6;--bad:#fff0f0;--ok:#edf8f3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.58 Inter,"Segoe UI",system-ui,sans-serif}.top{background:var(--head);color:#fff;padding:12px 24px}.top b{color:var(--brand)}main{max-width:1240px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 30px}h1{line-height:1.25}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}h3{margin-top:22px}code{background:#f0f2f4;padding:1px 4px;font:12px ui-monospace,Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:12.5px;margin:12px 0;display:block;overflow-x:auto}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#eef1f4;white-space:nowrap}.meta{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;background:#f1f3f5;padding:10px;margin-top:12px}.note{background:var(--warn);border-left:4px solid #a56a00;padding:10px 14px}.blocked{background:var(--bad);border-left:4px solid var(--brand);padding:10px 14px}.ok{background:var(--ok);border-left:4px solid #19704b;padding:10px 14px}</style>
+</head><body><header class="top">Label<b>X</b> · M04S-04 implementation</header><main><article>
+<div class="meta"><b>id</b><span>implementation-m04s-04-vietanhhhhhh2003</span><b>type</b><span>report</span><b>status</b><span>blocked</span></div>
+<h1>M04S-04 — Dữ liệu crop có nhãn thật cho huấn luyện classifier</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo auditable cho GitHub issue <a href="https://github.com/toilatrung/label-x/issues/301">#301</a>. Báo cáo xác định nguồn dữ liệu có thể dùng, kiểm gate quyền sử dụng và chuẩn bị handoff đúng contract <code>labelx-classifier build-dataset</code>. Không xuất ảnh/crop khi chưa có xác nhận của Product Owner.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04S-04</code></li>
+<li><strong>Title</strong>: <code>Dữ liệu crop có nhãn thật cho huấn luyện classifier (gỡ BLOCKER-030)</code></li>
+<li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>blocked</code></li>
+<li><strong>Task ID</strong>: <code>M04S-04 / GitHub #301</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<div class="blocked"><strong>Gate chưa đạt:</strong> không có comment/văn bản của PO xác nhận quyền dùng snapshot và ảnh thật. Issue #284 và <code>BLOCKER-030</code> còn ghi rõ dữ liệu crop có nhãn thật chưa được cấp. Theo điều kiện của #301, tác vụ dừng trước bước tải, chuyển đổi hoặc xuất dữ liệu; <strong>không có ảnh hay crop nào được thêm vào repository</strong>.</div>
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: đối chiếu nguồn ứng viên và quyền dùng; tái sử dụng inventory #293; xác nhận contract đầu vào của <code>build-dataset</code>; ghi bảng số mẫu 10 lớp ở trạng thái chưa xuất; nêu input và đường dẫn output cần thiết để PO mở gate.</li>
+<li><strong>Not Implemented</strong>: tải ảnh/annotation; materialize snapshot hoặc crop; chạy <code>build-dataset</code>; huấn luyện, đánh giá hoặc tuyên bố accuracy; sửa <code>src/backend</code>, worker, OpenAPI, migration, dependency, CI hoặc compose.</li>
+</ul>
+
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>.agent/reports/implementation/M04S-04-@Vietanhhhhhh2003.html</code></td><td>Ghi nguồn ứng viên, bằng chứng quyền hiện có, gate bị chặn, số mẫu bằng 0 và handoff để xuất dataset sau khi PO phê duyệt.</td><td>M04S-04</td></tr>
+</tbody></table>
+
+<h2 id="source-baseline">Source Baseline and Integrity</h2>
+<table><thead><tr><th>Nguồn</th><th>Revision / SHA</th><th>Kết quả quyền dùng</th><th>Quyết định</th></tr></thead><tbody>
+<tr><td><code>origin/develop</code></td><td><code>b027d771b561d6aecac41bc572b6969cf284414c</code></td><td>Baseline code/report; không chứa ảnh BDD100K thật.</td><td>Dùng làm baseline nhánh.</td></tr>
+<tr><td>M04S-02 — inventory #293</td><td>Nhánh <code>origin/docs/M04S-02-bdd100k-inventory@e994bafa6a65abcd290f81bc7730fca08a2b6433</code>; report SHA-256 <code>38cfae32d500baf4ea094e8d8a02a7f16ff8961ef972811d5818827c98f74137</code></td><td>17 locator detector cho 9/10 lớp; là prediction trên validation mirror, không phải GT; thiếu class <code>train</code>.</td><td>Tái dùng để loại trừ, không làm đôi và không biến prediction thành nhãn thật.</td></tr>
+<tr><td>BDD100K chính thức — 100K Images + Detection 2020 Labels, phần <code>train</code></td><td>Chưa tải; chưa có file SHA trong workspace.</td><td>Ứng viên tốt về mặt kỹ thuật. Tuy nhiên maintainer BDD100K xác nhận toolkit dùng BSD còn dữ liệu có giấy phép riêng; dự án chưa lưu chấp thuận điều khoản hoặc xác nhận mục đích sử dụng.</td><td><strong>Chưa được phép</strong>; chỉ dùng sau khi PO cung cấp bằng chứng quyền và bản tải từ kênh chính thức.</td></tr>
+<tr><td>Hugging Face <code>dgural/bdd100k</code></td><td>Revision inventory <code>c2e7f266756bcd07b87f1a45a35937c8eac20241</code>.</td><td>Dataset card tự khai <code>bsd</code>, nhưng đó không chứng minh LabelX đã chấp thuận giấy phép dữ liệu riêng. Inventory #293 dùng <code>bdd100k-validation</code>.</td><td><strong>Không dùng</strong>: mirror không phải bằng chứng quyền; validation được giữ ngoài fit.</td></tr>
+<tr><td><code>src/backend/fixtures/normalized-snapshot-v1.json</code></td><td>SHA-256 <code>58e7a68c6dd45cd85807d792f421ac29ccea62e1d6117b13fe3641dfa06e1e2a</code></td><td>Fixture có media placeholder <code>size_bytes=7</code>, không có frame bytes tương ứng và không đủ 10 lớp.</td><td>Chỉ dùng test code; không khai là dữ liệu thật.</td></tr>
+<tr><td>Snapshot LabelX/CVAT do PO hoặc Data Owner cấp</td><td>Chưa có snapshot ID, revision SHA, export SHA hoặc image-root.</td><td>Có thể dùng nếu nguồn ảnh có quyền, GT đã thẩm định và export khóa được PO xác nhận.</td><td><strong>Ưu tiên</strong> khi có đủ bằng chứng và đủ 10 lớp; hiện vẫn bị chặn.</td></tr>
+</tbody></table>
+<p>Nguồn pháp lý tham chiếu: <a href="https://github.com/bdd100k/bdd100k/discussions/130">maintainer BDD100K phân biệt giấy phép toolkit và dữ liệu</a>; <a href="https://doc.bdd100k.com/download.html">trang tải/điều khoản dữ liệu chính thức</a>. Metadata của mirror không thay thế phê duyệt nội bộ hoặc điều khoản từ nguồn chính thức.</p>
+
+<h2 id="required-authorization">Bằng chứng cần để mở gate</h2>
+<ol>
+<li>Comment/văn bản của <code>@toilatrung</code> hoặc Data Owner nêu rõ dataset/revision được phép dùng, mục đích <em>training classifier</em>, phạm vi lưu trữ crop và việc có/không được commit artifact vào repo.</li>
+<li>Nếu dùng BDD100K: bằng chứng chấp thuận điều khoản dữ liệu, mục đích dự án (research/non-commercial hay quyền thương mại phù hợp), và bản tải qua kênh chính thức; không dùng mirror để suy diễn quyền.</li>
+<li>Snapshot normalized khóa theo <code>labelx.snapshot.v1</code>, label map <code>{label_id: class_name}</code>, image root nội bộ, SHA-256 từng frame và revision SHA-256.</li>
+<li>Xác nhận annotation là GT đã thẩm định; không dùng annotation người học đang bị kiểm và không dùng detector prediction làm nhãn.</li>
+</ol>
+
+<h2 id="class-counts">Số mẫu theo lớp và nhóm nguồn</h2>
+<p>Gate dừng trước materialization nên số dưới đây là <strong>số artifact đã xuất</strong>, không phải ước lượng số object ở nguồn. Tất cả bằng 0; không có lớp nào được tuyên bố đạt tối thiểu.</p>
+<table><thead><tr><th>ID</th><th>Class</th><th>Authorized LabelX/CVAT</th><th>Official BDD100K train</th><th>Fit total</th><th>Held-out</th><th>Trạng thái</th></tr></thead><tbody>
+<tr><td>0</td><td><code>pedestrian</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>1</td><td><code>rider</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>2</td><td><code>car</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>3</td><td><code>truck</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>4</td><td><code>bus</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>5</td><td><code>train</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked; #293 không có locator</td></tr>
+<tr><td>6</td><td><code>motorcycle</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>7</td><td><code>bicycle</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>8</td><td><code>traffic light</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+<tr><td>9</td><td><code>traffic sign</code></td><td>0</td><td>0</td><td>0</td><td>0</td><td>blocked</td></tr>
+</tbody></table>
+<table><thead><tr><th>Nhóm nguồn / split</th><th>Số group</th><th>Số crop</th><th>Dùng để fit?</th></tr></thead><tbody>
+<tr><td><code>authorized-labelx-cvat / train+val</code></td><td>0</td><td>0</td><td>Chưa; chưa được cấp.</td></tr>
+<tr><td><code>official-bdd100k-train / train+val</code></td><td>0</td><td>0</td><td>Chưa; chưa được cấp.</td></tr>
+<tr><td><code>bdd100k-validation / held_out</code></td><td>0</td><td>0</td><td><strong>Không</strong>; không materialize và không fit.</td></tr>
+</tbody></table>
+
+<h2 id="output-contract">Output/path/SHA và contract bàn giao</h2>
+<table><thead><tr><th>Artifact dự kiến sau phê duyệt</th><th>Path</th><th>SHA hiện tại</th><th>Trạng thái</th></tr></thead><tbody>
+<tr><td>Normalized snapshot</td><td><code>&lt;authorized-workdir&gt;/m04s-04/input/normalized-snapshot.json</code></td><td>Không có</td><td>blocked</td></tr>
+<tr><td>Label map</td><td><code>&lt;authorized-workdir&gt;/m04s-04/input/label-map.json</code></td><td>Không có</td><td>blocked</td></tr>
+<tr><td>Frame root</td><td><code>&lt;authorized-workdir&gt;/m04s-04/input/images/</code></td><td>Không có</td><td>blocked; không commit ảnh vào repo nếu chưa được PO cho phép rõ ràng</td></tr>
+<tr><td>Dataset manifest</td><td><code>&lt;authorized-workdir&gt;/m04s-04/output/dataset-manifest.json</code></td><td>Không có</td><td>chưa chạy</td></tr>
+<tr><td>Crop PNG</td><td><code>&lt;authorized-workdir&gt;/m04s-04/output/crops/{train,val,held_out}/&lt;class&gt;/</code></td><td>Không có</td><td>0 file</td></tr>
+</tbody></table>
+<p>Worker tại <code>origin/feat/M-04-b-classifier@3a9ca080e6a4cd0f53ba1dbffb05cc2f3472f76c</code> yêu cầu <code>--snapshot</code>, <code>--label-map</code>, <code>--image-root</code>, <code>--out</code>, <code>--revision-sha256</code> và <code>--data-origin real</code>. Mặc định nhóm theo task; held-out phải tách theo source group và không nằm trong <code>fit_allowed_splits</code>. Chỉ chạy lệnh sau khi bốn bằng chứng quyền ở trên đạt.</p>
+<pre><code>labelx-classifier build-dataset \
+  --snapshot &lt;authorized-workdir&gt;/m04s-04/input/normalized-snapshot.json \
+  --label-map &lt;authorized-workdir&gt;/m04s-04/input/label-map.json \
+  --image-root &lt;authorized-workdir&gt;/m04s-04/input/images \
+  --out &lt;authorized-workdir&gt;/m04s-04/output \
+  --group-by task --val-fraction 0.2 --held-out-fraction &lt;po-approved&gt; \
+  --revision-sha256 &lt;locked-revision-sha256&gt; --data-origin real</code></pre>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/301">#301</a>; dependencies <a href="https://github.com/toilatrung/label-x/issues/284">#284</a>, <a href="https://github.com/toilatrung/label-x/issues/285">#285</a>, <a href="https://github.com/toilatrung/label-x/issues/293">#293</a>.</li>
+<li><strong>Context Packages</strong>: <code>origin/feat/M-04-backend:.agent/planning/M-04-ABC-implementation-2026-10-13.html</code>.</li>
+<li><strong>Task Board</strong>: không sửa file dùng chung theo ranh giới issue.</li>
+<li><strong>Current Context</strong>: không sửa file dùng chung theo ranh giới issue.</li>
+<li><strong>Decisions</strong>: <code>DEC-021</code> trên nhánh context M-04.</li>
+<li><strong>Change Requests</strong>: <code>CR-115</code> — approved về roadmap, nhưng không phải bằng chứng quyền dùng một bản dữ liệu cụ thể.</li>
+<li><strong>Risks or Blockers</strong>: <code>origin/feat/M-04-b-classifier:.agent/governance/blockers/BLOCKER-030.html</code> vẫn mở; chưa thể gỡ.</li>
+<li><strong>Review Request</strong>: <code>@toilatrung hoặc Data Owner; cần xác nhận quyền trước khi tiếp tục</code>.</li>
+<li><strong>Commits</strong>: <code>ghi tại PR/issue sau khi commit report</code>.</li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>gh issue view 301,284,285,293</code></td><td>passed</td><td>#301 không có xác nhận quyền; #284 nói chưa có dữ liệu crop nhãn thật; #293 chỉ có locator prediction.</td></tr>
+<tr><td><code>rg --files D:\Code -g image/json</code></td><td>passed</td><td>Không thấy frame BDD100K thật hoặc export snapshot phù hợp; chỉ có UI assets và fixture.</td></tr>
+<tr><td><code>git show origin/feat/M-04-b-classifier:.../dataset.py</code></td><td>passed</td><td>Xác nhận schema, provenance/hash, split theo source group và output manifest của builder.</td></tr>
+<tr><td><code>Get-FileHash -Algorithm SHA256</code></td><td>passed</td><td>Hash của fixture và report #293 được ghi trong bảng Source Baseline.</td></tr>
+<tr><td>Tải/xuất ảnh, chạy <code>build-dataset</code></td><td>not-run</td><td>Bị cấm trước khi PO xác nhận quyền dùng dữ liệu.</td></tr>
+<tr><td>Huấn luyện/đánh giá</td><td>not-run</td><td>Ngoài phạm vi #301.</td></tr>
+</tbody></table>
+
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Ranh giới file</td><td>passed</td><td>Chỉ report M04S-04 được tạo; không sửa BE/worker/OpenAPI/migration/dependency/CI/compose.</td></tr>
+<tr><td>Không có ảnh chưa được phép</td><td>passed</td><td>0 ảnh/crop được tải hoặc tạo; report chỉ chứa metadata, path, hash và URL công khai.</td></tr>
+<tr><td>Đủ 10 dòng class và tách held-out</td><td>passed with blocker</td><td>10/10 class được ghi; số artifact đều 0; validation/held-out ghi rõ không dùng để fit.</td></tr>
+<tr><td>Bằng chứng quyền dùng</td><td>failed / blocked</td><td>Chưa có xác nhận dataset/revision cụ thể từ PO hoặc Data Owner.</td></tr>
+<tr><td><code>make validate-kit</code> trong Ubuntu 24.04 WSL</td><td>passed</td><td><code>FRAMEWORK_VALIDATION_PASS</code> bằng Python 3.12 qua <code>uv</code>. Windows host không có <code>make</code>; đây không phải môi trường validation của dự án.</td></tr>
+</tbody></table>
+
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: đầu ra dataset thật không được tạo vì precondition quyền dùng dữ liệu của chính issue chưa đạt. Báo cáo dừng ở bước xác định nguồn như issue yêu cầu.</li>
+<li><strong>Approved By</strong>: <code>scope issue #301; chưa có approval dữ liệu hoặc review approval</code>.</li>
+<li><strong>Known Limitations</strong>: chưa có snapshot/revision, frame bytes, label map, source-group inventory, license acceptance, số object thật hay SHA output; do đó chưa thể chứng minh tối thiểu mẫu cho 10 lớp hoặc gỡ <code>BLOCKER-030</code>.</li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Chỉ thay đổi file report riêng được #301 cho phép.</li>
+<li>[x] Nêu nguồn ứng viên, tình trạng quyền và bằng chứng đang thiếu; không thêm ảnh chưa được phép.</li>
+<li>[x] Tái dùng kết quả #293 và không dùng detector prediction làm GT.</li>
+<li>[x] Ghi đủ 10 lớp, nhóm nguồn, held-out và số artifact thực tế bằng 0.</li>
+<li>[x] Ghi output/path/SHA hiện có và đánh dấu rõ artifact chưa sinh.</li>
+<li>[ ] PO/Data Owner xác nhận quyền dùng dataset/revision cụ thể.</li>
+<li>[ ] Snapshot + frame thật được cấp và dataset có mẫu cho đủ 10 lớp.</li>
+<li>[ ] <code>BLOCKER-030</code> được owner xác minh và gỡ trên nhánh classifier.</li>
+<li>[ ] Independent review/PR approval.</li>
+</ul>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không tải, crop, commit hoặc gửi ảnh ra ngoài khi chưa có quyền.</li><li>Không dùng BDD100K validation/held-out để fit.</li><li>Không dùng prediction locator #293 làm nhãn thật.</li><li>Không chạy huấn luyện hoặc tuyên bố accuracy.</li><li>Không tự đánh dấu <code>BLOCKER-030</code> resolved hay tự đóng issue.</li></ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Output duy nhất trong repository: <code>.agent/reports/implementation/M04S-04-@Vietanhhhhhh2003.html</code>. Dataset/crop output: <strong>không có</strong>. Trạng thái <code>blocked</code> cho đến khi PO/Data Owner ghi bằng chứng quyền và cung cấp input khóa. Report không chứa secret, API key hoặc byte ảnh.</p>
+<div class="note"><strong>Handoff PO:</strong> vui lòng comment tại #301 theo bốn mục trong “Bằng chứng cần để mở gate”. Sau đó executor có thể materialize ngoài repo, chạy builder với <code>--data-origin real</code>, điền số lớp/source group và SHA manifest/crop mà không cần thay đổi code của nhánh BE.</div>
+</article></main></body></html>
