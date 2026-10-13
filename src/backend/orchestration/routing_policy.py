@@ -195,3 +195,34 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
         human_review_required=False,
         policy=record,
     )
+
+
+# Adapter tạm: tên field candidate sẽ được chốt ở #286; chỉ sửa bảng này, không đụng route().
+CANDIDATE_FIELD_MAP = {
+    "crop_valid": "crop_valid",
+    "classifier_unknown": "unknown",
+    "predicted_class_id": "class_id",
+    "annotated_class_id": "annotated_class_id",
+    "score": "score",
+    "margin": "margin",
+}
+
+
+def routing_input_from_candidate(
+    candidate: Mapping[str, Any],
+    *,
+    manual_recheck: bool = False,
+    budget_exhausted: bool = False,
+) -> RoutingInput:
+    """Dựng RoutingInput từ dict candidate; field thiếu → giá trị an toàn (không đủ tin cậy)."""
+    get = {key: candidate.get(name) for key, name in CANDIDATE_FIELD_MAP.items()}
+    return RoutingInput(
+        crop_valid=get["crop_valid"] is not False,
+        classifier_unknown=bool(get["classifier_unknown"]),
+        predicted_class_id=get["predicted_class_id"],
+        annotated_class_id=get["annotated_class_id"],
+        score=get["score"],
+        margin=get["margin"],
+        manual_recheck=manual_recheck,
+        budget_exhausted=budget_exhausted,
+    )
