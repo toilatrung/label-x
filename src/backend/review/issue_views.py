@@ -15,6 +15,7 @@ from review.api_serializers import (
     FrameCompleteRequestSerializer,
     FrameIssuesSerializer,
     FrameSummarySerializer,
+    FrameWorkspaceSerializer,
     IssueDecisionCreateSerializer,
     IssueDecisionSerializer,
     IssueSerializer,
@@ -32,6 +33,7 @@ from review.serialization import (
     issue_response,
 )
 from review.services import _deny_frame_ineligible, _reviewer_identity
+from review.workspace import ai_evidence, lease_payload, open_lease, undecided_issue_count
 
 
 class _ReviewView(APIView):
@@ -77,6 +79,53 @@ class FrameIssuesView(_ReviewView):
                 "predictions": frame_predictions(frame),
                 "engines": frame_engines(frame),
                 "issues": [issue_response(issue) for issue in issues.order_by("pk")],
+            }
+        )
+
+
+class FrameWorkspaceView(_ReviewView):
+    action_name = "frames.workspace"
+    object_type = "frame"
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            FrameReview.objects.filter(pk=self.kwargs["pk"])
+            .values_list("run__dataset_id", flat=True)
+            .first()
+        )
+
+    @extend_schema(
+        operation_id="frames_workspace",
+        responses={
+            200: FrameWorkspaceSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        frame = FrameReview.objects.select_related(
+            "run__snapshot", "snapshot_frame__snapshot_job"
+        ).get(pk=pk)
+        identity = _reviewer_identity(request, action="frames.workspace")
+        _deny_frame_ineligible(request, identity, frame, "frames.workspace")
+        issues = list(
+            Issue.objects.filter(frame_review=frame).select_related("candidate").order_by("pk")
+        )
+        lease = open_lease(frame)
+        return Response(
+            {
+                "frame": frame_summary(frame),
+                "guideline_version": frame.run.snapshot.guideline_version,
+                "snapshot_revision": frame.run.snapshot.revision_sha256,
+                "annotations": frame_annotations(frame),
+                "predictions": frame_predictions(frame),
+                "engines": frame_engines(frame),
+                "issues": [issue_response(issue) for issue in issues],
+                "lease": lease_payload(lease),
+                "queue": lease.queue_source if lease is not None else None,
+                "undecided_issue_count": undecided_issue_count(issues),
+                "ai_evidence": ai_evidence(issues),
             }
         )
 

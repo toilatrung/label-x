@@ -21,6 +21,7 @@ from engines.interface import EngineStatus, public_status
 from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
 from review import services as review_services
+from review.lineage import run_lineage
 from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
 from runs.models import ConfigVersion, QCRun, RunRanking, WorkUnit
@@ -37,6 +38,7 @@ from runs.serializers import (
     RankedFrameSerializer,
     RunCreateSerializer,
     RunDetailSerializer,
+    RunLineageSerializer,
     RunSerializer,
     WorkUnitSerializer,
 )
@@ -366,6 +368,43 @@ class RunDetailView(APIView):
         if run is None:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
         return Response(RunDetailSerializer(run).data)
+
+
+class RunLineageView(APIView):
+    """Run lineage: GET /api/runs/{id}/lineage/."""
+
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (
+        Role.REVIEWER,
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.PRODUCT_OWNER,
+        Role.DATA_MODEL_OWNER,
+    )
+    action_name = "runs.lineage"
+    object_type = "run"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
+        )
+
+    @extend_schema(
+        operation_id="runs_lineage",
+        responses={
+            200: RunLineageSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
+    )
+    def get(self, _request: Request, pk: int) -> Response:
+        run = QCRun.objects.filter(pk=pk).first()
+        if run is None:
+            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
+        return Response(run_lineage(run))
 
 
 class RunCancelView(APIView):
