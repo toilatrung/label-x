@@ -79,7 +79,7 @@ export function ReviewManualIssueModal({
     }
 
     if (!hasPolicy || !trimmedPolicy) {
-      return 'Chưa có anchor policy_version đã duyệt từ T-035 (T-035 interface gap). Không thể tạo manual issue.';
+      return 'Chưa có phiên bản chính sách neo đã duyệt. Không thể tạo issue thủ công.';
     }
 
     if (description.trim().length > 2000) {
@@ -271,7 +271,7 @@ export function ReviewManualIssueModal({
         {!hasPolicy && (
           <div className="lx-callout lx-callout--warning" role="alert" style={{ marginBottom: '12px', padding: '8px 12px' }}>
             <span className="lx-callout__text">
-              Thiếu anchor policy_version đã duyệt từ T-035 (T-035 interface gap). Quyền tạo issue thủ công tạm khóa.
+              Thiếu phiên bản chính sách neo đã duyệt. Quyền tạo issue thủ công tạm khoá.
             </span>
           </div>
         )}
@@ -284,7 +284,7 @@ export function ReviewManualIssueModal({
 
         <form onSubmit={handleSubmit} className="lx-stack" style={{ gap: '14px' }}>
           <div className="lx-field">
-            <span className="lx-label">Loại neo (Anchor kind)</span>
+            <span className="lx-label">Loại neo</span>
             <span className="lx-tag lx-tag--ro">
               {anchorKind === 'manual_object'
                 ? `Đối tượng: ${selectedObject?.namespace}:${selectedObject?.id}`

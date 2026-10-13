@@ -126,10 +126,11 @@ describe('ReviewGuidelineLookup (T-037 Fail-Closed & Stale-Safe Guideline Lookup
     expect(screen.queryByText('Quy tắc từ phiên bản sai')).toBeNull();
   });
 
-  it('displays Case lookup limitation note without fabricating fake cases', async () => {
+  it('does not render the obsolete missing-API Case notice', async () => {
     render(<ReviewGuidelineLookup ruleId="VEH-03" guidelineVersion="v1.0" />);
     expect(
-      screen.getByText(/Chức năng tra cứu Case tương tự hiện chưa khả dụng/)
-    ).toBeDefined();
+      screen.queryByText(/Không tìm thấy Case tương tự trong response hiện tại/)
+    ).toBeNull();
+    expect(screen.queryByText(/không giả lập dữ liệu Case khi thiếu API/)).toBeNull();
   });
 });
