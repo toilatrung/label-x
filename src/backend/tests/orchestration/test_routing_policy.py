@@ -12,6 +12,7 @@ from orchestration.routing_policy import (
     RoutingPolicyError,
     RoutingReason,
     route,
+    routing_input_from_candidate,
 )
 
 POLICY = RoutingPolicy()
@@ -144,3 +145,14 @@ def test_from_config_defaults_and_overrides():
 def test_from_config_rejects_invalid(config):
     with pytest.raises(RoutingPolicyError):
         RoutingPolicy.from_config(config)
+
+
+def test_adapter_builds_input_and_missing_fields_are_not_confident():
+    full = routing_input_from_candidate(
+        {"class_id": "car", "annotated_class_id": "car", "score": 0.9, "margin": 0.3}
+    )
+    assert route(POLICY, full).primary is RoutingReason.CLASSIFIER_ONLY
+    empty = routing_input_from_candidate({}, manual_recheck=True, budget_exhausted=True)
+    assert empty.manual_recheck and empty.budget_exhausted
+    assert route(POLICY, routing_input_from_candidate({})).call_qwen
+    assert not routing_input_from_candidate({"crop_valid": False}).crop_valid
