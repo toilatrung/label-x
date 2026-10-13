@@ -23,4 +23,5 @@ export const REWORK_ENDPOINTS = [
     { ...rework, id: 161, code: 'RW-0161', issue_code: 'QC-00026', frame_id: 49, object_id: 10, action: 'Đã bổ sung thuộc tính', annotator_name: 'Bình Hồ', due_at: '2026-10-03', severity: 'minor', status: 'resolved' },
   ] } },
   { id: 'rework_retrieve', method: 'GET', path: '/api/rework/{id}/', group: 'Rework', summary: 'Chi tiết yêu cầu sửa', connection: 'backend', responseStatus: 200, response: rework },
+  { id: 'rework_current_revision', method: 'GET', path: '/api/rework/{id}/current-revision/', group: 'Rework', summary: 'Đọc revision CVAT hiện tại của job rework', connection: 'backend', responseStatus: 200, response: { rework_id: 212, cvat_job_id: 2272, revision_sha256: '3aa7baf46bf91ae8786a6629833544f2777c8e4fe769c587bcb0c91e29cf992e', original_revision: '91c4b74fa09211213d44ab35ce7a2db399ea595ab6ef912077245c4f04418fa2', unchanged: false, rework_status: 'fix_pending', read_at: '2026-10-12T05:15:00Z' } },
 ] satisfies ApiEndpoint[];

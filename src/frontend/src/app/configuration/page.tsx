@@ -9,6 +9,8 @@ import { errorMessage } from '@/lib/api/errors';
 import type { components } from '@/lib/api/contract';
 import { canAccessConfiguration, ROLE_LABELS } from '@/lib/auth/roles';
 import type { UserRole } from '@/types/auth';
+import { useAuth } from '@/lib/auth/auth-context';
+import { getReviewPolicy } from '@/lib/review/policy-api';
 
 type WorkflowPermissions = components['schemas']['WorkflowPermissions'];
 
@@ -36,7 +38,14 @@ async function fetchWorkflowPermissions(): Promise<WorkflowPermissions> {
 }
 
 function WorkflowPermissionsView() {
+  const { session, datasetId } = useAuth();
   const query = useQuery({ queryKey: ['workflow-permissions'], queryFn: fetchWorkflowPermissions, retry: false });
+  const policyQuery = useQuery({
+    queryKey: ['review-policy', session?.user.id, datasetId],
+    queryFn: ({ signal }) => getReviewPolicy(datasetId, signal),
+    enabled: Boolean(session),
+    retry: false,
+  });
   const data = query.data;
   return (
     <div className="lx-page">
@@ -82,6 +91,20 @@ function WorkflowPermissionsView() {
           </div>
         </aside>
       </div>
+      <section className="lx-card" aria-label="Chính sách review hiện hành">
+        <header className="lx-card__head"><div><h2 className="lx-h2">Chính sách review hiện hành</h2><span className="lx-hint">Lease, khôi phục phiên và cách ghi nhận effort do backend áp dụng.</span></div>{policyQuery.data && <span className="lx-badge lx-badge--success">{policyQuery.data.decision_status}</span>}</header>
+        {policyQuery.isPending && <div className="lx-card__body lx-muted" role="status">Đang tải chính sách review…</div>}
+        {policyQuery.isError && <div className="lx-card__body"><div className="lx-callout" role="alert"><strong>Không tải được chính sách review</strong><div>{errorMessage(policyQuery.error)}</div></div></div>}
+        {policyQuery.data && <div className="lx-card__body"><dl className="lx-kv">
+          <dt>Phiên bản</dt><dd className="lx-mono">{policyQuery.data.policy_version}</dd>
+          <dt>Thời hạn lease</dt><dd>{policyQuery.data.lease_ttl_seconds} giây</dd>
+          <dt>Giữ phiên để tiếp tục</dt><dd>{policyQuery.data.resume_reservation_seconds} giây</dd>
+          <dt>Ngưỡng idle</dt><dd>{policyQuery.data.idle_threshold_seconds} giây</dd>
+          <dt>Quy tắc idle</dt><dd className="lx-mono">{policyQuery.data.idle_gap_rule}</dd>
+          <dt>Gia hạn khi</dt><dd className="lx-mono">{policyQuery.data.renew_on}</dd>
+          <dt>Loại trừ ngay</dt><dd>{policyQuery.data.immediate_exclusion_reasons.join(', ') || '—'}</dd>
+        </dl></div>}
+      </section>
     </div>
   );
 }

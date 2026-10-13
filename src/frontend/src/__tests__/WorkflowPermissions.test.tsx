@@ -24,8 +24,17 @@ async function setup(username: string, handler: () => Response) {
   const api = installMockAuthApi();
   await api.signIn(username);
   const passthrough = api.fetchSpy.getMockImplementation()!;
-  api.fetchSpy.mockImplementation(async (request: Request) =>
-    new URL(request.url).pathname === PATH ? handler() : passthrough(request));
+  api.fetchSpy.mockImplementation(async (request: Request) => {
+    const path = new URL(request.url).pathname;
+    if (path === PATH) return handler();
+    if (path === '/api/review-policy/') return json({
+      policy_version: 'pilot-1', source: 'settings', decision_status: 'approved',
+      lease_ttl_seconds: 900, resume_reservation_seconds: 300, idle_threshold_seconds: 120,
+      idle_gap_rule: 'exclude_over_threshold', immediate_exclusion_reasons: ['hidden', 'offline'],
+      renew_on: 'successful_write',
+    });
+    return passthrough(request);
+  });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><AuthProvider><ConfigurationPage /></AuthProvider></QueryClientProvider>);
   return api;
@@ -45,6 +54,8 @@ describe('WorkflowPermissions (T-016, FE-09)', () => {
     expect(screen.getByText('Không tự review')).toBeDefined();
     expect(screen.getByText('Chờ triển khai')).toBeDefined();
     expect(screen.getByText('Đã áp dụng')).toBeDefined();
+    expect(screen.getByText('pilot-1')).toBeDefined();
+    expect(screen.getByText('900 giây')).toBeDefined();
     expect(screen.getAllByText('Thực hiện').length).toBe(5);
     expect(screen.queryByText('Vai trò của bạn')).toBeNull();
     expect(screen.queryByRole('status')).toBeNull();

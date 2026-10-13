@@ -4,6 +4,7 @@ import React, { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { errorMessage } from '@/lib/api/errors';
 import {
+  getDecisionCase,
   getDecisionCases,
   type DecisionCase,
   type DecisionCaseFilters,
@@ -43,11 +44,18 @@ function DecisionCaseLookupPanel({
   const [draftVersion, setDraftVersion] = useState('');
   const [filters, setFilters] = useState<DecisionCaseFilters>(initial);
   const [searched, setSearched] = useState(Boolean(initialIssueId));
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const query = useQuery({
     queryKey: ['decision-cases', session?.user.id, filters],
     queryFn: ({ signal }) => getDecisionCases(filters, signal),
     enabled: searched,
+    retry: false,
+  });
+  const detailQuery = useQuery({
+    queryKey: ['decision-case', selectedId],
+    queryFn: ({ signal }) => getDecisionCase(selectedId!, signal),
+    enabled: selectedId !== null,
     retry: false,
   });
 
@@ -68,6 +76,7 @@ function DecisionCaseLookupPanel({
     setDraftVersion('');
     setFilters(EMPTY_FILTERS);
     setSearched(false);
+    setSelectedId(null);
   };
 
   const cases: DecisionCase[] = query.data ?? [];
@@ -152,6 +161,7 @@ function DecisionCaseLookupPanel({
                 <th>Rule / Nhãn đúng</th>
                 <th>Lý do</th>
                 <th>Người phân xử</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -172,10 +182,27 @@ function DecisionCaseLookupPanel({
                     <span className="lx-mono">User #{decisionCase.actor_user_id}</span>
                     <div className="lx-cell__sub">{new Date(decisionCase.created_at).toLocaleString('vi-VN')}</div>
                   </td>
+                  <td className="r"><button className="lx-btn lx-btn--sm" type="button" onClick={() => setSelectedId(decisionCase.id)}>Chi tiết</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {selectedId !== null && (
+        <div className="lx-card__body lx-stack" aria-label={`Chi tiết Decision Case ${selectedId}`}>
+          <div className="lx-row lx-row--between"><h3 className="lx-h2">Decision Case #{selectedId}</h3><button className="lx-btn lx-btn--sm" type="button" onClick={() => setSelectedId(null)}>Đóng</button></div>
+          {detailQuery.isPending && <p className="lx-muted" role="status">Đang tải chi tiết…</p>}
+          {detailQuery.isError && <div className="lx-callout" role="alert">{errorMessage(detailQuery.error)}</div>}
+          {detailQuery.data && <dl className="lx-kv">
+            <dt>Issue</dt><dd className="lx-mono">#{detailQuery.data.issue_id}</dd>
+            <dt>Kết luận</dt><dd>{detailQuery.data.outcome}</dd>
+            <dt>Rule</dt><dd className="lx-mono">{detailQuery.data.rule_id}</dd>
+            <dt>Nhãn đúng</dt><dd>{detailQuery.data.correct_label ?? '—'}</dd>
+            <dt>Phiên bản</dt><dd className="lx-mono">{detailQuery.data.case_version}</dd>
+            <dt>Lý do</dt><dd>{detailQuery.data.reason}</dd>
+            <dt>Lịch sử</dt><dd>{detailQuery.data.history.length > 0 ? detailQuery.data.history.map(item => `${item.case_version}: ${item.outcome}`).join(' · ') : '—'}</dd>
+          </dl>}
         </div>
       )}
     </section>
