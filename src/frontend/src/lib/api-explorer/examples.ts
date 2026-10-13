@@ -40,6 +40,12 @@ export const issue = {
   n_i: 1, rule_ids: ['VEH-03'], evidence: [{ engine: 'detector', actual: 'bus', expected: 'truck', confidence: 0.77 }], links: [],
 };
 
+export const frameIssues = {
+  frame: { id: 3301, run_id: 91, frame_key: { cvat_task_id: 119, frame_number: 3301 }, review_state: 'in_review', missing_evidence: false },
+  guideline_version: 'v1.2', engines: [{ engine: 'detector', status: 'checked' }],
+  issues: [issue as components['schemas']['Issue']],
+} satisfies components['schemas']['FrameIssues'];
+
 export const rework = {
   id: 73, issue_id: 902, annotator_user_id: 28, status: 'fix_pending',
   original_revision: 'sha256:91c4…8fa2', submitted_revision: null,

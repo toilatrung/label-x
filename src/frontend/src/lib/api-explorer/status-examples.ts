@@ -1,5 +1,6 @@
-import { configVersion, evaluation, issue, rework, reworkDetail, run, session, snapshot, waiver } from './examples';
+import { configVersion, evaluation, frameIssues, rework, reworkDetail, run, session, snapshot, waiver } from './examples';
 import type { ApiResponseExample } from './types';
+import type { components } from '@/lib/api/contract';
 
 const variants = <T extends string>(statuses: readonly T[], build: (status: T, index: number) => unknown): ApiResponseExample[] =>
   statuses.map((status, index) => ({ label: status, response: build(status, index) }));
@@ -91,17 +92,27 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
   frames_issues: [{
     label: 'all engine + issue states',
     response: {
-      frame: { id: 3301, review_state: 'in_review' },
-      engines: engineStatuses.map((status, index) => ({ engine: ['schema', 'geometry', 'duplicate', 'detector', 'metric'][index], status,
+      ...frameIssues,
+      engines: engineStatuses.map((status, index) => ({ engine: (['schema', 'geometry', 'duplicate', 'detector', 'metric'] as const)[index], status,
         reason: status === 'not_checked' ? 'no_reference' : null, failed_units: status === 'failed' ? 10 : 0 })),
-      issues: issueStates.map((state, index) => ({ ...issue, id: 902 + index, state, status: undefined })),
-    },
+      issues: issueStates.map((state, index) => ({ ...frameIssues.issues[0], id: 902 + index, state })),
+    } satisfies components['schemas']['FrameIssues'],
   }],
   issues_decide: variants(['confirm', 'reject', 'uncertain', 'escalate'] as const, (action, index) => ({
     id: 1102 + index, issue_id: 902, action, actor_user_id: 12, revision: snapshot.revision_hash,
-    family: action === 'confirm' ? 'E2' : null, severity: action === 'confirm' ? 'medium' : null,
+    family: 'E2', severity: action === 'confirm' ? 'medium' : null, rule_id: action === 'confirm' ? 'VEH-03' : null,
     reason: action === 'confirm' ? null : `Ví dụ quyết định ${action}`, created_at: '2026-10-12T04:20:00Z',
-  })),
+  } satisfies components['schemas']['IssueDecision'])),
+  decision_cases_list: [{ label: 'Bảng sketch', origin: 'design', response: {
+    columns: ['Mã', 'Tình huống', 'Quy tắc', 'Quyết định', 'Phiên bản'],
+    rows: [
+      { code: 'CASE-040', situation: 'Xe bán tải có nắp thùng', rule_id: 'VEH-03', decision: 'Gán nhãn truck', version: 'Guideline v1.2' },
+      { code: 'CASE-034', situation: 'Xe van chở người', rule_id: 'VEH-03', decision: 'Gán nhãn car', version: 'Guideline v1.2' },
+      { code: 'CASE-021', situation: 'Xe bán tải thùng hở', rule_id: 'VEH-03', decision: 'Gán nhãn truck', version: 'Guideline v1.2' },
+      { code: 'CASE-017', situation: 'Người đi bộ bị che bởi cột điện', rule_id: 'G-014', decision: 'Vẫn gán nhãn nếu thấy trên 30%', version: 'Guideline v1.2' },
+      { code: 'CASE-009', situation: 'Xe đạp dựng sát tường', rule_id: 'VEH-01', decision: 'Không gán nhãn', version: 'Guideline v1.1' },
+    ],
+  } }],
   issues_adjudicate: variants(['confirm', 'reject', 'guideline_gap'] as const, (outcome, index) => ({
     id: 81 + index, issue_id: 902, outcome, actor_user_id: 7, rule_id: 'VEH-03', correct_label: outcome === 'confirm' ? 'truck' : null,
     reason: `Ví dụ phân xử ${outcome}`, case_version: 'v1', created_at: '2026-10-12T04:30:00Z',

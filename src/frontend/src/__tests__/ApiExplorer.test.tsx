@@ -143,6 +143,68 @@ describe('API Explorer', () => {
     expect(screen.getByLabelText('Request issues_adjudicate').textContent).toContain('"correct_label": "truck"');
   });
 
+  it('shows a CSRF placeholder on every write request and copies the same text', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    try {
+      render(<ApiExplorer />);
+      for (const endpoint of API_ENDPOINTS) {
+        const request = screen.getByLabelText(`Request ${endpoint.id}`).textContent!;
+        expect(request.includes('X-CSRFToken: <giá trị cookie csrftoken>')).toBe(endpoint.method !== 'GET');
+      }
+      const request = screen.getByLabelText('Request issues_decide').textContent;
+      fireEvent.click(screen.getByRole('button', { name: 'Sao chép request issues_decide' }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith(request));
+      expect(screen.getAllByText(/giá trị cookie csrftoken/).length).toBeGreaterThan(0);
+    } finally { vi.unstubAllGlobals(); }
+  });
+
+  it('keeps frame and decision responses contract complete in default and variant examples', () => {
+    const frameExamples = [API_ENDPOINTS.find(endpoint => endpoint.id === 'frames_issues')?.response,
+      ...STATUS_RESPONSE_EXAMPLES.frames_issues!.map(example => example.response)];
+    for (const value of frameExamples) {
+      const response = value as { frame: Record<string, unknown>; guideline_version: unknown; engines: unknown[]; issues: unknown[] };
+      expect(response).toHaveProperty('guideline_version');
+      expect(response.frame).toEqual(expect.objectContaining({ id: expect.any(Number), run_id: expect.any(Number),
+        frame_key: expect.objectContaining({ cvat_task_id: expect.any(Number), frame_number: expect.any(Number) }),
+        review_state: expect.any(String), missing_evidence: expect.any(Boolean) }));
+      expect(response.engines).toBeInstanceOf(Array);
+      expect(response.issues).toBeInstanceOf(Array);
+    }
+    const decisionExamples = [API_ENDPOINTS.find(endpoint => endpoint.id === 'issues_decide')?.response,
+      ...STATUS_RESPONSE_EXAMPLES.issues_decide!.map(example => example.response)];
+    for (const value of decisionExamples) {
+      const response = value as Record<string, unknown>;
+      expect(response).toHaveProperty('reason');
+      expect(response).toHaveProperty('rule_id');
+      expect(response.rule_id).toBe(response.action === 'confirm' ? 'VEH-03' : null);
+    }
+  });
+
+  it('keeps Decision Case API examples separate from the two sketch columns', () => {
+    const reviewSource = readFileSync('src/lib/api-explorer/features/review.ts', 'utf8');
+    expect(reviewSource).not.toContain('@/lib/mock/escalations');
+    const api = API_ENDPOINTS.find(endpoint => endpoint.id === 'decision_cases_list')?.response as { results: Record<string, unknown>[] };
+    expect(api.results[0]).not.toHaveProperty('situation');
+    expect(api.results[0]).not.toHaveProperty('decision');
+    expect(api.results[0].reason).not.toContain(' · ');
+    const sketch = readFileSync('../../docs/design/screens/Escalations.dc.html', 'utf8');
+    const design = STATUS_RESPONSE_EXAMPLES.decision_cases_list?.[0];
+    expect(design?.origin).toBe('design');
+    const rows = (design?.response as { rows: { situation: string; decision: string }[] }).rows;
+    expect(rows).toHaveLength(5);
+    for (const row of rows) {
+      expect(sketch).toContain(row.situation);
+      expect(sketch).toContain(row.decision);
+    }
+    render(<ApiExplorer />);
+    const selector = screen.getByRole('combobox', { name: 'Chọn response decision_cases_list' });
+    fireEvent.change(selector, { target: { value: '1' } });
+    expect(JSON.parse(screen.getByLabelText('Response decision_cases_list').textContent!).rows[0])
+      .toMatchObject({ situation: 'Xe bán tải có nắp thùng', decision: 'Gán nhãn truck' });
+    expect(screen.getByText('Bảng theo sketch để đối chiếu giao diện; đây không phải response của API.')).toBeInTheDocument();
+  });
+
   it('copies the selected response and the matching request independently', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });

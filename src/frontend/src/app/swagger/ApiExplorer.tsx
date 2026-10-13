@@ -21,7 +21,7 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
   const [copyError, setCopyError] = React.useState('');
   const [exampleIndex, setExampleIndex] = React.useState(0);
   const examples = endpoint.responseExamples?.[0]?.label === 'design' ? endpoint.responseExamples
-    : [{ label: 'Sketch / mẫu mặc định', response: endpoint.response }, ...(endpoint.responseExamples ?? [])];
+    : [{ label: endpoint.connection === 'mock' ? 'Thiết kế / mẫu mặc định' : 'API / mẫu mặc định', response: endpoint.response }, ...(endpoint.responseExamples ?? [])];
   const selectedExample = examples?.[exampleIndex];
   const response = selectedExample?.response ?? endpoint.response;
   const payload = typeof response === 'string' ? response : JSON.stringify(response, null, 2);
@@ -36,7 +36,8 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
     body = { outcome: selectedExample.label, rule_id: 'VEH-03', reason: `Ví dụ phân xử ${selectedExample.label}`,
       ...(selectedExample.label === 'confirm' ? { correct_label: 'truck' } : {}) };
   }
-  const requestPayload = `${endpoint.method} ${endpoint.path}${REQUEST_QUERIES[endpoint.id] ?? ''}${body === undefined ? '' : `\nContent-Type: application/json\n\n${JSON.stringify(body, null, 2)}`}`;
+  const writeHeader = endpoint.method === 'GET' ? '' : '\nX-CSRFToken: <giá trị cookie csrftoken>';
+  const requestPayload = `${endpoint.method} ${endpoint.path}${REQUEST_QUERIES[endpoint.id] ?? ''}${writeHeader}${body === undefined ? '' : `\nContent-Type: application/json\n\n${JSON.stringify(body, null, 2)}`}`;
 
   async function copyPayload(kind: 'request' | 'response') {
     try {
@@ -69,7 +70,7 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
             <button type="button" onClick={() => void copyPayload('request')} aria-label={`Sao chép request ${endpoint.id}`}>{copied === 'request' ? 'Đã sao chép' : 'Sao chép'}</button>
           </div>
           <pre aria-label={`Request ${endpoint.id}`}><code>{requestPayload}</code></pre>
-          <p className={styles.requestNote}>{body === undefined ? 'Không có request body.' : 'Body JSON minh họa.'} Các tham số trong dấu {'{}'} cần được thay bằng giá trị thực. API ghi dùng session và X-CSRFToken từ /api/auth/csrf/.</p>
+          <p className={styles.requestNote}>{body === undefined ? 'Không có request body.' : 'Body JSON minh họa.'} Thay tham số đường dẫn bằng giá trị thực. API ghi cần cookie phiên đăng nhập; gọi GET /api/auth/csrf/ rồi thay X-CSRFToken bằng giá trị cookie csrftoken.</p>
         </div>
         {copyError && <p role="status" className={styles.operation}>{copyError}</p>}
       </div>
@@ -87,6 +88,7 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
           </button>
         </div>
         <pre aria-label={`Response ${endpoint.id}`}><code>{responseStatus === 204 ? 'Không có response body (204 No Content).' : payload}</code></pre>
+        {selectedExample?.origin === 'design' && <p className={styles.requestNote}>Bảng theo sketch để đối chiếu giao diện; đây không phải response của API.</p>}
       </div>
     </div>
   </article>;

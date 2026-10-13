@@ -6,6 +6,7 @@ export interface ApiResponseExample {
   label: string;
   responseStatus?: number;
   response: unknown;
+  origin?: 'design';
 }
 
 export interface ApiEndpoint {
