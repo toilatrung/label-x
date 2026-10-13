@@ -62,7 +62,7 @@ HOST_KEY_ENV: dict[str, str] = {
 def binding_error(provider: str, host: str, api_key_env: str) -> str | None:
     """Lỗi nếu (provider, host, api_key_env) không khớp nhau; None nếu hợp lệ."""
     if HOST_PROVIDER.get(host) != provider:
-        return "models.vlm.provider không khớp host của base_url."
+        return "models.vlm.provider không khớp host của base_url (provider sai host)."
     if HOST_KEY_ENV.get(host) != api_key_env:
         return (
             "models.vlm.api_key_env không khớp host của base_url "

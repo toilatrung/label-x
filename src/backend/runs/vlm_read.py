@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from orchestration.models import VlmEvidence, VlmUnit
+from orchestration.models import VlmBudget, VlmEvidence, VlmUnit
 from runs.models import EngineResult, QCRun
 
 NOT_CHECKED_STATES = frozenset({"disabled", "no_model", "not_applicable", "not_triggered"})
@@ -23,6 +23,10 @@ def run_vlm_engine_state(run_id: int) -> str:
         return "disabled"  # config của run không có engine vlm
     if result.status == "not_checked" and result.reason in NOT_CHECKED_STATES:
         return str(result.reason)
+    budget = VlmBudget.objects.filter(run_id=run_id).first()
+    if budget is not None:
+        # Stage VLM đã khởi động mà candidate này không có VlmUnit ⇒ policy không chọn nó.
+        return budget.skipped_reason or "not_triggered"
     if result.status == "running":
         run_status = QCRun.objects.filter(pk=run_id).values_list("status", flat=True).first()
         return "pending" if run_status in ("queued", "running") else "not_triggered"

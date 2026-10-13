@@ -32,10 +32,10 @@ from tests.orchestration.test_vlm_stage import (  # noqa: F401  (fixture _env tÃ
 pytestmark = pytest.mark.django_db(transaction=True)
 
 
-def _client(run: QCRun) -> APIClient:
-    user, created = User.objects.get_or_create(username=f"vlm-api-{run.pk}")
+def _client(run: QCRun, role: Role = Role.REVIEWER) -> APIClient:
+    user, created = User.objects.get_or_create(username=f"vlm-api-{run.pk}-{role}")
     if created:
-        RoleAssignment.objects.create(user=user, role=Role.REVIEWER, dataset_id=run.dataset_id)
+        RoleAssignment.objects.create(user=user, role=role, dataset_id=run.dataset_id)
     api = APIClient()
     api.force_authenticate(user)
     return api
@@ -183,3 +183,89 @@ def test_candidate_list_is_scoped_and_vlm_batches_queries(
     outsider = APIClient()
     outsider.force_authenticate(User.objects.create_user("outsider"))
     assert outsider.get(f"/api/runs/{run.pk}/candidates/").status_code in (401, 403, 404)
+
+
+def test_candidates_not_selected_by_policy_are_not_triggered_not_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import orchestration.vlm_stage as stage
+
+    run = _make_run()
+    first_batch = CandidateRecord.objects.none()
+    del first_batch
+    monkeypatch.setattr(stage, "select_candidates_for_vlm", lambda r: _only_first(r))
+    _run_shards(run)
+    rows = _candidates(run)
+    states = sorted(r["vlm"]["state"] for r in rows)
+    assert states == ["not_triggered", "not_triggered", "pending"]
+    unselected = [r for r in rows if r["vlm"]["state"] == "not_triggered"]
+    assert all(r["vlm"]["engine_status"] == "not_checked" for r in unselected)
+    selected = next(r for r in rows if r["vlm"]["state"] == "pending")
+    unit = VlmUnit.objects.get(run_id=run.pk)
+    assert unit.candidate_id == selected["id"]
+    execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    states_after = sorted(r["vlm"]["state"] for r in _candidates(run))
+    assert states_after == ["checked", "not_triggered", "not_triggered"]
+
+
+def _only_first(run: QCRun) -> list[CandidateRecord]:
+    return list(CandidateRecord.objects.filter(run_id=run.pk).order_by("pk")[:1])
+
+
+def test_unit_with_changed_config_is_failed_without_provider_call() -> None:
+    run = _make_run()
+    _run_shards(run)
+    unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    VlmUnit.objects.filter(pk=unit.pk).update(model="other-model")
+    client = FakeClient()
+    assert execute_vlm_unit(unit.pk, client=client) == "failed"
+    assert client.calls == 0
+    assert VlmEvidence.objects.get(unit=unit).reason_code == "provider_error"
+
+
+def test_runtime_role_cannot_mutate_or_truncate_evidence() -> None:
+    import uuid
+
+    from django.core.management import call_command
+
+    role = f"labelx_vlm_test_{uuid.uuid4().hex[:10]}"
+    quoted = connection.ops.quote_name(role)
+    with connection.cursor() as cursor:
+        cursor.execute(f"CREATE ROLE {quoted} NOLOGIN")
+    try:
+        call_command("provision_runtime_db_role", role)
+        with connection.cursor() as cursor:
+            cursor.execute(f"SET ROLE {quoted}")
+            try:
+                cursor.execute(
+                    "SELECT has_table_privilege(current_user, 'orchestration_vlmevidence', p) "
+                    "FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE']) AS p"
+                )
+                assert [row[0] for row in cursor.fetchall()] == [True, True, False, False, False]
+            finally:
+                cursor.execute("RESET ROLE")
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP OWNED BY {quoted}")
+            cursor.execute(f"DROP ROLE {quoted}")
+
+
+def test_ledger_endpoint_counts_vlm_units_not_zero() -> None:
+    run = _make_run(vlm={**VALID, "budget": {"max_calls": 2}})
+    _run_shards(run)
+    api = _client(run, Role.QA_LEAD)
+
+    def vlm_entry() -> dict[str, Any]:
+        resp = api.get(f"/api/runs/{run.pk}/ledger/")
+        assert resp.status_code == 200
+        return next(e for e in resp.data if e["engine"] == "vlm")
+
+    pending = vlm_entry()
+    assert (pending["total"], pending["pending"], pending["completed"]) == (3, 3, 0)
+    assert pending["unit"] == "shape" and pending["status"] == "running"
+    for unit in VlmUnit.objects.filter(run_id=run.pk).order_by("pk"):
+        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    entry = vlm_entry()
+    assert (entry["total"], entry["eligible"], entry["completed"], entry["failed"]) == (3, 3, 2, 1)
+    assert entry["pending"] == 0 and entry["coverage"] == pytest.approx(2 / 3)
+    assert entry["status"] == "partial"

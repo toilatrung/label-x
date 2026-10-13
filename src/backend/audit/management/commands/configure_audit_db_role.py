@@ -22,6 +22,7 @@ class Command(BaseCommand):
         quoted_role = connection.ops.quote_name(role)
         quoted_table = connection.ops.quote_name("audit_auditevent")
         quoted_sequence = connection.ops.quote_name("audit_auditevent_id_seq")
+        quote_name = connection.ops.quote_name
 
         with connection.cursor() as cursor:
             cursor.execute(
@@ -53,6 +54,14 @@ class Command(BaseCommand):
                 f"REVOKE ALL PRIVILEGES ON SEQUENCE {quoted_sequence} FROM {quoted_role}"
             )
             cursor.execute(f"GRANT USAGE, SELECT ON SEQUENCE {quoted_sequence} TO {quoted_role}")
+            cursor.execute("SELECT to_regclass('orchestration_vlmevidence') IS NOT NULL")
+            evidence_row = cursor.fetchone()
+            if evidence_row and evidence_row[0]:
+                # Evidence VLM cũng là append-only: runtime role không UPDATE/DELETE/TRUNCATE.
+                evidence_table = quote_name("orchestration_vlmevidence")
+                cursor.execute(
+                    f"REVOKE UPDATE, DELETE, TRUNCATE ON TABLE {evidence_table} FROM {quoted_role}"
+                )
 
         self.stdout.write(
             self.style.SUCCESS(
