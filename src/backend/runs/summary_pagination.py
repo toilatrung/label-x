@@ -17,7 +17,7 @@ class SummaryCursorPagination(CursorPagination):
         except NotFound:
             raise ApiError(400, "VALIDATION_ERROR", "Cursor không hợp lệ.") from None
         if cursor is not None and cursor.position is not None:
-            value = cursor.position
+            value = str(cursor.position)
             if (
                 not value.isascii()
                 or not value.isdigit()
