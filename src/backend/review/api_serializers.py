@@ -153,6 +153,16 @@ class EvidenceSerializer(serializers.Serializer[Any]):
     checkpoint_sha256 = serializers.CharField(allow_null=True, required=False)
     class_mapping_version = serializers.CharField(allow_null=True, required=False)
     iou = serializers.FloatField(allow_null=True, required=False)
+    # "classifier" chỉ là alias tương thích payload FE v0; runtime hiện tại là "detector".
+    source: Any = serializers.CharField(
+        required=False, help_text="detector (runtime) hoặc classifier (alias tương thích v0)"
+    )
+    match_status = serializers.ChoiceField(
+        choices=["matched", "unmatched_detection", "unmatched_annotation"], required=False
+    )
+    annotated_class_id = serializers.IntegerField(allow_null=True, required=False)
+    annotation_bbox = BBoxSerializer(allow_null=True, required=False)
+    artifact_verified = serializers.BooleanField(required=False)
 
 
 class IssueLinkSerializer(serializers.Serializer[Any]):

@@ -100,7 +100,7 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>M-04</code></td>
 <td><code>R-001</code></td>
-<td><strong>Qwen VLM, classifier và routing kỹ thuật</strong> — M-04 chạy theo ba cổng A/B/C: Qwen runtime có evidence, ConvNeXt Tiny classifier trên crop, rồi routing/phân định lại có API. Reference, calibration và đánh giá hiệu quả chuyển sau cổng kỹ thuật theo <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch M-04 A/B/C</a>.</td>
+<td><strong>Qwen VLM, classifier và routing kỹ thuật</strong> — M-04 chạy theo cổng A (Qwen runtime có evidence) và C (routing/phân định lại có API) với Faster R-CNN làm nguồn candidate; giai đoạn B ConvNeXt đã bị bỏ theo CR-117 (APPROVED 2026-10-13; quality detector NOT VERIFIED). Reference, calibration và đánh giá hiệu quả chuyển sau cổng kỹ thuật theo <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch M-04 A/B/C</a>.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>theo cổng M-04A → M-04B → M-04C</code></td>
 <td><code>in-progress</code></td>

@@ -11,7 +11,14 @@ from orchestration.routing_policy import (
 def candidate(**evidence):
     return {
         "engine": "detector",
-        "evidence": {"class_id": 2, "class_name": "car", "confidence": 0.95, **evidence},
+        "evidence": {
+            "match_status": "matched",
+            "artifact_verified": True,
+            "class_id": 2,
+            "class_name": "car",
+            "confidence": 0.95,
+            **evidence,
+        },
     }
 
 

@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
+import re
 import subprocess
 import tempfile
+from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +40,101 @@ DETECTOR_DESCRIPTOR = EngineDescriptor(
     needs_reference=False,
     applicability_version="1.0.0",
 )
+
+
+# Taxonomy BDD100K 10 lớp; chỉ số = class_id mà worker trả (khớp manifest class_mapping.classes).
+BDD100K_DETECTOR_CLASSES: tuple[str, ...] = (
+    "pedestrian",
+    "rider",
+    "car",
+    "truck",
+    "bus",
+    "train",
+    "motorcycle",
+    "bicycle",
+    "traffic light",
+    "traffic sign",
+)
+MANIFEST_SCHEMA_VERSION = "labelx.detector.model.v1"
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+
+MATCHED = "matched"
+UNMATCHED_DETECTION = "unmatched_detection"
+UNMATCHED_ANNOTATION = "unmatched_annotation"
+
+
+class DetectorProvenanceError(ValueError):
+    """Manifest/checksum/class-map không xác minh được; engine fail closed, không tạo candidate."""
+
+
+@lru_cache(maxsize=4)
+def _checkpoint_sha256(path: str, size: int, mtime_ns: int) -> str:
+    # size/mtime chỉ là khoá cache; mỗi khi file đổi sẽ băm lại.
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_artifact(model: Any, artifact: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Xác minh đồng thời manifest, checksum checkpoint và class map; sai/thiếu → raise.
+
+    Nguồn tin cậy duy nhất là cấu hình server (đường dẫn setting) và ModelArtifact đã đăng ký của
+    run; không nhận đường dẫn hay lệnh từ request. Trả provenance đã xác minh để ghi vào evidence.
+    """
+    if not artifact or not isinstance(model, dict):
+        raise DetectorProvenanceError("detector thiếu ModelArtifact hoặc provenance của worker")
+    try:
+        manifest = json.loads(
+            Path(_required_setting("DETECTOR_MANIFEST_PATH")).read_text(encoding="utf-8")
+        )
+        manifest_model = manifest["model"]
+        mapping = manifest["class_mapping"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise DetectorProvenanceError("manifest detector thiếu hoặc không hợp lệ") from exc
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+        raise DetectorProvenanceError("manifest detector sai schema_version")
+    if not isinstance(manifest_model, dict) or not isinstance(mapping, dict):
+        raise DetectorProvenanceError("manifest detector sai cấu trúc")
+    checksum = str(manifest_model.get("sha256") or "")
+    if not _SHA256.fullmatch(checksum):
+        raise DetectorProvenanceError("manifest detector chưa đóng băng checkpoint sha256")
+    if tuple(mapping.get("classes") or ()) != BDD100K_DETECTOR_CLASSES:
+        raise DetectorProvenanceError("class map manifest không khớp taxonomy BDD100K 10 lớp")
+    class_map_version = str(mapping.get("version") or "")
+    registered = artifact["model_artifact__class_mapping"]
+    if registered and (
+        not isinstance(registered, dict)
+        or tuple(registered.get("classes") or ()) != BDD100K_DETECTOR_CLASSES
+    ):
+        raise DetectorProvenanceError("class map của ModelArtifact không khớp manifest")
+    try:
+        checkpoint = Path(_required_setting("DETECTOR_CHECKPOINT_PATH"))
+        stat = checkpoint.stat()
+        actual = _checkpoint_sha256(str(checkpoint), stat.st_size, stat.st_mtime_ns)
+    except OSError as exc:
+        raise DetectorProvenanceError("không đọc được checkpoint detector") from exc
+    expected = {
+        "sha256": artifact["model_artifact__checksum"],
+        "version": artifact["model_artifact__version"],
+        "class_mapping_version": artifact["model_artifact__class_mapping_version"],
+    }
+    if not (actual == checksum == expected["sha256"] == model.get("sha256")):
+        raise DetectorProvenanceError("checksum checkpoint không khớp manifest/ModelArtifact")
+    if (
+        manifest_model.get("version") != expected["version"]
+        or model.get("version") != expected["version"]
+        or class_map_version != expected["class_mapping_version"]
+        or model.get("class_mapping_version") != expected["class_mapping_version"]
+    ):
+        raise DetectorProvenanceError("version/class map worker không khớp artifact của run")
+    return {
+        "version": expected["version"],
+        "sha256": actual,
+        "class_mapping_version": class_map_version,
+        "verified": True,
+    }
 
 
 def _required_setting(name: str) -> str:
@@ -90,6 +189,7 @@ def _detection_candidate(
     raw: Any,
     *,
     family: str = "E1",
+    match_status: str = UNMATCHED_DETECTION,
     annotation: dict[str, Any] | None = None,
     iou: float | None = None,
     model: dict[str, Any] | None = None,
@@ -109,7 +209,8 @@ def _detection_candidate(
         )
         or isinstance(class_id, bool)
         or not isinstance(class_id, int)
-        or not isinstance(class_name, str)
+        or not 0 <= class_id < len(BDD100K_DETECTOR_CLASSES)
+        or class_name != BDD100K_DETECTOR_CLASSES[class_id]
         or isinstance(confidence, bool)
         or not isinstance(confidence, int | float)
         or not math.isfinite(confidence)
@@ -140,16 +241,19 @@ def _detection_candidate(
         ),
         evidence={
             "engine": DETECTOR_ENGINE_NAME,
+            "source": "detector",
             "prediction_bbox": [float(v) for v in bbox],
             "class_id": class_id,
             "class_name": class_name,
             "prediction_class": class_name,
             "confidence": float(confidence),
+            "match_status": match_status,
             "annotated_class_id": annotated_class_id,
             "iou": iou,
             "model_version": (model or {}).get("version"),
             "checkpoint_sha256": (model or {}).get("sha256"),
             "class_mapping_version": (model or {}).get("class_mapping_version"),
+            "artifact_verified": (model or {}).get("verified") is True,
         },
     )
 
@@ -222,12 +326,53 @@ def _candidates_for_frame(
                     det_index,
                     raw,
                     family="E2",
+                    match_status=MATCHED,
                     annotation=annotation,
                     iou=pair.iou,
                     model=model,
                 )
             )
+    for ann_id in result.unmatched_right:
+        candidates.append(
+            _annotation_candidate(engine_input, frame, annotations[ann_id], model=model)
+        )
     return candidates
+
+
+def _annotation_candidate(
+    engine_input: EngineInput,
+    frame: SnapshotFrame,
+    annotation: dict[str, Any],
+    *,
+    model: dict[str, Any] | None,
+) -> Candidate:
+    """Annotation không có detection ghép: không có prediction, chỉ bằng chứng phía annotation."""
+    source = annotation.get("source")
+    if not isinstance(source, dict) or "kind" not in source or "id" not in source:
+        raise ValueError("annotation không ghép được thiếu source")
+    return Candidate(
+        engine=engine_input.engine,
+        engine_version=engine_input.engine_version,
+        family="E3",
+        frame=FrameKey(frame.snapshot_job.cvat_task_id, frame.frame_index),
+        anchor=Anchor(
+            kind="annotation_box",
+            objects=(ObjectRef(namespace=str(source["kind"]), id=str(source["id"])),),
+            policy_version="detector-candidate-v1",
+            rule_id="faster-rcnn-unmatched-annotation",
+        ),
+        evidence={
+            "engine": DETECTOR_ENGINE_NAME,
+            "source": "detector",
+            "match_status": UNMATCHED_ANNOTATION,
+            "annotation_bbox": [float(v) for v in annotation["points"]],
+            "annotated_class_id": annotation["label_id"],
+            "model_version": (model or {}).get("version"),
+            "checkpoint_sha256": (model or {}).get("sha256"),
+            "class_mapping_version": (model or {}).get("class_mapping_version"),
+            "artifact_verified": (model or {}).get("verified") is True,
+        },
+    )
 
 
 def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
@@ -270,18 +415,11 @@ def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
             "model_artifact__checksum",
             "model_artifact__version",
             "model_artifact__class_mapping_version",
+            "model_artifact__class_mapping",
         )
         .first()
     )
-    model = payload.get("model")
-    if (
-        not artifact
-        or not isinstance(model, dict)
-        or model.get("sha256") != artifact["model_artifact__checksum"]
-        or model.get("version") != artifact["model_artifact__version"]
-        or model.get("class_mapping_version") != artifact["model_artifact__class_mapping_version"]
-    ):
-        raise ValueError("detector output không khớp model artifact của run")
+    model = verify_artifact(payload.get("model"), artifact)
 
     images = payload.get("images")
     if not isinstance(images, list):

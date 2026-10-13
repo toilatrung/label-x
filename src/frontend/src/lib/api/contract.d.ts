@@ -366,7 +366,7 @@ export interface paths {
          *     lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
          *     `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
          *     409 `IDEMPOTENCY_KEY_REUSED` khi key đã dùng cho payload hoặc người khác. 422 khi run không bật VLM, thiếu
-         *     taxonomy, đã huỷ hoặc classifier của candidate chưa chạy xong. Không ghi đè evidence/decision cũ và không
+         *     taxonomy hoặc đã huỷ. Không ghi đè evidence/decision cũ và không
          *     tạo ReviewDecision/Adjudication: kết quả AI chỉ là đề xuất. FE chỉ gửi `reason` (ghi chú audit, không vào
          *     prompt) và `expected_revision`; không gửi prompt, model, ảnh hay khoá API.
          */
@@ -387,11 +387,15 @@ export interface paths {
         /**
          * Đọc Evaluation (poll kết quả định tuyến/Qwen)
          * @description `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
-         *     tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Ngoài tập v0 còn có `classifier_untrusted`
-         *     (checkpoint khác `trained`, kể cả smoke_only) và `classifier_unavailable` (không có/lỗi hạ tầng/dữ liệu
-         *     sai kiểu). `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, classifier
-         *     không đáng tin, Qwen lỗi hoặc uncertain). `policy` lưu theo evaluation; ngưỡng chỉ là routing tạm, không phải
-         *     ngưỡng calibration.
+         *     tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Nguồn runtime duy nhất là candidate Faster R-CNN
+         *     (detector); không còn classifier. Các reason `classifier_only`, `classifier_unavailable`, `classifier_untrusted`
+         *     chỉ là alias tương thích payload FE v0 (untrusted = artifact detector chưa xác minh manifest/checksum/class map).
+         *     `detector_no_match`: detection không ghép annotation hoặc ngược lại (IoU ghép 0,50; ambiguous 0,30) →
+         *     `review_required=true`, `call_qwen=false`. `label_conflict` (ghép được nhưng khác nhãn) → gọi Qwen.
+         *     M-04 v0 chỉ dùng confidence top-1; `low_margin` bị vô hiệu vì detector không có phân bố đầy đủ (kể cả background).
+         *     `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, Qwen lỗi hoặc
+         *     uncertain). `policy` lưu theo evaluation; confidence detector chỉ là ngưỡng routing tạm, không phải ngưỡng
+         *     calibration. Chất lượng/accuracy của detector CHƯA được xác minh (cần dữ liệu held-out ngoài tập train).
          */
         get: operations["candidate_evaluations_read"];
         put?: never;
@@ -1506,35 +1510,6 @@ export interface components {
             /** Format: date-time */
             created_at?: string | null;
         };
-        ClassifierTopK: {
-            class_id: number;
-            class_name: string;
-            /** @description Softmax, chưa calibrate */
-            score: number;
-        };
-        /** @description Kết quả classifier cho một candidate. score là giá trị softmax CHƯA calibrate, không phải xác suất đúng. classifier_unknown mặc định false và chỉ true khi không quyết định được (score/margin không hữu hạn); abstention theo ngưỡng do policy định tuyến tính từ score/margin. unknown không phải lớp thứ 11. */
-        ClassifierEvidence: {
-            /** @enum {string} */
-            status: "pending" | "running" | "completed" | "failed" | "cancelled";
-            /** @description Rỗng khi completed. Khi failed: invalid_crop, box_too_small, checkpoint_unavailable, checksum_mismatch, not_configured, timeout, inference_error (không kèm lỗi thô). */
-            reason_code: string;
-            crop_valid: boolean;
-            crop_sha256: string;
-            predicted_class_id: number | null;
-            predicted_class_name: string;
-            annotated_class_id: number | null;
-            score: number | null;
-            /** @description Top-1 trừ top-2 */
-            margin: number | null;
-            top3: components["schemas"]["ClassifierTopK"][];
-            classifier_unknown: boolean;
-            checkpoint_version: string;
-            checkpoint_sha256: string;
-            /** @description smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy */
-            checkpoint_status: string;
-            class_map_version: string;
-            snapshot_revision: string;
-        };
         CandidateEvaluationCreate: {
             /** @description Ghi chú tự do của người dùng, chỉ để audit; KHÔNG bao giờ vào prompt VLM và không phải reason_code */
             reason: string;
@@ -1567,7 +1542,7 @@ export interface components {
             review_required: boolean;
             call_qwen: boolean;
             policy: components["schemas"]["CandidateEvaluationPolicy"];
-            /** @description trained | smoke_only | null */
+            /** @description Trạng thái xác minh artifact detector: verified | unverified | null. Không phải kết luận về chất lượng mô hình */
             checkpoint_status?: string | null;
             snapshot_revision: string;
             requested_by_user_id?: number | null;
@@ -1747,8 +1722,23 @@ export interface components {
             actual?: string | null;
             prediction_bbox?: components["schemas"]["BBox"] | null;
             prediction_class?: string | null;
+            /** @description Class ID Faster R-CNN (0–9) */
+            class_id?: number | null;
+            /** @description Tên lớp Faster R-CNN */
+            class_name?: string | null;
             confidence?: number | null;
+            model_version?: string | null;
+            checkpoint_sha256?: string | null;
+            class_mapping_version?: string | null;
             iou?: number | null;
+            /** @description detector (nguồn runtime) hoặc classifier (alias tương thích payload FE v0) */
+            source?: string;
+            /** @enum {string} */
+            match_status?: "matched" | "unmatched_detection" | "unmatched_annotation";
+            annotated_class_id?: number | null;
+            annotation_bbox?: components["schemas"]["BBox"] | null;
+            /** @description true khi manifest, checksum checkpoint và class map BDD100K 10 lớp đã được xác minh */
+            artifact_verified?: boolean;
         };
         Issue: {
             id: number;
