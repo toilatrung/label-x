@@ -58,7 +58,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Blocker Type</strong>: <code>dependency</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-12</code></li>
-<li><strong>Target Resolution Date</strong>: <code>FE-11…FE-14 (2026-10-15 → 2026-10-20), từng dòng theo tiến độ backend</code></li>
+<li><strong>Target Resolution Date</strong>: <code>Không đặt hạn (PO quyết 2026-10-13); từng dòng theo tiến độ backend, xử lý trong milestone M-BE-MVP (kế hoạch đề xuất, chờ duyệt CR-118)</code></li>
 </ul>
 <h2 id="blocking-condition">Blocking Condition</h2>
 <p>Nhiều vùng giao diện M-FE01 hiển thị dữ liệu minh họa kèm cảnh báo "Chức năng vẫn chưa được kết nối với server" vì endpoint chưa có backend hoặc chưa có trong contract OpenAPI (<code>docs/04-api/openapi.yaml</code>). Danh sách lấy từ <code>grep -rn "TODO(backend)" src/frontend/src</code> trên <code>develop-fe</code> (2026-10-12). Liên quan: <a href="BLOCKER-030.html">BLOCKER-030</a> (rework, Guideline Gap, Decision Case), <a href="../../planning/M-FE01.html">M-FE01</a> (FE-11…FE-14).</p>
@@ -117,7 +117,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Required Action</strong>: <code>PO duyệt CR thêm endpoint nhóm B vào contract; backend triển khai; dev frontend nối theo quy trình</code></li>
 <li><strong>Responsible Owner</strong>: <code>@toilatrung (PO) quyết định CR; backend theo epic; frontend FE-11…FE-14</code></li>
-<li><strong>Dependency or Approval</strong>: <code>Change request chưa tạo</code></li>
+<li><strong>Dependency or Approval</strong>: <code>CR-118 (proposed, chờ PO duyệt) đề xuất milestone M-BE-MVP: toàn bộ 22 dòng hoàn thành ở mức MVP, chia 9 làn song song MBE-00…MBE-09; chưa duyệt thì chưa có thay đổi nào có hiệu lực</code></li>
 <li><strong>Workaround</strong>: <code>Dữ liệu minh họa có nhãn + NotConnectedNotice, thao tác ghi bị chặn (CR-111, skill labelx-design-fidelity)</code></li>
 <li><strong>Verification Method</strong>: <code>grep -rn "TODO(backend)" src/frontend/src giảm dần; bản ghi này tick đủ; scripts/frontend/check.sh xanh</code></li>
 </ul>

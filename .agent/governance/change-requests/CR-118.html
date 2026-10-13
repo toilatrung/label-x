@@ -11,6 +11,7 @@
 <ol>
 <li>Thêm milestone <code>M-BE-MVP</code> sau M-04: hoàn thiện Backend còn thiếu và nối API lên giao diện (gói MBE-00…MBE-09 trong <a href="../../planning/M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>), gồm pipeline AI đầu cuối hiển thị trong Review Workspace và các dòng API của BLOCKER-031.</li>
 <li>Mở rộng contract <code>docs/04-api/openapi.yaml</code> một lần (MBE-00) cho các endpoint nhóm B của BLOCKER-031 (đáp ứng yêu cầu "cần CR mới" của BLOCKER-031 mục B và dòng 4, 6, 9, 11, 15).</li>
+<li>Cập nhật 2026-10-13 theo yêu cầu PO: toàn bộ API của BLOCKER-031 (22 dòng, 33 endpoint) hoàn thành ở mức MVP, không còn gói hoãn P1/P2; không đặt hạn; công việc chia thành 9 làn song song (xem "Chia làn song song" trong kế hoạch). Phần này chưa được duyệt cho tới khi PO duyệt CR-118.</li>
 <li>Trong giai đoạn M-BE-MVP không chạy QC độc lập; PO kiểm thử thủ công trên giao diện. Task xong theo "PO manual test", không có báo cáo QA theo SHA. CI <code>make check</code> và <code>make validate-kit</code> giữ nguyên.</li>
 </ol>
 <p>Không đổi: ranh giới cứng (adapter CVAT chỉ đọc; Celery idempotent; quyền project/job kiểm ở API), stack (DEC-001), vai trò Qwen chỉ đề xuất, payload FE v0.</p>
@@ -20,7 +21,7 @@
 <ul>
 <li>Affected Baselines : <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>docs/04-api/openapi.yaml</code> (khi MBE-00 được duyệt)</li>
 <li>Affected Epics or Tasks : E-02, E-03, E-04, E-11, E-12, E-13…E-22 (phần Backend và nối FE); MBE-00…MBE-09; FE-11…FE-14 của M-FE01</li>
-<li>Schedule Impact : M-BE-MVP bắt đầu 2026-10-14, hạn chưa chốt; M-05 và M-06 giữ khung cũ nhưng nghiệm thu theo hiệu quả bị đẩy sau MVP</li>
+<li>Schedule Impact : M-BE-MVP bắt đầu 2026-10-14, PO quyết không đặt hạn và làm liên tục (2026-10-13); mốc 2026-10-20 của CR-101 không còn ràng buộc milestone này; M-05 và M-06 giữ khung cũ nhưng nghiệm thu theo hiệu quả bị đẩy sau MVP</li>
 <li>Cost or Resource Impact : cần dev rảnh cho BE/FE theo bảng owner đề xuất; chưa xác nhận ai rảnh</li>
 <li>Security or Compliance Impact : giữ nguyên quy tắc dữ liệu và key; không có quyền gửi ảnh thật ra cổng bên thứ ba cho tới khi PO xác nhận</li>
 <li>Compatibility or Migration Impact : contract mở rộng không được phá vỡ payload FE v0 và các route FE đã nối</li>
