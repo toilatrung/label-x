@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04C Pha C — Policy routing và guard evaluation (#288, một phần #289) — Review Report — LabelX</title>
+<meta name="labelx:id" content="review-m04c-phase-c">
+<meta name="labelx:title" content="M04C Pha C — Policy routing và guard evaluation (#288, một phần #289) — Review Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="m04">
+<meta name="labelx:tags" content="[review, report, m04, routing, orchestrator, phase-c]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / M04C-phase-C</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>review-m04c-phase-c</span><b>title</b><span>M04C Pha C — Policy routing và guard evaluation (#288, một phần #289) — Review Report</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>m04</span><b>tags</b><span>[review, report, m04, routing, orchestrator, phase-c]</span><b>priority</b><span>3</span></div>
+<h1 id="review-m04c-phase-c">M04C Pha C — Policy routing và guard evaluation (#288, một phần #289) — Review Report</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo thẩm định kỹ thuật độc lập (Review Report) cho Pull Request #313 (nhánh <code>feat/M-04-c-gate</code> vào <code>feat/M-04-backend</code>) theo quy trình <code>labelx-pr-review</code> (CR-102), đối chiếu chi tiết các acceptance criteria và bằng chứng kiểm thử trên môi trường thực.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04C-phase-C</code></li>
+<li><strong>Title</strong>: <code>Thẩm định kỹ thuật Pha C — Policy routing và guard evaluation (#288, một phần #289)</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung</code></li>
+<li><strong>Reviewer</strong>: <code>Phiên QA/QC chéo (chuẩn bị bàn giao)</code></li>
+<li><strong>Executor</strong>: <code>@toilatrung</code> (co-authored Claude Sonnet 5.5)</li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED_WITH_CONDITIONS</code></li>
+<li><strong>Review Type</strong>: <code>code, contract, architecture, security</code></li>
+<li><strong>Task ID</strong>: <code>M04C-01 (#288), M04C-02 (khung thuần #289)</code> (Epic E-12)</li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/313">#313</a></li>
+<li><strong>Head Commit Reviewed</strong>: <code>168579d17a954618409194d2ddde622442ce5a49</code></li>
+<li><strong>Base Branch</strong>: <code>feat/M-04-backend</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>:
+  <ul>
+    <li>Routing Policy &amp; Adapter: <code>src/backend/orchestration/routing_policy.py</code>.</li>
+    <li>Evaluation Guard &amp; Request Serializer: <code>src/backend/orchestration/evaluation_guard.py</code>, <code>src/backend/orchestration/evaluation_serializers.py</code>.</li>
+    <li>Test Suite: <code>src/backend/tests/orchestration/test_evaluation_guard.py</code>, <code>src/backend/tests/orchestration/test_routing_policy.py</code>, <code>src/backend/tests/orchestration/test_routing_scenarios.py</code>.</li>
+    <li>Implementation Report: <code>.agent/reports/implementation/M04C-phase-C-@codex.html</code>.</li>
+  </ul>
+</li>
+<li><strong>Review Standard</strong>: Quy chuẩn kỹ thuật <code>labelx-pr-review</code> (CR-102), DEC-021, CR-115, CR-116, CR-117.</li>
+</ul>
+
+<h2 id="ac-evidence-table">Đối chiếu Acceptance Criteria → Bằng chứng kiểm tra</h2>
+<table><thead><tr><th>Task / AC</th><th>Yêu cầu</th><th>Bằng chứng kiểm tra</th><th>Đánh giá</th></tr></thead><tbody>
+<tr><td><strong>M04C-01 (#288)</strong></td><td>Policy định tuyến versioned (<code>classification-routing-v0</code>), hàm thuần <code>route()</code>, cấu hình <code>RoutingPolicy.from_config</code>, lưu record kèm <code>policy_sha256</code></td><td><code>tests/orchestration/test_routing_policy.py</code>, <code>test_routing_scenarios.py</code> (98 tests). Kiểm tra 7 nhánh quyết định; conflict thắng score cao; crop lỗi / budget hết không gọi Qwen; unknown là abstention; checkpoint khác "trained" ⇒ <code>classifier_untrusted</code> ép gọi Qwen và human review.</td><td><strong>ĐẠT</strong> (thuần, 100% pass)</td></tr>
+<tr><td><strong>M04C-01 Adapter</strong></td><td>Adapter <code>routing_input_from_candidate</code> theo contract #286; fail-closed khi thiếu/sai kiểu dữ liệu; pending/running báo <code>ClassifierNotReadyError</code></td><td><code>tests/orchestration/test_routing_policy.py</code>. Test các trường hợp classifier lỗi hạ tầng, crop lỗi, sai kiểu nhãn, status pending/running phải chờ; không phỏng đoán dữ liệu.</td><td><strong>ĐẠT</strong> (thuần, 100% pass)</td></tr>
+<tr><td><strong>M04C-02 Khung thuần (#289)</strong></td><td>Guard idempotency, revision check (409 khi stale revision), digest payload cấm trùng key khác người/payload; serializer từ chối prompt/model/image/key</td><td><code>tests/orchestration/test_evaluation_guard.py</code> (24 tests). Idempotency key 1–128 ký tự; replay khi cùng digest và actor; 409 khi revision cũ; serializer chỉ nhận <code>reason</code> và <code>expected_revision</code>, <code>reason</code> chỉ để audit và không vào prompt VLM.</td><td><strong>ĐẠT</strong> (thuần, 100% pass)</td></tr>
+</tbody></table>
+
+<h2 id="checklist-checks">Kết quả kiểm thử tự động</h2>
+<table><thead><tr><th>Mục kiểm tra</th><th>Kết quả</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td><code>pytest</code> Orchestration (PR #313)</td><td><strong>122 passed in 0.80s</strong></td><td>Chạy trên Postgres/Redis cô lập; 100% test thuần pass.</td></tr>
+<tr><td><code>pytest</code> Full backend suite</td><td><strong>994 passed, 1 skipped (100% pass)</strong></td><td>Chạy trên Postgres 17 và Redis 7 thật; không có hồi quy nào.</td></tr>
+<tr><td><code>ruff check .</code> &amp; <code>ruff format --check .</code></td><td><strong>passed</strong></td><td>261 backend files kiểm tra sạch sẽ.</td></tr>
+<tr><td><code>mypy</code> typecheck</td><td><strong>passed</strong></td><td>137 source files (bao gồm toàn bộ backend apps và orchestration).</td></tr>
+<tr><td><code>detector-lint</code> &amp; <code>detector-test</code></td><td><strong>passed (10 tests)</strong></td><td>Worker Detector kiểm tra độc lập đạt.</td></tr>
+<tr><td><code>make validate-kit</code></td><td><strong>passed</strong></td><td><code>FRAMEWORK_VALIDATION_PASS</code> và <code>TEST_PLAN_HTML_CURRENT</code>.</td></tr>
+<tr><td><code>check-agent-ownership.cjs</code></td><td><strong>passed</strong></td><td><code>AGENT_OWNERSHIP_PASS</code> (CR-100).</td></tr>
+<tr><td>GitHub CI Checks PR #313</td><td><strong>6/6 passed</strong></td><td>Tất cả 6 checks xanh (backend, bootstrap-windows, classifier, detector, framework, frontend).</td></tr>
+<tr><td>Merge compatibility với base</td><td><strong>Clean (0 conflict)</strong></td><td><code>git merge-tree</code> trả về clean tree đối với <code>origin/feat/M-04-backend</code>.</td></tr>
+</tbody></table>
+
+<h2 id="findings-table">Bảng Findings &amp; Giới hạn kỹ thuật</h2>
+<table><thead><tr><th>Mã</th><th>Mức độ</th><th>Mô tả</th><th>Tình trạng / Xử lý</th></tr></thead><tbody>
+<tr><td><strong>F-01</strong></td><td><code>observation</code></td><td>Phần tích hợp Evaluation API đầy đủ (model DB, view, Celery, openapi) nằm ở <code>wip/m04-c-evaluation</code> và phụ thuộc Pha A (#312) và Pha B (#311). PR #313 này đóng vai trò nhánh cổng độc lập.</td><td><strong>Đã ghi nhận trong bàn giao</strong>: Khi PR #312 và #311 merge vào base, áp dụng cherry-pick 3 commit của evaluation và đánh số lại migration.</td></tr>
+<tr><td><strong>F-02</strong></td><td><code>observation</code></td><td>Hai <code>reason_code</code> mới (<code>classifier_untrusted</code>, <code>classifier_unavailable</code>) nằm ngoài payload FE v0.</td><td>Cần PO phê duyệt bổ sung vào issue cha #278 để frontend map đúng nhãn giao diện.</td></tr>
+<tr><td><strong>F-03</strong></td><td><code>observation</code></td><td>Nếu CR-117 (bỏ ConvNeXt) được duyệt, nguồn candidate chuyển sang detector (đã có phân tích chi tiết tại mục classifier-deps của báo cáo thực thi).</td><td>Toàn bộ hàm <code>route()</code> thuần, guard và serializer không bị ảnh hưởng; chỉ adapter <code>routing_input_from_candidate</code> sẽ đổi nguồn sang detector.</td></tr>
+</tbody></table>
+
+<h2 id="conclusion">Kết luận thẩm định</h2>
+<p>PR #313 đáp ứng đầy đủ tiêu chí kỹ thuật của Pha C (Policy routing &amp; Evaluation guard), toàn bộ 122 bài test thuần và 995 bài test toàn backend đều đạt 100%. Nhánh cổng sạch, không xung đột với base và sẵn sàng để phối hợp điều phối QA/QC chéo với các PR #311 và #312.</p>
+</article></main></body></html>

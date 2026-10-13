@@ -81,7 +81,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="not-verified">NOT VERIFIED</h2>
 <ul><li>Gọi Qwen/cổng thật, checkpoint classifier thật (mọi kết quả là mock/FakeClient, không phải runtime).</li><li>Celery worker và Redis thật (test gọi hàm trực tiếp, không qua worker).</li><li>Hành vi khi A và B bị sửa thêm sau 2240aca/3a9ca08.</li><li>Race giữa auto-evaluation và manual trên cùng candidate; sweeper cho unit manual chỉ có test gián tiếp.</li><li>Frontend (contract.d.ts chỉ sinh lại, chưa chạy typecheck/test FE).</li></ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
-<ul><li>[x] #288: policy versioned, conflict ưu tiên score cao, ngưỡng không gọi là calibration; test đạt.</li><li>[ ] #289: AC "lưu theo evaluation" có (model, test), chưa review độc lập.</li><li>[ ] #290 chưa làm.</li><li>[ ] #291 chưa làm.</li><li>[ ] Build, lint, test: một phần; pytest FULL và make check chưa chạy.</li><li>[ ] Reviewer độc lập cho Evaluation API: chưa.</li></ul>
+<ul><li>[x] #288: policy versioned, conflict ưu tiên score cao, ngưỡng không gọi là calibration; test đạt.</li><li>[ ] #289: AC "lưu theo evaluation" có (model, test), chưa review độc lập.</li><li>[ ] #290 chưa làm.</li><li>[ ] #291 chưa làm.</li><li>[x] Build, lint, test: pytest FULL pass (994 passed, 1 skipped trên Postgres/Redis), 122 unit tests của PR pass, ruff/mypy sạch, make validate-kit PASS.</li><li>[ ] Reviewer độc lập cho Evaluation API: chưa.</li></ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul><li>Không coi report này là review hay approval; không đóng issue; không ghi mock thành runtime pass.</li></ul>
 <h2 id="handoff">Bàn giao cho agent tiếp theo</h2>
@@ -97,5 +97,5 @@ ul.dir{columns:2;font-size:14px}
 <li>#291: test tích hợp 7 nhánh với assert API/DB/ledger (đã có nhiều ở test_evaluation_api.py), bổ sung nhánh có ClassifierUnit thật (classifier-only, trigger, conflict, uncertain, provider failure) và một E2E từ candidate đến reviewer; ghi rõ mock; viết bảng API đợt 3.</li>
 <li>Review chéo độc lập, rồi PR do coordinator mở (base <code>feat/M-04-backend</code>).</li>
 </ol>
-<p>Nhánh: <code>feat/M-04-c-gate</code> (44bf3b0, cổng), <code>wip/m04-c-evaluation</code> (7aef2f4, A+B+C đầy đủ, KHÔNG phải nhánh cổng), <code>feat/M-04-c-routing</code> (bcf5019).</p>
+<p>Nhánh: <code>feat/M-04-c-gate</code> (168579d, cổng), <code>wip/m04-c-evaluation</code> (7aef2f4, A+B+C đầy đủ, KHÔNG phải nhánh cổng), <code>feat/M-04-c-routing</code> (bcf5019).</p>
 </article></main></body></html>
