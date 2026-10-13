@@ -115,7 +115,7 @@ def create_manual_issue(*, request: Request) -> Issue:
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Frame không tồn tại.")
     user = _actor(request)
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["run_id"])
     frame = FrameReview.objects.select_related("snapshot_frame__snapshot_job", "run").get(
         pk=frame_id
@@ -200,7 +200,7 @@ def complete_frame(*, request: Request, frame_id: int) -> FrameReview:
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Frame không tồn tại.")
     user = _actor(request)
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["run_id"])
     frame = FrameReview.objects.select_related("run__snapshot", "snapshot_frame__snapshot_job").get(
         pk=frame_id
