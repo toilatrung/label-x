@@ -190,8 +190,10 @@ def rework_response(rework: ReworkRequest) -> dict[str, object]:
 
 
 @transaction.atomic
-def create_rework(*, request: Request) -> ReworkRequest:
-    body = _body(request)
+def create_rework(
+    *, request: Request, body_override: dict[str, Any] | None = None
+) -> ReworkRequest:
+    body = _body(request) if body_override is None else body_override
     user = _actor(request)
     issue_id = _positive_int(body.get("issue_id"), "issue_id")
     key = _idempotency(request)

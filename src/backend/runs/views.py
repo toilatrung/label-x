@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from django.contrib.auth.models import User
-from django.db.models import Case, CharField, Exists, F, OuterRef, Subquery, Value, When
+from django.db.models import Case, CharField, Exists, F, OuterRef, Q, Subquery, Value, When
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
@@ -663,6 +663,8 @@ class RunRankingView(APIView):
                     "completed",
                 ],
             ),
+            OpenApiParameter("q", str, required=False),
+            OpenApiParameter("priority", str, required=False, enum=["high", "medium", "low"]),
             OpenApiParameter("cursor", str, required=False),
         ],
         responses={
@@ -733,10 +735,48 @@ class RunRankingView(APIView):
         if review_state is not None:
             entries = entries.filter(effective_review_state=review_state)
 
+        query = request.query_params.get("q")
+        if query is not None and query.strip():
+            clean = query.strip()
+            if ":" in clean:
+                task, frame, *extra = clean.split(":")
+                if extra or not task.isdigit() or not frame.isdigit():
+                    entries = entries.none()
+                else:
+                    entries = entries.filter(
+                        snapshot_frame__snapshot_job__cvat_task_id=int(task),
+                        snapshot_frame__frame_index=int(frame),
+                    )
+            elif clean.isdigit():
+                number = int(clean)
+                entries = entries.filter(
+                    Q(snapshot_frame__snapshot_job__cvat_task_id=number)
+                    | Q(snapshot_frame__frame_index=number)
+                )
+            else:
+                entries = entries.none()
+
+        ranking_total = ranking.entries.count()
+        priority = request.query_params.get("priority")
+        if priority not in {None, "high", "medium", "low"}:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "priority không hợp lệ."
+            )
+        first_cut = (ranking_total + 2) // 3
+        second_cut = (ranking_total * 2 + 2) // 3
+        if priority == "high":
+            entries = entries.filter(rank__lte=first_cut)
+        elif priority == "medium":
+            entries = entries.filter(rank__gt=first_cut, rank__lte=second_cut)
+        elif priority == "low":
+            entries = entries.filter(rank__gt=second_cut)
+
         paginator = RunCursorPagination()
         paginator.ordering = "rank"
         page = paginator.paginate_queryset(entries, request, view=self)
-        response = paginator.get_paginated_response(RankedFrameSerializer(page, many=True).data)
+        response = paginator.get_paginated_response(
+            RankedFrameSerializer(page, many=True, context={"ranking_total": ranking_total}).data
+        )
         response.data["source"] = ranking.source
         response.data["content_hash"] = ranking.content_hash
         response.data["ranking_hash"] = ranking.ranking_hash

@@ -56,6 +56,14 @@ class PolicySerializer(serializers.Serializer[Any]):
 
 class QueueNextRequestSerializer(serializers.Serializer[Any]):
     run_id = serializers.IntegerField(min_value=1)
+    frame_id = serializers.IntegerField(min_value=1, required=False)
+
+
+class QueueSummarySerializer(serializers.Serializer[Any]):
+    name = serializers.ChoiceField(choices=["risk", "random"])
+    run_id = serializers.IntegerField()
+    total = serializers.IntegerField()
+    counts = serializers.DictField(child=serializers.IntegerField())
 
 
 class LeaseSerializer(serializers.Serializer[Any]):

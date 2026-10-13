@@ -90,6 +90,7 @@ REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=900)
 REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
     "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=300
 )
+REWORK_DEFAULT_DUE_HOURS = env.int("REWORK_DEFAULT_DUE_HOURS", default=72)
 # JSON object overriding the whole idle policy, e.g. {"source": "...", "decision_status": "...",
 # "t_idle_seconds": 120, "version": "..."}.
 EFFORT_IDLE_POLICY = env.json(
@@ -184,6 +185,7 @@ SPECTACULAR_SETTINGS = {
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],
         "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
+        "QueueEnum": ["risk", "random"],
         "PersistedIssueDecisionActionEnum": [
             "confirm",
             "reject",

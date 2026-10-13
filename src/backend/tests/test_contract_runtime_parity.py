@@ -22,31 +22,15 @@ ACCEPTED_CODE_DIFFS: dict[tuple[str, str], tuple[list[str], list[str]]] = {}
 
 # Operation đã có trong contract (MBE-00, CR-118) nhưng runtime do task sau làm. Mỗi mục ghi task
 # chủ; test fail khi mục đó đã có runtime để danh sách không bị bỏ quên.
-PENDING_RUNTIME: dict[tuple[str, str], str] = {
-    ("get", "/api/issues/{id}/similar-cases/"): "MBE-02",
-    ("get", "/api/queues/{name}/"): "MBE-02",
-}
+PENDING_RUNTIME: dict[tuple[str, str], str] = {}
 
 
 # Query param đã có trong contract (CR-118) nhưng runtime do task sau làm; cùng quy tắc tự hết hạn.
-PENDING_RUNTIME_PARAMS: dict[tuple[str, str], tuple[list[tuple[str, str]], str]] = {
-    ("get", "/api/runs/{id}/ranking/"): ([("query", "priority"), ("query", "q")], "MBE-02"),
-}
+PENDING_RUNTIME_PARAMS: dict[tuple[str, str], tuple[list[tuple[str, str]], str]] = {}
 
 
-# Trường đã có trong contract (CR-118) nhưng runtime do MBE-02 làm; cùng quy tắc tự hết hạn.
-PENDING_RUNTIME_SHAPES: list[tuple[object, ...]] = [
-    (
-        ("get", "/api/runs/{id}/ranking/"),
-        "resp200.results[]",
-        "props",
-        ["priority", "thumbnail_url"],
-        [],
-    ),
-    (("post", "/api/issues/{id}/adjudications/"), "request", "props", ["after_adjudication"], []),
-    (("post", "/api/issues/{id}/adjudications/"), "resp201", "props", ["rework_id"], []),
-    (("post", "/api/queues/{name}/next/"), "request", "props", ["frame_id"], []),
-]
+# MBE-02 fields now have runtime implementations and must match without exemptions.
+PENDING_RUNTIME_SHAPES: list[tuple[object, ...]] = []
 
 
 def _generate(tmp_path: Path) -> Path:
