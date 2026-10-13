@@ -4086,6 +4086,41 @@ components:
               allOf: [{ $ref: "#/components/schemas/QueueName" }]
               nullable: true
             undecided_issue_count: { type: integer }
+            ai_evidence:
+              type: array
+              description: Đề xuất AI mới nhất cho từng issue có candidate (MBE-01); chỉ đọc, không phải quyết định review.
+              items: { $ref: "#/components/schemas/WorkspaceAiEvidence" }
+    WorkspaceAiEvidence:
+      type: object
+      description: >-
+        Evaluation mới nhất (generation lớn nhất) của candidate gắn với issue. Qwen chỉ đề xuất, không tạo
+        ReviewDecision hay Adjudication; issue thủ công không có mục.
+      required: [issue_id, candidate_id, evaluation_id, generation, evaluation_source, status, source, reason_code, reasons, review_required, suggestion, evidence_refs, snapshot_revision, poll_url]
+      properties:
+        issue_id: { type: integer }
+        candidate_id: { type: integer }
+        evaluation_id: { type: integer }
+        generation: { type: integer }
+        evaluation_source: { type: string, description: "auto | manual" }
+        status: { type: string, description: "pending | running | completed | failed | cancelled" }
+        source: { type: string, description: "classifier (định tuyến đủ tin cậy, không gọi Qwen) | qwen" }
+        reason_code: { type: string, nullable: true }
+        reasons:
+          type: array
+          items: { type: string }
+        review_required: { type: boolean }
+        suggestion:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: "Đề xuất của Qwen: status (checked | uncertain | failed), class_name, rationale (lời giải thích của model, không phải bằng chứng đã xác minh)"
+        evidence_refs:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: "Tham chiếu VlmEvidence: evidence_id, unit_id, crop_sha256, crop, request_id, model, prompt_version, policy_version, snapshot_revision"
+        snapshot_revision: { type: string }
+        poll_url: { type: string, description: "GET /api/candidate-evaluations/{id}/" }
     GuidelineGapCreate:
       type: object
       required: [rule_id, description]
