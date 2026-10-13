@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labelx-classifier-worker"
+version = "0.1.0"
+description = "Isolated ConvNeXt Tiny crop classifier worker for LabelX (M-04 phase B)"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy>=1.26,<3",
+    "Pillow>=10,<12",
+    "torch>=2.4,<3",
+    "torchvision>=0.19,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.12,<0.15"]
+
+[project.scripts]
+labelx-classifier = "labelx_classifier.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["labelx_classifier*"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]
