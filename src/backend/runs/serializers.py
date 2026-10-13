@@ -246,10 +246,14 @@ class PaginatedWorkUnitSerializer(serializers.Serializer[Any]):
 
 
 class LedgerEntrySerializer(serializers.Serializer[Any]):
-    engine = serializers.CharField()
-    status = serializers.CharField()
-    required = serializers.BooleanField()  # type: ignore[assignment]
-    unit = serializers.CharField()
+    engine = serializers.ChoiceField(
+        choices=["detector", "duplicate", "geometry", "metric", "schema", "vlm"]
+    )
+    status = serializers.ChoiceField(
+        choices=["checked", "failed", "not_checked", "partial", "running"]
+    )
+    required = serializers.BooleanField(required=False)  # type: ignore[assignment]
+    unit = serializers.ChoiceField(choices=["frame", "shape"])
     total = serializers.IntegerField()
     eligible = serializers.IntegerField()
     excluded = serializers.IntegerField()
