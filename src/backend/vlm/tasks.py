@@ -2,8 +2,13 @@
 
 Payload chỉ chứa dữ liệu JSON: crop base64 (crop nhỏ ≤ 2 MiB), taxonomy, candidate context và
 `models.vlm` (không secret). Task không tự retry qua Celery: retry/backoff nằm trong
-`run_vlm_unit` để mỗi attempt thực đều được tính budget. Persistence evidence, budget nguyên tử
-và idempotency theo evaluation thuộc M04A-03/#282; task này chỉ trả kết quả đã redacted.
+`run_vlm_unit` để mỗi attempt thực đều được tính budget.
+
+CHỈ DÙNG CHO SMOKE/TEST, KHÔNG phải đường production: budget là CounterBudget trong bộ nhớ nên
+giao lại message sẽ tính lại budget và không có idempotency theo DB. Đường thật là
+`orchestration.run_vlm_unit` (orchestration/vlm_stage.py: budget nguyên tử, VlmUnit idempotent,
+evidence append-only). Payload mang crop base64 (≤ 2 MiB) qua broker, chỉ chấp nhận được cho
+smoke; đường thật đọc crop từ storage trong worker.
 """
 
 from __future__ import annotations
@@ -85,6 +90,6 @@ def evaluate_payload(
     return result_to_dict(run_vlm_unit(request, client or DashScopeClient(), gate))
 
 
-@shared_task(name="vlm.run_unit", acks_late=True, reject_on_worker_lost=True)
-def run_vlm_unit_task(payload: dict[str, Any]) -> dict[str, Any]:
+@shared_task(name="vlm.smoke_unit", acks_late=True, reject_on_worker_lost=True)
+def smoke_vlm_unit_task(payload: dict[str, Any]) -> dict[str, Any]:
     return evaluate_payload(payload)

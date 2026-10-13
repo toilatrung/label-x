@@ -6,6 +6,8 @@ ConfigVersion, DB, log hay evidence. Model ID phải thuộc allowlist trong sou
 
 from __future__ import annotations
 
+import math
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -16,6 +18,9 @@ from vlm.errors import VlmConfigError
 PROVIDER_DASHSCOPE = "dashscope"
 DEFAULT_MODEL = "qwen3-vl-plus"
 DEFAULT_API_KEY_ENV = "DASHSCOPE_API_KEY"
+# Chỉ đọc biến môi trường trong allowlist: tên tuỳ ý sẽ làm lộ secret khác (DJANGO_SECRET_KEY...)
+# sang host provider qua header Authorization.
+ALLOWED_API_KEY_ENVS = frozenset({DEFAULT_API_KEY_ENV})
 
 # Allowlist model ID. Chỉ bản Instruct, không "thinking" (CR-116). Mở rộng cần change request.
 ALLOWED_MODELS = frozenset({"qwen3-vl-plus"})
@@ -79,12 +84,50 @@ class VlmConfig:
         }
 
 
+_PATH_OK = re.compile(r"^/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$")
+MIN_TIMEOUT_SECONDS = 1.0
+MAX_BUDGET_CALLS = 10_000
+
+
+def _base_url_errors(base_url: Any) -> list[str]:
+    """base_url: https, host allowlist, KHÔNG port/userinfo/query/fragment/ký tự lạ."""
+    message = (
+        "models.vlm.base_url phải là https tới host trong allowlist, chỉ gồm host và đường dẫn "
+        "(không port, userinfo, query, fragment, khoảng trắng hay ký tự điều khiển)."
+    )
+    if not isinstance(base_url, str) or not base_url.isascii() or not base_url.isprintable():
+        return [message]
+    if any(c in base_url for c in " \t\r\n%?#;\\@"):
+        return [message]
+    try:
+        parsed = urlparse(base_url)
+        port = parsed.port
+    except ValueError:
+        return [message]
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname not in ALLOWED_BASE_URL_HOSTS
+        or parsed.netloc != parsed.hostname  # chặn userinfo và mọi port tường minh
+        or port is not None
+        or parsed.query
+        or parsed.fragment
+        or parsed.params
+        or not _PATH_OK.match(parsed.path.rstrip("/"))
+        or ".." in parsed.path.split("/")
+    ):
+        return [message]
+    return []
+
+
 def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
-    """Trả danh sách lỗi (rỗng nếu hợp lệ). Không ném lỗi để serializer gom được nhiều lỗi."""
+    """Trả danh sách lỗi (rỗng nếu hợp lệ). Không ném lỗi để serializer gom được nhiều lỗi.
+
+    Mọi giá trị đều kiểm kiểu TRƯỚC khi so sánh/`in` (giá trị list/dict không được gây TypeError).
+    """
     errors: list[str] = []
     if not isinstance(raw, Mapping):
         return ["models.vlm phải là object."]
-    unknown = sorted(set(raw) - KNOWN_KEYS)
+    unknown = sorted(str(k) for k in set(raw) - KNOWN_KEYS)
     if unknown:
         errors.append(f"models.vlm có khoá không hỗ trợ: {', '.join(unknown)}.")
     for key in ("api_key", "apiKey", "secret", "prompt", "system_prompt"):
@@ -93,29 +136,23 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
     if raw.get("provider") != PROVIDER_DASHSCOPE:
         errors.append(f"models.vlm.provider phải là '{PROVIDER_DASHSCOPE}'.")
     model = raw.get("model")
-    if model not in ALLOWED_MODELS:
+    if not isinstance(model, str) or model not in ALLOWED_MODELS:
         errors.append(f"models.vlm.model phải thuộc allowlist: {sorted(ALLOWED_MODELS)}.")
-    base_url = raw.get("base_url")
-    parsed = urlparse(base_url) if isinstance(base_url, str) else None
-    if (
-        parsed is None
-        or parsed.scheme != "https"
-        or parsed.hostname not in ALLOWED_BASE_URL_HOSTS
-        or parsed.username
-        or parsed.password
-    ):
-        errors.append(
-            "models.vlm.base_url phải là https tới host trong allowlist, không có userinfo."
-        )
-    if raw.get("prompt_version") not in PROMPT_VERSIONS:
+    errors += _base_url_errors(raw.get("base_url"))
+    prompt_version = raw.get("prompt_version")
+    if not isinstance(prompt_version, str) or prompt_version not in PROMPT_VERSIONS:
         errors.append(f"models.vlm.prompt_version phải thuộc: {sorted(PROMPT_VERSIONS)}.")
     timeout = raw.get("timeout_seconds")
     if (
         isinstance(timeout, bool)
         or not isinstance(timeout, int | float)
-        or not 0 < timeout <= MAX_TIMEOUT_SECONDS
+        or not math.isfinite(timeout)
+        or not MIN_TIMEOUT_SECONDS <= timeout <= MAX_TIMEOUT_SECONDS
     ):
-        errors.append(f"models.vlm.timeout_seconds phải trong (0, {MAX_TIMEOUT_SECONDS:g}].")
+        errors.append(
+            f"models.vlm.timeout_seconds phải trong [{MIN_TIMEOUT_SECONDS:g}, "
+            f"{MAX_TIMEOUT_SECONDS:g}]."
+        )
     attempts = raw.get("max_attempts")
     if (
         not isinstance(attempts, int)
@@ -130,12 +167,14 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
         or set(budget) != {"max_calls"}
         or not isinstance(max_calls, int)
         or isinstance(max_calls, bool)
-        or max_calls < 0
+        or not 0 <= max_calls <= MAX_BUDGET_CALLS
     ):
-        errors.append("models.vlm.budget phải là {max_calls: số nguyên >= 0}.")
+        errors.append(f"models.vlm.budget phải là {{max_calls: số nguyên 0..{MAX_BUDGET_CALLS}}}.")
     env_name = raw.get("api_key_env", DEFAULT_API_KEY_ENV)
-    if not isinstance(env_name, str) or not env_name.replace("_", "").isalnum() or not env_name:
-        errors.append("models.vlm.api_key_env phải là tên biến môi trường hợp lệ.")
+    if not isinstance(env_name, str) or env_name not in ALLOWED_API_KEY_ENVS:
+        errors.append(
+            f"models.vlm.api_key_env phải thuộc allowlist: {sorted(ALLOWED_API_KEY_ENVS)}."
+        )
     return errors
 
 

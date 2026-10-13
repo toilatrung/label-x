@@ -2786,8 +2786,12 @@ components:
           description: >-
             Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider
             (dashscope), model (allowlist, mặc định qwen3-vl-plus), base_url (https, host trong
-            allowlist), prompt_version, timeout_seconds, max_attempts (1 đến 3) và
-            budget {max_calls}. Không nhận api_key hay prompt; API key chỉ ở biến môi trường runtime.
+            allowlist, không port/userinfo/query/fragment), prompt_version, timeout_seconds
+            (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env
+            (tuỳ chọn, chỉ nhận DASHSCOPE_API_KEY; là TÊN biến môi trường, không phải khoá). Không
+            nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password,
+            authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm
+            lại và trả 422.
     ConfigVersion:
       type: object
       required: [id, name, status, engines, created_by, created_at]
