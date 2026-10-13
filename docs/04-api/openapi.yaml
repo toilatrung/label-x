@@ -1978,7 +1978,7 @@ components:
         policy_version: vlm-trigger-v0
         snapshot_revision: "<sha256 của snapshot>"
         attempts: 1
-        request_id: "chatcmpl-…c9681afb"
+        request_id: "…c9681afb"
         crop_sha256: "<sha256 của crop>"
         crop: { frame: { cvat_task_id: 9, frame_number: 0 }, box: [60, 40, 100, 80], padded_box: [56, 36, 104, 84], output_size: [48, 48] }
         rationale: "Văn bản tự do của model, FE render dạng text thuần"
