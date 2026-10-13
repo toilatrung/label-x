@@ -183,6 +183,8 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
+        "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
+        "RunRankingSourceEnum": ["risk", "random_audit"],
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],
         "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
