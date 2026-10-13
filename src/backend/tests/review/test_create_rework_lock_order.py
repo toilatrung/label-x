@@ -14,7 +14,9 @@ from types import SimpleNamespace
 
 import pytest
 from django.db import connection, connections
+from django.test.utils import CaptureQueriesContext
 
+from accounts.models import Role, RoleAssignment
 from review import rework_service
 from review.models import Issue, ReworkRequest
 from tests.review.test_frame_followup_flow import (  # noqa: F401
@@ -176,3 +178,91 @@ def test_four_creates_and_four_submits_race_without_deadlock(scene, repeat):
     codes = _codes(*results)
     assert not any(isinstance(c, Exception) or c >= 500 for c in codes), codes
     assert codes.count(201) == 1 and codes.count(202) >= 1, codes  # one winner each side
+
+
+def _create_as(world, actor, annotator, issue_id):
+    connections.close_all()
+    try:
+        body = {
+            **create_body(SimpleNamespace(pk=issue_id), world),
+            "annotator_user_id": annotator.pk,
+        }
+        return client(actor).post("/api/rework/", body, format="json")
+    except Exception as exc:
+        return exc
+    finally:
+        connections.close_all()
+
+
+@pytest.fixture
+def two_way_users(world):  # noqa: F811
+    """Both reviewers can also be annotators, so each may be the other's rework annotator."""
+
+    for user in (world["reviewer"], world["other"]):
+        RoleAssignment.objects.create(user=user, role=Role.ANNOTATOR, dataset_id=42)
+    return world["reviewer"], world["other"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("repeat", range(5))
+def test_crossed_actor_annotator_pairs_do_not_deadlock(world, two_way_users, repeat):  # noqa: F811
+    """(A creates for B) and (B creates for A) at once: user rows must be taken in one global
+    order (pk), whoever is the actor."""
+
+    del repeat
+    first, second = two_way_users
+    lease_id, frame_id = claim(world)
+    issue_one = _confirmed_issue(world, lease_id, frame_id)
+    issue_two = _confirmed_issue(world, lease_id, frame_id)
+    barrier = Barrier(2)
+
+    def go(actor, annotator, issue_id):
+        barrier.wait(timeout=WAIT)
+        return _create_as(world, actor, annotator, issue_id)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            pool.submit(go, first, second, issue_one),
+            pool.submit(go, second, first, issue_two),
+        ]
+        results = [f.result(timeout=WAIT) for f in futures]
+    assert _codes(*results) == [201, 201], _codes(*results)
+
+
+def _lock_statements(world, issue_id):
+    body = create_body(SimpleNamespace(pk=issue_id), world)
+    with CaptureQueriesContext(connection) as queries:
+        response = client(world["reviewer"]).post("/api/rework/", body, format="json")
+    assert response.status_code == 201, response.data
+    return [
+        q["sql"] for q in queries if "FOR UPDATE" in q["sql"] or "FOR NO KEY UPDATE" in q["sql"]
+    ]
+
+
+@pytest.mark.django_db
+def test_create_rework_locks_users_by_ascending_pk_then_run_then_issue(scene):
+    """Structural guard for the lock protocol (equivalent to the mutants a thread race cannot
+    see: descending order is still consistent, and an unordered scan merely happens to match).
+    One statement locks the actor AND the annotator rows ``ORDER BY id ASC``; only then the run;
+    only then the issue."""
+
+    statements = _lock_statements(scene.world, scene.issue_b)
+    tables = [
+        '"auth_user"'
+        if 'FROM "auth_user"' in sql
+        else '"qc_run"'
+        if 'FROM "qc_run"' in sql
+        else '"review_issue"'
+        if 'FROM "review_issue"' in sql
+        else "other"
+        for sql in statements
+    ]
+    assert tables[:3] == ['"auth_user"', '"qc_run"', '"review_issue"'], tables
+    users = statements[0]
+    assert "ORDER BY" in users and '"auth_user"."id" ASC' in users, users
+    actor, annotator = scene.world["reviewer"].pk, scene.world["author"].pk
+    assert f'"auth_user"."id" IN ({min(actor, annotator)}, {max(actor, annotator)})' in users or (
+        f'"auth_user"."id" IN ({actor}, {annotator})' in users
+        or f'"auth_user"."id" IN ({annotator}, {actor})' in users
+    ), users
+    assert sum('FROM "auth_user"' in sql for sql in statements) == 1  # annotator not re-locked
