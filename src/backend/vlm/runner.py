@@ -82,15 +82,24 @@ def run_vlm_unit(
     budget: BudgetGate,
     *,
     sleep: Callable[[float], None] = time.sleep,
+    attempts_done: int = 0,
 ) -> VlmResult:
+    """Chạy một lượt logic. `attempts_done` là số attempt đã gửi ở lần thực thi trước (worker
+    chết giữa chừng): tổng attempt của lượt logic không vượt `max_attempts`."""
     try:
         validate_crop(request.crop)
     except VlmInvalidCropError as exc:
-        return _failed(request, exc.reason_code, 0)
-    attempts = 0
+        return _failed(request, exc.reason_code, attempts_done)
+    attempts = attempts_done
+    if attempts >= request.config.max_attempts:
+        return _failed(request, VlmReasonCode.PROVIDER_ERROR, attempts)
     last_reason = VlmReasonCode.PROVIDER_ERROR
     request_id: str | None = None
     while attempts < request.config.max_attempts:
+        try:
+            client.preflight(request)  # chưa đủ điều kiện gửi (thiếu key...) thì KHÔNG tính budget
+        except VlmProviderError as exc:
+            return _failed(request, exc.reason_code, attempts, request_id)
         if not budget.try_consume():
             # Không gọi provider khi hết budget; chuyển người review (reason rõ).
             return _failed(request, VlmReasonCode.BUDGET_EXHAUSTED, attempts, request_id)

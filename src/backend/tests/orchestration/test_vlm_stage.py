@@ -74,6 +74,9 @@ class FakeClient:
         self.script = list(script or [])
         self.label = label
 
+    def preflight(self, request: Any) -> None:
+        return None
+
     def complete(self, request: Any) -> tuple[str, str | None]:
         self.calls += 1
         if self.script:
@@ -256,18 +259,96 @@ def _provider_error() -> Exception:
     return VlmProviderError(VlmProviderFailure.SERVER_ERROR)
 
 
-def test_attempt_replay_is_not_charged_twice() -> None:
+def test_gate_numbers_attempts_after_existing_and_charges_each_real_send() -> None:
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
     first = DbBudgetGate(unit)
+    assert first.attempts_done == 0
     assert first.try_consume() and first.try_consume()
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2
-    replay = DbBudgetGate(unit)  # worker khác giao lại cùng lượt: attempt 1,2 đã tính
-    assert replay.try_consume() and replay.try_consume()
-    assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2
-    assert replay.try_consume()  # attempt 3 là mới
+    # Worker chết sau khi gửi attempt 1-2; lần nhận lại tiếp tục từ attempt 3 và tính budget.
+    resumed = DbBudgetGate(unit)
+    assert resumed.attempts_done == 2
+    assert resumed.try_consume()
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 3
+    assert sorted(VlmAttempt.objects.filter(unit=unit).values_list("attempt_no", flat=True)) == [
+        1,
+        2,
+        3,
+    ]
+
+
+def test_worker_dies_after_send_then_reclaim_sends_again_and_is_charged() -> None:
+    run = _make_run()
+    _run_shards(run)
+    unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    gate = DbBudgetGate(unit)
+    assert gate.try_consume()  # đã gửi attempt 1 rồi worker chết: unit kẹt RUNNING
+    VlmUnit.objects.filter(pk=unit.pk).update(
+        status="running", started_at=timezone.now() - timedelta(hours=2), lease_token="dead"
+    )
+    QCRun.objects.filter(pk=run.pk).update(created_at=timezone.now() - timedelta(hours=1))
+    redispatch_pending(older_than_seconds=0, running_stale_seconds=60)
+    client = FakeClient()
+    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    assert client.calls == 1  # provider bị gọi lần hai
+    assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2  # và được tính budget
+    unit.refresh_from_db()
+    assert unit.attempts == 2
+
+
+def test_reclaim_never_exceeds_max_attempts_per_logical_turn() -> None:
+    run = _make_run(vlm={**VALID, "max_attempts": 2})
+    _run_shards(run)
+    unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    gate = DbBudgetGate(unit)
+    assert gate.try_consume() and gate.try_consume()  # đã gửi 2/2 rồi chết
+    VlmUnit.objects.filter(pk=unit.pk).update(
+        status="running", started_at=timezone.now() - timedelta(hours=2), lease_token="dead"
+    )
+    QCRun.objects.filter(pk=run.pk).update(created_at=timezone.now() - timedelta(hours=1))
+    redispatch_pending(older_than_seconds=0, running_stale_seconds=60)
+    client = FakeClient()
+    assert execute_vlm_unit(unit.pk, client=client) == "failed"
+    assert client.calls == 0
+    assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2
+    unit.refresh_from_db()
+    assert unit.reason_code == "provider_error" and unit.attempts == 2
+
+
+def test_missing_api_key_costs_no_budget_and_makes_no_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DASHSCOPE_API_KEY")
+    run = _make_run(vlm={**VALID, "budget": {"max_calls": 3}})
+    _run_shards(run)
+    requests: list[Any] = []
+    client = DashScopeClient(
+        transport=httpx.MockTransport(lambda r: requests.append(r) or httpx.Response(500))
+    )
+    for u in VlmUnit.objects.filter(run_id=run.pk):
+        assert execute_vlm_unit(u.pk, client=client) == "failed"
+    assert requests == []
+    assert VlmBudget.objects.get(run_id=run.pk).used_calls == 0
+    assert VlmAttempt.objects.count() == 0
+
+
+def test_candidate_selection_seam_and_created_count(monkeypatch: pytest.MonkeyPatch) -> None:
+    import orchestration.vlm_stage as stage
+
+    run = _make_run()
+    _run_shards(run)
+    assert VlmUnit.objects.filter(run_id=run.pk).count() == 3
+    assert stage.EVALUATION_GENERATION == 1
+    assert set(VlmUnit.objects.values_list("evaluation_generation", flat=True)) == {1}
+    # Policy thay thế qua điểm nối: chỉ chọn một candidate; start trả đúng số unit chèn thật.
+    VlmUnit.objects.all().delete()
+    first = stage.select_candidates_for_vlm(run)[0]
+    monkeypatch.setattr(stage, "select_candidates_for_vlm", lambda r: [first])
+    assert start_vlm_stage(run.pk) == 1
+    assert start_vlm_stage(run.pk) == 0
+    assert VlmUnit.objects.filter(run_id=run.pk).count() == 1
 
 
 def test_budget_exhaustion_stops_provider_calls_and_keeps_run_alive() -> None:

@@ -11,6 +11,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from runs.config_guard import validate_config_safety
 from runs.models import ConfigVersion
 from runs.routing_config import validate_routing_thresholds
 from runs.services import (
@@ -102,6 +103,7 @@ def _assert_publishable_ai_config(config: ConfigVersion) -> None:
     """Chặn publish khi models.vlm hoặc thresholds.classification_routing sai schema (M04A-01)."""
     errors = validate_routing_thresholds(config.thresholds or {})
     models_cfg = config.models or {}
+    errors += validate_config_safety(config.engines or {}, config.thresholds or {}, models_cfg)
     if "vlm" in models_cfg:
         errors += validate_vlm_config(models_cfg["vlm"])
     if errors:

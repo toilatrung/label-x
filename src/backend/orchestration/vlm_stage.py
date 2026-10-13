@@ -29,7 +29,7 @@ from typing import Any, Protocol
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import F, Max, Q
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
@@ -55,6 +55,9 @@ logger = logging.getLogger("labelx.orchestration")
 VLM_ENGINE = "vlm"
 TRIGGER_POLICY_VERSION = "vlm-trigger-v0"
 SKIP_NO_TAXONOMY = "not_applicable"
+# Lượt đánh giá logic đầu tiên. Manual recheck/re-evaluate (M04C-02/#289) sẽ tăng generation; ràng
+# buộc unique (run, candidate, generation) và khoá idempotency đã hỗ trợ nhiều generation.
+EVALUATION_GENERATION = 1
 _OPEN_STATUSES = (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING)
 
 
@@ -137,6 +140,21 @@ def _taxonomy_for_run(run: QCRun) -> tuple[TaxonomyLabel, ...] | None:
     return tuple(TaxonomyLabel(str(label.label_id), label.name) for label in taxonomy.labels)
 
 
+def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
+    """ĐIỂM NỐI policy: candidate nào cần hỏi VLM.
+
+    Pha A (`vlm-trigger-v0`) CHƯA có policy thật: mọi candidate của run (trừ engine vlm) đều thành
+    VlmUnit; budget là chặn trên duy nhất. M04C-01 (`routing_policy.route`) thay thân hàm này, giữ
+    nguyên chữ ký, để chỉ candidate low-score/low-margin/conflict/manual recheck mới được gửi.
+    """
+    return list(
+        CandidateRecord.objects.filter(run_id=run.pk)
+        .exclude(engine=VLM_ENGINE)
+        .select_related("run")
+        .order_by("pk")
+    )
+
+
 def start_vlm_stage(run_id: int) -> int:
     """Khởi động/bổ sung stage VLM sau khi candidate đã sinh. Idempotent; trả số VlmUnit mới.
 
@@ -157,33 +175,40 @@ def start_vlm_stage(run_id: int) -> int:
         return 0
     provider = crop_provider()
     revision = run.snapshot.revision_sha256 or str(run.snapshot_id)
-    candidates = CandidateRecord.objects.filter(run_id=run_id).exclude(engine=VLM_ENGINE)
     existing = set(VlmUnit.objects.filter(run_id=run_id).values_list("candidate_id", flat=True))
-    new_units = [
-        VlmUnit(
-            run_id=run_id,
-            candidate=candidate,
-            policy_version=TRIGGER_POLICY_VERSION,
-            model=config.model,
-            prompt_version=config.prompt_version,
-            crop_identity=(identity := provider.identity(candidate)),
-            idempotency_key=compute_vlm_idempotency_key(
-                evaluation_generation=1,
-                candidate_dedup_key=candidate.dedup_key,
-                crop_identity=identity,
-                snapshot_revision=revision,
+    wanted = [c for c in select_candidates_for_vlm(run) if c.pk not in existing]
+    prepare = getattr(provider, "prepare", None)
+    if prepare is not None:
+        prepare(wanted)  # nạp trước dữ liệu để identity() không truy vấn từng candidate
+    before = VlmUnit.objects.filter(run_id=run_id).count()
+    VlmUnit.objects.bulk_create(
+        [
+            VlmUnit(
+                run_id=run_id,
+                candidate=candidate,
+                evaluation_generation=EVALUATION_GENERATION,
                 policy_version=TRIGGER_POLICY_VERSION,
                 model=config.model,
                 prompt_version=config.prompt_version,
-            ),
-        )
-        for candidate in candidates.order_by("pk")
-        if candidate.pk not in existing
-    ]
-    created = VlmUnit.objects.bulk_create(new_units, ignore_conflicts=True)
+                crop_identity=(identity := provider.identity(candidate)),
+                idempotency_key=compute_vlm_idempotency_key(
+                    evaluation_generation=EVALUATION_GENERATION,
+                    candidate_dedup_key=candidate.dedup_key,
+                    crop_identity=identity,
+                    snapshot_revision=revision,
+                    policy_version=TRIGGER_POLICY_VERSION,
+                    model=config.model,
+                    prompt_version=config.prompt_version,
+                ),
+            )
+            for candidate in wanted
+        ],
+        ignore_conflicts=True,
+    )
+    created = VlmUnit.objects.filter(run_id=run_id).count() - before
     if VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists():
         transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
-    return len(created)
+    return created
 
 
 def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
@@ -223,12 +248,21 @@ def vlm_units_open(run_id: int) -> bool:
 
 
 class DbBudgetGate:
-    """Cổng budget nguyên tử theo DB cho một lượt logic (một VlmUnit)."""
+    """Cổng budget nguyên tử theo DB cho một lượt logic (một VlmUnit).
+
+    Mỗi lần gọi `try_consume` là MỘT lần gửi thật: ghi VlmAttempt "đã gửi" (số thứ tự kế tiếp sau
+    các attempt đã ghi của unit) rồi tăng budget, cùng một transaction, TRƯỚC khi gọi provider. Nếu
+    worker chết sau khi gửi, lần nhận lại tiếp tục đánh số từ attempt kế tiếp và tính budget vì
+    đó là lần gửi thật mới; tổng attempt của lượt không vượt max_attempts (xem `attempts_done`).
+    Giao lại unit đã settle là no-op ở `_claim_unit`, nên không có lần gửi hay tính phí nào.
+    """
 
     def __init__(self, unit: VlmUnit) -> None:
         self._unit_id = unit.pk
         self._run_id = unit.run_id
-        self._attempt_no = 0
+        last = VlmAttempt.objects.filter(unit_id=unit.pk).aggregate(last=Max("attempt_no"))["last"]
+        self.attempts_done: int = last or 0
+        self._attempt_no = self.attempts_done
 
     def try_consume(self) -> bool:
         self._attempt_no += 1
@@ -237,7 +271,8 @@ class DbBudgetGate:
                 unit_id=self._unit_id, attempt_no=self._attempt_no
             )
             if not created:
-                return True  # cùng attempt được giao lại: đã tính budget, không tính lần hai
+                # Worker khác vừa ghi đúng attempt này (đã tính budget ở đó): không tính hai lần.
+                return True
             charged = VlmBudget.objects.filter(
                 run_id=self._run_id, used_calls__lt=F("max_calls")
             ).update(used_calls=F("used_calls") + 1)
@@ -350,7 +385,10 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         ),
         config=config,
     )
-    result = result_to_dict(run_vlm_unit(request, client or DashScopeClient(), DbBudgetGate(unit)))
+    gate = DbBudgetGate(unit)
+    result = result_to_dict(
+        run_vlm_unit(request, client or DashScopeClient(), gate, attempts_done=gate.attempts_done)
+    )
     _settle_unit(unit, token, result)
     refresh_run(unit.run_id)
     unit.refresh_from_db(fields=["status"])

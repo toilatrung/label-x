@@ -11,12 +11,16 @@ Thuần Python, không phụ thuộc Django/HTTP, để worker, orchestrator và
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
+import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Protocol
+
+from PIL import Image, UnidentifiedImageError
 
 from vlm.config import VlmConfig
 from vlm.errors import VlmInvalidCropError, VlmParseError, VlmReasonCode
@@ -108,12 +112,28 @@ class VlmResult:
 class VlmClient(Protocol):
     """Cổng gọi provider (hiện thực ở M04A-02). Mỗi lần gọi = một attempt thực tính budget."""
 
+    def preflight(self, request: VlmRequest) -> None:
+        """Kiểm điều kiện gửi (credential, cấu hình) mà không gọi mạng; ném VlmProviderError.
+
+        Chạy TRƯỚC khi tính budget: không gửi được thì không tốn budget.
+        """
+        ...
+
     def complete(self, request: VlmRequest) -> tuple[str, str | None]:
         """Trả (nội dung văn bản thô, request_id). Ném VlmProviderError khi lỗi provider."""
         ...
 
 
+MAX_CROP_PIXELS = 25_000_000
+_FORMAT_MIME = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
+
+
 def validate_crop(crop: CropInput) -> None:
+    """Kiểm MIME, kích thước byte, magic bytes và header/độ toàn vẹn ảnh (Pillow `verify`).
+
+    Giới hạn: không giải mã toàn bộ pixel; chỉ đọc header + kiểm cấu trúc, và từ chối ảnh có
+    số pixel quá lớn (chống decompression bomb) trước khi gửi ra provider.
+    """
     if crop.mime_type not in ALLOWED_CROP_MIME:
         raise VlmInvalidCropError("MIME crop không được hỗ trợ.")
     if not crop.data:
@@ -122,6 +142,19 @@ def validate_crop(crop: CropInput) -> None:
         raise VlmInvalidCropError("Crop vượt kích thước tối đa.")
     if not _magic_matches(crop.data, crop.mime_type):
         raise VlmInvalidCropError("Nội dung crop không khớp MIME khai báo.")
+    try:
+        with Image.open(io.BytesIO(crop.data)) as image:
+            width, height = image.size
+            image_format = image.format
+            if width < 1 or height < 1 or width * height > MAX_CROP_PIXELS:
+                raise VlmInvalidCropError("Kích thước pixel của crop không hợp lệ.")
+            if _FORMAT_MIME.get(image_format or "") != crop.mime_type:
+                raise VlmInvalidCropError("Định dạng ảnh không khớp MIME khai báo.")
+            image.verify()
+    except VlmInvalidCropError:
+        raise
+    except (UnidentifiedImageError, OSError, ValueError, SyntaxError, Image.DecompressionBombError):
+        raise VlmInvalidCropError("Crop không phải ảnh hợp lệ.") from None
 
 
 def _magic_matches(data: bytes, mime: str) -> bool:
@@ -132,16 +165,28 @@ def _magic_matches(data: bytes, mime: str) -> bool:
     return data[:4] == b"RIFF" and data[8:12] == b"WEBP"
 
 
+def _plain(value: str, limit: int = 64) -> str:
+    """Một dòng, không ký tự điều khiển, cắt ngắn: tên lớp không thể chèn chỉ thị vào prompt."""
+    cleaned = "".join(" " if unicodedata.category(c).startswith("C") else c for c in value)
+    return " ".join(cleaned.split())[:limit]
+
+
+def _clean_text(value: str) -> str:
+    """Bỏ NUL/ký tự điều khiển (trừ xuống dòng, tab): jsonb Postgres từ chối \\u0000."""
+    return "".join(c for c in value if c in "\n\t" or not unicodedata.category(c).startswith("C"))
+
+
 def build_prompt(
     prompt_version: str, taxonomy: Sequence[TaxonomyLabel], context: CandidateContext
 ) -> str:
     """Prompt phía backend. Bản duy nhất hiện có: `vlm-prompt-v0`."""
     if prompt_version != "vlm-prompt-v0":
         raise VlmParseError(f"prompt_version không biết: {prompt_version}")
-    labels = "\n".join(f"- {t.class_id}: {t.class_name}" for t in taxonomy)
+    labels = "\n".join(f"- {_plain(t.class_id)}: {_plain(t.class_name)}" for t in taxonomy)
     hint = ""
-    if context.current_label is not None:
-        hint = f"\nNhãn đang được đề xuất cho vùng này: {context.current_label}."
+    known = {t.class_id for t in taxonomy}
+    if context.current_label is not None and context.current_label in known:
+        hint = f"\nNhãn đang được đề xuất cho vùng này: {_plain(context.current_label)}."
     return (
         "Bạn kiểm tra một ảnh crop của một đối tượng trong bộ dữ liệu giao thông.\n"
         "Chọn đúng MỘT class_id trong danh sách dưới đây nếu chắc chắn; nếu ảnh mờ, bị che, "
@@ -177,6 +222,8 @@ def parse_response(text: str, taxonomy: Sequence[TaxonomyLabel]) -> VlmVerdict:
     if rationale is not None:
         if not isinstance(rationale, str) or len(rationale) > MAX_RATIONALE_CHARS:
             raise VlmParseError("'rationale' sai kiểu hoặc quá dài.")
+    if rationale is not None:
+        rationale = _clean_text(rationale)
     if label == UNCERTAIN_LABEL:
         return VlmVerdict(VlmStatus.UNCERTAIN, None, rationale)
     if label not in {t.class_id for t in taxonomy}:

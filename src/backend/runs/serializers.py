@@ -12,6 +12,7 @@ from orchestration.models import CandidateRecord
 from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
+from runs.config_guard import validate_config_safety
 from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
 from runs.routing_config import validate_routing_thresholds
 from vlm.config import validate_vlm_config
@@ -166,6 +167,14 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
         if not any(config["enabled"] for config in value.values()):
             raise serializers.ValidationError("Cần bật ít nhất một engine.")
         return value
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        errors = validate_config_safety(
+            attrs.get("engines", {}), attrs.get("thresholds", {}), attrs.get("models", {})
+        )
+        if errors:
+            raise serializers.ValidationError({"config": errors})
+        return attrs
 
     def validate_thresholds(self, value: dict[str, Any]) -> dict[str, Any]:
         errors = validate_routing_thresholds(value)

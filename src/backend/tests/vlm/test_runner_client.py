@@ -178,6 +178,9 @@ def test_missing_api_key_is_auth_failure_without_network(monkeypatch: pytest.Mon
 
 def test_unexpected_exception_is_contained() -> None:
     class Boom:
+        def preflight(self, request: VlmRequest) -> None:
+            return None
+
         def complete(self, request: VlmRequest) -> tuple[str, str | None]:
             raise RuntimeError(f"internal {SECRET}")
 
@@ -241,3 +244,54 @@ def test_task_missing_key_in_payload() -> None:
     payload = _payload()
     del payload["config"]
     assert evaluate_payload(payload)["status"] == "failed"
+
+
+def test_client_never_reads_env_outside_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
+    import dataclasses
+
+    monkeypatch.setenv("DJANGO_SECRET_KEY", "super-secret-django")
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers.get("authorization", ""))
+        return _ok()
+
+    req = _req()
+    evil = dataclasses.replace(
+        req, config=dataclasses.replace(req.config, api_key_env="DJANGO_SECRET_KEY")
+    )
+    client = _client(handler)
+    with pytest.raises(VlmProviderError):
+        client.preflight(evil)
+    with pytest.raises(VlmProviderError):
+        client.complete(evil)
+    assert seen == []
+
+
+def test_preflight_failure_is_provider_error_without_calling_budget() -> None:
+    class NoKey:
+        def preflight(self, request: VlmRequest) -> None:
+            raise VlmProviderError(VlmProviderFailure.AUTH)
+
+        def complete(self, request: VlmRequest) -> tuple[str, str | None]:
+            raise AssertionError("không được gửi")
+
+    budget = CounterBudget(3)
+    result = run_vlm_unit(_req(), NoKey(), budget)
+    assert result.reason_code is VlmReasonCode.PROVIDER_ERROR and budget.used == 0
+    assert result.attempts == 0
+
+
+def test_attempts_done_caps_total_attempts() -> None:
+    calls = []
+    budget = CounterBudget(10)
+    result = run_vlm_unit(
+        _req(max_attempts=2),
+        _client(lambda r: calls.append(1) or httpx.Response(500)),
+        budget,
+        sleep=lambda s: None,
+        attempts_done=1,
+    )
+    assert len(calls) == 1 and result.attempts == 2
+    done = run_vlm_unit(_req(max_attempts=2), _client(lambda r: _ok()), budget, attempts_done=2)
+    assert done.status is VlmStatus.FAILED and budget.used == 1

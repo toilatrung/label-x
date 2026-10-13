@@ -17,6 +17,7 @@ from typing import Any
 
 import httpx
 
+from vlm.config import ALLOWED_API_KEY_ENVS
 from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
 
@@ -84,12 +85,24 @@ class DashScopeClient:
     def __init__(self, *, transport: httpx.BaseTransport | None = None) -> None:
         self._transport = transport
 
-    def complete(self, request: VlmRequest) -> tuple[str, str | None]:
+    @staticmethod
+    def _api_key(request: VlmRequest) -> str:
         cfg = request.config
+        if cfg.api_key_env not in ALLOWED_API_KEY_ENVS:
+            # Phòng thủ thêm: không bao giờ đọc biến môi trường ngoài allowlist.
+            raise VlmProviderError(VlmProviderFailure.AUTH, "api_key_env không được phép")
         api_key = os.environ.get(cfg.api_key_env, "")
         if not api_key:
             # Thiếu credential: lỗi xác thực cố định, không retry và không gọi mạng.
             raise VlmProviderError(VlmProviderFailure.AUTH, "thiếu API key trong môi trường")
+        return api_key
+
+    def preflight(self, request: VlmRequest) -> None:
+        self._api_key(request)
+
+    def complete(self, request: VlmRequest) -> tuple[str, str | None]:
+        cfg = request.config
+        api_key = self._api_key(request)
         prompt = build_prompt(cfg.prompt_version, request.taxonomy, request.context)
         data_url = (
             f"data:{request.crop.mime_type};base64,"
