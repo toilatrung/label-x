@@ -205,21 +205,45 @@ def test_fixture_scenarios_only_use_current_contract_operations(
         assert operation["method"] in path_item, scenario["id"]
 
 
-def test_unapproved_read_deltas_are_explicit_and_not_in_openapi(
+# Deltas approved by DEC-019 / CR-113 (P02…P07). Anything else stays unapproved and absent.
+CR_113_APPROVED = {"M03-D02", "M03-D03", "M03-D04", "M03-D05", "M03-D06"}
+
+
+def _proposed(gap: dict[str, Any]) -> list[dict[str, str]]:
+    return [
+        gap[key]
+        for key in ("proposed_operation", "additional_proposed_operation")
+        if gap.get(key) is not None
+    ]
+
+
+def test_read_deltas_are_approved_only_when_listed_in_cr_113(
     fixture: dict[str, Any], contract: dict[str, Any]
 ) -> None:
     gaps = fixture["contract_gaps"]
     assert {gap["id"] for gap in gaps} == {f"M03-D{index:02d}" for index in range(1, 7)}
+    assert {gap["id"] for gap in gaps if gap["approved"]} == CR_113_APPROVED
 
+    paths = contract["paths"]
     for gap in gaps:
-        assert gap["approved"] is False
-        assert gap["decision_status"].startswith("requires_")
-        for key in ("proposed_operation", "additional_proposed_operation"):
-            operation = gap.get(key)
-            if operation is None:
-                continue
-            implemented_methods = contract["paths"].get(operation["path"], {})
-            assert operation["method"] not in implemented_methods, gap["id"]
+        if gap["approved"]:
+            assert gap["id"] in CR_113_APPROVED
+            assert gap["decision_status"] == "approved_by_change_request"
+            assert {"DEC-019", "CR-113"} <= set(gap["approval_ref"]), gap["id"]
+            approved = gap["approved_operations"]
+            assert approved, gap["id"]
+            for operation in approved:
+                assert operation["method"] in paths.get(operation["path"], {}), gap["id"]
+            approved_keys = {(op["method"], op["path"]) for op in approved}
+            # A proposed shape that CR-113 did not adopt must not leak into the contract.
+            for operation in _proposed(gap):
+                if (operation["method"], operation["path"]) not in approved_keys:
+                    assert operation["method"] not in paths.get(operation["path"], {}), gap["id"]
+        else:
+            assert gap["decision_status"].startswith("requires_"), gap["id"]
+            assert "approved_operations" not in gap, gap["id"]
+            for operation in _proposed(gap):
+                assert operation["method"] not in paths.get(operation["path"], {}), gap["id"]
 
 
 def test_unresolved_policy_values_are_not_promoted_to_defaults(fixture: dict[str, Any]) -> None:

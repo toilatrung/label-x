@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T-042 — Contract handoff D04/D05 cho Việt Anh</title>
+  <style>
+    :root{--ink:#18212d;--muted:#667085;--line:#d9dee7;--navy:#162231;--blue:#175cd3;--green:#067647;--amber:#b54708;--red:#b42318;--bg:#f5f7fa;--card:#fff}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,Segoe UI,Arial,sans-serif}
+    header{background:var(--navy);color:#fff;padding:30px max(24px,calc((100% - 1120px)/2))}
+    header h1{margin:0 0 8px;font-size:28px} header p{margin:4px 0;color:#d6deea}
+    main{max-width:1120px;margin:24px auto 60px;padding:0 20px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px;margin:16px 0}
+    h2{font-size:21px;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:9px}h3{font-size:17px;margin:20px 0 8px}h4{margin:16px 0 7px}
+    code{font-family:Cascadia Code,Consolas,monospace;background:#eef2f6;padding:2px 5px;border-radius:4px}pre{background:#111827;color:#e5edf7;border-radius:8px;padding:16px;overflow:auto;font:13px/1.5 Cascadia Code,Consolas,monospace}
+    table{width:100%;border-collapse:collapse;margin:10px 0 16px}th,td{border:1px solid var(--line);padding:9px;vertical-align:top;text-align:left}th{background:#eef2f6}
+    .badge{display:inline-block;border-radius:999px;padding:3px 9px;font-weight:700;font-size:12px}.ok{background:#ecfdf3;color:var(--green)}.wait{background:#fff4e5;color:var(--amber)}.stop{background:#fee4e2;color:var(--red)}
+    .callout{border-left:4px solid var(--blue);background:#eff6ff;padding:12px 14px;margin:12px 0}.warning{border-color:var(--amber);background:#fff8eb}.good{border-color:var(--green);background:#ecfdf3}
+    ul,ol{padding-left:22px}.small{font-size:13px;color:var(--muted)}a{color:var(--blue)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.mini{border:1px solid var(--line);border-radius:8px;padding:14px}
+    @media print{body{background:#fff}.card{break-inside:avoid;box-shadow:none}header{padding:20px}.no-print{display:none}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>T-042 — D04/D05 API Contract Handoff</h1>
+  <p>Người nhận triển khai Frontend: <strong>@Vietanhhhhhh2003</strong> · Người chốt tài liệu: Hà</p>
+  <p><strong>DRAFT FOR REVIEW — chờ PO phê duyệt bằng văn bản</strong> · Phiên bản 1.0 · Ngày 12/10/2026 · Căn cứ mã nguồn <code>integration/m03</code> và Issue #226</p>
+</header>
+<main>
+  <section class="card">
+    <h2>1. Kết luận triển khai</h2>
+    <div class="grid">
+      <div class="mini"><span class="badge ok">FE CÓ THỂ CHUẨN BỊ</span><p>Việt Anh có thể dựng type, service, state và UI bằng fixture mục tiêu trong tài liệu này; chưa coi đây là API đã được phê duyệt.</p></div>
+      <div class="mini"><span class="badge wait">CHỜ BACKEND #226</span><p>Chỉ chuyển sang API thật sau khi D04/D05 được merge và response thực tế vượt contract test.</p></div>
+      <div class="mini"><span class="badge stop">KHÔNG TẠO /lineage/</span><p>D05 mở rộng <code>GET /api/runs/{id}/</code>; không mở endpoint <code>/api/runs/{id}/lineage/</code>.</p></div>
+    </div>
+    <div class="callout good"><strong>Phạm vi đề xuất chốt:</strong> D04 là API đọc danh sách/chi tiết rework. D05 bổ sung lineage vào run detail hiện có. D03, Guideline Gap và Decision Case không thuộc tài liệu bàn giao T-042 này.</div>
+    <div class="callout warning"><strong>Trạng thái quản trị:</strong> đây là contract kỹ thuật đề xuất theo #226, đang chờ PO phê duyệt bằng comment. Việt Anh có thể chuẩn bị fixture và UI nhưng chưa khóa tích hợp API thật. Sau phê duyệt, mọi thay đổi tên trường hoặc quyền truy cập phải cập nhật contract này và fixture trong cùng PR; không để Frontend tự đoán.</div>
+  </section>
+
+  <section class="card">
+    <h2>2. Quy ước chung</h2>
+    <table>
+      <tr><th>Mục</th><th>Quy ước chốt</th></tr>
+      <tr><td>Base URL</td><td><code>/api</code></td></tr>
+      <tr><td>Thời gian</td><td>Chuỗi ISO-8601 có timezone, ví dụ <code>2026-10-12T14:30:00+07:00</code>.</td></tr>
+      <tr><td>ID</td><td>Số nguyên dương. ID không có giá trị dùng <code>null</code>; mảng không có phần tử dùng <code>[]</code>.</td></tr>
+      <tr><td>Pagination</td><td>Cursor opaque. Frontend dùng nguyên URL trong <code>next</code>/<code>previous</code>, không tự tách hoặc tạo cursor.</td></tr>
+      <tr><td>Ổn định thứ tự</td><td>D04: <code>created_at ASC, id ASC</code>. D05 lineage: <code>verification_id ASC</code>; selected sources: <code>cvat_job_id ASC, verification_id ASC</code>.</td></tr>
+      <tr><td>Scope</td><td>Backend xác thực dataset scope từ quan hệ dữ liệu. Frontend không được coi việc ẩn nút là biện pháp bảo mật.</td></tr>
+      <tr><td>Lỗi</td><td>Dùng error envelope hiện hành của backend. Frontend phải xử lý tối thiểu <code>400</code>, <code>401</code>, <code>403</code>, <code>404</code>; không suy diễn mảng rỗng là lỗi.</td></tr>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>3. D04 — Rework read APIs</h2>
+    <h3>3.1 Danh sách</h3>
+    <p><code>GET /api/rework/?dataset_id={id}&amp;status={status}&amp;cursor={cursor}</code></p>
+    <table>
+      <tr><th>Tham số</th><th>Kiểu</th><th>Bắt buộc</th><th>Quy tắc</th></tr>
+      <tr><td><code>dataset_id</code></td><td>integer &gt; 0</td><td>Có</td><td>Dataset đang được người dùng chọn và có quyền truy cập.</td></tr>
+      <tr><td><code>status</code></td><td>enum</td><td>Không</td><td><code>fix_pending</code>, <code>recheck_pending</code>, <code>resolved</code>, <code>reopened</code>.</td></tr>
+      <tr><td><code>cursor</code></td><td>string</td><td>Không</td><td>Opaque; chỉ dùng giá trị backend trả về.</td></tr>
+    </table>
+    <p><strong>Quyền đọc:</strong> Annotator chỉ thấy rework được giao cho mình. Reviewer/QA Lead/Super Admin thấy dữ liệu trong dataset scope. QC Admin chỉ được mở nếu RBAC matrix của backend xác nhận; T-042 không phụ thuộc quyền này.</p>
+    <pre>{
+  "next": "/api/rework/?dataset_id=42&status=fix_pending&cursor=opaque-next",
+  "previous": null,
+  "results": [
+    {
+      "id": 380,
+      "dataset_id": 42,
+      "issue_id": 2,
+      "frame_id": 1,
+      "annotator_user_id": 7,
+      "created_by_user_id": 2,
+      "status": "fix_pending",
+      "instruction": "Correct the class and submit a new CVAT revision.",
+      "severity": "medium",
+      "original_revision": "rev-0001",
+      "submitted_revision": null,
+      "recheck_run_id": null,
+      "due_at": "2026-10-13T17:00:00+07:00",
+      "cvat_deep_link": "http://localhost:8080/tasks/1/jobs/1?frame=0",
+      "submitted_at": null,
+      "resolved_at": null,
+      "created_at": "2026-10-12T14:30:00+07:00",
+      "updated_at": "2026-10-12T14:30:00+07:00"
+    }
+  ],
+  "counts": {
+    "fix_pending": 1,
+    "recheck_pending": 0,
+    "resolved": 2,
+    "reopened": 0
+  }
+}</pre>
+    <div class="callout"><strong>Ngữ nghĩa <code>counts</code>:</strong> tính sau khi áp dụng dataset scope và quyền của người dùng, nhưng trước bộ lọc <code>status</code>. Nhờ vậy số trên các tab không đổi khi người dùng chuyển tab.</div>
+
+    <h3>3.2 Chi tiết</h3>
+    <p><code>GET /api/rework/{id}/</code></p>
+    <ul>
+      <li>Response <code>200</code> là đúng một object có cùng schema với phần tử trong <code>results</code>.</li>
+      <li>Không bắt buộc gửi <code>dataset_id</code>; backend suy ra dataset từ Issue → FrameReview → Snapshot.</li>
+      <li>Annotator truy cập rework của người khác nhận <code>404</code> để không lộ sự tồn tại của bản ghi.</li>
+      <li>Vai trò hợp lệ nhưng không có dataset scope nhận <code>403</code>. ID không tồn tại nhận <code>404</code>.</li>
+    </ul>
+
+    <h3>3.3 TypeScript contract cho Frontend</h3>
+    <pre>export type ReworkStatus =
+  | "fix_pending"
+  | "recheck_pending"
+  | "resolved"
+  | "reopened";
+
+export type ReworkSeverity = "critical" | "medium" | "minor";
+
+export interface ReworkRead {
+  id: number;
+  dataset_id: number;
+  issue_id: number;
+  frame_id: number;
+  annotator_user_id: number;
+  created_by_user_id: number;
+  status: ReworkStatus;
+  instruction: string;
+  severity: ReworkSeverity;
+  original_revision: string;
+  submitted_revision: string | null;
+  recheck_run_id: number | null;
+  due_at: string;
+  cvat_deep_link: string;
+  submitted_at: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReworkListResponse {
+  next: string | null;
+  previous: string | null;
+  results: ReworkRead[];
+  counts: Record&lt;ReworkStatus, number&gt;;
+}</pre>
+  </section>
+
+  <section class="card">
+    <h2>4. D05 — Run lineage trong endpoint hiện có</h2>
+    <p><code>GET /api/runs/{id}/</code></p>
+    <p>Giữ nguyên toàn bộ trường đang có của <code>RunSerializer</code>: <code>id</code>, <code>snapshot_id</code>, <code>config_version_id</code>, <code>seed</code>, <code>status</code>, <code>is_final</code>, <code>origin_run_id</code>, <code>score_version</code>, <code>model_artifact</code>, <code>engines</code>, <code>created_by</code>, <code>created_at</code>, <code>finished_at</code>. Bổ sung đúng hai trường sau:</p>
+    <pre>{
+  "verification_lineage": [
+    {
+      "verification_id": 55,
+      "rework_id": 380,
+      "recheck_run_id": 331,
+      "outcome": "pass",
+      "revision": "rev-0002",
+      "verified_at": "2026-10-12T16:00:00+07:00"
+    }
+  ],
+  "selected_final_sources": [
+    {
+      "cvat_job_id": 1,
+      "rework_id": 380,
+      "verification_id": 55,
+      "source_run_id": 331,
+      "source_revision": "rev-0002"
+    }
+  ]
+}</pre>
+    <table>
+      <tr><th>Trường</th><th>Ngữ nghĩa</th><th>Giá trị rỗng</th></tr>
+      <tr><td><code>verification_lineage</code></td><td>Bằng chứng verify gắn với run. Với final run, lấy qua <code>FinalRunVerification</code>; với recheck run, lấy các <code>ReworkVerification</code> có <code>recheck_run_id</code> tương ứng.</td><td><code>[]</code></td></tr>
+      <tr><td><code>selected_final_sources</code></td><td>Nguồn revision được final run chọn cho từng CVAT job, truy vết về rework và verification đã pass.</td><td><code>[]</code></td></tr>
+    </table>
+    <ul>
+      <li><strong>Origin run:</strong> <code>origin_run_id = null</code>, hai mảng có thể rỗng.</li>
+      <li><strong>Recheck run:</strong> <code>origin_run_id</code> trỏ run gốc; lineage xuất hiện sau khi verification được tạo.</li>
+      <li><strong>Final run:</strong> <code>is_final = true</code>; selected sources chỉ chứa nguồn có bằng chứng được final run chọn.</li>
+      <li>Quyền và dataset scope giữ nguyên <code>RunDetailView</code>: Reviewer, QA Lead, QC Admin, Super Admin.</li>
+    </ul>
+    <h3>4.1 TypeScript fields bổ sung</h3>
+    <pre>export interface VerificationLineageItem {
+  verification_id: number;
+  rework_id: number;
+  recheck_run_id: number;
+  outcome: "pass" | "fail";
+  revision: string;
+  verified_at: string;
+}
+
+export interface SelectedFinalSource {
+  cvat_job_id: number;
+  rework_id: number;
+  verification_id: number;
+  source_run_id: number;
+  source_revision: string;
+}
+
+// Extend interface Run hiện có:
+verification_lineage: VerificationLineageItem[];
+selected_final_sources: SelectedFinalSource[];</pre>
+  </section>
+
+  <section class="card">
+    <h2>5. Mapping để Việt Anh triển khai T-042</h2>
+    <table>
+      <tr><th>UI</th><th>Nguồn dữ liệu</th><th>Hành vi</th></tr>
+      <tr><td>Danh sách rework</td><td>D04 list</td><td>Tab theo status; badge đếm dùng <code>counts</code>; tải trang tiếp theo bằng URL <code>next</code>.</td></tr>
+      <tr><td>Chi tiết rework</td><td>D04 detail</td><td>Hiển thị instruction, severity, revisions, deadline và link CVAT. Không dựng link CVAT từ ID.</td></tr>
+      <tr><td>Run history / lineage</td><td>D05 run detail</td><td>Hiển thị run gốc → recheck → verification → nguồn final. Mảng rỗng là trạng thái hợp lệ.</td></tr>
+      <tr><td>Loading/error</td><td>HTTP status</td><td>Loading riêng từng panel; 403 hiển thị không đủ quyền; 404 hiển thị không tìm thấy/không còn truy cập.</td></tr>
+    </table>
+    <div class="callout"><strong>Quy tắc làm song song:</strong> Việt Anh dùng fixture có đúng schema và tên trường ở trên. Khi backend #226 sẵn sàng, chỉ đổi adapter từ fixture sang HTTP; không sửa component theo payload tạm của backend.</div>
+  </section>
+
+  <section class="card">
+    <h2>6. Điều kiện nghiệm thu trước khi nối API thật</h2>
+    <h3>D04</h3>
+    <ul>
+      <li>List trả đúng scope, lọc đủ bốn status, cursor page 2 không trùng hoặc mất bản ghi.</li>
+      <li><code>counts</code> giữ nguyên khi đổi status filter và phản ánh đúng quyền người dùng.</li>
+      <li>Annotator chỉ đọc bản ghi của mình; truy cập bản ghi người khác không làm lộ dữ liệu.</li>
+      <li>Detail có đủ instruction, severity, revision, run, timestamps và CVAT link.</li>
+    </ul>
+    <h3>D05</h3>
+    <ul>
+      <li>Origin, recheck và final run đều serialize được; mảng rỗng luôn là <code>[]</code>.</li>
+      <li>Nhiều verification có thứ tự cố định; final source truy ngược được tới verification và rework.</li>
+      <li>Không thêm route <code>/lineage/</code>; OpenAPI của run detail thể hiện hai trường mới.</li>
+      <li>Contract test dùng fixture thật của M-03; Frontend manual test xác nhận Network payload khớp tài liệu.</li>
+    </ul>
+    <h3>Gate bàn giao</h3>
+    <ol>
+      <li>Backend PR #226 xanh test và được review.</li>
+      <li>OpenAPI/schema cùng fixture được cập nhật trong PR.</li>
+      <li>Việt Anh chạy UI với API thật và lưu ảnh Network response cho D04 list/detail và D05 run detail.</li>
+      <li>Chỉ sau ba bước trên mới ghi “T-042 đã tích hợp API”; trước đó ghi “FE prepared against proposed fixture — pending PO approval/backend merge”.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>7. Căn cứ và thay đổi so với bản đề xuất cũ</h2>
+    <ul>
+      <li><a href="https://github.com/toilatrung/label-x/issues/226">Issue #226 — M-03-RESOLVE-01</a></li>
+      <li><a href="https://github.com/toilatrung/label-x/issues/109">Issue #109 — T-042</a></li>
+      <li><a href="https://github.com/toilatrung/label-x/blob/integration/m03/src/backend/review/rework_urls.py">rework_urls.py</a> — hiện mới có POST create/submitted/verify.</li>
+      <li><a href="https://github.com/toilatrung/label-x/blob/integration/m03/src/backend/review/models.py">review/models.py</a> — nguồn enum, field và lineage models.</li>
+      <li><a href="https://github.com/toilatrung/label-x/blob/integration/m03/src/backend/runs/serializers.py">runs/serializers.py</a> và <a href="https://github.com/toilatrung/label-x/blob/integration/m03/src/backend/runs/views.py">runs/views.py</a> — run detail hiện có.</li>
+    </ul>
+    <table>
+      <tr><th>Bản cũ</th><th>Bản chốt này</th></tr>
+      <tr><td>Đề xuất endpoint mới <code>/api/runs/{id}/lineage/</code>.</td><td>Mở rộng <code>GET /api/runs/{id}/</code>; giảm API thừa và dùng đúng RunSerializer hiện có.</td></tr>
+      <tr><td>Thiếu kiểu, nullability, enum, thứ tự, counts và quyền.</td><td>Đã chốt schema, enum, nullability, sorting, counts semantics, RBAC và error behavior.</td></tr>
+      <tr><td>Lẫn D03, Guideline Gap và Decision Case.</td><td>Chỉ giữ D04/D05 để Việt Anh triển khai T-042.</td></tr>
+    </table>
+    <p class="small">Sau khi PO phê duyệt, tài liệu này thay thế phần D04/D05 trong file proposal cũ. Khi backend thay đổi contract, sửa tài liệu + OpenAPI + fixture + frontend type trong cùng thay đổi để tránh lệch giao diện.</p>
+  </section>
+</main>
+</body>
+</html>
+

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from django.contrib.auth.models import User
+from django.db.models import Case, CharField, Exists, F, OuterRef, Subquery, Value, When
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
@@ -19,6 +20,8 @@ from config.serializers import ErrorSerializer
 from engines.interface import EngineStatus, public_status
 from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
+from review import services as review_services
+from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
 from runs.models import ConfigVersion, QCRun, RunRanking, WorkUnit
 from runs.serializers import (
@@ -33,6 +36,7 @@ from runs.serializers import (
     PaginatedWorkUnitSerializer,
     RankedFrameSerializer,
     RunCreateSerializer,
+    RunDetailSerializer,
     RunSerializer,
     WorkUnitSerializer,
 )
@@ -339,7 +343,7 @@ class RunDetailView(APIView):
     @extend_schema(
         operation_id="runs_retrieve",
         responses={
-            200: RunSerializer,
+            200: RunDetailSerializer,
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -355,7 +359,7 @@ class RunDetailView(APIView):
         )
         if run is None:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
-        return Response(RunSerializer(run).data)
+        return Response(RunDetailSerializer(run).data)
 
 
 class RunCancelView(APIView):
@@ -557,6 +561,55 @@ class RunCandidateListView(RunScopedReadView):
         return response
 
 
+def _annotate_review_state(entries: Any, *, run_id: int) -> Any:
+    """Attach persisted, expiry-aware review state and lease holder to ranking rows.
+
+    An open lease past its expiry is treated as already closed (same rule as
+    ``review.services._close_expired``) without writing from a GET: the frame is
+    incomplete when a decision was saved, otherwise unreviewed.
+    """
+    now = review_services._now()
+    frame_reviews = FrameReview.objects.filter(
+        run_id=run_id, snapshot_frame_id=OuterRef("snapshot_frame_id")
+    )
+    open_leases = Lease.objects.filter(
+        frame_review__run_id=run_id,
+        frame_review__snapshot_frame_id=OuterRef("snapshot_frame_id"),
+        closed_at__isnull=True,
+    )
+    active = open_leases.filter(expires_at__gt=now)
+    decided = ReviewDecision.objects.filter(
+        issue__frame_review__run_id=run_id,
+        issue__frame_review__snapshot_frame_id=OuterRef("snapshot_frame_id"),
+    )
+    return entries.annotate(
+        stored_review_state=Subquery(frame_reviews.values("state")[:1]),
+        active_lease_holder_id=Subquery(active.values("holder_id")[:1]),
+        has_active_lease=Exists(active),
+        has_saved_decision=Exists(decided),
+    ).annotate(
+        effective_review_state=Case(
+            When(stored_review_state__isnull=True, then=Value(FrameReview.State.UNREVIEWED)),
+            When(
+                stored_review_state=FrameReview.State.IN_REVIEW,
+                has_active_lease=True,
+                then=Value(FrameReview.State.IN_REVIEW),
+            ),
+            When(
+                stored_review_state=FrameReview.State.IN_REVIEW,
+                has_saved_decision=True,
+                then=Value(FrameReview.State.INCOMPLETE),
+            ),
+            When(
+                stored_review_state=FrameReview.State.IN_REVIEW,
+                then=Value(FrameReview.State.UNREVIEWED),
+            ),
+            default=F("stored_review_state"),
+            output_field=CharField(),
+        )
+    )
+
+
 class RunRankingView(APIView):
     """Read a persisted risk or independent random-audit queue for one run."""
 
@@ -623,7 +676,9 @@ class RunRankingView(APIView):
                 "Run chưa có ranking đã lưu cho queue này.",
             )
 
-        entries = ranking.entries.select_related("ranking", "snapshot_frame__snapshot_job")
+        entries = _annotate_review_state(
+            ranking.entries.select_related("ranking", "snapshot_frame__snapshot_job"), run_id=pk
+        )
         family = request.query_params.get("family")
         if family is not None:
             if family not in {"E1", "E2", "E3", "structural"}:
@@ -655,8 +710,8 @@ class RunRankingView(APIView):
                 "VALIDATION_ERROR",
                 "review_state không hợp lệ.",
             )
-        if review_state not in {None, "unreviewed"}:
-            entries = entries.none()
+        if review_state is not None:
+            entries = entries.filter(effective_review_state=review_state)
 
         paginator = RunCursorPagination()
         paginator.ordering = "rank"

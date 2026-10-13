@@ -21,6 +21,8 @@ export const ERROR_MESSAGES = {
   ISSUE_EXISTS: 'Issue đã tồn tại cho annotation và rule này. Vui lòng kiểm tra Issue hiện có.',
   BUSINESS_RULE_UNMET: 'Chưa đủ điều kiện thực hiện thao tác. Vui lòng kiểm tra các yêu cầu liên quan.',
   INSUFFICIENT_SAMPLE: 'Chưa đủ mẫu để đánh giá. Vui lòng bổ sung mẫu và thử lại.',
+  POLICY_NOT_CONFIGURED: 'Chính sách review chưa được cấu hình. Vui lòng liên hệ quản trị viên.',
+  POLICY_VERSION_MISMATCH: 'Phiên bản chính sách không khớp. Vui lòng tải lại và thử lại.',
 } satisfies Record<ErrorCode, string>;
 
 export const CSRF_ERROR_MESSAGE = 'Mã bảo vệ của phiên không hợp lệ hoặc đã bị thay thế (ví dụ do cookie của ứng dụng khác cùng host). Vui lòng tải lại trang và thử lại.';

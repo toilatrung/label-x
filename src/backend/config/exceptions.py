@@ -14,6 +14,7 @@ from rest_framework.exceptions import (
     NotAuthenticated,
     NotFound,
     PermissionDenied,
+    Throttled,
     ValidationError,
 )
 from rest_framework.response import Response
@@ -96,6 +97,12 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
             else "Phương thức không được hỗ trợ."
         )
         response.status_code = status.HTTP_405_METHOD_NOT_ALLOWED
+    elif isinstance(exc, Throttled):
+        code = "BUSINESS_RULE_UNMET"
+        message = "Quá nhiều yêu cầu. Vui lòng thử lại sau."
+        wait: float | None = getattr(exc, "wait", None)
+        if wait is not None:
+            details = {"retry_after_seconds": int(wait) + 1}
     else:
         if response.status_code == status.HTTP_401_UNAUTHORIZED:
             code = "NOT_AUTHENTICATED"

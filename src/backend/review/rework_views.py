@@ -1,5 +1,6 @@
 """HTTP endpoints for the approved T-040 rework contract."""
 
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -7,6 +8,14 @@ from rest_framework.views import APIView
 
 from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope
+from config.serializers import ErrorSerializer
+from review.api_serializers import (
+    IDEMPOTENCY_KEY_PARAM,
+    ReworkCreateRequestSerializer,
+    ReworkRequestSerializer,
+    ReworkSubmissionRequestSerializer,
+    ReworkVerifyRequestSerializer,
+)
 from review.models import Issue, ReworkRequest
 from review.rework_service import create_rework, rework_response, submit_rework, verify_rework
 
@@ -30,6 +39,19 @@ class ReworkCreateView(APIView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="rework_create",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
+        request=ReworkCreateRequestSerializer,
+        responses={
+            201: ReworkRequestSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
+        tags=["rework"],
+    )
     def post(self, request: Request) -> Response:
         rework = create_rework(request=request)
         return Response(rework_response(rework), status=status.HTTP_201_CREATED)
@@ -49,6 +71,25 @@ class ReworkSubmittedView(APIView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="rework_submitted",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
+        request=ReworkSubmissionRequestSerializer,
+        responses={
+            202: ReworkRequestSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: OpenApiResponse(
+                ErrorSerializer,
+                description=(
+                    "INVALID_TRANSITION | IDEMPOTENCY_KEY_REUSED | REVISION_UNCHANGED "
+                    "(revision or snapshot already used by the original or an earlier round)."
+                ),
+            ),
+        },
+        tags=["rework"],
+    )
     def post(self, request: Request, pk: int) -> Response:
         rework = submit_rework(request=request, rework_id=pk)
         return Response(rework_response(rework), status=status.HTTP_202_ACCEPTED)
@@ -68,6 +109,19 @@ class ReworkVerifyView(APIView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="rework_verify",
+        parameters=[IDEMPOTENCY_KEY_PARAM],
+        request=ReworkVerifyRequestSerializer,
+        responses={
+            200: ReworkRequestSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
+        tags=["rework"],
+    )
     def post(self, request: Request, pk: int) -> Response:
         rework = verify_rework(request=request, rework_id=pk)
         return Response(rework_response(rework))

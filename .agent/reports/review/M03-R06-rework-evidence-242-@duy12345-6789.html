@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M03-R06 (#242) — Bằng chứng AC và cập nhật quyết định rework — LabelX</title>
+<meta name="labelx:id" content="m03-r06-rework-evidence-242-@duy12345-6789">
+<meta name="labelx:title" content="M03-R06 (#242) — Bằng chứng AC và cập nhật quyết định rework">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="review-workflow">
+<meta name="labelx:tags" content="[review, report, rework, m03, r06, evidence]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / M03-R06-242</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>m03-r06-rework-evidence-242-@duy12345-6789</span><b>title</b><span>M03-R06 (#242) — Bằng chứng AC và cập nhật quyết định rework</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>review-workflow</span><b>tags</b><span>[review, report, rework, m03, r06, evidence]</span><b>priority</b><span>1</span></div>
+<h1 id="m03-r06-rework-evidence-242">M03-R06 (#242) — Bằng chứng AC và cập nhật quyết định rework</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo hồ sơ cho Issue #242 (M03-R06: Khép kín rework khi verify fail và giữ lịch sử các vòng sửa). Code đã merge vào <code>integration/m03</code> (PR #254). Báo cáo này thực hiện hai mục tiêu:</p>
+<ol>
+<li><strong>Cập nhật Acceptance Criteria (AC)</strong>: Điều chỉnh tiêu chí chấp nhận cho khớp quyết định đã chốt của Product Owner (@toilatrung) về hành vi probe cũ (kỳ vọng FAIL) và race submit cùng snapshot.</li>
+<li><strong>Ghi nhận bằng chứng thực nghiệm (AC &rarr; Test &rarr; Output &rarr; SHA)</strong>: Chạy trực tiếp test suite trên môi trường PostgreSQL độc lập, đối chiếu kết quả thật và phân định rõ những hạng mục chưa kiểm chứng độc lập.</li>
+</ol>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M03-R06-rework-evidence-242-@duy12345-6789</code></li>
+<li><strong>Title</strong>: <code>M03-R06 (#242) — Bằng chứng AC và cập nhật quyết định rework</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Reviewer</strong>: <code>Codex</code></li>
+<li><strong>Executor</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Review Type</strong>: <code>code</code></li>
+<li><strong>Task ID</strong>: <code>M03-R06</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+<li><strong>Baseline SHA</strong>: <code>13e97c20bdd12235b60978a086fd559305b2f740</code></li>
+<li><strong>Target Branch</strong>: <code>integration/m03</code></li>
+</ul>
+
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>: <code>src/backend/review/rework_service.py</code>, <code>src/backend/review/rework_views.py</code>, <code>src/backend/review/models.py</code>, <code>src/backend/tests/review/test_rework.py</code>, <code>src/backend/tests/review/test_rework_read.py</code>, <code>src/backend/tests/review/test_rework_timeline.py</code>, <code>src/backend/tests/review/test_rework_schema.py</code>.</li>
+<li><strong>Code Diff</strong>: PR #254 (commit <code>cd11e20</code>, <code>13e97c2</code>, <code>b1c8463</code>, <code>258bc31</code>, <code>46a5825</code>).</li>
+<li><strong>Excluded Artifacts</strong>: Frontend code, CVAT adapter writes (chỉ đọc), S3 actual storage harness (T-045/T-046).</li>
+<li><strong>Review Standard</strong>: DEC-019 (P06/P09), DEC-020 (Session B), CR-113, state-machines.html (issue.reopen_fix).</li>
+</ul>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/242">Issue #242</a>, <a href="https://github.com/toilatrung/label-x/issues/236">Issue #236 (M-03-RESOLVE)</a></li>
+<li><strong>Governance Decisions</strong>: <a href="../../governance/decisions/DEC-019.html">DEC-019</a>, <a href="../../governance/change-requests/CR-113.html">CR-113</a></li>
+<li><strong>Planning</strong>: <a href="../../planning/M-03-RESOLVE-2026-10-12.html#m03-r06">M-03-RESOLVE Planning (M03-R06)</a></li>
+<li><strong>Task Board</strong>: <a href="../../execution/task-board.html">.agent/execution/task-board.html</a></li>
+<li><strong>Current Context</strong>: <a href="../../execution/current-context.html">.agent/execution/current-context.html</a></li>
+<li><strong>Source Review</strong>: <a href="flow-M-03-2026-10-12.html">flow-M-03-2026-10-12.html (Finding F-04)</a></li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uv run pytest tests/review/test_rework.py tests/review/test_rework_read.py tests/review/test_rework_timeline.py tests/review/test_rework_schema.py -v</code></td>
+<td><code>passed</code></td>
+<td>26 passed in 20.35s trên PostgreSQL <code>labelx_m03_242</code></td>
+</tr>
+<tr>
+<td><code>uv run python scripts/validate-framework.py</code></td>
+<td><code>passed</code></td>
+<td>0 errors, framework contracts valid</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="required-review-checks">Required Review Checks</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code diff</td>
+<td><code>passed</code></td>
+<td>PR #254 đã merge vào integration/m03 sạch</td>
+</tr>
+<tr>
+<td>Acceptance criteria</td>
+<td><code>passed</code></td>
+<td>Cập nhật theo đúng 2 quyết định PO đã chốt (probe fail kỳ vọng, race lock row)</td>
+</tr>
+<tr>
+<td>Architecture compliance</td>
+<td><code>passed</code></td>
+<td>Tuân thủ state machine <code>issue.reopen_fix</code>, append-only history, CVAT adapter chỉ đọc</td>
+</tr>
+<tr>
+<td>Security</td>
+<td><code>passed</code></td>
+<td>Separation of duties (verifier &ne; annotator), RBAC/scope 403, missing foreign detail 404</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td><code>passed</code></td>
+<td>FOR UPDATE row lock ngăn chặn race condition hiệu quả mà không gây deadlocks</td>
+</tr>
+<tr>
+<td>Regression risk</td>
+<td><code>passed</code></td>
+<td>Tất cả 4 route rework hiển thị đầy đủ trên runtime OpenAPI schema, 26 tests regression pass</td>
+</tr>
+<tr>
+<td>Test/lint/build evidence</td>
+<td><code>passed</code></td>
+<td>26/26 test pass thật trên PostgreSQL chuyên dụng</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="findings">Findings</h2>
+<table>
+<thead>
+<tr>
+<th>Finding ID</th>
+<th>Severity</th>
+<th>Artifact</th>
+<th>Finding</th>
+<th>Required Action</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>F-04-RESOLVED</code></td>
+<td><code>major</code></td>
+<td><code>review/rework_service.py</code></td>
+<td>Verify fail từng làm vòng sửa bị kẹt ở reopened (Finding F-04). Nay tự động chuyển về fix_pending theo <code>issue.reopen_fix</code>.</td>
+<td>Đã giải quyết trong PR #254, kiểm chứng bằng test_verify_fail_reopens_issue</td>
+<td><code>@toilatrung</code></td>
+</tr>
+<tr>
+<td><code>F-242-PROBE-NOTE</code></td>
+<td><code>observation</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td>Probe verify_failure_can_be_submitted_again cũ mock trả lại snapshot vòng 1. Nay trả 409 REVISION_UNCHANGED (đúng nghiệp vụ). Probe cũ kỳ vọng FAIL (4/5 probe review PASS).</td>
+<td>Giữ nguyên probe không sửa; ghi nhận quyết định PO vào hồ sơ</td>
+<td><code>@toilatrung</code></td>
+</tr>
+<tr>
+<td><code>F-242-RACE-LOCK</code></td>
+<td><code>observation</code></td>
+<td><code>review/rework_service.py</code></td>
+<td>Tranh chấp hai submit đồng thời cùng snapshot: luồng thua nhận 409 INVALID_TRANSITION do row-lock FOR UPDATE chứ không phải REVISION_UNCHANGED.</td>
+<td>Giữ nguyên cơ chế lock row; IntegrityError giữ vai trò lớp phòng thủ tầng DB</td>
+<td><code>@toilatrung</code></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+
+<h3>Phần 1: Cập nhật Acceptance Criteria (Đề xuất văn bản AC mới)</h3>
+<p>Bảng đối chiếu AC cũ trong Issue #242 và đề xuất AC mới cập nhật theo quyết định của Product Owner (@toilatrung):</p>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Văn bản AC cũ (#242)</th>
+<th>Đề xuất AC mới (Khớp quyết định PO)</th>
+<th>Trạng thái / Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AC-1</strong></td>
+<td>Verify fail ghi lý do + reopened history rồi tự đưa công việc về <code>fix_pending</code> theo transition đã duyệt; annotator submit revision mới được, không bị kẹt 409 vĩnh viễn.</td>
+<td>Verify fail ghi lý do + reopened history rồi tự đưa công việc về <code>fix_pending</code> theo transition đã duyệt; annotator submit revision mới được, không bị kẹt 409 vĩnh viễn.</td>
+<td><strong>Giữ nguyên</strong> (Đã kiểm chứng đạt)</td>
+</tr>
+<tr>
+<td><strong>AC-2</strong></td>
+<td>Chạy ít nhất 2 vòng sửa: unchanged revision bị 409, new revision tạo snapshot/recheck, fail &rarr; sửa tiếp &rarr; pass; mỗi vòng có lineage và audit append-only.</td>
+<td>Chạy ít nhất 2 vòng sửa: unchanged revision bị 409 <code>REVISION_UNCHANGED</code>, new revision tạo snapshot/recheck, fail &rarr; sửa tiếp &rarr; pass; mỗi vòng có lineage (<code>round_count</code>, <code>ReworkRecheck</code>, <code>ReworkVerification</code>) và audit append-only.</td>
+<td><strong>Làm rõ mã lỗi</strong> (Đã kiểm chứng đạt)</td>
+</tr>
+<tr>
+<td><strong>AC-3</strong></td>
+<td>Re-check chưa Completed hoặc verifier cùng annotator/cùng thể nhân bị chặn; pass mới resolved; sai actor/scope bị chặn.</td>
+<td>Re-check chưa Completed hoặc verifier cùng annotator/cùng thể nhân bị chặn; pass mới resolved; sai actor/scope bị chặn (403 missing scope, 404 foreign rework).</td>
+<td><strong>Giữ nguyên</strong> (Đã kiểm chứng đạt)</td>
+</tr>
+<tr>
+<td><strong>AC-4</strong></td>
+<td>Retry, key reuse/body change và concurrent submit/verify không mất/nhân đôi kết quả; quyết định + audit cùng transaction; CVAT adapter chỉ đọc.</td>
+<td>Retry, key reuse/body change và concurrent submit/verify không mất/nhân đôi kết quả; quyết định + audit cùng transaction; CVAT adapter chỉ đọc. Tranh chấp hai submit đồng thời cùng snapshot: luồng thua nhận 409 <code>INVALID_TRANSITION</code> do khóa hàng FOR UPDATE, bảo toàn DB không đổi; <code>rework_recheck_unique_snapshot</code> là lớp phòng thủ tầng DB.</td>
+<td><strong>Làm rõ hành vi race</strong> (Đã kiểm chứng đạt)</td>
+</tr>
+<tr>
+<td><strong>Verification</strong></td>
+<td>Probe <code>verify_failure_can_be_submitted_again</code> PASS + PostgreSQL API/races; workflow nhiều vòng và replay sau lỗi worker/network.</td>
+<td>Probe <code>verify_failure_can_be_submitted_again</code> cũ kỳ vọng <strong>FAIL</strong> (do mock trả lại snapshot vòng 1, server từ chối 409 đúng thiết kế; chốt giữ probe, 4/5 probe review PASS); kiểm chứng bằng test suite PostgreSQL đa luồng thực tế (races 2 luồng [202, 409], replay [202, 202], reused snapshot [409, 409]) + timeline 2 vòng.</td>
+<td><strong>Cập nhật trọng tâm</strong> (Theo quyết định PO)</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Phần 2: Bằng chứng thực nghiệm AC &rarr; Test &rarr; Output &rarr; SHA</h3>
+<p>Toàn bộ 26 tests được chạy trực tiếp trên cơ sở dữ liệu PostgreSQL <code>labelx_m03_242</code> tại SHA <code>13e97c2</code> (commit merge PR #254 trên <code>integration/m03</code>). Dữ liệu test fixtures là dữ liệu tổng hợp (synthetic):</p>
+<table>
+<thead>
+<tr>
+<th>AC</th>
+<th>Tiêu chí cụ thể</th>
+<th>Test cụ thể</th>
+<th>File test</th>
+<th>SHA</th>
+<th>Kết quả thật</th>
+<th>Bằng chứng / Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2"><strong>AC-1</strong></td>
+<td>Verify fail chuyển về <code>fix_pending</code></td>
+<td><code>test_verify_fail_reopens_issue</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Status <code>fix_pending</code>, Issue state <code>FIX_PENDING</code>, outcome <code>fail</code>, AuditEvent <code>rework.verify_fail</code> và <code>issue.reopen_fix</code> (Still wrong) tồn tại.</td>
+</tr>
+<tr>
+<td>Lịch sử vòng sửa được hiển thị</td>
+<td><code>test_timeline_lists_rounds_in_order_with_results</code></td>
+<td><code>tests/review/test_rework_timeline.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>GET <code>/api/rework/{id}/</code> trả timeline vòng 1 outcome=fail, reason="Still wrong", round_count=2.</td>
+</tr>
+<tr>
+<td rowspan="4"><strong>AC-2</strong></td>
+<td>Unchanged revision nhận 409</td>
+<td><code>test_submission_requires_new_revision_and_is_idempotent</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>HTTP 409, code <code>REVISION_UNCHANGED</code> khi gửi lại original_revision.</td>
+</tr>
+<tr>
+<td>2 vòng sửa hoàn chỉnh (fail &rarr; sửa &rarr; pass)</td>
+<td><code>test_verify_failure_can_be_submitted_again</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Vòng 1: first revision fail &rarr; 409 khi submit lại first &rarr; vòng 2: second revision pass &rarr; resolved. 2 rechecks (round 1, 2) và 2 verifications (fail, pass).</td>
+</tr>
+<tr>
+<td>Dùng lại snapshot vòng 1 nhận 409, DB không đổi</td>
+<td><code>test_recheck_reusing_same_snapshot_is_409_without_db_change</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>HTTP 409 <code>REVISION_UNCHANGED</code>, state giữ nguyên <code>fix_pending</code>, 1 recheck, 1 audit.</td>
+</tr>
+<tr>
+<td>Mô phỏng race IntegrityError thành 409</td>
+<td><code>test_recheck_snapshot_race_integrity_error_becomes_409</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Mô phỏng concurrent commit snapshot trùng &rarr; biến IntegrityError thành 409 <code>REVISION_UNCHANGED</code> sạch sẽ.</td>
+</tr>
+<tr>
+<td rowspan="4"><strong>AC-3</strong></td>
+<td>Re-check chưa Completed bị chặn (409)</td>
+<td><code>test_verify_requires_completed_recheck_and_separate_person</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Verify sớm khi run QUEUED trả 409.</td>
+</tr>
+<tr>
+<td>Verifier cùng annotator/thể nhân bị chặn (403)</td>
+<td><code>test_verify_requires_completed_recheck_and_separate_person</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Same person trả 403; append-only verification chặn sửa/xóa bằng DB trigger PostgreSQL.</td>
+</tr>
+<tr>
+<td>Vòng fail chặn annotator verify, stranger bị 403</td>
+<td><code>test_failed_round_blocks_verify_by_annotator_and_wrong_actor</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Annotator không thể tự verify; người lạ khác dataset bị 403.</td>
+</tr>
+<tr>
+<td>Annotator chỉ đọc việc mình, thiếu scope 403</td>
+<td><code>test_annotator_sees_only_own_and_foreign_detail_is_404</code>, <code>test_missing_scope_or_unknown_id_is_rejected</code></td>
+<td><code>tests/review/test_rework_read.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Annotator đọc việc người khác &rarr; 404; gọi không có dataset scope &rarr; 403.</td>
+</tr>
+<tr>
+<td rowspan="6"><strong>AC-4</strong></td>
+<td>Create replay idempotent, key reuse đổi body &rarr; 409</td>
+<td><code>test_create_rework_appends_decision_audit_and_replays</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Cùng key replay trả 201 cùng ID; đổi body trả 409 <code>IDEMPOTENCY_KEY_REUSED</code>; rollback audit atomicity.</td>
+</tr>
+<tr>
+<td>Replay nhiều vòng không nhân đôi kết quả</td>
+<td><code>test_multi_round_replays_do_not_duplicate_results</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Replay submit vòng 1 &rarr; 202, verify vòng 1 &rarr; 200, count không tăng; cùng key revision mới &rarr; 409.</td>
+</tr>
+<tr>
+<td>2 luồng verify đồng thời ghi 1 kết quả</td>
+<td><code>test_concurrent_verify_records_single_result</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>2 luồng đồng thời qua Barrier: kết quả <code>[200, 409]</code>, chỉ tạo đúng 1 ReworkVerification.</td>
+</tr>
+<tr>
+<td>2 luồng submit 2 key khác nhau &rarr; [202, 409]</td>
+<td><code>test_postgres_concurrent_submit_same_snapshot_distinct_keys</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Codes <code>[202, 409]</code>, luồng thua nhận <code>INVALID_TRANSITION</code> do row lock FOR UPDATE; rechecks [1, 2].</td>
+</tr>
+<tr>
+<td>2 luồng submit cùng key &rarr; [202, 202]</td>
+<td><code>test_postgres_concurrent_submit_same_key_replays_once</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Codes <code>[202, 202]</code>, replay thành công 1 recheck run.</td>
+</tr>
+<tr>
+<td>2 luồng nhận lại snapshot vòng 1 &rarr; [409, 409] không 500</td>
+<td><code>test_postgres_concurrent_submit_reused_snapshot_never_500</code></td>
+<td><code>tests/review/test_rework.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Codes <code>[409, 409]</code>, cả 2 nhận <code>REVISION_UNCHANGED</code>, DB bất biến.</td>
+</tr>
+<tr>
+<td><strong>Schema</strong></td>
+<td>Runtime schema lộ đủ GET và POST <code>/api/rework/</code></td>
+<td><code>test_rework_collection_route_has_get_and_post</code>, <code>test_every_rework_route_is_in_runtime_schema</code>, <code>test_operation_ids_are_unique</code></td>
+<td><code>tests/review/test_rework_schema.py</code></td>
+<td><code>13e97c2</code></td>
+<td><code>PASSED</code></td>
+<td>Schema runtime có đủ: <code>/api/rework/</code> (GET, POST), <code>/api/rework/{id}/</code> (GET), <code>/api/rework/{id}/submitted/</code> (POST), <code>/api/rework/{id}/verify/</code> (POST); operationId duy nhất.</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Dữ liệu E2E CVAT Local (Tham chiếu PO)</h3>
+<blockquote>
+<p><strong>Lưu ý:</strong> Thử nghiệm E2E CVAT local được thực hiện bởi Product Owner (@toilatrung) trên tài khoản tổng hợp, <strong>KHÔNG</strong> phải là kết quả kiểm thử của QA độc lập (nghiệm thu độc lập thuộc M03-R12 / T-045 / T-046). File kết quả <code>E2E-cvat-local-result.json</code> do người giao cung cấp riêng.</p>
+</blockquote>
+<ul>
+<li><strong>Luồng chạy</strong>: 2 vòng rework hoàn chỉnh:
+<ul>
+<li>Vòng 1: Annotator submit revision mới &rarr; Re-check run &rarr; Reviewer verify FAIL (reason: "Still wrong") &rarr; Issue tự động chuyển về <code>fix_pending</code>.</li>
+<li>Vòng 2: Annotator submit revision thứ hai &rarr; Re-check run &rarr; Reviewer verify PASS &rarr; Issue chuyển sang <code>resolved</code>.</li>
+</ul>
+</li>
+<li><strong>Chỉ số ghi nhận</strong>: <code>round_count = 2</code>, timeline hiển thị đủ 2 vòng với đầy đủ <code>recheck_run_id</code>, <code>verifier_user_id</code>, revision SHA-256.</li>
+</ul>
+
+<h3>Những phần chưa kiểm / Giới hạn</h3>
+<ul>
+<li><strong>E2E trên hạ tầng staging/production thật</strong>: Chưa được kiểm chứng bởi QA độc lập (Lê Duy Nam / @duy12345-6789 theo DEC-019).</li>
+<li><strong>S3 integration test</strong>: Bị bỏ qua (1 skipped) khi không có dev stack S3 đầy đủ; chỉ kiểm tra trên SeaweedFS local.</li>
+<li><strong>Probe ngoài test suite</strong>: 1 probe cũ trong harness review kỳ vọng FAIL theo quyết định PO (4/5 probe PASS).</li>
+</ul>
+
+<h2 id="approval-outcome">Approval Outcome</h2>
+<ul>
+<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Rationale</strong>: Toàn bộ 26/26 test liên quan đến M03-R06 (rework, timeline, read, schema, PostgreSQL race) đã chạy thực tế và PASS 100% trên môi trường PostgreSQL độc lập; các quyết định PO về probe cũ và cơ chế row-lock đã được tài liệu hóa minh bạch.</li>
+<li><strong>Approved By</strong>: <code>Codex (tổng hợp theo chỉ đạo PO @toilatrung)</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-13</code></li>
+<li><strong>Follow-up Tasks</strong>: M03-R07 (#243), M03-R08 (#244), M03-R12 (#248).</li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Đã cập nhật văn bản AC mới khớp 2 quyết định PO chốt.</li>
+<li>[x] Đã ghi nhận bảng bằng chứng AC &rarr; Test &rarr; Output &rarr; SHA với 26 test chạy thật.</li>
+<li>[x] Đã phân định rõ kết quả tham chiếu E2E local CVAT của PO và giới hạn chưa kiểm.</li>
+<li>[x] Báo cáo HTML tuân thủ đầy đủ cấu trúc template và vượt qua <code>validate-framework.py</code>.</li>
+</ul>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Không sửa code production, test, contract, fixture trong task hồ sơ này.</li>
+<li>Không sửa trực tiếp hoặc đóng Issue #242 trên GitHub khi chưa có chỉ đạo.</li>
+<li>Không đổi Assignee của Issue #242 (giữ nguyên @toilatrung).</li>
+<li>Không báo PASS khi chưa chạy test thực tế trên PostgreSQL.</li>
+<li>Không dùng kết quả thử nghiệm nội bộ của PO để tuyên bố nghiệm thu QA độc lập.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Lưu tại <code>.agent/reports/review/M03-R06-rework-evidence-242-@duy12345-6789.html</code>.</li>
+<li>Định dạng HTML duy nhất theo CR-103.</li>
+<li>Chạy <code>uv run python scripts/validate-framework.py</code> kiểm tra đạt 100%.</li>
+</ul>
+
+</article></main></body></html>

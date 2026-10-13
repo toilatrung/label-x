@@ -191,7 +191,7 @@ def write_decision(*, request: Request, issue_id: int) -> ReviewDecision:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
     user = _actor(request)
     # Same lock order as claim_next/renew: user -> run -> issue/lease.
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["frame_review__run_id"])
     issue = Issue.objects.select_related("frame_review__run__snapshot").get(pk=issue_id)
     frame = issue.frame_review
