@@ -197,7 +197,8 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     )
 
 
-# Adapter tạm: tên field theo đề xuất của #286 (feat/M-04-b-classifier @2638e3d3), chưa là hợp đồng; chỉ sửa bảng này, không đụng route().
+# Adapter tạm: tên field theo đề xuất của #286 (feat/M-04-b-classifier @2638e3d3),
+# chưa là hợp đồng; chỉ sửa bảng này, không đụng route().
 CANDIDATE_FIELD_MAP = {
     "crop_valid": "crop_valid",
     "classifier_unknown": "classifier_unknown",
