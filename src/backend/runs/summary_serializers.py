@@ -2,12 +2,20 @@
 
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from engines.interface import EngineStatus
-from review.api_serializers import ENGINE_NAMES
-from review.models import Issue
+from review.api_serializers import ENGINE_NAMES, ENGINE_STATUSES, FAMILIES
 from runs.models import QCRun
+
+
+@extend_schema_field({"$ref": "#/components/schemas/EngineStatusStatusEnum"})
+class EngineStatusField(serializers.ChoiceField):
+    """Reuse the existing EngineStatus component, preserving M-03 enum names.
+
+    Introducing another inline status enum renames the existing M-03 component
+    and makes spectacular --fail-on-warn fail. Do not change global settings here.
+    """
 
 
 class RunMetricsSerializer(serializers.Serializer[Any]):
@@ -23,7 +31,7 @@ class RunMetricsSerializer(serializers.Serializer[Any]):
 
 class RunEngineStatSerializer(serializers.Serializer[Any]):
     engine = serializers.ChoiceField(choices=ENGINE_NAMES)
-    status = serializers.ChoiceField(choices=[s.value for s in EngineStatus])
+    status = EngineStatusField(choices=ENGINE_STATUSES)
     units_total = serializers.IntegerField()
     units_failed = serializers.IntegerField()
     candidates = serializers.IntegerField()
@@ -74,7 +82,7 @@ class PaginatedTaskQualityListSerializer(serializers.Serializer[Any]):
 
 
 class CandidateCategorySerializer(serializers.Serializer[Any]):
-    family = serializers.ChoiceField(choices=Issue.Family.choices)
+    family = serializers.ChoiceField(choices=FAMILIES)
     count = serializers.IntegerField()
     share = serializers.FloatField(allow_null=True)
 
