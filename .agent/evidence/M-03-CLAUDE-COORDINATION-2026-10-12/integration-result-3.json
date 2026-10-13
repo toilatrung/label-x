@@ -1,0 +1,81 @@
+{
+  "task": "Integration confirmation step 1 on the integrator tree",
+  "by": "label-x-37 (author of #243/#244/#246 and the rework read route; results are measurements, not an independent certification)",
+  "sha": "c4cacec126148c8e68e42ef9843070584fce0c97",
+  "branch": "feat/m03-resolve-integrator (integrator worktree /tmp/labelx-m03-integrator, clean, not modified)",
+  "verifyWorktree": "/tmp/labelx-m03-verify (detached at the SHA); own database name labelx_verify_claude (pytest used test_labelx_verify_claude); no push",
+  "results": {
+    "pytest full (uv run pytest -q -p no:cacheprovider --strict-markers)": "665 passed, 1 skipped in 295.30s; the skip is tests/storage/test_seaweedfs_integration.py (needs LABELX_RUN_S3_INTEGRATION=1 and the dev stack), not run",
+    "ruff check .": "All checks passed!",
+    "ruff format --check .": "236 files already formatted",
+    "mypy config effort review": "Success: no issues found in 55 source files",
+    "makemigrations --check --dry-run": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0; output log contains 0 warnings and 0 errors",
+    "5 probes (test_review_probes.py copied unchanged, run, removed; sha256 prefix b33d3d31 matches)": "4 passed, 1 failed. Failed as expected: test_verify_failure_can_be_submitted_again, retry submit returned 409 and re-create returned 409 (assert 409 == 202 or 409 == 201). Not edited. Passed: queue holder after claim, in_review filter, new final candidate blocks operational source, verify pass does not complete frame before final run."
+  },
+  "openapiDrift": {
+    "method": "Script comparing paths/methods, operationId, response codes, body presence, schema names/properties/required between runtime schema (spectacular output of this SHA) and docs/04-api/openapi.yaml; script in session scratchpad. It compares operation-level parameters only, so 25 'param' differences are mostly path-level parameters declared in docs; treat that count as noise.",
+    "counts": {
+      "runtimeOperations": 42,
+      "docsOperations": 52,
+      "onlyInRuntime": 0,
+      "onlyInDocs": 10,
+      "operationIdDifferences": 0,
+      "responseCodeDifferences": 8,
+      "requestBodyPresenceDifferences": 0,
+      "schemasRuntime": 90,
+      "schemasDocs": 110,
+      "schemasOnlyRuntime": 38,
+      "schemasOnlyDocs": 58,
+      "sameNameSchemasDifferent": 25
+    },
+    "onlyInDocs": [
+      "POST /api/evaluations/",
+      "GET /api/evaluations/{id}/",
+      "POST /api/references/",
+      "POST /api/references/{id}/lock/",
+      "GET /api/reports/{id}/",
+      "GET /api/rework/",
+      "POST /api/rework/",
+      "GET /api/runs/{id}/gate/",
+      "POST /api/waivers/",
+      "POST /api/waivers/{id}/approve/"
+    ],
+    "findings": [
+      {
+        "id": "D1",
+        "severity": "real defect",
+        "text": "GET and POST /api/rework/ are missing from the runtime schema. The collection route is the function view rework_collection (my #244 code) that dispatches to two APIViews, which spectacular cannot see. The other 8 only-in-docs operations are evaluation/reference/report/gate/waiver endpoints of later milestones, not implemented. Because spectacular passes with 0 warnings, this gap is silent: the clean-schema test cannot catch it.",
+        "owner": "author of #244 (this session) - fix not made, tree not modified; proposal: replace the dispatcher by one APIView with get/post, or register both views with extend_schema, then regenerate"
+      },
+      {
+        "id": "D2",
+        "severity": "contract mismatch",
+        "text": "8 response-code differences, e.g. docs list 403 for GET config-versions and GET runs but runtime does not; runtime lists 404 for POST issues and for GET escalations; docs list 422 for POST queues/{name}/next and POST config-versions but runtime does not; runtime lists 422 on rework verify and 401 on review-policy, docs do not."
+      },
+      {
+        "id": "D3",
+        "severity": "contract mismatch",
+        "text": "25 same-name schemas differ, mostly 'required' lists: runtime marks many fields required (FrameIssues needs annotations, predictions, snapshot_revision, guideline_version; Run and RunDetail list nullable fields as required; Paginated* require next/previous) while docs require fewer. RunDetail, DecisionCaseDetail, EngineStatus and ReworkDetail differ in properties/enum. docs has no RunDetail properties or EngineStatus enum in the compared form."
+      },
+      {
+        "id": "D4",
+        "severity": "info",
+        "text": "Schema names differ widely (38 only runtime such as ErrorResponse, Policy, ReworkStatusEnum; 58 only docs such as Anchor, Evidence, EngineInput, EffortEvent). Names alone are not proof of mismatch; a semantic comparison per consumer type was not done."
+      }
+    ]
+  },
+  "notDone": [
+    "S3 integration test (skipped, needs dev stack)",
+    "frontend build/tests/contract regeneration (not asked)",
+    "semantic schema-by-schema equivalence review"
+  ],
+  "caveats": "Author-of-code measurements; the probe and drift conclusions should be re-read by an independent QA.",
+  "e2e": {
+    "state": "PAUSED by coordinator; E2E owner is now label-x-38 (sole owner)",
+    "whatWasDone": "On c4cacec (worktree /tmp/labelx-m03-verify, DB labelx_e2e2_claude, Redis db 15): GET job 4 showed assignee lx_provisioner (id 1), state completed, updated 2026-10-12T17:01:07Z; read-only snapshot 1 locked (revision b87b7e229525e4945b2c5c2e15e48b44000b14f0fe2cbd5e2e38228c140f108d, assignee cvat 1 mapped to the synthetic annotator user, guideline v1, 5 rectangles + 3 masks skipped); guideline v1 loaded via load_guideline; config with taxonomy (10 labels read from CVAT project labelx-dev, required_attributes [] - built by this session, not official) published; run 1 created.",
+    "warning": "Run 1 in DB labelx_e2e2_claude was still 'running' (duplicate and schema running, geometry checked) when stopped, and my worker shared broker db 15 with another session's worker, so tasks for this run may have been consumed by the wrong worker or lost. Treat that DB as unreliable; no E2E result is claimed from it.",
+    "stopped": "Only this session's processes (celery worker + its children in /tmp/labelx-m03-verify) were killed; nothing else touched. Nothing further was done on CVAT (GET only, no writes). Scratchpad files e2e_env.py/e2e_lib.py/snap_step.py were shared with the other session and were overwritten between sessions.",
+    "claims": "No E2E PASS is claimed by this session."
+  }
+}

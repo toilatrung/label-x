@@ -1,0 +1,162 @@
+{
+  "task": "#238 F1: _close_expired không ghi đè awaiting_followup",
+  "worktree": "/tmp/labelx-m03-f1",
+  "branch": "fix/m03-238-expired-lease",
+  "baseSHA": "cd11e20c1d1e602bd78f56cb21cbd9d3c7c1a044",
+  "commitSHA": "8ecda66180d3714de16130622497ae0b5b771b3d",
+  "pushed": false,
+  "files": [
+    "src/backend/review/services.py",
+    "src/backend/tests/review/test_expired_lease_state.py (mới)"
+  ],
+  "change": "_close_expired vẫn đóng lease (closed_at) nhưng chỉ khi frame.state == IN_REVIEW mới đặt incomplete/unreviewed, previous_reviewer, incomplete_since và reset_undecided_issues; frame ở awaiting_followup/reviewed/completed được giữ nguyên. Khóa PostgreSQL, một lease/reviewer, hành vi expiry của in_review không đổi.",
+  "tests": [
+    "test_awaiting_followup_survives_expired_lease_and_scope_completes (claim -> hết hạn -> awaiting_followup -> claim lại -> vẫn awaiting_followup -> complete_scope_frames==1 -> completed)",
+    "test_other_post_review_states_are_not_rewritten[reviewed|completed]",
+    "test_in_review_expiry_without_decision_requeues_frame",
+    "test_in_review_expiry_with_saved_decision_is_incomplete_and_resumes",
+    "test_postgres_race_verify_vs_claim_keeps_awaiting_followup"
+  ],
+  "regressionProof": "Trên code cũ (stash services.py): 4/6 test fail (kịch bản F1, reviewed, completed, race); 2 test in_review pass trên cả cũ và mới (đúng yêu cầu không đổi hành vi). Test race là xác suất theo thứ tự luồng: cả hai thứ tự đều phải ra awaiting_followup.",
+  "results": {
+    "pytest tests/review tests/effort tests/runs": "176 passed, 0 failed",
+    "ruff check": "All checks passed",
+    "ruff format --check": "238 files already formatted",
+    "mypy review": "no issues found in 36 source files",
+    "mypy config effort": "no issues found in 19 source files",
+    "makemigrations --check": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, log rỗng",
+    "5 probes (bản sao nguyên trạng .agent/evidence/M-03-REVIEW-2026-10-12/test_review_probes.py, chạy xong đã xóa)": "1 failed, 4 passed. Fail: test_verify_failure_can_be_submitted_again (retry submit '9'*64 và create đều 409). Probe mock _build_recheck_artifacts trả lại snapshot vòng 1 nên chạm 409 REVISION_UNCHANGED của #242; không liên quan F1, không đổi probe. Giống kết quả label-x-37.",
+    "pytest FULL (cd src/backend, DB test riêng từ labelx_b0_f1)": "674 passed, 1 skipped in 179.26s, 0 failed"
+  },
+  "notRun": [
+    "make check",
+    "E2E thật"
+  ],
+  "dataNote": "Fixture tổng hợp",
+  "selfQc": "không tự chứng nhận",
+  "finalSHA": "8ecda66180d3714de16130622497ae0b5b771b3d",
+  "slotReleased": "Không còn tiến trình pytest của phiên b0; pytest-django đã hủy test DB.",
+  "commits": {
+    "F1": "af1b5a3c01fbbc7cc2c958d1af5bfe69d7d157ad",
+    "R1+T1-T3": "d7bd6a3",
+    "R2+verify_rework": "8e2c82d9781ebdcc69e82e0fb6d77dcbc1f8ecef",
+    "design3_undecided_and_complete_hook": "e5e07b5e511b7d1660024174380cd1b52023f01b",
+    "test_gapT": "de6381c",
+    "complete_idempotent_200": "ab451a59712ae348ab0fc7ba22c4b4e2ba070ea8",
+    "test_c9_c2": "8ecda66180d3714de16130622497ae0b5b771b3d"
+  },
+  "round2": {
+    "R1": "guard của _close_expired vẫn gọi reset_undecided_issues (không đổi frame).",
+    "R2": "services._close_if_frame_moved_on: lease còn sống trên frame state != in_review bị đóng + requeue issue chưa quyết, ở claim_next (resume loop và eligible loop) và renew (trả 409 LEASE_CONFLICT sẵn có, không mã mới).",
+    "verify_rework": "rework_service._move_frame_to_followup: frame COMPLETED giữ nguyên; frame IN_REVIEW còn lease -> đóng lease + requeue issue chưa quyết + AWAITING_FOLLOWUP trong transaction verify; các state khác giữ hành vi cũ. Docstring ghi rõ.",
+    "noContractChange": "Không đổi openapi/serializer/settings/finalization_service."
+  },
+  "tests2": "tests/review/test_expired_lease_state.py: 22 test (race ép thứ tự bằng Event cả hai chiều: verify-vs-claim, verify-vs-renew; có test qua verify_rework thật).",
+  "mutations": {
+    "R1/F1 guard bỏ": "6/9 test fail",
+    "guard không requeue": "1 fail (test_undecided_issue_is_requeued...)",
+    "guard không đóng lease": "6 fail",
+    "M1 claim resume bỏ kiểm moved-on": "1 fail (test_live_lease_on_awaiting_followup_frame_is_not_resumed)",
+    "M2 eligible loop không đóng lease": "lần đầu 0 fail (test chưa phủ) -> thêm test_other_reviewer_claim_closes_live_lease_on_moved_frame -> 1 fail",
+    "M3 renew bỏ kiểm": "1 fail",
+    "M4 verify ghi đè COMPLETED": "1 fail",
+    "M5 verify không đóng lease": "3 fail",
+    "M6 verify không requeue": "2 fail",
+    "M7 helper không đóng lease": "2 fail",
+    "M8 helper không requeue": "2 fail"
+  },
+  "results2": {
+    "pytest tests/review tests/effort tests/runs": "192 passed, 0 failed",
+    "ruff check": "pass",
+    "ruff format --check": "238 files already formatted",
+    "mypy review": "sạch 36 file",
+    "mypy config effort": "sạch 19 file",
+    "makemigrations --check": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, log rỗng",
+    "5 probes": "1 failed, 4 passed (cùng probe verify_failure_can_be_submitted_again, nguyên nhân như trước: mock trả lại snapshot vòng 1 -> 409 của #242; không liên quan)"
+  },
+  "openGap": "Frame awaiting_followup có issue chưa quyết (đã requeue pending_review) KHÔNG claim được (claim_next chỉ nhận unreviewed/incomplete, probe cho 204) và _frame_may_complete cần mọi issue đóng, nên scope vẫn không hoàn tất qua API. Chưa sửa vì cần quyết định thiết kế: cho frame quay lại trạng thái claim được (incomplete/unreviewed) khi còn issue chưa quyết, nhưng khi reviewer complete frame sẽ thành reviewed chứ không phải awaiting_followup nên complete_scope_frames (chỉ hoàn tất awaiting_followup) cũng cần thay đổi.",
+  "fullPytest": "707 passed, 1 skipped trên ab451a5",
+  "fullPytestRound2": {
+    "sha": "8e2c82d9781ebdcc69e82e0fb6d77dcbc1f8ecef",
+    "result": "690 passed, 1 skipped in 193.11s, 0 failed",
+    "probes": "1 failed, 4 passed (test_verify_failure_can_be_submitted_again, mock trả lại snapshot vòng 1 nên 409 của #242)",
+    "slot": "đã nhả; DB test do pytest-django hủy, không còn tiến trình pytest của b0"
+  },
+  "round3": {
+    "change": "decision_source.undecided_issue_ids/frame_reworks_all_resolved; rework_service._move_frame_to_followup: COMPLETED giữ nguyên, còn issue chưa quyết thì KHÔNG đổi frame/lease, hết issue chưa quyết: IN_REVIEW đóng lease + AWAITING_FOLLOWUP, state khác như cũ. issue_service.complete_frame: sau REVIEWED, nếu frame có >=1 rework và tất cả resolved thì AWAITING_FOLLOWUP cùng transaction; retry idempotent (_already_completed: REVIEWED, hoặc AWAITING_FOLLOWUP kèm audit frame.complete). Không đổi finalization_service, claim_next, contract.",
+    "tests": "tests/review/test_frame_followup_flow.py (7: (a) undecided->expiry->resume->decide->complete->complete_scope_frames hoàn tất qua API thật; (b); (d); (f); complete không rework giữ REVIEWED; (e) hai race Postgres ép thứ tự bằng Event) + tests/review/test_expired_lease_state.py cập nhật (24).",
+    "mutations": {
+      "MA bỏ kiểm issue chưa quyết": "6 fail",
+      "MB bỏ hook complete_frame": "2 fail",
+      "MC hook không kiểm tất cả rework resolved": "1 fail",
+      "MD idempotent chỉ REVIEWED": "1 fail",
+      "ME verify không đóng lease": "4 fail (lần đầu mutant gây lỗi cú pháp, chạy lại bằng pass)",
+      "MF verify ghi đè COMPLETED": "1 fail",
+      "MG helper undecided luôn rỗng": "6 fail"
+    },
+    "results": {
+      "pytest tests/review tests/effort tests/runs": "201 passed, 0 failed",
+      "ruff check": "pass",
+      "ruff format --check": "239 files already formatted",
+      "mypy review": "sạch 36 file",
+      "mypy config effort": "sạch 19 file",
+      "makemigrations --check": "No changes detected",
+      "spectacular --validate --fail-on-warn": "exit 0, log rỗng",
+      "5 probes": "1 failed, 4 passed (test_verify_failure_can_be_submitted_again, như trước)"
+    },
+    "fullPytest": "CHƯA chạy lại sau round 3 (slot thuộc label-x-7a). Full gần nhất trên 8e2c82d: 690 passed, 1 skipped.",
+    "behaviourChangeNote": "Một frame có issue chưa quyết giữ nguyên IN_REVIEW/INCOMPLETE/UNREVIEWED khi verify tới (trước đây bị đặt AWAITING_FOLLOWUP). Retry frames/complete trên frame AWAITING_FOLLOWUP chỉ idempotent nếu đã có audit frame.complete; nếu frame bị verify bàn giao (lease đóng, chưa complete) thì complete trả 409 (test race order 2)."
+  },
+  "fullPytestRound3": {
+    "sha": "e5e07b5e511b7d1660024174380cd1b52023f01b",
+    "result": "699 passed, 1 skipped in 189.50s, 0 failed",
+    "probes": "1 failed, 4 passed (test_verify_failure_can_be_submitted_again, như trước)",
+    "note": "Trước khi chạy pgrep thấy 6 tiến trình pytest không phải của b0 (không rõ phiên); chạy vẫn dùng DB riêng labelx_b0_f1. Sau khi xong không còn tiến trình pytest nào của b0; worktree sạch.",
+    "slot": "đã nhả"
+  },
+  "round4": {
+    "gapT_tests": "de6381c: issue ESCALATED không tính là chưa quyết (verify bàn giao, complete_frame không 422, scope vẫn bị chặn: build_final_run ném FinalRunNotReady); ghi chú test mô phỏng verify; test INCOMPLETE->AWAITING giữ previous_reviewer/incomplete_since. Mutant bỏ exclude(ESCALATED): 2 fail.",
+    "complete_idempotent": "ab451a5: issue_service.complete_frame trả 200 idempotent cho holder cũ khi lease đã đóng, frame REVIEWED/AWAITING_FOLLOWUP/COMPLETED và không còn issue chưa quyết (audit frame.complete ghi một lần, không đổi state). Còn lại giữ 409 LEASE_CONFLICT, thêm details.frame_state, message chính xác khi frame đã rời review ('Frame không còn ở trạng thái đang review...'), 'Lease không còn hợp lệ.' cho lease cũ trên frame in_review. Người khác không được 200.",
+    "extend_schema": "frames_complete đã khai báo 200, 403, 404, 409, 422: không thiếu mã; không đổi contract/openapi/serializer.",
+    "mutations": {
+      "N1 bỏ kiểm issue chưa quyết": "1 fail",
+      "N2 bỏ ràng buộc holder": "1 fail",
+      "N3 không ghi audit khi retry": "2 fail",
+      "N4 COMPLETED không tính xong": "1 fail",
+      "N5 audit ghi mỗi lần retry": "3 fail",
+      "N6 bỏ details.frame_state": "2 fail",
+      "N7 REVIEWED không tính xong": "1 fail"
+    },
+    "results": {
+      "pytest FULL": "707 passed, 1 skipped in 219.42s, 0 failed",
+      "pytest tests/review tests/effort tests/runs": "209 passed",
+      "ruff check": "pass",
+      "ruff format --check": "239 files already formatted",
+      "mypy review": "sạch 36 file",
+      "mypy config effort": "sạch 19 file",
+      "makemigrations --check": "No changes detected",
+      "spectacular --validate --fail-on-warn": "exit 0, log rỗng",
+      "5 probes": "1 failed, 4 passed (test_verify_failure_can_be_submitted_again, như trước)"
+    }
+  },
+  "round5": {
+    "change": "chỉ test (tests/review/test_frame_followup_flow.py, 3 test mới), không đổi mã sản phẩm",
+    "tests": [
+      "test_stale_holder_cannot_complete_a_frame_another_reviewer_now_holds (A claim -> hết hạn -> B claim -> A complete = 409 details.frame_state=in_review, B's lease sống, không audit frame.complete)",
+      "test_live_lease_on_a_frame_past_review_is_not_an_idempotent_complete (phòng thủ chiều sâu; dựng bằng update vì không có đường API)",
+      "test_each_frame_left_review_conflict_records_exactly_one_rejection_audit (ghi nhận hành vi hiện tại: một rejection audit frames.complete.rejected mỗi 409)"
+    ],
+    "mutants": {
+      "C9 thêm IN_REVIEW vào _PAST_REVIEW_STATES": "1 fail (trước đó sống sót)",
+      "C2 bỏ lease.closed_at is not None": "1 fail"
+    },
+    "results": {
+      "pytest test_frame_followup_flow + test_expired_lease_state + test_issues_decisions": "58 passed",
+      "ruff check/format": "pass",
+      "mypy review": "sạch 36 file"
+    },
+    "fullPytest": "Không chạy lại (chỉ thêm test); full gần nhất 707 passed, 1 skipped trên ab451a5."
+  }
+}

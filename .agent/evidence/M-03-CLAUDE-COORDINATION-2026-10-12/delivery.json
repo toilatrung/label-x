@@ -1,0 +1,26 @@
+[
+  {
+    "pid": 2226,
+    "role": "A",
+    "sessionId": "32382ab8-26e5-47bd-ba7c-126736a8a22f",
+    "transport": "sent",
+    "reply": "",
+    "acknowledged": false
+  },
+  {
+    "pid": 4233,
+    "role": "B",
+    "sessionId": "9d9b956d-d73a-4dd2-9b51-3dde46c1c0eb",
+    "transport": "sent",
+    "reply": "",
+    "acknowledged": false
+  },
+  {
+    "pid": 4360,
+    "role": "C",
+    "sessionId": "fc66c294-ea1c-49b9-958b-4a8e2d2af6eb",
+    "transport": "sent",
+    "reply": "",
+    "acknowledged": false
+  }
+]

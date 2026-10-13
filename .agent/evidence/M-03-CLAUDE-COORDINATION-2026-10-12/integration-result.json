@@ -1,0 +1,13 @@
+{
+  "worktree": "/tmp/labelx-m03-integrator",
+  "baseSHA": "6419d1b9f39ba601bb800f8bbd62164f586dc0bb",
+  "commits": ["6e46c85", "d68d780", "420766f", "d9c2830", "c483f6a", "900dc97"],
+  "scope": ["#238", "#239", "#242", "#243", "#244"],
+  "tests": "110 passed in 35.93s: tests/review tests/test_m03_contract_fixture.py",
+  "ruff": "pass; 39 files formatted",
+  "mypy": "Success: no issues found in 30 source files",
+  "migrations": "No changes detected; database availability warning was non-blocking",
+  "realCVAT": "not run; PO will test exported CVAT data separately",
+  "frontendOpenAPI": "pending coordinator integration",
+  "independentQC": "pending"
+}

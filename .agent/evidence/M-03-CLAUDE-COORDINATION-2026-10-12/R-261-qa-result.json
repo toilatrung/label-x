@@ -1,0 +1,111 @@
+{
+  "task": "Independent QA of PR #261 (#238, F1/R1/R2 + verify/complete follow-up)",
+  "qaBy": "label-x-7a (formerly label-x-62); not the author of #238 (b0 wrote, 38 cross-reviewed); did not reuse their results as evidence",
+  "target": {
+    "sha": "3057aac8d66d80cd8d528bb61414d66bfebe27dd",
+    "branch": "fix/m03-238-expired-lease",
+    "base": "origin/integration/m03 @ 0bd45a8 (includes #259/#260)",
+    "worktree": "/tmp/labelx-m03-qa261 (detached; clean)",
+    "db": "labelx_7a_qa261 (Redis db 10)"
+  },
+  "verdict": "PASS with 1 risk to decide (R-QA1). No blocking defect found. Not an E2E CVAT result.",
+  "items": [
+    {
+      "item": "1 pytest FULL (once, --strict-markers)",
+      "result": "PASS",
+      "output": "733 passed, 1 skipped in 219.90s; skip = S3 integration (needs dev stack)"
+    },
+    {
+      "item": "1 ruff check / format --check",
+      "result": "PASS",
+      "output": "All checks passed! / 242 files already formatted"
+    },
+    {
+      "item": "1 mypy config effort review",
+      "result": "PASS",
+      "output": "Success: no issues found in 55 source files"
+    },
+    {
+      "item": "1 makemigrations --check --dry-run",
+      "result": "PASS",
+      "output": "No changes detected"
+    },
+    {
+      "item": "1 spectacular --validate --fail-on-warn",
+      "result": "PASS",
+      "output": "exit 0; 0 lines matching warning|error"
+    },
+    {
+      "item": "1 five original probes",
+      "result": "4 PASS / 1 FAIL as decided",
+      "output": "FAIL = test_verify_failure_can_be_submitted_again (submit returns 409, probe expects 202/201); file copied unchanged, run, removed"
+    },
+    {
+      "item": "2 independent business scenarios via real HTTP API (R-261-qa-scenarios.py; time moved by editing Lease.expires_at, no clock patching)",
+      "result": "PASS 12/13 as written; 1 intentionally-failing probe of a risk (D3B)",
+      "detail": {
+        "a F1 expired lease then verify then other reviewer claims": "PASS: frame stays awaiting_followup, claim 204, old lease closed",
+        "b undecided issue + verify": "PASS: frame stays in_review, lease untouched, rework still resolved; lease expires -> incomplete -> same reviewer resumes -> decides -> complete -> awaiting_followup. (Final 'completed' by complete_scope_frames NOT exercised.)",
+        "c forgot complete + verify": "PASS: awaiting_followup, lease closed",
+        "d1 former holder complete": "PASS: 200, exactly 1 audit frame.complete, repeat 200, no extra audit/decision",
+        "d2 non-holder uses someone else's lease": "PASS: 403/409, no audit",
+        "d3 A displaced by B (frame in_review) then A completes with old lease": "PASS: 409 LEASE_CONFLICT, details.frame_state=in_review, frame stays in_review",
+        "d4 retry after COMPLETED": "PASS: 200, state unchanged",
+        "d5 undecided issue": "PASS: 422 (idempotent 200 does not skip the undecided check)",
+        "e escalated issue": "PASS: not counted as undecided, frame -> awaiting_followup",
+        "f1/f2 live lease on frame that left in_review": "PASS: renew 409 LEASE_CONFLICT + lease closed; claim_next 204 (no 'resumed')",
+        "D3B A displaced by B and B already finished the frame, then A completes with A's old lease": "OBSERVED 200 (not 409) - see R-QA1"
+      }
+    },
+    {
+      "item": "3 permissions/scope",
+      "result": "PASS",
+      "output": "annotator claim 403 FORBIDDEN; reviewer scoped to dataset 999 -> 403 OUT_OF_SCOPE; one open lease per reviewer (second claim returns same lease, resumed=true, 1 open lease); alias account of the job assignee: claim_next skips (204, no lease) and GET frames/{id}/issues -> 403 SELF_REVIEW_FORBIDDEN. PostgreSQL race tests (claim/renew/decision/verify) are in the FULL suite and passed; I did not write new race tests."
+    },
+    {
+      "item": "4 mutation (10 mutants of my own choosing on services.py, issue_service.py, rework_service.py, decision_source.py)",
+      "result": "PASS: 10/10 killed by the PR's own tests (test_expired_lease_state.py + test_frame_followup_flow.py); 5/10 also killed by my scenarios (M5, M6, M7, M9, M10); 0 survivors",
+      "mutants": {
+        "M1 _close_expired guard weakened to COMPLETED only": "killed (author 4 failed)",
+        "M2 idempotent 200 also for a live lease": "killed (author 1)",
+        "M3 idempotent 200 ignores undecided issues": "killed (author 1)",
+        "M4 verify may downgrade a COMPLETED frame": "killed (author 1)",
+        "M5 verify no longer closes live lease": "killed (author 6, mine 3 extra)",
+        "M6 renew ignores moved-on frame": "killed (author 1, mine 1 extra)",
+        "M7 complete hook removed": "killed (author 2, mine 1 extra)",
+        "M8 escalated counted as undecided": "killed (author 2)",
+        "M9 completion audit every retry": "killed (author 3, mine 1 extra)",
+        "M10 claim ignores moved-on live lease": "killed (author 1, mine 1 extra)"
+      },
+      "note": "'my scenarios' kill counts exclude the always-failing D3B probe; M1-M4, M8 are not caught by my scenarios (author's tests do catch them). Mutants were applied to a clean worktree and reverted (git checkout); worktree is clean. Script: R-261-qa-mutants.py."
+    },
+    {
+      "item": "5 regression proof on pre-PR code (origin/integration/m03 @ 0bd45a8, same scenarios)",
+      "result": "PASS (tests are not fake)",
+      "output": "10 failed, 3 passed on base; on the PR 12 passed + D3B. Fail on base / pass on PR: a (F1), b, c, d1, d3, d4, f, f2. Pass on both (non-regression): d2, d5, e. (p fails on base only because it needs the 204/skip behaviour order; see script.)"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R-QA1",
+      "severity": "low-medium (semantics; decision needed, not a data-integrity bug)",
+      "where": "src/backend/review/issue_service.py:213-231 (complete_frame idempotent branch)",
+      "what": "The 200-idempotent branch only requires: the caller owns THAT lease, the lease is closed, the frame is in reviewed/awaiting_followup/completed and no undecided issue. It does not check who closed the lease or who completed the frame. So reviewer A, who lost the frame to reviewer B after A's lease expired and B completed it, receives 200 with a frame summary when calling frames/complete with A's stale lease (scenario D3B). No second audit is written (B's audit exists), no state change.",
+      "impact": "A is told 'completed' for a review A did not finish; the frame state is unaffected. A UI treating 200 as 'my completion' could mis-attribute or hide the hand-over. Contradicts the intent in the PR text that only the holder of the completion gets 200.",
+      "suggestion": "Decide: accept (idempotent semantics 'frame is done'), or restrict 200 to leases closed by completion/hand-over (e.g. require the completing audit actor == caller, or lease.closed_at set by complete/verify rather than expiry) and return 409 LEASE_CONFLICT otherwise. Add a test either way.",
+      "evidenceFile": "R-261-qa-scenarios.py::test_d3b_old_holder_after_other_reviewer_finished (prints status 200)"
+    }
+  ],
+  "notVerified": [
+    "E2E on real CVAT data; browser/UI; FE handling of 409 LEASE_CONFLICT (PR says unchecked)",
+    "complete_scope_frames / final 'completed' transition after awaiting_followup (only the entry state was asserted)",
+    "three-way race (complete_frame vs verify_rework vs complete_scope_frames): not tested by me; the PR also lists it as a limitation",
+    "random-order races (author's race tests force two lock orders); I added none",
+    "GitHub CI on the PR"
+  ],
+  "files": {
+    "scenarios": "R-261-qa-scenarios.py",
+    "mutants": "R-261-qa-mutants.py"
+  },
+  "constraints": "No code of the PR changed (worktree clean), nothing pushed, no GitHub comment/approval. This QA is an independent check by a non-author; it is not a formal approval."
+}

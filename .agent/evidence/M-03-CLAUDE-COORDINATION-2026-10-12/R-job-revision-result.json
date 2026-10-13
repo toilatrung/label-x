@@ -1,0 +1,1 @@
+{"task":"current-revision","branch":"feat/m03-job-current-revision","pr":268,"sha":"43099e7ba7d5cfaf8a83057556b88efb81d5c1d6","pytest_scoped":"280 passed","new_tests":10,"mutants":"5/5 killed","ruff":"clean","mypy":"clean on changed modules","spectacular":"ok","fe":{"lint":"ok","typecheck":"ok","vitest":"316/316","build":"ok"},"not_run":["pytest FULL","5 probe","real CVAT"]}

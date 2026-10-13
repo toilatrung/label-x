@@ -1,0 +1,26 @@
+{
+  "group": "A",
+  "pid": 2226,
+  "session": "label-x-62 [c1ec57]",
+  "state": "READY",
+  "priorWork": "none (session just cleared; no in-flight task)",
+  "worktree": "/tmp/labelx-m03-claude-a",
+  "branch": "feat/m03-resolve-claude-a",
+  "baseSHA": "6419d1b9f39ba601bb800f8bbd62164f586dc0bb",
+  "baseRef": "origin/integration/m03",
+  "issues": [238, 239],
+  "plannedFiles": [
+    "src/backend/runs/serializers.py",
+    "src/backend/runs/views.py",
+    "src/backend/review/queue_urls.py",
+    "src/backend/review/lease_urls.py (+ lease service, located during implementation)",
+    "src/backend/review/frame_urls.py / FrameIssues read payload (review/serialization.py or views as needed)",
+    "src/backend/tests/review/test_queue_lease.py and new regression tests"
+  ],
+  "willNotTouch": ["review/rework_service.py", "final source services", "review/models.py", "migrations (owned by B)", "frontend"],
+  "notes": [
+    "Shared checkout /mnt/h/label-x untouched (only this evidence file written).",
+    "git fetch hit a transient ref-lock race with another session; origin/integration/m03 resolves to 6419d1b.",
+    "No push/merge/issue-close. Contract/OpenAPI changes will be sent as patches to coordinator."
+  ]
+}

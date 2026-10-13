@@ -1,0 +1,42 @@
+{
+  "task": "Verification of the rework-schema fix (b0 commit d2e06972) on top of the integrator tree",
+  "by": "label-x-37 (author of the code that d2e0697 fixes; measurements, not independent certification)",
+  "integratorTree": {
+    "path": "/tmp/labelx-m03-integrator",
+    "head": "c4cacec126148c8e68e42ef9843070584fce0c97",
+    "modified": false,
+    "why": "The requested cherry-pick onto feat/m03-resolve-integrator was blocked by the auto-mode permission classifier (shared resource). The block was not worked around. The coordinator's message is not user authorisation for that action."
+  },
+  "verifiedCommit": {
+    "sha": "222c4fda833a3711d1736e8d99779762362ef8e6",
+    "what": "d2e06972 cherry-picked onto c4cacec in this session's OWN detached worktree /tmp/labelx-m03-verify (not a branch, not pushed). Same diff as d2e0697 (3 files, +64/-8); the SHA differs from d2e0697 because the parent differs.",
+    "note": "A cherry-pick onto the integrator branch will create another SHA (different committer metadata), but the same tree content as 222c4fd if c4cacec is still the parent."
+  },
+  "results": {
+    "pytest full": "668 passed, 1 skipped in 293.86s (previous run on c4cacec: 665 passed, 1 skipped; +3 = the three new tests in tests/review/test_rework_schema.py). The skip is tests/storage/test_seaweedfs_integration.py (needs dev stack), not run.",
+    "ruff check .": "All checks passed!",
+    "ruff format --check .": "237 files already formatted",
+    "mypy config effort review": "Success: no issues found in 55 source files",
+    "makemigrations --check --dry-run": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, log 0 warnings 0 errors",
+    "5 probes (unchanged copy, run, removed)": "1 failed, 4 passed. Failed as expected: test_verify_failure_can_be_submitted_again (409 on retry and on re-create)."
+  },
+  "operations": {
+    "runtime": 44,
+    "expected": 44,
+    "reworkOperations": [
+      "GET /api/rework/",
+      "POST /api/rework/",
+      "GET /api/rework/{id}/",
+      "POST /api/rework/{id}/submitted/",
+      "POST /api/rework/{id}/verify/"
+    ]
+  },
+  "driftRemeasured": {
+    "D1": "FIXED: GET and POST /api/rework/ are now in the runtime schema. Only-in-docs operations dropped from 10 to 8 (the remaining 8 are evaluations, references, reports, gate and waivers of later milestones, not implemented).",
+    "D2": "UNCHANGED: 8 response-code differences between runtime and docs/04-api/openapi.yaml (config-versions get/post, escalations get, issues post, queues next post, review-policy get, rework verify post, runs get).",
+    "D3": "UNCHANGED (not re-listed): required-list/property differences in 25 same-name schemas; this commit does not touch contract schemas. Operation-level parameter comparison is noisy as before.",
+    "note": "The drift script compares operation-level data only; it is not a full semantic comparison."
+  },
+  "resources": "No process of this session is running (verified: 0 processes with cwd/command in /tmp/labelx-m03-verify). The only database used by pytest was test_labelx_verify_claude (created and dropped by pytest). DB labelx_e2e2_claude (created for the paused E2E) still exists and is unreliable; it was not deleted. Redis db 15 not purged by this session."
+}

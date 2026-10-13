@@ -1,0 +1,50 @@
+{
+  "task": "GET/POST /api/rework/ vào schema runtime",
+  "worktree": "/tmp/labelx-m03-rework-schema",
+  "branch": "feat/m03-rework-schema",
+  "baseSHA": "c4cacec126148c8e68e42ef9843070584fce0c97",
+  "commitSHA": "d2e06972d7f88ddbfb44e60b7d742dbd8af66904",
+  "pushed": false,
+  "files": [
+    "src/backend/review/rework_read_views.py",
+    "src/backend/review/rework_urls.py",
+    "src/backend/tests/review/test_rework_schema.py (mới)"
+  ],
+  "cause": "/api/rework/ là hàm dispatcher rework_collection; drf-spectacular không đọc được view hàm thường nên bỏ route, exit 0 và 0 cảnh báo.",
+  "fix": "ReworkCollectionView(APIView): get = ReworkListView.get, post = ReworkCreateView.post chỉ để spectacular thấy; dispatch() vẫn chuyển request thô sang ReworkListView (GET) hoặc ReworkCreateView (còn lại) nên quyền/hành vi/đường dẫn không đổi. Bỏ rework_collection và import csrf_exempt.",
+  "operationCount": {
+    "before": 42,
+    "after": 44,
+    "added": [
+      "GET /api/rework/ (rework_list)",
+      "POST /api/rework/ (rework_create)"
+    ]
+  },
+  "runtimeResponses": {
+    "get": "200,400,403",
+    "post": "201,400,403,404,409"
+  },
+  "tests": [
+    "test_rework_collection_route_has_get_and_post",
+    "test_every_rework_route_is_in_runtime_schema",
+    "test_operation_ids_are_unique"
+  ],
+  "regressionProof": "Trên code cũ (stash hai file sửa) 2/3 test fail; sau sửa 3 pass.",
+  "results": {
+    "ruff check": "All checks passed!",
+    "ruff format": "237 files already formatted",
+    "mypy review": "Success: no issues found in 36 source files",
+    "mypy config effort": "Success: no issues found in 19 source files",
+    "makemigrations --check": "No changes detected",
+    "spectacular --validate --fail-on-warn exit code": "0",
+    "pytest tests/review tests/effort tests/runs tests/accounts tests/test_contract.py": "296 passed in 153.58s (0:02:33)"
+  },
+  "openapiYamlChanged": false,
+  "gap": "Runtime POST /api/rework/ chưa khai báo header Idempotency-Key như docs/04-api/openapi.yaml (parameters rỗng ở runtime); có sẵn từ trước, chưa kiểm các operation khác, không sửa.",
+  "notRun": [
+    "full backend pytest",
+    "make check",
+    "so khớp từng field với docs (chỉ kiểm operationId, mã response, parameters query)"
+  ],
+  "selfQc": "không tự chứng nhận; cần QC độc lập"
+}

@@ -1,0 +1,34 @@
+{
+  "task": "rework timeline read-only (#242 follow-up)",
+  "worktree": "/tmp/labelx-m03-rework-timeline",
+  "branch": "feat/m03-rework-timeline",
+  "baseSHA": "8d334660246bee390e564ba97b7a118eac09ffab",
+  "commitSHA": "f6ae47a512d00ed4a5c802bba12715831429af7d",
+  "pushed": false,
+  "files": [
+    "src/backend/review/rework_timeline.py (new)",
+    "src/backend/review/rework_read_views.py",
+    "src/backend/review/api_serializers.py",
+    "src/backend/tests/review/test_rework_timeline.py (new)"
+  ],
+  "schemaChange": {
+    "GET /api/rework/ (results[])": "thêm round_count:int",
+    "GET /api/rework/{id}/": "response ReworkDetailSerializer = ReworkRead + review_state (enum FrameReview.State, cùng tên với RankedFrame.review_state) + timeline[] ReworkRound {round, revision, snapshot_id, recheck_run_id, recheck_run_status, submitted_at|null, verification|null {id, outcome(pass|fail), verifier_user_id, reason, verified_at}, result_status(enum rework status: recheck_pending khi chưa verify, fix_pending khi fail, resolved khi pass)}",
+    "note": "label-x-62 cần sinh lại OpenAPI/types. Hình dạng do tôi chọn (additive); cần PO/label-x-98 xác nhận nếu muốn khác. Dòng cũ không có ReworkRecheck: vòng suy ra từ verification, submitted_at=null."
+  },
+  "behavior": "GET không ghi DB (test so sánh updated_at/count audit/recheck/verification). Quyền giữ nguyên: annotator chỉ thấy của mình (404 object người khác), thiếu scope dataset 403. Prefetch rechecks/verifications.",
+  "results": {
+    "ruff check": "All checks passed!",
+    "ruff format": "236 files already formatted",
+    "mypy review": "Success: no issues found in 36 source files",
+    "spectacular --validate --fail-on-warn": "",
+    "makemigrations --check": "No changes detected",
+    "pytest tests/review tests/effort tests/runs tests/test_m03_contract_fixture.py": "176 passed in 101.16s (0:01:41)"
+  },
+  "notRun": [
+    "full backend suite",
+    "make check"
+  ],
+  "dataNote": "Fixture tổng hợp, không có CVAT thật.",
+  "selfQc": "không tự chứng nhận; cần QC độc lập"
+}

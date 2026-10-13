@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabelX — Kế hoạch Backend từ M-04</title>
+<meta name="labelx:id" content="ke-hoach-backend-m04-2026-10-13">
+<meta name="labelx:title" content="Kế hoạch Backend từ M-04 — hoàn thiện kỹ thuật trước">
+<meta name="labelx:type" content="planning">
+<meta name="labelx:domain" content="project">
+<meta name="labelx:module" content="backend">
+<meta name="labelx:tags" content="[roadmap, backend, vlm, classifier, api, planning]">
+<meta name="labelx:priority" content="1">
+<style>
+:root{--ink:#172536;--muted:#526276;--line:#dbe3ec;--bg:#f2f5f9;--blue:#174c83;--teal:#14665e;--red:#a32c3b;--amber:#855200}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Segoe UI",Arial,sans-serif}header{background:#112b45;color:#fff;padding:42px max(24px,calc((100% - 1360px)/2));border-bottom:5px solid #43b9ad}header .eyebrow{color:#a8d8e6;font-size:12px;letter-spacing:2px;text-transform:uppercase}h1{font-size:clamp(28px,3.5vw,43px);line-height:1.2;max-width:920px;margin:14px 0}header p{max-width:900px;color:#d9e5f1;margin:12px 0}.meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}.meta span{border:1px solid #547088;border-radius:5px;padding:4px 10px;font-size:12px}main{max-width:1410px;margin:auto;padding:24px 24px 55px}nav{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:22px;font-size:13px}a{color:var(--blue);text-underline-offset:3px}section{background:#fff;border:1px solid var(--line);border-radius:10px;padding:26px;margin:20px 0;scroll-margin-top:15px}h2{font-size:24px;line-height:1.35;margin:0 0 15px}h2 .n{color:#59819e;margin-right:9px}h3{font-size:17px;margin:24px 0 8px}p{margin:9px 0}.lead{font-size:18px;max-width:1060px}.muted,small{color:var(--muted)}small{font-size:12px;display:block;margin-top:5px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{background:#f7f9fc;border:1px solid var(--line);border-top:3px solid var(--blue);border-radius:6px;padding:17px}.card b{display:block;margin-bottom:7px}.callout{padding:15px 18px;border-left:4px solid var(--teal);background:#edf8f5;margin:17px 0}.callout.warn{background:#fff7e8;border-color:#c68a28}.table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:7px}table{border-collapse:collapse;width:100%;font-size:13px}th{background:#eaf0f7;color:#243e58;text-align:left;font-size:12px;padding:12px}td{padding:12px;vertical-align:top;border-top:1px solid var(--line)}tbody tr:nth-child(even){background:#fafbfd}td p{margin:0 0 7px}.roadmap{min-width:1160px}.roadmap td:first-child{width:105px}.roadmap td:nth-child(3){width:25%}.api{min-width:1080px}.api td:nth-child(2){width:24%}.api td:nth-child(3){width:32%}code{font:12px/1.5 Consolas,monospace;background:#edf1f6;border-radius:3px;padding:2px 4px;overflow-wrap:anywhere}pre{background:#112b45;color:#e4edf6;padding:20px;border-radius:7px;overflow:auto;font:12px/1.65 Consolas,monospace}pre code{padding:0;background:none;color:inherit}.badge{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:3px 8px;white-space:nowrap;margin:2px 0}.p0{background:#fce8ec;color:var(--red)}.p1{background:#e8f0fc;color:var(--blue)}.p2{background:#fff1d6;color:var(--amber)}.p3{background:#edf0f4;color:#526276}.existing{background:#e0f3ec;color:#17634b}.partial{background:#fff1d6;color:#855200}.new{background:#ede8fb;color:#634394}ul,ol{padding-left:21px;margin:8px 0}li{margin:6px 0}.flow{background:#f5f8fc;border:1px solid var(--line);border-radius:8px;padding:20px;margin:17px 0}.node{max-width:710px;margin:auto;text-align:center;border:1px solid #a9bfd5;border-radius:6px;background:white;padding:13px}.arrow{text-align:center;color:#50748d;font-size:22px;line-height:1.3;margin:6px}.branches{display:grid;grid-template-columns:1fr 1fr;gap:18px}.branches .node{height:100%}.node.success{border-color:#66ac9a;background:#eef9f5}.node.review{border-color:#d6a34c;background:#fff8eb}.split{display:grid;grid-template-columns:1fr 1fr;gap:20px}.checklist li::marker{color:var(--teal)}.source-list{font-size:13px}.footer{color:var(--muted);font-size:12px;text-align:center;margin:24px auto 0}caption{text-align:left;padding:12px;background:#f7f9fc;font-weight:600}.nowrap{white-space:nowrap}
+@media(max-width:800px){main{padding:14px}section{padding:18px}.grid,.split,.branches{grid-template-columns:1fr}h2{font-size:21px}header{padding:30px 20px}.table-wrap{border-radius:3px}}
+@media print{@page{size:A4 landscape;margin:12mm}body{background:#fff;font-size:11px}header{padding:18px;background:#fff;color:var(--ink);border-bottom:3px solid var(--blue)}header p,header .eyebrow{color:var(--muted)}header .meta span{border-color:var(--line)}h1{font-size:27px}main{max-width:none;padding:0}nav{display:none}section{padding:14px;border-radius:0;break-inside:auto}h2,h3{break-after:avoid}.table-wrap{overflow:visible}table,.roadmap,.api{min-width:0;font-size:10px}th,td{padding:7px}tr,.card,.node,pre{break-inside:avoid}thead{display:table-header-group}code{font-size:10px}a{color:inherit}pre{white-space:pre-wrap}.badge{font-size:9px}}
+</style>
+</head>
+<body>
+<header>
+<div class="eyebrow">LabelX / Báo cáo kế hoạch / Backend</div>
+<h1>Từ M-04: hoàn thiện kỹ thuật trước, kiểm chứng mở rộng sau</h1>
+<p>Ưu tiên vận hành VLM, bổ sung classifier và khép kín luồng Backend. Bàn giao API theo từng đợt để Frontend trên nhánh riêng có thể kết nối ngay khi contract và luồng tương ứng sẵn sàng.</p>
+<div class="meta"><span>Ngày lập: 13/10/2026</span><span>Phạm vi: Backend</span><span>Trạng thái: kế hoạch đề xuất triển khai</span><span>M-04 → M-08</span></div>
+</header>
+<main>
+<nav aria-label="Mục lục"><a href="#direction">01 · Định hướng</a><a href="#roadmap">02 · Roadmap</a><a href="#decision">03 · Classifier &amp; VLM</a><a href="#api">04 · API bàn giao</a><a href="#risks">05 · Rủi ro</a><a href="#now-later">06 · Làm ngay / hoãn</a><a href="#tracking">07 · Cập nhật tiến độ</a><a href="#sources">Nguồn đối chiếu</a></nav>
+
+<section id="direction">
+<h2><span class="n">01</span>Định hướng và nguyên tắc ưu tiên</h2>
+<p class="lead">Thứ tự triển khai: <strong>VLM chạy thật → classifier chạy thật → policy phân định → luồng Backend end-to-end → hoàn thiện chức năng còn lại → kiểm chứng và tối ưu.</strong> API được bàn giao xuyên suốt, không chờ kết thúc toàn bộ roadmap.</p>
+<div class="grid">
+<div class="card"><b><span class="badge p0">P0 · Ưu tiên cao nhất</span></b>Đưa VLM Gemini vào worker, có cấu hình thực thi; bổ sung classifier; nối kết quả vào evidence, review và API. Sửa ngay lỗi làm đứt luồng chính.</div>
+<div class="card"><b><span class="badge p1">P1 · Hoàn thiện kỹ thuật</span></b>Khép kín snapshot → QC → review → rework → verify → final run. Hoàn thiện các dịch vụ reference, báo cáo và gate ở mức chức năng.</div>
+<div class="card"><b><span class="badge p2">P2 / P3 · Sau kỹ thuật</span></b>Reference quy mô đầy đủ, hiệu chỉnh ngưỡng, benchmark, KPI, test mở rộng, tối ưu tải, nghiệm thu và tài liệu chi tiết.</div>
+</div>
+<ul>
+<li><strong>VLM là trợ lý phân định có điều kiện.</strong> Chỉ tạo đề xuất/evidence; không tự xác nhận lỗi, sửa annotation, quyết định Quality Gate hoặc release.</li>
+<li><strong>Classifier trong kế hoạch này là bộ phân loại đối tượng trên crop</strong> theo taxonomy của snapshot. Không đồng nhất với detector tìm đối tượng, cũng không phải bộ tự kết luận lỗi E1/E2/E3.</li>
+<li><strong>FE tiếp tục trên <code>develop-fe</code>.</strong> Phần kế hoạch này chỉ bao gồm API, schema, payload mẫu, trạng thái bất đồng bộ, quyền truy cập và hỗ trợ tích hợp. Không đưa công việc dựng màn hình vào BE.</li>
+<li><strong>Giữ kiểm tra tối thiểu trong từng lần bàn giao:</strong> API hợp lệ, phân quyền, tính nhất quán revision, retry không ghi trùng và một luồng chính chạy được. Đánh giá thống kê và test tải không chặn các đợt kỹ thuật đầu.</li>
+<li><strong>Không chờ đóng toàn bộ M-03 để làm M-04.</strong> Chỉ kéo lên trước các phần M-03 còn thiếu mà AI/API cần trực tiếp: dữ liệu workspace, rework đọc, lineage và guard chuyển trạng thái.</li>
+</ul>
+<div class="callout"><strong>Quyết định kỹ thuật đã chốt:</strong> dùng <code>gemini-3.8-flash</code> làm VLM qua Gemini API, với structured JSON output và mức suy luận thấp cho các lượt phân định. Classifier là <strong>ConvNeXt Tiny pretrained ImageNet, fine-tune trên crop theo 10 lớp BDD100K/LabelX</strong>, input 224×224 và output top-3, score, margin, <code>unknown</code>. Gemini không thay classifier; classifier không tự xác nhận lỗi.</div>
+<div class="callout warn"><strong>Phạm vi xác minh trạng thái:</strong> đối chiếu mã nguồn local tại <code>33746b9</code>, nhánh <code>docs/blockers-status-2026-10-12</code>, cùng tài liệu đang có trong working tree. Chưa xác minh các nhánh triển khai khác, trạng thái GitHub mới nhất hoặc runtime. “Có mã” trong báo cáo không đồng nghĩa đã deploy, đã nghiệm thu hay đã chạy thành công.</div>
+<h3>Những điểm xuất phát ảnh hưởng trực tiếp đến kế hoạch</h3>
+<div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Bằng chứng hiện có</th><th>Hệ quả triển khai</th></tr></thead><tbody>
+<tr><td>VLM</td><td>Có descriptor <code>vlm</code> và cho phép cấu hình; registry khởi tạo đã đọc chỉ đăng ký các engine xác định. Tài liệu cũ ghi VLM tắt.</td><td>Làm adapter/runner, worker và điều phối có phụ thuộc candidate. Việc thêm tên engine chưa đủ để coi là tích hợp.</td></tr>
+<tr><td>Classifier</td><td>Chưa có trong allowlist engine của <code>ConfigVersionCreateSerializer</code>; chưa thấy implementation trong các module engine đã kiểm tra.</td><td>Bổ sung model, taxonomy mapping, engine registration, cấu hình, lưu evidence và API.</td></tr>
+<tr><td>Detector</td><td>Có package <code>src/detector_worker</code>, inference, manifest và bằng chứng cũ; chưa thấy adapter detector trong registry BE đã đọc.</td><td>Tái sử dụng worker, xác minh/nối đường dispatch và matching cần thiết để sinh candidate. Không làm lại baseline nếu đã dùng được.</td></tr>
+<tr><td>Review/rework</td><td>Có route quyết định và phân xử. DEC-019 yêu cầu thêm workspace/lineage/rework read; mã local còn thiếu một số phần và còn enum legacy.</td><td>Đối chiếu bản M-03 resolve trước khi bổ sung; chỉ chuyển phần thiếu thực sự vào đợt API.</td></tr>
+</tbody></table></div>
+<p class="muted">Đây là bản sắp xếp kế hoạch theo yêu cầu hiện tại. Nội dung mô tả thay đổi cần đồng bộ vào roadmap/contract khi triển khai, không tự ghi các milestone hoặc API đề xuất thành đã hoàn thành.</p>
+</section>
+
+<section id="roadmap">
+<h2><span class="n">02</span>Roadmap từ M-04 trở đi</h2>
+<p>Giữ M-04…M-06 để truy vết, chia M-04 thành ba đợt kỹ thuật và đề xuất thêm M-07/M-08 cho phần kiểm chứng, vận hành và nghiệm thu. Các đợt đi theo tiêu chí đầu ra; chưa gán ngày kết thúc khi chưa chốt model, môi trường và năng lực thực hiện.</p>
+<div class="table-wrap"><table class="roadmap"><thead><tr><th>Mốc / mục tiêu</th><th>Trọng tâm</th><th>Đầu việc BE</th><th>Đầu ra bàn giao</th><th>Phụ thuộc</th><th>Ưu tiên</th><th>Tiêu chí hoàn thành</th></tr></thead><tbody>
+<tr><td><strong>M-04A</strong><small>VLM Gemini vận hành</small></td><td>Chạy được một đường Gemini thật, sớm nhất.</td><td>Dùng <code>gemini-3.8-flash</code> qua Gemini API; gửi crop inline; cấu hình model ID/prompt version/structured JSON/safety setting/thinking thấp; adapter Gemini → JSON nội bộ; worker queue; timeout/retry/budget; đăng ký engine; tạo work unit sau khi candidate sẵn sàng; lưu evidence theo revision. Chốt contract v0 ngay đầu đợt.</td><td>Adapter/worker Gemini; cấu hình có version; một candidate thật có evidence; API run/ledger thể hiện trạng thái và lỗi. Gói API đợt 0/1.</td><td>Ảnh/crop hợp lệ, taxonomy, Gemini API key/quota và chính sách cho phép gửi ảnh. Có thể dùng candidate cố định để kiểm kỹ thuật trước khi classifier xong.</td><td><span class="badge p0">P0 · Làm trước</span></td><td>Gọi <code>gemini-3.8-flash</code> thật thành công, parse/lưu/đọc được qua API; lỗi API không treo run; retry cùng đơn vị không tạo evidence trùng. Chưa yêu cầu chứng minh accuracy.</td></tr>
+<tr><td><strong>M-04B</strong><small>ConvNeXt Tiny classifier</small></td><td>Phân loại crop và tạo tín hiệu chọn lọc.</td><td>Dùng ConvNeXt Tiny pretrained ImageNet, fine-tune theo 10 lớp BDD100K/LabelX; chuẩn hóa crop 224×224; top-3/score/margin/unknown; đăng ký classifier trong config/registry; nối detector → matching/crop → classifier; lưu checkpoint checksum, class map và hash dữ liệu đầu vào.</td><td>Classifier worker; phân loại có cấu trúc; evidence đọc được; config chứa cả classifier/Gemini. Gói API đợt 2.</td><td>M-04A contract chung; tập crop có nhãn; mapping 10 lớp. Crop từ annotation cho trường hợp có box; detector cần cho discovery/box mới.</td><td><span class="badge p0">P0 · Kế tiếp</span></td><td>Crop hợp lệ trả nhãn trong taxonomy hoặc unknown; checkpoint/class map được version hóa; không lẫn revision; không biến điểm model thành xác suất đã hiệu chỉnh.</td></tr>
+<tr><td><strong>M-04C</strong><small>Policy phân định</small></td><td>Quyết định lúc nào gọi VLM và lúc nào cần người.</td><td>Policy có version; điều kiện score/margin/conflict; xử lý taxonomy ngoài phạm vi, crop hỏng; giới hạn gọi lại; API re-evaluate; lưu lần đánh giá mới cùng liên kết evidence cũ; mở rộng issue/workspace và ledger theo candidate.</td><td>Luồng classifier–VLM đầy đủ; API phân định lại và truy vấn kết quả; reason code; evidence có provenance. Gói API đợt 3.</td><td>M-04A/B; candidate ID ổn định; identity crop/revision; quyền reviewer/QA; schema thống nhất.</td><td><span class="badge p0">P0 · Khép kín AI</span></td><td>Chạy được nhánh bỏ qua VLM, gọi VLM, bất đồng, không đủ căn cứ và lỗi/hết budget; AI chỉ đề xuất; quyết định người dùng giữ nguyên khi đánh giá lại.</td></tr>
+<tr><td><strong>M-05</strong><small>E2E kỹ thuật</small></td><td>Ứng dụng BE chạy trọn luồng qua HTTP.</td><td>Nối snapshot → run → candidate → queue/lease → review/adjudication → rework → verify → final run. Hoàn thiện các phần M-03 resolve cần thiết; workspace ảnh/annotation/prediction; rework list/detail; lineage final source; config triển khai worker/storage.</td><td>Bản BE chạy được; API đợt 4; script gọi luồng chính; log/run IDs, SHA BE và bộ dữ liệu dùng để chạy; checklist kết nối FE.</td><td>M-04C; Postgres/broker/storage; actor và dataset scope; snapshot/revision phù hợp. Dữ liệu xuất/fixture hợp lệ dùng cho kỹ thuật theo DEC-020.</td><td><span class="badge p0">P0 · Luồng chính</span></td><td>Một luồng HTTP hoàn chỉnh có worker thật và trạng thái terminal; đọc lại được quyết định/lineage; quyền trái scope bị chặn; thiếu dữ liệu thật ghi rõ, chưa tuyên bố nghiệm thu CVAT thực tế.</td></tr>
+<tr><td><strong>M-06</strong><small>Hoàn thiện BE còn lại</small></td><td>Đủ chức năng kỹ thuật trước đợt kiểm chứng.</td><td>Công cụ reference: nhập hai GT, matching, phân xử, suy lỗi, khóa version/chống leakage (E-06). Khung metric/scoring, report/export và gate/waiver (phần kỹ thuật E-17/E-20/E-21/E-22). API quản trị tối thiểu và đóng lỗ hổng contract còn lại.</td><td>API reference/metric/report/gate; export cơ bản; nghiệp vụ xử lý thiếu reference/mẫu; gói bàn giao FE đợt 5.</td><td>E2E M-05; schema reference; method/threshold cấu hình. Có thể triển khai với fixture, chưa cần đủ tập đánh giá.</td><td><span class="badge p1">P1 · Đủ chức năng</span></td><td>Nhập–khóa–đọc reference chạy được; xuất dữ liệu được; gate tính theo nguồn final hợp lệ và không trả đạt khi thiếu dữ liệu. Không coi fixture là bằng chứng hiệu quả.</td></tr>
+<tr><td><strong>M-07</strong><small>Kiểm chứng mở rộng</small></td><td>Đo độ đúng và hiệu quả trên dữ liệu kiểm chứng.</td><td>Hoàn thiện reference calibration/held-out; hiệu chỉnh ngưỡng detector/classifier/VLM và score; regression/integration đầy đủ; ablation classifier so với classifier+VLM; preregistration, crossover, KPI và kiểm tra guardrail.</td><td>Reference/version khóa; báo cáo chất lượng/coverage/chi phí; regression suite; ngưỡng có bằng chứng; báo cáo KPI và gate thật.</td><td>M-06; QA/Model Owner; dữ liệu độc lập, đủ mẫu, reviewer và thiết kế đo. Calibration không sử dụng held-out.</td><td><span class="badge p2">P2 · Sau kỹ thuật</span></td><td>Đánh giá theo tiêu chí chốt trước khi đo; báo rõ thiếu mẫu; có kết luận và danh sách lỗi cần sửa. Không dùng score tạm ở M-04 làm ngưỡng nghiệm thu.</td></tr>
+<tr><td><strong>M-08</strong><small>Vận hành &amp; nghiệm thu</small></td><td>Ổn định ở quy mô mục tiêu và bàn giao.</td><td>Load/soak/fault test; đo NFR; tối ưu batching/cache/concurrency; retention, backup/restore drill; quan sát/cảnh báo đầy đủ; tài liệu vận hành chi tiết; nghiệm thu độc lập E-23/E-24.</td><td>Bản release đủ điều kiện; số đo hiệu năng; bằng chứng restore; runbook; bộ hồ sơ nghiệm thu.</td><td>M-07; hạ tầng mục tiêu; ngưỡng NFR; kiểm dữ liệu thật và tích hợp FE khi nghiệm thu toàn ứng dụng.</td><td><span class="badge p3">P3 · Củng cố</span></td><td>NFR và tiêu chí nghiệm thu đã thống nhất đạt; blocker release đóng; phục hồi nhất quán; bàn giao đầy đủ. Lỗi an toàn dữ liệu hoặc lỗi làm đứt luồng phát hiện ở bất kỳ mốc nào vẫn sửa ngay.</td></tr>
+</tbody></table></div>
+<h3>Ánh xạ roadmap cũ → kế hoạch mới</h3>
+<div class="table-wrap"><table><thead><tr><th>Phạm vi cũ</th><th>Vị trí mới</th><th>Cách xử lý</th></tr></thead><tbody>
+<tr><td>M-04 / E-12 — VLM có điều kiện</td><td>M-04A + M-04C</td><td>Đưa lên đầu; cập nhật chủ trương VLM tắt trong tài liệu cũ sang mục tiêu triển khai VLM có kiểm soát.</td></tr>
+<tr><td>M-04 / E-10 — Detector</td><td>M-04B; hiệu chỉnh ở M-07</td><td>Giữ artifact dùng được, hoàn thiện tích hợp tối thiểu; bỏ phụ thuộc dữ liệu reference đầy đủ khỏi bước nối kỹ thuật.</td></tr>
+<tr><td>Classifier — hạng mục bổ sung</td><td>M-04B + M-04C</td><td>Tách gói việc mới có contract và tiêu chí hoàn thành; chưa tự cấp mã epic/task chính thức.</td></tr>
+<tr><td>M-04 / E-06, E-07, E-17</td><td>M-06 → M-07</td><td>Build công cụ reference/metric trước; tạo tập chuẩn quy mô đầy đủ, hiệu chỉnh score, pilot và ablation sau.</td></tr>
+<tr><td>M-05 / E-18, E-19, E-20</td><td>M-06 phần dịch vụ tính toán; M-07 phần kiểm chứng</td><td>Held-out/D1-D2, preregistration, crossover và KPI chuyển sau khi pipeline chạy được.</td></tr>
+<tr><td>M-05 / E-21, E-22</td><td>M-06 chức năng; M-07 kết luận thật</td><td>API báo cáo/gate được build trước; báo cáo hiệu quả và quyết định đạt chỉ xuất khi đủ dữ liệu.</td></tr>
+<tr><td>M-06 / E-23, E-24</td><td>M-04/M-05 vận hành tối thiểu; M-08 đầy đủ</td><td>Queue, timeout, cấu hình và log cần ngay; tải lớn, tối ưu, restore drill, hồ sơ nghiệm thu làm sau.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="decision">
+<h2><span class="n">03</span>Luồng quyết định classifier–VLM</h2>
+<p><strong>Detector tìm vị trí; classifier đề xuất lớp; VLM hỗ trợ phân định trường hợp khó; reviewer/QA quyết định nghiệp vụ.</strong> VLM chỉ nhận candidate đã tồn tại, không khởi chạy đồng loạt cùng các engine sinh candidate.</p>
+<div class="flow" role="img" aria-label="Snapshot hợp lệ đến classifier; đủ tin cậy thì trả đề xuất, chưa đủ thì gọi VLM có điều kiện; bất đồng hoặc không rõ chuyển người phân xử.">
+<div class="node">Snapshot/revision đã khóa + annotation hoặc detector candidate<br><small>Kiểm ảnh/crop, tọa độ, taxonomy và quyền dữ liệu trước inference</small></div>
+<div class="arrow" aria-hidden="true">↓</div>
+<div class="node"><strong>Classifier</strong> → top-k, score, margin, unknown<br><small>Policy có version xét độ tin cậy và bất đồng với annotation/detector</small></div>
+<div class="arrow" aria-hidden="true">↓</div>
+<div class="branches"><div class="node success"><strong>Đủ tin cậy + không có bất đồng</strong><br>Trả đề xuất từ classifier<br>VLM: <code>not_checked / not_triggered</code><br><small>Không tự chuyển issue thành confirmed hoặc frame thành reviewed</small></div><div class="node review"><strong>Thiếu tin cậy / bất đồng / yêu cầu phân định lại</strong><br>Kiểm model + budget + quyền + dữ liệu<br>Đủ điều kiện → VLM chạy bất đồng bộ<br><small>Thiếu điều kiện → giữ unresolved, ghi lý do và cho người xử lý</small></div></div>
+<div class="arrow" aria-hidden="true">↓</div>
+<div class="node"><strong>Gộp evidence, không bỏ phiếu tự động</strong><br>VLM có căn cứ → đề xuất lớp / VLM bất đồng hoặc uncertain → cần review<br><small>Lưu cả kết quả classifier và VLM, nguồn ảnh và version</small></div>
+<div class="arrow" aria-hidden="true">↓</div>
+<div class="node review">Reviewer quyết định → chưa rõ thì escalate → QA phân xử<br><small>Cần sửa nhãn: tạo rework, sửa tại CVAT, snapshot revision mới, verify/final run</small></div>
+</div>
+<h3>Policy v0 có thể triển khai ngay</h3>
+<p>Đặt <code>classifier_min_score</code>, <code>classifier_min_margin</code> và danh sách lớp hỗ trợ trong config đã publish. <strong>Giá trị khởi tạo đề xuất</strong> để chạy thử kỹ thuật: score ≥ 0,85 và top1 − top2 ≥ 0,15; đây là ngưỡng routing tạm, chưa phải mức accuracy cam kết. Model Owner điều chỉnh theo thang score thực tế trước khi bật policy; hiệu chỉnh bằng dữ liệu độc lập ở M-07.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường hợp</th><th>Quy tắc xử lý</th><th>Đầu ra API đề xuất</th><th>Bước tiếp theo</th></tr></thead><tbody>
+<tr><td>Classifier đủ tin cậy</td><td>Crop hợp lệ, nhãn thuộc taxonomy, score/margin đạt ngưỡng; không mâu thuẫn annotation/detector, không có yêu cầu phân định lại.</td><td><code>routing=classifier_only</code>; <code>suggested_label</code>; <code>review_required=false</code> cho riêng lượt đánh giá AI; VLM <code>not_checked</code>, reason <code>not_triggered</code>.</td><td>Không thêm lượt VLM. Cờ AI không thay thế yêu cầu review/audit sẵn có của frame.</td></tr>
+<tr><td>Score thấp, margin nhỏ, unknown</td><td>Tạo candidate phân định từ crop hợp lệ; gọi VLM một lượt logic nếu dữ liệu và tài nguyên đáp ứng.</td><td><code>routing=vlm_required</code>; reason <code>low_score / low_margin / unknown_label</code>; evaluation <code>queued/running</code>.</td><td>Poll evaluation; nếu không thể phân định thì <code>review_required=true</code>.</td></tr>
+<tr><td>Classifier tự tin nhưng khác annotation/detector</td><td>Bất đồng có ưu tiên cao hơn điều kiện score. VLM so sánh nhãn ứng viên với guideline đúng version.</td><td>Reason <code>label_conflict</code>; giữ nhãn gốc và từng đề xuất; kết quả <code>suggested_label</code> hoặc null.</td><td>Nếu VLM đồng ý với một phía vẫn cần người xử lý lỗi/nhãn; không lấy “hai model đồng ý” làm kết luận đúng.</td></tr>
+<tr><td>Phân định/phân loại lại theo yêu cầu</td><td>Reviewer/QA gửi reason và revision mong đợi; tạo evaluation mới, liên kết lần trước; khóa idempotency. Đổi revision phải lấy crop mới.</td><td><code>202</code> với <code>evaluation_id</code>; <code>supersedes_evaluation_id</code>; reason <code>manual_recheck</code>. Revision lệch trả <code>409</code>.</td><td>Không ghi đè evidence/decision lịch sử. Issue đã chốt chỉ đổi trạng thái qua luồng người dùng được phép.</td></tr>
+<tr><td>VLM chưa rõ hoặc nhãn ngoài taxonomy</td><td>Validate output; chuẩn hóa <code>uncertain</code>; không dùng đoạn giải thích tự do làm bằng chứng đã xác minh.</td><td><code>status=completed</code>, <code>resolution=uncertain</code>, <code>suggested_label=null</code>, <code>review_required=true</code>.</td><td>Hiển thị chờ người review; reviewer có thể escalate tới API phân xử hiện có.</td></tr>
+<tr><td>Crop hỏng / nguồn sai revision</td><td>Dừng trước khi gọi model; không gửi VLM để “đoán” từ dữ liệu lỗi.</td><td>Lỗi input có cấu trúc; reason <code>invalid_crop / stale_revision</code>; evaluation không có kết luận nhãn.</td><td>Sửa input hoặc tạo snapshot đúng. Không tự loại khỏi mẫu số để làm đẹp coverage.</td></tr>
+<tr><td>Thiếu model, disabled, hết budget, timeout</td><td>Không đủ điều kiện gọi: ghi not checked; lỗi sau khi thử hết số lần: failed. Giới hạn tối đa 3 lần tổng cộng mỗi lượt logic; không có vòng classifier↔VLM vô hạn.</td><td>Engine <code>not_checked</code> hoặc <code>failed</code>; reason rõ; <code>review_required=true</code>. <code>budget_exhausted</code> là reason cần bổ sung contract.</td><td>Người dùng vẫn review được; lỗi một candidate không treo cả run; không trả pass ngầm.</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>Điểm cần sửa ở orchestration:</strong> descriptor VLM hiện khai báo đơn vị <code>frame</code>, trong khi policy tài liệu yêu cầu <strong>candidate được trigger</strong>. M-04C phải thống nhất work unit, khóa idempotency và ledger theo candidate. Candidate không trigger nằm ngoài mẫu số VLM; candidate đã trigger nhưng hết budget/lỗi vẫn phải được tính là chưa hoàn thành hoặc thất bại.</div>
+<h3>Envelope kết quả AI đề xuất — chưa phải schema đã triển khai</h3>
+<pre><code>{
+  "evaluation_id": "eval-001",
+  "candidate_id": "cand-001",
+  "snapshot_id": 42,
+  "snapshot_revision": "revision-hash",
+  "policy_version": "classification-routing-v0",
+  "taxonomy_version": "taxonomy-v1",
+  "status": "completed",
+  "routing": "vlm_required",
+  "trigger_reasons": ["label_conflict"],
+  "classifier": {
+    "model_version": "classifier-v1",
+    "label": "truck", "score": 0.88, "margin": 0.19
+  },
+  "vlm": {
+    "model_version": "vlm-v1", "prompt_version": "prompt-v1",
+    "status": "checked", "label": "van", "reason": null
+  },
+  "resolution": "conflict",
+  "suggested_label": null,
+  "review_required": true,
+  "evidence_refs": ["evidence-001", "evidence-002"],
+  "supersedes_evaluation_id": null
+}</code></pre>
+<p class="muted">Tách trạng thái tác vụ evaluation (<code>queued/running/completed/failed/not_checked</code>) khỏi trạng thái engine hiện có và kết luận AI (<code>suggested/conflict/uncertain</code>). Evidence chi tiết phải chứa crop hash, mapping về ảnh gốc, Gemini model ID, API version và prompt version. Không dùng confidence tự khai của VLM làm xác suất đúng.</p>
+</section>
+
+<section id="api">
+<h2><span class="n">04</span>API BE ưu tiên để FE tích hợp</h2>
+<p><span class="badge existing">Có mã</span> Route/handler đã thấy trong local. <span class="badge partial">Cần hoàn thiện</span> Có nền nhưng thiếu phần bàn giao. <span class="badge new">Đề xuất mới</span> Chưa thấy route/contract trong phạm vi đã đọc. Tất cả vẫn cần kiểm tra runtime trước khi gắn nhãn “sẵn sàng FE”.</p>
+<p><strong>Đợt 0 bắt đầu ngay trong M-04A:</strong> chốt OpenAPI, ví dụ request/response và các enum dự kiến cho AI để FE dựng kết nối. Đợt 1 bàn giao API nền đã có; các đợt sau bàn giao runtime tăng dần. Không buộc FE chờ model hoàn chỉnh mới nhận contract.</p>
+<div class="table-wrap"><table class="api"><thead><tr><th>Thứ tự / mốc</th><th>Endpoint / chức năng</th><th>Request → response chính</th><th>Trạng thái quan sát</th><th>Việc cần chốt để bàn giao</th></tr></thead><tbody>
+<tr><td><strong>0 · M-04A</strong><br><span class="badge p0">P0</span></td><td><code>GET /api/schema/</code><br><code>GET /api/docs/</code></td><td>Không body → schema OpenAPI / trang tra cứu.</td><td><span class="badge existing">Có mã</span></td><td>Đồng bộ schema runtime và contract; ví dụ success/error; đánh dấu endpoint AI là dự kiến cho tới khi có runtime.</td></tr>
+<tr><td><strong>1a · M-04A</strong><br><span class="badge p0">P0</span></td><td><code>GET /api/auth/csrf/</code><br><code>POST /api/auth/login/</code><br><code>GET /api/auth/session/</code><br><code>GET /api/auth/workflow-permissions/</code></td><td>Login với username/password và CSRF → session; read → danh tính và quyền workflow theo schema hiện hữu.</td><td><span class="badge existing">Có mã</span></td><td>Kiểm cookie/CSRF với origin FE, dataset scope và case không có quyền. FE dùng quyền BE để hiển thị thao tác.</td></tr>
+<tr><td><strong>1b · M-04A</strong></td><td><code>GET /api/datasets/</code><br><code>GET /api/datasets/{id}/tasks/</code><br><code>POST /api/snapshots/</code><br><code>GET /api/snapshots/{id}/</code></td><td>Create: <code>{dataset_id, scope:{cvat_task_ids,cvat_job_ids}, note?}</code> → snapshot ID/trạng thái; detail → revision/hash và dữ liệu snapshot được phép đọc.</td><td><span class="badge existing">Có mã</span></td><td>Input thực cho smoke hoặc fixture ghi rõ nguồn; không tự thêm import endpoint từ quyết định dùng dữ liệu xuất. Reviewer lấy workspace qua frames API, không mở rộng quyền snapshot tùy tiện.</td></tr>
+<tr><td><strong>1c → 2 · M-04A/B</strong><br><span class="badge p0">P0</span></td><td><code>GET, POST /api/config-versions/</code><br><code>POST /api/config-versions/{id}/publish/</code></td><td><code>{name, engines, thresholds, models}</code> → config có ID/version/status; publish → config khóa dùng cho run.</td><td><span class="badge partial">Có mã, cần mở rộng</span></td><td>Allowlist classifier; policy version, model mapping, timeout/budget VLM và validation; tránh cấu hình được publish nhưng runner không tồn tại.</td></tr>
+<tr><td><strong>1d · M-04A</strong><br><span class="badge p0">P0</span></td><td><code>POST, GET /api/runs/</code><br><code>GET /api/runs/{id}/</code></td><td>Create: <code>{snapshot_id, config_version_id, seed}</code> + idempotency key → run ID/status/engines. GET → tiến độ và trạng thái terminal.</td><td><span class="badge partial">Có mã, cần nối AI</span></td><td>Run tạo đúng dependency stages; trả lỗi model rõ ràng; FE poll theo trạng thái. Bổ sung provenance từng model, không chỉ một artifact chung.</td></tr>
+<tr><td><strong>1e → 3 · M-04A/C</strong></td><td><code>GET /api/runs/{id}/ledger/</code><br><code>GET /api/runs/{id}/shards/</code><br><code>POST /api/runs/{id}/retry-failed/</code><br><code>POST /api/runs/{id}/cancel/</code></td><td>Run ID, payload thao tác theo contract hiện hữu → engine/unit counts, coverage, work units hoặc run cập nhật.</td><td><span class="badge partial">Có mã, cần bổ sung AI</span></td><td>Ledger candidate-level VLM; reason hết budget; cancel/retry không ghi trùng hoặc vượt ngân sách; không thêm endpoint progress riêng nếu GET run đáp ứng đủ.</td></tr>
+<tr><td><strong>2 · M-04B</strong><br><span class="badge p0">P0</span></td><td><code>GET /api/runs/{id}/candidates/</code><br><code>GET /api/runs/{id}/ranking/</code></td><td>Filter/pagination theo schema → candidate/evidence; frame/rank/score/explanation.</td><td><span class="badge partial">Có mã, thiếu AI contract</span></td><td>Candidate serializer hiện chưa trả ID: bổ sung ID ổn định, top-k, nguồn nhãn, version, crop/revision. Ranking dùng score_v0 tạm; không chờ calibration.</td></tr>
+<tr><td><strong>3a · M-04C</strong><br><span class="badge p0">P0</span></td><td><code>POST /api/candidates/{id}/evaluations/</code><br><code>GET /api/evaluations/{id}/</code><br><small>Đường dẫn đề xuất mới</small></td><td>POST: <code>{reason, expected_snapshot_revision, supersedes_evaluation_id?}</code> + <code>Idempotency-Key</code> → <code>202 {evaluation_id,status,poll_url}</code>. GET → envelope mục 03.</td><td><span class="badge new">Đề xuất mới</span></td><td>BE quyết định model/policy từ config, không nhận prompt tùy ý từ FE; scope/role check, rate/budget cap; <code>409</code> khi stale revision hoặc cùng key khác payload.</td></tr>
+<tr><td><strong>3b · M-04C</strong></td><td><code>GET /api/frames/{id}/issues/</code><br><code>GET /api/issues/{id}/</code></td><td>Frame/issue ID → frame, guideline, engines, issues. Bổ sung <code>snapshot_revision, annotations[], predictions[]</code>, evidence AI và <code>evaluation_id</code>.</td><td><span class="badge partial">Có mã, còn phần resolve</span></td><td>Hoàn thiện theo DEC-019 P04; ảnh/crop có quyền và đúng snapshot. Các ID frame review, snapshot frame, CVAT frame phải phân biệt trong contract.</td></tr>
+<tr><td><strong>4a · M-05</strong></td><td><code>POST /api/queues/{risk|random}/next/</code><br><code>POST /api/leases/{id}/renew/</code><br><code>POST /api/frames/{id}/complete/</code></td><td>Queue nhận <code>{run_id}</code> → frame/lease hoặc <code>204</code> khi hết hàng. Renew/complete theo contract → lease/frame mới.</td><td><span class="badge existing">Có mã</span></td><td>Xác minh expiry/conflict, guard complete và policy M-03 resolve. Không bỏ khóa/lease để đẩy nhanh tích hợp.</td></tr>
+<tr><td><strong>4b · M-05</strong></td><td><code>POST /api/issues/{id}/decisions/</code><br><code>GET /api/escalations/</code><br><code>POST /api/issues/{id}/adjudications/</code><br><code>GET /api/decision-cases/</code><br><code>GET /api/decision-cases/{id}/</code></td><td>Decision: <code>{action,reason,rule_id,family?,severity?}</code> → decision. Adjudicate: <code>{outcome,reason,rule_id,correct_label?}</code> → case/issue; read → case version và danh sách.</td><td><span class="badge partial">Có mã, cần thống nhất enum</span></td><td>Local còn <code>guideline_missing</code>; public contract theo DEC-019 là <code>guideline_gap</code>. Giữ lịch sử, mapping tương thích; liên kết evidence AI, không cho AI tự gọi quyền phân xử.</td></tr>
+<tr><td><strong>4c · M-05</strong></td><td><code>POST /api/rework/</code><br><code>POST /api/rework/{id}/submitted/</code><br><code>POST /api/rework/{id}/verify/</code><br><code>GET /api/rework/</code><br><code>GET /api/rework/{id}/</code></td><td>Create với issue/người sửa/hướng dẫn; submitted với dữ liệu theo contract hiện hữu; verify với kết quả/lý do → rework state. GET → danh sách/detail có scope, revision và deep link CVAT.</td><td><span class="badge existing">POST có mã</span><br><span class="badge partial">GET cần hoàn thiện</span></td><td>GET đã có định hướng DEC-019 P06 nhưng chưa thấy route trong local; đối chiếu nhánh resolve. Người sửa không tự verify; adapter CVAT chỉ đọc.</td></tr>
+<tr><td><strong>4d · M-05</strong></td><td><code>GET /api/runs/{id}/</code><br><small>Mở rộng endpoint sẵn có</small></td><td>Thêm <code>verification_lineage</code>, <code>selected_final_sources</code>, <code>operational_source:{run_id,scope_complete,blocked_reasons[]}</code>.</td><td><span class="badge partial">Contract resolve cần đối chiếu</span></td><td>Theo DEC-019 P07; không thêm <code>/lineage/</code>; BE chọn nguồn final đúng job/revision, FE không tự suy diễn.</td></tr>
+<tr><td><strong>5 · M-06</strong><br><span class="badge p1">P1</span></td><td>Reference import/lock/read; metric; report/export; gate/waiver.</td><td>Input scope/run/reference/version → kết quả có provenance, trạng thái thiếu dữ liệu và file export.</td><td><span class="badge new">Chưa xác minh implementation</span></td><td>Chốt đường dẫn/payload từ contract nghiệp vụ ở M-06; không đưa route phỏng đoán cho FE như API sẵn có. Dịch vụ chạy trước, kết luận hiệu quả ở M-07.</td></tr>
+</tbody></table></div>
+<h3>Điều kiện gắn nhãn “sẵn sàng FE” cho từng nhóm API</h3>
+<ul class="checklist">
+<li>OpenAPI và runtime khớp; có ví dụ success, không có dữ liệu, lỗi validation, sai quyền, conflict và AI chưa xử lý xong; thống nhất null/unknown thay cho giả định nhãn mặc định.</li>
+<li>Có base URL môi trường tích hợp, cấu hình session/CSRF và tài khoản đúng scope; không chứa secret trong tài liệu hoặc response.</li>
+<li>Chạy được request thực tới handler và đọc lại kết quả từ DB; thao tác async có worker thật. Fixture/mock phải gắn nhãn, không tính là runtime model thành công.</li>
+<li>Gói bàn giao gồm SHA BE, phiên bản schema, payload mẫu và một lệnh/script smoke. FE xác nhận parse được payload trên nhánh riêng; việc dựng giao diện không thuộc gói BE.</li>
+</ul>
+</section>
+
+<section id="risks">
+<h2><span class="n">05</span>Rủi ro, phụ thuộc và cách giảm thiểu</h2>
+<div class="table-wrap"><table><thead><tr><th>Rủi ro / phụ thuộc</th><th>Ảnh hưởng</th><th>Xử lý cụ thể</th><th>Chủ trì / hạn xử lý</th></tr></thead><tbody>
+<tr><td>Gemini API quota hoặc quyền gửi ảnh chưa sẵn sàng</td><td>M-04A không thể chứng minh chạy thật hoặc có thể vượt chi phí/hạn mức.</td><td>Model đã chốt là <code>gemini-3.8-flash</code>. Chốt API version, quota, timeout và safety setting ngay đầu đợt; chỉ gửi crop tối thiểu được phép; secret ở runtime config; ghi model ID/prompt version trong evidence. Stub dùng phát triển contract nhưng không đóng tiêu chí Gemini chạy thật.</td><td>Owner BE phối hợp Model Owner/Infra; đầu M-04A.</td></tr>
+<tr><td>Classifier ConvNeXt Tiny chưa có tập crop/taxonomy phù hợp</td><td>Nhãn sai mapping hoặc model score không dùng được.</td><td>Trích crop từ annotation, khóa class map theo taxonomy version; dùng unknown cho nhãn ngoài tập; ghi checkpoint checksum/preprocessing; fine-tune baseline ở M-04B, tuning sâu chuyển M-07.</td><td>Owner BE + Model Owner; M-04B.</td></tr>
+<tr><td>Orchestrator giả định engine độc lập theo frame</td><td>VLM chạy trước khi có candidate, coverage sai hoặc run kết thúc sớm.</td><td>Tạo stage phụ thuộc; candidate ID ổn định; hoàn tất aggregation sau AI; ledger và idempotency theo candidate + revision + model/policy version.</td><td>Owner BE; M-04A/C.</td></tr>
+<tr><td>Timeout/retry làm tăng chi phí và tạo trùng</td><td>Run treo, evidence lặp, hết GPU/budget.</td><td>Cấu hình timeout bắt buộc; tối đa 3 lần tổng cộng/lượt; candidate cap ban đầu theo tài liệu là 400/run; đặt riêng tổng lượt gọi vì retry cũng tốn budget. Giữ bộ đếm nguyên tử, hủy nhận việc mới khi hết hạn mức.</td><td>Owner BE + Infra; M-04A.</td></tr>
+<tr><td>VLM giải thích hợp lý nhưng sai; prompt từ dữ liệu gây lệch</td><td>Tự động chấp nhận nhãn sai.</td><td>Prompt cố định có version; input là dữ liệu, output JSON giới hạn taxonomy; không cấp tool/quyền ghi; chỉ lưu evidence và đề xuất; conflict/uncertain chuyển người.</td><td>Owner BE + QA; M-04C.</td></tr>
+<tr><td>Revision/crop/ID khác nhau giữa AI và workspace</td><td>Người dùng quyết định trên ảnh hoặc prediction cũ.</td><td>Kiểm revision/hash trước inference và trước ghi; tọa độ crop truy về ảnh gốc; dùng expected revision cho re-evaluate; giữ lịch sử append-only.</td><td>Owner BE; M-04B → M-05.</td></tr>
+<tr><td>API có trên nhánh khác nhưng local chưa cập nhật</td><td>Làm trùng M-03 resolve hoặc báo sai tiến độ.</td><td>Trước giao task, lập bảng route → nhánh/SHA → contract → runtime evidence; tích hợp phần đã làm, chỉ bổ sung thiếu hụt. Không suy trạng thái triển khai từ tài liệu kế hoạch.</td><td>Owner BE; trước từng đợt API.</td></tr>
+<tr><td>Thiếu dữ liệu thật/actor CVAT</td><td>Không nghiệm thu được E2E thực tế.</td><td>Theo DEC-020, tiếp tục kỹ thuật với dữ liệu xuất/fixture và provenance rõ. PO kiểm dữ liệu thật sau; không tự đổi import contract hoặc coi fixture là xác nhận thực tế.</td><td>PO và người bàn giao dữ liệu; M-05 kỹ thuật, trước nghiệm thu M-08.</td></tr>
+<tr><td>Hoãn test quá mức</td><td>Lỗi quyền, retry hoặc state phá luồng từ sớm.</td><td>Giữ smoke success/error, scope, stale revision, retry và chuyển trạng thái thiết yếu trong mọi đợt. Chỉ hoãn ma trận rộng, đánh giá thống kê, tải dài và tài liệu chi tiết.</td><td>Owner BE; mỗi đợt.</td></tr>
+<tr><td>Backend tập trung một owner; deadline cũ không còn phản ánh phạm vi</td><td>Nhiều việc P0 cạnh tranh, lịch thiếu khả thi.</td><td>Giữ ownership theo chỉ đạo hiện tại; giới hạn một gói triển khai chính đang làm, bàn giao nhỏ liên tục; dùng khoảng ước lượng sau spike model thay vì giữ ngày cũ. Chỉ chia người khi PO thay đổi phân công.</td><td>PO/Owner BE; cập nhật cuối mỗi đợt.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="now-later">
+<h2><span class="n">06</span>Việc cần hoàn thành ngay và việc hoãn sang sau</h2>
+<div class="split">
+<div class="card"><b><span class="badge p0">LÀM NGAY · M-04 → M-05</span></b><ol>
+<li>Chốt baseline code, contract AI v0, Gemini API version, quota và quyền dữ liệu; phát gói API đợt 0/1.</li>
+<li>Tích hợp <code>gemini-3.8-flash</code>: worker, structured parser, evidence, timeout, retry và budget.</li>
+<li>Bổ sung ConvNeXt Tiny classifier, crop pipeline 224×224 và mapping 10 lớp; nối detector phần cần thiết.</li>
+<li>Cài policy định tuyến, re-evaluate và xử lý conflict/uncertain; lưu provenance đầy đủ.</li>
+<li>Hoàn thiện các API workspace/rework/lineage còn thiếu để FE kết nối và BE chạy trọn luồng.</li>
+<li>Chạy E2E kỹ thuật bằng API; ghi nguồn dữ liệu, SHA, run ID và kết quả tối thiểu.</li>
+</ol></div>
+<div class="card"><b><span class="badge p2">HOÃN · M-07 → M-08</span></b><ul>
+<li>Thu thập reference quy mô đầy đủ, hiệu chỉnh confidence/ngưỡng và scoring nâng cao.</li>
+<li>Ablation toàn diện, benchmark nhiều model, chứng minh KPI và thí nghiệm crossover.</li>
+<li>Regression ma trận rộng, test tải/soak dài, fault injection quy mô lớn.</li>
+<li>Tối ưu batching, cache, GPU/concurrency và chi phí sau khi có số đo thật.</li>
+<li>Rà soát chất lượng tổng thể, hồ sơ nghiệm thu và tài liệu vận hành chi tiết.</li>
+<li>Diễn tập phục hồi đầy đủ, đo NFR trên hạ tầng mục tiêu và release acceptance.</li>
+</ul></div>
+</div>
+<div class="callout"><strong>Không hoãn:</strong> quyền truy cập dữ liệu, CSRF/session, validation, khóa revision, idempotency, giới hạn thực thi, trạng thái lỗi, log truy vết và hướng dẫn khởi chạy tối thiểu. Đây là điều kiện để phần kỹ thuật chạy được và bàn giao API an toàn, không phải đợt test mở rộng.</div>
+<h3>Gói việc mở đầu, theo thứ tự có thể giao triển khai</h3>
+<div class="table-wrap"><table><thead><tr><th>Gói đề xuất</th><th>Đầu việc / đầu ra kiểm được</th><th>Phụ thuộc trực tiếp</th></tr></thead><tbody>
+<tr><td>BE-01 · Contract &amp; baseline</td><td>Danh mục route/SHA thực tế; schema AI v0; status/reason; cấu hình model, policy và dữ liệu vào; payload mẫu FE.</td><td>Đối chiếu bản resolve hiện có; không chờ reference đầy đủ.</td></tr>
+<tr><td>BE-02 · Gemini runtime</td><td>Một candidate hợp lệ đi qua <code>gemini-3.8-flash</code> → evidence persist → GET API; case lỗi/timeout có kết quả rõ.</td><td>BE-01 + Gemini API version, quota và tài nguyên kết nối.</td></tr>
+<tr><td>BE-03 · Classifier runtime</td><td>ConvNeXt Tiny crop 224×224 → top-3/score/margin/unknown; checkpoint/taxonomy version; đăng ký engine và đọc được trong candidate API.</td><td>BE-01 + tập crop có nhãn 10 lớp; ưu tiên triển khai sau BE-02 theo năng lực owner.</td></tr>
+<tr><td>BE-04 · Routing &amp; re-evaluate</td><td>Policy trigger, task phụ thuộc, budget ledger, endpoint phân định lại và provenance.</td><td>BE-02 + BE-03; candidate ID ổn định.</td></tr>
+<tr><td>BE-05 · Handoff &amp; E2E</td><td>Hoàn thiện workspace/rework/lineage; script HTTP khép kín; bảng API sẵn sàng FE có evidence.</td><td>BE-04 + phần M-03 resolve liên quan.</td></tr>
+</tbody></table></div>
+<p class="muted">BE-01…BE-05 là nhãn gói việc trong báo cáo, không phải mã task đã mở. Owner Backend theo chỉ đạo hiện tại là PO Trịnh Quang Trung; Model Owner/Infra/QA tham gia theo vai trò hỗ trợ, không tự đổi assignee BE.</p>
+</section>
+
+<section id="tracking">
+<h2><span class="n">07</span>Cách cập nhật tiến độ và chốt bàn giao</h2>
+<p>Mỗi ngày làm việc hoặc sau mỗi gói hoàn thành, cập nhật một dòng theo mẫu dưới đây. Không dùng phần trăm hoàn thành cảm tính; đo bằng đầu ra kỹ thuật và số nhóm API thực sự sẵn sàng.</p>
+<div class="table-wrap"><table><thead><tr><th>Mốc / gói</th><th>Trạng thái</th><th>Bằng chứng tối thiểu</th><th>Phụ thuộc đang chặn</th><th>Bàn giao tiếp theo</th></tr></thead><tbody>
+<tr><td>M-04A / BE-02</td><td>Chưa xác minh runtime<br><small>Trạng thái khởi tạo của báo cáo</small></td><td>Điền SHA, Gemini model ID/API version, prompt version, run/evaluation ID, request/response và nguồn ảnh sau khi chạy.</td><td>Gemini quota/quyền dữ liệu và dữ liệu đầu vào thực tế.</td><td>Gemini trả evidence đọc được qua API; xác định ETA sau spike runtime.</td></tr>
+<tr><td>API từng đợt</td><td>Contract → có mã → chạy tối thiểu → sẵn sàng FE</td><td>Phiên bản schema, URL môi trường, smoke result và payload được FE đọc.</td><td>Ghi đúng endpoint thiếu, owner xử lý và điều kiện mở khóa.</td><td>Giao nhóm API tiếp theo; không chờ đợt lớn.</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Cổng kỹ thuật M-04:</strong> VLM/classifier có runtime thật, routing rõ, evidence/ledger đúng và API đọc được. Chưa kết luận hiệu quả model.</li>
+<li><strong>Cổng E2E M-05:</strong> luồng HTTP hoàn chỉnh trên dữ liệu có provenance; tách kết quả fixture, dữ liệu xuất và dữ liệu thực tế đã được PO kiểm.</li>
+<li><strong>Cổng chức năng M-06:</strong> API BE còn lại đủ dùng, report/gate xử lý thiếu dữ liệu đúng.</li>
+<li><strong>Cổng chất lượng M-07/M-08:</strong> đánh giá độc lập, ngưỡng có bằng chứng, NFR/restore và nghiệm thu đầy đủ; chỉ lúc đó mới kết luận sẵn sàng release.</li>
+</ul>
+<p class="muted">Khi bắt đầu thực thi, đồng bộ các thay đổi phạm vi/ưu tiên VLM, classifier và phân bổ epic vào hồ sơ roadmap/contract liên quan. Báo cáo này không tự thay đổi trạng thái đã duyệt hoặc đóng milestone lịch sử.</p>
+</section>
+
+<section id="sources">
+<h2>Nguồn đối chiếu và giới hạn</h2>
+<p>Tài liệu là kế hoạch đề xuất dựa trên repository local, không phải báo cáo QA hay xác nhận triển khai. Ngưỡng routing, evaluation endpoint và envelope AI được đánh dấu rõ là đề xuất mới.</p>
+<ul class="source-list">
+<li><a href="../../.agent/planning/roadmap.html">Roadmap R-001</a>, <a href="../../.agent/planning/milestones.html">milestones</a> và <a href="implementation-plan-review.html">bản tổng hợp kế hoạch cũ</a>: phạm vi M-04…M-06 và E-06…E-24.</li>
+<li><a href="../12-ai/vlm.html">VLM: kiến trúc, budget, retry và coverage</a>: candidate → policy → worker → evidence; không tự xác nhận lỗi.</li>
+<li><a href="../../.agent/governance/decisions/DEC-019.html">DEC-019</a>: ownership BE, workspace, enum phân xử, rework read và final lineage. <a href="../../.agent/governance/decisions/DEC-020.html">DEC-020</a>: dữ liệu xuất/fixture phục vụ kỹ thuật, PO kiểm dữ liệu thực tế sau.</li>
+<li><a href="../../src/backend/config/urls.py">Route gốc BE</a>, <a href="../../src/backend/runs/urls.py">run routes</a>, <a href="../../src/backend/runs/serializers.py">run/config/candidate serializers</a>, <a href="../../src/backend/runs/services.py">engine descriptor và tạo shard</a>.</li>
+<li><a href="../../src/backend/orchestration/apps.py">Khởi tạo registry</a>, <a href="../../src/backend/orchestration/builtin_engines.py">builtin engines</a>, <a href="../../src/backend/engines/registration.py">structural engines</a>, <a href="../../src/backend/engines/interface.py">engine status/reason</a>.</li>
+<li><a href="../../src/backend/review/issue_views.py">Workspace/decision API</a>, <a href="../../src/backend/review/adjudication_service.py">phân xử</a>, <a href="../../src/backend/review/rework_urls.py">rework routes</a>, <a href="../../src/detector_worker/labelx_detector/inference.py">detector inference</a>.</li>
+<li><a href="https://ai.google.dev/gemini-api/docs/models">Gemini API Models</a> và <a href="https://ai.google.dev/gemini-api/docs/image-understanding">Gemini Image Understanding</a>: model ID <code>gemini-3.8-flash</code>, xử lý ảnh và JSON có schema. <a href="https://docs.pytorch.org/vision/stable/models/convnext.html">PyTorch ConvNeXt</a>: backbone classifier ConvNeXt Tiny.</li>
+</ul>
+<p class="muted">Không tra cứu/publish dịch vụ bên ngoài, không thay đổi nhánh FE, mã BE hoặc các file roadmap gốc trong lần lập báo cáo này. Các liên kết nguồn hoạt động khi mở file trong cấu trúc repository; nội dung và CSS của báo cáo không phụ thuộc mạng.</p>
+</section>
+<footer class="footer">LABELX · KẾ HOẠCH BACKEND TỪ M-04 · 13/10/2026 · HTML độc lập, có bố cục in ngang</footer>
+</main>
+</body>
+</html>

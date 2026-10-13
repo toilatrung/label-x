@@ -1,0 +1,124 @@
+{
+  "task": "#243 (R07) concurrency and final-state verification - tests only",
+  "author": "label-x-38 (same author as #243: not independent QC)",
+  "branch": "test/m03-243-concurrency",
+  "worktree": "/tmp/labelx-m03-243c",
+  "base": "cd11e20",
+  "pushed": false,
+  "commits": [
+    "7a91f4c99ac01ad09e38b786f7fb302ae783d745 (first version)",
+    "9fb12406065b5173e86e9acaff352e2166d04a9d (revised after cross-review; FINAL SHA)"
+  ],
+  "finalSHA": "9fb12406065b5173e86e9acaff352e2166d04a9d",
+  "productCodeChanged": false,
+  "file": "src/backend/tests/review/test_final_concurrency.py (19 tests)",
+  "tests": {
+    "newFile": "19 passed, 3 consecutive runs: 15.38 s, 13.67 s, 14.14 s",
+    "withGuardAndFinalizationFiles": "40 passed (test_final_concurrency + test_final_source_guard + test_finalization)",
+    "fullSuite": "pytest -q on 9fb1240 with the 5 review probes copied in as an untracked temp file: 691 passed, 1 skipped, 1 failed in 186.03 s. The single failure is the probe test_verify_failure_can_be_submitted_again; every non-probe test passed (687 passed incl. 19 new). Earlier full run on 7a91f4c (before the revision, no probes): 685 passed, 1 skipped, 219.60 s, exit 0.",
+    "ruffCheck": "All checks passed",
+    "ruffFormat": "238 files already formatted",
+    "mypy": "Success: no issues found in 3 source files (finalization_service, lineage, tasks)",
+    "makemigrations --check": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, no output",
+    "skipped": "1 skipped = S3 integration test (opt-in), as before"
+  },
+  "probes": {
+    "file": ".agent/evidence/M-03-REVIEW-2026-10-12/test_review_probes.py (copied unchanged, run, deleted)",
+    "result": "4 passed, 1 failed",
+    "passed": [
+      "test_queue_exposes_real_holder_after_claim",
+      "test_queue_in_review_filter_finds_claimed_frame",
+      "test_new_final_candidate_blocks_operational_source",
+      "test_verify_pass_does_not_complete_frame_before_final_run"
+    ],
+    "failed": "test_verify_failure_can_be_submitted_again: now HTTP 409 on the second submit (was IntegrityError before the #242 fix). The probe mocks _build_recheck_artifacts to return the SAME snapshot for both rounds and sends revision '9'*64, so the service rejects it. Probe assumption, not a #243 defect; not edited."
+  },
+  "mutationMatrix": {
+    "target": "locks inside review.finalization_service.complete_scope_frames (source restored after each run; git diff empty)",
+    "results": [
+      {
+        "mutant": "no origin-run lock",
+        "failedTests": [
+          "test_issue_writer_taking_the_run_lock_cannot_slip_in_after_the_completion_check"
+        ],
+        "caught": true
+      },
+      {
+        "mutant": "no frame lock",
+        "failedTests": [
+          "test_issue_writer_taking_only_the_frame_lock_cannot_slip_in_after_the_check"
+        ],
+        "caught": true
+      },
+      {
+        "mutant": "no attempts lock",
+        "failedTests": [],
+        "caught": false,
+        "note": "19 passed: redundant, subsumed by the origin-run lock for every current caller; not claimed as verified"
+      },
+      {
+        "mutant": "no locks at all",
+        "failedTests": [
+          "test_parallel_complete_scope_frames_has_one_effect",
+          "test_issue_writer_taking_the_run_lock...",
+          "test_issue_writer_taking_only_the_frame_lock...",
+          "test_cancelling_a_retry_attempt_while_sweeping_keeps_the_valid_final"
+        ],
+        "caught": true
+      },
+      {
+        "mutant": "no run + no attempts locks",
+        "failedTests": [
+          "test_issue_writer_taking_the_run_lock..."
+        ],
+        "caught": true
+      },
+      {
+        "mutant": "no frame + no attempts locks",
+        "failedTests": [
+          "test_issue_writer_taking_only_the_frame_lock..."
+        ],
+        "caught": true
+      },
+      {
+        "mutant": "no run + no frame locks",
+        "failedTests": [
+          "test_issue_writer_taking_the_run_lock...",
+          "test_issue_writer_taking_only_the_frame_lock..."
+        ],
+        "caught": true
+      }
+    ],
+    "honestNotes": [
+      "The frame lock is defence in depth: production issue writers take the run lock first. The frame-only test simulates a writer that skips the run lock.",
+      "The race tests use deliberate pauses (completer_gate / widen_race_window); without a forced order the critical section is microseconds long and unlocked code passed by luck in the first version (cross-review finding).",
+      "blocked_reasons reports only one reason per final attempt (known limit awaiting PO decision); tests do not pin it."
+    ]
+  },
+  "coverageAgainstAC243": {
+    "one valid effect under concurrent trigger": "4 threads complete_scope_frames -> exactly 1 change; 4 threads sweeper -> 1 Issue and 1 FrameReview, no error; 4 threads route_new_candidates (inside a transaction, as the sweeper does) -> 1 Issue via unique constraint",
+    "new-issue race": "forced order: writer acts only after the completer passed _frame_may_complete; never COMPLETED while the writer saw the frame open (two variants: run-lock writer, frame-lock-only writer)",
+    "final Partial/Failed/Cancelled": "source stays origin, scope_complete=false, blocked_reasons final_run_<status>, no routing, frame not completed",
+    "ledger gaps": "failed unit / pending ledger / not_checked / no engine row: blocked_reasons == [coverage_incomplete], not routed, not completed",
+    "retry": "failed attempt then valid retry: only the valid final selected; original engine results untouched",
+    "cancel": "cancel_qc_run on COMPLETED final raises InvalidTransitionError and the sweep still completes; cancel of a running retry attempt racing 2 sweepers: retry cancelled, exactly one sweeper completes the frame, source stays the valid final"
+  },
+  "notCovered": [
+    "Race between rework verify and completion (verify_rework writes frame=AWAITING_FOLLOWUP unconditionally at rework_service.py:643, so 'completion first then verify' would regress a COMPLETED frame: design question for #242, recorded by the coordinator)",
+    "Two issues on one frame under race: the scenario cannot occur, an open issue on the origin run blocks selection before the frame loop (so the frame-level issue check is defence in depth)",
+    "Real beat timing under load; only one tick observed (see below)"
+  ],
+  "beatMeasurement": {
+    "method": "real Celery beat (DatabaseScheduler) + worker from the 243c worktree, DB labelx_e2e_claude, broker Redis db 13, SYNTHETIC scopes (datasets 71-73, no CVAT)",
+    "observed": "beat started 17:48:09Z; first review-sweep-ready-final-runs tick sent at 17:50:09Z (= configured 120 s); the task ran about 0.19 s. Final runs marked Completed at 17:48:25Z, 17:49:00Z, 17:49:35Z; the routed Issues were created at 17:50:09.84-.91Z",
+    "latencySeconds": {
+      "ds71": 104.65,
+      "ds72": 69.54,
+      "ds73": 34.43
+    },
+    "caveat": "ONE tick observed, so not a distribution: latency depends on the beat phase, upper bound about 120 s + about 0.2 s run time. No measurement under load or with several ticks."
+  },
+  "crossReviewReceived": "label-x-b0 review of 7a91f4c (6 points) addressed in 9fb1240",
+  "releaseSlot": "full pytest finished; slot released"
+}

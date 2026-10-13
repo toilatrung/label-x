@@ -1,0 +1,388 @@
+{
+  "title": "E2E on PO's local CVAT - experiment by label-x-38, NOT independent QC; author of #243/#244/#246 does not certify those parts",
+  "environment": "Local environment of the PO: CVAT http://localhost:8080, CVAT project 'labelx-dev' (id 1), task 4 / job 4, data of job 4 only. CVAT accessed with GET only through cvat_adapter.CvatReadClient; nothing written to CVAT; token never printed or stored.",
+  "sha": {
+    "main": "c4cacec126148c8e68e42ef9843070584fce0c97 (worktree /tmp/labelx-m03-e2e, detached)",
+    "earlier": "edcb8a5005af6325216582730f3c0bdb769c42ed was used for snapshots 1-3, runs 1-3, claim/issue/decision/rework #1 creation (before the switch). No migration changed between the two (makemigrations --check: No changes detected on c4cacec). The 409-recheck commit and the OpenAPI changes are in c4cacec; run 4 and everything after ran on c4cacec."
+  },
+  "isolation": {
+    "db": "labelx_e2e_claude (own DB on the dev postgres, migrated)",
+    "celery": "own worker, Redis broker db 13 / result db 12",
+    "note": "For a period a second session wrote into the shared scratchpad and used broker db 15; my first worker consumed a few of its tasks. Resolved by coordinator: separate scratchpad/c38 and db 13."
+  },
+  "provenance": {
+    "snapshots": [
+      {
+        "id": 1,
+        "revision": "3a0320b76ab6110a7f7e7b5c4b0a3fb5c332ccafa48211a549993e14544ecade",
+        "job_sha256": "3171dbe51a0d542c7d399912d97c6fdd3c5f1e0dae03ac432479134e770cd79d",
+        "guideline": "unversioned",
+        "source_updated_at": "2026-10-12T16:01:19.294781Z",
+        "note": "E2E local CVAT job4 (read-only)"
+      },
+      {
+        "id": 2,
+        "revision": "3a0320b76ab6110a7f7e7b5c4b0a3fb5c332ccafa48211a549993e14544ecade",
+        "job_sha256": "3171dbe51a0d542c7d399912d97c6fdd3c5f1e0dae03ac432479134e770cd79d",
+        "guideline": "unversioned",
+        "source_updated_at": "2026-10-12T16:01:19.294781Z",
+        "note": "E2E local CVAT job4 (read-only)"
+      },
+      {
+        "id": 3,
+        "revision": "52281f4984a8c99b1cbb1182399e831be274a804cbf6226907aad42230d0aead",
+        "job_sha256": "994afe6ec7aef2711ce7edfe3f3ac096009eeaf4cb31c840bbe039175a445a84",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T16:50:24.027039Z",
+        "note": "E2E local CVAT job4 after assignee (read-only)"
+      },
+      {
+        "id": 4,
+        "revision": "b87b7e229525e4945b2c5c2e15e48b44000b14f0fe2cbd5e2e38228c140f108d",
+        "job_sha256": "c91eb1aff307269e7c3692f029c29f53adfd9a099ad46daa9771fd42a2f6ab49",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T17:01:07.157132Z",
+        "note": "harness: precompute revision of current CVAT state"
+      },
+      {
+        "id": 5,
+        "revision": "b87b7e229525e4945b2c5c2e15e48b44000b14f0fe2cbd5e2e38228c140f108d",
+        "job_sha256": "c91eb1aff307269e7c3692f029c29f53adfd9a099ad46daa9771fd42a2f6ab49",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T17:01:07.157132Z",
+        "note": "T-040 rework 1 submission b87b7e229525e4945b2c5c2e15e48b44000b14f0fe2cbd5e2e38228c140f108d"
+      },
+      {
+        "id": 6,
+        "revision": "db06719f8e5ad3e828d54e82703ba4fbf211b3986da3b6d38e4e339355a31015",
+        "job_sha256": "9b18eff2d674035b02a7111ab094b77478de9ff1634d07eea51e105bd40c7df3",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T17:22:56.633291Z",
+        "note": "harness: precompute revision of CVAT state after round 2"
+      },
+      {
+        "id": 7,
+        "revision": "db06719f8e5ad3e828d54e82703ba4fbf211b3986da3b6d38e4e339355a31015",
+        "job_sha256": "9b18eff2d674035b02a7111ab094b77478de9ff1634d07eea51e105bd40c7df3",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T17:22:56.633291Z",
+        "note": "T-040 rework 1 submission db06719f8e5ad3e828d54e82703ba4fbf211b3986da3b6d38e4e339355a31015"
+      },
+      {
+        "id": 8,
+        "revision": "db06719f8e5ad3e828d54e82703ba4fbf211b3986da3b6d38e4e339355a31015",
+        "job_sha256": "9b18eff2d674035b02a7111ab094b77478de9ff1634d07eea51e105bd40c7df3",
+        "guideline": "v1",
+        "source_updated_at": "2026-10-12T17:22:56.633291Z",
+        "note": "T-041 final scope for origin run 3"
+      }
+    ],
+    "runs": [
+      {
+        "id": 1,
+        "snapshot_id": 1,
+        "config_version_id": 1,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": null,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ],
+          [
+            "schema",
+            "not_checked"
+          ]
+        ]
+      },
+      {
+        "id": 2,
+        "snapshot_id": 1,
+        "config_version_id": 2,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": null,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ]
+        ]
+      },
+      {
+        "id": 3,
+        "snapshot_id": 3,
+        "config_version_id": 2,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": null,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ]
+        ]
+      },
+      {
+        "id": 4,
+        "snapshot_id": 3,
+        "config_version_id": 3,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": null,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ],
+          [
+            "schema",
+            "checked"
+          ]
+        ]
+      },
+      {
+        "id": 5,
+        "snapshot_id": 5,
+        "config_version_id": 2,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": 3,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ]
+        ]
+      },
+      {
+        "id": 6,
+        "snapshot_id": 7,
+        "config_version_id": 2,
+        "status": "completed",
+        "is_final": false,
+        "origin_run_id": 3,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ]
+        ]
+      },
+      {
+        "id": 7,
+        "snapshot_id": 8,
+        "config_version_id": 2,
+        "status": "completed",
+        "is_final": true,
+        "origin_run_id": 3,
+        "engines": [
+          [
+            "duplicate",
+            "checked"
+          ],
+          [
+            "geometry",
+            "checked"
+          ]
+        ]
+      }
+    ]
+  },
+  "cvatDataTimeline": [
+    {
+      "read": "first read",
+      "annotation_sha256": "f022fadb…b30b229",
+      "job_updated": "2026-10-12T16:01:19Z",
+      "shapes": "5 rect + 3 mask",
+      "assignee": null
+    },
+    {
+      "read": "after user assigned job 4 to lx_provisioner (id 1)",
+      "annotation_sha256": "f022fadb… (unchanged)",
+      "job_updated": "2026-10-12T16:50:24Z",
+      "assignee": 1
+    },
+    {
+      "read": "round 1 edit by user",
+      "annotation_sha256": "97346759…36c8",
+      "job_updated": "2026-10-12T17:01:07Z",
+      "change": "box shape 4440 [345.2,275.28,456.4,336.3] -> [345.2,275.28,469.8,335.2]; others unchanged"
+    },
+    {
+      "read": "first attempt at round 2 (no new box)",
+      "annotation_sha256": "bf4b510d…18fd",
+      "job_updated": "2026-10-12T17:20:16Z",
+      "change": "box 4438 [615.45,254.53,691.6,314.4] -> [614.38,256.1,682.2,306.87]; no box added; run stopped before submit"
+    },
+    {
+      "read": "round 2 final state",
+      "annotation_sha256": "02be571d…969a",
+      "job_updated": "2026-10-12T17:22:56Z",
+      "change": "exactly 1 new rectangle id 4446 [784.38,227.53,1039.65,416.47] overlapping shape 4442 [787.6,229.64,1036.23,414.39], IoU 0.952; no other change vs 17:20:16Z; 3 masks (4443-4445) unchanged; pre-existing overlap 4439/4440 IoU 0.059"
+    }
+  ],
+  "steps": [
+    {
+      "step": "snapshot locked from CVAT (read-only)",
+      "result": "PASS",
+      "detail": "snapshot 1 locked; replay with same key returns same snapshot; new key gives identical revision 3a0320b7…; 5 rectangles kept, 3 masks skipped (skipped_shape_counts mask:3)"
+    },
+    {
+      "step": "guideline loaded via official command",
+      "result": "PASS",
+      "detail": "manage.py load_guideline fixtures/bdd100k_guideline_v1.yaml: 13 rules, 31 mapping groups; snapshots created afterwards carry guideline_version v1 (snapshots 1,2 stay 'unversioned', immutable)"
+    },
+    {
+      "step": "run + ranking through API and real worker",
+      "result": "PASS",
+      "detail": "POST /api/runs/ then worker; runs 2,3 (geometry+duplicate) completed with full coverage; 0 candidates on the original data"
+    },
+    {
+      "step": "schema engine with taxonomy",
+      "result": "PASS",
+      "detail": "Run 1 (schema enabled, no taxonomy): schema not_checked/no_reference, coverage.complete=false (a final from such config could never be selected). Run 4 on snapshot 3 with params.taxonomy = the 10 CVAT labels pasted by the user (required_attributes empty, version = snapshot taxonomy_version): schema checked, ledger 1/1, coverage.complete=true. TAXONOMY WAS BUILT BY THE SESSION FROM THE USER-PROVIDED CVAT LABEL LIST, NOT AN OFFICIAL PO TAXONOMY."
+    },
+    {
+      "step": "queue claim, holder, state",
+      "result": "PASS",
+      "detail": "POST /api/queues/risk/next/ 200; ranking after claim review_state=in_review and lease_holder_user_id = reviewer; FrameIssues returned snapshot_revision, 5 annotations, 0 predictions"
+    },
+    {
+      "step": "issue + decision + rework create",
+      "result": "PASS",
+      "detail": "manual E1 issue, confirm decision 201, POST /api/rework/ 201 -> fix_pending, original_revision = snapshot 3 revision; annotator GET /api/rework/?dataset_id=1 sees only its own item"
+    },
+    {
+      "step": "round 1: submit -> recheck -> verify FAIL -> fix_pending",
+      "result": "PASS",
+      "detail": "HARNESS METHOD (not the user flow): a separate snapshot (key e2e-claude-precompute-r1) was created to read the deterministic revision b87b7e22…108d and used as cvat_revision. Submit 202; recheck run 5 completed, snapshot revision == cvat_revision; verifier (different synthetic person) verify passed=false -> 200, rework fix_pending, issue fix_pending, frame awaiting_followup; verification #1 outcome=fail kept"
+    },
+    {
+      "step": "round 2: submit -> recheck -> verify PASS",
+      "result": "PASS",
+      "detail": "Same harness method (precompute-r2 revision db06719f…1015). Submit 202; recheck run 6 completed; engine duplicate produced 1 candidate E3 (rule DUP-01, objects shape:4442 + shape:4446) in the recheck run, i.e. the overlap IoU 0.952 is above the duplicate engine's threshold (threshold value not read). Verify passed=true -> 200: rework resolved, issue resolved, frame awaiting_followup (not completed)"
+    },
+    {
+      "step": "final run built automatically (T-041)",
+      "result": "PASS",
+      "detail": "After verify PASS the Celery task built final run 7 (snapshot 8) from live CVAT; snapshot 8 job sha256 == recheck snapshot 7 job sha256 and revision db06719f… == verified revision; run completed; engines checked; 2 FinalRunVerification links (verification 1 fail, 2 pass)"
+    },
+    {
+      "step": "duplicate engine creates a new candidate in the final run",
+      "result": "PASS",
+      "detail": "Final run 7 has 1 E3 candidate (dedup_key d83f1bc1…) that is absent from the origin run 3 (0 candidates) => 'new candidate'"
+    },
+    {
+      "step": "guard: source not selected while new candidate unreviewed",
+      "result": "PASS",
+      "detail": "GET /api/runs/3/ before routing: operational_source run 3 (origin), scope_complete=false, blocked_reasons=[new_candidate_unreviewed], final_attempts[run 7 completed, new_candidate_unreviewed]"
+    },
+    {
+      "step": "route_new_candidates through the sweeper (#243)",
+      "result": "PASS",
+      "detail": "HARNESS: sweeper triggered by calling review.tasks.sweep_ready_final_runs() directly (beat not running in this harness; settings beat schedule is 120 s). It created Issue #2 (E3, origin=engine, pending_review) on a new FrameReview of final run 7 (state unreviewed); operational_source then blocked_reasons=[open_issue_in_final_run]; final-run ranking showed issue_counts {E3:1}"
+    },
+    {
+      "step": "RISK 1: claim the routed issue through /api/queues/risk/next/",
+      "result": "PASS",
+      "detail": "POST /api/queues/risk/next/ with run_id=7 -> 200; FrameIssues lists the issue (E3, engine), state pending_review -> in_review, 6 annotations, 1 prediction"
+    },
+    {
+      "step": "reject + complete frame + source selection",
+      "result": "PASS",
+      "detail": "reject decision 201 (issue rejected), POST /api/frames/2/complete/ 200; GET /api/runs/3/ then: operational_source run 7 (final), scope_complete=true, blocked_reasons=[], coverage.complete=true; GET /api/runs/7/: verification_lineage 2 items (fail, pass) and selected_final_sources [{cvat_job_id 4, rework_id 1, verification_id 2, source_run_id 6, source_revision db06719f…}]; GET /api/rework/1/: status resolved, round_count 2, timeline 2 rounds"
+    },
+    {
+      "step": "sweeper completes the ORIGIN frame after resolve",
+      "result": "FAIL",
+      "detail": "Origin frame 1 stayed 'incomplete' after the second sweeper pass; complete_scope_frames only completes frames in awaiting_followup, so the origin frame was never completed. See finding F1."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "major (needs owner decision)",
+      "title": "Expired lease on an old frame regresses its state to incomplete after rework verify",
+      "evidence": "Lease 1 on origin frame 1 (run 3) was created 16:59:58, expired 17:14:58 and was never closed because the reviewer did not call frames/complete (harness skipped that step). Rework verify then set the frame to awaiting_followup. At 17:25:16 the reviewer claimed run 7: review.services._close_expired materialised the expired lease and set frame 1 to INCOMPLETE (previous_reviewer=reviewer, incomplete_since=17:14:58). Frame 1 was then never completed by complete_scope_frames (it only completes awaiting_followup).",
+      "impact": "If a reviewer leaves the frame without 'complete' (closed browser) and rework is verified later, the frame is pushed back to incomplete and the scope frames cannot complete automatically; resume would require the reviewer to claim it again.",
+      "scope": "lease/expiry (#238 / T-033), not #243. Not fixed; no code changed.",
+      "options": "(a) _close_expired should not overwrite states other than in_review/unreviewed; (b) complete_scope_frames should also complete frames left incomplete once all issues are closed; (c) accept and document: reviewer must complete frames before requesting rework. Decision belongs to the coordinator/PO."
+    },
+    {
+      "id": "F2",
+      "severity": "design gap",
+      "title": "Annotator/FE has no way to learn the current CVAT revision needed for POST /api/rework/{id}/submitted/",
+      "evidence": "cvat_revision must equal revision_sha256 of the snapshot LabelX builds at submit time; I had to precompute it with a separate snapshot (harness method)",
+      "note": "already recorded by the coordinator for R13"
+    },
+    {
+      "id": "F3",
+      "severity": "config",
+      "title": "Engine 'schema' is required; without a taxonomy in config params the coverage is never complete",
+      "evidence": "Run 1 not_checked/no_reference, coverage.complete=false; Run 4 with taxonomy true"
+    },
+    {
+      "id": "F4",
+      "severity": "observation",
+      "title": "Job 4 had no assignee initially: every frame was IDENTITY_MAPPING_MISSING and the queue returned 204 (fail-closed by design)"
+    },
+    {
+      "id": "F5",
+      "severity": "observation",
+      "title": "Only rectangles are processed; 3 masks of job 4 are skipped by the normaliser (skipped_shape_counts mask:3)"
+    },
+    {
+      "id": "F6",
+      "severity": "observation",
+      "title": "The final run reads live CVAT; any CVAT edit between verify and final build would be blocked by the 'final snapshot must contain verified revision' guard (job sha comparison). Observed as a precondition: the round-2 edit had to be finished before submit."
+    },
+    {
+      "id": "F7",
+      "severity": "observation",
+      "title": "Sweeper latency: routing/completion happen only when review.sweep_ready_final_runs runs (beat every 120 s in settings, DatabaseScheduler). It was triggered manually here, so the real beat timing was NOT measured."
+    }
+  ],
+  "synthetic_or_harness": [
+    "Accounts annotator/reviewer/verifier/qa_lead/qc_admin are synthetic LabelX users with synthetic identities (CVAT ids 9001-9004; annotator mapped to the real CVAT user id 1 lx_provisioner); they are not real people.",
+    "Taxonomy for the schema engine was built from the user-provided CVAT label list.",
+    "Revision for submit was precomputed by a harness snapshot.",
+    "Sweeper was invoked by a direct call.",
+    "Issue #1 was created manually by the reviewer (the original data produced 0 engine candidates)."
+  ],
+  "notDone": [
+    "Real celery beat timing of the sweeper",
+    "Annotator effort/idle policy and the review-policy endpoint on real data",
+    "Concurrency/race on real data",
+    "Browser/UI checks",
+    "Full pytest/ruff/mypy/spectacular were NOT run in this E2E task (no code changed); unit tests numbers for c4cacec come from another session (label-x-37: 665 pass) and are not claimed here",
+    "Origin frame completion path (see F1)"
+  ],
+  "claims": "Experiment on the PO's local environment with job 4 data. Not independent QC. Not a PASS of M-03 acceptance. Fixture/synthetic parts are listed above.",
+  "files": "Scripts in the session scratchpad (scratchpad/c38); preliminary file E2E-cvat-local-prelim.json (earlier snapshot-only step)."
+}

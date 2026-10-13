@@ -1,0 +1,56 @@
+{
+  "task": "recheck cùng snapshot -> 409 (#242)",
+  "worktree": "/tmp/labelx-m03-rework-timeline",
+  "branch": "feat/m03-rework-timeline-409",
+  "baseSHA": "f6ae47a512d00ed4a5c802bba12715831429af7d",
+  "commitSHA": "dfc93a4ef18550a9a6b4b339725e49add5570c47",
+  "pushed": false,
+  "files": [
+    "src/backend/review/rework_service.py",
+    "src/backend/review/rework_views.py",
+    "src/backend/tests/review/test_rework.py"
+  ],
+  "behavior": "submit_rework kiểm rework.rechecks.filter(snapshot) trong lock trước khi ghi; bọc insert ReworkRecheck bằng savepoint và bắt IntegrityError (race) -> 409. Mã lỗi REVISION_UNCHANGED (đã có trong ErrorCode contract, không thêm mã mới vì enum ở openapi.yaml được test pin), details {rework_id, snapshot_id}. DB không đổi (status/issue/rechecks/audit giữ nguyên, có test).",
+  "schemaChange": "POST /api/rework/{id}/submitted/ 409 có mô tả mã INVALID_TRANSITION | IDEMPOTENCY_KEY_REUSED | REVISION_UNCHANGED; label-x-62 sinh lại OpenAPI.",
+  "tests": [
+    "test_recheck_reusing_same_snapshot_is_409_without_db_change",
+    "test_recheck_snapshot_race_integrity_error_becomes_409"
+  ],
+  "results": {
+    "ruff check": "All checks passed!",
+    "ruff format": "236 files already formatted",
+    "mypy review": "Success: no issues found in 36 source files",
+    "spectacular --validate --fail-on-warn": "exit 0; ",
+    "makemigrations --check": "No changes detected",
+    "pytest tests/review tests/effort tests/runs": "160 passed in 98.05s (0:01:38)"
+  },
+  "notRun": [
+    "make check (đầy đủ gồm FE/docs)"
+  ],
+  "dataNote": "Fixture tổng hợp, không CVAT thật",
+  "selfQc": "không tự chứng nhận",
+  "followUpCommit": {
+    "commitSHA": "46a5825484b09173a53a096ee0dd6e9d33cfa0eb",
+    "previous": "dfc93a4ef18550a9a6b4b339725e49add5570c47",
+    "files": [
+      "src/backend/tests/review/test_rework.py"
+    ],
+    "db": "labelx_b0_race (test DB riêng)"
+  },
+  "raceTests": {
+    "test_postgres_concurrent_submit_same_snapshot_distinct_keys": "2 luồng, 2 key khác nhau, cùng revision/snapshot: [202, 409]; luồng thua nhận INVALID_TRANSITION (không phải REVISION_UNCHANGED); DB: 2 rechecks (round 1,2), 2 audit rework.submitted, rework/issue recheck_pending.",
+    "test_postgres_concurrent_submit_same_key_replays_once": "2 luồng cùng key + body: [202, 202], vẫn đúng 1 recheck mới (replay).",
+    "test_postgres_concurrent_submit_reused_snapshot_never_500": "2 luồng cùng nhận lại snapshot vòng 1 với revision mới: [409, 409] cả hai REVISION_UNCHANGED, DB không đổi."
+  },
+  "finding": "Đường IntegrityError (rework_recheck_unique_snapshot) gần như không đạt được bằng race thật vì rework bị khóa FOR UPDATE nên luồng sau thấy recheck_pending và nhận INVALID_TRANSITION; IntegrityError là lớp phòng thủ, test mô phỏng vẫn giữ. Race 'cùng submit, 1 thắng' trả INVALID_TRANSITION chứ không phải REVISION_UNCHANGED như yêu cầu; không đổi hành vi cũ, chờ label-x-98 quyết.",
+  "fullBackendChecks": {
+    "pytest (full, cd src/backend)": "661 passed, 1 skipped in 296.91s",
+    "ruff check .": "All checks passed!",
+    "ruff format --check .": "236 files already formatted",
+    "makemigrations --check --dry-run": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, không cảnh báo",
+    "mypy config effort (đúng như CI ci.yml:124)": "Success: no issues found in 19 source files",
+    "mypy review": "Success: no issues found in 36 source files",
+    "mypy . (toàn dự án)": "LỖI: không chạy được nguyên trạng ('Source file found twice' ở fixtures/m03_review_workflow.py). Với --explicit-package-bases: 892 errors in 45 files; 889 trong tests/ (strict, test chưa gắn type, gồm 151 ở test_rework*.py) và 3 ở manage.py; 0 ở mã ứng dụng. CI chỉ chạy mypy config effort."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "group": "A", "pid": 2226, "issue": 241, "scope": "Backend only",
+  "commitSHA": "ee4a361", "stackedOn": ["826efc1 (#238)", "07a634f (#239)"],
+  "branch": "feat/m03-resolve-claude-a", "worktree": "/tmp/labelx-m03-claude-a", "pushed": false,
+  "files": [
+    "src/backend/review/adjudication_service.py", "src/backend/review/adjudication_views.py",
+    "src/backend/review/case_serializers.py (new)", "src/backend/tests/review/test_escalation_adjudication.py"
+  ],
+  "behavior": [
+    "Public outcome enum confirm|reject|guideline_gap on write and read; guideline_missing now rejected on write (400).",
+    "Legacy rows with outcome guideline_missing are mapped to guideline_gap on read; rows never updated (append-only). New rows persist 'guideline_gap' in the existing CharField(24) - no model/migration change (review/models.py is group B's).",
+    "GET /api/decision-cases/ now {next,previous,results}, page 50, cursor by pk, filters rule_id/issue/version/outcome (outcome=guideline_gap matches legacy rows too), invalid issue/outcome/cursor -> 400, dataset-scope enforced.",
+    "GET /api/decision-cases/{id}/ adds history[] of all versions of the issue (append-only).",
+    "Serializers + extend_schema added for list/detail/adjudicate; spectacular reports no error for these views."
+  ],
+  "tests": {
+    "command": "cd /tmp/labelx-m03-claude-a/src/backend && DJANGO_SECRET_KEY=<dummy> CORS_ALLOWED_ORIGINS=http://localhost:3000 DATABASE_URL=postgres://labelx:labelx@localhost:5432/labelx_claude_a uv run --frozen pytest -q -p no:cacheprovider",
+    "output": "616 passed, 1 skipped in 172.94s",
+    "note": "Without CORS_ALLOWED_ORIGINS set, tests/test_settings.py::test_cors_preflight_allows_idempotency_key fails (env only, unrelated to my change; passes with the variable)."
+  },
+  "contractPatchProposal": {
+    "file": "docs/04-api/openapi.yaml (NOT edited; shared)",
+    "add": "paths /api/decision-cases/ (params rule_id, issue, version, outcome, cursor; 200 {next,previous,results:DecisionCase[]}) and /api/decision-cases/{id}/ (200 DecisionCase + history[{id,case_version,outcome,actor_user_id,created_at}]); schema 'Adjudication' already uses guideline_gap and matches runtime.",
+    "generatedTypes": "need regeneration by coordinator"
+  },
+  "notVerified": [
+    "R01 (#237) dependency not checked.",
+    "AC about 14 views missing serializers: only case/adjudication views fixed; spectacular still errors for EscalationsListView and IssueDecisionView (out of my files or scope).",
+    "AC same escalator/alias 403 + audit rollback: existing tests still pass, not extended.",
+    "No browser/Case UI check, no OpenAPI regeneration/drift check, no real CVAT data."
+  ],
+  "suggestedModelPatchForB": "Add GUIDELINE_GAP = 'guideline_gap' to DecisionCase.Outcome choices (choices-only migration) so model choices match persisted values."
+}

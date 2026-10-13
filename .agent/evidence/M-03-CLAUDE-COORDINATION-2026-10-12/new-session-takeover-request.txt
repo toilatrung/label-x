@@ -1,0 +1,41 @@
+M-03-RESOLVE TAKEOVER — single Claude coordinator
+
+You are the new Claude Code session selected by the PO to take over and coordinate the entire M-03-RESOLVE scope. First acknowledge your current task and whether it is safe to switch context. Then own the coordination of GitHub #236 and all native subissues #237–#249; do not wait for another Claude session to assign individual M-03 work.
+
+Read before acting:
+- /mnt/h/label-x/AGENT.html
+- /mnt/h/label-x/.agent/governance/decisions/DEC-019.html and DEC-020.html
+- /mnt/h/label-x/.agent/governance/change-requests/CR-113.html and CR-114.html
+- /mnt/h/label-x/.agent/planning/M-03-RESOLVE-2026-10-12.html
+- /mnt/h/label-x/.agent/reports/review/flow-M-03-2026-10-12.html
+- /mnt/h/label-x/.agent/evidence/M-03-CLAUDE-COORDINATION-2026-10-12/ (A/B/C results and integration-result.json)
+
+PO constraints:
+- Backend ownership stays with @toilatrung until PO explicitly delegates.
+- Backend target branch is integration/m03; new FE target is develop-fe.
+- Policy pilot: lease TTL 900 s, resume reservation 300 s, idle cutoff 120 s, whole idle gap excluded, versioned policy.
+- PO will test CVAT/data separately after receiving exported CVAT data. Do not require a live-CVAT snapshot or locator to code; do preserve internal immutable snapshot, revision, hash, and provenance guarantees. Never claim real-CVAT E2E PASS from fixtures.
+
+Already completed and must be preserved, not duplicated:
+- #238/#239: A commits 826efc1 and 07a634f; 111 tests pass.
+- #242: B commit 8284fb2; 91 tests pass; multi-round rework, idempotency/race handling, verify pass leaves AWAITING_FOLLOWUP.
+- #243/#244: C commits bbc56e7 and 15ce418b; 84 tests pass.
+- #246 Backend wave: C commit 22a4e11; 102 tests pass; policy/effort backend handoff is documented in C-wave2-result.json.
+- Integrated QC worktree: /tmp/labelx-m03-integrator, commit 900dc97, 110 integrated tests pass, ruff and mypy pass.
+
+Take over all task groups and coordinate dependencies:
+- R01 #237 contract/policy gate and scope traceability.
+- R02 #238 queue state/holder/filter/resume.
+- R03 #239 Workspace revision/annotations/predictions.
+- R04 #240 ReviewWorkspace FE owner remains tdt2112; coordinate, review, and do not silently rewrite ownership.
+- R05 #241 Case API/enum/runtime schema, Backend plus FE consumer.
+- R06 #242 rework multiple rounds and verify-fail recovery.
+- R07 #243 final source/frame completion guard.
+- R08 #244 GET rework and lineage/operational source.
+- R09 #245 rework/history FE owner remains tdt2112; coordinate and review.
+- R10 #246 policy/effort Backend and FE integration.
+- R11 #247 exported-data/environment readiness; no live-CVAT snapshot prerequisite.
+- R12 #248 independent QA on final integrated SHA; do not self-certify.
+- R13 #249 governance/aggregate and final PO handoff.
+
+Use isolated worktrees/branches. Do not reset, clean, or checkout /mnt/h/label-x while other sessions have changes. Do not push, merge, close issues, or change GitHub assignees without an explicit PO instruction. Do not edit shared OpenAPI/config/FE files concurrently; make a handoff or integrate sequentially. Preserve current evidence and write new status/result files under this coordination evidence directory. Report ACK with session id, current task, takeover state, worktree/base SHA, and first 3 actions. Then maintain a non-overlapping task matrix and report blockers, tests, commits, and handoffs. Independent QA remains required.

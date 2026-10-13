@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "decidedBy": "coordinator (label-x-9d) per user delegation: context-sharing issues are decided by coordinator; only system decisions go to the user",
+  "coordinatorAddress": "Use ListAgents and pick the session that is not you and not a known worker (names so far: label-x-98 -> label-x-9d). Names can change; if unsure, ask the user.",
+  "taskOwnership": {
+    "rule": "one owner per task; never run the same task in two sessions; a new session that continues another session's work must be named as the owner by the coordinator first",
+    "owners": {
+      "E2E CVAT local (labelx-dev, task 4/job 4)": "label-x-38",
+      "integration verify c4cacec": "label-x-37 (done, integration-result-3.json)",
+      "FE handoff doc": "label-x-7a",
+      "rework schema fix (GET/POST /api/rework/ in runtime schema)": "label-x-b0 (Kênh liên lạc phiên codex)",
+      "integrator worktree /tmp/labelx-m03-integrator": "read-only for everyone; only the coordinator may assign changes to it"
+    }
+  },
+  "isolation": {
+    "worktree": "/tmp/labelx-m03-<session-or-task>; never reuse another session's worktree",
+    "database": "labelx_<session>_<purpose> (e.g. labelx_e2e_claude belongs to label-x-38); never touch another session's DB",
+    "redisBroker": {"label-x-38": 13, "label-x-37": 15, "label-x-b0": 11, "label-x-7a": 10, "next-free": 9},
+    "scratchpad": "each session uses only its own scratchpad subdirectory (scratchpad/<session>); never write to files in a shared scratchpad path",
+    "processes": "kill only processes you started; never kill another session's worker"
+  },
+  "reporting": {
+    "to": "coordinator via SendMessage; first line a self-contained sentence",
+    "content": "task and state; SHA/branch/worktree; real test numbers; issues/blockers/questions with evidence and recommendation; what was not verified",
+    "doNotDo": "no push/merge/close issue/assignee change/GitHub; no PASS claim without running; no self-certifying QC of own work; no E2E CVAT PASS claim from fixtures; no token printing"
+  },
+  "decisionsByCoordinator": [
+    "worktree/DB/Redis/scratchpad naming and allocation",
+    "which session owns which task and when a session stops",
+    "which SHA is the test baseline (currently c4cacec126148c8e68e42ef9843070584fce0c97)",
+    "order of cherry-picks/integration among sessions"
+  ],
+  "decisionsForUser": [
+    "contract/API/schema changes beyond approved DEC-019/CR-113",
+    "push, PR creation, merge, issue closing, assignee changes",
+    "CVAT data changes (manual annotation edits), taxonomy, policy values",
+    "QA assignee and acceptance"
+  ]
+}

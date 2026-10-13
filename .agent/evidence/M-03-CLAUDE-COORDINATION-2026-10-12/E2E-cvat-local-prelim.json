@@ -1,0 +1,127 @@
+{
+  "kind": "PRELIMINARY connectivity + snapshot step only. Not the full E2E (that waits for 'SHA cuoi'); not independent QC (author of #243/#244/#246).",
+  "environment": "PO's local CVAT http://localhost:8080 (v2.77.0 per .env comment), task 4 / job 4, project 1, data of job 4. Token loaded from src/backend/.env, never printed or stored here.",
+  "worktree": "/tmp/labelx-m03-e2e (detached) at feat/m03-resolve-integrator edcb8a5005af6325216582730f3c0bdb769c42ed (integrator was still moving; this is not the final SHA)",
+  "database": "labelx_e2e_claude (new, own DB on the dev postgres); migrated to head; not the dev DB",
+  "cvatCalls": "GET only through cvat_adapter.CvatReadClient (read-only hook): jobs/4, tasks/4, jobs/4/annotations, jobs/4/data/meta, jobs/4/data frame 0, labels of project 1. Nothing was written to CVAT.",
+  "steps": [
+    {
+      "step": "auth + read job 4",
+      "result": "PASS",
+      "observed": {
+        "job": {
+          "id": 4,
+          "task_id": 4,
+          "project_id": 1,
+          "stage": "annotation",
+          "state": "in progress",
+          "start_frame": 0,
+          "stop_frame": 0,
+          "frame_count": 1,
+          "assignee": null,
+          "updated_date": "2026-10-12T16:01:19.294781Z"
+        },
+        "task": {
+          "name": "cavat_test",
+          "size": 1,
+          "mode": "annotation"
+        },
+        "annotations": {
+          "shapes": 8,
+          "rectangle": 5,
+          "mask": 3,
+          "tracks": 0,
+          "tags": 0,
+          "frames_with_shapes": 1,
+          "label_ids": [
+            3
+          ]
+        },
+        "canonical_annotation_sha256": "f022fadba2fa05cf874ee5ca81f4d6654b6976f31a78b9e5e11fa0b7ca30b229",
+        "frame0": {
+          "name": "b334b56d-b82e26b5.jpg",
+          "width": 1280,
+          "height": 720,
+          "bytes": 52621,
+          "content_type": "image/jpeg",
+          "sha256": "19180b24ae39e9ff2b6db8e9815d55ac07352e9490f9459faa22d74c3d927412",
+          "magic": "ffd8fffe"
+        }
+      }
+    },
+    {
+      "step": "locked internal snapshot (create_snapshot_from_cvat, dataset_id=1, scope job 4)",
+      "result": "PASS",
+      "observed": {
+        "snapshot_id": 1,
+        "status": "locked",
+        "revision_sha256": "3a0320b76ab6110a7f7e7b5c4b0a3fb5c332ccafa48211a549993e14544ecade",
+        "job_sha256": "3171dbe51a0d542c7d399912d97c6fdd3c5f1e0dae03ac432479134e770cd79d",
+        "rectangles": 5,
+        "skipped_shape_counts": {
+          "mask": 3
+        },
+        "frames": 1,
+        "provenance": {
+          "source": "CVAT",
+          "cvat_project_id": 1,
+          "scope": {
+            "cvat_job_ids": [
+              4
+            ],
+            "cvat_task_ids": []
+          },
+          "note": "E2E local CVAT job4 (read-only)"
+        },
+        "guideline_version": "unversioned"
+      }
+    },
+    {
+      "step": "idempotent replay (same Idempotency key)",
+      "result": "PASS",
+      "observed": "same snapshot id 1 and same revision returned"
+    },
+    {
+      "step": "reproducibility (new key, same CVAT state)",
+      "result": "PASS",
+      "observed": "snapshot id 2 has identical revision_sha256 and job sha256 (CVAT job updated_date unchanged)"
+    }
+  ],
+  "observationsForPO": [
+    "Job 4 has no assignee: any rework needs an annotator User with a verified identity, and the assignee-based checks have nothing to match. Roles/identities for the run must be set up (DEC-019 accounts still pending).",
+    "3 of 8 shapes are masks; the snapshot normaliser keeps only rectangles (5) and records mask:3 as skipped. Candidates/engines can only work on those 5 rectangles.",
+    "Job has one frame only, so a 'new candidate on another frame' scenario cannot occur naturally; a new final-run candidate for risk 1 would need an annotation change or synthetic data (will be labelled).",
+    "guideline_version is 'unversioned' (no guideline version published in the new DB).",
+    "Side effect: the snapshot step stored frame bytes in the dev object storage configured in .env (content-addressed key). CVAT itself was not modified.",
+    "src/backend/.env has CRLF line endings: sourcing it in bash leaves a carriage return in values; Python parsing with strip() works. Worth fixing the file or documenting."
+  ],
+  "notYetRun": [
+    "run creation and ranking",
+    "queue next/claim",
+    "issue/decision",
+    "rework multi-round",
+    "finalization and routing of a new candidate (risk 1)",
+    "sweeper timing",
+    "any step needing the integrator 'SHA cuoi'"
+  ],
+  "userActionNeededLater": "Rework needs a changed CVAT revision: the user edits the annotation of job 4 manually in CVAT when asked; LabelX never writes CVAT.",
+  "claims": "Local environment of the PO, data of job 4. Snapshot step PASS on this data only. No QC independence is claimed.",
+  "cvatProject": {
+    "id": 1,
+    "name": "labelx-dev",
+    "verified": "GET jobs/4 -> task 4 -> project 1 named labelx-dev (job and task both report project_id 1)",
+    "labels": [
+      "pedestrian",
+      "rider",
+      "car",
+      "truck",
+      "bus",
+      "train",
+      "motorcycle",
+      "bicycle",
+      "traffic light",
+      "traffic sign"
+    ],
+    "jobShapesUseLabel": "car (id 3)"
+  }
+}

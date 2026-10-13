@@ -1,0 +1,190 @@
+{
+  "task": "R11 #247 readiness checklist for PO-provided CVAT export data (documentation only)",
+  "author": "C (label-x-37, PID 4360)",
+  "basis": "DEC-019 P08/P09, DEC-020, CR-114, #247 AC, snapshots/normalization.py, snapshots/services.py, snapshots/orchestration.py, review/finalization_service.py as of branch C",
+  "principles": [
+    "No live CVAT snapshot or locator is needed to code or to run this checklist (DEC-020).",
+    "Internal immutable snapshot/revision/hash/provenance, verify and final guards stay unchanged.",
+    "No new import adapter or format is created without an approved contract. Items marked PO_DECISION are not decided here.",
+    "Synthetic fixtures stay separate from PO input and are labelled; fixtures never produce a data PASS.",
+    "LabelX never writes annotations to CVAT; fixes happen manually in CVAT and are read back.",
+    "Nobody except the PO marks the real-data check PASS."
+  ],
+  "criticalGap": {
+    "finding": "The code has two ways to create a locked snapshot: live CVAT read (create_snapshot_from_cvat via the read-only adapter) and the internal create_locked_snapshot(JobExport[]). There is NO loader that turns an exported CVAT file into JobExport objects, and no API/command that accepts one.",
+    "consequence": "PO's exported data cannot be fed into the pipeline today. Building such a loader is a new import format/adapter, which DEC-020 forbids without contract.",
+    "decisionNeeded": "PO_DECISION: approve (a) an import contract (file format, who owns it, where it lives) or (b) a different way to test with the export, e.g. a one-off PO-run script that builds JobExport from the export and calls create_locked_snapshot, kept out of the product code. Until decided, R11 AC2/AC3 for real data stays BLOCKED and the E2E gate is NOT VERIFIED."
+  },
+  "inputRequiredFromPO": [
+    {
+      "id": "IN-1",
+      "item": "Export of the job annotations per CVAT job (shapes/tracks as CVAT returns them: rectangle type, frame, label_id, points, attributes, id)",
+      "maps_to": "JobExport.annotations -> normalized per job, SnapshotJob.sha256 + revision",
+      "status": "PO_DECISION on format"
+    },
+    {
+      "id": "IN-2",
+      "item": "Per job: cvat_job_id, cvat_task_id, source_updated_at (CVAT job updated_date), assignee CVAT user id if any",
+      "maps_to": "JobExport.cvat_job_id/cvat_task_id/source_updated_at/assignee_cvat_user_id",
+      "status": "PO_DECISION on format"
+    },
+    {
+      "id": "IN-3",
+      "item": "Frame media: real JPEG/PNG bytes with file name, width, height per frame in each job (frame_index/start_frame, step)",
+      "maps_to": "FrameExport.*; media_sha256 and media_size_bytes computed by LabelX; seed images must be real images (the earlier review found non-JPEG seed bytes)",
+      "status": "PO_DECISION on format"
+    },
+    {
+      "id": "IN-4",
+      "item": "Taxonomy (label set) version and guideline version for the dataset",
+      "maps_to": "create_locked_snapshot(taxonomy_version, guideline_version)",
+      "status": "needed"
+    },
+    {
+      "id": "IN-5",
+      "item": "Dataset id (CVAT project id) and the list of job ids in the scope",
+      "maps_to": "dataset_id, SnapshotScope",
+      "status": "needed; do not infer"
+    },
+    {
+      "id": "IN-6",
+      "item": "Provenance record for the handover: who exported, when, from which CVAT instance/version, file names and a sha256 of each export file received",
+      "maps_to": "Snapshot.provenance (internal keys today: source, cvat_project_id, scope, note) - extra keys need contract",
+      "status": "needed; manifest/checksum locator still not provided"
+    },
+    {
+      "id": "IN-7",
+      "item": "For the rework scenario: a SECOND export of at least one job after a manual fix in CVAT (annotations changed, so source_updated_at and annotation hash differ), plus a third after a second fix if the multi-round (fail then fix then pass) path is to be tested",
+      "maps_to": "recheck snapshot revision vs ReworkRequest.original_revision (unchanged revision must give 409 REVISION_UNCHANGED)",
+      "status": "needed"
+    },
+    {
+      "id": "IN-8",
+      "item": "Accounts: annotator, two different natural persons as reviewer and verifier, QA Lead, Super Admin; each with a verified identity (EmployeeIdentity + CvatIdentity) and dataset scope; annotator must be a different person from the verifier",
+      "maps_to": "RoleAssignment, CvatIdentity.employee.is_verified; separation-of-duties checks",
+      "status": "pending per DEC-019 (accounts/scope/backup/verifier)"
+    },
+    {
+      "id": "IN-9",
+      "item": "Deployment policy config: REVIEW_LEASE_TTL_SECONDS=900, REVIEW_INCOMPLETE_RESERVATION_SECONDS=300, EFFORT_IDLE_POLICY with t_idle_seconds=120 and a version name",
+      "maps_to": "GET review-policy; effort ingestion",
+      "status": "approved values; deployment hook missing (see R01 row P03)"
+    }
+  ],
+  "internalFieldsLabelXComputes": [
+    "SnapshotJob.sha256 = sha256 of canonical JSON of normalized job (labelx.snapshot.v1, 6-decimal coordinates)",
+    "Snapshot.revision_sha256 over the normalized snapshot; set at lock; locked snapshot cannot be edited",
+    "SnapshotFrame.media_sha256 and media_size_bytes",
+    "Snapshot.provenance, parent_snapshot chain, idempotency_key/request_sha256",
+    "Run scope_hash and config_version link; ReworkRequest.original_revision / submitted_revision; ReworkVerification.revision; FinalRunVerification links"
+  ],
+  "environmentChecklist": [
+    {
+      "id": "ENV-1",
+      "check": "Isolated PostgreSQL, Redis, Celery worker and beat, object storage reachable; migrate clean; makemigrations --check clean on the integrated tree (branch B adds review migration 0006)",
+      "evidence": "command outputs, versions, config source; no secrets in repo or logs",
+      "status": "not_checked_by_C"
+    },
+    {
+      "id": "ENV-2",
+      "check": "Stored frame objects are downloadable and decode as valid images; stored sha256 matches downloaded bytes",
+      "evidence": "object GET + hash comparison per frame",
+      "status": "not_checked_by_C"
+    },
+    {
+      "id": "ENV-3",
+      "check": "The three backend branches are merged into one tree and pass tests together (A ee4a361, B 8284fb2, C 22a4e11 currently separate; pairwise merge-tree dry run showed no conflicts)",
+      "evidence": "integrated SHA, make check output",
+      "status": "not_done"
+    },
+    {
+      "id": "ENV-4",
+      "check": "Runtime schema: spectacular --validate error count (exit code alone is not proof; baseline had 56 errors)",
+      "evidence": "schema log",
+      "status": "not_done"
+    },
+    {
+      "id": "ENV-5",
+      "check": "Review the status of M-02 dependencies and BLOCKER-025, -027, -028, -029 (open) and -026 (resolved) as of the day of the test; record what is missing with owner and next step",
+      "evidence": "blocker files read on that day",
+      "status": "open_blockers_noted_not_assessed"
+    },
+    {
+      "id": "ENV-6",
+      "check": "Harness false-PASS fixed before it is used for acceptance: scripts/development/t046-browser-check.cjs must fail on missing rows/links, must not accept 400/409 as contract verified, must report blocked overall when a gate is missing",
+      "evidence": "script diff + a negative run that fails",
+      "status": "not_done (R12)"
+    }
+  ],
+  "loadProcedureOnceFormatIsApproved": [
+    "1. Verify sha256 of each received export file against the manifest; stop on mismatch.",
+    "2. Build JobExport per job from the export with a read-only loader (no CVAT write); reject missing frames, bad dimensions, non-image bytes.",
+    "3. Call create_locked_snapshot with provenance recording file names and checksums; assert status locked, revision_sha256 non-empty, per-job sha256 stable on a second load (idempotent).",
+    "4. Create the QC run through the normal API (POST /api/runs/), let the worker finish; record run id, scope_hash, config version, ledger counts.",
+    "5. Reviewer claims via the real queue, decides, requests rework (deep link from the CVAT job/frame).",
+    "6. PO fixes the annotation manually in CVAT and delivers export 2 (IN-7); annotator submits the new revision via the API; recheck snapshot is built from that export.",
+    "7. A different person verifies; test both pass and fail then second fix paths.",
+    "8. After all reworks are resolved, the final full-scope snapshot is built from the export covering the whole scope; final run completes; read GET /api/runs/{id}/ for verification_lineage, selected_final_sources, operational_source."
+  ],
+  "passCriteria": [
+    {
+      "id": "PASS-1",
+      "criterion": "Snapshot locked; per-job and snapshot hashes reproducible from the same input; media hashes match bytes; provenance lists every input file with checksum"
+    },
+    {
+      "id": "PASS-2",
+      "criterion": "Rework with an unchanged revision is rejected 409 REVISION_UNCHANGED; changed revision creates a recheck snapshot and run"
+    },
+    {
+      "id": "PASS-3",
+      "criterion": "Verify by the annotator or the same natural person is rejected 403; verify before recheck Completed is rejected 409"
+    },
+    {
+      "id": "PASS-4",
+      "criterion": "Verify fail returns the rework to fix_pending, history keeps both rounds append-only; second round can pass"
+    },
+    {
+      "id": "PASS-5",
+      "criterion": "Frame stays awaiting_followup after a verify pass until every issue on the frame is closed and the final run is Completed with full required ledger and no unreviewed new candidate; then it completes"
+    },
+    {
+      "id": "PASS-6",
+      "criterion": "Final snapshot jobs contain the verified revision hash of each reworked job; operational_source selects the final only when scope_complete is true, otherwise blocked_reasons explains why; origin run is unchanged"
+    },
+    {
+      "id": "PASS-7",
+      "criterion": "Read endpoints (rework list/detail, run detail) respect role and dataset scope; no CVAT write call is made at any step"
+    },
+    {
+      "id": "PASS-8",
+      "criterion": "Idle gaps in effort events are excluded per policy 900/300/120 with the deployed config and the stored active_ms matches the recorded timeline"
+    },
+    {
+      "id": "PASS-9",
+      "criterion": "The report records BE SHA, FE SHA, integrated tree, config version and data hashes. Only the PO marks the real-data result PASS; fixture runs are labelled fixture and give no real-data PASS"
+    }
+  ],
+  "notClaimed": [
+    "No real CVAT data was seen or used by C.",
+    "No environment was started or health-checked by C for this checklist.",
+    "No E2E result, performance (NFR-01/02) or accessibility result is claimed."
+  ],
+  "ownerNextSteps": [
+    {
+      "owner": "PO @toilatrung",
+      "step": "Decide the import path (criticalGap) and supply IN-1..IN-8; confirm EFFORT_IDLE_POLICY deployment mechanism (IN-9)"
+    },
+    {
+      "owner": "Ha @DucHa180104 (R11)",
+      "step": "ENV-1, ENV-2, ENV-5 once the export arrives; no secrets in repo"
+    },
+    {
+      "owner": "Nam (R12)",
+      "step": "ENV-6 harness fixes and independent QC on the integrated SHA"
+    },
+    {
+      "owner": "coordinator label-x-98",
+      "step": "ENV-3 and ENV-4 on the integrated tree"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "task": "#241 R05 - contract/runtime parity (backend + docs/04-api/openapi.yaml), M-03 operations",
+  "owner": "label-x-7a (formerly label-x-62); author of this change, not an independent QC",
+  "branch": "fix/m03-241-contract-parity",
+  "worktree": "/tmp/labelx-m03-241",
+  "base": "13e97c2 (integration/m03 after PR #254)",
+  "commits": {
+    "2668052": "backend + contract + parity tests",
+    "aa870c6": "regenerated src/frontend/src/lib/api/contract.d.ts",
+    "de64ce7": "review fixes F1-F3",
+    "5e68b44": "regenerated contract.d.ts (422 queues_next)"
+  },
+  "headSHA": "5e68b44e046f5761db78ce790c5ce83ab14c6333",
+  "pushed": false,
+  "driftBeforeAfter": {
+    "method": "own semantic script (response codes, non-path params, request-body presence, resolved shapes incl required/enum/nullable; schema names ignored); scope = 20 M-03 operations; the same logic now lives in tests/contract_parity.py",
+    "before": {
+      "operationOnlyInDocs": 0,
+      "operationOnlyInRuntime": 0,
+      "operationId": 0,
+      "responseCodes": 5,
+      "params": 7,
+      "requestBody": 0,
+      "shapes": 85
+    },
+    "after": {
+      "operationOnlyInDocs": 0,
+      "operationOnlyInRuntime": 0,
+      "operationId": 0,
+      "responseCodes": 0,
+      "params": 0,
+      "requestBody": 0,
+      "shapes": 0
+    },
+    "outOfScopeNotTouched": {
+      "operationsOnlyInDocs": 8,
+      "note": "evaluations, references, reports, runs gate, waivers (later milestones, not implemented)",
+      "responseCodes": 4,
+      "params": 7,
+      "shapes": 80,
+      "scope": "measured before changes on the full contract; other modules (auth, datasets, guidelines, config-versions, snapshots, candidates...)"
+    }
+  },
+  "tests": {
+    "pytestFull": "672 passed, 1 skipped, 0 failed (final run on 5e68b44; --strict-markers; DB labelx_7a_parity, Redis db 10)",
+    "ruff": "check and format clean",
+    "mypy": "72 files clean",
+    "makemigrations --check": "No changes detected",
+    "spectacular --validate --fail-on-warn": "exit 0, no warnings/errors",
+    "newTests": [
+      "tests/test_contract_runtime_parity.py::test_runtime_schema_generation_has_no_errors_or_warnings",
+      "tests/test_contract_runtime_parity.py::test_m03_contract_matches_runtime_schema (scope guard >= 20 operations, empty accepted-diff allowlist)"
+    ],
+    "probes5": "4 PASS, 1 FAIL expected (test_verify_failure_can_be_submitted_again, 409 at submit)",
+    "frontend (run once after gen:api:contract)": "lint clean; typecheck clean; vitest 30 files / 316 passed; next build ok; bundle password123 check ok",
+    "frontend (once, after gen:api:contract)": "lint, typecheck, vitest 30 files/316 passed, next build ok, bundle check ok",
+    "targeted + mutation": "89 passed before full run"
+  },
+  "changes": {
+    "runtimeDocumentationOnly (no behavior/permission/path change)": [
+      "review/api_serializers.py: nested Anchor/Evidence/IssueLink/BBox/ObjectRef/FrameAnnotation/FramePrediction; ChoiceFields for engine, status, reason, decision, actor_role, reference_match_status, queue, source, review_state, verification outcome; nullability aligned; Idempotency-Key header param constant",
+      "review/*_views.py: Idempotency-Key header on issues_create, issues_decide, issues_adjudicate, rework_create, rework_submitted, rework_verify; query run/cursor on escalations_list; removed 401 from review_policy_retrieve and 422 from rework_verify (never produced)",
+      "runs/serializers.py: RankedFrame source/queue/review_state/frame_key/issue_counts/explanation/lease_holder typed; Run.engines typed; model_artifact nullable; ranking list source enum",
+      "config/settings.py: ENUM_NAME_OVERRIDES + ReworkVerificationOutcomeEnum, DecisionCaseOutcomeEnum"
+    ],
+    "contractAdditions (match runtime)": [
+      "required added: Run (origin_run_id, score_version, model_artifact, finished_at), RankedFrame (lease_holder_user_id), Adjudication (correct_label), IssueDecision (family, severity, reason, rule_id), ReworkRequest (submitted_revision, recheck_run_id, cvat_deep_link), PaginatedIssueList and PaginatedRankedFrameList (next, previous)",
+      "IssueDecision.severity made nullable",
+      "responses added: 404 on POST /api/issues/, 400 and 404 on GET /api/escalations/",
+      "queues_next 422 kept (restored by review fix F1)"
+    ]
+  },
+  "contractLimitationForR13_sixSchemasKeptOptional": {
+    "reason": "Making runtime-always-sent fields required in the contract broke frontend typecheck and next build (fixtures in 5 FE test files). User principle: do not break FE CI (FE runs separately on develop-fe). So the fields stay optional in the contract and the runtime documents them with required=False.",
+    "schemas": {
+      "FrameSummary": [
+        "cvat_job_id",
+        "rank",
+        "width",
+        "height"
+      ],
+      "EngineRunStatus": [
+        "reason",
+        "failed_units"
+      ],
+      "Issue": [
+        "q_i",
+        "severity",
+        "rule_ids"
+      ],
+      "IssueDecision": [
+        "audit_event_id"
+      ],
+      "LeaseGrant": [
+        "resumed"
+      ],
+      "FrameIssues": [
+        "snapshot_revision",
+        "annotations",
+        "predictions"
+      ]
+    },
+    "note": "FrameIssues fields approved in D02 (CR-113) remain optional in the contract although the runtime always returns them. Revisit when FE fixtures are updated."
+  },
+  "changesForFrontend": {
+    "contract.d.ts regenerated": "types gain required: Run.origin_run_id/score_version/model_artifact/finished_at, RankedFrame.lease_holder_user_id, Adjudication.correct_label, IssueDecision.family/severity/reason/rule_id, ReworkRequest.submitted_revision/recheck_run_id/cvat_deep_link, Paginated* next/previous; IssueDecision.severity nullable; new response codes 404/400 on issues_create and escalations_list; 422 removed from queues_next; typed nested Anchor/Evidence/IssueLink (already typed in contract)",
+    "verified": "FE lint/typecheck/vitest/build clean after regeneration; no FE source changes made"
+  },
+  "notVerified": [
+    "browser/UI",
+    "real CVAT E2E",
+    "drift outside the 20 M-03 operations",
+    "whether any consumer relies on 422 from queues_next",
+    "clean-DB/CI run on GitHub"
+  ],
+  "selfQc": "author measurement, not independent QC",
+  "reviewFixesRound2": {
+    "reviewer": "label-x-38 (cross-review of aa870c6)",
+    "F1": "restored 422 BUSINESS_RULE_UNMET on POST /api/queues/{name}/next/ in view + docs/openapi.yaml (earlier removal was wrong: review/decision_source.py raises it for a candidate family/anchor outside the contract); real test reproduces it (family 'bogus_family' -> 422, no open lease). The coordinator decision to drop 422 is superseded.",
+    "F2": "the old schema-clean test in the parity file was empty; it now runs `manage.py spectacular --validate --fail-on-warn` in a subprocess and asserts exit code 0",
+    "F3": "RankedFrame issue_counts/explanation: runtime DictField(child=IntegerField) replaced by pass-through JSONField subclasses described only via extend_schema_field (no runtime coercion); test with odd stored JSON returns 200 unchanged",
+    "F4_limitationForR13": "The six schemas kept optional (FrameSummary, EngineRunStatus, Issue, IssueDecision.audit_event_id, LeaseGrant.resumed, FrameIssues.snapshot_revision/annotations/predictions) make the contract LOOSER than the runtime, which always sends them; for FrameIssues this includes fields approved in D02/CR-113. Trade-off chosen by the user (option B) so FE CI keeps passing while FE runs separately on develop-fe. Recommendation: tighten the contract once FE fixtures are updated (FE typecheck failures when tightened: ReviewWorkspace.test.tsx:13, ReviewWorkspaceT035Integration.test.tsx:61, ReviewEffortIntegration.test.tsx:173, ReviewQueueWorkspaceIntegration.test.tsx:276,439).",
+    "mutation": "7/7 caught: untyped SerializerMethodField (CLI exit 1, test fails), strict DictField coercion, 422 dropped from view, Idempotency-Key param dropped, engine status enum changed, contract adds unsent required field, contract drops 404 on escalations. (First F2 mutant was applied in the wrong place and wrongly passed; redone correctly.)"
+  }
+}

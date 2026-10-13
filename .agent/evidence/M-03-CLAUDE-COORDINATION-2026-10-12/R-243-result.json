@@ -1,0 +1,68 @@
+{
+  "step": 6,
+  "issue": 243,
+  "author": "label-x-37 (group C; author of #243, so this is not independent QA)",
+  "worktree": "/tmp/labelx-m03-243",
+  "branch": "feat/m03-243-new-candidate",
+  "baseSHA": "8d334660246bee390e564ba97b7a118eac09ffab",
+  "commitSHA": "1361fe9103fb858f9f62b1e7cc7abb86ef0c26a1",
+  "pushed": false,
+  "rebase": "rebased from 07b3381 onto 8d33466 (integrator step 2) with no conflicts",
+  "change": [
+    "review/decision_source.py: materialize_candidate_issue(frame, candidate) extracted from materialize_candidate_issues (same behaviour; claim flow now loops over it)",
+    "review/finalization_service.py: route_new_candidates(origin_run, final_run): for each new candidate (dedup_key absent from origin run and no rejected/resolved Issue) get-or-create the final run FrameReview for its snapshot frame and a pending_review engine Issue; a frame in completed/reviewed/awaiting_followup goes back to unreviewed so claim_next can pick it. Returns count created.",
+    "complete_scope_frames now calls route_new_candidates for each Completed final attempt with complete required ledger, before selecting the source; selection and frame completion stay blocked until the routed issues are rejected/resolved.",
+    "review/tasks.py: complete_scope_frames_sweep covers every origin run that has a Completed final attempt (no longer only runs with awaiting_followup frames), so routing is triggered by the existing sweeper (production caller)."
+  ],
+  "idempotency": "Issue has a DB unique constraint on candidate (review_issue_one_per_candidate); get_or_create plus the origin QCRun row lock in complete_scope_frames. Repeat runs create nothing.",
+  "tests": {
+    "ruff check .": "All checks passed!",
+    "ruff format --check .": "234 files already formatted",
+    "mypy (finalization_service, decision_source, tasks)": "Success: no issues found in 3 source files",
+    "makemigrations --check --dry-run": "No changes detected",
+    "pytest tests/review tests/effort tests/runs": "158 passed, 0 failed, 0 skipped (isolated DB test_labelx_claude_c)",
+    "newTests": [
+      "test_new_candidate_is_routed_to_queue_once_and_blocks_completion",
+      "test_no_new_candidate_routes_nothing",
+      "test_routing_waits_for_complete_final_ledger",
+      "test_concurrent_routing_creates_one_issue (two threads on PostgreSQL)"
+    ]
+  },
+  "probes": {
+    "file": ".agent/evidence/M-03-REVIEW-2026-10-12/test_review_probes.py (copied unchanged to a temp untracked file, run, deleted; sha256 prefix b33d3d31f6a6298c matches the original)",
+    "result": "4 passed, 1 failed on the rebased branch (same as before rebase)",
+    "passed": [
+      "test_queue_exposes_real_holder_after_claim",
+      "test_queue_in_review_filter_finds_claimed_frame",
+      "test_new_final_candidate_blocks_operational_source",
+      "test_verify_pass_does_not_complete_frame_before_final_run"
+    ],
+    "failed": "test_verify_failure_can_be_submitted_again: IntegrityError rework_recheck_unique_snapshot (rework 1, snapshot 4) at the second submit.",
+    "analysis": "The probe monkeypatches review.rework_service._build_recheck_artifacts to return the SAME snapshot for both rounds while sending cvat_revision '9'*64 the second time. In the real code the claimed revision must equal the new snapshot revision, so a second round always has a new snapshot and a different recheck row. With the mock, the unique constraint (rework, snapshot) fires and the request ends as a DB error. This looks like a probe assumption (mock reuses snapshot), not a defect in #243. It touches B's #242 code, not changed by this branch. Not fixed, probe not edited. Open question for label-x-98: should the real service answer 409 instead of a DB IntegrityError (500) if the same snapshot is reused for a rework? That decision belongs to #242 owner/PO.",
+    "newFinalCandidateProbeAssumption": "The probe calls operational_run() directly with a new candidate that has 0 Issues and expects the origin to stay selected. That matches the guard and still passes. The assumption 'Issue only exists at claim time' is true on the baseline and is why routing was added; the probe does not exercise routing.",
+    "decisionOnFailedProbe": "label-x-98 passes the 409-vs-500 question (same snapshot reused for a second round) to the user; code of #242 not changed by this session"
+  },
+  "risks": [
+    "Routing relies on the final run's RunRankingEntry for the frame: claim_next only offers frames listed in a stored ranking. Rankings are persisted for terminal runs from their candidates, so a frame with a new candidate should be ranked, but this was not verified end to end (no test claims the routed issue through /api/queues/.../next/).",
+    "Routing is triggered by the sweeper (review.sweep_ready_final_runs -> complete_scope_frames_sweep); how often it runs depends on the beat schedule in config/settings.py (not edited). Until it runs the new candidate is blocked from selection but not yet queued.",
+    "A routed frame lives on the FINAL run's FrameReview; origin frames stay awaiting_followup. UI/queue consumers that only look at the origin run will not see it.",
+    "After the issue is rejected/resolved, complete_scope_frames still needs a later sweeper pass to complete origin frames."
+  ],
+  "schemaNote": "No API schema change: no serializer, view, URL or OpenAPI edit.",
+  "notEdited": [
+    "settings.py",
+    "openapi.yaml",
+    "urls",
+    "rework_read_views.py",
+    "review/models.py",
+    "migrations"
+  ],
+  "notDone": [
+    "full backend suite, make check",
+    "claim of routed issue through the queue API end to end",
+    "browser/UI",
+    "real CVAT data"
+  ],
+  "selfQc": "not certified; author is the same session. Independent QA required.",
+  "previousCommit": "17316571abb0af59743c430eb3db22800ef6c1d1"
+}
