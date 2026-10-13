@@ -630,9 +630,19 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         rework.status = ReworkRequest.Status.RESOLVED
         rework.resolved_at = timezone.now()
         issue.state = Issue.State.RESOLVED
+        verified = {"status": rework.status, "issue_state": issue.state}
     else:
-        rework.status = ReworkRequest.Status.REOPENED
-        issue.state = Issue.State.REOPENED
+        # The failed round is audited as reopened; the row is written once, directly in its
+        # resting fix_pending state. A second UPDATE of a row this transaction already updated
+        # makes PostgreSQL re-check every deferred FK at COMMIT (KEY SHARE on parent rows such
+        # as the users), which deadlocks against a writer that holds a user row and waits for
+        # the run lock (complete_frame): tests/review/test_three_way_race.py.
+        verified = {
+            "status": ReworkRequest.Status.REOPENED,
+            "issue_state": Issue.State.REOPENED,
+        }
+        rework.status = ReworkRequest.Status.FIX_PENDING
+        issue.state = Issue.State.FIX_PENDING
     rework.save(update_fields=["status", "resolved_at", "updated_at"])
     issue.save(update_fields=["state"])
     audit = append_audit_event(
@@ -641,7 +651,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         object_type="rework",
         object_id=rework.pk,
         before=before,
-        after={"status": rework.status, "issue_state": issue.state, "actor_role": actor_role},
+        after={**verified, "actor_role": actor_role},
         revision=revision,
         reason=reason or override_reason,
     )
@@ -658,17 +668,12 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
     if not passed:
         # issue.reopen_fix: the failed round stays in history, the annotator may submit again.
-        reopened = {"status": rework.status, "issue_state": issue.state}
-        rework.status = ReworkRequest.Status.FIX_PENDING
-        issue.state = Issue.State.FIX_PENDING
-        rework.save(update_fields=["status", "updated_at"])
-        issue.save(update_fields=["state"])
         append_audit_event(
             actor=user,
             action="issue.reopen_fix",
             object_type="issue",
             object_id=issue.pk,
-            before=reopened,
+            before=verified,
             after={"status": rework.status, "issue_state": issue.state},
             revision=revision,
             reason=reason,
