@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from reports.views import RunReportExportView, RunReportView
 from runs.views import (
     RunCancelView,
     RunCandidateListView,
@@ -24,4 +25,6 @@ urlpatterns = [
     path("<int:pk>/shards/", RunShardView.as_view(), name="runs-shards"),
     path("<int:pk>/candidates/", RunCandidateListView.as_view(), name="runs-candidates"),
     path("<int:pk>/ranking/", RunRankingView.as_view(), name="runs-ranking"),
+    path("<int:pk>/report/", RunReportView.as_view(), name="runs-report"),
+    path("<int:pk>/report/export/", RunReportExportView.as_view(), name="runs-report-export"),
 ]
