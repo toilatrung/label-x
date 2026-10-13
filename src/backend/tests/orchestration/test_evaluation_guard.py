@@ -117,3 +117,10 @@ def test_user_reason_is_audit_only_and_not_a_reason_code():
     note = EvaluationRequest(7, RoutingReason.LABEL_CONFLICT.value, "abc")
     assert note.reason == "label_conflict"
     assert EvaluationRequest(7, "khác", "abc").digest() != note.digest()
+
+
+def test_reason_length_limit_is_500_not_derived_from_the_constant():
+    ok = EvaluationCreateSerializer(data={"reason": "x" * 500, "expected_revision": "abc"})
+    too_long = EvaluationCreateSerializer(data={"reason": "x" * 501, "expected_revision": "abc"})
+    assert ok.is_valid(), ok.errors
+    assert not too_long.is_valid() and "reason" in too_long.errors
