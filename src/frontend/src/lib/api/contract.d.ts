@@ -2474,7 +2474,7 @@ export interface components {
              * @default none
              * @enum {string}
              */
-            after_adjudication: "none" | "request_rework";
+            after_adjudication?: "none" | "request_rework";
         };
         Adjudication: {
             id: number;
