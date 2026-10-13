@@ -103,3 +103,17 @@ def test_serializer_rejects_forbidden_fields(extra):
 )
 def test_serializer_requires_fields(data):
     assert not EvaluationCreateSerializer(data=data).is_valid()
+
+
+def test_user_reason_is_audit_only_and_not_a_reason_code():
+    """`reason` người dùng nhập không được là đầu vào của prompt/routing: guard và
+    RoutingInput không có chỗ nhận nó."""
+    import dataclasses
+
+    from orchestration.routing_policy import RoutingInput, RoutingReason
+
+    assert "reason" not in {f.name for f in dataclasses.fields(RoutingInput)}
+    # Ghi chú trùng tên reason_code vẫn chỉ là chuỗi tự do, không đổi routing.
+    note = EvaluationRequest(7, RoutingReason.LABEL_CONFLICT.value, "abc")
+    assert note.reason == "label_conflict"
+    assert EvaluationRequest(7, "khác", "abc").digest() != note.digest()
