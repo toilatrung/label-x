@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-021 — Phân công M-04 — LabelX</title>
+<meta name="labelx:id" content="dec-021">
+<meta name="labelx:title" content="DEC-021 — Phân công M-04">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[decision, adr, template]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / dec-021</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-021</span><b>title</b><span>DEC-021 — Phân công M-04</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[decision, adr, template]</span><b>priority</b><span>2</span></div>
+<h1>DEC-021 — Phân công M-04, Backend tập trung PO</h1>
+<h2>Usage Purpose</h2><p>Ghi chỉ đạo mới của PO về nhánh code, issue/task M-04 và quyền sở hữu file.</p>
+<h2>Record Metadata</h2><ul>
+<li><strong>Decision ID</strong>: <code>DEC-021</code></li><li><strong>Title</strong>: <code>Phân công M-04 A/B/C — BE PO, hỗ trợ nhỏ độc lập</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Decision Makers</strong>: <code>PO @toilatrung qua yêu cầu trực tiếp trong phiên</code></li><li><strong>Status</strong>: <code>accepted</code></li><li><strong>Decision Type</strong>: <code>process</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Decision Date</strong>: <code>2026-10-13</code></li></ul>
+<h2>Context</h2><blockquote>Tạo nhánh để code M-04 đi. Tạo luôn issues M-04 và các task nhỏ rồi điều chỉnh các task, tập chung để tôi code BE, các thành viên khác chỉ các task nhỏ và nhanh, ít ảnh hưởng đến phần tôi đang code</blockquote>
+<p>CR-115 và kế hoạch A/B/C đã có. Nhánh planning trước đó dựa develop local cũ; nhánh code mới lấy origin/develop@a2e01954e44a9ae7bbed14f8db718a3c8fc45f1d, mang kế hoạch sang bằng cherry-pick 2b2d603. Issue #196 không truy cập được; các issue #212/#213/#214/#216 còn mở, cần đổi ưu tiên. Không coi issue mất là done.</p>
+<h2>Decision Drivers</h2><ul><li>PO giữ đường code chính A → B → C; hỗ trợ không đụng shared files.</li><li>Giữ task đủ nhỏ, đầu ra rõ, review được; không gán deadline thay owner.</li></ul>
+<h2>Options Considered</h2><table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody><tr><td>BE tập trung PO, hỗ trợ timebox riêng</td><td>Ít conflict, ownership rõ</td><td>PO là đường triển khai chính</td><td>meets</td></tr><tr><td>Chia runtime/API/migration cho nhiều người</td><td>Nhiều luồng code</td><td>Chồng file/contract, trái yêu cầu</td><td>does-not-meet</td></tr></tbody></table>
+<h2>Decision Outcome</h2><ul><li><strong>Selected Option</strong>: <code>BE tập trung PO</code></li><li><strong>Rationale</strong>: <code>Chỉ đạo trực tiếp của PO</code></li><li><strong>Effective Date</strong>: <code>2026-10-13</code></li></ul>
+<p>Nhánh <code>feat/M-04-backend</code> trong /tmp/labelx-m04, PR vào develop. Không tạo ngoại lệ integration branch. PO sở hữu toàn bộ API/DB/migration/model training/inference/orchestrator/policy/tests/contract/runtime/dependencies. E-12 mở rộng classifier trong phạm vi CR-115: EPIC_READY cho expansion 16 task, rồi EPIC_IN_PROGRESS cho triển khai; tất cả task mới pending. E-10 BE mở rộng do PO, giữ lịch sử task T-005.</p>
+<p>Hà: M04S-01 checklist môi trường; Việt Anh: M04S-02 inventory class map/crop; Nam: M04S-03 checklist smoke. Mỗi người 1 file report riêng, 60–90 phút dự kiến; thiếu input báo missing, không chặn coding. Thọ: #213 badge/status AI trên develop-fe, 1–2 giờ dự kiến sau contract; #216 backlog FE độc lập. #212/#214 deferred, gỡ assignee thực thi đợt hiện tại; không đóng hoặc mất scope. Review/QC theo quy trình, không tự gán author làm reviewer.</p>
+<h2>Consequences</h2><ul><li><strong>Positive</strong>: <code>13 task BE PO, 3 support độc lập, tái sử dụng #213 cho FE nhỏ</code></li><li><strong>Negative</strong>: <code>Core BE phụ thuộc capacity PO; model/credential/runtime chưa xác minh</code></li><li><strong>Follow-up Work</strong>: <code>M04A-01…05, M04B-01…04, M04C-01…04, M04S-01…03, T-066</code></li></ul>
+<h2>Related Files</h2><ul><li><strong>Affected Documents</strong>: <a href="../../planning/M-04-dispatch-2026-10-13.html">dispatch</a>; task-board, current-context, epics, dependency-graph.</li><li><strong>Epics or Tasks</strong>: <code>E-12, E-10, M-04</code>; <a href="https://github.com/toilatrung/label-x/issues/278">#278</a></li><li><strong>Change Requests</strong>: <a href="../change-requests/CR-115.html">CR-115</a></li><li><strong>Risks</strong>: <code>scope creep; thiếu dữ liệu model/quota; shared-file conflict</code></li><li><strong>Supersedes</strong>: <code>Phân công Backend M-04 cũ trong DEC-017 và lịch task #212/#213/#214/#216, trong phạm vi điều chỉnh này</code></li><li><strong>Superseded By</strong>: <code>none</code></li></ul>
+<h2>Completion Criteria</h2><ul><li>[x] Chỉ đạo và owner/phạm vi được ghi.</li><li>[x] Task nhỏ có AC/phụ thuộc/path.</li><li>[ ] Implementation/review/QA và nghiệm thu M-04 có evidence.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không sửa report accepted cũ; giữ evidence trước điều chỉnh.</li><li>Thành viên khác không push nhánh code PO, sửa BE/shared config hoặc tự mở rộng scope.</li><li>Không ghi implementation done từ việc tạo issue.</li></ul>
+<h2>Output Requirements</h2><p>Đồng bộ issue, task registry, planning và code branch; task support không là prerequisite của các task core.</p></article></main></body></html>
+

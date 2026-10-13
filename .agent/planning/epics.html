@@ -181,9 +181,9 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-12</code></td>
 <td><code>M-04</code></td>
 <td><strong>Gemini VLM có điều kiện, evidence và routing</strong> — Gemini chỉ phân định candidate được trigger; classifier và reviewer/QA giữ các vai trò tách biệt theo CR-115.</td>
-<td><code>Nguyễn Xuân Việt Anh</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><code>Trịnh Quang Trung (@toilatrung)</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>M04A-01…05, M04B-01…04, M04C-01…04, M04S-01…03</code></td>
 <td>Xem <a href="#e-12">chi tiết</a></td>
 <td><code>CR-115, DEC-002, DEC-003; Gemini quota/data permission</code></td>
 </tr>
@@ -595,8 +595,8 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>Gemini quota/data permission; classifier crop provenance; candidate idempotency</code></li>
-<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-115.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
 <li><strong>Screens (H)</strong>: — (dùng trong Benchmark, ReviewWorkspace)</li>
 </ul>
 <h4 id="acceptance-criteria_4">Acceptance Criteria</h4>
@@ -1030,14 +1030,14 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_11">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
-<li><strong>Title</strong>: <code>Gemini VLM có điều kiện, evidence và routing (CR-115)</code></li>
-<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Title</strong>: <code>Gemini VLM, ConvNeXt Tiny classifier và routing (CR-115)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
-<li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>CR-115 approved 2026-10-13; task execution pending task registration</code></li>
+<li><strong>Target Date</strong>: <code>Theo gate A/B/C; ETA khi nhận task</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>CR-115 / DEC-021, 2026-10-13: READY cho expansion, IN_PROGRESS cho triển khai; task mới pending</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
 <p>Triển khai Gemini VLM có điều kiện theo CR-115: chỉ tạo evidence/đề xuất cho candidate được trigger; không tự xác nhận issue, quyết định gate hoặc sửa annotation.</p>
@@ -1046,11 +1046,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li>Gemini <code>gemini-3.8-flash</code> qua backend worker: structured JSON, prompt/model/API version, timeout/retry/budget và evidence append-only theo candidate/revision</li>
 <li>Routing classifier–Gemini: candidate đủ tin cậy không gọi VLM; low-score/low-margin/conflict/manual recheck gọi VLM; uncertain/failed/budget exhausted chuyển reviewer</li>
+<li>ConvNeXt Tiny fine-tune/inference, crop manifest và class-map 10 lớp; unknown là abstention; toàn bộ code/training do PO.</li>
 <li>API evidence/evaluation và workspace handoff theo <code>.agent/planning/M-04-ABC-implementation-2026-10-13.html</code></li>
 </ul>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
 <li>Tự xác nhận lỗi, ghi ReviewDecision/Adjudication hoặc sửa annotation từ Gemini/classifier</li>
+<li>Gửi dữ liệu ảnh ra dịch vụ ngoài khi chưa được phép; credential hoặc quota không được suy ra từ việc duyệt kế hoạch.</li>
 <li>Calibration, KPI, benchmark/load test và nghiệm thu hiệu quả</li>
 </ul>
 <h4 id="dependencies_11">Dependencies</h4>
@@ -1064,15 +1066,15 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>Quota/input runtime; crop provenance; idempotency; xem DEC-021</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-115.html</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ModelsGuidelines, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
 <ul>
 <li>[ ] Gemini <code>gemini-3.8-flash</code> chạy trên crop được phép, kết quả JSON được validate, evidence/ledger/API có provenance và không có duplicate retry</li>
 <li>[ ] Routing classifier–Gemini xử lý classifier-only, trigger, conflict, uncertain, stale revision và budget/error theo kế hoạch M-04 A/B/C</li>
-<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
+<li>[ ] API BE có schema/payload/error handoff; FE theo nhánh develop-fe và #213, không mở rộng scope coding BE.</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1886,4 +1888,5 @@ ul.dir{columns:2;font-size:14px}
 <li>Do not change baselined scope without an approved change request.</li>
 <li>Do not record fabricated links, evidence, or completion state.</li>
 </ul>
+<h2 id="m04-ownership">M-04 — ownership 2026-10-13</h2><p>DEC-021: toàn bộ Backend mới E-10/E-12/E-08 trong phạm vi M-04 do PO @toilatrung. E-12 bao gồm classifier và routing, READY để tạo task rồi IN_PROGRESS cho execution; tasks pending. Không thay lịch sử task cũ. Reference/calibration E-06/E-07/E-17 chuyển sau cổng kỹ thuật. <a href="M-04-dispatch-2026-10-13.html">Danh mục task và issue</a>.</p>
 </article></main></body></html>

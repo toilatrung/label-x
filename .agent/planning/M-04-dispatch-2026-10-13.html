@@ -1,0 +1,225 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phân công M-04</title><meta name="labelx:id" content="m04-dispatch-20261013"><meta name="labelx:title" content="Phân công M-04 A/B/C"><meta name="labelx:type" content="planning"><meta name="labelx:domain" content="project"><meta name="labelx:module" content="backend"><meta name="labelx:tags" content="[m04, dispatch, tasks]"><meta name="labelx:priority" content="1"><style>body{font:15px/1.6 system-ui;max-width:1250px;margin:30px auto;padding:20px;color:#19334c}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #d5dfe9;vertical-align:top;text-align:left}th{background:#eef4fa}code{background:#eef2f5}h2{margin-top:30px}</style></head><body>
+<h1>M-04 — Phân công code và task nhỏ</h1><p>Nhánh <code>feat/M-04-backend</code> từ origin/develop@a2e0195; worktree <code>/tmp/labelx-m04</code>. PR vào develop. <a href="https://github.com/toilatrung/label-x/issues/278">Issue tổng #278</a> · <a href="../governance/decisions/DEC-021.html">DEC-021</a>.</p>
+<h2>Quyền sở hữu và thứ tự</h2><p>PO @toilatrung giữ toàn bộ BE, model worker/training, contract, tests, migrations, dependencies và runtime. Thành viên khác chỉ file report riêng; Thọ làm FE nhỏ trên develop-fe. Không commit lên nhánh PO; không có task support nào chặn code BE. A dùng candidate fixture để làm trước classifier; inference dữ liệu thật chỉ khi đủ quyền/credential.</p>
+<p>Bắt đầu #279; tiếp tục A #280 → #281 → #282 → #283. B #284 → #285 → #286 → #287. C #288 → #289 → #290 → #291. Có thể chuẩn bị B sau contract A; hoàn thành theo gate A/B/C. Unknown là abstention, không ngầm thêm lớp thứ 11. Manual recheck có logical evaluation mới; retry cùng evaluation khử trùng, mỗi API attempt thực tính vào budget.</p>
+<h2>Task registry</h2><table><thead><tr><th>Task</th><th>Owner</th><th>Phụ thuộc</th><th>Đầu ra</th><th>Trạng thái</th></tr></thead><tbody><tr><td><a href="https://github.com/toilatrung/label-x/issues/279">M04A-01 #279</a><br><a href="../execution/m04/M04A-01.html">Đặc tả task</a></td><td>@toilatrung</td><td>none</td><td>Contract Gemini và schema cấu hình</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/280">M04A-02 #280</a><br><a href="../execution/m04/M04A-02.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-01</td><td>Gemini adapter và worker thực thi</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/281">M04A-03 #281</a><br><a href="../execution/m04/M04A-03.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-01, M04A-02</td><td>Điều phối candidate, retry và budget nguyên tử</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/282">M04A-04 #282</a><br><a href="../execution/m04/M04A-04.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-01, M04A-03</td><td>Evidence append-only và API run/ledger/candidate</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/283">M04A-05 #283</a><br><a href="../execution/m04/M04A-05.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-02, M04A-03, M04A-04</td><td>Smoke Gemini và bàn giao API đợt 1</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/284">M04B-01 #284</a><br><a href="../execution/m04/M04B-01.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-01</td><td>Crop dataset, split và taxonomy manifest</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/285">M04B-02 #285</a><br><a href="../execution/m04/M04B-02.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04B-01</td><td>Fine-tune ConvNeXt Tiny và đóng gói checkpoint</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/286">M04B-03 #286</a><br><a href="../execution/m04/M04B-03.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-04, M04B-02</td><td>Tích hợp classifier engine/config/API</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/287">M04B-04 #287</a><br><a href="../execution/m04/M04B-04.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04B-03</td><td>Smoke classifier và bàn giao API đợt 2</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/288">M04C-01 #288</a><br><a href="../execution/m04/M04C-01.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-01, M04B-03</td><td>Policy định tuyến classifier–Gemini</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/289">M04C-02 #289</a><br><a href="../execution/m04/M04C-02.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04C-01, M04A-04</td><td>Evaluation API và phân định lại</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/290">M04C-03 #290</a><br><a href="../execution/m04/M04C-03.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04C-02, M04B-03</td><td>Evidence AI trong review workspace</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/291">M04C-04 #291</a><br><a href="../execution/m04/M04C-04.html">Đặc tả task</a></td><td>@toilatrung</td><td>M04A-05, M04B-04, M04C-03</td><td>Kiểm luồng A/B/C và bàn giao API đợt 3</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/292">M04S-01 #292</a><br><a href="../execution/m04/M04S-01.html">Đặc tả task</a></td><td>@DucHa180104</td><td>none</td><td>Checklist môi trường Gemini đã redacted</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/293">M04S-02 #293</a><br><a href="../execution/m04/M04S-02.html">Đặc tả task</a></td><td>@Vietanhhhhhh2003</td><td>none</td><td>Đối chiếu class map BDD100K và crop mẫu</td><td>pending</td></tr><tr><td><a href="https://github.com/toilatrung/label-x/issues/294">M04S-03 #294</a><br><a href="../execution/m04/M04S-03.html">Đặc tả task</a></td><td>@duy12345-6789</td><td>none</td><td>Checklist smoke A/B/C và bảng API cần bàn giao</td><td>pending</td></tr></tbody></table>
+<h2>FE và task cũ</h2><table><thead><tr><th>Issue</th><th>Điều chỉnh</th><th>Owner</th></tr></thead><tbody><tr><td><a href="https://github.com/toilatrung/label-x/issues/213">#213 T-066</a></td><td>Chỉ badge/status/reason AI; contract #282/#287/#290. FE riêng, 1–2h dự kiến, phối hợp PR #276. Không sửa BE/generated client/shared API layer.</td><td>@tdt2112</td></tr><tr><td>#212 T-065</td><td>Deferred reference FE sau M-04, dự kiến M-06; OPEN, không cancelled/done; gỡ owner thực thi hiện tại.</td><td>PO tái giao khi tới đợt</td></tr><tr><td>#214 T-067</td><td>Deferred calibration FE sau kỹ thuật, M-07; không giữ deadline 16/10 cũ.</td><td>PO tái giao khi tới đợt</td></tr><tr><td>#216 T-069</td><td>Backlog FE độc lập; xếp sau #213, timebox điều tra 90 phút, không chặn BE.</td><td>@tdt2112</td></tr></tbody></table>
+<h2>Context và evidence</h2><p>Đọc <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch A/B/C</a>, CR-115, DEC-021 và task riêng. Baseline code phải lấy nhánh mới, không dùng develop local d751326 cũ. Không có bằng chứng model thực trong lần tạo issue.</p>
+<h2>Nội dung task cũ trước điều chỉnh</h2><details><summary>#212 — T-065: FE reference Benchmark/Calibration trên API thật</summary><pre style="white-space:pre-wrap">**Task:** T-065 · **Epic:** E-06 · **Milestone:** M-FE01 · **Tracking:** #196 (bảng phụ thuộc và lịch cả milestone nằm ở đó)
+
+| Vai trò | Người |
+|---|---|
+| **Owner duy nhất (làm và báo cáo PO)** | @tdt2112 |
+| Reviewer/QC (khác owner, không đồng sở hữu) | @DucHa180104 |
+
+### Hạn (giờ Việt Nam, UTC+7)
+
+- **Dev xong — PR sẵn sàng review: 15/10 12:00 (2026)**
+- **QC xong — review + QA + merge: 15/10 17:00**
+- Baseline M-04 kết thúc 16/10/2026; hạn trên đặt sớm hơn để còn QC. Trễ hạn hoặc bị chặn: báo PO ngay trong issue, không tự đổi hạn.
+
+### Mục tiêu
+
+Nối màn reference Benchmark/Calibration vào API thật (child của FE-13 #166).
+
+### Scope
+
+- **Trong scope:** Import/derive/review/lock/version/leakage theo API đã merge develop; RBAC hiding/guards; trạng thái draft/missing/review-needed/409; tests create→derive→approve→lock đúng vai.
+- **Ngoài scope:** Backend; ranking/score/candidate cho reference preparer; mock demo tính acceptance.
+
+### Phụ thuộc (cần xong trước)
+
+| Task | Owner | Hạn upstream |
+|---|---|---|
+| T-054 #201 | @DucHa180104 | PR sẵn sàng 14/10 12:00; merge 14/10 17:00 |
+
+Bắt đầu: có thể dựng code/fixture khi upstream bàn giao interface (PR draft). Hoàn tất: chỉ khi upstream đã merge vào nhánh đích; không ghi acceptance trước đó.
+
+### Mở khoá cho (đang chờ task này)
+
+| Task | Owner | Hạn |
+|---|---|---|
+| T-068 #215 | @DucHa180104 | dev 16/10 17:00 |
+
+### Acceptance criteria
+
+- [ ] Child scope của FE-13 #166, tận dụng layout FE-07 #160; nối import/derive/review/lock/version/leakage theo API đã merge develop.
+- [ ] Hiding/action guards phù hợp RBAC; không hiển thị ranking/score/candidate cho reference preparer; xử lý draft/missing/review-needed/409.
+- [ ] Contract/component/E2E evidence cho create→derive→approve→lock với user đúng vai; demo mock không tính acceptance.
+
+### Verification và completion
+
+- [ ] Test theo AC gồm failure/boundary; ghi command + kết quả + SHA.
+- [ ] Implementation report HTML (template, file riêng theo user, CR-100); review/QA độc lập bởi reviewer ở trên; không ghi approval thay reviewer.
+- [ ] PR (BE base `develop`, FE base `develop-fe`), nhánh gợi ý `feat/T-065-m04`; handoff schema/fixture cho task ở bảng "Mở khoá".
+- [ ] Gate chưa đủ evidence ghi owner/bằng chứng cần thiếu, không tự chốt giá trị chưa duyệt.
+
+### Quy trình chung
+
+Comment `Nhận` trước khi bắt đầu (trạng thái ban đầu pending). Quyết định PO 12/10, provenance và gate chung: xem #196. Chỉ một owner chịu trách nhiệm task; reviewer chỉ review/QC. Task xong không tự đồng nghĩa epic DONE.
+</pre></details>
+<details><summary>#213 — T-066: FE models/config/execution và VLM-off status</summary><pre style="white-space:pre-wrap">**Task:** T-066 · **Epic:** E-10 · **Milestone:** M-FE01 · **Tracking:** #196 (bảng phụ thuộc và lịch cả milestone nằm ở đó)
+
+| Vai trò | Người |
+|---|---|
+| **Owner duy nhất (làm và báo cáo PO)** | @tdt2112 |
+| Reviewer/QC (khác owner, không đồng sở hữu) | @DucHa180104 |
+
+### Hạn (giờ Việt Nam, UTC+7)
+
+- **Dev xong — PR sẵn sàng review: 15/10 17:50 (2026)**
+- **QC xong — review + QA + merge: 16/10 10:00**
+- Baseline M-04 kết thúc 16/10/2026; hạn trên đặt sớm hơn để còn QC. Trễ hạn hoặc bị chặn: báo PO ngay trong issue, không tự đổi hạn.
+
+### Mục tiêu
+
+Nối màn models/config/execution và trạng thái VLM-off vào API thật (child của FE-14 #167).
+
+### Scope
+
+- **Trong scope:** Model checksum/threshold version/engine applicability; ledger per frame, partial failure/retry; VLM-off không có đường bật; endpoint chưa sẵn giữ NotConnectedNotice.
+- **Ngoài scope:** Backend; đoán API chưa có; bật VLM.
+
+### Phụ thuộc (cần xong trước)
+
+| Task | Owner | Hạn upstream |
+|---|---|---|
+| T-057 #204 | @Vietanhhhhhh2003 | PR sẵn sàng 14/10 10:00; merge 14/10 15:00 |
+| T-058 #205 | @Vietanhhhhhh2003 | PR sẵn sàng 14/10 17:00; merge 15/10 10:00 |
+| T-060 #207 | @DucHa180104 | PR sẵn sàng 13/10 12:00; merge 13/10 17:00 |
+
+Bắt đầu: có thể dựng code/fixture khi upstream bàn giao interface (PR draft). Hoàn tất: chỉ khi upstream đã merge vào nhánh đích; không ghi acceptance trước đó.
+
+### Mở khoá cho (đang chờ task này)
+
+| Task | Owner | Hạn |
+|---|---|---|
+| T-068 #215 | @DucHa180104 | dev 16/10 17:00 |
+
+### Acceptance criteria
+
+- [ ] Child scope FE-14 #167, tận dụng FE-09/#162 và FE-11/#164; hiện model checksum/threshold version/engine applicability.
+- [ ] VLM-off không có đường bật trái policy; ledger per frame và partial failure/retry hiển thị đúng state.
+- [ ] Component/E2E thật cho payload/status; endpoint chưa sẵn giữ NotConnectedNotice, không gọi API phỏng đoán.
+
+### Verification và completion
+
+- [ ] Test theo AC gồm failure/boundary; ghi command + kết quả + SHA.
+- [ ] Implementation report HTML (template, file riêng theo user, CR-100); review/QA độc lập bởi reviewer ở trên; không ghi approval thay reviewer.
+- [ ] PR (BE base `develop`, FE base `develop-fe`), nhánh gợi ý `feat/T-066-m04`; handoff schema/fixture cho task ở bảng "Mở khoá".
+- [ ] Gate chưa đủ evidence ghi owner/bằng chứng cần thiếu, không tự chốt giá trị chưa duyệt.
+
+### Quy trình chung
+
+Comment `Nhận` trước khi bắt đầu (trạng thái ban đầu pending). Quyết định PO 12/10, provenance và gate chung: xem #196. Chỉ một owner chịu trách nhiệm task; reviewer chỉ review/QC. Task xong không tự đồng nghĩa epic DONE.
+</pre></details>
+<details><summary>#214 — T-067: FE calibration counts, fit/fallback và score version</summary><pre style="white-space:pre-wrap">**Task:** T-067 · **Epic:** E-17 · **Milestone:** M-FE01 · **Tracking:** #196 (bảng phụ thuộc và lịch cả milestone nằm ở đó)
+
+| Vai trò | Người |
+|---|---|
+| **Owner duy nhất (làm và báo cáo PO)** | @tdt2112 |
+| Reviewer/QC (khác owner, không đồng sở hữu) | @DucHa180104 |
+
+### Hạn (giờ Việt Nam, UTC+7)
+
+- **Dev xong — PR sẵn sàng review: 16/10 14:00 (2026)**
+- **QC xong — review + QA + merge: 16/10 16:00**
+- Baseline M-04 kết thúc 16/10/2026; hạn trên đặt sớm hơn để còn QC. Trễ hạn hoặc bị chặn: báo PO ngay trong issue, không tự đổi hạn.
+
+### Mục tiêu
+
+Hiển thị counts, fit/fallback và score version trên API thật (child của FE-13 #166).
+
+### Scope
+
+- **Trong scope:** n_min/counts/folds/prerequisites/fallback, OOF diagnostics, lineage; khoá thao tác fit/lock khi thiếu prerequisites; phân biệt pending/failed/fallback/locked. Dựng UI theo contract trước, nối API thật khi T-061 merge.
+- **Ngoài scope:** KPI held-out/crossover (M-05); backend.
+
+### Phụ thuộc (cần xong trước)
+
+| Task | Owner | Hạn upstream |
+|---|---|---|
+| T-061 #208 | @Vietanhhhhhh2003 | PR sẵn sàng 15/10 17:50; merge 16/10 09:00 |
+| T-063 #210 | @Vietanhhhhhh2003 | PR sẵn sàng 16/10 12:00; merge 16/10 14:00 |
+| T-064 #211 | @Vietanhhhhhh2003 | PR sẵn sàng 16/10 14:00; merge 16/10 16:00 |
+
+Bắt đầu: có thể dựng code/fixture khi upstream bàn giao interface (PR draft). Hoàn tất: chỉ khi upstream đã merge vào nhánh đích; không ghi acceptance trước đó.
+
+### Mở khoá cho (đang chờ task này)
+
+| Task | Owner | Hạn |
+|---|---|---|
+| T-068 #215 | @DucHa180104 | dev 16/10 17:00 |
+
+### Acceptance criteria
+
+- [ ] Child scope FE-13 #166: n_min/counts/folds/prerequisites/fallback và OOF diagnostics; lineage artifact/reference/version.
+- [ ] Khoá thao tác fit/lock khi thiếu prerequisites; phân biệt pending/failed/fallback/locked, số mẫu issue-level.
+- [ ] API/component/E2E checks đúng role; không dựng KPI held-out/crossover M-05 trong task này.
+
+### Verification và completion
+
+- [ ] Test theo AC gồm failure/boundary; ghi command + kết quả + SHA.
+- [ ] Implementation report HTML (template, file riêng theo user, CR-100); review/QA độc lập bởi reviewer ở trên; không ghi approval thay reviewer.
+- [ ] PR (BE base `develop`, FE base `develop-fe`), nhánh gợi ý `feat/T-067-m04`; handoff schema/fixture cho task ở bảng "Mở khoá".
+- [ ] Gate chưa đủ evidence ghi owner/bằng chứng cần thiếu, không tự chốt giá trị chưa duyệt.
+
+### Quy trình chung
+
+Comment `Nhận` trước khi bắt đầu (trạng thái ban đầu pending). Quyết định PO 12/10, provenance và gate chung: xem #196. Chỉ một owner chịu trách nhiệm task; reviewer chỉ review/QC. Task xong không tự đồng nghĩa epic DONE.
+</pre></details>
+<details><summary>#216 — T-069: Ổn định Vitest worker và kiểm tra frontend CI</summary><pre style="white-space:pre-wrap">**Task:** T-069 · **Epic:** E-02 · **Milestone:** M-FE01 · **Tracking:** #196 (bảng phụ thuộc và lịch cả milestone nằm ở đó)
+
+| Vai trò | Người |
+|---|---|
+| **Owner duy nhất (làm và báo cáo PO)** | @tdt2112 |
+| Reviewer/QC (khác owner, không đồng sở hữu) | @DucHa180104 |
+
+### Hạn (giờ Việt Nam, UTC+7)
+
+- **Dev xong — PR sẵn sàng review: 13/10 12:00 (2026)**
+- **QC xong — review + QA + merge: 13/10 17:00**
+- Baseline M-04 kết thúc 16/10/2026; hạn trên đặt sớm hơn để còn QC. Trễ hạn hoặc bị chặn: báo PO ngay trong issue, không tự đổi hạn.
+
+### Mục tiêu
+
+Sửa lỗi worker startup timeout của Vitest để CI frontend ổn định cho mọi PR M-04.
+
+### Scope
+
+- **Trong scope:** Tái lập lỗi (188 test pass nhưng auth worker lỗi; auth pool forks/1 worker pass 7); xác định nguyên nhân resource/pool/config; chạy full suite CI-equivalent + type/build.
+- **Ngoài scope:** Skip test hoặc tăng timeout mù; đổi test runner (cần CR).
+
+### Phụ thuộc (cần xong trước)
+
+| Task | Owner | Hạn upstream |
+|---|---|---|
+| — | — | Không phụ thuộc task M-04 khác (đối chiếu baseline đã merge) |
+
+Bắt đầu: có thể dựng code/fixture khi upstream bàn giao interface (PR draft). Hoàn tất: chỉ khi upstream đã merge vào nhánh đích; không ghi acceptance trước đó.
+
+### Mở khoá cho (đang chờ task này)
+
+| Task | Owner | Hạn |
+|---|---|---|
+| — | — | Không task M-04 nào chờ trực tiếp |
+
+### Acceptance criteria
+
+- [ ] Tái lập lỗi worker startup timeout: full Vitest mặc định có 188 tests pass nhưng auth worker lỗi; auth chạy pool forks/1worker pass7.
+- [ ] Xác định resource/pool/config nguyên nhân, chọn fix ít nhất có evidence; không dùng skip test hay tăng timeout mù.
+- [ ] Chạy full frontend suite trong CI-equivalent + type/build và ghi command/runtime/SHA; không ghi make check xanh chỉ từ auth riêng.
+
+### Verification và completion
+
+- [ ] Test theo AC gồm failure/boundary; ghi command + kết quả + SHA.
+- [ ] Implementation report HTML (template, file riêng theo user, CR-100); review/QA độc lập bởi reviewer ở trên; không ghi approval thay reviewer.
+- [ ] PR (BE base `develop`, FE base `develop-fe`), nhánh gợi ý `feat/T-069-m04`; handoff schema/fixture cho task ở bảng "Mở khoá".
+- [ ] Gate chưa đủ evidence ghi owner/bằng chứng cần thiếu, không tự chốt giá trị chưa duyệt.
+
+### Quy trình chung
+
+Comment `Nhận` trước khi bắt đầu (trạng thái ban đầu pending). Quyết định PO 12/10, provenance và gate chung: xem #196. Chỉ một owner chịu trách nhiệm task; reviewer chỉ review/QC. Task xong không tự đồng nghĩa epic DONE.
+</pre></details>
+</body></html>
+
