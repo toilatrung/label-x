@@ -4,14 +4,14 @@ import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { ReworkTracking } from '@/components/review/ReworkTracking';
-import { canAccessReview } from '@/lib/auth/roles';
+import { canAccessRework } from '@/lib/auth/roles';
 
 export default function ReworkTrackingPage() {
   return (
     <AuthGuard
-      permissionCheck={canAccessReview}
+      permissionCheck={canAccessRework}
       requiresIdentity
-      requiredPermissionName="Reviewer / Quality Assurance Lead / Quality Control Admin / Super Admin, có liên kết CVAT"
+      requiredPermissionName="Annotator / Reviewer / Quality Assurance Lead / Super Admin, có liên kết CVAT"
     >
       <AppShell
         activeKey="review"

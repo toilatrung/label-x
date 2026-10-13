@@ -12,6 +12,7 @@ describe('API Explorer', () => {
     expect(screen.getAllByText('Product API').length).toBeGreaterThan(0);
     expect(screen.getByText('/api/auth/session/')).toBeInTheDocument();
     expect(screen.getByText('/api/evaluations/{id}/')).toBeInTheDocument();
+    expect(screen.getByText('/api/rework/{id}/current-revision/')).toBeInTheDocument();
   });
 
   it('filters operations by connection status and search text', () => {
@@ -27,7 +28,7 @@ describe('API Explorer', () => {
 
   it('keeps a default response and adds state variants where the contract has a state machine', () => {
     const ids = new Set(API_ENDPOINTS.map(endpoint => endpoint.id));
-    expect(API_ENDPOINTS).toHaveLength(77);
+    expect(API_ENDPOINTS).toHaveLength(78);
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'runs_list')?.responseExamples?.map(example => example.label))

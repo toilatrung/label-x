@@ -5,6 +5,7 @@ export type EscalationIssue = components['schemas']['Issue'];
 export type EscalationPage = components['schemas']['PaginatedIssueList'];
 export type AdjudicationInput = components['schemas']['AdjudicationCreate'];
 export type DecisionCase = components['schemas']['DecisionCase'];
+export type DecisionCaseDetail = components['schemas']['DecisionCaseDetail'];
 
 type EscalationsQuery = NonNullable<
   operations['escalations_list']['parameters']['query']
@@ -87,4 +88,12 @@ export async function getDecisionCases(
     cache: 'no-store',
   });
   return unwrap(result).results;
+}
+
+export async function getDecisionCase(id: number, signal?: AbortSignal): Promise<DecisionCaseDetail> {
+  return unwrap(await apiClient.GET('/api/decision-cases/{id}/', {
+    params: { path: { id } },
+    signal,
+    cache: 'no-store',
+  }));
 }

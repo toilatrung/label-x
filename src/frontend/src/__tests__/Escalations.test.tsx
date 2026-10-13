@@ -99,6 +99,11 @@ describe('Escalations UI (T-039)', () => {
           results: [issue],
         });
       }
+      if (/^\/api\/decision-cases\/\d+\/$/.test(url.pathname)) return Response.json({
+        id: Number(url.pathname.split('/')[3]), issue_id: 42, outcome: 'confirm', actor_user_id: 2,
+        rule_id: 'VEH-03', correct_label: 'truck', reason: 'Chi tiết từ API', case_version: 'v2',
+        created_at: '2026-10-11T03:00:00Z', history: [],
+      });
       if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
       if (url.pathname === '/api/issues/42/adjudications/') {
         return Response.json({
@@ -259,6 +264,22 @@ describe('Escalations UI (T-039)', () => {
       const url = new URL(call.url);
       return url.pathname === '/api/decision-cases/' && url.searchParams.get('version') === 'v2';
     })).toBe(true));
+  });
+
+  it('loads Decision Case detail from the dedicated endpoint', async () => {
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [{
+        id: 12, issue_id: 42, outcome: 'confirm', actor_user_id: 2, rule_id: 'VEH-03',
+        correct_label: 'truck', reason: 'Kết quả danh sách', case_version: 'v2', created_at: '2026-10-11T03:00:00Z',
+      }] });
+      return null;
+    });
+    await screen.findByText('QC-00042');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(await screen.findByText('#12')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Chi tiết' }));
+    expect(await screen.findByText('Chi tiết từ API')).toBeDefined();
+    expect(calls.some(request => new URL(request.url).pathname === '/api/decision-cases/12/')).toBe(true);
   });
 
   it('requires an override reason for a global Super Admin', async () => {

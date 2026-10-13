@@ -39,6 +39,10 @@ export function canAccessReview(role: UserRole): boolean {
   return ['reviewer', 'qa_lead', 'super_admin'].includes(role);
 }
 
+export function canAccessRework(role: UserRole): boolean {
+  return ['annotator', 'reviewer', 'qa_lead', 'super_admin'].includes(role);
+}
+
 export function canAccessEscalations(role: UserRole): boolean {
   return ['qa_lead', 'super_admin'].includes(role);
 }
