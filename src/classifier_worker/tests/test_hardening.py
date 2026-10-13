@@ -9,6 +9,7 @@ from PIL import Image
 from labelx_classifier.artifact import ClassifierArtifact, ManifestError
 from labelx_classifier.cli import main
 from labelx_classifier.dataset import (
+    DatasetError,
     SplitConfig,
     build_dataset,
     canonical_json,
@@ -239,3 +240,53 @@ def test_train_refuses_tampered_manifest(dataset, tmp_path):
     rewrite(dataset, lambda m: m["split"].update(val_fraction=0.9))
     with pytest.raises(TrainingDataError):
         train_classifier(dataset, tmp_path / "m", version="x", epochs=1, pretrained=False)
+
+
+def test_user_files_in_crops_dir_are_never_deleted(snapshot, image_root, tmp_path):
+    out = tmp_path / "o"
+    foreign = out / "crops" / "MY_ANNOTATIONS.txt"
+    foreign.parent.mkdir(parents=True)
+    foreign.write_text("keep me")
+    with pytest.raises(DatasetError, match="refusing"):  # no manifest from this tool
+        build(snapshot, image_root, out)
+    assert foreign.read_text() == "keep me"
+    foreign.unlink()
+    build(snapshot, image_root, out)  # now the dir is the tool's
+    foreign.write_text("keep me")
+    manifest = build(snapshot, image_root, out)  # rebuild: tool crops replaced, foreign kept
+    assert foreign.read_text() == "keep me"
+    assert manifest["counts"]["crops"] == 24
+
+
+@pytest.mark.parametrize("value", [1, "true", "False", None, 0])
+def test_outside_must_be_a_real_boolean(snapshot, image_root, tmp_path, value):
+    shape = _shape(960, 1, [10, 10, 60, 60])
+    shape["outside"] = value
+    snapshot["jobs"][0]["frames"][0]["shapes"].append(shape)
+    manifest = build(snapshot, image_root, tmp_path / "o")
+    assert manifest["counts"]["rejected_by_reason"] == {"malformed_shape": 1}
+    assert manifest["counts"]["crops"] == 24
+
+
+@pytest.mark.parametrize(
+    ("mutate", "reason"),
+    [
+        (lambda s: s["jobs"].append(5), "malformed_job"),
+        (lambda s: s["jobs"].append({"cvat_job_id": 1, "frames": "abc"}), "malformed_job"),
+        (lambda s: s["jobs"][0]["frames"].append("frame"), "malformed_frame"),
+        (lambda s: s["jobs"][0]["frames"].append({"shapes": "x"}), "malformed_frame"),
+        (lambda s: s["jobs"][0]["frames"][0]["shapes"].append(7), "malformed_shape"),
+    ],
+)
+def test_structurally_wrong_snapshot_nodes_are_rejected(
+    snapshot, image_root, tmp_path, mutate, reason
+):
+    mutate(snapshot)
+    manifest = build(snapshot, image_root, tmp_path / "o")
+    assert manifest["counts"]["rejected_by_reason"] == {reason: 1}
+    assert manifest["counts"]["crops"] == 24
+
+
+def test_origin_is_declared_not_verified(dataset):
+    manifest = load_dataset_manifest(dataset)
+    assert "not verified" in manifest["data_origin_note"]

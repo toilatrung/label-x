@@ -77,3 +77,18 @@ def test_cli_predict_batch(trained, items, tmp_path, capsys):  # noqa: F811
 def test_empty_batch_is_valid(trained):  # noqa: F811
     _, _, artifact = trained
     assert predict_batch(Classifier.load(artifact.path), [])["results"] == []
+
+
+def test_cli_exit_codes_distinguish_checksum_and_manifest_errors(trained, tmp_path):  # noqa: F811
+    _, _, artifact = trained
+    original = artifact.checkpoint_path.read_bytes()
+    try:
+        artifact.checkpoint_path.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
+        assert main(["verify", "--manifest", str(artifact.path)]) == 3
+    finally:
+        artifact.checkpoint_path.write_bytes(original)
+    bad = tmp_path / "bad.json"
+    raw = json.loads(artifact.path.read_text())
+    raw["model"]["sha256"] = "nope"
+    bad.write_text(json.dumps(raw))
+    assert main(["verify", "--manifest", str(bad)]) == 4

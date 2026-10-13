@@ -15,6 +15,9 @@ from .dataset import DatasetError, SplitConfig, build_dataset, parse_label_map
 from .infer import Classifier, predict_batch
 from .train import TrainingDataError, train_classifier
 
+EXIT_CHECKSUM_MISMATCH = 3  # the backend maps these codes to stable reason codes
+EXIT_BAD_MANIFEST = 4
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="labelx-classifier")
@@ -131,11 +134,15 @@ def main(argv: list[str] | None = None) -> int:
                     else letterbox_crop(image, tuple(args.box))[0]
                 )
             print(json.dumps(classifier.predict([crop])[0].as_dict()))
+    except ChecksumMismatchError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_CHECKSUM_MISMATCH
+    except ManifestError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_BAD_MANIFEST
     except (
         DatasetError,
         TrainingDataError,
-        ManifestError,
-        ChecksumMismatchError,
         OSError,
         ValueError,
         RuntimeError,

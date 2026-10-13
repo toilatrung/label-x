@@ -208,4 +208,4 @@ def test_cli_verify_and_predict(trained, capsys):
         == 0
     )
     assert len(json.loads(capsys.readouterr().out)["top3"]) == 3
-    assert main(["verify", "--manifest", str(root / "missing.json")]) == 2
+    assert main(["verify", "--manifest", str(root / "missing.json")]) == 4
