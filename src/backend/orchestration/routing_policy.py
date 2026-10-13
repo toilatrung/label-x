@@ -114,17 +114,24 @@ class RoutingInput:
     margin: float | None = None
     manual_recheck: bool = False
     budget_exhausted: bool = False
+    # "smoke_only" | "trained" | "": nguồn checkpoint, chỉ để ghi evidence; KHÔNG ảnh hưởng routing.
+    checkpoint_status: str = ""
 
 
 @dataclass(frozen=True)
 class RoutingDecision:
-    """Kết quả định tuyến; `reasons[0]` luôn bằng `primary`."""
+    """Kết quả định tuyến; `reasons[0]` luôn bằng `primary`.
+
+    `checkpoint_status` được chuyển nguyên vào evidence để reviewer thấy kết quả đến từ
+    checkpoint smoke_only (không phải mô hình đã huấn luyện thật).
+    """
 
     primary: RoutingReason
     reasons: tuple[RoutingReason, ...]
     call_qwen: bool
     human_review_required: bool
     policy: Mapping[str, Any]
+    checkpoint_status: str = ""
 
 
 def _valid_number(value: float | None) -> bool:
@@ -159,6 +166,10 @@ def _trigger_reasons(policy: RoutingPolicy, data: RoutingInput) -> list[RoutingR
 def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     """Quyết định có gọi Qwen hay không; hàm thuần, tất định.
 
+    Unknown (abstention) do policy quyết: contract classifier luôn trả classifier_unknown=false,
+    nên adapter coi "completed mà predicted_class_id null" là unknown (xem
+    routing_input_from_candidate). Không có lớp thứ 11.
+
     Thứ tự: crop lỗi (không có gì để gửi) → các lý do trigger; nếu cần Qwen mà hết budget
     thì không gọi và chuyển người review. Không có trigger → classifier_only.
     """
@@ -170,6 +181,7 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
             call_qwen=False,
             human_review_required=True,
             policy=record,
+            checkpoint_status=data.checkpoint_status,
         )
     triggers = _trigger_reasons(policy, data)
     if not triggers:
@@ -179,6 +191,7 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
             call_qwen=False,
             human_review_required=False,
             policy=record,
+            checkpoint_status=data.checkpoint_status,
         )
     if data.budget_exhausted:
         return RoutingDecision(
@@ -187,6 +200,7 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
             call_qwen=False,
             human_review_required=True,
             policy=record,
+            checkpoint_status=data.checkpoint_status,
         )
     return RoutingDecision(
         primary=triggers[0],
@@ -194,6 +208,7 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
         call_qwen=True,
         human_review_required=False,
         policy=record,
+        checkpoint_status=data.checkpoint_status,
     )
 
 
@@ -231,4 +246,5 @@ def routing_input_from_candidate(
         margin=clf.get("margin") if completed else None,
         manual_recheck=manual_recheck,
         budget_exhausted=budget_exhausted,
+        checkpoint_status=str(clf.get("checkpoint_status") or ""),
     )
