@@ -590,3 +590,27 @@ def test_uncertain_and_parse_failure_flow_through_real_client(monkeypatch: Any) 
     assert reasons[1][0] == "parse_failure"
     assert reasons[0][1]["status"] == "uncertain" and reasons[0][1]["label"] is None
     assert "sk-test-not-real" not in json.dumps([r[1] for r in reasons])
+
+
+def test_ledger_counts_only_latest_generation_per_candidate() -> None:
+    """Re-evaluate (generation > 1) không được làm méo ledger/EngineResult của engine vlm."""
+    from orchestration.services import vlm_ledger_counts
+
+    run = _make_run()
+    _run_shards(run)
+    for u in VlmUnit.objects.filter(run_id=run.pk):
+        execute_vlm_unit(u.pk, client=FakeClient())
+    first = VlmUnit.objects.filter(run_id=run.pk).order_by("pk").first()
+    VlmUnit.objects.create(
+        run_id=run.pk,
+        candidate_id=first.candidate_id,
+        evaluation_generation=2,
+        idempotency_key="g2-" + "0" * 60,
+        policy_version=first.policy_version,
+        model=first.model,
+        prompt_version=first.prompt_version,
+        status=VlmUnit.Status.PENDING,
+    )
+    counts = vlm_ledger_counts(run.pk)
+    # Candidate đầu có lượt mới nhất đang pending; hai candidate còn lại đã completed.
+    assert (counts.completed, counts.failed, counts.pending) == (2, 0, 1)

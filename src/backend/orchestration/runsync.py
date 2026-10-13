@@ -106,7 +106,15 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
     """EngineResult của vlm tính từ VlmUnit (đơn vị = candidate), không từ LedgerUnit theo frame."""
     if not vlm_stage_started(run_id):
         return  # candidate chưa sinh xong: giữ nguyên trạng thái running ban đầu
-    statuses = list(VlmUnit.objects.filter(run_id=run_id).values_list("status", flat=True))
+    # Mỗi candidate chỉ tính lượt mới nhất: re-evaluate không được làm méo số đếm của ledger.
+    latest: dict[int, str] = {}
+    for candidate_id, status in (
+        VlmUnit.objects.filter(run_id=run_id)
+        .order_by("evaluation_generation")
+        .values_list("candidate_id", "status")
+    ):
+        latest[candidate_id] = status
+    statuses = list(latest.values())
     completed = sum(s == VlmUnit.Status.COMPLETED for s in statuses)
     failed = sum(s == VlmUnit.Status.FAILED for s in statuses)
     pending = sum(s in (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING) for s in statuses)
