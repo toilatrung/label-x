@@ -22,6 +22,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   const [isScanningSearch, setIsScanningSearch] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [paginationError, setPaginationError] = useState<string | null>(null);
+  const [initialError, setInitialError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,6 +52,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
       if (!isMountedRef.current || gen !== currentGen.current) return;
       setIsLoading(true);
       setPaginationError(null);
+      setInitialError(null);
       setDatasets([]);
       setNextCursor(undefined);
       setIsScanningSearch(false);
@@ -67,13 +69,14 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         setNextCursor(cursorFrom(page.next));
         setIsLoading(false);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (inFlightCursorRef.current === 'page1') {
           inFlightCursorRef.current = null;
         }
         if (!isMountedRef.current || gen !== currentGen.current) return;
         setDatasets([]);
         setNextCursor(undefined);
+        setInitialError(errorMessage(err));
         setIsLoading(false);
       });
   }, [refreshTrigger, currentUserId, isAuthLoading]);
@@ -270,6 +273,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   };
 
   const isRealDataActive = datasets.length > 0;
+  const showProductFallback = !isRealDataActive;
 
   return (
     <>
@@ -326,6 +330,13 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
           </div>
         ) : null}
 
+        {initialError && !isLoading && !showProductFallback && (
+          <div className="lx-state--card" role="alert">
+            <div className="lx-text-danger lx-mb-3">{initialError}</div>
+            <button type="button" className="lx-btn lx-btn--sm" onClick={handleRetryInitial}>Thử lại</button>
+          </div>
+        )}
+
         {/* Real datasets table when connected */}
         {isRealDataActive && !isLoading && (
           filteredDatasets.length === 0 ? (
@@ -372,10 +383,9 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDatasets.map((ds, idx) => {
+                  {filteredDatasets.map((ds) => {
                     const isSelected = ds.id === datasetId;
-                    const product = HOME_DATASETS.find(row => row.id === ds.id)
-                      ?? HOME_DATASETS[idx % HOME_DATASETS.length];
+                    const product = HOME_DATASETS.find(row => row.id === ds.id || row.name === ds.name);
                     return (
                       <tr
                         key={ds.id}
@@ -397,28 +407,19 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                           </div>
                           <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
                         </td>
-                        <td className="r">{product.tasksJobs}</td>
-                        <td className="r">{product.frames}</td>
+                        <td className="r">{product?.tasksJobs ?? '—'}</td>
+                        <td className="r">{product?.frames ?? '—'}</td>
                         <td>
-                          {product.qcRunStatus ? (
-                            <>
-                              <span className="lx-mono">{product.qcRun}</span>{' '}
-                              <span className={`lx-badge${product.qcRunTone ? ` lx-badge--${product.qcRunTone}` : ''}`}>
-                                {product.qcRunStatus}
-                              </span>
+                          {product?.qcRunStatus ? (
+                            <><span className="lx-mono">{product.qcRun}</span>{' '}
+                              <span className={`lx-badge${product.qcRunTone ? ` lx-badge--${product.qcRunTone}` : ''}`}>{product.qcRunStatus}</span>
                               {product.qcRunTime && <div className="lx-cell__sub">{product.qcRunTime}</div>}
                             </>
-                          ) : (
-                            <span className="lx-subtle">{product.qcRun}</span>
-                          )}
+                          ) : <span className="lx-subtle">{product?.qcRun ?? '—'}</span>}
                         </td>
-                        <td className="r">{product.coverage}</td>
-                        <td className="r">{product.openIssues}</td>
-                        <td>
-                          <span className={`lx-badge${product.gateTone ? ` lx-badge--${product.gateTone}` : ''}`}>
-                            {product.gate}
-                          </span>
-                        </td>
+                        <td className="r">{product?.coverage ?? '—'}</td>
+                        <td className="r">{product?.openIssues ?? '—'}</td>
+                        <td><span className={`lx-badge${product?.gateTone ? ` lx-badge--${product.gateTone}` : ''}`}>{product?.gate ?? '—'}</span></td>
                         <td className="r">
                           <button
                             type="button"
@@ -445,7 +446,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         )}
 
         {/* Canonical product data remains available when the live API has no rows. */}
-        {!isRealDataActive && !isLoading && (
+        {showProductFallback && !isLoading && (
           <div className="lx-scroll">
             <table className="lx-table lx-table--min-1040">
               <thead>

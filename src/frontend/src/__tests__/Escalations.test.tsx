@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import EscalationsPage from '@/app/escalations/page';
@@ -99,7 +99,7 @@ describe('Escalations UI (T-039)', () => {
           results: [issue],
         });
       }
-      if (url.pathname === '/api/decision-cases/') return Response.json([]);
+      if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
       if (url.pathname === '/api/issues/42/adjudications/') {
         return Response.json({
           id: 91,
@@ -215,7 +215,7 @@ describe('Escalations UI (T-039)', () => {
         return Response.json({
           id: 92,
           issue_id: 42,
-          outcome: 'guideline_missing',
+          outcome: 'guideline_gap',
           actor_user_id: 2,
           rule_id: 'VEH-03',
           correct_label: null,
@@ -237,7 +237,7 @@ describe('Escalations UI (T-039)', () => {
     expect(await screen.findByText(/Đã lưu Decision Case #92/)).toBeDefined();
 
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
-    expect((await request?.clone().json()).outcome).toBe('guideline_missing');
+    expect((await request?.clone().json()).outcome).toBe('guideline_gap');
   });
 
   it('enforces the page role matrix without issuing data requests', async () => {
@@ -281,7 +281,7 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.queryByText(/IoU/)).toBeNull();
   });
 
-  it('opens Guideline Gap design from an issue without saving it (FE-12)', async () => {
+  it('uses the real adjudication outcome when creating a Guideline Gap (FE-12)', async () => {
     const { calls } = await renderPage();
     await screen.findByText('QC-00042');
     expect(screen.queryByText('QC-00098')).toBeNull();
@@ -289,21 +289,54 @@ describe('Escalations UI (T-039)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     const before = calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect(screen.getByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeDefined();
-    expect(screen.getByText(/QC-00042 · Quy tắc VEH-03/)).toBeDefined();
-    fireEvent.click(screen.getByRole('dialog').querySelector('button[type="submit"]')!);
-    expect(screen.getByText('Mô tả nội dung còn thiếu.')).toBeDefined();
+    expect((screen.getByRole('radio', { name: 'Guideline còn thiếu' }) as HTMLInputElement).checked).toBe(true);
+    expect(screen.queryByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeNull();
     expect(calls.length).toBe(before);
   });
 
-  it('shows the three design tabs, sample rows and the not-connected notice (FE-06)', async () => {
-    await renderPage();
+  it('uses sketchup data for Guideline Gaps and API data for Decision Cases (FE-06)', async () => {
+    await renderPage('qalead', async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname !== '/api/decision-cases/') return null;
+      return Response.json({ next: null, previous: null, results: [
+        {
+          id: 12,
+          issue_id: 42,
+          outcome: 'guideline_gap',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: null,
+          reason: 'Xe buýt mini chở hàng thuộc nhãn nào',
+          case_version: 'v2',
+          created_at: '2026-10-11T02:00:00Z',
+        },
+        {
+          id: 40,
+          issue_id: 84,
+          outcome: 'confirm',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: 'truck',
+          reason: 'Xe bán tải có nắp thùng',
+          case_version: 'v2',
+          created_at: '2026-10-11T03:00:00Z',
+        },
+      ] });
+    });
     fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
-    expect(screen.getByText('GAP-012')).toBeDefined();
+    expect(await screen.findByText('GAP-012')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByText(/chưa được kết nối với server/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
+    fireEvent.change(within(dialog).getByLabelText('Quy tắc liên quan *'), { target: { value: 'VEH-03' } });
+    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Tình huống mới từ sketchup' } });
+    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Ba case chưa thống nhất' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await screen.findByText('GAP-013')).toBeDefined();
+    expect(screen.getByText('Tình huống mới từ sketchup')).toBeDefined();
     fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
-    expect(screen.getByText('CASE-040')).toBeDefined();
+    expect(await screen.findByText('CASE-040')).toBeDefined();
     expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Decision Cases/ })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Adjudication/ })).toBeDefined();

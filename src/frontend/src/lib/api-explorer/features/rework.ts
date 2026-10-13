@@ -5,7 +5,7 @@ export const REWORK_ENDPOINTS = [
   { id: 'rework_create', method: 'POST', path: '/api/rework/', group: 'Rework', summary: 'Tạo yêu cầu sửa', connection: 'backend', responseStatus: 201, response: rework },
   { id: 'rework_submitted', method: 'POST', path: '/api/rework/{id}/submitted/', group: 'Rework', summary: 'Ghi nhận annotator đã sửa', connection: 'backend', responseStatus: 202, response: { ...rework, status: 'recheck_pending', submitted_revision: 'sha256:3aa7…992e' } },
   { id: 'rework_verify', method: 'POST', path: '/api/rework/{id}/verify/', group: 'Rework', summary: 'Xác minh kết quả sửa lỗi', connection: 'backend', responseStatus: 200, response: { ...rework, status: 'resolved', submitted_revision: 'sha256:3aa7…992e' } },
-  { id: 'rework_list', method: 'GET', path: '/api/rework/', group: 'Rework', summary: 'Danh sách yêu cầu sửa theo scope', connection: 'mock', origin: 'design', responseStatus: 200, response: { next: null, previous: null, counts: { total: 86, fix_pending: 5, recheck_pending: 7, resolved: 74, reopened: 0 }, results: [
+  { id: 'rework_list', method: 'GET', path: '/api/rework/', group: 'Rework', summary: 'Danh sách yêu cầu sửa theo scope', connection: 'backend', responseStatus: 200, response: { next: null, previous: null, counts: { total: 86, fix_pending: 5, recheck_pending: 7, resolved: 74, reopened: 0 }, results: [
     { ...rework, id: 212, code: 'RW-0212', issue_code: 'QC-00061', frame_id: 104, object_id: 12, action: 'Đổi nhãn car → truck', annotator_name: 'Bình Hồ', due_at: '2026-10-06', severity: 'critical', status: 'fix_pending' },
     { ...rework, id: 213, code: 'RW-0213', issue_code: 'QC-00064', frame_id: 118, object_id: 8, action: 'Xoá bản ghi trùng #08', annotator_name: 'Bình Hồ', due_at: '2026-10-06', severity: 'medium', status: 'fix_pending' },
     { ...rework, id: 215, code: 'RW-0215', issue_code: 'QC-00067', frame_id: 131, object_id: null, action: 'Thêm bounding box cho xe máy bị thiếu', annotator_name: 'An Nguyễn', due_at: '2026-10-07', severity: 'critical', status: 'fix_pending' },
@@ -22,5 +22,5 @@ export const REWORK_ENDPOINTS = [
     { ...rework, id: 158, code: 'RW-0158', issue_code: 'QC-00021', frame_id: 40, object_id: 5, action: 'Đã xoá bản ghi trùng', annotator_name: 'Bình Hồ', due_at: '2026-10-03', severity: 'medium', status: 'resolved' },
     { ...rework, id: 161, code: 'RW-0161', issue_code: 'QC-00026', frame_id: 49, object_id: 10, action: 'Đã bổ sung thuộc tính', annotator_name: 'Bình Hồ', due_at: '2026-10-03', severity: 'minor', status: 'resolved' },
   ] } },
-  { id: 'rework_retrieve', method: 'GET', path: '/api/rework/{id}/', group: 'Rework', summary: 'Chi tiết yêu cầu sửa', connection: 'mock', origin: 'design', responseStatus: 200, response: rework },
+  { id: 'rework_retrieve', method: 'GET', path: '/api/rework/{id}/', group: 'Rework', summary: 'Chi tiết yêu cầu sửa', connection: 'backend', responseStatus: 200, response: rework },
 ] satisfies ApiEndpoint[];

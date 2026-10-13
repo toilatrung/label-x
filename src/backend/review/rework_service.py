@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import URLValidator
@@ -23,9 +24,11 @@ from accounts.models import CvatIdentity, Role, RoleAssignment
 from accounts.permissions import record_rejection_audit
 from audit.services import append_audit_event
 from config.exceptions import ApiError
+from review import decision_source
 from review.models import (
     FrameReview,
     Issue,
+    Lease,
     ReviewDecision,
     ReworkRecheck,
     ReworkRequest,
@@ -35,7 +38,12 @@ from review.services import _actor, _reviewer_identity
 from runs.models import QCRun
 from runs.services import create_qc_run
 from snapshots.models import Snapshot
-from snapshots.orchestration import SnapshotScope, create_snapshot_from_cvat
+from snapshots.orchestration import (
+    SnapshotScope,
+    SnapshotSourceError,
+    compute_job_revision,
+    create_snapshot_from_cvat,
+)
 
 
 def _body(request: Request) -> dict[str, Any]:
@@ -189,7 +197,16 @@ def create_rework(*, request: Request) -> ReworkRequest:
     key = _idempotency(request)
     request_hash = _request_hash(body)
 
-    User.objects.select_for_update().get(pk=user.pk)
+    # One lock order for every rework writer: user rows (by pk), then the run, then the rest.
+    # The annotator's row is locked here, not after the run lock: `submitted` (by that
+    # annotator) takes its user row before the run lock, so the reverse order deadlocks.
+    # Only a well-formed id is locked early; every validation error keeps its old precedence.
+    locked_users = {user.pk}
+    early_annotator = body.get("annotator_user_id")
+    if isinstance(early_annotator, int) and not isinstance(early_annotator, bool):
+        if early_annotator > 0:
+            locked_users.add(early_annotator)
+    list(User.objects.select_for_update(no_key=True).filter(pk__in=locked_users).order_by("pk"))
     relation = Issue.objects.filter(pk=issue_id).values("frame_review__run_id").first()
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
@@ -229,7 +246,7 @@ def create_rework(*, request: Request) -> ReworkRequest:
         )
 
     annotator_id = _positive_int(body.get("annotator_user_id"), "annotator_user_id")
-    annotator = User.objects.select_for_update().filter(pk=annotator_id).first()
+    annotator = User.objects.filter(pk=annotator_id).first()  # row already locked above
     if annotator is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Annotator không tồn tại.")
     if not _has_role(annotator, dataset_id, (Role.ANNOTATOR,)):
@@ -316,7 +333,7 @@ def _build_recheck_artifacts(
             "INVALID_TRANSITION",
             "Snapshot re-check không khóa được do drift nguồn CVAT.",
         )
-    if snapshot.revision_sha256 == rework.original_revision:
+    if snapshot.revision_sha256 in _known_revisions(rework):
         raise ApiError(
             status.HTTP_409_CONFLICT,
             "REVISION_UNCHANGED",
@@ -339,24 +356,92 @@ def _build_recheck_artifacts(
     return snapshot, run
 
 
-def _replay_submitted_rework(
+def _snapshot_reused_error(snapshot: Snapshot, rework: ReworkRequest) -> ApiError:
+    """Same snapshot = same revision content already re-checked: a business conflict, not a 500."""
+
+    return ApiError(
+        status.HTTP_409_CONFLICT,
+        "REVISION_UNCHANGED",
+        "Snapshot re-check đã được dùng cho một vòng trước của rework này.",
+        {"rework_id": rework.pk, "snapshot_id": snapshot.pk},
+    )
+
+
+def _known_revisions(rework: ReworkRequest) -> set[str]:
+    """Revisions already seen by this rework: the reviewed one and every submitted round."""
+
+    return {rework.original_revision, *rework.rechecks.values_list("revision", flat=True)}
+
+
+def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
+    """Revision `submitted` would claim right now. Reads CVAT only; persists nothing."""
+
+    frame = rework.issue.frame_review
+    job_id = frame.snapshot_frame.snapshot_job.cvat_job_id
+    try:
+        revision = compute_job_revision(dataset_id=frame.run.dataset_id, cvat_job_id=job_id)
+    except (
+        httpx.HTTPError,
+        SnapshotSourceError,
+        LookupError,
+        AttributeError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+    ) as exc:
+        raise ApiError(
+            status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được job CVAT."
+        ) from exc
+    return {
+        "rework_id": rework.pk,
+        "cvat_job_id": job_id,
+        "revision_sha256": revision,
+        "original_revision": rework.original_revision,
+        "unchanged": revision in _known_revisions(rework),
+        "rework_status": rework.status,
+        "read_at": timezone.now().isoformat(),
+    }
+
+
+def _existing_submission(
     *,
     rework: ReworkRequest,
     claimed_revision: str,
     key: str | None,
     request_hash: str,
-) -> ReworkRequest:
-    if rework.submitted_revision != claimed_revision or (
-        key is not None and rework.submission_idempotency_key != key
-    ):
-        raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
-    if key is not None and rework.submission_request_hash != request_hash:
+) -> ReworkRequest | None:
+    """Return the rework for a retried submission, None for a genuinely new round."""
+
+    rechecks = list(rework.rechecks.all())
+    if key is not None:
+        keyed = next((item for item in rechecks if item.idempotency_key == key), None)
+        if keyed is not None:
+            if keyed.request_hash != request_hash or keyed.revision != claimed_revision:
+                raise ApiError(
+                    status.HTTP_409_CONFLICT,
+                    "IDEMPOTENCY_KEY_REUSED",
+                    "Idempotency-Key đã dùng với body khác.",
+                )
+            return rework
+    seen = next((item for item in rechecks if item.revision == claimed_revision), None)
+    if seen is not None:
+        latest = rechecks[-1]
+        if (
+            rework.status == ReworkRequest.Status.RECHECK_PENDING
+            and seen.pk == latest.pk
+            and seen.idempotency_key is None
+            and key is None
+        ):
+            return rework
+        if rework.status == ReworkRequest.Status.RECHECK_PENDING:
+            raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
         raise ApiError(
-            status.HTTP_409_CONFLICT,
-            "IDEMPOTENCY_KEY_REUSED",
-            "Idempotency-Key đã dùng với body khác.",
+            status.HTTP_409_CONFLICT, "REVISION_UNCHANGED", "Revision CVAT chưa thay đổi."
         )
-    return rework
+    if rework.status == ReworkRequest.Status.RECHECK_PENDING:
+        raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework đã được submit.")
+    return None
 
 
 def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
@@ -385,13 +470,11 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         raise ApiError(
             status.HTTP_409_CONFLICT, "REVISION_UNCHANGED", "Revision CVAT chưa thay đổi."
         )
-    if lookup.status == ReworkRequest.Status.RECHECK_PENDING:
-        return _replay_submitted_rework(
-            rework=lookup,
-            claimed_revision=claimed_revision,
-            key=key,
-            request_hash=request_hash,
-        )
+    replay = _existing_submission(
+        rework=lookup, claimed_revision=claimed_revision, key=key, request_hash=request_hash
+    )
+    if replay is not None:
+        return replay
     if lookup.status != ReworkRequest.Status.FIX_PENDING:
         raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework không chờ sửa.")
     effective_key = key or str(
@@ -402,19 +485,20 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
 
     with transaction.atomic():
-        User.objects.select_for_update().get(pk=user.pk)
+        User.objects.select_for_update(no_key=True).get(pk=user.pk)
         QCRun.objects.select_for_update().get(pk=lookup.issue.frame_review.run_id)
         rework = ReworkRequest.objects.select_for_update().select_related("issue").get(pk=rework_id)
-        if rework.status == ReworkRequest.Status.RECHECK_PENDING:
-            return _replay_submitted_rework(
-                rework=rework,
-                claimed_revision=claimed_revision,
-                key=key,
-                request_hash=request_hash,
-            )
+        replay = _existing_submission(
+            rework=rework, claimed_revision=claimed_revision, key=key, request_hash=request_hash
+        )
+        if replay is not None:
+            return replay
         if rework.status != ReworkRequest.Status.FIX_PENDING:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Rework không chờ sửa.")
+        if rework.rechecks.filter(snapshot=snapshot).exists():
+            raise _snapshot_reused_error(snapshot, rework)
         before = {"status": rework.status, "issue_state": rework.issue.state}
+        round_number = rework.rechecks.count() + 1
         rework.status = ReworkRequest.Status.RECHECK_PENDING
         rework.submitted_revision = claimed_revision
         rework.recheck_snapshot = snapshot
@@ -437,10 +521,21 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         issue = Issue.objects.select_for_update().get(pk=rework.issue_id)
         issue.state = Issue.State.RECHECK_PENDING
         issue.save(update_fields=["state"])
-        ReworkRecheck.objects.get_or_create(
-            rework=rework,
-            defaults={"snapshot": snapshot, "run": run, "revision": claimed_revision},
-        )
+        try:
+            with transaction.atomic():
+                ReworkRecheck.objects.create(
+                    rework=rework,
+                    round=round_number,
+                    snapshot=snapshot,
+                    run=run,
+                    revision=claimed_revision,
+                    idempotency_key=key,
+                    request_hash=request_hash,
+                )
+        except IntegrityError as exc:
+            if rework.rechecks.filter(snapshot=snapshot).exists():
+                raise _snapshot_reused_error(snapshot, rework) from exc
+            raise
         append_audit_event(
             actor=user,
             action="rework.submitted",
@@ -452,6 +547,7 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
                 "issue_state": issue.state,
                 "snapshot_id": snapshot.pk,
                 "recheck_run_id": run.pk,
+                "round": round_number,
             },
             revision=claimed_revision,
         )
@@ -480,7 +576,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["issue__frame_review__run_id"])
     rework = (
         ReworkRequest.objects.select_for_update(of=("self",))
@@ -543,9 +639,19 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         rework.status = ReworkRequest.Status.RESOLVED
         rework.resolved_at = timezone.now()
         issue.state = Issue.State.RESOLVED
+        verified = {"status": rework.status, "issue_state": issue.state}
     else:
-        rework.status = ReworkRequest.Status.REOPENED
-        issue.state = Issue.State.REOPENED
+        # The failed round is audited as reopened; the row is written once, directly in its
+        # resting fix_pending state. A second UPDATE of a row this transaction already updated
+        # makes PostgreSQL re-check every deferred FK at COMMIT (KEY SHARE on parent rows such
+        # as the users), which deadlocks against a writer that holds a user row and waits for
+        # the run lock (complete_frame): tests/review/test_three_way_race.py.
+        verified = {
+            "status": ReworkRequest.Status.REOPENED,
+            "issue_state": Issue.State.REOPENED,
+        }
+        rework.status = ReworkRequest.Status.FIX_PENDING
+        issue.state = Issue.State.FIX_PENDING
     rework.save(update_fields=["status", "resolved_at", "updated_at"])
     issue.save(update_fields=["state"])
     audit = append_audit_event(
@@ -554,7 +660,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         object_type="rework",
         object_id=rework.pk,
         before=before,
-        after={"status": rework.status, "issue_state": issue.state, "actor_role": actor_role},
+        after={**verified, "actor_role": actor_role},
         revision=revision,
         reason=reason or override_reason,
     )
@@ -569,7 +675,45 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         idempotency_key=key,
         request_hash=request_hash,
     )
+    if not passed:
+        # issue.reopen_fix: the failed round stays in history, the annotator may submit again.
+        append_audit_event(
+            actor=user,
+            action="issue.reopen_fix",
+            object_type="issue",
+            object_id=issue.pk,
+            before=verified,
+            after={"status": rework.status, "issue_state": issue.state},
+            revision=revision,
+            reason=reason,
+        )
+    if passed:
+        from review.tasks import enqueue_final_run
+
+        transaction.on_commit(lambda: enqueue_final_run(rework.issue.frame_review.run_id, user.pk))
     frame = FrameReview.objects.select_for_update().get(pk=issue.frame_review_id)
-    frame.state = FrameReview.State.COMPLETED if passed else FrameReview.State.AWAITING_FOLLOWUP
-    frame.save(update_fields=["state"])
+    _move_frame_to_followup(frame)
     return rework
+
+
+def _move_frame_to_followup(frame: FrameReview) -> None:
+    """Frame effect of a verify, in the verify transaction.
+
+    A frame enters awaiting_followup only when no issue on it is left undecided: while the
+    reviewer still has work there the frame and its lease are left alone (the verification and
+    the resolved rework are still recorded) and frames/complete moves it later. Completion
+    belongs to the final-scope path (finalization_service), never to a single verify, so a
+    COMPLETED frame is left exactly as it is. A frame still in_review with a live lease is
+    handed over to follow-up and its lease closed. Any other state keeps the existing behaviour.
+    """
+
+    if frame.state == FrameReview.State.COMPLETED:
+        return
+    if decision_source.undecided_issue_ids(frame):
+        return
+    if frame.state == FrameReview.State.IN_REVIEW:
+        Lease.objects.filter(frame_review=frame, closed_at__isnull=True).update(
+            closed_at=timezone.now()
+        )
+    frame.state = FrameReview.State.AWAITING_FOLLOWUP
+    frame.save(update_fields=["state"])

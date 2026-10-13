@@ -1,20 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SAMPLE_IN_USE, SAMPLE_IN_USE_EXTRA, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
+import { SAMPLE_IN_USE, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
 
-/** Ba trường của Snapshot đang dùng chưa có API; luôn là dữ liệu minh họa, một cảnh báo cho cả khối. */
+/** Lỗi tải API Quality Control Run thật; không thay bằng mock vì endpoint này đã có. */
 export function SnapshotInUseExtra({ error }: { error?: string }) {
-  void error;
-  return (
-    <div className="lx-stack lx-stack--divider">
-      <dl className="lx-kv">
-        {SAMPLE_IN_USE_EXTRA.map(([label, value, mono]) => (
-          <React.Fragment key={label}><dt>{label}</dt><dd className={mono ? 'lx-mono' : undefined}>{value}</dd></React.Fragment>
-        ))}
-      </dl>
-    </div>
-  );
+  return <div className="lx-callout" role="alert">{error || 'Không tải được Quality Control Run của Snapshot.'}</div>;
 }
 
 /** Bản minh họa đủ thiết kế của thẻ "Snapshot đang dùng", dùng khi không tải được Dataset. */
@@ -36,7 +27,7 @@ export function SnapshotInUseSample() {
   );
 }
 
-/** Dataset, Annotation revision, Seed: hai trường sau chưa có API nên khoá và dùng giá trị minh họa. */
+/** Revision và seed chưa có API, dùng dữ liệu sketchup và giữ read-only. */
 export function SnapshotRevisionFields({ dataset }: { dataset: React.ReactNode }) {
   const f = SAMPLE_SNAPSHOT_FORM;
   return (

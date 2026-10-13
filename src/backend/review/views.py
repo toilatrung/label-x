@@ -1,5 +1,6 @@
 """Contract endpoints for queue claim and lease renewal."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -8,6 +9,12 @@ from rest_framework.views import APIView
 from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
+from config.serializers import ErrorSerializer
+from review.api_serializers import (
+    LeaseGrantSerializer,
+    LeaseSerializer,
+    QueueNextRequestSerializer,
+)
 from review.models import Lease
 from review.services import claim_next, renew
 from runs.models import QCRun
@@ -28,6 +35,21 @@ class QueueNextView(APIView):
             )
         return QCRun.objects.filter(pk=int(raw)).values_list("dataset_id", flat=True).first()
 
+    @extend_schema(
+        operation_id="queues_next",
+        request=QueueNextRequestSerializer,
+        responses={
+            200: LeaseGrantSerializer,
+            204: None,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            # BUSINESS_RULE_UNMET: a candidate's family/anchor is outside the review contract
+            # (review/decision_source.py materialize_candidate_issue).
+            422: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def post(self, request: Request, name: str) -> Response:
         if name not in {"risk", "random"}:
             raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Queue không hợp lệ.")
@@ -53,6 +75,17 @@ class LeaseRenewView(APIView):
             .first()
         )
 
+    @extend_schema(
+        operation_id="leases_renew",
+        request=None,
+        responses={
+            200: LeaseSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            409: ErrorSerializer,
+        },
+        tags=["review"],
+    )
     def post(self, request: Request, pk: int) -> Response:
         lease = renew(request=request, lease_id=pk)
         if lease is None:

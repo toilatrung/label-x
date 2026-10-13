@@ -1381,7 +1381,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       );
 
       // Warning overlay must be displayed
-      expect(screen.getByText(/Kích thước khung hình chưa xác định từ API/i)).toBeInTheDocument();
+      expect(screen.getByText(/Chưa xác định kích thước khung hình/i)).toBeInTheDocument();
 
       const svg = screen.getByRole('img', { name: /Khung hình annotation và prediction/i });
       fireEvent.mouseDown(svg, { button: 0, clientX: 100, clientY: 100 });

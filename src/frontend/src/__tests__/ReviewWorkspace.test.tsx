@@ -100,7 +100,7 @@ async function renderWorkspace(
     }
 
     if (url.pathname === '/api/decision-cases/') {
-      return Response.json([{
+      return Response.json({ next: null, previous: null, results: [{
         id: 301,
         issue_id: 101,
         outcome: 'confirm',
@@ -110,7 +110,7 @@ async function renderWorkspace(
         reason: 'Workspace shared Decision Case lookup',
         case_version: 'v2',
         created_at: '2026-10-11T02:00:00Z',
-      }]);
+      }] });
     }
 
     return Response.json({ code: 'NOT_FOUND' }, { status: 404 });

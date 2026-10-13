@@ -84,10 +84,22 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
-# TBD-09: no business defaults; deployment must supply approved policy values.
-REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=None)
+# M-03 pilot policy (DEC-019 / CR-113): pilot defaults, not scientific acceptance values.
+# Each value can be overridden from the environment; an explicitly invalid value fails closed.
+REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=900)
 REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
-    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=None
+    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=300
+)
+# JSON object overriding the whole idle policy, e.g. {"source": "...", "decision_status": "...",
+# "t_idle_seconds": 120, "version": "..."}.
+EFFORT_IDLE_POLICY = env.json(
+    "EFFORT_IDLE_POLICY",
+    default={
+        "source": "DEC-019/P03",
+        "decision_status": "approved_for_pilot",
+        "t_idle_seconds": 120,
+        "version": "pilot-1",
+    },
 )
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -153,6 +165,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+    # Each current-revision read costs 8+N CVAT requests (N = frames); throttle per user.
+    # Counters live in Django's default cache (per-process LocMemCache unless CACHES is set).
+    "DEFAULT_THROTTLE_RATES": {
+        "rework_current_revision": env("REWORK_CURRENT_REVISION_RATE", default="6/min"),
+    },
 }
 
 SPECTACULAR_SETTINGS = {
@@ -160,6 +177,21 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Quality Control cho annotation CVAT",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Several models share the field names "status"/"action"; pin stable component names.
+    "ENUM_NAME_OVERRIDES": {
+        "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
+        "RunStatusEnum": "runs.models.QCRun.Status",
+        "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
+        "ReworkVerificationOutcomeEnum": ["pass", "fail"],
+        "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
+        "PersistedIssueDecisionActionEnum": [
+            "confirm",
+            "reject",
+            "uncertain",
+            "escalate",
+            "request_fix",
+        ],
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
@@ -236,6 +268,7 @@ LOGGING = {
 
 # T-025: tự xếp shard vào Celery sau khi tạo/retry run.
 ORCHESTRATION_AUTO_DISPATCH = env.bool("ORCHESTRATION_AUTO_DISPATCH", default=True)
+FINAL_RUN_AUTO_DISPATCH = env.bool("FINAL_RUN_AUTO_DISPATCH", default=True)
 ORCHESTRATION_RUNNING_STALE_SECONDS = env.int("ORCHESTRATION_RUNNING_STALE_SECONDS", default=1800)
 ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
     "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", default=300
@@ -243,6 +276,10 @@ ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
 CELERY_BEAT_SCHEDULE = {
     "orchestration-redispatch-pending": {
         "task": "orchestration.redispatch_pending",
+        "schedule": 120.0,
+    },
+    "review-sweep-ready-final-runs": {
+        "task": "review.sweep_ready_final_runs",
         "schedule": 120.0,
     },
 }

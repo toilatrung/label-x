@@ -16,7 +16,7 @@ from engines.interface import (
     NotCheckedReason,
 )
 from engines.interface import display_status as engine_display_status
-from orchestration.models import LedgerUnit
+from orchestration.models import CandidateRecord, LedgerUnit
 from review.models import FrameReview, Issue, ReviewDecision
 from runs.models import EngineResult, RunRankingEntry
 
@@ -151,3 +151,49 @@ def frame_engines(frame: FrameReview) -> list[dict[str, object]]:
             }
         )
     return output
+
+
+def frame_annotations(frame: FrameReview) -> list[dict[str, object]]:
+    """Every annotation of the locked snapshot frame, with or without an engine candidate."""
+    annotations: list[dict[str, object]] = []
+    for shape in frame.snapshot_frame.shapes:
+        points = shape.get("points") or []
+        source = shape.get("source") or {}
+        annotations.append(
+            {
+                "id": f"{source.get('kind')}:{source.get('id')}",
+                "source": source,
+                "label_id": shape.get("label_id"),
+                "bbox": (
+                    {"x1": points[0], "y1": points[1], "x2": points[2], "y2": points[3]}
+                    if len(points) == 4
+                    else None
+                ),
+                "rotation": shape.get("rotation", 0),
+                "occluded": shape.get("occluded", False),
+                "outside": shape.get("outside", False),
+                "z_order": shape.get("z_order", 0),
+                "attributes": shape.get("attributes", []),
+            }
+        )
+    return annotations
+
+
+def frame_predictions(frame: FrameReview) -> list[dict[str, object]]:
+    """Immutable engine output of this run for the frame; never altered by review."""
+    source = frame.snapshot_frame
+    job = source.snapshot_job
+    candidates = CandidateRecord.objects.filter(
+        run_id=frame.run_id, cvat_task_id=job.cvat_task_id, frame_number=source.frame_index
+    ).order_by("pk")
+    return [
+        {
+            "candidate_id": candidate.pk,
+            "engine": candidate.engine,
+            "engine_version": candidate.engine_version,
+            "family": candidate.family,
+            "anchor": candidate.anchor,
+            "evidence": candidate.evidence,
+        }
+        for candidate in candidates
+    ]

@@ -2,13 +2,21 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+export interface GuidelineGapDraft {
+  rule: string;
+  content: string;
+  reason: string;
+  issueId?: number;
+}
+
 interface Props {
   onClose: () => void;
+  onCreate: (draft: GuidelineGapDraft) => void;
   issueId?: number;
   initialRule?: string;
 }
 
-export function GuidelineGapModal({ onClose, issueId, initialRule = '' }: Props) {
+export function GuidelineGapModal({ onClose, onCreate, issueId, initialRule = '' }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const ruleField = useRef<HTMLSelectElement>(null);
@@ -18,7 +26,6 @@ export function GuidelineGapModal({ onClose, issueId, initialRule = '' }: Props)
   const [content, setContent] = useState('');
   const [reason, setReason] = useState('');
   const [tried, setTried] = useState(false);
-  const [notice, setNotice] = useState(false);
 
   useEffect(() => {
     if (!opener.current && document.activeElement instanceof HTMLElement) opener.current = document.activeElement;
@@ -29,11 +36,10 @@ export function GuidelineGapModal({ onClose, issueId, initialRule = '' }: Props)
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setTried(true);
-    setNotice(false);
     if (!rule) return ruleField.current?.focus();
     if (!content.trim()) return contentField.current?.focus();
     if (!reason.trim()) return reasonField.current?.focus();
-    setNotice(true);
+    onCreate({ rule, content: content.trim(), reason: reason.trim(), issueId });
   };
 
   return (
@@ -44,14 +50,13 @@ export function GuidelineGapModal({ onClose, issueId, initialRule = '' }: Props)
         <header className="lx-gap__head">
           <div>
             <h2 id="guideline-gap-title">Tạo Guideline Gap</h2>
-            <p id="guideline-gap-description">Ghi nhận phần hướng dẫn còn thiếu để nhóm phụ trách xem xét. Đây là bản thiết kế minh họa.</p>
+            <p id="guideline-gap-description">Ghi nhận phần hướng dẫn còn thiếu để nhóm phụ trách xem xét.</p>
           </div>
           <button type="button" className="lx-gap__close" aria-label="Đóng hộp thoại" onClick={() => dialog.current?.close()}>×</button>
         </header>
         <form className="lx-gap__body" noValidate onSubmit={submit}>
           <div className="lx-gap__context"><strong>Ngữ cảnh:</strong> Dataset Road Vision Urban · Guideline v1.2<br />
             {issueId && <><strong>Issue liên quan:</strong> QC-{String(issueId).padStart(5, '0')} · Quy tắc {initialRule || '—'}<br /></>}
-            <span className="lx-muted">Dữ liệu minh họa</span>
           </div>
           <div className="lx-gap__fields">
             <div className="lx-field">
@@ -76,7 +81,6 @@ export function GuidelineGapModal({ onClose, issueId, initialRule = '' }: Props)
               {tried && !reason.trim() && <span id="gap-reason-error" className="lx-gap__error">Nhập lý do hoặc bằng chứng.</span>}
             </div>
           </div>
-          {notice && <div className="lx-gap__notice" role="status">Chức năng vẫn chưa được kết nối với server. Nội dung chưa được lưu.</div>}
           <div className="lx-gap__actions">
             <button type="button" className="lx-btn" onClick={() => dialog.current?.close()}>Hủy</button>
             <button type="submit" className="lx-btn lx-btn--primary">Tạo Guideline Gap</button>
