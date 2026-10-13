@@ -66,6 +66,12 @@ ORDERS = list(itertools.permutations(KINDS))
 
 
 @pytest.fixture(autouse=True)
+def cvat_base_url(settings):
+    # create_request's deep link is validated against settings.CVAT_BASE_URL; CI leaves it empty.
+    settings.CVAT_BASE_URL = "http://localhost:8080"
+
+
+@pytest.fixture(autouse=True)
 def no_auto_dispatch(settings):
     settings.FINAL_RUN_AUTO_DISPATCH = False  # a passing verify must not publish to a broker
 
