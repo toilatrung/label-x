@@ -529,11 +529,17 @@ paths:
       summary: Đọc Evaluation (poll kết quả định tuyến/Qwen)
       description: |
         `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
-        tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Các reason `classifier_only` và
-        `classifier_unavailable` được giữ để tương thích payload FE v0, nhưng nguồn runtime là candidate Faster R-CNN.
+        tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Nguồn runtime duy nhất là candidate Faster R-CNN
+        (detector); không còn classifier. Các reason `classifier_only`, `classifier_unavailable`, `classifier_untrusted`
+        chỉ là alias tương thích payload FE v0 (untrusted = artifact detector chưa xác minh manifest/checksum/class map).
+        `detector_no_match`: detection không ghép annotation hoặc ngược lại (IoU ghép 0,50; ambiguous 0,30) →
+        `review_required=true`, `call_qwen=false`. `label_conflict` (ghép được nhưng khác nhãn) → gọi Qwen.
+        Evidence lịch sử chỉ có confidence: không suy diễn margin. HTTP worker cung cấp đủ 11 ROI scores:
+        score=max foreground, margin=top1-top2 foreground, background >= max foreground → unknown;
+        low_margin chỉ bật khi đủ phân bố 11 lớp đã được kiểm tra.
         `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, Qwen lỗi hoặc
         uncertain). `policy` lưu theo evaluation; confidence detector chỉ là ngưỡng routing tạm, không phải ngưỡng
-        calibration. Detector hiện không trả top-k nên policy không tự chế margin.
+        calibration. Chất lượng/accuracy của detector CHƯA được xác minh (cần dữ liệu held-out ngoài tập train).
       x-labelx-trace: [FR-ENG-08]
       x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
       parameters:
@@ -2122,7 +2128,7 @@ components:
         review_required: { type: boolean }
         call_qwen: { type: boolean }
         policy: { $ref: "#/components/schemas/CandidateEvaluationPolicy" }
-        checkpoint_status: { type: string, nullable: true, description: "trained | smoke_only | null" }
+        checkpoint_status: { type: string, nullable: true, description: "Trạng thái xác minh artifact detector: verified | unverified | null. Không phải kết luận về chất lượng mô hình" }
         snapshot_revision: { type: string }
         requested_by_user_id: { type: integer, nullable: true }
         note: { type: string, nullable: true }
@@ -2375,10 +2381,37 @@ components:
         class_id: { type: integer, nullable: true, description: "Class ID Faster R-CNN (0–9)" }
         class_name: { type: string, nullable: true, description: "Tên lớp Faster R-CNN" }
         confidence: { type: number, nullable: true }
+        class_scores:
+          type: array
+          minItems: 11
+          maxItems: 11
+          items: { type: number, minimum: 0, maximum: 1 }
+          description: "11 probabilities ROI gốc: 10 lớp theo class map rồi background; không có với evidence lịch sử hoặc annotation-only."
+        score: { type: number, minimum: 0, maximum: 1, description: "Max foreground probability; routing tạm, không phải quality score." }
+        margin: { type: number, minimum: 0, maximum: 1, description: "Top1 minus top2 foreground probabilities, không renormalize và không tính background." }
+        background_score: { type: number, minimum: 0, maximum: 1 }
+        unknown: { type: boolean, description: "Background >= max foreground." }
+        predicted_label_id: { type: integer, description: "CVAT taxonomy label ID, khác model class index." }
+        top3:
+          type: array
+          items:
+            type: object
+            required: [class_id, class_name, score]
+            properties:
+              class_id: { type: integer }
+              class_name: { type: string }
+              score: { type: number }
         model_version: { type: string, nullable: true }
         checkpoint_sha256: { type: string, nullable: true }
         class_mapping_version: { type: string, nullable: true }
         iou: { type: number, nullable: true }
+        source: { type: string, description: "detector (nguồn runtime) hoặc classifier (alias tương thích payload FE v0)" }
+        match_status: { type: string, enum: [matched, unmatched_detection, unmatched_annotation] }
+        annotated_class_id: { type: integer, nullable: true }
+        annotation_bbox:
+          allOf: [{ $ref: "#/components/schemas/BBox" }]
+          nullable: true
+        artifact_verified: { type: boolean, description: "true khi manifest, checksum checkpoint và class map BDD100K 10 lớp đã được xác minh" }
     Issue:
       type: object
       required: [id, family, origin, state, anchor, n_i, evidence, links, review_decisions]

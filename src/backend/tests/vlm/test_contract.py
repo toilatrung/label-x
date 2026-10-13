@@ -196,6 +196,16 @@ def test_allowlist_contains_only_instruct_default() -> None:
         (make_image("JPEG"), "image/png"),  # JPEG khai báo PNG
         (make_image("PNG", (6000, 6000), "L"), "image/png"),  # 36 MP: chặn decompression bomb
     ],
+    ids=[
+        "empty",
+        "wrong_mime",
+        "corrupt_magic",
+        "oversized_3mb",
+        "truncated_png",
+        "header_only",
+        "jpeg_declared_as_png",
+        "decompression_bomb_36mp",
+    ],
 )
 def test_invalid_crop(data: bytes, mime: str) -> None:
     with pytest.raises(VlmInvalidCropError) as exc:

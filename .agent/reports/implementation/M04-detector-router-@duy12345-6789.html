@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-04 — Tích hợp detector và Router</title>
+<meta name="labelx:id" content="m04-detector-router-duy12345-6789">
+<meta name="labelx:title" content="M04 detector-router implementation">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="orchestration">
+<meta name="labelx:tags" content="[implementation, m-04, detector, router]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>M-04 / detector + router / implementation</span><span class="sp"></span></header>
+<main><article>
+<h1>M-04 — Lõi detector HTTP và routing sau PR #315</h1>
+<h2>Usage Purpose</h2>
+<p>Báo cáo triển khai của @duy12345-6789, hỗ trợ bởi Codex. CR-117 đã APPROVED; PR #315 đã merge. Bản gốc 2cd1564 đã push để PO đối chiếu, chưa mở PR cho bản gốc. Rebase lên origin/feat/M-04-c-evaluation@e923edf9c956a6c5c2f010bc784bbc4683492fe1 theo bàn giao. Chỉ mở PR lõi vào feat/M-04-backend; không push trực tiếp nhánh PO.</p>
+<h2>Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>M04-detector-router</code></li>
+<li><strong>Title</strong>: <code>HTTP detector core, 11 ROI scores and routing</code></li>
+<li><strong>Owner</strong>: <code>@duy12345-6789</code></li>
+<li><strong>Executor</strong>: <code>@duy12345-6789 (Codex hỗ trợ thực hiện)</code></li>
+<li><strong>Status</strong>: <code>ready-for-review</code></li>
+<li><strong>Task ID</strong>: <code>M-04 #278 / CR-117 / bàn giao detector-router</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-14</code></li></ul>
+<h2>Scope</h2>
+<pre>Snapshot locked → verify_artifact (manifest + checkpoint SHA + class map)
+  → HTTP worker warm GPU → 11 ROI probabilities giữ qua NMS
+  → Hungarian one-to-one (code chung hiện có)
+  → E1 unmatched detection / E2 matched cần đánh giá / E3 unmatched annotation
+  → routing hiện có → evaluation API / evidence API.
+No-match: human_review_required=true, call_qwen=false.</pre>
+<p>Người dùng chốt HTTP worker là adapter duy nhất. PR 2 (compose/make/queue) và PR 3 (crop/prompt/multi-target VLM) để sau M-04. Bản gốc lưu tại backup/m04-detector-router-pre-rebase và remote commit 2cd1564; không mất phần deferred.</p>
+<h2>Changes Made</h2>
+<table><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr>
+<tr><td>src/backend/engines/detector.py</td><td>Giữ verify_artifact của #315; kiểm trước HTTP; bỏ subprocess và adapter trùng. Kiểm hash/size/revision frame; giữ artifact_verified, match_status và E3. CVAT label ID ánh xạ theo taxonomy, không nhầm model class index.</td><td>M-04</td></tr>
+<tr><td>src/backend/engines/matching.py (không sửa)</td><td>Dùng lại Hungarian/Kuhn-Munkres, cardinality rồi IoU, ngưỡng match 0.50 / ambiguous 0.30.</td><td>M-04</td></tr>
+<tr><td>src/detector_worker/labelx_detector/service.py</td><td>Model warm, xác thực token env, kiểm checkpoint trước load; giữ 10 foreground + background từ ROI gốc qua NMS.</td><td>M-04</td></tr>
+<tr><td>orchestration/routing_policy.py</td><td>score=max foreground; margin=top1−top2 foreground, không renormalize; background ≥ max foreground → unknown. Chỉ bật low_margin khi đủ 11 score; evidence lịch sử không suy diễn margin. Giữ classifier_* là alias tên FE, không giữ classifier code.</td><td>M-04</td></tr>
+<tr><td>review/api_serializers.py; docs/04-api/openapi.yaml; frontend/src/lib/api/contract.d.ts</td><td>Fields evidence typed cho class_scores/score/margin/background/unknown/predicted_label_id/top3 (chuẩn hóa Top3ItemSerializer khớp 100% contract parity). Giữ alias source classifier và source detector.</td><td>M-04</td></tr></table>
+<h2>Related Files</h2>
+<ul><li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/278">M-04 #278</a></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-117.html — APPROVED</code></li>
+<li><strong>Review Request</strong>: <code>pending independent review; không tự approve/done</code></li>
+<li><strong>Commits</strong>: <code>2cd1564 (bản gốc đối chiếu); 3e0204f (bản rebase lõi detector PR 1 trên feat/M-04-backend)</code></li></ul>
+<h2>Command Evidence</h2>
+<table><tr><th>Command</th><th>Result</th><th>Evidence</th></tr>
+<tr><td>git push -u origin feat/m04-detector-router</td><td>PASS bản gốc</td><td>2cd1564; không mở PR bản gốc</td></tr>
+<tr><td>ruff check .; ruff format --check . (backend & worker)</td><td>PASS</td><td>294 backend files + 12 worker files already formatted</td></tr>
+<tr><td>mypy config accounts audit effort engines guideline cvat_adapter orchestration ranking runs snapshots storage vlm</td><td>PASS</td><td>Success: no issues found in 159 source files</td></tr>
+<tr><td>python manage.py makemigrations --check --dry-run</td><td>PASS</td><td>No changes detected (0 pending migrations)</td></tr>
+<tr><td>python scripts/validate-framework.py</td><td>PASS</td><td>FRAMEWORK_VALIDATION_PASS</td></tr>
+<tr><td>run_m04_detector_tests.py tests/engines/test_detector.py tests/engines/test_detector_http.py tests/orchestration/test_routing_policy.py</td><td>78 PASS</td><td>Database PostgreSQL test riêng; m04-detector-rebased-targeted.xml</td></tr>
+<tr><td>pytest src/detector_worker/tests/test_service.py</td><td>5 PASS</td><td>Worker unit tests: frame provenance & rejection</td></tr>
+<tr><td>pytest tests/test_contract_runtime_parity.py</td><td>2 PASS</td><td>Runtime OpenAPI generation khớp 100% docs/04-api/openapi.yaml</td></tr>
+<tr><td>smoke_m04_detector_service.py (GPU Docker labelx-m04-detector-smoke)</td><td>10 PASS checks; DB test 1 PASS</td><td>m04-gpu-service-smoke.json (48 detections, 21.4s); m04-gpu-rebased-db-tests.xml</td></tr></table>
+<h2>Verification Evidence</h2>
+<p>Unit/HTTP mock và integration PostgreSQL tách khỏi dữ liệu demo. HTTP mock không phải kết nối GPU thật. Bằng chứng GPU mới chạy qua Docker container <code>labelx-m04-detector-smoke</code> với 1 frame BDD100K val thật. Qwen thật chưa kiểm.</p>
+<blockquote>Quality gate: NOT VERIFIED. Chỉ có 1 frame BDD100K val, chưa phủ 10 lớp; không tuyên bố accuracy, calibration hay production readiness.</blockquote>
+<h2>Deviations</h2>
+<p>Không giữ hai adapter hoặc classifier compatibility implementation. Không sửa lịch sử approval CR-117. PR 2 và PR 3 deferred theo lựa chọn người dùng. Việc bật low_margin là yêu cầu bàn giao hiện tại khi worker cung cấp đủ phân bố; không suy diễn từ confidence đơn lẻ.</p>
+<h2>Completion Criteria</h2>
+<ul><li>☑ Bản gốc đã commit/push để PO đối chiếu (commit 2cd1564).</li>
+<li>☑ Chốt HTTP adapter duy nhất; PR 2 và PR 3 sau M-04.</li>
+<li>☑ Rebase hoàn tất và code SHA cuối được ghi (commit 3e0204f).</li>
+<li>☑ Ruff/mypy/migration/validate-kit/worker test/contract parity test sau rebase có bằng chứng đầy đủ.</li>
+<li>☑ Runtime GPU mới được chạy và ghi giới hạn dữ liệu (1 frame BDD100K val, 48 detections, first request 21.4s).</li>
+<li>☐ PR lõi vào feat/M-04-backend (sẵn sàng mở PR khi push nhánh).</li>
+<li>☐ Reviewer độc lập khác executor; comment “Đã xem và duyệt” hợp lệ của @toilatrung hoặc @DucHa180104.</li>
+<li>☐ Quality gate held-out đủ phạm vi (NOT VERIFIED, không thuộc smoke).</li></ul>
+<h2>Forbidden Actions</h2>
+<p>Không push trực tiếp nhánh PO; không tự approve/done; không lưu token/secret vào Git hay ConfigVersion; không sửa CVAT. HTTP plain chỉ loopback; máy khác cần HTTPS/mTLS.</p>
+<h2>Output Requirements</h2>
+<p>Report HTML per-user theo CR-100. PR 1 giới hạn lõi, PR 2/3 deferred; lệnh và SHA phải đúng code đã kiểm. Báo cáo chuyển sang ready-for-review để gửi reviewer độc lập.</p>
+</article></main></body></html>

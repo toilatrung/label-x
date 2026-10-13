@@ -16,7 +16,12 @@ from orchestration.routing_policy import (
 )
 
 POLICY = RoutingPolicy()
-CONFIDENT = {"score": 0.95, "predicted_class_id": 3, "checkpoint_status": "trained"}
+CONFIDENT = {
+    "score": 0.95,
+    "predicted_class_id": 3,
+    "source_trusted": True,
+    "checkpoint_status": "verified",
+}
 
 
 def decide(**overrides):
@@ -26,7 +31,14 @@ def decide(**overrides):
 def detector(**evidence):
     return {
         "engine": "detector",
-        "evidence": {"class_id": 3, "class_name": "car", "confidence": 0.95, **evidence},
+        "evidence": {
+            "match_status": "matched",
+            "artifact_verified": True,
+            "class_id": 3,
+            "class_name": "car",
+            "confidence": 0.95,
+            **evidence,
+        },
     }
 
 
@@ -46,9 +58,52 @@ def test_detector_without_top_k_does_not_invent_low_margin():
     assert RoutingReason.LOW_MARGIN not in decision.reasons
 
 
-def test_margin_is_applied_only_when_explicitly_available():
-    assert decide(margin=0.15).primary is RoutingReason.CLASSIFIER_ONLY
-    assert decide(margin=0.1499).primary is RoutingReason.LOW_MARGIN
+def test_margin_is_ignored_in_v0_so_low_margin_never_triggers():
+    # Không có phân bố đầy đủ (kể cả background) ⇒ low_margin bị vô hiệu dù có margin.
+    for margin in (None, 0.0, 0.1499, 0.9):
+        decision = decide(margin=margin)
+        assert decision.primary is RoutingReason.CLASSIFIER_ONLY
+        assert RoutingReason.LOW_MARGIN not in decision.reasons
+
+
+def test_untrusted_artifact_is_never_detector_only():
+    decision = route(POLICY, routing_input_from_candidate(detector(artifact_verified=False)))
+    assert decision.primary is RoutingReason.CLASSIFIER_UNTRUSTED
+    assert decision.call_qwen and decision.human_review_required
+    assert decision.checkpoint_status == "unverified"
+    missing = detector()
+    del missing["evidence"]["artifact_verified"]
+    assert route(POLICY, routing_input_from_candidate(missing)).primary is (
+        RoutingReason.CLASSIFIER_UNTRUSTED
+    )
+
+
+def test_direct_input_is_untrusted_by_default():
+    decision = route(POLICY, RoutingInput(score=0.99, predicted_class_id=1))
+    assert decision.primary is RoutingReason.CLASSIFIER_UNTRUSTED
+
+
+@pytest.mark.parametrize("status", ["unmatched_detection", "unmatched_annotation"])
+def test_detector_no_match_goes_to_reviewer_without_qwen(status):
+    # Ưu tiên trước low_score: confidence thấp hoặc không có vẫn không gọi Qwen.
+    for evidence in ({"confidence": 0.2}, {"confidence": None}):
+        data = routing_input_from_candidate(detector(match_status=status, **evidence))
+        decision = route(POLICY, data)
+        assert decision.primary is RoutingReason.DETECTOR_NO_MATCH
+        assert not decision.call_qwen and decision.human_review_required
+
+
+def test_missing_match_status_fails_closed():
+    candidate = detector()
+    del candidate["evidence"]["match_status"]
+    decision = route(POLICY, routing_input_from_candidate(candidate))
+    assert decision.primary is RoutingReason.CLASSIFIER_UNAVAILABLE and decision.call_qwen
+
+
+def test_routing_has_no_classifier_unit_dependency():
+    import orchestration.models as models
+
+    assert not hasattr(models, "ClassifierUnit")
 
 
 def test_conflict_beats_high_score():

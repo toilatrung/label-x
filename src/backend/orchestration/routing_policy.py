@@ -5,8 +5,12 @@ quyết định, và lưu `RoutingPolicy.as_record()` cùng mỗi evaluation.
 
 Ranh giới:
 - confidence ≥ 0,85 là NGƯỠNG ĐỊNH TUYẾN TẠM, không phải ngưỡng quality hay calibration.
-- Faster R-CNN không trả top-k nên không tự chế margin; ngưỡng margin chỉ áp dụng khi nguồn vào
-  thực sự cung cấp giá trị đó.
+- Evidence lịch sử chỉ có confidence: không suy diễn margin. Worker HTTP cung cấp đủ 11
+  probability ROI gốc: score=max foreground, margin=top1-top2 foreground; background → unknown.
+- Detection không ghép annotation (hoặc ngược lại) ⇒ `detector_no_match`: chuyển thẳng reviewer,
+  không gọi Qwen.
+- Detector chỉ được tin khi evidence mang `artifact_verified is True` (manifest + checksum +
+  class map đã xác minh ở adapter); không có mặc định tin cậy.
 - Conflict luôn ưu tiên hơn score cao.
 - Policy chỉ quyết định có gọi Qwen hay không; không tạo ReviewDecision/Adjudication.
 - Detector không dùng được hoặc evidence sai kiểu vẫn gọi Qwen làm fallback.
@@ -34,11 +38,14 @@ DEFAULT_MARGIN_THRESHOLD = 0.15
 class RoutingReason(StrEnum):
     """Tập con `reason_code` của payload FE v0 do policy sinh ra."""
 
+    # `classifier_*`: tên tương thích payload FE v0; runtime là detector, không có classifier.
     CLASSIFIER_ONLY = "classifier_only"
     LOW_SCORE = "low_score"
+    # Chỉ xét khi có phân bố ROI đủ 11 lớp, không suy diễn từ NMS confidence.
     LOW_MARGIN = "low_margin"
     UNKNOWN = "unknown"
     LABEL_CONFLICT = "label_conflict"
+    DETECTOR_NO_MATCH = "detector_no_match"
     MANUAL_RECHECK = "manual_recheck"
     INVALID_CROP = "invalid_crop"
     BUDGET_EXHAUSTED = "budget_exhausted"
@@ -49,6 +56,7 @@ class RoutingReason(StrEnum):
 
 # Thứ tự ưu tiên khi nhiều lý do cùng đúng; lý do đầu tiên là `primary`.
 _TRIGGER_PRIORITY = (
+    RoutingReason.DETECTOR_NO_MATCH,
     RoutingReason.MANUAL_RECHECK,
     RoutingReason.LABEL_CONFLICT,
     RoutingReason.UNKNOWN,
@@ -128,12 +136,16 @@ class RoutingInput:
     annotated_class_id: int | None = None
     score: float | None = None
     margin: float | None = None
+    full_distribution: bool = False
     manual_recheck: bool = False
     budget_exhausted: bool = False
     # False: detector không có/lỗi hạ tầng/dữ liệu sai kiểu ⇒ reason tương thích
     # `classifier_unavailable`.
     source_available: bool = True
-    source_trusted: bool = True
+    source_trusted: bool = False
+    # Detection/annotation không ghép một-một ⇒ detector_no_match (reviewer, không Qwen).
+    detector_no_match: bool = False
+    # "verified" khi adapter đã xác minh manifest/checksum/class map; ngược lại "unverified".
     checkpoint_status: str = ""
 
 
@@ -141,9 +153,9 @@ class RoutingInput:
 class RoutingDecision:
     """Kết quả định tuyến; `reasons[0]` luôn bằng `primary`.
 
-    `checkpoint_status` được chuyển nguyên vào evidence để reviewer thấy kết quả đến từ
-    checkpoint smoke_only (không phải mô hình đã huấn luyện thật); khác "trained" ⇒ policy ép gọi
-    Qwen và `human_review_required`.
+    `checkpoint_status` ("verified"/"unverified") là trạng thái xác minh artifact, KHÔNG phải kết
+    luận về chất lượng mô hình; nguồn không verified ⇒ `classifier_untrusted`, gọi Qwen và
+    `human_review_required`.
     """
 
     primary: RoutingReason
@@ -191,8 +203,8 @@ def _trigger_reasons(policy: RoutingPolicy, data: RoutingInput) -> list[RoutingR
     # Thiếu/NaN/ngoài [0,1] coi như không đủ tin cậy, không coi là đạt ngưỡng.
     if not _valid_number(data.score) or data.score < policy.score_threshold:  # type: ignore[operator]
         found.add(RoutingReason.LOW_SCORE)
-    if data.margin is not None and (
-        not _valid_number(data.margin) or data.margin < policy.margin_threshold
+    if data.full_distribution and (
+        not _valid_number(data.margin) or data.margin < policy.margin_threshold  # type: ignore[operator]
     ):
         found.add(RoutingReason.LOW_MARGIN)
     return [reason for reason in _TRIGGER_PRIORITY if reason in found]
@@ -210,6 +222,15 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     thì không gọi và chuyển người review. Không có trigger → classifier_only.
     """
     record = policy.as_record()
+    if data.detector_no_match:
+        return RoutingDecision(
+            primary=RoutingReason.DETECTOR_NO_MATCH,
+            reasons=(RoutingReason.DETECTOR_NO_MATCH,),
+            call_qwen=False,
+            human_review_required=True,
+            policy=record,
+            checkpoint_status=data.checkpoint_status,
+        )
     if data.crop_valid is not True:  # chuỗi "false"/None cũng không phải crop hợp lệ
         return RoutingDecision(
             primary=RoutingReason.INVALID_CROP,
@@ -262,7 +283,7 @@ def routing_input_from_candidate(
     """Dựng input trực tiếp từ candidate Faster R-CNN.
 
     Contract detector dùng ``engine=detector`` và ``evidence`` chứa ``class_id``, ``class_name``
-    cùng ``confidence``. Detector hiện không trả top-k/margin nên margin để ``None``. Candidate
+    cùng ``confidence``. Chỉ khi có đủ 11 ROI scores mới tính margin/unknown. Candidate
     từ engine khác hoặc evidence sai schema được định tuyến an toàn sang Qwen.
     """
     raw = candidate.get("evidence")
@@ -273,14 +294,35 @@ def routing_input_from_candidate(
             budget_exhausted=budget_exhausted,
         )
     evidence: Mapping[str, Any] = raw
-    predicted = evidence.get("class_id")
-    score = evidence.get("confidence")
-    annotated = evidence.get(ANNOTATED_CLASS_KEY, candidate.get(ANNOTATED_CLASS_KEY))
+    trusted = evidence.get("artifact_verified") is True
     common: dict[str, Any] = {
         "manual_recheck": manual_recheck,
         "budget_exhausted": budget_exhausted,
-        "checkpoint_status": "trained",
+        "source_trusted": trusted,
+        "checkpoint_status": "verified" if trusted else "unverified",
     }
+    status = evidence.get("match_status")
+    if status in ("unmatched_detection", "unmatched_annotation"):
+        return RoutingInput(detector_no_match=True, **common)
+    if status != "matched":
+        # Thiếu/lạ match_status: không đủ dữ kiện để tin ⇒ fail closed sang Qwen.
+        return RoutingInput(source_available=False, **common)
+    predicted = evidence.get("predicted_label_id", evidence.get("class_id"))
+    score = evidence.get("confidence")
+    margin = None
+    unknown = False
+    full_distribution = "class_scores" in evidence
+    if full_distribution:
+        from engines.detector import distribution_evidence
+
+        try:
+            distribution = distribution_evidence(evidence, required=True)
+        except ValueError:
+            return RoutingInput(source_available=False, **common)
+        score = distribution["score"]
+        margin = distribution["margin"]
+        unknown = distribution["unknown"]
+    annotated = evidence.get(ANNOTATED_CLASS_KEY, candidate.get(ANNOTATED_CLASS_KEY))
     for value in (predicted, annotated):
         if value is not None and not _real_int(value):
             return RoutingInput(source_available=False, **common)
@@ -290,6 +332,8 @@ def routing_input_from_candidate(
         predicted_class_id=predicted,
         annotated_class_id=annotated,
         score=float(cast(int | float, score)),
-        margin=None,
+        margin=margin,
+        full_distribution=full_distribution,
+        source_unknown=unknown,
         **common,
     )

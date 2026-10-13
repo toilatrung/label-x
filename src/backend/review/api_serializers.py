@@ -139,6 +139,12 @@ class AnchorSerializer(serializers.Serializer[Any]):
     policy_version = serializers.CharField()
 
 
+class Top3ItemSerializer(serializers.Serializer[Any]):
+    class_id = serializers.IntegerField()
+    class_name = serializers.CharField()
+    score = serializers.FloatField()
+
+
 class EvidenceSerializer(serializers.Serializer[Any]):
     engine = serializers.ChoiceField(choices=ENGINE_NAMES)
     rule_id = serializers.CharField(allow_null=True, required=False)
@@ -153,6 +159,28 @@ class EvidenceSerializer(serializers.Serializer[Any]):
     checkpoint_sha256 = serializers.CharField(allow_null=True, required=False)
     class_mapping_version = serializers.CharField(allow_null=True, required=False)
     iou = serializers.FloatField(allow_null=True, required=False)
+    # "classifier" chỉ là alias tương thích payload FE v0; runtime hiện tại là "detector".
+    source: Any = serializers.CharField(
+        required=False, help_text="detector (runtime) hoặc classifier (alias tương thích v0)"
+    )
+    match_status = serializers.ChoiceField(
+        choices=["matched", "unmatched_detection", "unmatched_annotation"], required=False
+    )
+    annotated_class_id = serializers.IntegerField(allow_null=True, required=False)
+    annotation_bbox = BBoxSerializer(allow_null=True, required=False)
+    artifact_verified = serializers.BooleanField(required=False)
+    class_scores = serializers.ListField(
+        child=serializers.FloatField(min_value=0, max_value=1),
+        min_length=11,
+        max_length=11,
+        required=False,
+    )
+    score = serializers.FloatField(min_value=0, max_value=1, required=False)
+    margin = serializers.FloatField(min_value=0, max_value=1, required=False)
+    background_score = serializers.FloatField(min_value=0, max_value=1, required=False)
+    unknown = serializers.BooleanField(required=False)
+    predicted_label_id = serializers.IntegerField(required=False)
+    top3 = Top3ItemSerializer(many=True, required=False)
 
 
 class IssueLinkSerializer(serializers.Serializer[Any]):
