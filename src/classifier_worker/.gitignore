@@ -1,0 +1,4 @@
+*.pth
+crops/
+dataset-manifest.json
+!tests/**

@@ -29,12 +29,13 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--val-fraction", type=float, default=0.2)
     build.add_argument("--held-out-fraction", type=float, default=0.0)
     build.add_argument("--revision-sha256", default=None)
+    build.add_argument("--data-origin", choices=("fixture", "real"), default="fixture")
 
     fit = sub.add_parser("train", help="fine-tune on the train split and freeze a checkpoint")
     fit.add_argument("--dataset", type=Path, required=True)
     fit.add_argument("--out", type=Path, required=True)
     fit.add_argument("--version", required=True)
-    fit.add_argument("--status", choices=("smoke_only", "trained"), required=True)
+    fit.add_argument("--smoke-only", action="store_true", help="force status smoke_only")
     fit.add_argument("--epochs", type=int, default=5)
     fit.add_argument("--batch-size", type=int, default=32)
     fit.add_argument("--lr", type=float, default=1e-4)
@@ -68,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
                 split=SplitConfig(val=args.val_fraction, held_out=args.held_out_fraction),
                 group_by=args.group_by,
                 snapshot_revision_sha256=args.revision_sha256,
+                data_origin=args.data_origin,
             )
             print(
                 json.dumps({"manifest_sha256": manifest["manifest_sha256"], **manifest["counts"]})
@@ -77,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.dataset,
                 args.out,
                 version=args.version,
-                status=args.status,
+                smoke_only=args.smoke_only,
                 epochs=args.epochs,
                 batch_size=args.batch_size,
                 lr=args.lr,
@@ -86,10 +88,19 @@ def main(argv: list[str] | None = None) -> int:
                 pretrained=not args.no_pretrained,
                 git_commit=args.git_commit,
             )
-            print(json.dumps({"manifest": str(artifact.path), "sha256": artifact.sha256}))
+            print(
+                json.dumps(
+                    {
+                        "manifest": str(artifact.path),
+                        "sha256": artifact.sha256,
+                        "status": artifact.status,
+                        "status_reasons": artifact.raw["training"]["status_reasons"],
+                    }
+                )
+            )
         elif args.command == "verify":
             artifact = ClassifierArtifact.load(args.manifest)
-            artifact.verify_checkpoint()
+            artifact.load_model()  # checksum, then a strict state_dict load
             print(
                 json.dumps(
                     {
@@ -116,6 +127,8 @@ def main(argv: list[str] | None = None) -> int:
         ChecksumMismatchError,
         OSError,
         ValueError,
+        RuntimeError,
+        KeyError,
     ) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

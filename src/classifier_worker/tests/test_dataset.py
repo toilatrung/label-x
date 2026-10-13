@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from labelx_classifier.dataset import (
     DatasetError,
@@ -110,11 +111,19 @@ def test_frame_with_wrong_media_hash_is_not_cropped(snapshot, image_root, tmp_pa
 
 def test_storage_key_cannot_escape_image_root(snapshot, image_root, tmp_path):
     outside = tmp_path / "secret.png"
-    outside.write_bytes(b"not an image")
-    snapshot["jobs"][0]["frames"][0]["media"]["storage_key"] = "../secret.png"
-    snapshot["jobs"][0]["frames"][0]["media"].pop("sha256")
+    Image.new("RGB", (50, 50)).save(outside)
+    media = snapshot["jobs"][0]["frames"][0]["media"]
+    media["storage_key"] = "../secret.png"
+    media["sha256"] = hashlib.sha256(outside.read_bytes()).hexdigest()  # hash present and correct
     manifest = build(snapshot, image_root, tmp_path)
     assert manifest["counts"]["rejected_by_reason"] == {"frame_image_unavailable": 3}
+
+
+def test_frame_without_recorded_hash_is_rejected(snapshot, image_root, tmp_path):
+    snapshot["jobs"][0]["frames"][0]["media"].pop("sha256")
+    manifest = build(snapshot, image_root, tmp_path)
+    assert manifest["counts"]["rejected_by_reason"] == {"frame_media_sha256_missing": 3}
+    assert all(r["provenance"]["frame_media_sha256"] for r in manifest["crops"])
 
 
 def test_held_out_defaults_to_empty(snapshot, image_root, tmp_path):
