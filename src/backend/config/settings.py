@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "orchestration.apps.OrchestrationConfig",
     "review.apps.ReviewConfig",
     "effort.apps.EffortConfig",
+    "calibration.apps.CalibrationConfig",
 ]
 
 MIDDLEWARE = [
