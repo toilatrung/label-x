@@ -71,6 +71,8 @@ class CandidateContext:
 class CropInput:
     data: bytes = field(repr=False)  # repr ẩn bytes để không rò vào log
     mime_type: str
+    # Ánh xạ crop về ảnh gốc (frame, box, padding...) để lưu evidence; không tham gia so sánh/hash.
+    origin: dict[str, Any] | None = field(default=None, compare=False, repr=False)
 
     @property
     def sha256(self) -> str:

@@ -5,6 +5,8 @@ FK tới `runs.QCRun` (cột `run_id`, khớp `EngineInput.run_id`).
 
 from __future__ import annotations
 
+from typing import Any
+
 from django.db import models
 
 
@@ -181,3 +183,59 @@ class VlmAttempt(models.Model):
 
     def __str__(self) -> str:
         return f"VlmAttempt unit={self.unit_id} #{self.attempt_no}"
+
+
+class VlmEvidenceImmutableError(RuntimeError):
+    """VlmEvidence là append-only: không sửa, không xoá."""
+
+
+class VlmEvidence(models.Model):
+    """Evidence VLM append-only, đúng một dòng cho mỗi VlmUnit (M04A-04).
+
+    Là đề xuất/bằng chứng, không phải quyết định: không có quan hệ tới ReviewDecision hay
+    Adjudication. Lưu model/prompt/policy/revision, crop hash và ánh xạ crop về ảnh gốc, request
+    ID đã redacted. Không chứa API key, prompt hay bytes ảnh. DB trigger chặn UPDATE/DELETE.
+    """
+
+    class Status(models.TextChoices):
+        CHECKED = "checked", "Checked"
+        UNCERTAIN = "uncertain", "Uncertain"
+        FAILED = "failed", "Failed"
+
+    unit = models.OneToOneField(VlmUnit, on_delete=models.PROTECT, related_name="evidence")
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
+    candidate = models.ForeignKey(CandidateRecord, on_delete=models.PROTECT, related_name="+")
+    status = models.CharField(max_length=16, choices=Status.choices)
+    label_class_id = models.CharField(max_length=64, blank=True, default="")
+    class_name = models.CharField(max_length=128, blank=True, default="")
+    # Lời giải thích của model, KHÔNG phải bằng chứng đã xác minh.
+    rationale = models.TextField(blank=True, default="")
+    reason_code = models.CharField(max_length=24, blank=True, default="")
+    attempts = models.PositiveSmallIntegerField(default=0)
+    provider = models.CharField(max_length=32)
+    model = models.CharField(max_length=64)
+    prompt_version = models.CharField(max_length=32)
+    policy_version = models.CharField(max_length=32)
+    snapshot_revision = models.CharField(max_length=64)
+    crop_sha256 = models.CharField(max_length=64, blank=True, default="")
+    crop_origin = models.JSONField(null=True, blank=True)
+    request_id = models.CharField(max_length=64, blank=True, default="")
+    config = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self) -> str:
+        return f"VlmEvidence unit={self.unit_id} [{self.status}]"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise VlmEvidenceImmutableError("VlmEvidence là append-only, không được cập nhật.")
+        kwargs["force_insert"] = True
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise VlmEvidenceImmutableError("VlmEvidence là append-only, không được xoá.")
