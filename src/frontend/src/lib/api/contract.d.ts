@@ -210,7 +210,7 @@ export interface paths {
         put?: never;
         /**
          * Publish config version
-         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. models.vlm hoặc thresholds.classification_routing sai schema trả 422 BUSINESS_RULE_UNMET. Ghi audit cùng transaction.
          */
         post: operations["config_versions_publish"];
         delete?: never;
@@ -1362,6 +1362,95 @@ export interface components {
             frame: components["schemas"]["FrameKey"];
             anchor: components["schemas"]["Anchor"];
             evidence: components["schemas"]["Evidence"];
+            /** @description ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/. */
+            id?: number;
+            vlm?: components["schemas"]["CandidateVlm"];
+        };
+        /**
+         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+         * @example {
+         *       "state": "checked",
+         *       "engine_status": "checked",
+         *       "source": "qwen",
+         *       "conclusion": "confirmed",
+         *       "class_id": "1",
+         *       "class_name": "car",
+         *       "reason_code": null,
+         *       "evidence_id": 5,
+         *       "evaluation_id": null,
+         *       "model_version": "qwen3-vl-plus",
+         *       "provider": "openai_compatible",
+         *       "provider_host": "api.shopaikey.com",
+         *       "response_model": "qwen3-vl-plus",
+         *       "prompt_version": "vlm-prompt-v0",
+         *       "policy_version": "vlm-trigger-v0",
+         *       "snapshot_revision": "<sha256 của snapshot>",
+         *       "attempts": 1,
+         *       "request_id": "chatcmpl-…c9681afb",
+         *       "crop_sha256": "<sha256 của crop>",
+         *       "crop": {
+         *         "frame": {
+         *           "cvat_task_id": 9,
+         *           "frame_number": 0
+         *         },
+         *         "box": [
+         *           60,
+         *           40,
+         *           100,
+         *           80
+         *         ],
+         *         "padded_box": [
+         *           56,
+         *           36,
+         *           104,
+         *           84
+         *         ],
+         *         "output_size": [
+         *           48,
+         *           48
+         *         ]
+         *       },
+         *       "rationale": "Văn bản tự do của model, FE render dạng text thuần",
+         *       "created_at": "2026-10-13T08:30:00Z"
+         *     }
+         */
+        CandidateVlm: {
+            /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled */
+            state: string;
+            /** @description checked | partial | failed | not_checked | running (payload FE v0) */
+            engine_status: string;
+            /** @description Luôn là qwen */
+            source: string;
+            /** @description confirmed | uncertain | null */
+            conclusion?: string | null;
+            class_id?: string | null;
+            class_name?: string | null;
+            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | null */
+            reason_code?: string | null;
+            evidence_id?: number | null;
+            /** @description Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa */
+            evaluation_id?: string | null;
+            /** @description Model ID đã yêu cầu */
+            model_version?: string | null;
+            provider?: string | null;
+            provider_host?: string | null;
+            /** @description Model ID mà provider báo về */
+            response_model?: string | null;
+            prompt_version?: string | null;
+            policy_version?: string | null;
+            snapshot_revision?: string | null;
+            attempts: number;
+            /** @description ID provider đã làm sạch (chỉ ký tự an toàn, cắt 64 ký tự), không che nội dung */
+            request_id?: string | null;
+            crop_sha256?: string | null;
+            /** @description Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra */
+            crop?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Văn bản tự do do model sinh, không phải bằng chứng đã xác minh; FE phải render dạng text thuần (không HTML/Markdown) */
+            rationale?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
         };
         /** @description Kết quả cuối của một đơn vị trong shard */
         EngineUnitResult: {
@@ -2031,10 +2120,11 @@ export interface components {
             engines: {
                 [key: string]: unknown;
             };
+            /** @description Khoá classification_routing (M04C-01, tên classification-routing-v0) gồm score_threshold và margin_threshold trong [0, 1]; đây là ngưỡng định tuyến tạm, không phải ngưỡng quality hay calibration. */
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
             models?: {
                 [key: string]: unknown;
             };
@@ -2519,6 +2609,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     runs_list: {
