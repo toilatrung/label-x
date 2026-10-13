@@ -80,6 +80,7 @@ def test_checked_unit_writes_one_evidence_with_provenance_and_api_exposes_it() -
     )
     assert vlm["snapshot_revision"] == evidence.snapshot_revision
     assert vlm["provider_host"] == "dashscope-intl.aliyuncs.com" and vlm["attempts"] == 1
+    assert vlm["request_id"] == "…req-1"
     assert vlm["reason_code"] is None and vlm["evaluation_id"] is None
     assert "sk-test-not-real" not in json.dumps(vlm, default=str)
 

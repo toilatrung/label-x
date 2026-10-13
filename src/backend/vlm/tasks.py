@@ -19,7 +19,7 @@ from typing import Any
 
 from celery import shared_task
 
-from vlm.client import DashScopeClient
+from vlm.client import DashScopeClient, redact_request_id
 from vlm.config import parse_vlm_config
 from vlm.contract import (
     CandidateContext,
@@ -41,7 +41,9 @@ def result_to_dict(result: VlmResult) -> dict[str, Any]:
         "rationale": result.rationale,
         "reason_code": result.reason_code.value if result.reason_code else None,
         "attempts": result.attempts,
-        "request_id": result.request_id,
+        # Phòng thủ tại biên public/persistence: cả client thay thế trong test hay provider mới
+        # cũng không thể đưa request ID đầy đủ vào task result hoặc VlmEvidence.
+        "request_id": redact_request_id(result.request_id),
         "model": result.model,
         "response_model": result.response_model,
         "provider": result.provider,

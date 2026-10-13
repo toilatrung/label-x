@@ -1494,7 +1494,7 @@ export interface components {
             policy_version?: string | null;
             snapshot_revision?: string | null;
             attempts: number;
-            /** @description ID provider đã làm sạch (chỉ ký tự an toàn, cắt 64 ký tự), không che nội dung */
+            /** @description ID provider đã redacted; chỉ giữ dấu … và tối đa 8 ký tự an toàn cuối để đối soát */
             request_id?: string | null;
             crop_sha256?: string | null;
             /** @description Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra */

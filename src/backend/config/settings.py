@@ -273,6 +273,13 @@ ORCHESTRATION_RUNNING_STALE_SECONDS = env.int("ORCHESTRATION_RUNNING_STALE_SECON
 ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
     "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", default=300
 )
+# Faster R-CNN chạy ngoài process backend; worker phải mount checkpoint/config bất biến.
+DETECTOR_COMMAND = env("DETECTOR_COMMAND", default="labelx-detector")
+DETECTOR_CHECKPOINT_PATH = env("DETECTOR_CHECKPOINT_PATH", default="")
+DETECTOR_MANIFEST_PATH = env("DETECTOR_MANIFEST_PATH", default="")
+DETECTOR_CONFIG_PATH = env("DETECTOR_CONFIG_PATH", default="")
+DETECTOR_DEVICE = env("DETECTOR_DEVICE", default="cuda:0")
+DETECTOR_TIMEOUT_SECONDS = env.int("DETECTOR_TIMEOUT_SECONDS", default=1800)
 CELERY_BEAT_SCHEDULE = {
     "orchestration-redispatch-pending": {
         "task": "orchestration.redispatch_pending",

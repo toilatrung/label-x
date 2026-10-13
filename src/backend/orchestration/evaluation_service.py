@@ -1,6 +1,6 @@
-"""Evaluation: nối policy định tuyến (M04C-01) với stage VLM của A (M04C-02, CR-115).
+"""Evaluation: nối detector Faster R-CNN với policy/VLM (M04C-02, CR-117).
 
-- `route_candidates(run)`: quyết định định tuyến cho mọi candidate của run từ ClassifierUnit.
+- `route_candidates(run)`: quyết định định tuyến trực tiếp từ evidence của candidate detector.
 - `create_auto_evaluations(run, ...)`: lượt logic đầu (generation 1) do stage VLM tạo.
 - `create_manual_evaluation(...)`: re-evaluate theo yêu cầu, luôn là generation mới.
 
@@ -28,14 +28,12 @@ from orchestration.evaluation_guard import (
 )
 from orchestration.models import (
     CandidateRecord,
-    ClassifierUnit,
     Evaluation,
     VlmBudget,
     VlmUnit,
 )
 from orchestration.routing_policy import (
     POLICY_NAME,
-    ClassifierNotReadyError,
     RoutingDecision,
     RoutingPolicy,
     route,
@@ -71,21 +69,11 @@ def policy_for_run(run: QCRun) -> RoutingPolicy:
     return RoutingPolicy.from_config(raw)
 
 
-def classifier_payload(unit: ClassifierUnit | None) -> dict[str, Any]:
-    """Dạng `Candidate.classifier` mà `routing_input_from_candidate` đọc."""
-    if unit is None:
-        return {}
+def candidate_payload(candidate: CandidateRecord) -> dict[str, Any]:
+    """Phần CandidateRecord mà adapter routing cần; không tạo model trung gian."""
     return {
-        "classifier": {
-            "status": unit.status,
-            "crop_valid": unit.crop_valid,
-            "predicted_class_id": unit.predicted_class_id,
-            "annotated_class_id": unit.annotated_class_id,
-            "score": unit.score,
-            "margin": unit.margin,
-            "classifier_unknown": unit.classifier_unknown,
-            "checkpoint_status": unit.checkpoint_status,
-        }
+        "engine": candidate.engine,
+        "evidence": candidate.evidence,
     }
 
 
@@ -100,13 +88,12 @@ def budget_exhausted(run_id: int, config_budget: int | None = None) -> bool:
 def _decide(
     policy: RoutingPolicy,
     candidate: CandidateRecord,
-    classifier: ClassifierUnit | None,
     *,
     manual_recheck: bool,
     exhausted: bool,
 ) -> RoutingDecision:
     data = routing_input_from_candidate(
-        classifier_payload(classifier), manual_recheck=manual_recheck, budget_exhausted=exhausted
+        candidate_payload(candidate), manual_recheck=manual_recheck, budget_exhausted=exhausted
     )
     return route(policy, data)
 
@@ -114,21 +101,9 @@ def _decide(
 def route_candidates(
     run: QCRun, candidates: list[CandidateRecord], *, exhausted: bool
 ) -> list[tuple[CandidateRecord, RoutingDecision]]:
-    """Định tuyến tự động (không manual) cho `candidates` của run; một truy vấn classifier."""
+    """Định tuyến tự động (không manual) trực tiếp từ evidence detector đã persist."""
     policy = policy_for_run(run)
-    units = {
-        u.candidate_id: u
-        for u in ClassifierUnit.objects.filter(candidate_id__in=[c.pk for c in candidates])
-    }
-    routed: list[tuple[CandidateRecord, RoutingDecision]] = []
-    for c in candidates:
-        try:
-            routed.append(
-                (c, _decide(policy, c, units.get(c.pk), manual_recheck=False, exhausted=exhausted))
-            )
-        except ClassifierNotReadyError:
-            continue  # classifier chưa xong: chưa quyết định, lần refresh sau sẽ định tuyến
-    return routed
+    return [(c, _decide(policy, c, manual_recheck=False, exhausted=exhausted)) for c in candidates]
 
 
 def _vlm_unit_for(candidate: CandidateRecord, run: QCRun, config: Any, generation: int) -> VlmUnit:
@@ -255,19 +230,12 @@ def create_manual_evaluation(
             config = parse_vlm_config(raw)
             if not VlmBudget.objects.filter(run_id=run.pk).exists():
                 VlmBudget.objects.create(run_id=run.pk, max_calls=config.budget.max_calls)
-            classifier = ClassifierUnit.objects.filter(candidate_id=candidate.pk).first()
-            try:
-                decision = _decide(
-                    policy_for_run(run),
-                    candidate,
-                    classifier,
-                    manual_recheck=True,
-                    exhausted=budget_exhausted(run.pk, config.budget.max_calls),
-                )
-            except ClassifierNotReadyError:
-                raise EvaluationNotAllowedError(
-                    "Classifier của candidate chưa chạy xong; thử lại sau."
-                ) from None
+            decision = _decide(
+                policy_for_run(run),
+                candidate,
+                manual_recheck=True,
+                exhausted=budget_exhausted(run.pk, config.budget.max_calls),
+            )
             last = Evaluation.objects.filter(candidate=candidate).aggregate(m=Max("generation"))
             generation = (last["m"] or 0) + 1
             unit: VlmUnit | None = None

@@ -36,7 +36,7 @@ def _api(run: QCRun, role: Role = Role.REVIEWER, name: str = "rev") -> APIClient
 
 
 def _prepared() -> tuple[QCRun, int]:
-    """Run xong shard, không classifier ⇒ mọi candidate cần Qwen ⇒ có Evaluation gen 1."""
+    """Candidate không đến từ detector ⇒ fallback Qwen và có Evaluation generation 1."""
     run = _make_run()
     _run_shards(run)
     candidate_id = Evaluation.objects.filter(run_id=run.pk).order_by("pk").first().candidate_id
@@ -62,7 +62,7 @@ def test_auto_evaluations_are_written_for_each_candidate_with_policy() -> None:
     assert ev.source == "auto" and ev.call_qwen and ev.vlm_unit_id is not None
     assert ev.policy["name"] == "classification-routing-v0"
     assert ev.policy["threshold_semantics"] == "routing_temporary" and ev.policy["policy_sha256"]
-    # Không có classifier ⇒ classifier_unavailable (không phải low_score); vẫn gọi Qwen.
+    # Không có evidence detector ⇒ reason tương thích FE v0; vẫn gọi Qwen.
     assert ev.primary_reason == "classifier_unavailable"
     assert VlmUnit.objects.filter(run_id=run.pk).count() == 3
 

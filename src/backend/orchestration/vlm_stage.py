@@ -146,20 +146,10 @@ def _taxonomy_for_run(run: QCRun) -> tuple[TaxonomyLabel, ...] | None:
     return tuple(TaxonomyLabel(str(label.label_id), label.name) for label in taxonomy.labels)
 
 
-def _classifier_pending(run: QCRun) -> bool:
-    """Run có classifier bật mà stage đó chưa xong: policy cần kết quả classifier nên phải chờ."""
-    from classifier.config import CLASSIFIER_ENGINE
-    from orchestration.classifier_stage import classifier_stage_started, classifier_units_open
-
-    if CLASSIFIER_ENGINE not in (run.engine_versions or {}):
-        return False
-    return not classifier_stage_started(run.pk) or classifier_units_open(run.pk)
-
-
 def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
     """Candidate cần hỏi Qwen theo policy `classification-routing-v0` (M04C-01).
 
-    Chỉ candidate có `call_qwen` (low score/margin, unknown, conflict) được chọn; classifier-only,
+    Chỉ candidate có `call_qwen` (low score, unknown, conflict) được chọn; detector-only,
     invalid_crop và budget_exhausted thì không. Giữ chữ ký của pha A; xem `start_vlm_stage` để ghi
     cả quyết định của candidate không được chọn vào Evaluation.
     """
@@ -176,10 +166,11 @@ def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
 
 
 def start_vlm_stage(run_id: int) -> int:
-    """Khởi động/bổ sung stage VLM sau khi candidate (và classifier nếu bật) đã xong.
+    """Khởi động/bổ sung stage VLM sau khi candidate detector đã sinh xong.
 
     Idempotent; trả số VlmUnit mới. Mỗi candidate nhận một Evaluation generation 1 ghi quyết định
-    định tuyến (kể cả classifier-only); chỉ candidate cần Qwen mới có VlmUnit. Gọi trong
+    định tuyến (kể cả nhánh detector-only, mang reason tương thích FE v0); chỉ candidate cần Qwen
+    mới có VlmUnit. Gọi trong
     transaction đã khoá QCRun (refresh_run). Dispatch Celery chạy sau commit.
     """
     from orchestration.evaluation_service import (
@@ -192,8 +183,6 @@ def start_vlm_stage(run_id: int) -> int:
     raw = run_vlm_config(run)
     if raw is None or run.cancel_requested_at:
         return 0
-    if _classifier_pending(run):
-        return 0  # policy dựa trên kết quả classifier: chờ classifier xong rồi mới định tuyến
     config = parse_vlm_config(raw)
     budget, _ = VlmBudget.objects.get_or_create(
         run_id=run_id, defaults={"max_calls": config.budget.max_calls}

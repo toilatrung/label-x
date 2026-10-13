@@ -146,7 +146,12 @@ class EvidenceSerializer(serializers.Serializer[Any]):
     actual = serializers.CharField(allow_null=True, required=False)
     prediction_bbox = BBoxSerializer(allow_null=True, required=False)
     prediction_class = serializers.CharField(allow_null=True, required=False)
+    class_id = serializers.IntegerField(allow_null=True, required=False)
+    class_name = serializers.CharField(allow_null=True, required=False)
     confidence = serializers.FloatField(allow_null=True, required=False)
+    model_version = serializers.CharField(allow_null=True, required=False)
+    checkpoint_sha256 = serializers.CharField(allow_null=True, required=False)
+    class_mapping_version = serializers.CharField(allow_null=True, required=False)
     iou = serializers.FloatField(allow_null=True, required=False)
 
 

@@ -63,8 +63,7 @@ class CandidateContext:
 
     candidate_id: str
     snapshot_revision: str
-    current_label: str | None = None  # nhãn annotator/classifier đang tranh chấp (class_id)
-    classifier_top3: tuple[tuple[str, float], ...] = ()
+    current_label: str | None = None  # nhãn annotator/detector đang tranh chấp (class_id)
 
 
 @dataclass(frozen=True)

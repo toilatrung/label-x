@@ -22,23 +22,25 @@ from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
 
 _SAFE_ID = re.compile(r"[^A-Za-z0-9_.-]")
-MAX_REQUEST_ID_CHARS = 64
+REQUEST_ID_SUFFIX_CHARS = 8
+MAX_MODEL_ID_CHARS = 64
 MAX_OUTPUT_TOKENS = 256
 _QUOTA_HINTS = ("quota", "insufficient", "arrear", "balance", "billing")
 
 
 def redact_request_id(value: object) -> str | None:
-    """Giữ ký tự an toàn và cắt ngắn; ID provider chỉ dùng để đối soát, không phải secret."""
+    """Chỉ giữ hậu tố an toàn để đối soát mà không lộ toàn bộ ID của provider."""
     if not isinstance(value, str) or not value:
         return None
-    return _SAFE_ID.sub("", value)[:MAX_REQUEST_ID_CHARS] or None
+    cleaned = _SAFE_ID.sub("", value)
+    return f"…{cleaned[-REQUEST_ID_SUFFIX_CHARS:]}" if cleaned else None
 
 
 def redact_model_id(value: object) -> str | None:
     """Model ID do provider/cổng báo về: giữ ký tự an toàn, cắt ngắn (ghi provenance)."""
     if not isinstance(value, str) or not value:
         return None
-    return re.sub(r"[^A-Za-z0-9_.:/-]", "", value)[:MAX_REQUEST_ID_CHARS] or None
+    return re.sub(r"[^A-Za-z0-9_.:/-]", "", value)[:MAX_MODEL_ID_CHARS] or None
 
 
 def _error_code(response: httpx.Response) -> str:

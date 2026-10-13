@@ -155,7 +155,14 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
     models = serializers.DictField(required=False, default=dict)
 
     def validate_engines(self, value: dict[str, Any]) -> dict[str, Any]:
-        allowed = {"schema", "geometry", "duplicate", "detector", "metric", "vlm"}
+        allowed = {
+            "schema",
+            "geometry",
+            "duplicate",
+            "detector",
+            "metric",
+            "vlm",
+        }
         if not value or any(
             name not in allowed
             or not isinstance(config, dict)

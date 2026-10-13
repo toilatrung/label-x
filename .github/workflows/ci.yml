@@ -202,33 +202,6 @@ jobs:
       - name: Test (detector-test)
         run: uv run --frozen --extra dev pytest -q
 
-  classifier:
-    timeout-minutes: 20
-    # Fail-closed: the worker (M04B-02) must exist in the checked-out ref.
-    # Missing directory, pyproject.toml or uv.lock fails this job instead of
-    # being skipped. `--locked` also fails when uv.lock drifts from pyproject.
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/classifier_worker
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        with:
-          python-version: '3.12'
-          enable-cache: true
-          cache-dependency-glob: src/classifier_worker/uv.lock
-      - name: Install locked CPU dependencies
-        run: uv sync --locked --extra dev
-      - name: Lint classifier worker
-        run: |
-          uv run --locked --extra dev ruff check .
-          uv run --locked --extra dev ruff format --check .
-      - name: Test classifier worker
-        run: uv run --locked --extra dev pytest -q
-
   frontend:
     runs-on: ubuntu-latest
     defaults:

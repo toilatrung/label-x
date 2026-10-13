@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from engines.detector import DETECTOR_DESCRIPTOR
 from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
@@ -58,15 +59,7 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     DUPLICATE_OVERLAP_ENGINE_NAME: DUPLICATE_OVERLAP_DESCRIPTOR,
     SCHEMA_TAXONOMY_ENGINE_NAME: SCHEMA_TAXONOMY_DESCRIPTOR,
     GEOMETRY_ENGINE_NAME: GEOMETRY_DESCRIPTOR,
-    "detector": EngineDescriptor(
-        name="detector",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=True,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
+    "detector": DETECTOR_DESCRIPTOR,
     "metric": EngineDescriptor(
         name="metric",
         version="1.0.0",

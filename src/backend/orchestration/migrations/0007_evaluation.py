@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("orchestration", "0007_classifier_unit"),
+        ("orchestration", "0006_vlm_evidence_block_truncate"),
         ("runs", "0006_workunit_lease_token"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
