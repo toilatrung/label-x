@@ -128,7 +128,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 <tr>
 <td>D-03</td>
-<td>VLM (nếu bật): ảnh không gửi ra ngoài khi chưa được phép; self-host hay API ngoài chưa chốt.</td>
+<td>VLM (nếu bật): ảnh không gửi ra ngoài khi chưa được phép. Theo CR-116 (M-04) VLM là Qwen gọi qua API (<code>openai_compatible</code> hoặc <code>dashscope</code>), nên crop sẽ rời hạ tầng khi bật; cần PO xác nhận chính sách dữ liệu trước smoke thật, và key chỉ nằm ở biến môi trường runtime. Chi tiết: vlm.html.</td>
 <td>FR-ENG-10; R B-08</td>
 </tr>
 <tr>
