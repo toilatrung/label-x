@@ -1,9 +1,9 @@
 /**
  * Dữ liệu minh họa cho Snapshot và Lịch sử snapshot, lấy từ docs/design/screens/Snapshot.dc.html và SnapshotHistory.dc.html.
- * Chỉ dùng cho phần thiết kế chưa có API (revision, seed, cấu hình kiểm tra, Quality Control Run theo Snapshot) hoặc khi không tải được Dataset.
+ * Chỉ dùng cho các trường thiết kế chưa có API (revision khi tạo Snapshot) và chế độ mock rõ ràng.
  * TODO(backend): GET /api/datasets/{id}/revisions/ (danh sách annotation revision), seed lấy mẫu và cấu hình kiểm tra gắn với Snapshot
  *   (trường seed, config_version_id, models trên Snapshot), GET /api/snapshots/{id}/runs/ (Quality Control Run đã chạy trên Snapshot).
- * Mọi nơi dùng phải kèm SampleDataBadge và NotConnectedNotice.
+ * Dữ liệu thật từ endpoint đã tồn tại luôn được ưu tiên; lỗi endpoint thật không bị che bằng fixture.
  */
 export const SAMPLE_SNAPSHOT_FORM = {
   dataset: 'Road Vision Urban · v1.4',

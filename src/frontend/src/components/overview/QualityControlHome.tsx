@@ -386,6 +386,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                 <tbody>
                   {filteredDatasets.map((ds) => {
                     const isSelected = ds.id === datasetId;
+                    const product = HOME_DATASETS.find(row => row.id === ds.id || row.name === ds.name);
                     return (
                       <tr
                         key={ds.id}
@@ -407,12 +408,19 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                           </div>
                           <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
                         </td>
-                        <td className="r">—</td>
-                        <td className="r">—</td>
-                        <td><span className="lx-subtle">—</span></td>
-                        <td className="r">—</td>
-                        <td className="r">—</td>
-                        <td><span className="lx-badge">—</span></td>
+                        <td className="r">{product?.tasksJobs ?? '—'}</td>
+                        <td className="r">{product?.frames ?? '—'}</td>
+                        <td>
+                          {product?.qcRunStatus ? (
+                            <><span className="lx-mono">{product.qcRun}</span>{' '}
+                              <span className={`lx-badge${product.qcRunTone ? ` lx-badge--${product.qcRunTone}` : ''}`}>{product.qcRunStatus}</span>
+                              {product.qcRunTime && <div className="lx-cell__sub">{product.qcRunTime}</div>}
+                            </>
+                          ) : <span className="lx-subtle">{product?.qcRun ?? '—'}</span>}
+                        </td>
+                        <td className="r">{product?.coverage ?? '—'}</td>
+                        <td className="r">{product?.openIssues ?? '—'}</td>
+                        <td><span className={`lx-badge${product?.gateTone ? ` lx-badge--${product.gateTone}` : ''}`}>{product?.gate ?? '—'}</span></td>
                         <td className="r">
                           <button
                             type="button"

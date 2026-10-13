@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import EscalationsPage from '@/app/escalations/page';
@@ -294,7 +294,7 @@ describe('Escalations UI (T-039)', () => {
     expect(calls.length).toBe(before);
   });
 
-  it('shows the three design tabs with rows returned by the Decision Case API (FE-06)', async () => {
+  it('uses sketchup data for Guideline Gaps and API data for Decision Cases (FE-06)', async () => {
     await renderPage('qalead', async (request) => {
       const url = new URL(request.url);
       if (url.pathname !== '/api/decision-cases/') return null;
@@ -327,6 +327,14 @@ describe('Escalations UI (T-039)', () => {
     expect(await screen.findByText('GAP-012')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
     expect(screen.queryByText(/chưa được kết nối với server/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
+    fireEvent.change(within(dialog).getByLabelText('Quy tắc liên quan *'), { target: { value: 'VEH-03' } });
+    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Tình huống mới từ sketchup' } });
+    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Ba case chưa thống nhất' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await screen.findByText('GAP-013')).toBeDefined();
+    expect(screen.getByText('Tình huống mới từ sketchup')).toBeDefined();
     fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
     expect(await screen.findByText('CASE-040')).toBeDefined();
     expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();

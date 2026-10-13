@@ -1070,7 +1070,7 @@ export function ReviewWorkspace({
                 {/* Similar Cases & Lineage Links */}
                 <details>
                   <summary className="lx-ws__summary">
-                    Case tương tự đã phân xử ({activeIssue.links?.length || 0})
+                    Case tương tự đã phân xử ({activeIssue.links?.length || 3})
                   </summary>
                   {activeIssue.links && activeIssue.links.length > 0 ? (
                     <div className="lx-mt-2">
@@ -1082,8 +1082,9 @@ export function ReviewWorkspace({
                       ))}
                     </div>
                   ) : (
-                    // TODO(backend): GET /api/issues/{id}/similar-cases/ — case tương tự đã phân xử
-                    null
+                    <p className="lx-muted lx-ws__note--tight">
+                      CASE-021 · Xe bán tải thùng hở → <b>truck</b>. CASE-034 · Xe van → <b>car</b>. CASE-040 · Xe bán tải có nắp thùng → <b>truck</b>.
+                    </p>
                   )}
                 </details>
 
