@@ -197,7 +197,16 @@ def create_rework(*, request: Request) -> ReworkRequest:
     key = _idempotency(request)
     request_hash = _request_hash(body)
 
-    User.objects.select_for_update(no_key=True).get(pk=user.pk)
+    # One lock order for every rework writer: user rows (by pk), then the run, then the rest.
+    # The annotator's row is locked here, not after the run lock: `submitted` (by that
+    # annotator) takes its user row before the run lock, so the reverse order deadlocks.
+    # Only a well-formed id is locked early; every validation error keeps its old precedence.
+    locked_users = {user.pk}
+    early_annotator = body.get("annotator_user_id")
+    if isinstance(early_annotator, int) and not isinstance(early_annotator, bool):
+        if early_annotator > 0:
+            locked_users.add(early_annotator)
+    list(User.objects.select_for_update(no_key=True).filter(pk__in=locked_users).order_by("pk"))
     relation = Issue.objects.filter(pk=issue_id).values("frame_review__run_id").first()
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
@@ -237,7 +246,7 @@ def create_rework(*, request: Request) -> ReworkRequest:
         )
 
     annotator_id = _positive_int(body.get("annotator_user_id"), "annotator_user_id")
-    annotator = User.objects.select_for_update(no_key=True).filter(pk=annotator_id).first()
+    annotator = User.objects.filter(pk=annotator_id).first()  # row already locked above
     if annotator is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Annotator không tồn tại.")
     if not _has_role(annotator, dataset_id, (Role.ANNOTATOR,)):
