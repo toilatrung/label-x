@@ -417,6 +417,12 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
     public = config.as_public_dict()
+    if (config.model, config.prompt_version) != (unit.model, unit.prompt_version):
+        # Config của run không còn khớp lúc unit được tạo: không gọi provider với model/prompt
+        # khác với khoá idempotency và evidence.
+        _fail(unit, token, VlmReasonCode.PROVIDER_ERROR, revision=revision, config=public)
+        refresh_run(unit.run_id)
+        return VlmUnit.Status.FAILED
     try:
         crop = crop_provider().load(candidate)
     except VlmError as exc:

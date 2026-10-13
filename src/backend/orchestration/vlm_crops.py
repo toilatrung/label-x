@@ -30,6 +30,7 @@ MIN_PADDING_PX = 4.0
 MAX_SIDE_PX = 1024
 SHRINK_SIDES = (768, 512, 384, 256)
 MAX_SOURCE_PIXELS = 50_000_000
+MAX_SOURCE_BYTES = 50 * 1024 * 1024
 MIN_BOX_PX = 2.0
 
 
@@ -44,6 +45,8 @@ def _object_ids(candidate: CandidateRecord) -> list[str]:
 
 
 def _shape_box(shape: dict[str, Any]) -> tuple[float, float, float, float] | None:
+    """bbox của shape. Giả định: shape trong snapshot chỉ là rectangle (normalization chỉ giữ
+    rectangle; shape khác bị bỏ trước khi vào snapshot) và bỏ qua `rotation` (box trục)."""
     points = shape.get("points")
     if not isinstance(points, list) or len(points) != 4:
         return None
@@ -139,8 +142,17 @@ class SnapshotCropProvider:
         if frame.width <= 0 or frame.height <= 0 or frame.width * frame.height > MAX_SOURCE_PIXELS:
             raise VlmInvalidCropError("kích thước ảnh gốc không hợp lệ")
         storage = self._storage or ObjectStorage.from_django_settings("snapshots")
+        expected = int(frame.media_size_bytes)
+        if not 0 < expected <= MAX_SOURCE_BYTES:
+            raise VlmInvalidCropError("kích thước byte của ảnh gốc không hợp lệ")
         try:
+            head = storage.head(frame.media_storage_key)
+            if head is None or head.size != expected:
+                # Trần kích thước TRƯỚC khi đọc: không nạp object lạ/lớn vào RAM.
+                raise VlmInvalidCropError("object ảnh gốc không khớp kích thước của snapshot")
             raw = storage.get(frame.media_storage_key)
+        except VlmInvalidCropError:
+            raise
         except Exception:
             raise VlmInvalidCropError("không đọc được ảnh gốc từ storage") from None
         if hashlib.sha256(raw).hexdigest() != frame.media_sha256:

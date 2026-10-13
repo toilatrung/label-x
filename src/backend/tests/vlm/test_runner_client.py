@@ -380,12 +380,52 @@ def test_client_refuses_key_to_wrong_host_both_directions(
 
 
 def test_redirects_are_not_followed() -> None:
+    seen: list[str] = []
+
     def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        if request.url.host == "evil.example.com":
+            return _ok()  # nếu bị theo, kết quả sẽ thành checked
         return httpx.Response(302, headers={"location": "https://evil.example.com/x"})
 
     result = run_vlm_unit(_req(max_attempts=1), _client(handler), CounterBudget(2))
     assert result.status is VlmStatus.FAILED
     assert result.reason_code is VlmReasonCode.PROVIDER_ERROR
+    assert all("evil.example.com" not in u for u in seen) and len(seen) == 1
+
+
+@pytest.mark.parametrize(
+    ("host", "good_env", "bad_env", "provider"),
+    [
+        ("dashscope.aliyuncs.com", "DASHSCOPE_API_KEY", "VLM_API_KEY", "dashscope"),
+        ("dashscope-intl.aliyuncs.com", "DASHSCOPE_API_KEY", "VLM_API_KEY", "dashscope"),
+        ("dashscope-us.aliyuncs.com", "DASHSCOPE_API_KEY", "VLM_API_KEY", "dashscope"),
+        ("api.shopaikey.com", "VLM_API_KEY", "DASHSCOPE_API_KEY", "openai_compatible"),
+    ],
+)
+def test_env_binding_for_every_host(host: str, good_env: str, bad_env: str, provider: str) -> None:
+    from vlm.config import validate_vlm_config
+
+    path = "/v1" if host == "api.shopaikey.com" else "/compatible-mode/v1"
+    base = {**VALID, "provider": provider, "base_url": f"https://{host}{path}"}
+    assert validate_vlm_config({**base, "api_key_env": good_env}) == []
+    assert parse_vlm_config(base).api_key_env == good_env  # mặc định theo host
+    errors = validate_vlm_config({**base, "api_key_env": bad_env})
+    assert errors and "api_key_env" in errors[0]
+
+
+def test_wrong_provider_for_host_reports_provider_not_env() -> None:
+    from vlm.config import validate_vlm_config
+
+    errors = validate_vlm_config(
+        {
+            **VALID,
+            "provider": "dashscope",
+            "base_url": "https://api.shopaikey.com/v1",
+            "api_key_env": "VLM_API_KEY",
+        }  # env khớp host nhưng provider sai
+    )
+    assert len(errors) == 1 and "provider" in errors[0] and "api_key_env" not in errors[0]
 
 
 def test_failed_result_keeps_provider_host_and_reported_model() -> None:

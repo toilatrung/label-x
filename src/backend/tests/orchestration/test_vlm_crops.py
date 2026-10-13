@@ -40,6 +40,10 @@ class FakeStorage:
         self.blobs = blobs
         self.reads: list[str] = []
 
+    def head(self, key: str) -> Any:
+        blob = self.blobs.get(key)
+        return None if blob is None else type("Head", (), {"size": len(blob)})()
+
     def get(self, key: str) -> bytes:
         self.reads.append(key)
         if key not in self.blobs:
@@ -144,11 +148,19 @@ def test_media_integrity_and_storage_failures() -> None:
     run, storage = _setup([(7, [60, 40, 100, 80])])
     candidate = _candidate(run, ["shape:7"])
     key = next(iter(storage.blobs))
-    storage.blobs[key] = _frame_png() + b"tamper"  # sha256 khác snapshot
+    original = _frame_png()
+    storage.blobs[key] = bytes([original[0] ^ 1]) + original[1:]  # cùng kích thước, sha256 khác
     with pytest.raises(VlmInvalidCropError, match="sha256"):
         _provider(storage).load(candidate)
-    with pytest.raises(VlmInvalidCropError, match="storage"):
+    with pytest.raises(VlmInvalidCropError, match="object ảnh gốc"):
         _provider(FakeStorage({})).load(candidate)
+
+    class BrokenStorage(FakeStorage):
+        def head(self, key: str) -> Any:
+            raise OSError("mất kết nối")
+
+    with pytest.raises(VlmInvalidCropError, match="storage"):
+        _provider(BrokenStorage({})).load(candidate)
 
 
 def test_not_an_image_and_size_mismatch_are_rejected() -> None:
@@ -175,3 +187,18 @@ def test_helpers_union_pad_and_bad_points() -> None:
         union_box([{"source": {"kind": "s", "id": 1}, "points": [1, 2, 3, "x"]}], ["s:1"]) is None
     )
     assert pad_box((50, 50, 150, 100), 200, 120) == (40.0, 40.0, 160.0, 110.0)
+
+
+def test_size_is_checked_before_reading_object() -> None:
+    run, storage = _setup([(7, [60, 40, 100, 80])])
+    candidate = _candidate(run, ["shape:7"])
+    key = next(iter(storage.blobs))
+    storage.blobs[key] = _frame_png() + b"x" * 1000  # lớn hơn media_size_bytes của snapshot
+    with pytest.raises(VlmInvalidCropError, match="kích thước"):
+        _provider(storage).load(candidate)
+    assert storage.reads == [key] or storage.reads == []  # get() không được gọi
+    assert all(r != "get" for r in storage.reads[1:])
+    missing = FakeStorage({})
+    with pytest.raises(VlmInvalidCropError):
+        _provider(missing).load(candidate)
+    assert missing.reads == []  # head None: không đọc object

@@ -1366,7 +1366,54 @@ export interface components {
             id?: number;
             vlm?: components["schemas"]["CandidateVlm"];
         };
-        /** @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian. */
+        /**
+         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+         * @example {
+         *       "state": "checked",
+         *       "engine_status": "checked",
+         *       "source": "qwen",
+         *       "conclusion": "confirmed",
+         *       "class_id": "1",
+         *       "class_name": "car",
+         *       "reason_code": null,
+         *       "evidence_id": 5,
+         *       "evaluation_id": null,
+         *       "model_version": "qwen3-vl-plus",
+         *       "provider": "openai_compatible",
+         *       "provider_host": "api.shopaikey.com",
+         *       "response_model": "qwen3-vl-plus",
+         *       "prompt_version": "vlm-prompt-v0",
+         *       "policy_version": "vlm-trigger-v0",
+         *       "snapshot_revision": "<sha256 của snapshot>",
+         *       "attempts": 1,
+         *       "request_id": "chatcmpl-…c9681afb",
+         *       "crop_sha256": "<sha256 của crop>",
+         *       "crop": {
+         *         "frame": {
+         *           "cvat_task_id": 9,
+         *           "frame_number": 0
+         *         },
+         *         "box": [
+         *           60,
+         *           40,
+         *           100,
+         *           80
+         *         ],
+         *         "padded_box": [
+         *           56,
+         *           36,
+         *           104,
+         *           84
+         *         ],
+         *         "output_size": [
+         *           48,
+         *           48
+         *         ]
+         *       },
+         *       "rationale": "Văn bản tự do của model, FE render dạng text thuần",
+         *       "created_at": "2026-10-13T08:30:00Z"
+         *     }
+         */
         CandidateVlm: {
             /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled */
             state: string;
@@ -1393,13 +1440,14 @@ export interface components {
             policy_version?: string | null;
             snapshot_revision?: string | null;
             attempts: number;
-            /** @description ID provider đã redacted */
+            /** @description ID provider đã làm sạch (chỉ ký tự an toàn, cắt 64 ký tự), không che nội dung */
             request_id?: string | null;
             crop_sha256?: string | null;
             /** @description Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra */
             crop?: {
                 [key: string]: unknown;
             } | null;
+            /** @description Văn bản tự do do model sinh, không phải bằng chứng đã xác minh; FE phải render dạng text thuần (không HTML/Markdown) */
             rationale?: string | null;
             /** Format: date-time */
             created_at?: string | null;
