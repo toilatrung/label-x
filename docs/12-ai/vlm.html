@@ -6,7 +6,7 @@
 <meta name="labelx:type" content="reference">
 <meta name="labelx:domain" content="ai">
 <meta name="labelx:module" content="quality-control">
-<meta name="labelx:tags" content="[ai, vlm, selective-check, pilot]">
+<meta name="labelx:tags" content="[ai, vlm, qwen, selective-check, m-04, cr-116]">
 <meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -44,21 +44,48 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / vlm</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, selective-check, pilot]</span><b>priority</b><span>3</span></div>
+<div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, qwen, selective-check, m-04, cr-116]</span><b>priority</b><span>3</span></div>
 <h1 id="mo-hinh-thi-giac-ngon-ngu-vlm">Mô hình thị giác – ngôn ngữ (VLM)</h1>
-<h2 id="1-trang-thai-trong-pilot-m13">1. Trạng thái trong pilot M13</h2>
+<h2 id="1-trang-thai-trong-pilot-m13">1. Trạng thái: VLM trong M-04 (CR-115, CR-116)</h2>
+<blockquote><strong>Cập nhật 2026-10-13.</strong> M-04 triển khai kỹ thuật VLM runtime theo <strong>CR-115</strong> (đổi ưu tiên: A — VLM runtime, B — ConvNeXt Tiny classifier, C — routing) và <strong>CR-116</strong> (đã duyệt: VLM là <strong>Qwen</strong>, thay Gemini). Phần dưới đây mô tả theo kế hoạch; mục nào chưa khớp contract thực tế được đánh dấu <strong>[chờ contract]</strong>. Không có nội dung nào ở đây là kết quả runtime đã chạy thật.</blockquote>
 <ul>
-<li><strong>Đề xuất</strong>: VLM <strong>không bật</strong> trong pilot M13. Đây là đề xuất thu hẹp cho pilot, <strong>cần Product Owner duyệt</strong> — <strong>TBD-08</strong> (SRS <a href="../label-x_system-requirement-specification/sections/01-introduction.tex">01-introduction.tex</a> §Phạm vi; FR-ENG-10, ưu tiên Could).</li>
-<li>Đề xuất này không kế thừa từ B-08 và không thay B-08. Kiến trúc B-08 vẫn là kiến trúc đã chốt nếu VLM được bật (R B-08).</li>
-<li>Khi tắt: engine "Mô hình thị giác – ngôn ngữ" hiển thị <strong>Not checked</strong> (<code>disabled</code>); không bao giờ coi là đạt (H AnalysisConfig; R B-19). Ba nhóm lỗi E1–E3 không phụ thuộc VLM.</li>
+<li>Trạng thái trước M-04: đề xuất không bật VLM trong pilot M13 (TBD-08). CR-115 thay thế phần ưu tiên này cho phạm vi M-04; calibration, KPI, ablation và nghiệm thu nằm <strong>ngoài</strong> M-04.</li>
+<li>VLM <strong>tắt</strong> vẫn là trạng thái hợp lệ cho run/config cũ: engine hiển thị <strong>Not checked</strong> (<code>disabled</code>), không bao giờ coi là đạt (H AnalysisConfig; R B-19). Ba nhóm lỗi E1–E3 không phụ thuộc VLM.</li>
+<li>Chưa có runtime pass cho VLM: các kết quả hiện chỉ là mock/fixture cho tới khi có smoke thật (task #283) và PO xác nhận chính sách dữ liệu.</li>
 </ul>
-<h2 id="2-kien-truc-a-chot-neu-bat-b-08">2. Kiến trúc đã chốt nếu bật (B-08)</h2>
+<h3 id="1a-qwen-cr-116">1a. Model và provider (CR-116)</h3>
+<table>
+<thead><tr><th>Mục</th><th>Giá trị theo kế hoạch</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr><td>Model mặc định</td><td><code>qwen3-vl-plus</code> (bản Instruct, không dùng chế độ suy luận), cấu hình tại <code>models.vlm</code> của ConfigVersion; model ID phải thuộc allowlist trong mã nguồn</td><td>Contract A (#279) <strong>[chờ contract]</strong>; ID đã thấy trong danh sách model của cổng thử nghiệm, chưa có runtime pass</td></tr>
+<tr><td>Provider</td><td><code>openai_compatible</code> (cổng bên thứ ba) hoặc <code>dashscope</code> (Alibaba Cloud)</td><td><strong>[chờ contract]</strong></td></tr>
+<tr><td>Ràng buộc host ↔ biến key</td><td>Mỗi provider chỉ dùng host riêng và biến môi trường riêng (<code>DASHSCOPE_API_KEY</code> chỉ cho host DashScope; <code>VLM_API_KEY</code> cho cổng bên thứ ba), để key không gửi sai nơi. Config chỉ lưu <em>tên</em> biến môi trường từ allowlist, không lưu key</td><td>Đang hoàn thiện ở nhánh A <strong>[chờ contract]</strong></td></tr>
+<tr><td>Giao thức</td><td>API tương thích OpenAI (chat completions, ảnh dạng data URL); backend validate JSON đầu ra, không dựa vào JSON schema của provider</td><td>Chưa kiểm chứng JSON schema phía provider</td></tr>
+<tr><td>Region/base URL DashScope, tên model theo từng cổng</td><td>Phụ thuộc tài khoản; danh sách model của một cổng phụ thuộc kênh của key</td><td>Chưa xác minh với tài liệu chính thức; cần PO xác nhận trước smoke thật</td></tr>
+</tbody></table>
+<ul>
+<li>Config bị từ chối nếu chứa key, secret, prompt hoặc khoá lạ; <strong>FE không gửi prompt, key, model ID hay ảnh</strong> — FE chỉ gửi <code>reason</code> và <code>expected_revision</code> khi yêu cầu đánh giá lại.</li>
+<li>Secret chỉ ở runtime (biến môi trường), không ghi vào DB, log hay evidence.</li>
+</ul>
+<h2 id="2-kien-truc-a-chot-neu-bat-b-08">2. Kiến trúc (B-08, bổ sung bởi CR-115)</h2>
 <pre class="highlight"><code>Candidate (từ engine khác trong run) → chọn theo policy → worker VLM kiểm chọn lọc → Evidence có cấu trúc</code></pre>
 <ul>
 <li>VLM phụ thuộc candidate nên <strong>không</strong> chạy song song từ đầu với các engine sinh candidate (R B-08: "Chạy song song chưa giải quyết phụ thuộc candidate").</li>
 <li>Chỉ ghi Evidence/Candidate; không tự xác nhận lỗi; không có quyền quyết định, gate, release (R R-02; A ADR-07).</li>
 <li>Kết quả không rõ ⇒ uncertain/chuyển cấp cho người (T §4); lời giải thích của VLM không phải bằng chứng đã xác minh (T §3).</li>
 <li>Kiểm frame/revision và mapping crop về ảnh gốc trước khi dùng evidence (T §3, §9).</li>
+</ul>
+<h3 id="2a-luong-m04">2a. Luồng kỹ thuật M-04 (theo kế hoạch)</h3>
+<pre class="highlight"><code>snapshot revision khoá → candidate (detector/annotation) → crop có hash → classifier ConvNeXt Tiny (top-3, score, margin)
+→ policy có version → Qwen khi policy yêu cầu → evidence append-only → reviewer quyết định hoặc QA phân xử</code></pre>
+<ul>
+<li>Đơn vị công việc VLM là <strong>candidate được trigger</strong>, không phải frame; VLM chỉ bắt đầu sau khi candidate đã sinh xong.</li>
+<li>Qwen chỉ nhận crop tối thiểu qua worker backend. Đầu ra là JSON theo schema nội bộ: nhãn thuộc taxonomy 10 lớp hoặc <code>uncertain</code>. <code>uncertain</code> là kết luận riêng của AI, không phải lớp thứ 11.</li>
+<li>Kết quả engine: <code>checked</code>, <code>uncertain</code>, <code>failed</code>, <code>not_checked</code> <strong>[chờ contract]</strong>. Lỗi parse, lỗi model, hết quota hoặc hết budget trả trạng thái và reason code rõ ràng; luồng vẫn chuyển người review, không làm fail cả run.</li>
+<li><strong>Qwen chỉ tạo evidence/đề xuất.</strong> Không tạo ReviewDecision hay Adjudication, không tự xác nhận issue; reviewer/QA quyết định.</li>
+<li>Idempotency theo khoá gồm evaluation ID/generation, candidate ID, crop hash, snapshot revision, policy version, model ID và prompt version. Retry cùng evaluation không tạo bản ghi mới; đánh giá lại thủ công với khoá mới tạo evaluation mới.</li>
+<li>Evidence lưu crop hash, mapping tọa độ về ảnh gốc, provider, host (đã che) và model ID mà provider báo về, prompt version, policy version, request ID đã che và thời điểm. Tên field chính thức chốt ở task #282 <strong>[chờ contract]</strong>.</li>
+<li>Routing classifier ↔ VLM (policy versioned, ngưỡng kỹ thuật tạm) do pha C quy định; các ngưỡng mặc định chỉ là routing tạm, <strong>không</strong> phải ngưỡng chất lượng hay calibration.</li>
 </ul>
 <h2 id="3-han-muc-va-retry-inh-huong-van-hanh-a-duyet">3. Hạn mức và retry (định hướng vận hành đã duyệt)</h2>
 <table>
@@ -103,41 +130,26 @@ ul.dir{columns:2;font-size:14px}
 <li>Candidate không thoả điều kiện kiểm chọn lọc ⇒ Not checked <code>not_triggered</code>, <strong>không</strong> vào mẫu số (SRS 05 bảng trạng thái engine).</li>
 <li>Kiểm chọn lọc không tự thành yêu cầu quét mọi frame (R).</li>
 </ul>
-<h2 id="5-ieu-kien-truoc-khi-bat">5. Điều kiện trước khi bật</h2>
+<h2 id="5-ieu-kien-truoc-khi-bat">5. Điều kiện trước khi bật thật</h2>
 <table>
-<thead>
-<tr>
-<th>Điều kiện</th>
-<th>Trạng thái</th>
-</tr>
-</thead>
+<thead><tr><th>Điều kiện</th><th>Trạng thái</th></tr></thead>
 <tbody>
-<tr>
-<td>Product Owner bác đề xuất không bật (TBD-08)</td>
-<td>Chưa</td>
-</tr>
-<tr>
-<td>Model/provider được chọn; self-host hay API ngoài (A ưu tiên self-host; H chưa chốt)</td>
-<td>Chưa chốt</td>
-</tr>
-<tr>
-<td>Quyền xử lý ảnh: ảnh <strong>không gửi ra ngoài</strong> khi chưa được phép (FR-ENG-10; NFR-09)</td>
-<td>Pilot: không gửi</td>
-</tr>
-<tr>
-<td>Trigger/policy chọn candidate có version</td>
-<td>Chưa chốt</td>
-</tr>
-<tr>
-<td>Ablation chứng minh lợi ích trong budget (T §7–8; R thứ tự triển khai bước 4)</td>
-<td>Chưa đo</td>
-</tr>
-</tbody>
-</table>
+<tr><td>Product Owner duyệt đưa VLM vào phạm vi kỹ thuật M-04</td><td>Đã duyệt: CR-115 (đổi ưu tiên) và CR-116 (VLM là Qwen)</td></tr>
+<tr><td>Model/provider được chọn (CR-116: <code>qwen3-vl-plus</code> qua <code>openai_compatible</code> hoặc <code>dashscope</code>)</td><td>Đã chọn theo kế hoạch; chưa kiểm chứng với tài liệu chính thức của provider (tên model, region, JSON schema)</td></tr>
+<tr><td>Quyền xử lý ảnh: crop <strong>không gửi ra ngoài</strong> khi chưa được phép (FR-ENG-10; NFR-09). Với cổng bên thứ ba, crop và key đi qua trung gian</td><td><strong>Chờ PO xác nhận chính sách dữ liệu</strong> trước smoke thật; smoke đầu tiên chỉ dùng ảnh tổng hợp</td></tr>
+<tr><td>Credential/quota và biến môi trường <code>VLM_API_KEY</code> (hoặc <code>DASHSCOPE_API_KEY</code>) trên môi trường chạy</td><td>Chỉ chặn smoke thật; không chặn viết adapter hay mock. Không ghi key vào repo, log hay evidence</td></tr>
+<tr><td>Trigger/policy chọn candidate có version</td><td>Bản tạm của pha A chọn mọi candidate; policy thật thuộc pha C <strong>[chờ contract]</strong></td></tr>
+<tr><td>Smoke thật: một crop được phép tới provider, ghi model/prompt version và request ID đã che</td><td>Chưa thực hiện (task #283); mock không được ghi là runtime pass</td></tr>
+<tr><td>Ablation chứng minh lợi ích trong budget (T §7–8)</td><td>Ngoài phạm vi M-04; chưa đo</td></tr>
+</tbody></table>
+<ul>
+<li><strong>Giới hạn chưa kiểm chứng</strong>: hành vi dưới Celery/Redis thật, bảng ánh xạ mã lỗi HTTP của từng cổng, hỗ trợ JSON schema, độ chính xác của Qwen trên dữ liệu LabelX, độ trễ và chi phí.</li>
+<li>Calibration, KPI, load test và reference held-out không thuộc M-04.</li>
+</ul>
 <h2 id="6-mau-thuan-nguon">6. Mâu thuẫn nguồn</h2>
 <ul>
 <li>H ghi VLM v0.9 "thử nghiệm"; B ghi v0.4. Không phiên bản nào được coi là model sẵn dùng (R mục 8).</li>
 <li>T đưa VLM + RAG vào giai đoạn D; A đưa AI Assistance vào P4. R B-13 chốt lookup trực tiếp, RAG sau MVP — RAG không đi kèm VLM trong MVP.</li>
 </ul>
-<p>Liên quan: <a href="safety-and-data.html">safety-and-data.html</a>, <a href="../03-domain/services.html#3-candidategenerationservice-engine">../03-domain/services.html</a>.</p>
+<p>Liên quan: <a href="safety-and-data.html">safety-and-data.html</a>, <a href="../03-domain/services.html#3-candidategenerationservice-engine">../03-domain/services.html</a>; CR-115 và CR-116 trong <code>.agent/governance/change-requests/</code>.</p>
 </article></main></body></html>
