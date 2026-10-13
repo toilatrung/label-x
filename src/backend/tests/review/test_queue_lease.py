@@ -28,7 +28,7 @@ def approved_test_policy(settings):
     settings.REVIEW_INCOMPLETE_RESERVATION_SECONDS = 120
 
 
-pytestmark = pytest.mark.usefixtures("approved_test_policy")
+pytestmark = pytest.mark.usefixtures("approved_test_policy", "snapshot_media_urls")
 
 
 @pytest.fixture
@@ -542,13 +542,7 @@ def test_ranking_reports_persisted_state_holder_and_filters(world, monkeypatch):
         (row,) = ranking_rows(api, run_id, queue)
         assert row["review_state"] == "in_review"
         assert row["lease_holder_user_id"] == world["reviewer"].pk
-        (filtered_row,) = ranking_rows(api, run_id, queue, review_state="in_review")
-        # Snapshot URLs are signed independently for each response and may have a
-        # different expiry when calls cross a second boundary.
-        assert {k: v for k, v in filtered_row.items() if k != "thumbnail_url"} == {
-            k: v for k, v in row.items() if k != "thumbnail_url"
-        }
-        assert filtered_row["thumbnail_url"]
+        assert ranking_rows(api, run_id, queue, review_state="in_review") == [row]
         for other in ("unreviewed", "incomplete", "reviewed", "awaiting_followup", "completed"):
             assert ranking_rows(api, run_id, queue, review_state=other) == []
 

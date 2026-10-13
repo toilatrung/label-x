@@ -25,6 +25,7 @@ from snapshots.normalization import FrameExport, JobExport
 from snapshots.services import create_locked_snapshot
 
 BDD100K_FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "normalized-snapshot-v1.json"
+pytestmark = pytest.mark.usefixtures("snapshot_media_urls")
 
 
 @pytest.fixture
@@ -221,7 +222,7 @@ def test_ranking_endpoint_serves_risk_and_random_with_scope_protection(
     assert risk.data["results"][0]["score_version"] == SCORE_V0
     assert risk.data["results"][0]["explanation"]["contributions"]
     assert risk.data["results"][0]["priority"] == "high"
-    assert risk.data["results"][0]["thumbnail_url"]
+    assert risk.data["results"][0]["thumbnail_url"] == "https://storage.test/frames/0.jpg"
 
     searched = client.get(f"/api/runs/{run.pk}/ranking/", {"q": "9:0"})
     assert searched.status_code == 200

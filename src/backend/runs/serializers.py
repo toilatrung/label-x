@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from django.core.files.storage import storages
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
 
 from orchestration.models import CandidateRecord
@@ -455,10 +455,18 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         return storages["snapshots"].url(key) if key else None
 
 
+@extend_schema_serializer(component_name="RankedFrame")
+class RankedFrameResponseSerializer(RankedFrameSerializer):
+    """Describe optional contract additions without marking method fields required."""
+
+    priority: Any = serializers.ChoiceField(choices=["high", "medium", "low"], required=False)
+    thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
+
+
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
     source: Any = serializers.ChoiceField(choices=["risk", "random_audit"])
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
-    results = RankedFrameSerializer(many=True)
+    results = RankedFrameResponseSerializer(many=True)
