@@ -12,6 +12,7 @@ from django.urls import get_resolver
 from accounts.models import RoleAssignment
 from audit.models import AuditEvent, AuditImmutableError
 from audit.services import AuditTransactionRequired, append_audit_event
+from calibration.views import AuditSampleListCreateView
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -217,8 +218,12 @@ def test_runtime_database_role_has_only_insert_and_select(capsys):
 def test_audit_has_no_admin_or_api_mutation_surface():
     assert not admin.site.is_registered(AuditEvent)
 
-    top_level_routes = {str(pattern.pattern) for pattern in get_resolver().url_patterns}
-    assert not any("audit" in route for route in top_level_routes)
+    # Calibration samples are a separate domain from the immutable security log.
+    # Allow only the approved sample route and its exact view, not arbitrary audit APIs.
+    for pattern in get_resolver().url_patterns:
+        if "audit" in str(pattern.pattern):
+            assert str(pattern.pattern) == "api/audit-samples/"
+            assert pattern.callback.cls is AuditSampleListCreateView
 
 
 def test_deploy_check_reports_owner_role_and_accepts_the_runtime_role(capsys):
