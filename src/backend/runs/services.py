@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from engines.detector import DETECTOR_DESCRIPTOR
 from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
@@ -20,8 +21,10 @@ from engines.duplicate_overlap import (
 from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
 from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
+from orchestration.models import VlmUnit
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
 from snapshots.models import Snapshot
+from vlm.config import validate_vlm_config
 
 
 class RunDomainError(Exception):
@@ -56,15 +59,7 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     DUPLICATE_OVERLAP_ENGINE_NAME: DUPLICATE_OVERLAP_DESCRIPTOR,
     SCHEMA_TAXONOMY_ENGINE_NAME: SCHEMA_TAXONOMY_DESCRIPTOR,
     GEOMETRY_ENGINE_NAME: GEOMETRY_DESCRIPTOR,
-    "detector": EngineDescriptor(
-        name="detector",
-        version="1.0.0",
-        unit="frame",
-        required=True,
-        needs_model=True,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
+    "detector": DETECTOR_DESCRIPTOR,
     "metric": EngineDescriptor(
         name="metric",
         version="1.0.0",
@@ -77,9 +72,9 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     "vlm": EngineDescriptor(
         name="vlm",
         version="1.0.0",
-        unit="frame",
+        unit="shape",  # đơn vị VLM là candidate (một shape/annotation), không phải frame
         required=False,
-        needs_model=True,
+        needs_model=False,  # model Qwen nằm ở config models.vlm, không phải ModelArtifact
         needs_reference=False,
         applicability_version="1.0.0",
     ),
@@ -136,6 +131,12 @@ def canonical_request_hash(data: Mapping[str, Any]) -> str:
     }
     raw = json.dumps(clean_dict, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
+
+
+def _vlm_config_ready(config_version: ConfigVersion) -> bool:
+    models_cfg = config_version.models or (config_version.payload or {}).get("models", {})
+    raw = models_cfg.get("vlm") if isinstance(models_cfg, dict) else None
+    return isinstance(raw, dict) and not validate_vlm_config(raw)
 
 
 def generate_shards_for_snapshot(
@@ -248,6 +249,28 @@ def generate_shards_for_snapshot(
             ),
         )
         engine_versions_map[engine_name] = descriptor.version
+
+        if engine_name == "vlm":
+            # VLM phụ thuộc candidate: không có shard theo frame; VlmUnit tạo sau khi candidate
+            # sinh xong (orchestration.vlm_stage). Thiếu/sai models.vlm -> không có model.
+            vlm_ready = _vlm_config_ready(config_version)
+            if not vlm_ready:
+                engine_versions_map.pop(engine_name)
+            engine_results_data.append(
+                {
+                    "engine": engine_name,
+                    "status": EngineStatus.RUNNING if vlm_ready else EngineStatus.NOT_CHECKED,
+                    "reason": None if vlm_ready else NotCheckedReason.NO_MODEL,
+                    "eligible_units": 0,
+                    "completed_units": 0,
+                    "failed_units": 0,
+                    "not_checked_units": 0,
+                    "required": descriptor.required,
+                    "unit": descriptor.unit,
+                    "applicability_version": descriptor.applicability_version,
+                }
+            )
+            continue
 
         if descriptor.needs_model and not model_checksum:
             engine_results_data.append(
@@ -476,6 +499,9 @@ def cancel_qc_run(*, run_id: int, actor: User, reason: str = "") -> QCRun:
         run.work_units.filter(status__in=[WorkUnit.Status.PENDING, WorkUnit.Status.RUNNING]).update(
             status=WorkUnit.Status.CANCELLED, finished_at=now
         )
+        VlmUnit.objects.filter(
+            run_id=run.pk, status__in=[VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING]
+        ).update(status=VlmUnit.Status.CANCELLED, finished_at=now)
 
         append_audit_event(
             actor=actor,

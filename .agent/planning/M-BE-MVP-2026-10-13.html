@@ -1,0 +1,54 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kế hoạch M-BE-MVP</title><meta name="labelx:id" content="m-be-mvp-20261013"><meta name="labelx:title" content="M-BE-MVP — hoàn thiện Backend và nối API lên giao diện cho MVP"><meta name="labelx:type" content="planning"><meta name="labelx:domain" content="project"><meta name="labelx:module" content="backend"><meta name="labelx:tags" content="[m-be-mvp, backend, wiring, mvp]"><meta name="labelx:priority" content="1"><style>body{font:15px/1.6 system-ui;max-width:1250px;margin:30px auto;padding:20px;color:#19334c}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #d5dfe9;vertical-align:top;text-align:left}th{background:#eef4fa}code{background:#eef2f5}h2{margin-top:30px}.warn{background:#fdf2d8;border-left:3px solid #8a5300;padding:8px 14px}</style></head><body>
+<h1>M-BE-MVP — hoàn thiện Backend và nối API lên giao diện cho MVP</h1>
+<p>Ngày lập: 2026-10-13. Chủ trì: PO (@toilatrung). Vị trí: ngay sau M-04, trước M-05 và M-06. Milestone này gom toàn bộ giai đoạn "code Backend rồi nối lên giao diện" để có MVP. Trạng thái milestone: <code>proposed</code>, chờ PO duyệt <a href="../governance/change-requests/CR-118.html">CR-118</a>. Các task nằm ở <code>.agent/execution/mbe/MBE-00…MBE-09.html</code> (bản nháp, chưa đăng ký). Kế hoạch này gộp và thay phần task song song của <a href="M-04-e2e-acceptance-2026-10-13.html">kế hoạch E2E M-04</a>; WP0–WP5 của kế hoạch đó là gói MBE-01 dưới đây.</p>
+
+<h2>Quyết định của PO (2026-10-13)</h2>
+<ul>
+<li>Giao diện đã xong 100% theo PO; chỉ còn nối API. Tôi chưa kiểm chứng điều này: <code>BLOCKER-031</code> còn nhiều dòng "chưa nối" và <code>grep TODO(backend)</code> chưa chạy trên nhánh mới.</li>
+<li>Không QC độc lập trong giai đoạn này. PO tự kiểm thử thủ công trên giao diện. Hệ quả: không có báo cáo QA theo SHA, nên task sẽ ghi "PO manual test" thay vì <code>done</code> theo mục 4 của skill <code>labelx-qc-integrate</code>. Quy tắc CI (<code>make check</code>) và <code>make validate-kit</code> vẫn giữ.</li>
+<li>Tập trung code Backend và nối giao diện; việc ngoài hai thứ này (QC chéo, runbook vận hành, tài liệu M-05, giao diện thêm) bị bỏ khỏi milestone.</li>
+</ul>
+
+<h2>Phạm vi</h2>
+<p>Included: các endpoint còn thiếu hoặc chưa nối trong <a href="../governance/blockers/BLOCKER-031.html">BLOCKER-031</a> (22 dòng) và pipeline AI đầu cuối của M-04 (QC Run → 3 engine → detector → routing → Qwen → Review Workspace). Excluded: calibration/score (E-17), reference held-out, preregistration, KPI, Quality Gate đo hiệu quả (M-05), NFR/backup/tải (M-06), huấn luyện classifier (đã bỏ theo CR-117).</p>
+
+<h2>Thứ tự và hợp đồng</h2>
+<ol>
+<li><strong>MBE-00 Hợp đồng một lần</strong>: <code>docs/04-api/openapi.yaml</code> là file dùng chung nên chỉ một người ghi tại một thời điểm. PO (hoặc người PO chỉ định) viết một commit contract cho mọi endpoint nhóm B của BLOCKER-031 trước khi các dev code, rồi mọi dev code theo contract đó. Thay đổi contract sau đó đi qua PO. <code>make gen-api</code> sinh lại <code>contract.d.ts</code> trong cùng PR.</li>
+<li>MBE-01 làm trước vì là đường chính cho nghiệm thu AI; MBE-02…MBE-08 chạy song song sau MBE-00.</li>
+<li>Payload FE v0 (<a href="M-04-dispatch-2026-10-13.html">phân công M-04</a>) vẫn đóng băng; <code>source</code> hiện gồm "classifier"|"qwen"|"policy", PO quyết có thêm "detector" hay không.</li>
+</ol>
+
+<h2>Gói công việc</h2>
+<table><thead><tr><th>Mã</th><th>Việc (BE + nối FE)</th><th>BLOCKER-031</th><th>Owner đề xuất</th><th>Ưu tiên đề xuất</th></tr></thead><tbody>
+<tr><td><a href="../execution/mbe/MBE-00.html">MBE-00</a></td><td>Contract bổ sung một lần cho các endpoint nhóm B; ghi rõ route, schema, mã lỗi, quyền.</td><td>nhóm B</td><td>PO</td><td>P0, làm đầu tiên</td></tr>
+<tr><td><a href="../execution/mbe/MBE-01.html">MBE-01</a></td><td>Pipeline AI đầu cuối: hoàn tất Evaluation API (#289), evidence AI trong workspace (#290: reason code, evidence refs, <code>review_required</code>, <code>source</code>), kiểm luồng (#291), rồi nối hiển thị trong Review Workspace.</td><td>3, 4 (một phần)</td><td>PO (BE) + @tdt2112 (FE)</td><td>P0</td></tr>
+<tr><td><a href="../execution/mbe/MBE-02.html">MBE-02</a></td><td>Nối FE các API đã có trong contract: gate, waivers, frame issues/decisions, queues next, guidelines rules, ranking. Bỏ <code>ReviewWorkspaceSample</code>, <code>NotConnectedNotice</code> vùng đã nối.</td><td>1–6 (nhóm A)</td><td>@tdt2112</td><td>P0 (không cần BE mới)</td></tr>
+<tr><td><a href="../execution/mbe/MBE-03.html">MBE-03</a></td><td>Rework list/detail, Guideline Gaps, Decision Cases, tham số "sau khi phân xử", similar-cases (BLOCKER-030).</td><td>7–10</td><td>BE @DucHa180104; nối FE @Vietanhhhhhh2003</td><td>P0 (vòng review–rework)</td></tr>
+<tr><td><a href="../execution/mbe/MBE-04.html">MBE-04</a></td><td>Report và export PDF/CSV/JSON; Release History, manifest, approve.</td><td>11–12</td><td>BE @DucHa180104; nối FE @tdt2112</td><td>P1</td></tr>
+<tr><td><a href="../execution/mbe/MBE-05.html">MBE-05</a></td><td>Audit samples, benchmarks (nhập CVAT), performance, calibration reviewers/models/assignments.</td><td>13–16</td><td>BE @Vietanhhhhhh2003 (kèm @duy12345-6789 cho benchmark); nối FE @Vietanhhhhhh2003</td><td>P1 (không dùng cho KPI, chỉ để màn chạy)</td></tr>
+<tr><td><a href="../execution/mbe/MBE-06.html">MBE-06</a></td><td>Configuration: models, guideline versions, config-versions rules, ngưỡng phát hành, workflow-permissions PATCH.</td><td>17–19</td><td>BE @DucHa180104; nối FE @tdt2112</td><td>P1</td></tr>
+<tr><td><a href="../execution/mbe/MBE-07.html">MBE-07</a></td><td>Số liệu tổng hợp Home/Quality Summary (metrics, engines, review-volume, tasks-quality, candidate-categories, datasets summary); snapshot revisions, seed, giai đoạn CvatJob.</td><td>20–21</td><td>BE @duy12345-6789; nối FE @duy12345-6789</td><td>P2</td></tr>
+<tr><td><a href="../execution/mbe/MBE-08.html">MBE-08</a></td><td>RBAC matrix cho Calibration/Audit và lọc dữ liệu theo vai trò ở API.</td><td>22</td><td>@DucHa180104</td><td>P2</td></tr>
+<tr><td><a href="../execution/mbe/MBE-09.html">MBE-09</a></td><td>Runbook kiểm thử thủ công cho PO: kịch bản theo từng màn, dữ liệu vào, kết quả mong đợi, nơi ghi lỗi.</td><td>—</td><td>Phiên trung tâm</td><td>P0</td></tr>
+</tbody></table>
+<p>Owner chỉ là đề xuất, chưa có ai nhận; ai đang rảnh chưa xác minh. Ưu tiên P0/P1/P2 là đề xuất để PO chỉnh. Nếu một dev không rảnh, việc trong bảng chuyển cho phiên khác theo quyết định PO.</p>
+
+<h2>Quy trình và ranh giới</h2>
+<ul>
+<li>Mỗi gói: nhánh riêng từ <code>develop</code> (BE) hoặc <code>develop-fe</code> (FE); PR vào nhánh gốc tương ứng; comment <code>Đã xem và duyệt</code> theo CR-102 do người được giao. Chưa có issue/task đăng ký cho MBE-xx; đăng ký theo <code>.agent/templates/task-template.html</code> trước khi dev bắt đầu.</li>
+<li>Ranh giới cứng giữ nguyên: adapter CVAT chỉ đọc (sửa annotation bằng deep link); Celery task idempotent; quyền project/job kiểm ở API; Qwen không tạo ReviewDecision/Adjudication.</li>
+<li>Không sửa <code>src/backend/orchestration/*</code> và serializers của M-04 ngoài MBE-01 do PO giữ, để tránh conflict với phiên A/B/C.</li>
+<li>Khi một dòng BLOCKER-031 được nối: theo quy trình trong blocker (cập nhật <code>contract.d.ts</code>, bỏ <code>NotConnectedNotice</code> của vùng đó, tick cột "Đã nối").</li>
+<li>Không ghi secret/key, không gửi dữ liệu ra cổng bên thứ ba khi chưa có xác nhận của PO.</li>
+<li><strong>Quy trình:</strong> thêm milestone vào roadmap, mở rộng contract nhóm B và bỏ QC độc lập cần PO duyệt <a href="../governance/change-requests/CR-118.html">CR-118</a> trước khi đăng ký task và giao việc.</li>
+</ul>
+
+<h2>Cổng hoàn thành MVP</h2>
+<ul>
+<li>[ ] Pipeline AI chạy từ input được phép đến Review Workspace; PO xem kết quả trên giao diện.</li>
+<li>[ ] Mọi dòng P0 của BLOCKER-031 được nối và PO kiểm tay; dòng P1/P2 nối hoặc PO ghi rõ hoãn.</li>
+<li>[ ] <code>make check</code> xanh trên SHA cuối; <code>make validate-kit</code> PASS.</li>
+<li>[ ] PO ghi kết quả manual test (đạt/không đạt theo màn) vào báo cáo; thiếu thì chưa tuyên bố xong.</li>
+</ul>
+</body></html>

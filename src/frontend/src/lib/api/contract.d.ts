@@ -210,7 +210,7 @@ export interface paths {
         put?: never;
         /**
          * Publish config version
-         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+         * @description Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. models.vlm hoặc thresholds.classification_routing sai schema trả 422 BUSINESS_RULE_UNMET. Ghi audit cùng transaction.
          */
         post: operations["config_versions_publish"];
         delete?: never;
@@ -340,6 +340,64 @@ export interface paths {
         };
         /** Danh sách candidate và evidence chi tiết theo QC run (CR-108) */
         get: operations["runs_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidates/{id}/evaluations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yêu cầu đánh giá lại candidate (re-evaluate, M04C-02)
+         * @description Tạo một Evaluation mới (generation tiếp theo) cho candidate: định tuyến lại bằng policy
+         *     `classification-routing-v0` với lý do `manual_recheck`, rồi (nếu policy cho phép) xếp một lượt Qwen.
+         *     Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/candidate-evaluations/{id}/`).
+         *     Cùng `Idempotency-Key` + cùng payload + cùng người → trả lại Evaluation cũ (không tạo mới, không tính budget
+         *     lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
+         *     `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
+         *     409 `IDEMPOTENCY_KEY_REUSED` khi key đã dùng cho payload hoặc người khác. 422 khi run không bật VLM, thiếu
+         *     taxonomy hoặc đã huỷ. Không ghi đè evidence/decision cũ và không
+         *     tạo ReviewDecision/Adjudication: kết quả AI chỉ là đề xuất. FE chỉ gửi `reason` (ghi chú audit, không vào
+         *     prompt) và `expected_revision`; không gửi prompt, model, ảnh hay khoá API.
+         */
+        post: operations["candidates_evaluate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate-evaluations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Đọc Evaluation (poll kết quả định tuyến/Qwen)
+         * @description `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
+         *     tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Nguồn runtime duy nhất là candidate Faster R-CNN
+         *     (detector); không còn classifier. Các reason `classifier_only`, `classifier_unavailable`, `classifier_untrusted`
+         *     chỉ là alias tương thích payload FE v0 (untrusted = artifact detector chưa xác minh manifest/checksum/class map).
+         *     `detector_no_match`: detection không ghép annotation hoặc ngược lại (IoU ghép 0,50; ambiguous 0,30) →
+         *     `review_required=true`, `call_qwen=false`. `label_conflict` (ghép được nhưng khác nhãn) → gọi Qwen.
+         *     M-04 v0 chỉ dùng confidence top-1; `low_margin` bị vô hiệu vì detector không có phân bố đầy đủ (kể cả background).
+         *     `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, Qwen lỗi hoặc
+         *     uncertain). `policy` lưu theo evaluation; confidence detector chỉ là ngưỡng routing tạm, không phải ngưỡng
+         *     calibration. Chất lượng/accuracy của detector CHƯA được xác minh (cần dữ liệu held-out ngoài tập train).
+         */
+        get: operations["candidate_evaluations_read"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1362,6 +1420,137 @@ export interface components {
             frame: components["schemas"]["FrameKey"];
             anchor: components["schemas"]["Anchor"];
             evidence: components["schemas"]["Evidence"];
+            /** @description ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/. */
+            id?: number;
+            vlm?: components["schemas"]["CandidateVlm"];
+        };
+        /**
+         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+         * @example {
+         *       "state": "checked",
+         *       "engine_status": "checked",
+         *       "source": "qwen",
+         *       "conclusion": "confirmed",
+         *       "class_id": "1",
+         *       "class_name": "car",
+         *       "reason_code": null,
+         *       "evidence_id": 5,
+         *       "evaluation_id": null,
+         *       "model_version": "qwen3-vl-plus",
+         *       "provider": "openai_compatible",
+         *       "provider_host": "api.shopaikey.com",
+         *       "response_model": "qwen3-vl-plus",
+         *       "prompt_version": "vlm-prompt-v0",
+         *       "policy_version": "vlm-trigger-v0",
+         *       "snapshot_revision": "<sha256 của snapshot>",
+         *       "attempts": 1,
+         *       "request_id": "…486eb4e3",
+         *       "crop_sha256": "<sha256 của crop>",
+         *       "crop": {
+         *         "frame": {
+         *           "cvat_task_id": 9,
+         *           "frame_number": 0
+         *         },
+         *         "box": [
+         *           60,
+         *           40,
+         *           100,
+         *           80
+         *         ],
+         *         "padded_box": [
+         *           56,
+         *           36,
+         *           104,
+         *           84
+         *         ],
+         *         "output_size": [
+         *           48,
+         *           48
+         *         ]
+         *       },
+         *       "rationale": "Văn bản tự do của model, FE render dạng text thuần",
+         *       "created_at": "2026-10-13T08:30:00Z"
+         *     }
+         */
+        CandidateVlm: {
+            /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled */
+            state: string;
+            /** @description checked | partial | failed | not_checked | running (payload FE v0) */
+            engine_status: string;
+            /** @description Luôn là qwen */
+            source: string;
+            /** @description confirmed | uncertain | null */
+            conclusion?: string | null;
+            class_id?: string | null;
+            class_name?: string | null;
+            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | null */
+            reason_code?: string | null;
+            evidence_id?: number | null;
+            /** @description Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa */
+            evaluation_id?: string | null;
+            /** @description Model ID đã yêu cầu */
+            model_version?: string | null;
+            provider?: string | null;
+            provider_host?: string | null;
+            /** @description Model ID mà provider báo về */
+            response_model?: string | null;
+            prompt_version?: string | null;
+            policy_version?: string | null;
+            snapshot_revision?: string | null;
+            attempts: number;
+            /** @description ID provider đã redacted; chỉ giữ dấu … và tối đa 8 ký tự an toàn cuối để đối soát */
+            request_id?: string | null;
+            crop_sha256?: string | null;
+            /** @description Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra */
+            crop?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Văn bản tự do do model sinh, không phải bằng chứng đã xác minh; FE phải render dạng text thuần (không HTML/Markdown) */
+            rationale?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
+        };
+        CandidateEvaluationCreate: {
+            /** @description Ghi chú tự do của người dùng, chỉ để audit; KHÔNG bao giờ vào prompt VLM và không phải reason_code */
+            reason: string;
+            /** @description revision_sha256 của snapshot mà client đang xem */
+            expected_revision: string;
+        };
+        CandidateEvaluationPolicy: {
+            /** @example classification-routing-v0 */
+            name: string;
+            version: string;
+            score_threshold: number;
+            margin_threshold: number;
+            /** @description routing_temporary: không phải ngưỡng calibration */
+            threshold_semantics: string;
+            policy_sha256: string;
+        };
+        /** @description Một lượt đánh giá logic của candidate; AI chỉ là đề xuất. */
+        CandidateEvaluation: {
+            id: number;
+            candidate_id: number;
+            run_id: number;
+            /** @description 1 là lượt tự động; manual recheck tăng dần */
+            generation: number;
+            /** @enum {string} */
+            source: "auto" | "manual";
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            reason_code: string | null;
+            reasons: string[];
+            review_required: boolean;
+            call_qwen: boolean;
+            policy: components["schemas"]["CandidateEvaluationPolicy"];
+            /** @description Trạng thái xác minh artifact detector: verified | unverified | null. Không phải kết luận về chất lượng mô hình */
+            checkpoint_status?: string | null;
+            snapshot_revision: string;
+            requested_by_user_id?: number | null;
+            note?: string | null;
+            vlm?: components["schemas"]["CandidateVlm"] | null;
+            /** Format: date-time */
+            created_at: string;
+            poll_url: string;
         };
         /** @description Kết quả cuối của một đơn vị trong shard */
         EngineUnitResult: {
@@ -1533,8 +1722,23 @@ export interface components {
             actual?: string | null;
             prediction_bbox?: components["schemas"]["BBox"] | null;
             prediction_class?: string | null;
+            /** @description Class ID Faster R-CNN (0–9) */
+            class_id?: number | null;
+            /** @description Tên lớp Faster R-CNN */
+            class_name?: string | null;
             confidence?: number | null;
+            model_version?: string | null;
+            checkpoint_sha256?: string | null;
+            class_mapping_version?: string | null;
             iou?: number | null;
+            /** @description detector (nguồn runtime) hoặc classifier (alias tương thích payload FE v0) */
+            source?: string;
+            /** @enum {string} */
+            match_status?: "matched" | "unmatched_detection" | "unmatched_annotation";
+            annotated_class_id?: number | null;
+            annotation_bbox?: components["schemas"]["BBox"] | null;
+            /** @description true khi manifest, checksum checkpoint và class map BDD100K 10 lớp đã được xác minh */
+            artifact_verified?: boolean;
         };
         Issue: {
             id: number;
@@ -2044,10 +2248,11 @@ export interface components {
             engines: {
                 [key: string]: unknown;
             };
+            /** @description Khoá classification_routing (M04C-01, tên classification-routing-v0) gồm score_threshold và margin_threshold trong [0, 1]; đây là ngưỡng định tuyến tạm, không phải ngưỡng quality hay calibration. */
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
             models?: {
                 [key: string]: unknown;
             };
@@ -2532,6 +2737,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     runs_list: {
@@ -2752,6 +2958,66 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    candidates_evaluate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Khoá idempotency, 1 đến 128 ký tự. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateEvaluationCreate"];
+            };
+        };
+        responses: {
+            /** @description Đã nhận; đọc kết quả tại poll_url */
+            202: {
+                headers: {
+                    /** @description URL poll của evaluation */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateEvaluation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    candidate_evaluations_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Evaluation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateEvaluation"];
+                };
+            };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };

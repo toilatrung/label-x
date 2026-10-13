@@ -100,12 +100,22 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>M-04</code></td>
 <td><code>R-001</code></td>
-<td><strong>Qwen VLM, classifier và routing kỹ thuật</strong> — M-04 chạy theo ba cổng A/B/C: Qwen runtime có evidence, ConvNeXt Tiny classifier trên crop, rồi routing/phân định lại có API. Reference, calibration và đánh giá hiệu quả chuyển sau cổng kỹ thuật theo <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch M-04 A/B/C</a>.</td>
+<td><strong>Qwen VLM, classifier và routing kỹ thuật</strong> — M-04 chạy theo cổng A (Qwen runtime có evidence) và C (routing/phân định lại có API) với Faster R-CNN làm nguồn candidate; giai đoạn B ConvNeXt đã bị bỏ theo CR-117 (APPROVED 2026-10-13; quality detector NOT VERIFIED). Reference, calibration và đánh giá hiệu quả chuyển sau cổng kỹ thuật theo <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch M-04 A/B/C</a>.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>theo cổng M-04A → M-04B → M-04C</code></td>
 <td><code>in-progress</code></td>
 <td><code>E-08, E-10, E-12; classifier work package mới</code></td>
 <td>Qwen chạy thật trên crop được phép, evidence/ledger/API đọc được; classifier trả top-3/score/margin/unknown theo taxonomy; routing xử lý classifier-only, Qwen, conflict, uncertain, retry/budget và stale revision. Calibration/ablation không là gate M-04.</td>
+</tr>
+<tr>
+<td><code>M-BE-MVP</code></td>
+<td><code>R-001</code></td>
+<td><strong>Hoàn thiện Backend và nối API lên giao diện cho MVP</strong> — gom toàn bộ giai đoạn code Backend và nối API vào giao diện đã dựng, nằm ngay sau M-04; PO tự kiểm thử thủ công trên giao diện, không QC độc lập. Xem <a href="M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>.</td>
+<td><code>Trịnh Quang Trung</code></td>
+<td><code>bắt đầu 2026-10-14; hạn chưa chốt</code></td>
+<td><code>proposed</code></td>
+<td><code>phần backend và nối FE của E-02…E-22 theo BLOCKER-031; E-12</code></td>
+<td>Pipeline AI đầu cuối hiển thị trong Review Workspace; các dòng P0 của BLOCKER-031 đã nối; PO ghi kết quả manual test. Chờ PO duyệt <a href="../governance/change-requests/CR-118.html">CR-118</a>.</td>
 </tr>
 <tr>
 <td><code>M-05</code></td>

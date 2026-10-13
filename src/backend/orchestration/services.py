@@ -94,7 +94,30 @@ def seed_ledger(run_id: int, engine: str, units: Iterable[EngineUnitRef]) -> int
     return LedgerUnit.objects.filter(run_id=run_id, engine=engine).count() - before
 
 
+def vlm_ledger_counts(run_id: int) -> LedgerCounts:
+    """Ledger của engine vlm tính từ VlmUnit (đơn vị VLM là candidate, không có LedgerUnit theo
+    frame). Unit bị huỷ không nằm trong mẫu số. Mỗi candidate chỉ tính lượt (generation) mới nhất:
+    re-evaluate (M04C-02) không được làm méo số đếm."""
+    from orchestration.models import VlmUnit
+
+    latest: dict[int, str] = {}
+    for candidate_id, status in (
+        VlmUnit.objects.filter(run_id=run_id)
+        .order_by("evaluation_generation")
+        .values_list("candidate_id", "status")
+    ):
+        latest[candidate_id] = status
+    statuses = list(latest.values())
+    return LedgerCounts(
+        completed=sum(s == VlmUnit.Status.COMPLETED for s in statuses),
+        failed=sum(s == VlmUnit.Status.FAILED for s in statuses),
+        pending=sum(s in (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING) for s in statuses),
+    )
+
+
 def ledger_counts(run_id: int, engine: str) -> LedgerCounts:
+    if engine == "vlm":
+        return vlm_ledger_counts(run_id)
     rows = LedgerUnit.objects.filter(run_id=run_id, engine=engine).values_list(
         "outcome", "not_checked_reason"
     )

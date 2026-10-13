@@ -12,7 +12,11 @@ from orchestration.models import CandidateRecord
 from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
+from runs.config_guard import validate_config_safety
 from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
+from runs.routing_config import validate_routing_thresholds
+from runs.vlm_read import build_vlm_view, run_vlm_engine_state
+from vlm.config import validate_vlm_config
 
 
 class RunCreateSerializer(serializers.Serializer[Any]):
@@ -168,7 +172,14 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
     models = serializers.DictField(required=False, default=dict)
 
     def validate_engines(self, value: dict[str, Any]) -> dict[str, Any]:
-        allowed = {"schema", "geometry", "duplicate", "detector", "metric", "vlm"}
+        allowed = {
+            "schema",
+            "geometry",
+            "duplicate",
+            "detector",
+            "metric",
+            "vlm",
+        }
         if not value or any(
             name not in allowed
             or not isinstance(config, dict)
@@ -180,6 +191,28 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
             )
         if not any(config["enabled"] for config in value.values()):
             raise serializers.ValidationError("Cần bật ít nhất một engine.")
+        return value
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        errors = validate_config_safety(
+            attrs.get("engines", {}), attrs.get("thresholds", {}), attrs.get("models", {})
+        )
+        if errors:
+            raise serializers.ValidationError({"config": errors})
+        return attrs
+
+    def validate_thresholds(self, value: dict[str, Any]) -> dict[str, Any]:
+        errors = validate_routing_thresholds(value)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
+    def validate_models(self, value: dict[str, Any]) -> dict[str, Any]:
+        """models.vlm phải đúng schema Qwen (M04A-01): allowlist model/host, không secret/prompt."""
+        if "vlm" in value:
+            errors = validate_vlm_config(value["vlm"])
+            if errors:
+                raise serializers.ValidationError(errors)
         return value
 
 
@@ -229,15 +262,67 @@ class LedgerEntrySerializer(serializers.Serializer[Any]):
     coverage = serializers.FloatField(allow_null=True)
 
 
+VLM_STATES = [
+    "disabled",
+    "no_model",
+    "not_applicable",
+    "not_triggered",
+    "pending",
+    "running",
+    "checked",
+    "uncertain",
+    "failed",
+    "cancelled",
+]
+
+
+class CandidateVlmSerializer(serializers.Serializer[Any]):
+    """Evidence VLM (Qwen) của candidate; chỉ là đề xuất, không phải quyết định review."""
+
+    # Chuỗi thuần (không enum tự sinh) để không va chạm tên enum của drf-spectacular; giá trị hợp lệ
+    # nằm trong help_text và được test khoá lại.
+    state = serializers.CharField(help_text="Một trong: " + ", ".join(VLM_STATES))
+    engine_status = serializers.CharField(
+        help_text="checked | partial | failed | not_checked | running (payload FE v0)"
+    )
+    source: Any = serializers.CharField(help_text="Luôn là qwen")
+    conclusion = serializers.CharField(
+        allow_null=True, help_text="confirmed | uncertain | null; chỉ là đề xuất AI"
+    )
+    class_id = serializers.CharField(allow_null=True)
+    class_name = serializers.CharField(allow_null=True)
+    reason_code = serializers.CharField(
+        allow_null=True,
+        help_text="invalid_crop | provider_error | parse_failure | budget_exhausted | null",
+    )
+    evidence_id = serializers.IntegerField(allow_null=True)
+    evaluation_id = serializers.CharField(allow_null=True)
+    model_version = serializers.CharField(allow_null=True)
+    provider = serializers.CharField(allow_null=True)
+    provider_host = serializers.CharField(allow_null=True)
+    response_model = serializers.CharField(allow_null=True)
+    prompt_version = serializers.CharField(allow_null=True)
+    policy_version = serializers.CharField(allow_null=True)
+    snapshot_revision = serializers.CharField(allow_null=True)
+    attempts = serializers.IntegerField()
+    request_id = serializers.CharField(allow_null=True)
+    crop_sha256 = serializers.CharField(allow_null=True)
+    crop = serializers.DictField(allow_null=True)
+    rationale = serializers.CharField(allow_null=True)
+    created_at = serializers.DateTimeField(allow_null=True)
+
+
 class CandidateSerializer(serializers.ModelSerializer[Any]):
     """Schema for Candidate matching OpenAPI components.schemas.Candidate."""
 
     frame = serializers.SerializerMethodField()
     severity = serializers.SerializerMethodField()
+    vlm = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateRecord
         fields = [
+            "id",
             "engine",
             "engine_version",
             "family",
@@ -245,6 +330,7 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
             "frame",
             "anchor",
             "evidence",
+            "vlm",
         ]
         read_only_fields = fields
 
@@ -256,6 +342,14 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
 
     def get_severity(self, obj: CandidateRecord) -> str | None:
         return getattr(obj, "severity", None)
+
+    @extend_schema_field(CandidateVlmSerializer)
+    def get_vlm(self, obj: CandidateRecord) -> dict[str, Any]:
+        units = self.context.get("vlm_units", {})
+        states = self.context.setdefault("vlm_engine_state", {})
+        if obj.run_id not in states:
+            states[obj.run_id] = run_vlm_engine_state(obj.run_id)
+        return build_vlm_view(units.get(obj.pk), states[obj.run_id])
 
 
 class PaginatedCandidateListSerializer(serializers.Serializer[Any]):

@@ -287,7 +287,7 @@ paths:
       operationId: config_versions_publish
       tags: [config]
       summary: Publish config version
-      description: Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. Ghi audit cùng transaction.
+      description: Chỉ từ draft; publish lại bản đã publish trả 409 INVALID_TRANSITION. models.vlm hoặc thresholds.classification_routing sai schema trả 422 BUSINESS_RULE_UNMET. Ghi audit cùng transaction.
       x-labelx-trace: [FR-ENG-01, FR-SEC-05]
       x-labelx-roles: [qc_admin, super_admin]
       parameters:
@@ -301,6 +301,7 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
   /api/runs/:
     get:
       operationId: runs_list
@@ -474,6 +475,79 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PaginatedCandidateList" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/candidates/{id}/evaluations/:
+    post:
+      operationId: candidates_evaluate
+      tags: [runs]
+      summary: Yêu cầu đánh giá lại candidate (re-evaluate, M04C-02)
+      description: |
+        Tạo một Evaluation mới (generation tiếp theo) cho candidate: định tuyến lại bằng policy
+        `classification-routing-v0` với lý do `manual_recheck`, rồi (nếu policy cho phép) xếp một lượt Qwen.
+        Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/candidate-evaluations/{id}/`).
+        Cùng `Idempotency-Key` + cùng payload + cùng người → trả lại Evaluation cũ (không tạo mới, không tính budget
+        lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
+        `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
+        409 `IDEMPOTENCY_KEY_REUSED` khi key đã dùng cho payload hoặc người khác. 422 khi run không bật VLM, thiếu
+        taxonomy hoặc đã huỷ. Không ghi đè evidence/decision cũ và không
+        tạo ReviewDecision/Adjudication: kết quả AI chỉ là đề xuất. FE chỉ gửi `reason` (ghi chú audit, không vào
+        prompt) và `expected_revision`; không gửi prompt, model, ảnh hay khoá API.
+      x-labelx-trace: [FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Khoá idempotency, 1 đến 128 ký tự.
+          schema: { type: string, minLength: 1, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CandidateEvaluationCreate" }
+      responses:
+        "202":
+          description: Đã nhận; đọc kết quả tại poll_url
+          headers:
+            Location:
+              description: URL poll của evaluation
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/candidate-evaluations/{id}/:
+    get:
+      operationId: candidate_evaluations_read
+      tags: [runs]
+      summary: Đọc Evaluation (poll kết quả định tuyến/Qwen)
+      description: |
+        `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
+        tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Nguồn runtime duy nhất là candidate Faster R-CNN
+        (detector); không còn classifier. Các reason `classifier_only`, `classifier_unavailable`, `classifier_untrusted`
+        chỉ là alias tương thích payload FE v0 (untrusted = artifact detector chưa xác minh manifest/checksum/class map).
+        `detector_no_match`: detection không ghép annotation hoặc ngược lại (IoU ghép 0,50; ambiguous 0,30) →
+        `review_required=true`, `call_qwen=false`. `label_conflict` (ghép được nhưng khác nhãn) → gọi Qwen.
+        M-04 v0 chỉ dùng confidence top-1; `low_margin` bị vô hiệu vì detector không có phân bố đầy đủ (kể cả background).
+        `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, Qwen lỗi hoặc
+        uncertain). `policy` lưu theo evaluation; confidence detector chỉ là ngưỡng routing tạm, không phải ngưỡng
+        calibration. Chất lượng/accuracy của detector CHƯA được xác minh (cần dữ liệu held-out ngoài tập train).
+      x-labelx-trace: [FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Evaluation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/ranking/:
@@ -1940,6 +2014,8 @@ components:
         frame: [FR-AGG-03]
         anchor: [FR-AGG-03, FR-RNK-12]
         evidence: [FR-ENG-08]
+        id: [FR-AGG-01]
+        vlm: [FR-ENG-10]
       properties:
         engine: { $ref: "#/components/schemas/EngineName" }
         engine_version: { type: string }
@@ -1950,6 +2026,115 @@ components:
         frame: { $ref: "#/components/schemas/FrameKey" }
         anchor: { $ref: "#/components/schemas/Anchor" }
         evidence: { $ref: "#/components/schemas/Evidence" }
+        id:
+          type: integer
+          description: ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/.
+        vlm:
+          $ref: "#/components/schemas/CandidateVlm"
+    CandidateVlm:
+      type: object
+      example:
+        state: checked
+        engine_status: checked
+        source: qwen
+        conclusion: confirmed
+        class_id: "1"
+        class_name: car
+        reason_code: null
+        evidence_id: 5
+        evaluation_id: null
+        model_version: qwen3-vl-plus
+        provider: openai_compatible
+        provider_host: api.shopaikey.com
+        response_model: qwen3-vl-plus
+        prompt_version: vlm-prompt-v0
+        policy_version: vlm-trigger-v0
+        snapshot_revision: "<sha256 của snapshot>"
+        attempts: 1
+        request_id: "…486eb4e3"
+        crop_sha256: "<sha256 của crop>"
+        crop: { frame: { cvat_task_id: 9, frame_number: 0 }, box: [60, 40, 100, 80], padded_box: [56, 36, 104, 84], output_size: [48, 48] }
+        rationale: "Văn bản tự do của model, FE render dạng text thuần"
+        created_at: "2026-10-13T08:30:00Z"
+      description: >-
+        Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI
+        và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision.
+        state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running,
+        checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model
+        ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+      required: [state, engine_status, source, attempts]
+      properties:
+        state: { type: string, description: "disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled" }
+        engine_status: { type: string, description: "checked | partial | failed | not_checked | running (payload FE v0)" }
+        source: { type: string, description: Luôn là qwen }
+        conclusion: { type: string, nullable: true, description: "confirmed | uncertain | null" }
+        class_id: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        reason_code: { type: string, nullable: true, description: "invalid_crop | provider_error | parse_failure | budget_exhausted | null" }
+        evidence_id: { type: integer, nullable: true }
+        evaluation_id: { type: string, nullable: true, description: Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa }
+        model_version: { type: string, nullable: true, description: Model ID đã yêu cầu }
+        provider: { type: string, nullable: true }
+        provider_host: { type: string, nullable: true }
+        response_model: { type: string, nullable: true, description: Model ID mà provider báo về }
+        prompt_version: { type: string, nullable: true }
+        policy_version: { type: string, nullable: true }
+        snapshot_revision: { type: string, nullable: true }
+        attempts: { type: integer }
+        request_id: { type: string, nullable: true, description: "ID provider đã redacted; chỉ giữ dấu … và tối đa 8 ký tự an toàn cuối để đối soát" }
+        crop_sha256: { type: string, nullable: true }
+        crop: { type: object, nullable: true, additionalProperties: true, description: "Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra" }
+        rationale: { type: string, nullable: true, description: "Văn bản tự do do model sinh, không phải bằng chứng đã xác minh; FE phải render dạng text thuần (không HTML/Markdown)" }
+        created_at: { type: string, format: date-time, nullable: true }
+    CandidateEvaluationCreate:
+      type: object
+      required: [reason, expected_revision]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Ghi chú tự do của người dùng, chỉ để audit; KHÔNG bao giờ vào prompt VLM và không phải reason_code
+        expected_revision:
+          type: string
+          maxLength: 128
+          description: revision_sha256 của snapshot mà client đang xem
+    CandidateEvaluationPolicy:
+      type: object
+      required: [name, version, score_threshold, margin_threshold, threshold_semantics, policy_sha256]
+      properties:
+        name: { type: string, example: classification-routing-v0 }
+        version: { type: string }
+        score_threshold: { type: number }
+        margin_threshold: { type: number }
+        threshold_semantics: { type: string, description: "routing_temporary: không phải ngưỡng calibration" }
+        policy_sha256: { type: string }
+    CandidateEvaluation:
+      type: object
+      description: Một lượt đánh giá logic của candidate; AI chỉ là đề xuất.
+      required: [id, candidate_id, run_id, generation, source, status, reason_code, reasons, review_required, call_qwen, policy, snapshot_revision, created_at, poll_url]
+      properties:
+        id: { type: integer }
+        candidate_id: { type: integer }
+        run_id: { type: integer }
+        generation: { type: integer, description: "1 là lượt tự động; manual recheck tăng dần" }
+        source: { type: string, enum: [auto, manual] }
+        status: { type: string, enum: [pending, running, completed, failed, cancelled] }
+        reason_code: { type: string, nullable: true }
+        reasons: { type: array, items: { type: string } }
+        review_required: { type: boolean }
+        call_qwen: { type: boolean }
+        policy: { $ref: "#/components/schemas/CandidateEvaluationPolicy" }
+        checkpoint_status: { type: string, nullable: true, description: "Trạng thái xác minh artifact detector: verified | unverified | null. Không phải kết luận về chất lượng mô hình" }
+        snapshot_revision: { type: string }
+        requested_by_user_id: { type: integer, nullable: true }
+        note: { type: string, nullable: true }
+        vlm:
+          allOf: [{ $ref: "#/components/schemas/CandidateVlm" }]
+          nullable: true
+        created_at: { type: string, format: date-time }
+        poll_url: { type: string }
     EngineUnitResult:
       type: object
       description: Kết quả cuối của một đơn vị trong shard
@@ -2191,8 +2376,20 @@ components:
           allOf: [{ $ref: "#/components/schemas/BBox" }]
           nullable: true
         prediction_class: { type: string, nullable: true }
+        class_id: { type: integer, nullable: true, description: "Class ID Faster R-CNN (0–9)" }
+        class_name: { type: string, nullable: true, description: "Tên lớp Faster R-CNN" }
         confidence: { type: number, nullable: true }
+        model_version: { type: string, nullable: true }
+        checkpoint_sha256: { type: string, nullable: true }
+        class_mapping_version: { type: string, nullable: true }
         iou: { type: number, nullable: true }
+        source: { type: string, description: "detector (nguồn runtime) hoặc classifier (alias tương thích payload FE v0)" }
+        match_status: { type: string, enum: [matched, unmatched_detection, unmatched_annotation] }
+        annotated_class_id: { type: integer, nullable: true }
+        annotation_bbox:
+          allOf: [{ $ref: "#/components/schemas/BBox" }]
+          nullable: true
+        artifact_verified: { type: boolean, description: "true khi manifest, checksum checkpoint và class map BDD100K 10 lớp đã được xác minh" }
     Issue:
       type: object
       required: [id, family, origin, state, anchor, n_i, evidence, links, review_decisions]
@@ -2798,10 +2995,27 @@ components:
         thresholds:
           type: object
           additionalProperties: true
+          description: >-
+            Khoá classification_routing (M04C-01, tên classification-routing-v0) gồm score_threshold
+            và margin_threshold trong [0, 1]; đây là ngưỡng định tuyến tạm, không phải ngưỡng
+            quality hay calibration.
         models:
           type: object
           additionalProperties: true
-          description: Model/artifact tham chiếu theo version đã khoá.
+          description: >-
+            Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider
+            (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác
+            chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và
+            đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version,
+            timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000)
+            và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host:
+            DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định
+            theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible
+            chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là
+            cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận
+            chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret
+            (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng
+            engines/thresholds/models; publish kiểm lại và trả 422.
     ConfigVersion:
       type: object
       required: [id, name, status, engines, created_by, created_at]

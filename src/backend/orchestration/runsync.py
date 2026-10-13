@@ -7,9 +7,16 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
-from engines.interface import public_status
+from engines.interface import EngineStatus, LedgerCounts, NotCheckedReason, public_status
+from orchestration.models import VlmBudget, VlmUnit
 from orchestration.services import ledger_counts
-from runs.models import QCRun, WorkUnit
+from orchestration.vlm_stage import (
+    VLM_ENGINE,
+    start_vlm_stage,
+    vlm_stage_started,
+    vlm_units_open,
+)
+from runs.models import EngineResult, QCRun, WorkUnit
 from runs.ranking import persist_terminal_run_rankings
 
 logger = logging.getLogger("labelx.orchestration")
@@ -27,7 +34,18 @@ def refresh_run(run_id: int) -> None:
     with transaction.atomic():
         run = QCRun.objects.select_for_update().get(pk=run_id)
         units = list(run.work_units.all())
+        units_open = any(u.status in _OPEN for u in units)
+        if (
+            not units_open
+            and VLM_ENGINE in (run.engine_versions or {})
+            and not run.cancel_requested_at
+        ):
+            # Candidate đã sinh xong: khởi động/bổ sung stage VLM (idempotent, trong khoá run).
+            start_vlm_stage(run_id)
         for result in run.engine_results.all():
+            if result.engine == VLM_ENGINE:
+                _refresh_vlm_result(run_id, result)
+                continue
             ledger = ledger_counts(run_id, result.engine)
             if ledger.total == 0:
                 continue
@@ -62,8 +80,12 @@ def refresh_run(run_id: int) -> None:
         )
         if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
             return
-        if run.cancel_requested_at or any(u.status in _OPEN for u in units):
+        if run.cancel_requested_at or units_open:
             return
+        if VLM_ENGINE in (run.engine_versions or {}) and (
+            not vlm_stage_started(run_id) or vlm_units_open(run_id)
+        ):
+            return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
         done = sum(u.status == WorkUnit.Status.COMPLETED for u in units)
         if failed == 0:
@@ -78,3 +100,45 @@ def refresh_run(run_id: int) -> None:
         # immutable ranking there would make the successful retry conflict.
         if run.status == QCRun.Status.COMPLETED:
             persist_terminal_run_rankings(run_id)
+
+
+def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
+    """EngineResult của vlm tính từ VlmUnit (đơn vị = candidate), không từ LedgerUnit theo frame."""
+    if not vlm_stage_started(run_id):
+        return  # candidate chưa sinh xong: giữ nguyên trạng thái running ban đầu
+    # Mỗi candidate chỉ tính lượt mới nhất: re-evaluate không được làm méo số đếm của ledger.
+    latest: dict[int, str] = {}
+    for candidate_id, status in (
+        VlmUnit.objects.filter(run_id=run_id)
+        .order_by("evaluation_generation")
+        .values_list("candidate_id", "status")
+    ):
+        latest[candidate_id] = status
+    statuses = list(latest.values())
+    completed = sum(s == VlmUnit.Status.COMPLETED for s in statuses)
+    failed = sum(s == VlmUnit.Status.FAILED for s in statuses)
+    pending = sum(s in (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING) for s in statuses)
+    ledger = LedgerCounts(completed=completed, failed=failed, pending=pending)
+    if not statuses:
+        result.status = EngineStatus.NOT_CHECKED.value
+        skipped = VlmBudget.objects.filter(run_id=run_id).values_list("skipped_reason", flat=True)
+        result.reason = skipped.first() or NotCheckedReason.NOT_TRIGGERED.value
+        result.eligible_units = 0
+        result.completed_units = result.failed_units = result.not_checked_units = 0
+    else:
+        result.status = public_status(ledger, finished=not pending).value
+        result.reason = None
+        result.eligible_units = ledger.eligible
+        result.completed_units = completed
+        result.failed_units = failed
+        result.not_checked_units = 0
+    result.save(
+        update_fields=[
+            "status",
+            "reason",
+            "eligible_units",
+            "completed_units",
+            "failed_units",
+            "not_checked_units",
+        ]
+    )
