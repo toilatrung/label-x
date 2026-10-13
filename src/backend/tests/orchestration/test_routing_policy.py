@@ -149,10 +149,21 @@ def test_from_config_rejects_invalid(config):
 
 def test_adapter_builds_input_and_missing_fields_are_not_confident():
     full = routing_input_from_candidate(
-        {"class_id": "car", "annotated_class_id": "car", "score": 0.9, "margin": 0.3}
+        {"predicted_class_id": 3, "annotated_class_id": 3, "score": 0.9, "margin": 0.3}
     )
     assert route(POLICY, full).primary is RoutingReason.CLASSIFIER_ONLY
     empty = routing_input_from_candidate({}, manual_recheck=True, budget_exhausted=True)
     assert empty.manual_recheck and empty.budget_exhausted
     assert route(POLICY, routing_input_from_candidate({})).call_qwen
     assert not routing_input_from_candidate({"crop_valid": False}).crop_valid
+
+
+def test_adapter_integer_class_ids_conflict_and_unknown_field():
+    conflict = routing_input_from_candidate(
+        {"predicted_class_id": 3, "annotated_class_id": 4, "score": 0.99, "margin": 0.9}
+    )
+    assert route(POLICY, conflict).primary is RoutingReason.LABEL_CONFLICT
+    unknown = routing_input_from_candidate(
+        {"classifier_unknown": True, "predicted_class_id": None, "annotated_class_id": 4}
+    )
+    assert route(POLICY, unknown).primary is RoutingReason.UNKNOWN

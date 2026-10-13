@@ -108,8 +108,8 @@ class RoutingInput:
 
     crop_valid: bool = True
     classifier_unknown: bool = False
-    predicted_class_id: str | None = None
-    annotated_class_id: str | None = None
+    predicted_class_id: int | str | None = None
+    annotated_class_id: int | str | None = None
     score: float | None = None
     margin: float | None = None
     manual_recheck: bool = False
@@ -197,11 +197,11 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
     )
 
 
-# Adapter tạm: tên field candidate sẽ được chốt ở #286; chỉ sửa bảng này, không đụng route().
+# Adapter tạm: tên field theo đề xuất của #286 (feat/M-04-b-classifier @2638e3d3), chưa là hợp đồng; chỉ sửa bảng này, không đụng route().
 CANDIDATE_FIELD_MAP = {
     "crop_valid": "crop_valid",
-    "classifier_unknown": "unknown",
-    "predicted_class_id": "class_id",
+    "classifier_unknown": "classifier_unknown",
+    "predicted_class_id": "predicted_class_id",
     "annotated_class_id": "annotated_class_id",
     "score": "score",
     "margin": "margin",
