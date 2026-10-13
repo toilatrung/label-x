@@ -67,12 +67,13 @@ ul.dir{columns:2;font-size:14px}
 <li>M04B-03 (#286): <code>models.classifier</code> → <code>ModelArtifact</code> (400 khi sai schema, 422 khi publish thiếu manifest/class map), <code>ClassifierUnit</code> + migration, stage sau candidate chạy batch qua worker tách tiến trình, <code>EngineResult</code> classifier, field <code>classifier</code> trên Candidate API (openapi + contract.d.ts).</li>
 <li>M04B-04 (#287): smoke CLI end-to-end với trọng số ImageNet thật trên fixture tổng hợp; smoke backend→worker thật→checkpoint <code>smoke_only</code> (test bỏ qua mặc định, bật bằng biến môi trường); bảng bàn giao API đợt 2 bên dưới.</li>
 </ul>
+<p><strong>Phạm vi PR này (nhánh cổng)</strong>: chỉ phần worker M04B-01/02 và BLOCKER-030/report. <strong>M04B-03 backend</strong> (<code>src/backend/**</code>, migration, <code>docs/04-api/openapi.yaml</code>, <code>contract.d.ts</code>) nằm ở <code>feat/M-04-b-classifier</code>, <strong>KHÔNG vào PR này</strong> vì phụ thuộc PR pha A; bảng Changes Made bên dưới liệt kê cả phần đó để bàn giao, đánh dấu M04B-03.</p>
 <p><strong>Not Implemented</strong>: huấn luyện/đánh giá trên dữ liệu thật (BLOCKER-030); crop thật từ snapshot/CVAT (phụ thuộc M04A-04/#282, hiện dùng <code>NoCropProvider</code> mặc định ⇒ <code>invalid_crop</code> hiện rõ); policy định tuyến classifier–Qwen (pha C); calibration/KPI (ngoài phạm vi M-04); job CI cho <code>src/classifier_worker</code> (đề xuất, thuộc PO); đánh số lại migration và rebase lên A tại cổng.</p>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td><code>src/classifier_worker/labelx_classifier/{taxonomy,crops,dataset}.py</code></td><td>10 lớp bdd100k-det-10-v1, letterbox crop, builder dataset có provenance/split/manifest, từ chối input sai kiểu/ảnh bomb, chỉ xoá crop do chính tool tạo</td><td>M04B-01</td></tr>
 <tr><td><code>src/classifier_worker/labelx_classifier/{model,artifact,train,infer,cli}.py</code></td><td>ConvNeXt Tiny 10 lớp, đóng gói + verify checkpoint, train chỉ trên split train, status suy từ điều kiện thật, predict-batch an toàn (image-root, chunk, id duy nhất, mã lý do ổn định)</td><td>M04B-02</td></tr>
-<tr><td><code>src/classifier_worker/{pyproject.toml,uv.lock,.gitignore,tests/**}</code></td><td>Lock riêng ghim torch 2.14.1+cpu / torchvision 0.29.1+cpu (không đụng pyproject/uv.lock của backend); 78 test</td><td>M04B-02</td></tr>
+<tr><td><code>src/classifier_worker/{pyproject.toml,uv.lock,.gitignore,tests/**}</code></td><td>Lock riêng ghim torch 2.14.1+cpu / torchvision 0.29.1+cpu (không đụng pyproject/uv.lock của backend); 79 test</td><td>M04B-02</td></tr>
 <tr><td><code>src/backend/classifier/{config,errors,runner}.py</code></td><td>Schema models.classifier, kiểm ModelArtifact, runner subprocess (lệnh từ settings, không shell, timeout, mã lý do ổn định)</td><td>M04B-03</td></tr>
 <tr><td><code>src/backend/orchestration/{classifier_stage.py,models.py,runsync.py,dispatch.py,tasks.py,migrations/0005_classifier_unit.py}</code></td><td>ClassifierUnit, stage idempotent, lease/sweeper, EngineResult; migration số tạm 0005 (đánh số lại ở cổng)</td><td>M04B-03</td></tr>
 <tr><td><code>src/backend/runs/{services,serializers,config_versions}.py</code>, <code>review/api_serializers.py</code></td><td>Engine classifier trong allowlist/descriptor, validate 400/422, field classifier trên Candidate</td><td>M04B-03</td></tr>
@@ -90,11 +91,11 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Change Requests</strong>: <code>CR-115, CR-116</code></li>
 <li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-030.html</code></li>
 <li><strong>Review Request</strong>: <code>cross-review chỉ đọc bởi label-x-e4 (đã làm 3 vòng cho worker; #286 đang chờ)</code></li>
-<li><strong>Commits</strong>: <code>2638e3d3, ac28365, 5aa775a3, 3e22c723, 41997e92, 3a9ca080 (và merge A b27aaf6 — sẽ bỏ ở nhánh cổng)</code></li>
+<li><strong>Commits</strong> (nhánh cổng <code>feat/M-04-b-gate</code>): <code>7942d63, df23e26, 23a1f0e, 0ebaee0, 00867cf, 3dcbd25, 16653d6, ae99f9d</code> (+ commit report này). Backend M04B-03 ở <code>feat/M-04-b-classifier</code> (3a9ca08, 8f8c0f2, 9d26d77), không thuộc PR này.</li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td><code>uv run pytest tests</code> (src/classifier_worker, CPU, dữ liệu tổng hợp)</td><td><code>passed</code></td><td>78 passed</td></tr>
+<tr><td><code>uv run pytest tests</code> (src/classifier_worker, CPU, dữ liệu tổng hợp)</td><td><code>passed</code></td><td>79 passed</td></tr>
 <tr><td><code>uv run ruff check . ; ruff format --check .</code> (worker và backend)</td><td><code>passed</code></td><td>All checks passed; 280 files formatted (backend)</td></tr>
 <tr><td><code>uv run --frozen mypy config effort classifier</code> (backend)</td><td><code>passed</code></td><td>Success: no issues found in 23 source files</td></tr>
 <tr><td><code>uv run pytest tests/classifier</code> (backend)</td><td><code>passed</code></td><td>56 passed (+1 smoke e2e bỏ qua mặc định)</td></tr>
@@ -114,8 +115,8 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>M04B-03 AC1: publish không cho classifier bật khi thiếu manifest/class map</td><td><code>passed</code></td><td><code>tests/classifier/test_config.py</code> (422 BUSINESS_RULE_UNMET, 400 khi sai schema)</td></tr>
 <tr><td>M04B-03 AC2: crop lỗi trả reason rõ; model version hiển thị qua API</td><td><code>passed</code> (mock/fixture)</td><td><code>test_stage.py</code>: invalid_crop, box_too_small, checksum_mismatch, timeout…; field <code>classifier</code> trên Candidate có checkpoint_version/sha256/class_map_version. Runner giả; KHÔNG phải runtime pass.</td></tr>
 <tr><td>M04B-04 AC1: inference trên crop fixture chạy end-to-end</td><td><code>passed</code> (smoke_only)</td><td>Smoke e2e ở trên; crop là PNG tổng hợp, không phải crop được phép/thật.</td></tr>
-<tr><td>Mutation worker/stage</td><td><code>passed</code></td><td>Mutant do e4 và tôi chạy: 8/8, 9/9 và 10/10 mutant bị test bắt qua các vòng sửa; backend: chưa chạy mutation riêng cho classifier_stage</td></tr>
-<tr><td>Cross-review (QA kỹ thuật, không phải QC CR-102)</td><td><code>passed</code> cho worker</td><td>label-x-e4: 3 vòng, mọi mục đã đóng; #286 chờ review</td></tr>
+<tr><td>Mutation worker/stage</td><td><code>passed</code> (số tự đo)</td><td>Tôi chạy: worker 8/8, 9/9, 10/10 mutant bị bắt (mỗi vòng sửa); backend 12 mutant, 3 mutant ban đầu sống sót (thứ tự top3, killpg, prefetch) được bổ sung test rồi bị bắt. Số của e4 khác (13/16 vòng 1, 19/20 vòng sau): chưa đối chiếu từng mutant, nên ghi nhận là chưa khớp phép đo độc lập.</td></tr>
+<tr><td>Cross-review (QA kỹ thuật, không phải QC CR-102)</td><td><code>passed</code> worker; <code>partial</code> backend</td><td>label-x-e4: worker 3 vòng, mọi mục đã đóng; cổng B @39b0aa4 ĐẠT (79 pass, --image-root đã đóng). Backend #286 @3a9ca080: e4 nêu A–F — A cancel ClassifierUnit, B/C chuỗi và đầu ra worker không được tin (độ dài/enum, tên lớp từ CLASSES, sắp xếp/miền score), D env tối thiểu + process group, E kiểm artifact_key/manifest, F N+1 — đã sửa ở 8f8c0f2 (cộng ledger classifier theo ClassifierUnit và trace OpenAPI); e4 CHƯA kiểm lại 8f8c0f2/9d26d77. Mục còn mở: không có mục nào đã biết; chưa có xác nhận độc lập.</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <p><strong>Plan Deviations</strong>: (1) nhánh B chứa merge commit của A (b27aaf6, A @3f18565) để lấy ConfigVersion/vlm_stage; nhánh cổng sạch cherry-pick các commit B sẽ bỏ merge này (đã thống nhất với điều phối). (2) <code>annotated_class_id</code> suy từ <code>snapshot.normalized_json</code> + taxonomy của engine schema, chỉ kiểm bằng unit test.</p>
@@ -175,6 +176,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>Worker tests</td><td><code>cd src/classifier_worker &amp;&amp; uv sync --extra dev &amp;&amp; uv run pytest tests</code> (79 pass trên nhánh cổng)</td></tr>
 <tr><td>Mutation (tham khảo)</td><td>worker 8+9+10 mutant, backend 12 mutant đều bị bắt sau khi bổ sung test (script nằm ngoài repo)</td></tr>
 </tbody></table>
+<p>Ghi chú: hậu tố <code>-@label-x-47</code> của tên file do integrator gộp sau theo CR-100; giữ nguyên.</p>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
 <li>Do not report unperformed work as implemented.</li>
