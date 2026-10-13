@@ -207,3 +207,30 @@ def test_adapter_null_score_or_margin_is_low_confidence():
 def test_adapter_flags_pass_through():
     data = routing_input_from_candidate(_clf(), manual_recheck=True, budget_exhausted=True)
     assert data.manual_recheck and data.budget_exhausted
+
+
+@pytest.mark.parametrize("status", ["smoke_only", "trained", ""])
+def test_checkpoint_status_reaches_every_decision_and_never_changes_routing(status):
+    cases = [
+        {},  # classifier_only
+        {"annotated_class_id": 4},  # conflict
+        {"crop_valid": False},  # invalid_crop
+        {"budget_exhausted": True, "annotated_class_id": 4},  # budget
+    ]
+    for case in cases:
+        with_status = decide(checkpoint_status=status, **case)
+        baseline = decide(**case)
+        assert with_status.checkpoint_status == status
+        assert (with_status.primary, with_status.call_qwen, with_status.reasons) == (
+            baseline.primary,
+            baseline.call_qwen,
+            baseline.reasons,
+        )
+
+
+def test_adapter_reads_checkpoint_status_and_defaults_to_empty():
+    assert routing_input_from_candidate(_clf(checkpoint_status="smoke_only")).checkpoint_status == (
+        "smoke_only"
+    )
+    assert routing_input_from_candidate({}).checkpoint_status == ""
+    assert routing_input_from_candidate(_clf(checkpoint_status=None)).checkpoint_status == ""
