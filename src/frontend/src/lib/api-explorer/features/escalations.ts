@@ -8,5 +8,5 @@ export const ESCALATIONS_ENDPOINTS = [
     { id: 7, code: 'GAP-007', issue_id: 112, status: 'approved', title: 'Thuộc tính occluded cho người đi bộ', proposed_rule: 'A-003', related_case_count: 5, status_label: 'Đã phê duyệt · Guideline v1.3' },
     { id: 4, code: 'GAP-004', issue_id: 115, status: 'approved', title: 'Xe máy chở hai người', proposed_rule: 'VEH-02', related_case_count: 2, status_label: 'Đã phê duyệt · Guideline v1.3' },
   ] } },
-  { id: 'guideline_gaps_create', method: 'POST', path: '/api/guideline-gaps/', group: 'Escalations', summary: 'Tạo Guideline Gap từ phân xử', connection: 'mock', origin: 'design', responseStatus: 201, response: { id: 12, issue_id: 902, status: 'open', title: 'Phân biệt bus và truck', proposed_rule: 'VEH-08', created_by: 7 } },
+  { id: 'guideline_gaps_create', method: 'POST', path: '/api/guideline-gaps/', group: 'Escalations', summary: 'Tạo Guideline Gap từ phân xử', connection: 'mock', origin: 'design', responseStatus: 201, response: { id: 13, code: 'GAP-013', issue_id: 98, status: 'proposed', title: 'Xe buýt mini chở hàng thuộc nhãn nào', proposed_rule: 'VEH-03', reason: 'Reviewer bất đồng giữa bus và truck.', related_case_count: 0, status_label: 'Đề xuất sửa' } },
 ] satisfies ApiEndpoint[];

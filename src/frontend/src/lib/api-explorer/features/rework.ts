@@ -1,5 +1,5 @@
 import type { ApiEndpoint } from '../types';
-import { rework } from '../examples';
+import { rework, reworkDetail } from '../examples';
 
 export const REWORK_ENDPOINTS = [
   { id: 'rework_create', method: 'POST', path: '/api/rework/', group: 'Rework', summary: 'Tạo yêu cầu sửa', connection: 'backend', responseStatus: 201, response: rework },
@@ -22,5 +22,6 @@ export const REWORK_ENDPOINTS = [
     { ...rework, id: 158, code: 'RW-0158', issue_code: 'QC-00021', frame_id: 40, object_id: 5, action: 'Đã xoá bản ghi trùng', annotator_name: 'Bình Hồ', due_at: '2026-10-03', severity: 'medium', status: 'resolved' },
     { ...rework, id: 161, code: 'RW-0161', issue_code: 'QC-00026', frame_id: 49, object_id: 10, action: 'Đã bổ sung thuộc tính', annotator_name: 'Bình Hồ', due_at: '2026-10-03', severity: 'minor', status: 'resolved' },
   ] } },
-  { id: 'rework_retrieve', method: 'GET', path: '/api/rework/{id}/', group: 'Rework', summary: 'Chi tiết yêu cầu sửa', connection: 'backend', responseStatus: 200, response: rework },
+  { id: 'rework_retrieve', method: 'GET', path: '/api/rework/{id}/', group: 'Rework', summary: 'Chi tiết yêu cầu sửa', connection: 'backend', responseStatus: 200, response: reworkDetail },
+  { id: 'rework_current_revision', method: 'GET', path: '/api/rework/{id}/current-revision/', group: 'Rework', summary: 'Đọc revision CVAT hiện tại trước khi gửi xác minh', connection: 'backend', responseStatus: 200, response: { rework_id: 73, cvat_job_id: 44, revision_sha256: '3aa7992e'.repeat(8), original_revision: rework.original_revision, unchanged: false, rework_status: 'fix_pending', read_at: '2026-10-12T04:00:00Z' } },
 ] satisfies ApiEndpoint[];

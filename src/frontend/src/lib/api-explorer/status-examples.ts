@@ -1,4 +1,4 @@
-import { configVersion, evaluation, issue, rework, run, session, snapshot, waiver } from './examples';
+import { configVersion, evaluation, issue, rework, reworkDetail, run, session, snapshot, waiver } from './examples';
 import type { ApiResponseExample } from './types';
 
 const variants = <T extends string>(statuses: readonly T[], build: (status: T, index: number) => unknown): ApiResponseExample[] =>
@@ -103,7 +103,7 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
     reason: action === 'confirm' ? null : `Ví dụ quyết định ${action}`, created_at: '2026-10-12T04:20:00Z',
   })),
   issues_adjudicate: variants(['confirm', 'reject', 'guideline_gap'] as const, (outcome, index) => ({
-    id: 81 + index, issue_id: 902, outcome, actor_user_id: 7, rule_id: 'GEO-001',
+    id: 81 + index, issue_id: 902, outcome, actor_user_id: 7, rule_id: 'VEH-03', correct_label: outcome === 'confirm' ? 'truck' : null,
     reason: `Ví dụ phân xử ${outcome}`, case_version: 'v1', created_at: '2026-10-12T04:30:00Z',
   })),
   rework_list: variants(reworkStatuses, (status, index) => ({
@@ -112,7 +112,7 @@ export const STATUS_RESPONSE_EXAMPLES: Readonly<Partial<Record<string, readonly 
     results: [{ ...rework, id: 73 + index, status, submitted_revision: status === 'fix_pending' ? null : 'sha256:3aa7…992e' }],
   })),
   rework_retrieve: variants(reworkStatuses, (status, index) => ({
-    ...rework, id: 73 + index, status, submitted_revision: status === 'fix_pending' ? null : 'sha256:3aa7…992e',
+    ...reworkDetail, id: 73 + index, status, submitted_revision: status === 'fix_pending' ? null : 'sha256:3aa7…992e',
   })),
   evaluations_retrieve: variants(evaluationStatuses, (status, index) => ({
     ...evaluation, id: 14 + index, status,

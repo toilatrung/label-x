@@ -4,36 +4,56 @@ import React from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/BrandMark';
 import { API_ENDPOINTS, API_NAVIGATION, type ApiConnection, type ApiEndpoint } from '@/lib/api-explorer/catalog';
+import { REQUEST_BODIES, REQUEST_QUERIES } from '@/lib/api-explorer/requests';
 import styles from './swagger.module.css';
 
 type StatusFilter = 'all' | ApiConnection;
 
 const STATUS_LABEL: Record<ApiConnection, string> = {
   backend: 'Backend API',
-  mock: 'Product API',
+  mock: 'Product API · Mock',
 };
 
 const ORIGIN_LABEL = { openapi: 'OpenAPI', design: 'Design' } as const;
 
 function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = React.useState<'request' | 'response' | null>(null);
+  const [copyError, setCopyError] = React.useState('');
   const [exampleIndex, setExampleIndex] = React.useState(0);
-  const examples = endpoint.responseExamples;
+  const examples = endpoint.responseExamples?.[0]?.label === 'design' ? endpoint.responseExamples
+    : [{ label: 'Sketch / mẫu mặc định', response: endpoint.response }, ...(endpoint.responseExamples ?? [])];
   const selectedExample = examples?.[exampleIndex];
-  const payload = JSON.stringify(selectedExample?.response ?? endpoint.response, null, 2);
+  const response = selectedExample?.response ?? endpoint.response;
+  const payload = typeof response === 'string' ? response : JSON.stringify(response, null, 2);
   const responseStatus = selectedExample?.responseStatus ?? endpoint.responseStatus;
+  let body = REQUEST_BODIES[endpoint.id];
+  if (endpoint.id === 'issues_decide' && ['confirm', 'reject', 'uncertain', 'escalate'].includes(selectedExample?.label ?? '')) {
+    const action = selectedExample.label;
+    body = { lease_id: 61, action, revision: 'a91f3c', ...(action === 'confirm'
+      ? { family: 'E2', severity: 'medium', rule_id: 'VEH-03' } : { reason: `Ví dụ quyết định ${action}` }) };
+  }
+  if (endpoint.id === 'issues_adjudicate' && ['confirm', 'reject', 'guideline_gap'].includes(selectedExample?.label ?? '')) {
+    body = { outcome: selectedExample.label, rule_id: 'VEH-03', reason: `Ví dụ phân xử ${selectedExample.label}`,
+      ...(selectedExample.label === 'confirm' ? { correct_label: 'truck' } : {}) };
+  }
+  const requestPayload = `${endpoint.method} ${endpoint.path}${REQUEST_QUERIES[endpoint.id] ?? ''}${body === undefined ? '' : `\nContent-Type: application/json\n\n${JSON.stringify(body, null, 2)}`}`;
 
-  async function copyPayload() {
-    await navigator.clipboard.writeText(payload);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+  async function copyPayload(kind: 'request' | 'response') {
+    try {
+      await navigator.clipboard.writeText(kind === 'request' ? requestPayload : payload);
+      setCopyError('');
+      setCopied(kind);
+      window.setTimeout(() => setCopied(null), 1500);
+    } catch {
+      setCopyError('Không thể sao chép. Hãy chọn và sao chép nội dung bên dưới.');
+    }
   }
 
   return <article className={styles.endpoint} id={endpoint.id}>
     <div className={styles.endpointHead}>
       <span className={`${styles.method} ${styles[`method${endpoint.method}`]}`}>{endpoint.method}</span>
       <code className={styles.path}>{endpoint.path}</code>
-      <span className={`${styles.status} ${styles.connected}`}>
+      <span className={`${styles.status} ${endpoint.connection === 'backend' ? styles.connected : styles.mock}`}>
         <span aria-hidden="true" />{STATUS_LABEL[endpoint.connection]}
       </span>
     </div>
@@ -42,6 +62,16 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
         <p className={styles.summary}>{endpoint.summary}</p>
         <p className={styles.operation}>operationId: <code>{endpoint.id}</code>
           <span className={styles.origin}>{ORIGIN_LABEL[endpoint.origin ?? 'openapi']}</span></p>
+        <p className={styles.operation}>Ví dụ tĩnh để đối chiếu sketch/contract; không phải kết quả gọi API trực tiếp.</p>
+        {endpoint.connection === 'mock' && <p className={styles.operation}>Request/response minh họa; backend chưa cung cấp API này.</p>}
+        <div className={styles.response}>
+          <div className={styles.responseHead}><div><span>Request</span></div>
+            <button type="button" onClick={() => void copyPayload('request')} aria-label={`Sao chép request ${endpoint.id}`}>{copied === 'request' ? 'Đã sao chép' : 'Sao chép'}</button>
+          </div>
+          <pre aria-label={`Request ${endpoint.id}`}><code>{requestPayload}</code></pre>
+          <p className={styles.requestNote}>{body === undefined ? 'Không có request body.' : 'Body JSON minh họa.'} Các tham số trong dấu {'{}'} cần được thay bằng giá trị thực. API ghi dùng session và X-CSRFToken từ /api/auth/csrf/.</p>
+        </div>
+        {copyError && <p role="status" className={styles.operation}>{copyError}</p>}
       </div>
       <div className={styles.response}>
         <div className={styles.responseHead}>
@@ -52,11 +82,11 @@ function EndpointCard({ endpoint }: { endpoint: ApiEndpoint }) {
               {examples.map((example, index) => <option value={index} key={example.label}>{example.label}</option>)}
             </select>}
           </div>
-          <button type="button" onClick={() => void copyPayload()} aria-label={`Sao chép payload ${endpoint.id}`}>
-            {copied ? 'Đã sao chép' : 'Sao chép'}
+          <button type="button" disabled={responseStatus === 204} onClick={() => void copyPayload('response')} aria-label={`Sao chép payload ${endpoint.id}`}>
+            {copied === 'response' ? 'Đã sao chép' : 'Sao chép'}
           </button>
         </div>
-        <pre><code>{payload}</code></pre>
+        <pre aria-label={`Response ${endpoint.id}`}><code>{responseStatus === 204 ? 'Không có response body (204 No Content).' : payload}</code></pre>
       </div>
     </div>
   </article>;

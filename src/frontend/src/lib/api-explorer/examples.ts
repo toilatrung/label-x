@@ -1,3 +1,5 @@
+import type { components } from '@/lib/api/contract';
+
 export const session = {
   user: { id: 7, username: 'qa.lead', full_name: 'QA Lead' },
   roles: [{ role: 'qa_lead', dataset_id: 12 }],
@@ -32,15 +34,22 @@ export const run = {
 };
 
 export const issue = {
-  id: 902, frame_id: 3301, origin: 'engine', family: 'geometry', severity: 'major',
-  status: 'confirmed', description: 'Bounding box vượt biên ảnh', review_decisions: [],
+  id: 902, frame_id: 3301, origin: 'engine', family: 'E2', severity: 'medium',
+  state: 'in_review', description: 'Sai nhãn: bus hay truck', review_decisions: [],
+  anchor: { kind: 'annotation', objects: [{ namespace: 'cvat_shape', id: '117' }], rule_id: 'VEH-03', policy_version: 'pilot-1' },
+  n_i: 1, rule_ids: ['VEH-03'], evidence: [{ engine: 'detector', actual: 'bus', expected: 'truck', confidence: 0.77 }], links: [],
 };
 
 export const rework = {
   id: 73, issue_id: 902, annotator_user_id: 28, status: 'fix_pending',
   original_revision: 'sha256:91c4…8fa2', submitted_revision: null,
   due_at: '2026-10-15T10:00:00Z', cvat_deep_link: 'http://localhost:8080/tasks/19/jobs/44',
-};
+  dataset_id: 14, frame_id: 3301, created_by_user_id: 7, instruction: 'Đổi nhãn bus → truck theo VEH-03',
+  severity: 'medium', recheck_run_id: null, submitted_at: null, resolved_at: null,
+  created_at: '2026-10-04T07:00:00Z', updated_at: '2026-10-04T07:00:00Z', round_count: 0,
+} satisfies components['schemas']['ReworkRead'];
+
+export const reworkDetail = { ...rework, review_state: 'awaiting_followup', timeline: [] } satisfies components['schemas']['ReworkDetail'];
 
 export const reference = {
   id: 9, snapshot_id: 18, gt_checksum: 'sha256:5f2a…c811', mapping_version: 'bdd100k-v1',

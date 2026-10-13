@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { REQUEST_BODIES } from '@/lib/api-explorer/requests';
 import { ApiExplorer } from '@/app/swagger/ApiExplorer';
 import { API_ENDPOINTS, API_NAVIGATION } from '@/lib/api-explorer/catalog';
 import { STATUS_RESPONSE_EXAMPLES } from '@/lib/api-explorer/status-examples';
@@ -27,7 +29,7 @@ describe('API Explorer', () => {
 
   it('keeps a default response and adds state variants where the contract has a state machine', () => {
     const ids = new Set(API_ENDPOINTS.map(endpoint => endpoint.id));
-    expect(API_ENDPOINTS).toHaveLength(77);
+    expect(API_ENDPOINTS).toHaveLength(78);
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'runs_list')?.responseExamples?.map(example => example.label))
@@ -79,5 +81,65 @@ describe('API Explorer', () => {
     expect(screen.getByText('/api/calibration/assignments/')).toBeInTheDocument();
     expect(screen.getByText('/api/releases/{id}/manifest/')).toBeInTheDocument();
     expect(screen.getAllByText('Design').length).toBeGreaterThan(0);
+  });
+
+  it('shows the sketch payload before state variants can replace its rows and metrics', () => {
+    render(<ApiExplorer />);
+    const sketch = readFileSync('../../docs/design/screens/Escalations.dc.html', 'utf8');
+    const gaps = JSON.parse(screen.getByLabelText('Response guideline_gaps_list').textContent!);
+    expect(gaps.count).toBe(6);
+    for (const gap of gaps.results) {
+      expect(sketch).toContain(gap.code);
+      expect(sketch).toContain(gap.title);
+      expect(sketch).toContain(gap.proposed_rule);
+      expect(sketch).toContain(gap.status_label);
+    }
+    const rework = JSON.parse(screen.getByLabelText('Response rework_list').textContent!);
+    expect(rework.counts).toMatchObject({ fix_pending: 5, recheck_pending: 7, resolved: 74 });
+    const models = JSON.parse(screen.getByLabelText('Response models_list').textContent!).results;
+    expect(models).toHaveLength(3);
+    expect(models[1].confidence_threshold).toBe(0.7);
+    expect(models[2].confidence_threshold).toBeNull();
+    const rules = JSON.parse(screen.getByLabelText('Response config_version_rules').textContent!);
+    const ruleSketch = readFileSync('../../docs/design/screens/RulesThresholds.dc.html', 'utf8');
+    expect(rules.rules).toHaveLength(5);
+    for (const rule of rules.rules) {
+      expect(ruleSketch).toContain(rule.id);
+      expect(ruleSketch).toContain(rule.name);
+      expect(ruleSketch).toContain(rule.threshold_label);
+    }
+    expect(rules.sampling.random_rate).toBe(0.008);
+    expect(rules.sampling.risk_rate).toBe(0.008);
+    expect(rules.rules.find((rule: {id: string}) => rule.id === 'A-003').enabled).toBe(false);
+  });
+
+  it('includes all documented JSON bodies and leaves bodyless operations empty', () => {
+    render(<ApiExplorer />);
+    expect(screen.getByLabelText('Request guideline_gaps_create').textContent).toContain('VEH-03');
+    expect(screen.getByLabelText('Request guideline_gaps_create').textContent).toContain('reason');
+    expect(screen.getByLabelText('Request rework_list').textContent).toBe('GET /api/rework/?dataset_id=14');
+    expect(screen.getByLabelText('Request auth_session').textContent).toBe('GET /api/auth/session/');
+    for (const id of Object.keys(REQUEST_BODIES)) expect(API_ENDPOINTS.some(endpoint => endpoint.id === id)).toBe(true);
+    expect(screen.getByLabelText('Response rework_current_revision').textContent).toContain('revision_sha256');
+    const cases = JSON.parse(screen.getByLabelText('Response decision_cases_list').textContent!);
+    expect(cases.results[0]).toMatchObject({ outcome: 'confirm', rule_id: 'VEH-03', correct_label: 'truck' });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chọn response issues_adjudicate' }), { target: { value: '1' } });
+    expect(screen.getByLabelText('Request issues_adjudicate').textContent).toContain('"correct_label": "truck"');
+  });
+
+  it('copies the selected response and the matching request independently', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    try {
+      render(<ApiExplorer />);
+      const selector = screen.getByRole('combobox', { name: 'Chọn response issues_decide' });
+      fireEvent.change(selector, { target: { value: '2' } });
+      expect(screen.getByLabelText('Request issues_decide').textContent).toContain('"action": "reject"');
+      fireEvent.click(screen.getByRole('button', { name: 'Sao chép request issues_decide' }));
+      expect(writeText).toHaveBeenLastCalledWith(screen.getByLabelText('Request issues_decide').textContent);
+      fireEvent.click(screen.getByRole('button', { name: 'Sao chép payload issues_decide' }));
+      expect(writeText).toHaveBeenLastCalledWith(screen.getByLabelText('Response issues_decide').textContent);
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Sao chép payload issues_decide' }).textContent).toBe('Đã sao chép'));
+    } finally { vi.unstubAllGlobals(); }
   });
 });
