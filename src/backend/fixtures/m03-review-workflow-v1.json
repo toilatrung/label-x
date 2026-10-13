@@ -647,8 +647,11 @@
       "proposed_operation": {"method": "get", "path": "/api/queues/{name}/"},
       "implementation_owner": "T-033 backend; T-034 consumer",
       "decision_owner": "Product Owner",
-      "decision_status": "requires_approved_change_request",
-      "approved": false
+      "decision_status": "approved_by_change_request",
+      "approval_ref": ["CR-118"],
+      "approved_operations": [{"method": "get", "path": "/api/queues/{name}/"}],
+      "approval_note": "CR-118 (M-BE-MVP, MBE-00) đưa GET /api/queues/{name}/ vào contract; runtime do MBE-02.",
+      "approved": true
     },
     {
       "id": "M03-D02",
@@ -658,9 +661,9 @@
       "implementation_owner": "T-035 backend; T-037 consumer",
       "decision_owner": "Product Owner",
       "decision_status": "approved_by_change_request",
-      "approval_ref": ["DEC-019", "CR-113"],
-      "approved_operations": [{"method": "get", "path": "/api/frames/{id}/issues/"}],
-      "approval_note": "Approved as extension of existing FrameIssues (snapshot_revision, annotations[], predictions[]); the proposed /workspace/ path is NOT adopted.",
+      "approval_ref": ["DEC-019", "CR-113", "CR-118"],
+      "approved_operations": [{"method": "get", "path": "/api/frames/{id}/issues/"}, {"method": "get", "path": "/api/frames/{id}/workspace/"}],
+      "approval_note": "CR-113: extension of existing FrameIssues (snapshot_revision, annotations[], predictions[]). CR-118 (MBE-00) adds GET /api/frames/{id}/workspace/ (issues + lease + queue); runtime do MBE-01.",
       "approved": true
     },
     {
@@ -698,9 +701,9 @@
       "implementation_owner": "T-041 backend; T-042 consumer",
       "decision_owner": "Product Owner",
       "decision_status": "approved_by_change_request",
-      "approval_ref": ["DEC-019", "CR-113"],
-      "approved_operations": [{"method": "get", "path": "/api/runs/{id}/"}],
-      "approval_note": "Approved as three fields on GET /api/runs/{id}/ (verification_lineage, selected_final_sources, operational_source); the proposed /lineage/ path is NOT adopted.",
+      "approval_ref": ["DEC-019", "CR-113", "CR-118"],
+      "approved_operations": [{"method": "get", "path": "/api/runs/{id}/"}, {"method": "get", "path": "/api/runs/{id}/lineage/"}],
+      "approval_note": "CR-113: three fields on GET /api/runs/{id}/ (verification_lineage, selected_final_sources, operational_source). CR-118 (MBE-00) adds GET /api/runs/{id}/lineage/ (chuỗi run); runtime do MBE-01.",
       "approved": true
     },
     {
