@@ -1058,6 +1058,571 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit-samples/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách mẫu kiểm định (audit sample)
+         * @description Không kèm danh sách frame; lấy chi tiết frame ở response của POST hoặc qua ranking.
+         */
+        get: operations["audit_samples_list"];
+        put?: never;
+        /**
+         * Tạo mẫu kiểm định theo stream random hoặc risk
+         * @description Lấy mẫu từ dữ liệu run/issue có sẵn. Seed được lưu lại; bỏ trống thì server sinh và trả về, cùng seed + run + stream + size cho cùng kết quả (idempotent).
+         *     run chưa hoàn tất hoặc dữ liệu không đủ cỡ mẫu trả 422 INSUFFICIENT_SAMPLE.
+         */
+        post: operations["audit_samples_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/benchmarks/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách benchmark
+         * @description Benchmark là tập tham chiếu hiệu chỉnh, không phải reference held-out của /api/references/.
+         */
+        get: operations["benchmarks_list"];
+        put?: never;
+        /** Tạo benchmark từ frame của snapshot */
+        post: operations["benchmarks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/benchmarks/import-cvat/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nhập benchmark từ task CVAT (chỉ đọc)
+         * @description Adapter CVAT chỉ đọc (không ghi ngược lên CVAT). Chạy nền, idempotent theo (dataset_id, cvat_task_id).
+         */
+        post: operations["benchmarks_import_cvat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluation/performance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tổng hợp hiệu năng từ các evaluation
+         * @description Tổng hợp từ /api/evaluations/; chỉ evaluation đã completed. Số liệu thiếu mẫu giữ status not_checked, không bịa số.
+         */
+        get: operations["evaluation_performance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calibration/reviewers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách reviewer và độ hiệu chỉnh */
+        get: operations["calibration_reviewers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calibration/models/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách model và độ hiệu chỉnh */
+        get: operations["calibration_models_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calibration/assignments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ghi nhận giao mẫu hiệu chỉnh cho reviewer hoặc model
+         * @description Chỉ ghi nhận và liệt kê; không có thuật toán chấm điểm trong MVP.
+         */
+        post: operations["calibration_assignments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/models/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách model */
+        get: operations["models_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/models/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Bật/tắt hoặc đổi phiên bản model
+         * @description `expected_revision` khác revision hiện tại trả 409 INVALID_TRANSITION. Ghi audit cùng transaction. Không đổi model đã gắn config version đã publish (422 BUSINESS_RULE_UNMET).
+         */
+        patch: operations["models_update"];
+        trace?: never;
+    };
+    "/api/guidelines/versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách guideline version và hiệu lực */
+        get: operations["guidelines_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config-versions/{id}/rules/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rule, ngưỡng phát hành và chính sách lấy mẫu của config version
+         * @description Tập hữu hạn nên không phân trang. Ghi phiên bản mới bằng POST /api/config-versions/ (bản đã publish bất biến).
+         */
+        get: operations["config_versions_rules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/workflow-permissions/rules/{rule}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Bật/tắt quy tắc quy trình
+         * @description Ghi audit cùng transaction. `expected_revision` lệch trả 409. Quy tắc bắt buộc theo SRS (`locked`) không tắt được: 422 BUSINESS_RULE_UNMET.
+         */
+        patch: operations["auth_workflow_rule_update"];
+        trace?: never;
+    };
+    "/api/frames/{id}/workspace/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dữ liệu workspace của frame (issue, annotation, prediction, lease)
+         * @description Gộp GET /api/frames/{id}/issues/ với lease hiện tại và hàng đợi; người lập GT của tập đánh giá nhận 403 FORBIDDEN (BR-10).
+         */
+        get: operations["frames_workspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guideline-gaps/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách guideline gap */
+        get: operations["guideline_gaps_list"];
+        put?: never;
+        /**
+         * Tạo guideline gap độc lập
+         * @description Tạo gap ngoài luồng phân xử; luồng cũ `POST /api/issues/{id}/adjudications/` với outcome guideline_gap vẫn giữ nguyên. Đã có gap open cho cùng (issue_id, rule_id) trả 409.
+         */
+        post: operations["guideline_gaps_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues/{id}/similar-cases/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Case tương tự đã phân xử
+         * @description Dựa trên Decision Case cùng rule_id/family; không có case phù hợp trả danh sách rỗng.
+         */
+        get: operations["issues_similar_cases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/queues/{name}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tóm tắt hàng đợi và số đếm theo trạng thái frame */
+        get: operations["queues_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/metrics/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Số liệu tổng hợp của run
+         * @description Tính từ dữ liệu có sẵn; thiếu dữ liệu trả null, không bịa số. Annotator chỉ thấy phần giới hạn (MBE-07).
+         */
+        get: operations["runs_metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/engines/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thống kê theo engine của run */
+        get: operations["runs_engines_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/review-volume/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Khối lượng review theo thời gian */
+        get: operations["runs_review_volume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/tasks-quality/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chất lượng theo task CVAT */
+        get: operations["runs_tasks_quality"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/candidate-categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Phân bố candidate theo họ lỗi */
+        get: operations["runs_candidate_categories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tóm tắt các dataset (snapshot, run, issue mở)
+         * @description Chỉ dataset người gọi có quyền (kiểm ở API).
+         */
+        get: operations["datasets_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/snapshots/{id}/runs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Các QC run của snapshot */
+        get: operations["snapshots_runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{id}/revisions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Revision của dataset */
+        get: operations["datasets_revisions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/report/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Báo cáo chất lượng của run
+         * @description Khác /api/reports/{id}/ (báo cáo hiệu quả KPI theo reference). Số liệu thiếu để null. Gồm danh sách export đã yêu cầu.
+         */
+        get: operations["runs_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/report/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yêu cầu xuất báo cáo PDF/CSV/JSON
+         * @description Idempotent theo (run_id, format): export hoàn tất cho cùng run/format được tái dùng. Chạy nền khi nặng; theo dõi status ở `GET /api/runs/{id}/report/` (trường exports).
+         */
+        post: operations["runs_report_export"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{id}/lineage/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chuỗi run gốc → rework → run cuối */
+        get: operations["runs_lineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/releases/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách release */
+        get: operations["releases_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/releases/{id}/manifest/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Manifest của release */
+        get: operations["releases_manifest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/releases/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Phê duyệt release
+         * @description Người duyệt khác người tạo release (403 SAME_REQUESTER_APPROVER). Release đã duyệt trả 409 INVALID_TRANSITION. Gate chưa passed và không có waiver đã duyệt trả 422 BUSINESS_RULE_UNMET. Ghi audit cùng transaction.
+         */
+        post: operations["releases_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1142,6 +1707,10 @@ export interface components {
             name: string;
             description: string;
             enforced: boolean;
+            /** @description Dùng làm expected_revision khi PATCH (MBE-05) */
+            revision?: number;
+            /** @description true thì không tắt được */
+            locked?: boolean;
         };
         Dataset: {
             id: number;
@@ -1598,6 +2167,13 @@ export interface components {
                 [key: string]: unknown;
             };
             lease_holder_user_id: number | null;
+            /**
+             * @description Mức ưu tiên suy ra từ s(f) (MBE-02)
+             * @enum {string}
+             */
+            priority?: "high" | "medium" | "low";
+            /** Format: uri */
+            thumbnail_url?: string | null;
         };
         GuidelineRule: {
             /** @example VEH-03 */
@@ -1636,6 +2212,8 @@ export interface components {
         Severity: "critical" | "medium" | "minor";
         QueueNextRequest: {
             run_id: number;
+            /** @description Nhận đúng frame này thay vì frame kế tiếp (MBE-02); không thuộc hàng đợi hoặc đã có lease khác trả 409 LEASE_CONFLICT */
+            frame_id?: number;
         };
         Lease: {
             id: number;
@@ -1891,6 +2469,12 @@ export interface components {
             correct_label?: string | null;
             reason: string;
             override_reason?: string;
+            /**
+             * @description request_rework tạo yêu cầu sửa (rework) sau khi phân xử (MBE-02); chỉ hợp lệ với outcome confirm
+             * @default none
+             * @enum {string}
+             */
+            after_adjudication?: "none" | "request_rework";
         };
         Adjudication: {
             id: number;
@@ -1904,6 +2488,8 @@ export interface components {
             case_version: string;
             /** Format: date-time */
             created_at: string;
+            /** @description Có khi after_adjudication=request_rework (MBE-02) */
+            rework_id?: number | null;
         };
         ReworkCreate: {
             issue_id: number;
@@ -2312,6 +2898,429 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["RuleMapping"][];
+        };
+        /** @enum {string} */
+        AuditSampleStream: "random" | "risk";
+        AuditSampleCreate: {
+            run_id: number;
+            stream: components["schemas"]["AuditSampleStream"];
+            size: number;
+            /** @description Bỏ trống thì server sinh và lưu lại */
+            seed?: number;
+        };
+        AuditSample: {
+            id: number;
+            run_id: number;
+            stream: components["schemas"]["AuditSampleStream"];
+            seed: number;
+            /** @description Cỡ mẫu yêu cầu */
+            size: number;
+            /** @description Số frame thực tế lấy được */
+            frame_count: number;
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        AuditSampleFrame: {
+            frame_id: number;
+            frame_key: components["schemas"]["FrameKey"];
+            rank?: number | null;
+            review_state: components["schemas"]["FrameReviewState"];
+        };
+        AuditSampleDetail: components["schemas"]["AuditSample"] & {
+            frames: components["schemas"]["AuditSampleFrame"][];
+        };
+        PaginatedAuditSampleList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["AuditSample"][];
+        };
+        Benchmark: {
+            id: number;
+            name: string;
+            dataset_id: number;
+            snapshot_id?: number | null;
+            /** @enum {string} */
+            source: "manual" | "cvat_import";
+            cvat_task_id?: number | null;
+            /** @enum {string} */
+            status: "pending" | "ready" | "failed";
+            frame_count: number;
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BenchmarkCreate: {
+            name: string;
+            dataset_id: number;
+            snapshot_id: number;
+            frame_ids: number[];
+        };
+        BenchmarkImportCvat: {
+            name: string;
+            dataset_id: number;
+            cvat_task_id: number;
+        };
+        PaginatedBenchmarkList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Benchmark"][];
+        };
+        PerformanceEntry: {
+            evaluation_id: number;
+            run_id: number;
+            snapshot_id: number;
+            score_version: string;
+            /** Format: date-time */
+            created_at: string;
+            metrics: {
+                [key: string]: components["schemas"]["MetricValue"];
+            };
+        };
+        PaginatedPerformanceEntryList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["PerformanceEntry"][];
+        };
+        CalibrationReviewer: {
+            user_id: number;
+            display_name: string;
+            reviewed_frames: number;
+            /** @description Số assignment hiệu chỉnh đã ghi nhận */
+            assignments: number;
+            /** @description null khi chưa đủ dữ liệu */
+            agreement_rate?: number | null;
+            /** Format: date-time */
+            last_calibrated_at?: string | null;
+        };
+        PaginatedCalibrationReviewerList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["CalibrationReviewer"][];
+        };
+        CalibrationModel: {
+            model_id: number;
+            name: string;
+            version: string;
+            kind: components["schemas"]["ModelKind"];
+            assignments: number;
+            agreement_rate?: number | null;
+            /** Format: date-time */
+            last_calibrated_at?: string | null;
+        };
+        PaginatedCalibrationModelList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["CalibrationModel"][];
+        };
+        CalibrationAssignmentCreate: {
+            /** @enum {string} */
+            target_kind: "reviewer" | "model";
+            /** @description user_id (reviewer) hoặc model_id (model) */
+            target_id: number;
+            audit_sample_id: number;
+            note?: string;
+        };
+        CalibrationAssignment: {
+            id: number;
+            /** @enum {string} */
+            target_kind: "reviewer" | "model";
+            target_id: number;
+            audit_sample_id: number;
+            /** @enum {string} */
+            status: "assigned" | "completed";
+            note?: string;
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @enum {string} */
+        ModelKind: "vlm" | "detector" | "embedding" | "other";
+        Model: {
+            id: number;
+            name: string;
+            kind: components["schemas"]["ModelKind"];
+            version: string;
+            enabled: boolean;
+            /** @description Số revision cho kiểm soát xung đột (409) */
+            revision: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        PaginatedModelList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Model"][];
+        };
+        ModelPatch: {
+            expected_revision: number;
+            enabled?: boolean;
+            version?: string;
+        };
+        GuidelineVersionEntry: {
+            version: string;
+            is_current: boolean;
+            rule_count: number;
+            /** Format: date-time */
+            effective_from?: string | null;
+            /** Format: date-time */
+            effective_to?: string | null;
+        };
+        PaginatedGuidelineVersionEntryList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["GuidelineVersionEntry"][];
+        };
+        ConfigRule: {
+            rule_id: string;
+            name: string;
+            enabled: boolean;
+            parameters?: {
+                [key: string]: unknown;
+            };
+        };
+        ConfigVersionRules: {
+            config_version_id: number;
+            /** @enum {string} */
+            status: "draft" | "published";
+            rules: components["schemas"]["ConfigRule"][];
+            /** @description Ngưỡng phát hành (gate) */
+            release_thresholds: {
+                [key: string]: unknown;
+            };
+            /** @description Chính sách lấy mẫu */
+            sampling_policy: {
+                [key: string]: unknown;
+            };
+        };
+        WorkflowRulePatch: {
+            enforced: boolean;
+            expected_revision: number;
+            reason?: string;
+        };
+        FrameWorkspace: components["schemas"]["FrameIssues"] & {
+            lease?: components["schemas"]["Lease"] | null;
+            queue?: components["schemas"]["QueueName"] | null;
+            undecided_issue_count?: number;
+        };
+        GuidelineGapCreate: {
+            issue_id?: number | null;
+            rule_id: string;
+            description: string;
+        };
+        GuidelineGap: {
+            id: number;
+            issue_id?: number | null;
+            rule_id: string;
+            description: string;
+            /** @enum {string} */
+            status: "open" | "resolved";
+            guideline_version: string | null;
+            resolved_in_version?: string | null;
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PaginatedGuidelineGapList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["GuidelineGap"][];
+        };
+        SimilarCase: {
+            case: components["schemas"]["DecisionCase"];
+            similarity: number;
+        };
+        PaginatedSimilarCaseList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["SimilarCase"][];
+        };
+        QueueSummary: {
+            name: components["schemas"]["QueueName"];
+            run_id: number;
+            total: number;
+            /** @description Số frame theo FrameReviewState */
+            counts: {
+                [key: string]: number;
+            };
+        };
+        RunMetrics: {
+            run_id: number;
+            status: components["schemas"]["RunStatus"];
+            frames_total: number;
+            frames_reviewed: number;
+            issues_total: number;
+            issues_by_family: {
+                [key: string]: number;
+            };
+            issues_by_state: {
+                [key: string]: number;
+            };
+            reviewed_ratio?: number | null;
+        };
+        RunEngineStat: {
+            engine: components["schemas"]["EngineName"];
+            status: components["schemas"]["EngineStatus"];
+            units_total: number;
+            units_failed: number;
+            candidates: number;
+            duration_ms?: number | null;
+        };
+        RunEngineStats: {
+            run_id: number;
+            engines: components["schemas"]["RunEngineStat"][];
+        };
+        ReviewVolumePoint: {
+            /** Format: date */
+            period_start: string;
+            frames_reviewed: number;
+            decisions: number;
+        };
+        ReviewVolume: {
+            run_id: number;
+            /** @enum {string} */
+            granularity: "day" | "week";
+            points: components["schemas"]["ReviewVolumePoint"][];
+        };
+        TaskQuality: {
+            cvat_task_id: number;
+            name: string;
+            frames: number;
+            issues: number;
+            issue_rate?: number | null;
+            reviewed_ratio?: number | null;
+        };
+        PaginatedTaskQualityList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["TaskQuality"][];
+        };
+        CandidateCategories: {
+            run_id: number;
+            total: number;
+            categories: {
+                family: components["schemas"]["IssueFamily"];
+                count: number;
+                share?: number | null;
+            }[];
+        };
+        DatasetSummary: {
+            dataset_id: number;
+            name: string;
+            snapshot_count: number;
+            latest_snapshot_id?: number | null;
+            latest_run_id?: number | null;
+            open_issue_count: number;
+            reviewed_ratio?: number | null;
+        };
+        PaginatedDatasetSummaryList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["DatasetSummary"][];
+        };
+        DatasetRevision: {
+            revision: string;
+            snapshot_id?: number | null;
+            frame_count: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PaginatedDatasetRevisionList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["DatasetRevision"][];
+        };
+        /** @enum {string} */
+        ReportExportFormat: "pdf" | "csv" | "json";
+        ReportExportCreate: {
+            format: components["schemas"]["ReportExportFormat"];
+        };
+        ReportExport: {
+            id: number;
+            run_id: number;
+            format: components["schemas"]["ReportExportFormat"];
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "failed";
+            /** Format: uri */
+            download_url?: string | null;
+            error?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            finished_at?: string | null;
+        };
+        RunReport: {
+            run_id: number;
+            snapshot_id: number;
+            source_run_id: number;
+            source_reason: string;
+            score_version?: string | null;
+            /** Format: date-time */
+            generated_at: string;
+            metrics: components["schemas"]["RunMetrics"];
+            gate?: components["schemas"]["GateResult"] | null;
+            engine_coverage: components["schemas"]["LedgerEntry"][];
+            release_id?: number | null;
+            exports: components["schemas"]["ReportExport"][];
+        };
+        RunLineageNode: {
+            run_id: number;
+            /** @enum {string} */
+            kind: "original" | "rework_verification" | "final";
+            snapshot_id: number;
+            rework_id?: number | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        RunLineage: {
+            run_id: number;
+            origin_run_id: number | null;
+            final_run_id: number | null;
+            /** @description Từ run gốc tới run cuối */
+            chain: components["schemas"]["RunLineageNode"][];
+        };
+        Release: {
+            id: number;
+            run_id: number;
+            snapshot_id: number;
+            config_version_id: number;
+            version_tag: string;
+            /** @enum {string} */
+            status: "pending" | "approved";
+            /** @enum {string} */
+            gate_status?: "passed" | "failed" | "not_checked";
+            created_by: number;
+            /** Format: date-time */
+            created_at: string;
+            approved_by?: number | null;
+            /** Format: date-time */
+            approved_at?: string | null;
+        };
+        PaginatedReleaseList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Release"][];
+        };
+        ReleaseApprove: {
+            note?: string;
+        };
+        ReleaseManifest: {
+            release_id: number;
+            /** Format: date-time */
+            generated_at: string;
+            /** @description SHA-256 của manifest chuẩn hoá */
+            checksum: string;
+            snapshot_id: number;
+            run_id: number;
+            config_version_id: number;
+            guideline_version?: string | null;
+            score_version?: string | null;
+            gate?: components["schemas"]["GateResult"] | null;
+            artifacts: {
+                name: string;
+                sha256: string;
+                size_bytes?: number;
+            }[];
         };
     };
     responses: {
@@ -3029,6 +4038,9 @@ export interface operations {
                 family?: components["schemas"]["IssueFamily"];
                 origin?: components["schemas"]["IssueOrigin"];
                 review_state?: components["schemas"]["FrameReviewState"];
+                /** @description Tìm theo frame_key (cvat_task_id hoặc frame_number) */
+                q?: string;
+                priority?: "high" | "medium" | "low";
                 /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
                 cursor?: components["parameters"]["Cursor"];
             };
@@ -3974,6 +4986,940 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    audit_samples_list: {
+        parameters: {
+            query?: {
+                run_id?: number;
+                stream?: components["schemas"]["AuditSampleStream"];
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang audit sample, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAuditSampleList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    audit_samples_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditSampleCreate"];
+            };
+        };
+        responses: {
+            /** @description Audit sample đã tạo, kèm frame */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditSampleDetail"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    benchmarks_list: {
+        parameters: {
+            query?: {
+                dataset_id?: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang benchmark, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBenchmarkList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    benchmarks_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BenchmarkCreate"];
+            };
+        };
+        responses: {
+            /** @description Benchmark đã tạo */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Benchmark"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    benchmarks_import_cvat: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BenchmarkImportCvat"];
+            };
+        };
+        responses: {
+            /** @description Đã nhận yêu cầu nhập; benchmark ở trạng thái pending */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Benchmark"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    evaluation_performance: {
+        parameters: {
+            query?: {
+                dataset_id?: number;
+                run_id?: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang điểm hiệu năng, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPerformanceEntryList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    calibration_reviewers_list: {
+        parameters: {
+            query?: {
+                dataset_id?: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang reviewer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCalibrationReviewerList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    calibration_models_list: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang model */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCalibrationModelList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    calibration_assignments_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalibrationAssignmentCreate"];
+            };
+        };
+        responses: {
+            /** @description Assignment đã ghi nhận */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalibrationAssignment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    models_list: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["ModelKind"];
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang model */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedModelList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    models_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelPatch"];
+            };
+        };
+        responses: {
+            /** @description Model sau khi cập nhật */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Model"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    guidelines_versions_list: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang guideline version, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedGuidelineVersionEntryList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    config_versions_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rule và ngưỡng của config version */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersionRules"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    auth_workflow_rule_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowRulePatch"];
+            };
+        };
+        responses: {
+            /** @description Quy tắc sau khi cập nhật */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRule"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    frames_workspace: {
+        parameters: {
+            query?: {
+                /** @description Guideline version tag; bỏ trống là bản mới nhất. Workspace truyền version của snapshot. */
+                version?: components["parameters"]["GuidelineVersion"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workspace của frame */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameWorkspace"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    guideline_gaps_list: {
+        parameters: {
+            query?: {
+                status?: "open" | "resolved";
+                rule_id?: string;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang guideline gap, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedGuidelineGapList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    guideline_gaps_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidelineGapCreate"];
+            };
+        };
+        responses: {
+            /** @description Guideline gap đã tạo */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuidelineGap"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    issues_similar_cases: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang case tương tự, giảm dần theo độ giống */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSimilarCaseList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    queues_retrieve: {
+        parameters: {
+            query: {
+                run_id: number;
+            };
+            header?: never;
+            path: {
+                name: components["schemas"]["QueueName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Số đếm của hàng đợi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueSummary"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_metrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Số liệu của run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunMetrics"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_engines_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thống kê engine */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunEngineStats"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_review_volume: {
+        parameters: {
+            query?: {
+                granularity?: "day" | "week";
+                date_from?: string;
+                date_to?: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Chuỗi khối lượng review */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewVolume"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_tasks_quality: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang chất lượng theo task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTaskQualityList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_candidate_categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Phân bố theo họ lỗi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateCategories"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    datasets_summary: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang tóm tắt dataset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDatasetSummaryList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    snapshots_runs: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang run, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRunList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    datasets_revisions: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang revision, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDatasetRevisionList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Báo cáo của run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunReport"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    runs_report_export: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportExportCreate"];
+            };
+        };
+        responses: {
+            /** @description Export đã xếp hàng (hoặc trả lại export trùng) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportExport"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    runs_lineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lineage của run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunLineage"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    releases_list: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved";
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang release, mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedReleaseList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    releases_manifest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Manifest JSON */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleaseManifest"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    releases_approve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID do client sinh. Cùng key + cùng body → trả lại phản hồi cũ; cùng key + body khác →
+                 *     409 IDEMPOTENCY_KEY_REUSED (rest-api.html §3). Mức bắt buộc chờ Tech Lead xác nhận.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseApprove"];
+            };
+        };
+        responses: {
+            /** @description Release đã duyệt */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
 }
