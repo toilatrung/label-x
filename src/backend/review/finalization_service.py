@@ -259,18 +259,63 @@ def unreviewed_new_candidates(origin_run: QCRun, final_run: QCRun) -> QuerySet[C
     )
 
 
-def final_source_status(origin_run: QCRun, final_run: QCRun) -> tuple[bool, str]:
-    """Return ``(selectable, reason)`` for one final attempt; never mutates anything."""
+def final_source_blockers(origin_run: QCRun, final_run: QCRun) -> list[str]:
+    """Every reason one final attempt cannot be the source, in evaluation order (read-only).
+
+    A non-Completed attempt has the single reason ``final_run_<status>``: its candidates,
+    issues and ledger say nothing about the scope. A Completed one can be blocked by several
+    independent reasons at once.
+    """
 
     if final_run.status != QCRun.Status.COMPLETED:
-        return False, f"final_run_{final_run.status}"
+        return [f"final_run_{final_run.status}"]
+    reasons = []
     if _has_open_issue(final_run):
-        return False, "open_issue_in_final_run"
+        reasons.append("open_issue_in_final_run")
     if unreviewed_new_candidates(origin_run, final_run).exists():
-        return False, "new_candidate_unreviewed"
+        reasons.append("new_candidate_unreviewed")
     if not has_complete_required_coverage(final_run):
-        return False, "coverage_incomplete"
-    return True, "selected"
+        reasons.append("coverage_incomplete")
+    return reasons
+
+
+def final_source_status(origin_run: QCRun, final_run: QCRun) -> tuple[bool, str]:
+    """Return ``(selectable, reason)`` for one final attempt; never mutates anything.
+
+    ``reason`` is the first blocker (the evaluation order decides the source); the full list
+    is ``final_source_blockers``.
+    """
+
+    blockers = final_source_blockers(origin_run, final_run)
+    return (False, blockers[0]) if blockers else (True, "selected")
+
+
+def evaluate_operational_source(
+    origin_run: QCRun,
+) -> tuple[QCRun, str, list[dict[str, object]], dict[int, list[str]]]:
+    """Pick the safe source (read-only) and keep every attempt's full blocker list.
+
+    Each attempt is evaluated once; ``blockers`` maps its run id to all its reasons, while the
+    attempt's own ``reason`` stays the first blocker (the evaluation order decides the source).
+    """
+
+    attempts: list[dict[str, object]] = []
+    blockers: dict[int, list[str]] = {}
+    if _has_open_issue(origin_run):
+        return origin_run, "origin_has_open_issue", attempts, blockers
+    selected: QCRun | None = None
+    for candidate in QCRun.objects.filter(origin_run=origin_run, is_final=True).order_by(
+        "-finished_at", "-pk"
+    ):
+        found = final_source_blockers(origin_run, candidate)
+        blockers[candidate.pk] = found
+        reason = found[0] if found else "selected"
+        attempts.append({"run_id": candidate.pk, "status": candidate.status, "reason": reason})
+        if not found and selected is None:
+            selected = candidate
+    if selected is None:
+        return origin_run, "no_valid_final", attempts, blockers
+    return selected, "selected_final", attempts, blockers
 
 
 def select_operational_source(origin_run: QCRun) -> tuple[QCRun, str, list[dict[str, object]]]:
@@ -280,20 +325,8 @@ def select_operational_source(origin_run: QCRun) -> tuple[QCRun, str, list[dict[
     newly opened issue leaves the original run authoritative.
     """
 
-    attempts: list[dict[str, object]] = []
-    if _has_open_issue(origin_run):
-        return origin_run, "origin_has_open_issue", attempts
-    selected: QCRun | None = None
-    for candidate in QCRun.objects.filter(origin_run=origin_run, is_final=True).order_by(
-        "-finished_at", "-pk"
-    ):
-        selectable, reason = final_source_status(origin_run, candidate)
-        attempts.append({"run_id": candidate.pk, "status": candidate.status, "reason": reason})
-        if selectable and selected is None:
-            selected = candidate
-    if selected is None:
-        return origin_run, "no_valid_final", attempts
-    return selected, "selected_final", attempts
+    source, reason, attempts, _blockers = evaluate_operational_source(origin_run)
+    return source, reason, attempts
 
 
 def operational_run(origin_run: QCRun) -> QCRun:

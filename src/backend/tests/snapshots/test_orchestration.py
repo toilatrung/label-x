@@ -166,3 +166,86 @@ def test_task_outside_dataset_is_rejected() -> None:
     client.get_task = other_project  # type: ignore[method-assign,assignment]
     with pytest.raises(ValueError, match="outside dataset"):
         _create(key="outside", username="outside", client=client)
+
+
+class _AddressedStorage:
+    """Like ObjectStorage: content-addressed key, and it records every write."""
+
+    def __init__(self) -> None:
+        self.puts = 0
+
+    def put(
+        self,
+        content: bytes,
+        *,
+        extension: str | None = None,
+        content_type: str = "application/octet-stream",
+    ) -> Blob:
+        from storage.client import content_key
+
+        self.puts += 1
+        key, digest = content_key(content, extension)
+        return Blob("snapshots", key, digest, len(content), True)
+
+
+def test_compute_job_revision_equals_locked_snapshot_revision_and_writes_nothing(
+    monkeypatch,
+) -> None:
+    from snapshots import orchestration
+
+    storage = _AddressedStorage()
+    snapshot = create_snapshot_from_cvat(
+        dataset_id=42,
+        scope=SnapshotScope(cvat_job_ids=(17,)),
+        note="rework",
+        created_by=_actor("parity"),
+        idempotency_key="parity",
+        client=FakeCvatClient(),  # type: ignore[arg-type]
+        storage=storage,
+    )
+    puts_before, snapshots_before = storage.puts, Snapshot.objects.count()
+
+    revision = orchestration.compute_job_revision(
+        dataset_id=42,
+        cvat_job_id=17,
+        client=FakeCvatClient(),  # type: ignore[arg-type]
+    )
+
+    assert snapshot.status == Snapshot.Status.LOCKED
+    assert revision == snapshot.revision_sha256
+    assert storage.puts == puts_before
+    assert Snapshot.objects.count() == snapshots_before
+
+
+def test_compute_job_revision_changes_with_annotations_and_media() -> None:
+    from snapshots.orchestration import compute_job_revision
+
+    base = compute_job_revision(
+        dataset_id=42,
+        cvat_job_id=17,
+        client=FakeCvatClient(),  # type: ignore[arg-type]
+    )
+    moved = FakeCvatClient()
+    moved.annotation_reads = 1  # drift flag only triggers on read #2; edit points directly instead
+    original = ANNOTATIONS["shapes"][0]["points"]  # type: ignore[index]
+    try:
+        ANNOTATIONS["shapes"][0]["points"] = [10, 20, 130, 120]  # type: ignore[index]
+        edited = compute_job_revision(
+            dataset_id=42,
+            cvat_job_id=17,
+            client=moved,  # type: ignore[arg-type]
+        )
+    finally:
+        ANNOTATIONS["shapes"][0]["points"] = original  # type: ignore[index]
+    assert edited != base
+
+
+def test_compute_job_revision_rejects_job_outside_dataset() -> None:
+    from snapshots.orchestration import SnapshotSourceError, compute_job_revision
+
+    with pytest.raises(SnapshotSourceError):
+        compute_job_revision(
+            dataset_id=43,
+            cvat_job_id=17,
+            client=FakeCvatClient(),  # type: ignore[arg-type]
+        )

@@ -685,6 +685,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rework/{id}/current-revision/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revision CVAT hiện tại của job rework (chỉ đọc)
+         * @description Trả `revision_sha256` mà `POST /api/rework/{id}/submitted/` sẽ nhận làm `cvat_revision` nếu gửi ngay:
+         *     backend đọc CVAT (chỉ GET) và băm bằng đúng hàm chuẩn hóa snapshot một-job mà recheck dùng, nhưng
+         *     không tạo snapshot/run/audit, không upload object storage và không đọc lại để kiểm drift
+         *     (job đang bị sửa dở có thể cho revision mà submit sau đó từ chối).
+         *     `unchanged=true` nghĩa là revision trùng revision gốc hoặc một vòng trước, tức submit sẽ trả 409 `REVISION_UNCHANGED`.
+         *     Annotator chỉ đọc rework được giao (object của người khác trả 404); thiếu dataset scope trả 403.
+         *     CVAT không đọc được (hoặc trả dữ liệu thiếu/sai) trả 502 `BUSINESS_RULE_UNMET`. Mỗi lần gọi đọc CVAT lại
+         *     (8+N request, N = số frame; không cache nội dung) nên giới hạn 6 lần/phút/người dùng, vượt trả 429
+         *     `BUSINESS_RULE_UNMET` kèm header `Retry-After` và `details.retry_after_seconds`.
+         *
+         *     Hạn chế ngữ nghĩa:
+         *     - `unchanged` chỉ có ý nghĩa khi `rework_status` là `fix_pending`.
+         *     - `original_revision` là revision của snapshot gốc (có thể nhiều job) còn `revision_sha256` là của snapshot
+         *       một job, nên `unchanged` chỉ đáng tin khi snapshot gốc một job.
+         *     - Revision phụ thuộc `guideline_version` và `taxonomy_version` hiện hành.
+         *     - `unchanged=false` không có nghĩa annotator đã sửa; job đang sửa dở có thể cho revision mà submit từ chối (drift).
+         */
+        get: operations["rework_current_revision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rework/{id}/submitted/": {
         parameters: {
             query?: never;
@@ -814,6 +849,8 @@ export interface paths {
         /**
          * Policy lease/idle đang áp dụng (read-only, có version)
          * @description Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+         *     `dataset_id` là tùy chọn: nếu có, caller phải có scope dataset đó (thiếu scope → 403 `OUT_OF_SCOPE`,
+         *     giá trị không hợp lệ → 400); nếu không có, hành vi như trước (chỉ kiểm vai trò). Policy pilot trả như nhau.
          */
         get: operations["review_policy_retrieve"];
         put?: never;
@@ -1767,7 +1804,7 @@ export interface components {
             selected_final_sources: {
                 [key: string]: unknown;
             };
-            /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) */
+            /** @description Gồm scope_complete và blocked_reasons (DEC-019 P07) — mảng đầy đủ mọi lý do đang chặn nguồn, không trùng, sắp xếp cố định, rỗng khi scope_complete */
             operational_source: {
                 [key: string]: unknown;
             };
@@ -1833,6 +1870,17 @@ export interface components {
             /** @enum {string} */
             review_state: "unreviewed" | "in_review" | "incomplete" | "reviewed" | "awaiting_followup" | "completed";
             timeline: components["schemas"]["ReworkRound"][];
+        };
+        ReworkCurrentRevision: {
+            rework_id: number;
+            cvat_job_id: number;
+            revision_sha256: string;
+            original_revision: string;
+            unchanged: boolean;
+            /** @enum {string} */
+            rework_status?: "fix_pending" | "recheck_pending" | "resolved" | "reopened";
+            /** Format: date-time */
+            read_at: string;
         };
         ReworkRound: {
             round: number;
@@ -2049,6 +2097,16 @@ export interface components {
         };
     };
     responses: {
+        /** @description Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds) */
+        TooManyRequests: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Lỗi từ upstream dịch vụ (CVAT) hoặc điều kiện nghiệp vụ không đạt (BUSINESS_RULE_UNMET) */
         BadGateway: {
             headers: {
@@ -3187,6 +3245,32 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    rework_current_revision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision hiện tại */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReworkCurrentRevision"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            502: components["responses"]["BadGateway"];
+        };
+    };
     rework_submitted: {
         parameters: {
             query?: never;
@@ -3379,7 +3463,9 @@ export interface operations {
     };
     review_policy_retrieve: {
         parameters: {
-            query?: never;
+            query?: {
+                dataset_id?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3395,6 +3481,7 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewPolicy"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             503: components["responses"]["Unavailable"];
         };

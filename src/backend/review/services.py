@@ -208,8 +208,10 @@ def claim_next(*, request: Request, run_id: int, queue: str) -> dict[str, object
     user = _actor(request)
     user_id = int(user.pk)
     # Lock order: user, then run. This serializes claims across runs for one reviewer,
-    # and all contenders for a frame in one run. Do not use SKIP LOCKED here.
-    User.objects.select_for_update().get(pk=user_id)
+    # and all contenders for a frame in one run. Do not use SKIP LOCKED here. The user row is a
+    # mutex only: NO KEY UPDATE does not conflict with the deferred-FK KEY SHARE that another
+    # request's COMMIT takes on this user (frame.previous_reviewer), so it cannot deadlock.
+    User.objects.select_for_update(no_key=True).get(pk=user_id)
     open_for_user = list(
         Lease.objects.select_related("frame_review").filter(holder=user, closed_at__isnull=True)
     )
@@ -333,7 +335,7 @@ def renew(*, request: Request, lease_id: int) -> Lease | None:
     relation = Lease.objects.filter(pk=lease_id).values("holder_id", "frame_review__run_id").first()
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Lease không tồn tại.")
-    User.objects.select_for_update().get(pk=user_id)
+    User.objects.select_for_update(no_key=True).get(pk=user_id)
     QCRun.objects.select_for_update().get(pk=relation["frame_review__run_id"])
     lease = Lease.objects.select_related("frame_review").get(pk=lease_id)
     now = _now()

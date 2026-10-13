@@ -281,9 +281,7 @@ def test_incomplete_ledger_blocks_source_and_completion(final_world, gap):
 @pytest.mark.django_db
 @pytest.mark.parametrize("gap", LEDGER_GAPS)
 def test_new_candidate_is_not_routed_from_an_incomplete_ledger(final_world, gap):
-    """Invariants only. KNOWN LIMIT (awaiting PO decision): ``blocked_reasons`` reports a single
-    reason per final attempt, so with both a new candidate and a ledger gap only one is listed;
-    this test deliberately does not pin which one."""
+    """A new candidate is not routed while the ledger is incomplete; both reasons are listed."""
     origin, final = final_world["run"], final_world["final"]
     frame = _awaiting(final_world)
     _complete_final(final)
@@ -295,7 +293,8 @@ def test_new_candidate_is_not_routed_from_an_incomplete_ledger(final_world, gap)
     assert not Issue.objects.filter(candidate=new).exists()
     source = run_lineage_fields(origin)["operational_source"]
     assert source["run_id"] == origin.pk and source["scope_complete"] is False
-    assert source["blocked_reasons"]  # blocked, whatever the first reason is
+    assert "coverage_incomplete" in source["blocked_reasons"]
+    assert "new_candidate_unreviewed" in source["blocked_reasons"]
     frame.refresh_from_db()
     assert frame.state == FrameReview.State.AWAITING_FOLLOWUP
 

@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import URLValidator
@@ -37,7 +38,12 @@ from review.services import _actor, _reviewer_identity
 from runs.models import QCRun
 from runs.services import create_qc_run
 from snapshots.models import Snapshot
-from snapshots.orchestration import SnapshotScope, create_snapshot_from_cvat
+from snapshots.orchestration import (
+    SnapshotScope,
+    SnapshotSourceError,
+    compute_job_revision,
+    create_snapshot_from_cvat,
+)
 
 
 def _body(request: Request) -> dict[str, Any]:
@@ -191,7 +197,16 @@ def create_rework(*, request: Request) -> ReworkRequest:
     key = _idempotency(request)
     request_hash = _request_hash(body)
 
-    User.objects.select_for_update().get(pk=user.pk)
+    # One lock order for every rework writer: user rows (by pk), then the run, then the rest.
+    # The annotator's row is locked here, not after the run lock: `submitted` (by that
+    # annotator) takes its user row before the run lock, so the reverse order deadlocks.
+    # Only a well-formed id is locked early; every validation error keeps its old precedence.
+    locked_users = {user.pk}
+    early_annotator = body.get("annotator_user_id")
+    if isinstance(early_annotator, int) and not isinstance(early_annotator, bool):
+        if early_annotator > 0:
+            locked_users.add(early_annotator)
+    list(User.objects.select_for_update(no_key=True).filter(pk__in=locked_users).order_by("pk"))
     relation = Issue.objects.filter(pk=issue_id).values("frame_review__run_id").first()
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
@@ -231,7 +246,7 @@ def create_rework(*, request: Request) -> ReworkRequest:
         )
 
     annotator_id = _positive_int(body.get("annotator_user_id"), "annotator_user_id")
-    annotator = User.objects.select_for_update().filter(pk=annotator_id).first()
+    annotator = User.objects.filter(pk=annotator_id).first()  # row already locked above
     if annotator is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Annotator không tồn tại.")
     if not _has_role(annotator, dataset_id, (Role.ANNOTATOR,)):
@@ -358,6 +373,37 @@ def _known_revisions(rework: ReworkRequest) -> set[str]:
     return {rework.original_revision, *rework.rechecks.values_list("revision", flat=True)}
 
 
+def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
+    """Revision `submitted` would claim right now. Reads CVAT only; persists nothing."""
+
+    frame = rework.issue.frame_review
+    job_id = frame.snapshot_frame.snapshot_job.cvat_job_id
+    try:
+        revision = compute_job_revision(dataset_id=frame.run.dataset_id, cvat_job_id=job_id)
+    except (
+        httpx.HTTPError,
+        SnapshotSourceError,
+        LookupError,
+        AttributeError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+    ) as exc:
+        raise ApiError(
+            status.HTTP_502_BAD_GATEWAY, "BUSINESS_RULE_UNMET", "Không đọc được job CVAT."
+        ) from exc
+    return {
+        "rework_id": rework.pk,
+        "cvat_job_id": job_id,
+        "revision_sha256": revision,
+        "original_revision": rework.original_revision,
+        "unchanged": revision in _known_revisions(rework),
+        "rework_status": rework.status,
+        "read_at": timezone.now().isoformat(),
+    }
+
+
 def _existing_submission(
     *,
     rework: ReworkRequest,
@@ -439,7 +485,7 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
 
     with transaction.atomic():
-        User.objects.select_for_update().get(pk=user.pk)
+        User.objects.select_for_update(no_key=True).get(pk=user.pk)
         QCRun.objects.select_for_update().get(pk=lookup.issue.frame_review.run_id)
         rework = ReworkRequest.objects.select_for_update().select_related("issue").get(pk=rework_id)
         replay = _existing_submission(
@@ -530,7 +576,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["issue__frame_review__run_id"])
     rework = (
         ReworkRequest.objects.select_for_update(of=("self",))
@@ -593,9 +639,19 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         rework.status = ReworkRequest.Status.RESOLVED
         rework.resolved_at = timezone.now()
         issue.state = Issue.State.RESOLVED
+        verified = {"status": rework.status, "issue_state": issue.state}
     else:
-        rework.status = ReworkRequest.Status.REOPENED
-        issue.state = Issue.State.REOPENED
+        # The failed round is audited as reopened; the row is written once, directly in its
+        # resting fix_pending state. A second UPDATE of a row this transaction already updated
+        # makes PostgreSQL re-check every deferred FK at COMMIT (KEY SHARE on parent rows such
+        # as the users), which deadlocks against a writer that holds a user row and waits for
+        # the run lock (complete_frame): tests/review/test_three_way_race.py.
+        verified = {
+            "status": ReworkRequest.Status.REOPENED,
+            "issue_state": Issue.State.REOPENED,
+        }
+        rework.status = ReworkRequest.Status.FIX_PENDING
+        issue.state = Issue.State.FIX_PENDING
     rework.save(update_fields=["status", "resolved_at", "updated_at"])
     issue.save(update_fields=["state"])
     audit = append_audit_event(
@@ -604,7 +660,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
         object_type="rework",
         object_id=rework.pk,
         before=before,
-        after={"status": rework.status, "issue_state": issue.state, "actor_role": actor_role},
+        after={**verified, "actor_role": actor_role},
         revision=revision,
         reason=reason or override_reason,
     )
@@ -621,17 +677,12 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
     if not passed:
         # issue.reopen_fix: the failed round stays in history, the annotator may submit again.
-        reopened = {"status": rework.status, "issue_state": issue.state}
-        rework.status = ReworkRequest.Status.FIX_PENDING
-        issue.state = Issue.State.FIX_PENDING
-        rework.save(update_fields=["status", "updated_at"])
-        issue.save(update_fields=["state"])
         append_audit_event(
             actor=user,
             action="issue.reopen_fix",
             object_type="issue",
             object_id=issue.pk,
-            before=reopened,
+            before=verified,
             after={"status": rework.status, "issue_state": issue.state},
             revision=revision,
             reason=reason,
