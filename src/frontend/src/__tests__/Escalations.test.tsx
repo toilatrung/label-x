@@ -105,6 +105,13 @@ describe('Escalations UI (T-039)', () => {
         created_at: '2026-10-11T03:00:00Z', history: [],
       });
       if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
+      if (url.pathname === '/api/guideline-gaps/' && request.method === 'GET') {
+        return Response.json({ next: null, previous: null, results: [] });
+      }
+      if (url.pathname === '/api/guidelines/rules/') return Response.json({ next: null, previous: null, results: [
+        { rule_id: 'VEH-03', section: '§2.3', content: 'Phân biệt car và truck.', guideline_version: 'v1' },
+        { rule_id: 'VEH-02', section: '§2.2', content: 'Xe tải.', guideline_version: 'v1' },
+      ] });
       if (url.pathname === '/api/issues/42/adjudications/') {
         return Response.json({
           id: 91,
@@ -172,6 +179,7 @@ describe('Escalations UI (T-039)', () => {
       rule_id: 'VEH-03',
       correct_label: 'car',
       reason: 'Evidence và guideline thống nhất.',
+      after_adjudication: 'none',
     });
   });
 
@@ -289,7 +297,7 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.getByLabelText('Lý do ghi đè *')).toBeDefined();
   });
 
-  it('renders the three-column summary and the locked Sau khi phân xử field (FE-12)', async () => {
+  it('renders the three-column summary and limits Sau khi phân xử to confirm (MBE-02)', async () => {
     const { calls } = await renderPage();
     await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
@@ -297,69 +305,167 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.getByText('Hướng dẫn liên quan')).toBeDefined();
     expect(screen.getAllByText('Bằng chứng').length).toBeGreaterThan(0);
     const after = screen.getByLabelText('Sau khi phân xử') as HTMLSelectElement;
+    expect(after.disabled).toBe(false);
+    expect(after.value).toBe('none');
+    fireEvent.click(screen.getByLabelText('Bác bỏ'));
     expect(after.disabled).toBe(true);
+    expect(after.value).toBe('none');
     expect(calls.some((call) => new URL(call.url).pathname.startsWith('/api/rework'))).toBe(false);
     expect(screen.queryByText(/IoU/)).toBeNull();
   });
 
-  it('uses the real adjudication outcome when creating a Guideline Gap (FE-12)', async () => {
-    const { calls } = await renderPage();
+  it('sends after_adjudication=request_rework and links the returned rework_id (MBE-02)', async () => {
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname !== '/api/issues/42/adjudications/') return null;
+      return Response.json({
+        id: 93, issue_id: 42, outcome: 'confirm', actor_user_id: 2, rule_id: 'VEH-03', correct_label: null,
+        reason: 'Sai nhãn rõ ràng.', case_version: 'v2', created_at: '2026-10-11T02:00:00Z', rework_id: 17,
+      }, { status: 201 });
+    });
+    await screen.findByText('QC-00042');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    fireEvent.change(screen.getByLabelText('Sau khi phân xử'), { target: { value: 'request_rework' } });
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), { target: { value: 'Sai nhãn rõ ràng.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
+    const link = await screen.findByRole('link', { name: 'Đã tạo yêu cầu sửa #17' });
+    expect(link.getAttribute('href')).toBe('/review/rework');
+    const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
+    expect((await request?.clone().json()).after_adjudication).toBe('request_rework');
+  });
+
+  it('creates a Guideline Gap for the selected issue through POST /api/guideline-gaps/ (MBE-02)', async () => {
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname === '/api/guideline-gaps/' && request.method === 'POST') {
+        return Response.json({
+          id: 7, issue_id: 42, rule_id: 'VEH-03', description: 'x', status: 'open', guideline_version: 'v1',
+          resolved_in_version: null, created_by: 2, created_at: '2026-10-11T02:00:00Z',
+        }, { status: 201 });
+      }
+      return null;
+    });
     await screen.findByText('QC-00042');
     expect(screen.queryByText('QC-00098')).toBeNull();
     expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    const before = calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect((screen.getByRole('radio', { name: 'Guideline còn thiếu' }) as HTMLInputElement).checked).toBe(true);
-    expect(screen.queryByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeNull();
-    expect(calls.length).toBe(before);
+    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
+    expect(within(dialog).getByText(/QC-00042/)).toBeDefined();
+    expect((within(dialog).getByLabelText('Quy tắc liên quan *') as HTMLSelectElement).value).toBe('VEH-03');
+    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Pickup có mui' } });
+    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Hai reviewer bất đồng' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await screen.findByText(/Đã tạo Guideline Gap GAP-007/)).toBeDefined();
+    const post = calls.find((call) => call.method === 'POST' && new URL(call.url).pathname === '/api/guideline-gaps/');
+    expect(post?.headers.get('Idempotency-Key')).toBeTruthy();
+    await expect(post?.clone().json()).resolves.toEqual({
+      rule_id: 'VEH-03', issue_id: 42, description: 'Pickup có mui\n\nLý do / bằng chứng: Hai reviewer bất đồng',
+    });
+    expect(calls.some((call) => call.method === 'POST' && new URL(call.url).pathname === '/api/issues/42/adjudications/')).toBe(false);
   });
 
-  it('uses sketchup data for Guideline Gaps and API data for Decision Cases (FE-06)', async () => {
+  it('lists Guideline Gaps and Decision Cases from the API, not sketchup data (MBE-02)', async () => {
     await renderPage('qalead', async (request) => {
       const url = new URL(request.url);
+      if (url.pathname === '/api/guideline-gaps/') return Response.json({ next: null, previous: null, results: [
+        { id: 3, issue_id: 42, rule_id: 'VEH-03', description: 'Pickup có mui\n\nLý do / bằng chứng: Ba case chưa thống nhất',
+          status: 'open', guideline_version: 'v1', resolved_in_version: null, created_by: 2, created_at: '2026-10-11T02:00:00Z' },
+        { id: 1, issue_id: null, rule_id: 'G-014', description: 'Vật bị che', status: 'resolved',
+          guideline_version: 'v1', resolved_in_version: 'v2', created_by: 2, created_at: '2026-10-10T02:00:00Z' },
+      ] });
       if (url.pathname !== '/api/decision-cases/') return null;
       return Response.json({ next: null, previous: null, results: [
         {
-          id: 12,
-          issue_id: 42,
-          outcome: 'guideline_gap',
-          actor_user_id: 2,
-          rule_id: 'VEH-03',
-          correct_label: null,
-          reason: 'Xe buýt mini chở hàng thuộc nhãn nào',
-          case_version: 'v2',
-          created_at: '2026-10-11T02:00:00Z',
-        },
-        {
-          id: 40,
-          issue_id: 84,
-          outcome: 'confirm',
-          actor_user_id: 2,
-          rule_id: 'VEH-03',
-          correct_label: 'truck',
-          reason: 'Xe bán tải có nắp thùng',
-          case_version: 'v2',
-          created_at: '2026-10-11T03:00:00Z',
+          id: 40, issue_id: 84, outcome: 'confirm', actor_user_id: 2, rule_id: 'VEH-03', correct_label: 'truck',
+          reason: 'Xe bán tải có nắp thùng', case_version: 'v2', created_at: '2026-10-11T03:00:00Z',
         },
       ] });
     });
     fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
-    expect(await screen.findByText('GAP-012')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
+    expect(await screen.findByText('GAP-003')).toBeDefined();
+    expect(screen.getByText('Pickup có mui')).toBeDefined();
+    expect(screen.getByText('Ba case chưa thống nhất')).toBeDefined();
+    expect(screen.getByText('QC-00042')).toBeDefined();
+    expect(screen.getByText('Đang mở')).toBeDefined();
+    expect(screen.getByText('Đã giải quyết · Guideline v2')).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Guideline Gaps/ }).textContent).toContain('2');
+    expect(screen.queryByText('GAP-012')).toBeNull();
     expect(screen.queryByText(/chưa được kết nối với server/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
-    fireEvent.change(within(dialog).getByLabelText('Quy tắc liên quan *'), { target: { value: 'VEH-03' } });
-    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Tình huống mới từ sketchup' } });
-    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Ba case chưa thống nhất' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect(await screen.findByText('GAP-013')).toBeDefined();
-    expect(screen.getByText('Tình huống mới từ sketchup')).toBeDefined();
     fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
     expect(await screen.findByText('CASE-040')).toBeDefined();
-    expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();
-    expect(screen.getByRole('tab', { name: /Decision Cases/ })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Adjudication/ })).toBeDefined();
+  });
+
+  it('shows an error with Thử lại for Guideline Gaps, then recovers', async () => {
+    let fail = true;
+    const { calls } = await renderPage('qalead', async (request) => {
+      if (new URL(request.url).pathname !== '/api/guideline-gaps/') return null;
+      if (fail) return Response.json({ code: 'FORBIDDEN', message: 'no' }, { status: 403 });
+      return Response.json({ next: null, previous: null, results: [] });
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
+    expect(await screen.findByText('Không tải được Guideline Gaps.')).toBeDefined();
+    fail = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+    expect(await screen.findByText('Chưa có Guideline Gap nào trong phạm vi hiện tại.')).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Guideline Gaps/ }).textContent).toContain('0');
+    expect(calls.filter((call) => new URL(call.url).pathname === '/api/guideline-gaps/').length).toBe(2);
+  });
+
+  it('pages Guideline Gaps by cursor and marks the count as partial', async () => {
+    const gap = (id: number) => ({ id, issue_id: null, rule_id: 'VEH-03', description: `Gap ${id}`, status: 'open',
+      guideline_version: 'v1', resolved_in_version: null, created_by: 2, created_at: '2026-10-11T02:00:00Z' });
+    await renderPage('qalead', async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname !== '/api/guideline-gaps/') return null;
+      if (url.searchParams.get('cursor') === 'p2') return Response.json({ next: null, previous: 'x', results: [gap(1)] });
+      return Response.json({ next: 'http://localhost:8000/api/guideline-gaps/?cursor=p2', previous: null, results: [gap(2)] });
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
+    expect(await screen.findByText('GAP-002')).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Guideline Gaps/ }).textContent).toContain('1+');
+    fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }));
+    expect(await screen.findByText('GAP-001')).toBeDefined();
+  });
+
+  it('posts a new Guideline Gap from the list and refreshes it; shows server errors in the dialog', async () => {
+    let created = false;
+    let conflict = true;
+    const { calls } = await renderPage('qalead', async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname !== '/api/guideline-gaps/') return null;
+      if (request.method === 'POST') {
+        if (conflict) {
+          conflict = false;
+          return Response.json({ code: 'INVALID_TRANSITION', message: 'Đã có gap open.' }, { status: 409 });
+        }
+        created = true;
+        return Response.json({ id: 13, issue_id: null, rule_id: 'VEH-02', description: 'd', status: 'open',
+          guideline_version: 'v1', resolved_in_version: null, created_by: 2, created_at: '2026-10-11T02:00:00Z' }, { status: 201 });
+      }
+      return Response.json({ next: null, previous: null, results: created ? [{ id: 13, issue_id: null, rule_id: 'VEH-02',
+        description: 'Xe tải nhỏ\n\nLý do / bằng chứng: Ba case', status: 'open', guideline_version: 'v1',
+        resolved_in_version: null, created_by: 2, created_at: '2026-10-11T02:00:00Z' }] : [] });
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
+    await screen.findByText('Chưa có Guideline Gap nào trong phạm vi hiện tại.');
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
+    await within(dialog).findByRole('option', { name: 'VEH-02 · §2.2' });
+    expect(within(dialog).getByText(/Guideline v1/)).toBeDefined();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(within(dialog).getByText('Chọn quy tắc liên quan.')).toBeDefined();
+    fireEvent.change(within(dialog).getByLabelText('Quy tắc liên quan *'), { target: { value: 'VEH-02' } });
+    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Xe tải nhỏ' } });
+    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Ba case' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await within(dialog).findByText(/Không tạo được Guideline Gap \(INVALID_TRANSITION\)/)).toBeDefined();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await screen.findByText('GAP-013')).toBeDefined();
+    expect(screen.getByText(/Đã tạo Guideline Gap GAP-013/)).toBeDefined();
+    const posts = calls.filter((call) => call.method === 'POST' && new URL(call.url).pathname === '/api/guideline-gaps/');
+    expect(posts).toHaveLength(2);
+    // Gửi lại cùng nội dung giữ nguyên Idempotency-Key.
+    expect(posts[0].headers.get('Idempotency-Key')).toBe(posts[1].headers.get('Idempotency-Key'));
+    expect(await posts[1].clone().json()).toEqual({ rule_id: 'VEH-02', description: 'Xe tải nhỏ\n\nLý do / bằng chứng: Ba case' });
   });
 });
