@@ -215,6 +215,10 @@ class VlmEvidence(models.Model):
     reason_code = models.CharField(max_length=24, blank=True, default="")
     attempts = models.PositiveSmallIntegerField(default=0)
     provider = models.CharField(max_length=32)
+    # Host của cổng/provider (không secret) và model ID mà cổng BÁO VỀ: kết quả có thể đi qua bên
+    # trung gian nên cần provenance thực tế, không chỉ model đã yêu cầu.
+    provider_host = models.CharField(max_length=128, blank=True, default="")
+    response_model = models.CharField(max_length=64, blank=True, default="")
     model = models.CharField(max_length=64)
     prompt_version = models.CharField(max_length=32)
     policy_version = models.CharField(max_length=32)

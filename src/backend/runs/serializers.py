@@ -255,21 +255,28 @@ VLM_STATES = [
 class CandidateVlmSerializer(serializers.Serializer[Any]):
     """Evidence VLM (Qwen) của candidate; chỉ là đề xuất, không phải quyết định review."""
 
-    state = serializers.ChoiceField(choices=VLM_STATES)
-    engine_status = serializers.ChoiceField(
-        choices=["checked", "partial", "failed", "not_checked", "running"]
+    # Chuỗi thuần (không enum tự sinh) để không va chạm tên enum của drf-spectacular; giá trị hợp lệ
+    # nằm trong help_text và được test khoá lại.
+    state = serializers.CharField(help_text="Một trong: " + ", ".join(VLM_STATES))
+    engine_status = serializers.CharField(
+        help_text="checked | partial | failed | not_checked | running (payload FE v0)"
     )
-    source = serializers.ChoiceField(choices=["qwen"])
-    conclusion = serializers.ChoiceField(choices=["confirmed", "uncertain"], allow_null=True)
+    source: Any = serializers.CharField(help_text="Luôn là qwen")
+    conclusion = serializers.CharField(
+        allow_null=True, help_text="confirmed | uncertain | null; chỉ là đề xuất AI"
+    )
     class_id = serializers.CharField(allow_null=True)
     class_name = serializers.CharField(allow_null=True)
-    reason_code = serializers.ChoiceField(
-        choices=["invalid_crop", "provider_error", "parse_failure", "budget_exhausted"],
+    reason_code = serializers.CharField(
         allow_null=True,
+        help_text="invalid_crop | provider_error | parse_failure | budget_exhausted | null",
     )
     evidence_id = serializers.IntegerField(allow_null=True)
     evaluation_id = serializers.CharField(allow_null=True)
     model_version = serializers.CharField(allow_null=True)
+    provider = serializers.CharField(allow_null=True)
+    provider_host = serializers.CharField(allow_null=True)
+    response_model = serializers.CharField(allow_null=True)
     prompt_version = serializers.CharField(allow_null=True)
     policy_version = serializers.CharField(allow_null=True)
     snapshot_revision = serializers.CharField(allow_null=True)
@@ -299,6 +306,7 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
             "frame",
             "anchor",
             "evidence",
+            "vlm",
         ]
         read_only_fields = fields
 
