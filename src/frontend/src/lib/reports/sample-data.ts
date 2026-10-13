@@ -1,9 +1,8 @@
-// Dữ liệu minh họa lấy từ docs/design/screens/{QualityReport,QualityGate,ReleaseHistory}.dc.html (bộ số liệu chuẩn của labelx-design).
-// TODO(backend): thay toàn bộ bằng API khi có endpoint; chưa có trong contract: GET /api/runs/{id}/report/, GET /api/releases/, GET /api/releases/{id}/manifest/, POST /api/runs/{id}/report/export/, POST /api/releases/{id}/approve/.
-// TODO(backend): rbac-matrix chỉ cho Annotator xem báo cáo ở mức giới hạn; khi nối API, backend phải lọc phần dữ liệu theo vai trò (giao diện minh họa hiện hiển thị đầy đủ cho mọi vai trò).
-// Đã có trong contract nhưng chưa nối: GET /api/runs/{id}/gate/ (runs_gate), POST /api/waivers/ (waivers_create).
-
-export type BadgeTone = 'success' | 'danger' | 'warning' | 'info' | '';
+// Dữ liệu minh họa lấy từ docs/design/screens/{QualityReport,ReleaseHistory}.dc.html (bộ số liệu chuẩn của labelx-design).
+// Quality Gate đã nối GET /api/runs/{id}/gate/, POST /api/waivers/, POST /api/waivers/{id}/approve/ (lib/reports/api.ts), không còn dùng file này.
+// TODO(backend): server chưa chạy các endpoint MBE-03 (đã có trong contract): GET /api/runs/{id}/report/, POST /api/runs/{id}/report/export/,
+// GET /api/releases/, GET /api/releases/{id}/manifest/, POST /api/releases/{id}/approve/. Vùng dùng dữ liệu dưới đây phải có NotConnectedNotice và SampleDataBadge.
+// TODO(backend): rbac-matrix chỉ cho Annotator xem báo cáo ở mức giới hạn; khi nối API, backend phải lọc phần dữ liệu theo vai trò.
 
 export const REPORT_SCOPE = 'Road Vision Urban v1.4 · Quality Control Run #QC-091 · tạo ngày 04/10/2026';
 
@@ -46,21 +45,6 @@ export const EXPORT_FORMATS = [
   { key: 'csv', label: 'CSV', note: 'Bảng số liệu' },
   { key: 'json', label: 'JSON', note: 'Gói báo cáo kèm manifest' },
 ] as const;
-
-export const GATE_CONDITIONS: ReadonlyArray<{
-  name: string; result: string; resultTone?: 'is-warn' | 'is-bad'; resultStrong?: string; resultTail?: string;
-  badge: { tone: BadgeTone; label: string }; action: string | null; link?: { href: string; label: string };
-}> = [
-  { name: 'Toàn vẹn phiên bản', result: 'Snapshot, taxonomy, guideline khớp nhau', badge: { tone: 'success', label: 'Đạt' }, action: null },
-  { name: 'Benchmark và kiểm tra mẫu', result: 'Benchmark v1.2 đã đính kèm', badge: { tone: 'success', label: 'Đạt' }, action: null },
-  { name: 'Coverage', result: '', resultTone: 'is-warn', resultStrong: '92.4%', resultTail: ' / ngưỡng 95%', badge: { tone: 'danger', label: 'Chưa đạt' }, action: 'Chạy bổ sung hoặc xin waiver' },
-  { name: 'Lỗi nghiêm trọng', result: '', resultTone: 'is-bad', resultStrong: '3', resultTail: ' chưa đóng', badge: { tone: 'danger', label: 'Chưa đạt' }, action: 'Sửa và xác minh' },
-  { name: 'Rework', result: '12 yêu cầu bắt buộc chưa xác minh', badge: { tone: 'danger', label: 'Chưa đạt' }, action: null, link: { href: '/review/rework', label: 'Mở Rework Tracking' } },
-  { name: 'Phê duyệt', result: 'Chưa gửi phê duyệt', badge: { tone: '', label: 'Chờ' }, action: 'Sau khi các điều kiện trên đạt' },
-];
-
-export const GATE_SUMMARY = '2 đạt · 3 chưa đạt · 1 chờ phê duyệt';
-export const WAIVER_CONDITIONS = ['Coverage', 'Lỗi nghiêm trọng', 'Rework'] as const;
 
 export const RELEASES = [
   { version: 'Road Vision Urban v1.3', run: '#QC-077', frames: '11,800', approver: 'Chi Lâm', date: '2026-09-10', status: { tone: 'success', label: 'Released' }, selected: true },

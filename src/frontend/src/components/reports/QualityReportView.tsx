@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { CLASS_ROWS, CONFUSED_PAIRS, ERROR_TYPES, EXPORT_FORMATS, REPORT_METRICS, REPORT_SCOPE, ROOT_CAUSES } from '@/lib/reports/sample-data';
 
 type Tab = 'summary' | 'class' | 'cause';
@@ -9,6 +11,7 @@ const DASH = <span className="lx-subtle">—</span>;
 
 export function QualityReportHeader() {
   const [open, setOpen] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -25,6 +28,7 @@ export function QualityReportHeader() {
         <p className="lx-lead">{REPORT_SCOPE}. Báo cáo luôn ghi rõ phạm vi, nguồn Ground Truth, coverage và những phần chưa đủ dữ liệu.</p>
       </div>
       <div className="lx-actions lx-actions--rel" ref={menuRef}>
+        <SampleDataBadge />
         <span className="lx-badge lx-badge--danger">Release blocked</span>
         <button type="button" className="lx-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
           Xuất báo cáo
@@ -32,14 +36,15 @@ export function QualityReportHeader() {
         </button>
         {open && (
           <div className="lx-menu lx-menu--end lx-menu--right" role="menu">
-            {/* TODO(backend): POST /api/runs/{id}/report/export/ (pdf | csv | json) */}
+            {/* TODO(backend): POST /api/runs/{id}/report/export/ (pdf | csv | json), MBE-03; chưa chạy trên server */}
             {EXPORT_FORMATS.map((f) => (
-              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => setOpen(false)}>
+              <button key={f.key} type="button" className="lx-menu__item" role="menuitem" onClick={() => { setOpen(false); setBlocked(true); }}>
                 <span className="lx-menu__t">{f.label}</span><span className="lx-menu__d">{f.note}</span>
               </button>
             ))}
           </div>
         )}
+        {blocked && <NotConnectedNotice detail="Xuất báo cáo cần POST /api/runs/{id}/report/export/" />}
       </div>
     </div>
   );
@@ -49,7 +54,11 @@ export function QualityReportBody() {
   const [tab, setTab] = useState<Tab>('summary');
   return (
     <>
-      {/* TODO(backend): GET /api/runs/{id}/report/ (metric, lỗi theo loại, theo lớp, nguyên nhân gốc) */}
+      {/* TODO(backend): GET /api/runs/{id}/report/ (MBE-03; metric, lỗi theo loại, theo lớp, nguyên nhân gốc). /api/reports/{id}/ là báo cáo hiệu quả KPI theo evaluation, đã nối ở Performance Evaluation. */}
+      <div className="lx-row lx-row--between">
+        <NotConnectedNotice detail="Báo cáo chất lượng của run cần GET /api/runs/{id}/report/; số liệu dưới đây là minh họa" />
+        <SampleDataBadge />
+      </div>
       <div className="lx-grid lx-grid--4">
         {REPORT_METRICS.map((m) => (
           <div key={m.key} className="lx-metric">

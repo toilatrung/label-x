@@ -1,24 +1,13 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { PerformanceBody, PerformanceHeader } from '@/components/calibration/PerformanceView';
 import { BenchmarkBody, BenchmarkHeader } from '@/components/calibration/BenchmarkView';
 import { AuditSamplingBody, AuditSamplingHeader } from '@/components/calibration/AuditSamplingView';
 import { CalibrationBody, CalibrationHeader } from '@/components/calibration/CalibrationView';
 
 import { canAccessCalibration } from '@/lib/auth/roles';
 
-describe('Performance Evaluation', () => {
-  it('shows every figure from the design without implementation notices', () => {
-    render(<><PerformanceHeader /><PerformanceBody /></>);
-    expect(screen.getByText('94.1%')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
-    expect(screen.getAllByRole('row')).toHaveLength(4);
-    expect(screen.getByRole('img', { name: '76%' })).toBeTruthy();
-    expect((screen.getByLabelText('Phạm vi đánh giá') as HTMLSelectElement).disabled).toBe(true);
-    expect((screen.getByLabelText('Benchmark') as HTMLSelectElement).disabled).toBe(true);
-  });
-});
+// Performance Evaluation đã nối API (MBE-01): kiểm thử ở PerformanceEvaluation.test.tsx.
 
 describe('Benchmark', () => {
   it('lists three versions, marks v1.2 as locked and keeps write buttons without API', () => {
