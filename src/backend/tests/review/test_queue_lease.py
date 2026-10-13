@@ -220,6 +220,36 @@ def test_claim_two_tab_renew_expiry_resume_and_204(world):
 
 
 @pytest.mark.django_db
+def test_queue_summary_and_specific_frame_claim(world):
+    api = client(world["reviewer"])
+    summary = api.get(f"/api/queues/risk/?run_id={world['run'].pk}")
+    assert summary.status_code == 200, summary.data
+    assert summary.data["total"] == 1
+    assert summary.data["counts"][FrameReview.State.UNREVIEWED] == 1
+
+    claimed = api.post(
+        next_url(),
+        {"run_id": world["run"].pk, "frame_id": world["frame"].pk},
+        format="json",
+    )
+    assert claimed.status_code == 200, claimed.data
+    assert claimed.data["frame"]["frame_key"] == {
+        "cvat_task_id": 200,
+        "frame_number": 0,
+    }
+    after = api.get(f"/api/queues/risk/?run_id={world['run'].pk}")
+    assert after.data["counts"][FrameReview.State.IN_REVIEW] == 1
+
+    wrong = client(world["other"]).post(
+        next_url(),
+        {"run_id": world["run"].pk, "frame_id": world["frame"].pk + 999},
+        format="json",
+    )
+    assert wrong.status_code == 409
+    assert wrong.data["code"] == "LEASE_CONFLICT"
+
+
+@pytest.mark.django_db
 def test_identity_alias_scope_role_and_client_dataset_bypass(world):
     run_id = world["run"].pk
     assert (
@@ -512,7 +542,13 @@ def test_ranking_reports_persisted_state_holder_and_filters(world, monkeypatch):
         (row,) = ranking_rows(api, run_id, queue)
         assert row["review_state"] == "in_review"
         assert row["lease_holder_user_id"] == world["reviewer"].pk
-        assert ranking_rows(api, run_id, queue, review_state="in_review") == [row]
+        (filtered_row,) = ranking_rows(api, run_id, queue, review_state="in_review")
+        # Snapshot URLs are signed independently for each response and may have a
+        # different expiry when calls cross a second boundary.
+        assert {k: v for k, v in filtered_row.items() if k != "thumbnail_url"} == {
+            k: v for k, v in row.items() if k != "thumbnail_url"
+        }
+        assert filtered_row["thumbnail_url"]
         for other in ("unreviewed", "incomplete", "reviewed", "awaiting_followup", "completed"):
             assert ranking_rows(api, run_id, queue, review_state=other) == []
 

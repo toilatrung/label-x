@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
+from rest_framework.pagination import CursorPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,13 +17,15 @@ from review.adjudication_service import (
     get_decision_case,
     list_decision_cases,
     list_escalations,
+    similar_case_queryset,
 )
 from review.api_serializers import IDEMPOTENCY_KEY_PARAM, PaginatedEscalationSerializer
 from review.case_serializers import (
     AdjudicationCreateSerializer,
+    AdjudicationSerializer,
     DecisionCaseDetailSerializer,
-    DecisionCaseSerializer,
     PaginatedDecisionCaseSerializer,
+    PaginatedSimilarCaseSerializer,
 )
 from review.models import DecisionCase, Issue
 
@@ -75,7 +78,7 @@ class IssueAdjudicationView(APIView):
         parameters=[IDEMPOTENCY_KEY_PARAM],
         request=AdjudicationCreateSerializer,
         responses={
-            201: DecisionCaseSerializer,
+            201: AdjudicationSerializer,
             400: ErrorSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -87,6 +90,63 @@ class IssueAdjudicationView(APIView):
     def post(self, request: Request, pk: int) -> Response:
         payload = adjudicate_issue(request=request, issue_id=pk)
         return Response(payload, status=status.HTTP_201_CREATED)
+
+
+class SimilarCaseCursorPagination(CursorPagination):
+    page_size = 50
+    ordering = ("-similarity", "-pk")
+
+
+class IssueSimilarCasesView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
+    action_name = "issues.similar_cases"
+    object_type = "issue"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            Issue.objects.filter(pk=self.kwargs["pk"])
+            .values_list("frame_review__run__dataset_id", flat=True)
+            .first()
+        )
+
+    @extend_schema(
+        operation_id="issues_similar_cases",
+        parameters=[OpenApiParameter("cursor", str, required=False)],
+        responses={
+            200: PaginatedSimilarCaseSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        _issue, queryset = similar_case_queryset(issue_id=pk)
+        paginator = SimilarCaseCursorPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self) or []
+        return paginator.get_paginated_response(
+            [
+                {
+                    "case": {
+                        "id": case.pk,
+                        "issue_id": case.issue_id,
+                        "outcome": (
+                            "guideline_gap" if case.outcome == "guideline_missing" else case.outcome
+                        ),
+                        "actor_user_id": case.actor_id,
+                        "rule_id": case.rule_id,
+                        "correct_label": case.correct_label,
+                        "reason": case.reason,
+                        "case_version": case.case_version,
+                        "created_at": case.created_at.isoformat(),
+                    },
+                    "similarity": float(case.similarity),
+                }
+                for case in page
+            ]
+        )
 
 
 class DecisionCaseDetailView(APIView):
