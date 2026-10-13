@@ -290,3 +290,20 @@ def test_structurally_wrong_snapshot_nodes_are_rejected(
 def test_origin_is_declared_not_verified(dataset):
     manifest = load_dataset_manifest(dataset)
     assert "not verified" in manifest["data_origin_note"]
+
+
+def test_rebuild_only_deletes_paths_under_crops(snapshot, image_root, tmp_path):
+    out = tmp_path / "o"
+    build(snapshot, image_root, out)
+    keep = out / "keep.txt"
+    keep.write_text("mine")
+    outside_crops = out / "notes" / "x.txt"
+    outside_crops.parent.mkdir()
+    outside_crops.write_text("mine too")
+    path = out / "dataset-manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["crops"][0]["path"] = "keep.txt"  # hand-edited manifest points outside crops/
+    manifest["crops"][1]["path"] = "notes/x.txt"
+    path.write_text(json.dumps(manifest))
+    build(snapshot, image_root, out)
+    assert keep.read_text() == "mine" and outside_crops.read_text() == "mine too"
