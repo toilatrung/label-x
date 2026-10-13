@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MBE-05 — Calibration và Audit: audit samples, benchmarks, performance, calibration — LabelX</title>
+<meta name="labelx:id" content="mbe-05">
+<meta name="labelx:title" content="MBE-05 — Calibration và Audit: audit samples, benchmarks, performance, calibration">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[task, execution, m-be-mvp, draft]">
+<meta name="labelx:priority" content="2">
+<style>body{font:15px/1.6 system-ui;max-width:1100px;margin:30px auto;padding:20px;color:#19334c}code{background:#eef2f5}h2{margin-top:26px}.warn{background:#fdf2d8;border-left:3px solid #8a5300;padding:8px 14px}</style></head>
+<body>
+<main><article>
+<h1>MBE-05 — Calibration và Audit: audit samples, benchmarks, performance, calibration</h1>
+<div class="warn"><strong>Bản nháp chờ PO duyệt.</strong> Task thuộc milestone <code>M-BE-MVP</code> (đề xuất, <a href="../../governance/change-requests/CR-118.html">CR-118</a> chưa duyệt). Chưa đăng ký task board, chưa có issue, chưa có người nhận. Owner chỉ là đề xuất.</div>
+<h2>Usage Purpose</h2><p>Task của M-BE-MVP: hoàn thiện Backend và nối API lên giao diện cho MVP, theo <a href="../../planning/M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>.</p>
+<h2>Record Metadata</h2><ul><li><strong>Task ID</strong>: <code>MBE-05</code></li><li><strong>Epic ID</strong>: <code>E-17, E-18, E-20</code></li><li><strong>Title</strong>: <code>Calibration và Audit: audit samples, benchmarks, performance, calibration</code></li><li><strong>Owner</strong>: <code>BE @Vietanhhhhhh2003 (kèm @duy12345-6789 cho benchmark); nối FE @Vietanhhhhhh2003 (đề xuất) (đề xuất)</code></li><li><strong>Status</strong>: <code>pending</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Target Date</strong>: <code>Chưa chốt; PO quyết khi duyệt</code></li><li><strong>Priority</strong>: <code>P1 (đề xuất)</code></li></ul>
+<h2>Objective</h2><p>Cho các màn Calibration & Audit chạy trên API thật; không dùng để kết luận KPI.</p>
+<h2>Scope</h2><h3>Included</h3><ul><li>Dòng 13: <code>/api/audit-samples/</code> (stream random hoặc risk). Dòng 14: <code>/api/benchmarks/</code> và <code>import-cvat</code> (đọc từ CVAT, adapter chỉ đọc).</li><li>Dòng 15: <code>GET /api/evaluation/performance/</code> (đối chiếu <code>/api/evaluations/</code>). Dòng 16: <code>/api/calibration/reviewers|models|assignments</code>.</li><li>Nối FE: AuditSamplingView, BenchmarkView, PerformanceView, CalibrationView.</li></ul><h3>Excluded</h3><ul><li>Không khoá reference held-out, không preregistration, không đánh giá hiệu quả (M-05).</li></ul>
+<h2>Preconditions</h2><ul><li>CR-118 được PO duyệt; task được đăng ký trong task board và có issue.</li><li>Phụ thuộc: MBE-00.</li><li>Nhánh riêng từ <code>develop</code> (BE) hoặc <code>develop-fe</code> (FE); PR vào nhánh gốc tương ứng.</li></ul>
+<h2>Related Files</h2><ul><li><strong>Kế hoạch</strong>: <a href="../../planning/M-BE-MVP-2026-10-13.html">M-BE-MVP</a></li><li><strong>Change Request</strong>: <a href="../../governance/change-requests/CR-118.html">CR-118</a></li><li><strong>Blocker</strong>: <a href="../../governance/blockers/BLOCKER-031.html">BLOCKER-031</a></li><li><strong>Đường dẫn dự kiến được sửa</strong>: <code>src/backend</code> (app ranking/review/runs), <code>src/frontend/src/components/calibration/*</code></li></ul>
+<h2>Acceptance Criteria</h2><ul><li>[ ] Endpoint đúng contract, quyền theo vai trò, thao tác ghi có audit.</li><li>[ ] Màn hiển thị dữ liệu thật; trạng thái thiếu dữ liệu hiển thị rõ.</li></ul>
+<h2>Verification Requirements</h2><ul><li><strong>Automated Checks</strong>: <code>make check</code> (và <code>make validate-kit</code> nếu sửa <code>.agent/</code> hoặc <code>docs/</code>).</li><li><strong>Manual Checks</strong>: <code>make check</code> + PO manual test. Không QC độc lập theo quyết định PO 2026-10-13.</li><li><strong>Expected Evidence</strong>: lệnh và output, SHA, kết quả manual test do PO ghi; ghi rõ giới hạn kiểm chứng, không ghi mock thành runtime thật.</li></ul>
+<h2>Completion Criteria</h2><ul><li>[ ] Mọi AC có bằng chứng; PO manual test ghi kết quả.</li><li>[ ] Issue, task board và (nếu cần) BLOCKER-031 được cập nhật; không tự đánh dấu <code>done</code> khi PO chưa kiểm.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không sửa ngoài path và scope; không tự mở rộng scope.</li><li>Không ghi secret, API key hoặc ảnh chưa được phép; không gửi dữ liệu ra cổng bên thứ ba khi PO chưa xác nhận.</li><li>Không phá ranh giới: adapter CVAT chỉ đọc, Celery idempotent, quyền project/job kiểm ở API.</li></ul>
+<h2>Output Requirements</h2><p>Báo cáo riêng <code>.agent/reports/implementation/MBE-05-@user.html</code>. Ghi Nhận + ETA thực tế trước khi bắt đầu. Ghi chú: Việc này có thể hoãn theo ưu tiên PO (P1).</p>
+</article></main>
+</body></html>

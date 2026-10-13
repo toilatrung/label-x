@@ -1,0 +1,39 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CR-118 — Milestone M-BE-MVP</title><meta name="labelx:id" content="cr-118"><meta name="labelx:title" content="CR-118 — Milestone M-BE-MVP: hoàn thiện Backend và nối API cho MVP"><meta name="labelx:type" content="governance"><meta name="labelx:domain" content="governance"><meta name="labelx:module" content="planning"><meta name="labelx:tags" content="[change-request, m-be-mvp, roadmap, contract, process]"><meta name="labelx:priority" content="1"><style>body{max-width:1040px;margin:32px auto;padding:0 24px;font:15px/1.6 system-ui;color:#172536}h2{margin-top:26px}table{border-collapse:collapse;width:100%}td,th{padding:8px;border:1px solid #d5dfe9;vertical-align:top;text-align:left}th{background:#eef4fa}code{background:#eef2f5}.warn{background:#fdf2d8;border-left:3px solid #8a5300;padding:8px 14px}</style></head>
+<body>
+<main><article>
+<h1>CR-118 — Milestone M-BE-MVP: hoàn thiện Backend và nối API cho MVP</h1>
+<h2>Usage Purpose</h2><p>Đề xuất thêm milestone <code>M-BE-MVP</code> vào roadmap R-001, đặt ngay sau M-04, để gom việc code Backend còn thiếu và nối API lên giao diện đã dựng, nhằm có MVP cho PO kiểm thử thủ công. CR này cũng xin PO duyệt hai thay đổi đi kèm: mở rộng contract OpenAPI một lần cho nhóm B của BLOCKER-031, và bỏ QC độc lập trong giai đoạn này. <strong>Chưa đổi baseline nào cho tới khi PO duyệt.</strong></p>
+<div class="warn"><strong>Trạng thái.</strong> Bản nháp. Hàng <code>M-BE-MVP</code> đã được thêm vào <code>milestones.html</code> và <code>roadmap.html</code> ở trạng thái <code>proposed</code> trước khi có CR này; nếu PO không duyệt thì gỡ hai chỗ đó. Chưa có issue, chưa đăng ký task board cho MBE-00…MBE-09.</div>
+<h2>Record Metadata</h2><ul><li><strong>Change Request ID</strong>: <code>CR-118</code></li><li><strong>Title</strong>: <code>Milestone M-BE-MVP: hoàn thiện Backend và nối API cho MVP</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Proposer</strong>: <code>Trịnh Quang Trung (@toilatrung), Product Owner; soạn bởi phiên trung tâm label-x-m04-ad</code></li><li><strong>Status</strong>: <code>proposed</code></li><li><strong>Change Type</strong>: <code>roadmap</code></li><li><strong>Priority</strong>: <code>1</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Decision Due Date</strong>: <code>2026-10-13</code></li></ul>
+<h2>Proposed Change</h2>
+<p><strong>Trước:</strong> roadmap R-001 gồm M-01…M-06 và M-FE01. Phần còn lại sau M-04 nằm rải rác ở M-05 (đo hiệu quả, gate, báo cáo), M-06 (vận hành, nghiệm thu), M-FE01 Phase 2 (nối API) và BLOCKER-031 (22 dòng API chưa nối). Hồ sơ M-01…M-03 còn nhiều task ở trạng thái <code>review</code> chờ QC.</p>
+<p><strong>Sau (đề xuất):</strong></p>
+<ol>
+<li>Thêm milestone <code>M-BE-MVP</code> sau M-04: hoàn thiện Backend còn thiếu và nối API lên giao diện (gói MBE-00…MBE-09 trong <a href="../../planning/M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>), gồm pipeline AI đầu cuối hiển thị trong Review Workspace và các dòng API của BLOCKER-031.</li>
+<li>Mở rộng contract <code>docs/04-api/openapi.yaml</code> một lần (MBE-00) cho các endpoint nhóm B của BLOCKER-031 (đáp ứng yêu cầu "cần CR mới" của BLOCKER-031 mục B và dòng 4, 6, 9, 11, 15).</li>
+<li>Trong giai đoạn M-BE-MVP không chạy QC độc lập; PO kiểm thử thủ công trên giao diện. Task xong theo "PO manual test", không có báo cáo QA theo SHA. CI <code>make check</code> và <code>make validate-kit</code> giữ nguyên.</li>
+</ol>
+<p>Không đổi: ranh giới cứng (adapter CVAT chỉ đọc; Celery idempotent; quyền project/job kiểm ở API), stack (DEC-001), vai trò Qwen chỉ đề xuất, payload FE v0.</p>
+<h2>Justification</h2>
+<p>PO báo giao diện đã xong và cần MVP để kiểm thử thực tế vào ngày 2026-10-14; tồn đọng chính là Backend chưa có và API chưa nối (BLOCKER-031). Gom thành một milestone giúp phân công song song rõ ràng. Tôi chưa kiểm chứng độc lập mức hoàn thành giao diện (<code>TODO(backend)</code> chưa được grep trên <code>develop-fe</code>); điều này dựa trên lời PO.</p>
+<h2>Impact Assessment</h2>
+<ul>
+<li>Affected Baselines : <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>docs/04-api/openapi.yaml</code> (khi MBE-00 được duyệt)</li>
+<li>Affected Epics or Tasks : E-02, E-03, E-04, E-11, E-12, E-13…E-22 (phần Backend và nối FE); MBE-00…MBE-09; FE-11…FE-14 của M-FE01</li>
+<li>Schedule Impact : M-BE-MVP bắt đầu 2026-10-14, hạn chưa chốt; M-05 và M-06 giữ khung cũ nhưng nghiệm thu theo hiệu quả bị đẩy sau MVP</li>
+<li>Cost or Resource Impact : cần dev rảnh cho BE/FE theo bảng owner đề xuất; chưa xác nhận ai rảnh</li>
+<li>Security or Compliance Impact : giữ nguyên quy tắc dữ liệu và key; không có quyền gửi ảnh thật ra cổng bên thứ ba cho tới khi PO xác nhận</li>
+<li>Compatibility or Migration Impact : contract mở rộng không được phá vỡ payload FE v0 và các route FE đã nối</li>
+</ul>
+<h2>Rủi ro đã biết khi bỏ QC độc lập</h2>
+<ul><li>Không có bằng chứng QA theo SHA; lỗi chỉ lộ khi PO kiểm tay. Quy trình đóng task (mục 4 của <code>labelx-qc-integrate</code>) không thoả; task ghi "PO manual test" thay vì <code>done</code>.</li><li>Hồ sơ M-01…M-03 ở trạng thái <code>review</code> vẫn tồn đọng và không được đóng bởi CR này.</li><li>Một PR mỗi gói vẫn cần comment <code>Đã xem và duyệt</code> theo CR-102 trừ khi PO quyết khác.</li></ul>
+<h2>Related Files</h2>
+<ul><li>Affected Documents : <code>.agent/planning/M-BE-MVP-2026-10-13.html</code>, <code>.agent/execution/mbe/MBE-00.html … MBE-09.html</code>, <code>.agent/planning/M-04-e2e-acceptance-2026-10-13.html</code></li><li>Decisions : none</li><li>Risks : none</li><li>Issues or Blockers : <code>.agent/governance/blockers/BLOCKER-031.html</code>, BLOCKER-030, <a href="CR-117.html">CR-117</a></li></ul>
+<h2>Approval</h2>
+<ul><li>Approval Decision : <code>pending</code></li><li>Approver : <code>chưa có</code></li><li>Decision Date : <code>chưa có</code></li><li>Conditions : <code>none</code></li><li>Rationale : <code>chưa có</code></li></ul>
+<h2>Implementation Plan</h2>
+<ul><li>Responsible Owner : <code>Trịnh Quang Trung (@toilatrung)</code></li><li>Tasks : MBE-00…MBE-09 (bản nháp, chưa đăng ký)</li><li>Validation Method : <code>make validate-kit</code>; PO manual test theo runbook MBE-09; <code>make check</code> xanh trên SHA cuối</li><li>Rollback Method : gỡ hàng <code>M-BE-MVP</code> khỏi <code>milestones.html</code> và <code>roadmap.html</code>, đánh dấu CR-118 <code>rejected</code> hoặc <code>withdrawn</code>; không có thay đổi code đi kèm CR này.</li></ul>
+<h2>Completion Criteria</h2>
+<ul><li>[ ] PO ghi quyết định duyệt trước khi đổi baseline hoặc đăng ký task.</li><li>[ ] Task MBE-xx được duyệt đăng ký trong task board và issue.</li><li>[ ] Hàng <code>M-BE-MVP</code> khớp trạng thái thật sau duyệt.</li><li>[ ] Status là <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code> hoặc <code>superseded</code>.</li></ul>
+</article></main>
+</body></html>
