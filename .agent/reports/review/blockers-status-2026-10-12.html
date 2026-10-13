@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo blocker để chốt — 2026-10-12 — LabelX</title>
+<meta name="labelx:id" content="report-blockers-2026-10-12">
+<meta name="labelx:title" content="Báo cáo blocker để chốt 2026-10-12">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, report, po-decision]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+.b{display:inline-block;padding:0 8px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--neutral-soft)}
+.open{background:var(--warn-soft);color:var(--warn)}.p1{color:var(--brand)}
+.card{border:1px solid var(--border);margin:14px 0;padding:4px 16px 10px}.card h3{margin:10px 0 4px}
+.ask{background:var(--selected);border-left:3px solid var(--info);padding:6px 12px;margin:8px 0}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.bar button,.bar select{font:inherit;padding:4px 10px;border:1px solid var(--border);background:var(--surface)}tr.done{color:var(--subtle)}#bt{display:table}
+</style></head><body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / blockers-status-2026-10-12</span><span class="sp"></span></header>
+<main><article>
+<ul><li><strong>Report ID</strong>: <code>blockers-status-2026-10-12</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-12</code></li></ul>
+<h1>Báo cáo blocker để chốt — 2026-10-12</h1>
+<p>Nguồn: <code>.agent/governance/blockers/BLOCKER-001…029.html</code> (nhánh <code>integration/m03</code>, commit 0662c1a), cập nhật sau khi đối chiếu develop (DEC-015/016) và chốt BLOCKER-025, 026. Chỉ liệt kê chi tiết các blocker chưa resolved; các mục NOT VERIFIED lấy nguyên từ hồ sơ, không suy diễn thêm.</p>
+<h2>1. Tổng quan</h2>
+<table><tr><th>Trạng thái</th><th>Số lượng</th><th>Blocker</th></tr>
+<tr><td>resolved</td><td>23</td><td>001–014, 016–023, 026 (022 và 026 đóng 2026-10-12)</td></tr>
+<tr><td>accepted (PO chấp nhận rủi ro)</td><td>1</td><td>024</td></tr>
+<tr><td><b>open</b></td><td><b>5</b></td><td>015, 025, 027, 028, 029</td></tr>
+<tr><td>Tổng</td><td>29</td><td></td></tr></table>
+<h2>2. Bảng chốt nhanh (5 blocker đang open)</h2>
+<table><tr><th>ID</th><th>Chủ đề</th><th>Ưu tiên</th><th>Hạn</th><th>Chặn</th><th>Việc PO cần làm</th></tr>
+<tr><td><a href="#blocker-015">015</a></td><td>Tham số khoa học, nguồn lực</td><td>2</td><td>Theo cổng (DEC-002)</td><td>Nghiệm thu E-05, E-07, E-17–20</td><td>Xác nhận lịch chốt</td></tr>
+<tr><td><a href="#blocker-027">027</a></td><td>T-022: bằng chứng CVAT thật</td><td>2</td><td>PO chốt (M-02-RESOLVE)</td><td>T-022 → done</td><td>Chấp nhận rủi ro hoặc yêu cầu bổ sung</td></tr>
+<tr><td><a href="#blocker-029">029</a></td><td>T-031: E2E thật + frontend</td><td>2</td><td>PO chốt (M-02-RESOLVE)</td><td>T-031 → done</td><td>Chấp nhận hoặc yêu cầu bổ sung</td></tr>
+<tr><td><a href="#blocker-028">028</a></td><td>Rủi ro kỹ thuật PR #88</td><td>3</td><td>PO chốt</td><td>Nợ kỹ thuật T-022</td><td>Quyết định quyền datasets, R1</td></tr>
+<tr><td><a href="#blocker-025">025</a></td><td>NFR, retry, RPO/RTO</td><td>3</td><td>Sau pilot</td><td>Nghiệm thu NFR</td><td>Giữ open hoặc tách</td></tr></table>
+<blockquote>Cảnh báo: BLOCKER-026 và các blocker gắn M-02-RESOLVE (027, 028, 029) phải có quyết định ghi lại trước khi đóng M-02 (2026-10-14) hoặc merge develop → main; reviewer <code>labelx-flow-review</code> sẽ kiểm các mục này.</blockquote>
+<h2>3. Chi tiết các blocker đang open</h2>
+<div class="card" id="blocker-015"><h3>BLOCKER-015 — Tham số khoa học và nguồn lực cho các cổng đo</h3>
+<p><span class="b open">open</span> <span class="b">Ưu tiên 2</span> <span class="b">Owner: QA Lead (chưa gán)</span></p>
+<p>TBD-03…07, 10…12, 16, K1…K4; nguồn lực AS-04 (QA Lead + 2 người xác minh), AS-05 (≥ 4 reviewer). DEC-002 đã chọn phương án A: chốt theo cổng, không chặn M-01…M-03. Chặn E-05, E-07, E-17…E-20 ở phần nghiệm thu.</p><div class="ask"><b>Cần PO chốt:</b> cung cấp danh sách tên ≥ 4 reviewer ngoài và 1 người phân xử thí nghiệm (AS-05). DEC-015/016 (develop, 2026-10-12) đã chốt τ_m 0,50, τ_amb 0,30, a_min 24 px², visibility 0,2, n_min 50, 5 fold; còn đề xuất chờ PO/QA Lead ở <a href="../../governance/decisions/DEC-018.html">DEC-018</a> (TBD-07, 10, 11, 12, K1–K4); TBD-03 (split) chưa chốt; SRS chưa cập nhật.</div></div><div class="card" id="blocker-025"><h3>BLOCKER-025 — Tham số NFR, retry, retention/GC, RPO/RTO</h3>
+<p><span class="b open">open</span> <span class="b">Ưu tiên 3</span> <span class="b">Owner: Tech Lead Backend (chưa gán); PO cho TBD-15</span></p>
+<p>DEC-013/DEC-014 đã chốt giá trị cho TBD-02, 13, 14, 15, 17, 20. Còn pending: (1) thời gian QC Run 10.000 frame (NFR-03); (2) cấu hình server pilot (TBD-02); (3) đo NFR trên pilot; (4) đồng bộ SRS có version. Không chặn EPIC_READY, chỉ chặn nghiệm thu NFR.</p><div class="ask"><b>Cần PO chốt:</b> giữ open tới sau pilot (khuyến nghị), hoặc tách phần đã chốt ra đóng và chỉ giữ mục “đo trên pilot”.</div></div><div class="card" id="blocker-027"><h3>BLOCKER-027 — T-022 chưa có bằng chứng CVAT thật cho AC Snapshot</h3>
+<p><span class="b open">open</span> <span class="b">Ưu tiên 2</span> <span class="b">Owner: @toilatrung; thực hiện @tdt2112</span></p>
+<p>Đã có bằng chứng thật (CVAT 2.77.0): snapshot khoá, drift, bất biến/lineage, RBAC 7 vai trò × 13 endpoint, run thật broker+worker, SIGKILL/huỷ/retry-failed. <b>Chưa có:</b> shape bị bỏ qua trên CVAT thật, CSRF/Idempotency-Key tạo Snapshot qua UI, deep link Job/Frame, runner detector/metric/vlm trong E2E, retry thành công sau lỗi tạm, review độc lập + duyệt PO (CR-102). T-022 giữ ở <code>review</code>.</p><div class="ask"><b>Cần PO chốt:</b> chấp nhận rủi ro (ghi decision, đổi status accepted) hay yêu cầu bổ sung các mục NOT VERIFIED ở trên.</div></div><div class="card" id="blocker-028"><h3>BLOCKER-028 — PR #88 (T-022): rủi ro kỹ thuật còn lại</h3>
+<p><span class="b open">open</span> <span class="b">Ưu tiên 3</span> <span class="b">Owner: @toilatrung; thực hiện @tdt2112</span></p>
+<p>R1 còn chi phí O(số trang), chưa có filter “latest locked” ở backend. R2 không tái hiện. R3 đã xử lý (CI trên SHA cuối chưa có vì chưa push). R4: contract đã đồng bộ nhưng quyền <code>/api/datasets/</code> (mọi vai trò) lệch với màn Snapshot (chỉ qa_lead/qc_admin/super_admin) chưa có quyết định. R5 đã chạy lại: make check exit 0.</p><div class="ask"><b>Cần PO chốt:</b> quyết định quyền <code>/api/datasets/</code>; chấp nhận R1 hay yêu cầu filter backend; cho phép push để CI chạy.</div></div><div class="card" id="blocker-029"><h3>BLOCKER-029 — PR #92 (T-031): E2E dữ liệu thật và kiểm frontend</h3>
+<p><span class="b open">open</span> <span class="b">Ưu tiên 2</span> <span class="b">Owner: @toilatrung; thực hiện @Vietanhhhhhh2003</span></p>
+<p>V1 đã chạy trên BDD100K thật (588 frame, run 42/43 cùng 4 hash) nhưng provenance chỉ đối chiếu mirror HuggingFace (BLOCKER-024 đã accepted); <code>output_sha256</code> từng shard chưa ghi. V2: vitest 188 passed, nhưng <code>npm run build</code> và <code>tsc --noEmit</code> chưa có kết quả riêng. V3: RBAC khớp trên API thật, nhưng chưa có test pytest từng vai trò cho <code>runs_ranking</code>. T-031 giữ ở <code>review</code>.</p><div class="ask"><b>Cần PO chốt:</b> chấp nhận các mục NOT VERIFIED còn lại hay yêu cầu: ghi output_sha256, chạy build/tsc, thêm test từ chối từng vai trò.</div></div>
+<h2>4. Blocker đã accepted</h2>
+<div class="card" id="blocker-024"><h3>BLOCKER-024 — Annotation người học T-004 không nằm trên ảnh BDD100K</h3>
+<p><span class="b">accepted</span> <span class="b">Ưu tiên 1</span> <span class="b">Owner: @toilatrung</span></p>
+<p>PO đã chấp nhận và đóng ngày 2026-10-11 (DEC-014, phương án C). Là <b>chấp nhận rủi ro</b>, không phải resolved: 588 ảnh chỉ đối chiếu với mirror HuggingFace (chưa với bdd100k.com) và nguồn nhãn là lời khai PO, chưa có guideline/danh sách người gán trong repo. T-004 → in-progress, E-04 → EPIC_IN_PROGRESS, EDGE-009 → active.</p>
+<div class="ask"><b>Cần lưu ý:</b> T-004 còn phải cập nhật báo cáo với audit learner mới. Không cần chốt thêm.</div></div>
+<h2>5. Blocker đã resolved</h2>
+<p>23 blocker (001–014, 016–023, 026) đã đóng; BLOCKER-026 đóng 2026-10-12 sau khi PR #126 merge, phần hoãn chuyển sang <a href="../../governance/change-requests/CR-112.html">CR-112</a> (proposed, hạn đề xuất 2026-10-27); BLOCKER-022 đóng ngày 2026-10-12: theo <a href="../../governance/decisions/DEC-016.html">DEC-016</a> (develop): QA Lead là Nguyễn Đức Hà (@ducha180104), QC Admin là Trịnh Quang Trung (@toilatrung). Phần còn lại là các quyết định/ràng buộc của SRS và dữ liệu M-13 ghi ngày 2026-10-05; xem từng file trong <code>.agent/governance/blockers/</code>.</p>
+<h2>6. Thứ tự đề xuất khi chốt</h2>
+<ol><li>BLOCKER-015 — bổ sung danh sách tên ≥ 4 reviewer ngoài và người phân xử thí nghiệm (AS-05) để đóng.</li>
+<li>BLOCKER-027, 028, 029 — một phiếu chốt chung cho M-02-RESOLVE: chấp nhận rủi ro hoặc liệt kê bằng chứng bổ sung.</li>
+<li>BLOCKER-025 — xác nhận giữ open theo cổng (đo trên pilot).</li></ol>
+<h2 id="danh-dau">Bảng đánh dấu gỡ block</h2>
+<p>Tick các blocker anh đã chốt gỡ, rồi bấm “Sao chép danh sách” và gửi lại cho agent để cập nhật hồ sơ. Trạng thái tick lưu trong trình duyệt này. Các dòng đã resolved được tick sẵn và khoá. Tick ở đây chưa đổi hồ sơ; chỉ agent sửa file blocker sau khi anh gửi danh sách.</p>
+<div class="bar"><select id="filter" aria-label="Lọc"><option value="all">Tất cả (29)</option><option value="open" selected>Chưa gỡ</option></select>
+<button id="copy" type="button">Sao chép danh sách đã đánh dấu</button><button id="clear" type="button">Bỏ tick</button><span id="count" aria-live="polite"></span></div>
+<table id="bt"><thead><tr><th>Đã gỡ</th><th>ID</th><th>Chủ đề</th><th>Status hiện tại</th><th>Ưu tiên</th></tr></thead><tbody>
+<tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-001" aria-label="Đánh dấu BLOCKER-001 đã gỡ" checked disabled></td><td><code>BLOCKER-001</code></td><td>001</td><td>resolved</td><td>1</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-002" aria-label="Đánh dấu BLOCKER-002 đã gỡ" checked disabled></td><td><code>BLOCKER-002</code></td><td>002</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-003" aria-label="Đánh dấu BLOCKER-003 đã gỡ" checked disabled></td><td><code>BLOCKER-003</code></td><td>003</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-004" aria-label="Đánh dấu BLOCKER-004 đã gỡ" checked disabled></td><td><code>BLOCKER-004</code></td><td>004</td><td>resolved</td><td>1</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-005" aria-label="Đánh dấu BLOCKER-005 đã gỡ" checked disabled></td><td><code>BLOCKER-005</code></td><td>005</td><td>resolved</td><td>1</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-006" aria-label="Đánh dấu BLOCKER-006 đã gỡ" checked disabled></td><td><code>BLOCKER-006</code></td><td>006</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-007" aria-label="Đánh dấu BLOCKER-007 đã gỡ" checked disabled></td><td><code>BLOCKER-007</code></td><td>007</td><td>resolved</td><td>1</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-008" aria-label="Đánh dấu BLOCKER-008 đã gỡ" checked disabled></td><td><code>BLOCKER-008</code></td><td>008</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-009" aria-label="Đánh dấu BLOCKER-009 đã gỡ" checked disabled></td><td><code>BLOCKER-009</code></td><td>009</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-010" aria-label="Đánh dấu BLOCKER-010 đã gỡ" checked disabled></td><td><code>BLOCKER-010</code></td><td>010</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-011" aria-label="Đánh dấu BLOCKER-011 đã gỡ" checked disabled></td><td><code>BLOCKER-011</code></td><td>011</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-012" aria-label="Đánh dấu BLOCKER-012 đã gỡ" checked disabled></td><td><code>BLOCKER-012</code></td><td>012</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-013" aria-label="Đánh dấu BLOCKER-013 đã gỡ" checked disabled></td><td><code>BLOCKER-013</code></td><td>013</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-014" aria-label="Đánh dấu BLOCKER-014 đã gỡ" checked disabled></td><td><code>BLOCKER-014</code></td><td>014</td><td>resolved</td><td>2</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-015" aria-label="Đánh dấu BLOCKER-015 đã gỡ"></td><td><code>BLOCKER-015</code></td><td>015</td><td>open</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-016" aria-label="Đánh dấu BLOCKER-016 đã gỡ" checked disabled></td><td><code>BLOCKER-016</code></td><td>016</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-017" aria-label="Đánh dấu BLOCKER-017 đã gỡ" checked disabled></td><td><code>BLOCKER-017</code></td><td>017</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-018" aria-label="Đánh dấu BLOCKER-018 đã gỡ" checked disabled></td><td><code>BLOCKER-018</code></td><td>018</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-019" aria-label="Đánh dấu BLOCKER-019 đã gỡ" checked disabled></td><td><code>BLOCKER-019</code></td><td>019</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-020" aria-label="Đánh dấu BLOCKER-020 đã gỡ" checked disabled></td><td><code>BLOCKER-020</code></td><td>020</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-021" aria-label="Đánh dấu BLOCKER-021 đã gỡ" checked disabled></td><td><code>BLOCKER-021</code></td><td>021</td><td>resolved</td><td>2</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-022" aria-label="Đánh dấu BLOCKER-022 đã gỡ" checked disabled></td><td><code>BLOCKER-022</code></td><td>022</td><td>resolved</td><td>1</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-023" aria-label="Đánh dấu BLOCKER-023 đã gỡ" checked disabled></td><td><code>BLOCKER-023</code></td><td>023</td><td>resolved</td><td>1</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-024" aria-label="Đánh dấu BLOCKER-024 đã gỡ"></td><td><code>BLOCKER-024</code></td><td>Annotation người học của T-004 không nằm trên ảnh BDD100K</td><td>accepted</td><td>1</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-025" aria-label="Đánh dấu BLOCKER-025 đã gỡ"></td><td><code>BLOCKER-025</code></td><td>Tham số NFR, retry, retention/GC, RPO/RTO chốt theo cổng (tách từ BLOCKER-014)</td><td>open</td><td>3</td></tr><tr class="done"><td><input type="checkbox" class="pick" value="BLOCKER-026" aria-label="Đánh dấu BLOCKER-026 đã gỡ" checked disabled></td><td><code>BLOCKER-026</code></td><td>Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02</td><td>resolved</td><td>3</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-027" aria-label="Đánh dấu BLOCKER-027 đã gỡ"></td><td><code>BLOCKER-027</code></td><td>T-022 chưa có bằng chứng chạy trên CVAT thật cho AC Snapshot</td><td>open</td><td>2</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-028" aria-label="Đánh dấu BLOCKER-028 đã gỡ"></td><td><code>BLOCKER-028</code></td><td>PR #88 (T-022): rủi ro kỹ thuật còn lại cần PO xử lý sau</td><td>open</td><td>3</td></tr><tr><td><input type="checkbox" class="pick" value="BLOCKER-029" aria-label="Đánh dấu BLOCKER-029 đã gỡ"></td><td><code>BLOCKER-029</code></td><td>PR #92 (T-031): chạy E2E trên dữ liệu BDD100K thật và kiểm frontend ở M-02-RESOLVE</td><td>open</td><td>2</td></tr>
+</tbody></table>
+<textarea id="out" readonly rows="2" style="width:100%;font:13px var(--mono);display:none"></textarea>
+<script>
+(function(){
+var K='labelx-blockers-unblocked-2026-10-12',picks=[].slice.call(document.querySelectorAll('.pick:not([disabled])'));
+function load(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
+function save(a){try{localStorage.setItem(K,JSON.stringify(a))}catch(e){}}
+function marked(){return picks.filter(function(c){return c.checked}).map(function(c){return c.value})}
+var saved=load();picks.forEach(function(c){c.checked=saved.indexOf(c.value)>-1;c.addEventListener('change',upd)});
+function upd(){var m=marked();save(m);document.getElementById('count').textContent=m.length?('Đã đánh dấu '+m.length+': '+m.join(', ')):'Chưa đánh dấu blocker nào';applyFilter()}
+function applyFilter(){var all=document.getElementById('filter').value==='all';
+document.querySelectorAll('#bt tbody tr').forEach(function(r){r.style.display=(all||!r.classList.contains('done'))?'':'none'})}
+document.getElementById('filter').addEventListener('change',applyFilter);
+document.getElementById('clear').addEventListener('click',function(){picks.forEach(function(c){c.checked=false});upd()});
+document.getElementById('copy').addEventListener('click',function(){var m=marked(),t=m.length?('Đã gỡ block: '+m.join(', ')):'Chưa đánh dấu blocker nào',o=document.getElementById('out');
+o.value=t;o.style.display='block';o.select();try{navigator.clipboard.writeText(t)}catch(e){try{document.execCommand('copy')}catch(e2){}}});
+upd();
+})();
+</script>
+</article></main></body></html>

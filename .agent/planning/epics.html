@@ -180,53 +180,17 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>E-12</code></td>
 <td><code>M-04</code></td>
-<td><strong>VLM tắt trong pilot (TBD-08)</strong> — Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</td>
-<td><code>Nguyễn Xuân Việt Anh</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>none</code></td>
+<td><strong>Qwen VLM có điều kiện, evidence và routing</strong> — Qwen chỉ phân định candidate được trigger; classifier và reviewer/QA giữ các vai trò tách biệt theo CR-115.</td>
+<td><code>Trịnh Quang Trung (@toilatrung)</code></td>
+<td><code>EPIC_IN_PROGRESS</code></td>
+<td><code>M04A-01…05, M04B-01…04, M04C-01…04, M04S-01…03</code></td>
 <td>Xem <a href="#e-12">chi tiết</a></td>
-<td><code>BLOCKER-002, DEC-002, DEC-003</code></td>
+<td><code>CR-115, DEC-002, DEC-003; Qwen quota/data permission</code></td>
 </tr>
-<tr>
-<td><code>E-13</code></td>
-<td><code>M-03</code></td>
-<td><strong>Review Queues và lease nguyên tử</strong> — Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</td>
-<td><code>Nguyễn Đức Hà</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>T-032</code></td>
-<td>Xem <a href="#e-13">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003, DEC-006</code></td>
-</tr>
-<tr>
-<td><code>E-14</code></td>
-<td><code>M-03</code></td>
-<td><strong>Review Workspace, quyết định và effort log</strong> — Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</td>
-<td><code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>T-032</code></td>
-<td>Xem <a href="#e-14">chi tiết</a></td>
-<td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101, DEC-006</code></td>
-</tr>
-<tr>
-<td><code>E-15</code></td>
-<td><code>M-03</code></td>
-<td><strong>Escalation, phân xử, Decision Case và Guideline Gap</strong> — Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</td>
-<td><code>Nguyễn Đức Hà</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>T-032</code></td>
-<td>Xem <a href="#e-15">chi tiết</a></td>
-<td><code>DEC-002, DEC-003, CR-101</code></td>
-</tr>
-<tr>
-<td><code>E-16</code></td>
-<td><code>M-03</code></td>
-<td><strong>Rework, re-check, verify và QC run cuối</strong> — Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</td>
-<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
-<td><code>EPIC_PROPOSED</code></td>
-<td><code>T-032</code></td>
-<td>Xem <a href="#e-16">chi tiết</a></td>
-<td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101, DEC-005</code></td>
-</tr>
+<tr><td><code>E-13</code></td><td><code>M-03</code></td><td><strong>Review Queues và lease nguyên tử</strong> — Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</td><td><code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Frontend)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R01, M03-R02, M03-R04</code></td><td>Xem <a href="#e-13">chi tiết</a></td><td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003, DEC-006</code></td></tr>
+<tr><td><code>E-14</code></td><td><code>M-03</code></td><td><strong>Review Workspace, quyết định và effort log</strong> — Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</td><td><code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Workspace FE), Nguyễn Xuân Việt Anh (effort FE)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R03, M03-R04, M03-R10</code></td><td>Xem <a href="#e-14">chi tiết</a></td><td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101, DEC-006</code></td></tr>
+<tr><td><code>E-15</code></td><td><code>M-03</code></td><td><strong>Escalation, phân xử, Decision Case và Guideline Gap</strong> — Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</td><td><code>Trịnh Quang Trung (Backend); Nguyễn Xuân Việt Anh (Frontend)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R05</code></td><td>Xem <a href="#e-15">chi tiết</a></td><td><code>DEC-002, DEC-003, CR-101</code></td></tr>
+<tr><td><code>E-16</code></td><td><code>M-03</code></td><td><strong>Rework, re-check, verify và QC run cuối</strong> — Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</td><td><code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Frontend)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R06, M03-R07, M03-R08, M03-R09</code></td><td>Xem <a href="#e-16">chi tiết</a></td><td><code>BLOCKER-007, BLOCKER-011, DEC-002, DEC-003, CR-101, DEC-005</code></td></tr>
 <tr>
 <td><code>E-17</code></td>
 <td><code>M-04</code></td>
@@ -1066,27 +1030,30 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_11">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
-<li><strong>Title</strong>: <code>VLM tắt trong pilot (TBD-08)</code></li>
-<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Title</strong>: <code>Qwen VLM, ConvNeXt Tiny classifier và routing (CR-115)</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
-<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
-<li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>pending</code></li>
+<li><strong>Target Date</strong>: <code>Theo gate A/B/C; ETA khi nhận task</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>PO Sign-off</strong>: <code>CR-115 / DEC-021, 2026-10-13: READY cho expansion, IN_PROGRESS cho triển khai; task mới pending</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
-<p>Thực hiện nhánh đã duyệt cho FR-ENG-10: VLM tắt trong pilot, có ghi nhận (DEC-002).</p>
+<p>Triển khai Qwen VLM có điều kiện theo CR-115: chỉ tạo evidence/đề xuất cho candidate được trigger; không tự xác nhận issue, quyết định gate hoặc sửa annotation.</p>
 <h4 id="scope_11">Scope</h4>
 <h5 id="included_11">Included</h5>
 <ul>
-<li>VLM tắt trong pilot (DEC-002, BLOCKER-002 phương án A): trạng thái disabled/Not checked đúng, không giả coverage</li>
-<li>Frontend: AnalysisConfig/ExecutionHistory hiển thị VLM disabled/Not checked; không có điều khiển bật VLM</li>
+<li>Qwen <code>qwen3-vl-plus</code> qua backend worker: structured JSON, prompt/model/API version, timeout/retry/budget và evidence append-only theo candidate/revision</li>
+<li>Routing classifier–Qwen: candidate đủ tin cậy không gọi VLM; low-score/low-margin/conflict/manual recheck gọi VLM; uncertain/failed/budget exhausted chuyển reviewer</li>
+<li>ConvNeXt Tiny fine-tune/inference, crop manifest và class-map 10 lớp; unknown là abstention; toàn bộ code/training do PO.</li>
+<li>API evidence/evaluation và workspace handoff theo <code>.agent/planning/M-04-ABC-implementation-2026-10-13.html</code></li>
 </ul>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
-<li>Gửi ảnh ra dịch vụ ngoài khi chưa được phép (NFR-09)</li>
-<li>Pipeline VLM bật theo B-08 (để giai đoạn sau)</li>
+<li>Tự xác nhận lỗi, ghi ReviewDecision/Adjudication hoặc sửa annotation từ Qwen/classifier</li>
+<li>Gửi dữ liệu ảnh ra dịch vụ ngoài khi chưa được phép; credential hoặc quota không được suy ra từ việc duyệt kế hoạch.</li>
+<li>Calibration, KPI, benchmark/load test và nghiệm thu hiệu quả</li>
 </ul>
 <h4 id="dependencies_11">Dependencies</h4>
 <ul>
@@ -1099,14 +1066,15 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Milestones</strong>: <code>.agent/planning/milestones.html</code></li>
 <li><strong>Dependency Graph</strong>: <code>.agent/planning/dependency-graph.html</code></li>
 <li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-001.html, .agent/governance/decisions/DEC-002.html, .agent/governance/decisions/DEC-003.html</code></li>
-<li><strong>Risks</strong>: <code>none</code></li>
-<li><strong>Change Requests</strong>: <code>none</code></li>
+<li><strong>Risks</strong>: <code>Quota/input runtime; crop provenance; idempotency; xem DEC-021</code></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-115.html</code></li>
 <li><strong>Screens (H)</strong>: AnalysisConfig, ModelsGuidelines, ExecutionHistory</li>
 </ul>
 <h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Bằng chứng của đúng nhánh đã được Product Owner duyệt</li>
-<li>[ ] Frontend: màn trong Screens (H) chạy trên API thật (không dữ liệu giả), đúng quyền theo vai trò, có test frontend trong CI; giao diện tham khảo <code>docs/design/</code> (không yêu cầu khớp pixel)</li>
+<li>[ ] Qwen <code>qwen3-vl-plus</code> chạy trên crop được phép, kết quả JSON được validate, evidence/ledger/API có provenance và không có duplicate retry</li>
+<li>[ ] Routing classifier–Qwen xử lý classifier-only, trigger, conflict, uncertain, stale revision và budget/error theo kế hoạch M-04 A/B/C</li>
+<li>[ ] API BE có schema/payload/error handoff; FE theo nhánh develop-fe và #213, không mở rộng scope coding BE.</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>
 </ul>
@@ -1128,13 +1096,13 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Epic ID</strong>: <code>E-13</code></li>
 <li><strong>Title</strong>: <code>Review Queues và lease nguyên tử</code></li>
-<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Frontend)</code></li>
+<li><strong>Status</strong>: <code>EPIC_READY</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-15</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>pending</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — phiếu M-03-RESOLVE, DEC-019; BE PO / FE theo CR-111; implementation còn pending</code></li>
 </ul>
 <h4 id="objective_12">Objective</h4>
 <p>Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</p>
@@ -1188,18 +1156,19 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
+<p>Resolve ownership: Backend @toilatrung; task routing/AC theo <a href="M-03-RESOLVE-2026-10-12.html">kế hoạch mới</a> và DEC-019. READY cho scope resolve; chưa phải DONE.</p>
 <h3 id="e-14">E-14</h3>
 <h4 id="record-metadata_13">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-14</code></li>
 <li><strong>Title</strong>: <code>Review Workspace, quyết định và effort log</code></li>
-<li><strong>Owner</strong>: <code>Nguyễn Đức Hà (frontend: Trần Đức Thọ)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Workspace FE), Nguyễn Xuân Việt Anh (effort FE)</code></li>
+<li><strong>Status</strong>: <code>EPIC_READY</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>pending</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — phiếu M-03-RESOLVE, DEC-019; BE PO / FE theo CR-111; implementation còn pending</code></li>
 </ul>
 <h4 id="objective_13">Objective</h4>
 <p>Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</p>
@@ -1259,18 +1228,19 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
+<p>Resolve ownership: Backend @toilatrung; task routing/AC theo <a href="M-03-RESOLVE-2026-10-12.html">kế hoạch mới</a> và DEC-019. READY cho scope resolve; chưa phải DONE.</p>
 <h3 id="e-15">E-15</h3>
 <h4 id="record-metadata_14">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-15</code></li>
 <li><strong>Title</strong>: <code>Escalation, phân xử, Decision Case và Guideline Gap</code></li>
-<li><strong>Owner</strong>: <code>Nguyễn Đức Hà</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (Backend); Nguyễn Xuân Việt Anh (Frontend)</code></li>
+<li><strong>Status</strong>: <code>EPIC_READY</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>pending</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — phiếu M-03-RESOLVE, DEC-019; BE PO / FE theo CR-111; implementation còn pending</code></li>
 </ul>
 <h4 id="objective_14">Objective</h4>
 <p>Issue chưa đủ căn cứ được QA Lead phân xử, lưu thành Decision Case có version.</p>
@@ -1323,18 +1293,19 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
+<p>Resolve ownership: Backend @toilatrung; task routing/AC theo <a href="M-03-RESOLVE-2026-10-12.html">kế hoạch mới</a> và DEC-019. READY cho scope resolve; chưa phải DONE.</p>
 <h3 id="e-16">E-16</h3>
 <h4 id="record-metadata_15">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-16</code></li>
 <li><strong>Title</strong>: <code>Rework, re-check, verify và QC run cuối</code></li>
-<li><strong>Owner</strong>: <code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></li>
-<li><strong>Status</strong>: <code>EPIC_PROPOSED</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Frontend)</code></li>
+<li><strong>Status</strong>: <code>EPIC_READY</code></li>
 <li><strong>Milestone ID</strong>: <code>M-03</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-05</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-16</code></li>
 <li><strong>Priority</strong>: <code>2</code></li>
-<li><strong>PO Sign-off</strong>: <code>pending</code></li>
+<li><strong>PO Sign-off</strong>: <code>Trịnh Quang Trung, 2026-10-12 — phiếu M-03-RESOLVE, DEC-019; BE PO / FE theo CR-111; implementation còn pending</code></li>
 </ul>
 <h4 id="objective_15">Objective</h4>
 <p>Lỗi xác nhận được sửa trên CVAT, kiểm lại trên revision mới, và mọi báo cáo/gate trỏ QC run cuối.</p>
@@ -1391,6 +1362,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required implementation, review, and QA reports exist.</li>
 <li>[ ] Open blockers and risks have an explicit disposition.</li>
 </ul>
+<p>Resolve ownership: Backend @toilatrung; task routing/AC theo <a href="M-03-RESOLVE-2026-10-12.html">kế hoạch mới</a> và DEC-019. READY cho scope resolve; chưa phải DONE.</p>
 <h3 id="e-17">E-17</h3>
 <h4 id="record-metadata_16">Record Metadata</h4>
 <ul>
@@ -1916,4 +1888,5 @@ ul.dir{columns:2;font-size:14px}
 <li>Do not change baselined scope without an approved change request.</li>
 <li>Do not record fabricated links, evidence, or completion state.</li>
 </ul>
+<h2 id="m04-ownership">M-04 — ownership 2026-10-13</h2><p>DEC-021: toàn bộ Backend mới E-10/E-12/E-08 trong phạm vi M-04 do PO @toilatrung. E-12 bao gồm classifier và routing, READY để tạo task rồi IN_PROGRESS cho execution; tasks pending. Không thay lịch sử task cũ. Reference/calibration E-06/E-07/E-17 chuyển sau cổng kỹ thuật. <a href="M-04-dispatch-2026-10-13.html">Danh mục task và issue</a>.</p>
 </article></main></body></html>

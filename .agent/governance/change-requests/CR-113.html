@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-113 — Contract và policy review–rework M-03 đã được PO duyệt — LabelX</title>
+<meta name="labelx:id" content="cr-113">
+<meta name="labelx:title" content="CR-113 — Contract và policy review–rework M-03 đã được PO duyệt">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="review-workflow">
+<meta name="labelx:tags" content="[change-request, template]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / cr-113</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>cr-113</span><b>title</b><span>CR-113 — Contract và policy review–rework M-03 đã được PO duyệt</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[change-request, template]</span><b>priority</b><span>2</span></div>
+<h1 id="cr-113">CR-113 — Contract và policy review–rework M-03 đã được PO duyệt</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi approved contract deltas P02…P07 theo DEC-019; cho phép triển khai đúng phạm vi, không tự coi đã implemented.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Change Request ID</strong>: <code>CR-113</code></li><li><strong>Title</strong>: <code>M-03: review/effort policy, Workspace, Case, Rework read và operational lineage</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Proposer</strong>: <code>Codex tổng hợp từ phiếu PO P01…P09</code></li><li><strong>Status</strong>: <code>approved</code></li><li><strong>Change Type</strong>: <code>contract</code></li><li><strong>Priority</strong>: <code>1</code></li><li><strong>Created Date</strong>: <code>2026-10-12</code></li><li><strong>Decision Due Date</strong>: <code>2026-10-12</code></li></ul>
+<h2 id="proposed-change">Proposed Change</h2>
+<table><thead><tr><th>Phần</th><th>Trước</th><th>Sau đã duyệt</th></tr></thead><tbody><tr><td>Policy</td><td>Lease/idle TBD, FE idle null</td><td>900/300/120 s pilot + version/source; GET /api/review-policy/?dataset_id={id} read-only theo scope</td></tr><tr><td>Workspace D02</td><td>Thiếu revision/full overlays</td><td>Mở rộng FrameIssues: snapshot_revision, annotations[], predictions[] đúng locked snapshot; quyền snapshot không mở rộng</td></tr><tr><td>Case D03</td><td>Endpoint ngoài OpenAPI/enum lệch</td><td>Chuẩn hóa list/detail/version/filter/pager; public guideline_gap, history immutable</td></tr><tr><td>Rework D04</td><td>Chỉ POST</td><td>GET list/detail; annotator chỉ assigned; 404 foreign-assigned object, 403 missing dataset scope; scoped counts/cursor</td></tr><tr><td>Run D05</td><td>is_final/origin_run_id chưa đủ</td><td>3 fields: verification_lineage, selected_final_sources, operational_source; run_id/scope_complete/blocked_reasons; không /lineage/</td></tr></tbody></table>
+<h2 id="justification">Justification</h2>
+<p>Sửa findings F-02/F-03/F-07/F-08/F-09/F-10; PO chọn A tại từng mục P02…P07 trong phiếu, không còn gate xin duyệt contract cho các nội dung này.</p>
+<h2 id="impact-assessment">Impact Assessment</h2>
+<ul><li><strong>Affected Baselines</strong>: <code>OpenAPI/RBAC/state-machines; serializers/types/fixtures/config source; không thay các guard self-review/audit/final đã có.</code></li><li><strong>Affected Epics or Tasks</strong>: <code>E-13…E-16; R01/R03/R04/R05/R08/R09/R10/R12</code></li><li><strong>Schedule Impact</strong>: <code>Owner xác nhận ETA; chưa có deadline mới trong phiếu</code></li><li><strong>Cost or Resource Impact</strong>: <code>Toàn bộ Backend do PO; frontend Thọ/Việt Anh; Hà review/env; Nam QC</code></li><li><strong>Security or Compliance Impact</strong>: <code>Dataset/actor scope ở API; no snapshot permission expansion; missing scope 403, annotator foreign object 404; no CVAT writes</code></li><li><strong>Compatibility or Migration Impact</strong>: <code>Additive read fields/routes + normalize legacy public enum; history append-only không rewrite; API/types cùng cập nhật ở hai nhánh</code></li></ul>
+<h2 id="related-files">Related Files</h2>
+<ul><li><strong>Affected Documents</strong>: docs/04-api/openapi.yaml, rbac-matrix.html, state-machines.html; task plan.</li><li><strong>Decisions</strong>: <a href="../decisions/DEC-019.html">DEC-019</a>; DEC-002, DEC-015/016, CR-111.</li><li><strong>Risks</strong>: E2E/runtime inputs pending; source selection không do FE tự suy.</li><li><strong>Issues or Blockers</strong>: #236–#249; báo cáo review flow-M-03-2026-10-12.</li></ul>
+<h2 id="approval">Approval</h2>
+<ul><li><strong>Decision</strong>: <code>approved</code></li><li><strong>Approver</strong>: <code>Trịnh Quang Trung (@toilatrung), PO qua user message</code></li><li><strong>Decision Date</strong>: <code>2026-10-12</code></li><li><strong>Conditions</strong>: <code>Policy chỉ pilot; input trống không được suy; Backend owner PO đến khi PO chia; FE mới theo develop-fe; vẫn đủ QA đúng SHA trước nghiệm thu.</code></li><li><strong>Rationale</strong>: <code>PO đã chọn các phương án A P02…P07 rõ ràng; P03 A bao gồm 120 giây dù input số trống.</code></li></ul>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<ul><li><strong>Responsible Owner</strong>: <code>@toilatrung toàn Backend; FE theo task owner hiện hành</code></li><li><strong>Tasks</strong>: <code>R03/R05/R08, phần BE R10; consumers R04/R09 và FE R10</code></li><li><strong>Validation Method</strong>: <code>Contract/runtime schema semantic parity; role/identity/error tests; regeneration/types; PostgreSQL/migrations; browser + E2E source/lineage</code></li><li><strong>Rollback Method</strong>: <code>Rollback deployment/code theo PR nếu cần; giữ report/approval/history immutable; không xóa accepted decision</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Approval nguồn đã có trước implementation.</li><li>[ ] OpenAPI/serializers/types/tests/config thật được triển khai cùng PR.</li><li>[ ] QA đầy đủ trên SHA BE/FE + bản tích hợp.</li><li>[ ] Chuyển implemented chỉ khi có bằng chứng và commit map.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không thêm endpoint/role/delta ngoài phạm vi đã duyệt mà không có approval mới.</li><li>Không code Backend bởi dev khác khi PO chưa giao lại.</li><li>Không xem CR approved là product/runtime acceptance.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Lưu CR-113.html; preserve headings; liên kết DEC-019 và task/evidence thực tế.</p>
+</article></main></body></html>
