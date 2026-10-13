@@ -86,6 +86,16 @@ def test_valid_config_parses_and_public_dict_has_no_secret() -> None:
         {"prompt_version": ["vlm-prompt-v0"]},
         {"prompt_version": {"a": 1}},
         {"provider": ["dashscope"]},
+        {"provider": "openai"},
+        {"base_url": "https://api.shopaikey.com/compatible-mode/v1"},
+        {"base_url": "https://api.shopaikey.com/v1/chat"},
+        {"base_url": "https://api.shopaikey.com"},
+        {"base_url": "https://api.shopaikey.com:443/v1"},
+        {"base_url": "https://api.shopaikey.com.evil.com/v1"},
+        {"base_url": "https://evil.api.shopaikey.com/v1"},
+        {"base_url": "http://api.shopaikey.com/v1"},
+        {"base_url": "https://api.shopaikey.com/v1?x=1"},
+        {"base_url": "https://dashscope.aliyuncs.com/v1"},
         {"base_url": ["https://dashscope.aliyuncs.com/v1"]},
         {"base_url": "https://dashscope.aliyuncs.com:8443/compatible-mode/v1"},
         {"base_url": "https://dashscope.aliyuncs.com:443/compatible-mode/v1"},
@@ -139,8 +149,21 @@ def test_boundaries_accepted() -> None:
         {"max_attempts": 1},
         {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/"},
         {"api_key_env": "DASHSCOPE_API_KEY"},
+        {"api_key_env": "VLM_API_KEY"},
+        {"provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1"},
+        {"provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1/"},
     ):
         assert validate_vlm_config(_cfg(**over)) == [], over
+
+
+def test_default_key_env_and_providers() -> None:
+    cfg = parse_vlm_config(VALID)
+    assert cfg.api_key_env == "VLM_API_KEY" and cfg.host == "dashscope-intl.aliyuncs.com"
+    assert cfg.as_public_dict()["host"] == "dashscope-intl.aliyuncs.com"
+    gateway = parse_vlm_config(
+        {**VALID, "provider": "openai_compatible", "base_url": "https://api.shopaikey.com/v1"}
+    )
+    assert gateway.provider == "openai_compatible" and gateway.host == "api.shopaikey.com"
 
 
 def test_allowlist_contains_only_instruct_default() -> None:

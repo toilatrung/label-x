@@ -142,7 +142,7 @@ def _make_run(
 def _env(settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     settings.VLM_CROP_PROVIDER = "tests.orchestration.test_vlm_stage.FixtureCrops"
     settings.ORCHESTRATION_AUTO_DISPATCH = False
-    monkeypatch.setenv("DASHSCOPE_API_KEY", "sk-test-not-real")
+    monkeypatch.setenv("VLM_API_KEY", "sk-test-not-real")
 
     def runner(inp: EngineInput) -> EngineOutput:
         candidates = tuple(
@@ -320,7 +320,7 @@ def test_reclaim_never_exceeds_max_attempts_per_logical_turn() -> None:
 def test_missing_api_key_costs_no_budget_and_makes_no_request(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("DASHSCOPE_API_KEY")
+    monkeypatch.delenv("VLM_API_KEY")
     run = _make_run(vlm={**VALID, "budget": {"max_calls": 3}})
     _run_shards(run)
     requests: list[Any] = []

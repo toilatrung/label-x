@@ -43,6 +43,9 @@ def result_to_dict(result: VlmResult) -> dict[str, Any]:
         "attempts": result.attempts,
         "request_id": result.request_id,
         "model": result.model,
+        "response_model": result.response_model,
+        "provider": result.provider,
+        "provider_host": result.provider_host,
         "prompt_version": result.prompt_version,
         "crop_sha256": result.crop_sha256,
     }
@@ -57,6 +60,9 @@ def _bad_payload() -> dict[str, Any]:
         "attempts": 0,
         "request_id": None,
         "model": None,
+        "response_model": None,
+        "provider": None,
+        "provider_host": None,
         "prompt_version": None,
         "crop_sha256": None,
     }

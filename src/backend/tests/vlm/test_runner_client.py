@@ -32,6 +32,7 @@ def _req(**cfg: Any) -> VlmRequest:
 def _ok(label: str = "bus") -> httpx.Response:
     body = {
         "id": "chatcmpl-abc",
+        "model": "qwen3-vl-plus-gw",
         "choices": [{"message": {"content": json.dumps({"label": label})}}],
     }
     return httpx.Response(200, json=body, headers={"x-request-id": "req-123"})
@@ -39,7 +40,7 @@ def _ok(label: str = "bus") -> httpx.Response:
 
 @pytest.fixture(autouse=True)
 def _key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("DASHSCOPE_API_KEY", SECRET)
+    monkeypatch.setenv("VLM_API_KEY", SECRET)
 
 
 def _client(handler: Any) -> DashScopeClient:
@@ -170,7 +171,7 @@ def test_invalid_crop_never_calls_provider() -> None:
 
 
 def test_missing_api_key_is_auth_failure_without_network(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DASHSCOPE_API_KEY")
+    monkeypatch.delenv("VLM_API_KEY")
     calls = []
     result = run_vlm_unit(_req(), _client(lambda r: calls.append(1) or _ok()), CounterBudget(3))
     assert result.reason_code is VlmReasonCode.PROVIDER_ERROR and not calls
@@ -295,3 +296,69 @@ def test_attempts_done_caps_total_attempts() -> None:
     assert len(calls) == 1 and result.attempts == 2
     done = run_vlm_unit(_req(max_attempts=2), _client(lambda r: _ok()), budget, attempts_done=2)
     assert done.status is VlmStatus.FAILED and budget.used == 1
+
+
+SHOPAI = {
+    **VALID,
+    "provider": "openai_compatible",
+    "base_url": "https://api.shopaikey.com/v1",
+}
+
+
+def test_openai_compatible_gateway_provenance_and_request_shape() -> None:
+    seen: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["follow"] = request.extensions
+        return _ok()
+
+    req = VlmRequest(
+        crop=CropInput(PNG, "image/png"),
+        taxonomy=TAXONOMY,
+        context=CandidateContext("c1", "r1"),
+        config=parse_vlm_config(SHOPAI),
+    )
+    result = run_vlm_unit(req, _client(handler), CounterBudget(3))
+    assert seen["url"] == "https://api.shopaikey.com/v1/chat/completions"
+    assert result.provider == "openai_compatible" and result.provider_host == "api.shopaikey.com"
+    assert result.response_model == "qwen3-vl-plus-gw" and result.model == "qwen3-vl-plus"
+    assert SECRET not in repr(result)
+
+
+def test_gateway_key_env_default_is_vlm_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert parse_vlm_config(SHOPAI).api_key_env == "VLM_API_KEY"
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "other-key")
+    monkeypatch.delenv("VLM_API_KEY")
+    auth: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        auth.append(request.headers["authorization"])
+        return _ok()
+
+    legacy = parse_vlm_config({**SHOPAI, "api_key_env": "DASHSCOPE_API_KEY"})
+    req = VlmRequest(CropInput(PNG, "image/png"), TAXONOMY, CandidateContext("c", "r"), legacy)
+    assert run_vlm_unit(req, _client(handler), CounterBudget(2)).status is VlmStatus.CHECKED
+    assert auth == ["Bearer other-key"]
+
+
+def test_redirects_are_not_followed() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"location": "https://evil.example.com/x"})
+
+    result = run_vlm_unit(_req(max_attempts=1), _client(handler), CounterBudget(2))
+    assert result.status is VlmStatus.FAILED
+    assert result.reason_code is VlmReasonCode.PROVIDER_ERROR
+
+
+def test_failed_result_keeps_provider_host_and_reported_model() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = {"model": "gw-model", "choices": [{"message": {"content": "không phải json"}}]}
+        return httpx.Response(200, json=body)
+
+    result = run_vlm_unit(_req(), _client(handler), CounterBudget(2))
+    assert result.reason_code is VlmReasonCode.PARSE_FAILURE
+    assert (
+        result.response_model == "gw-model"
+        and result.provider_host == "dashscope-intl.aliyuncs.com"
+    )

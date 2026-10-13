@@ -197,3 +197,20 @@ def test_http_valid_config_with_benign_keys_is_created_and_publish_checks_again(
     bad.refresh_from_db()
     assert bad.status == "draft"
     assert client.post(f"/api/config-versions/{ok.data['id']}/publish/").status_code == 200
+
+
+@pytest.mark.django_db(transaction=True)
+def test_http_create_accepts_openai_compatible_gateway_config() -> None:
+    client = _actor(Role.QC_ADMIN)
+    vlm = {
+        **VALID,
+        "provider": "openai_compatible",
+        "base_url": "https://api.shopaikey.com/v1",
+        "api_key_env": "VLM_API_KEY",
+    }
+    resp = _post(client, "gw-1", models={"vlm": vlm})
+    assert resp.status_code == 201, resp.content[:300]
+    assert "VLM_API_KEY" in str(resp.data["models"])  # chỉ là tên biến môi trường
+    assert client.post(f"/api/config-versions/{resp.data['id']}/publish/").status_code == 200
+    bad = _post(client, "gw-2", models={"vlm": {**vlm, "base_url": "https://api.shopaikey.com/v2"}})
+    assert bad.status_code == 400

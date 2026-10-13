@@ -104,7 +104,10 @@ class VlmResult:
     reason_code: VlmReasonCode | None = None
     attempts: int = 0
     request_id: str | None = None  # ID provider đã redacted/cắt ngắn
-    model: str | None = None
+    model: str | None = None  # model ID đã yêu cầu (config)
+    response_model: str | None = None  # model ID mà provider/cổng BÁO VỀ (đã làm sạch)
+    provider: str | None = None
+    provider_host: str | None = None
     prompt_version: str | None = None
     crop_sha256: str | None = None
 
@@ -119,8 +122,10 @@ class VlmClient(Protocol):
         """
         ...
 
-    def complete(self, request: VlmRequest) -> tuple[str, str | None]:
-        """Trả (nội dung văn bản thô, request_id). Ném VlmProviderError khi lỗi provider."""
+    def complete(
+        self, request: VlmRequest
+    ) -> tuple[str, str | None] | tuple[str, str | None, str | None]:
+        """Trả (văn bản thô, request_id[, model ID provider báo về]). Ném VlmProviderError."""
         ...
 
 

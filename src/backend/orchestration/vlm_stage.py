@@ -339,6 +339,9 @@ def _fail(unit: VlmUnit, token: str, reason: VlmReasonCode, attempts: int = 0) -
         "attempts": attempts,
         "request_id": None,
         "model": unit.model,
+        "response_model": None,
+        "provider": None,
+        "provider_host": None,
         "prompt_version": unit.prompt_version,
         "crop_sha256": None,
     }
