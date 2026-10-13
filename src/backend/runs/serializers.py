@@ -83,6 +83,23 @@ class RunSerializer(serializers.ModelSerializer[Any]):
         return results
 
 
+class VerificationLineageItemSerializer(serializers.Serializer[Any]):
+    verification_id = serializers.IntegerField()
+    rework_id = serializers.IntegerField()
+    recheck_run_id = serializers.IntegerField()
+    outcome = serializers.ChoiceField(choices=("pass", "fail"))
+    revision = serializers.CharField()
+    verified_at = serializers.DateTimeField()
+
+
+class SelectedFinalSourceSerializer(serializers.Serializer[Any]):
+    cvat_job_id = serializers.IntegerField()
+    rework_id = serializers.IntegerField()
+    verification_id = serializers.IntegerField()
+    source_run_id = serializers.IntegerField()
+    source_revision = serializers.CharField()
+
+
 class RunDetailSerializer(RunSerializer):
     """GET /api/runs/{id}/: Run plus final-run lineage and operational source (D05)."""
 
@@ -106,13 +123,13 @@ class RunDetailSerializer(RunSerializer):
             obj._lineage_fields = cached  # type: ignore[attr-defined]
         return cast(dict[str, object], cached)
 
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_verification_lineage(self, obj: QCRun) -> object:
-        return self._lineage(obj)["verification_lineage"]
+    @extend_schema_field(VerificationLineageItemSerializer(many=True))
+    def get_verification_lineage(self, obj: QCRun) -> list[dict[str, object]]:
+        return cast(list[dict[str, object]], self._lineage(obj)["verification_lineage"])
 
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_selected_final_sources(self, obj: QCRun) -> object:
-        return self._lineage(obj)["selected_final_sources"]
+    @extend_schema_field(SelectedFinalSourceSerializer(many=True))
+    def get_selected_final_sources(self, obj: QCRun) -> list[dict[str, object]]:
+        return cast(list[dict[str, object]], self._lineage(obj)["selected_final_sources"])
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_operational_source(self, obj: QCRun) -> object:
