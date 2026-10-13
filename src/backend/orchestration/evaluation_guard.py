@@ -42,7 +42,12 @@ class IdempotencyOutcome(StrEnum):
 
 @dataclass(frozen=True)
 class EvaluationRequest:
-    """Payload FE được phép gửi: chỉ reason + revision; không prompt/model/ảnh/key API."""
+    """Payload FE được phép gửi: chỉ reason + revision; không prompt/model/ảnh/key API.
+
+    `reason` là ghi chú tự do của người dùng, chỉ lưu làm audit. TUYỆT ĐỐI không đưa vào
+    prompt gửi VLM (FE không được cung cấp prompt) và không phải `reason_code` của payload
+    FE v0, vốn do hệ thống tính (routing_policy.RoutingReason).
+    """
 
     candidate_id: int
     reason: str
