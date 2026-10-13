@@ -9,6 +9,10 @@ import type {
   Lease,
   Run,
 } from './types';
+import type { components } from '@/lib/api/contract';
+
+export type QueueSummary = components['schemas']['QueueSummary'];
+export type RankingPriority = NonNullable<components['schemas']['RankedFrame']['priority']>;
 
 function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (result.error || !result.data) {
@@ -46,6 +50,9 @@ export interface GetRunRankingOptions {
   family?: IssueFamily;
   origin?: IssueOrigin;
   review_state?: FrameReviewState;
+  /** Tìm theo frame_key (cvat_task_id hoặc frame_number), MBE-02. */
+  q?: string;
+  priority?: RankingPriority;
   cursor?: string | null;
   signal?: AbortSignal;
 }
@@ -54,7 +61,8 @@ export async function getRunRanking(
   runId: number,
   options: GetRunRankingOptions = {}
 ): Promise<PaginatedRankedFrameList> {
-  const { queue, family, origin, review_state, cursor, signal } = options;
+  const { queue, family, origin, review_state, q, priority, cursor, signal } = options;
+  const search = q?.trim();
   const result = await apiClient.GET('/api/runs/{id}/ranking/', {
     params: {
       path: { id: runId },
@@ -63,9 +71,24 @@ export async function getRunRanking(
         ...(family ? { family } : {}),
         ...(origin ? { origin } : {}),
         ...(review_state ? { review_state } : {}),
+        ...(search ? { q: search } : {}),
+        ...(priority ? { priority } : {}),
         ...(cursor ? { cursor } : {}),
       },
     },
+    signal,
+  });
+  return unwrap(result);
+}
+
+/** GET /api/queues/{name}/?run_id= — tổng số frame và số đếm theo FrameReviewState (MBE-02). */
+export async function getQueueSummary(
+  queueName: QueueName,
+  runId: number,
+  signal?: AbortSignal
+): Promise<QueueSummary> {
+  const result = await apiClient.GET('/api/queues/{name}/', {
+    params: { path: { name: queueName }, query: { run_id: runId } },
     signal,
   });
   return unwrap(result);
@@ -78,12 +101,14 @@ export type ClaimNextFrameResponse =
 export async function claimNextFrame(
   queueName: QueueName,
   runId: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  frameId?: number
 ): Promise<ClaimNextFrameResponse> {
   await csrf();
   const result = await apiClient.POST('/api/queues/{name}/next/', {
     params: { path: { name: queueName } },
-    body: { run_id: runId },
+    // frame_id (MBE-02): nhận đúng frame này; không có thì nhận frame kế tiếp của hàng đợi.
+    body: frameId ? { run_id: runId, frame_id: frameId } : { run_id: runId },
     signal,
   });
 
