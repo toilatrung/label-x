@@ -12,7 +12,7 @@ from PIL import Image
 from .artifact import ChecksumMismatchError, ClassifierArtifact, ManifestError
 from .crops import letterbox_crop
 from .dataset import DatasetError, SplitConfig, build_dataset, parse_label_map
-from .infer import Classifier, predict_batch
+from .infer import BatchError, Classifier, predict_batch
 from .train import TrainingDataError, train_classifier
 
 EXIT_CHECKSUM_MISMATCH = 3  # the backend maps these codes to stable reason codes
@@ -59,6 +59,9 @@ def _parser() -> argparse.ArgumentParser:
     batch = sub.add_parser("predict-batch", help="classify a JSON list of {id, image, box?}")
     batch.add_argument("--manifest", type=Path, required=True)
     batch.add_argument("--input", type=Path, required=True, help="JSON list of items")
+    batch.add_argument(
+        "--image-root", type=Path, required=True, help="images must live under this directory"
+    )
     batch.add_argument("--device", default="cpu")
     return parser
 
@@ -124,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             if not isinstance(items, list):
                 raise ValueError("--input must be a JSON list")
             classifier = Classifier.load(args.manifest, device=args.device)
-            print(json.dumps(predict_batch(classifier, items)))
+            print(json.dumps(predict_batch(classifier, items, image_root=args.image_root)))
         else:
             classifier = Classifier.load(args.manifest, device=args.device)
             with Image.open(args.image) as image:
@@ -141,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_BAD_MANIFEST
     except (
+        BatchError,
         DatasetError,
         TrainingDataError,
         OSError,

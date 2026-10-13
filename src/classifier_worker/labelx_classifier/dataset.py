@@ -177,10 +177,10 @@ def _remove_previous_crops(out_dir: Path, crops_dir: Path) -> None:
             f"{crops_dir} is not empty and has no dataset-manifest.json from this tool; "
             "refusing to modify it. Use an empty out_dir."
         )
-    root = out_dir.resolve()
+    crops_root = crops_dir.resolve()
     for relative in listed:
         path = (out_dir / relative).resolve()
-        if root in path.parents and path.is_file():
+        if crops_root in path.parents and path.is_file():  # only files under crops/
             path.unlink()
     for directory in sorted((p for p in crops_dir.rglob("*") if p.is_dir()), reverse=True):
         if not any(directory.iterdir()):

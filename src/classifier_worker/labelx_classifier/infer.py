@@ -18,6 +18,8 @@ from .model import to_tensor
 from .taxonomy import CLASSES
 
 MAX_IMAGE_PIXELS = 64_000_000
+PREDICT_CHUNK = 16  # bounds memory: a batch is forwarded in chunks
+MAX_BATCH_ITEMS = 1000
 
 
 @dataclass(frozen=True)
@@ -51,8 +53,12 @@ class Classifier:
 
     @torch.inference_mode()
     def predict(self, crops: Sequence[Image.Image]) -> list[Prediction]:
-        if not crops:
-            return []
+        out: list[Prediction] = []
+        for start in range(0, len(crops), PREDICT_CHUNK):
+            out.extend(self._predict_chunk(crops[start : start + PREDICT_CHUNK]))
+        return out
+
+    def _predict_chunk(self, crops: Sequence[Image.Image]) -> list[Prediction]:
         batch = torch.stack([to_tensor(crop) for crop in crops]).to(self.device)
         probs = torch.softmax(self.model(batch).float(), dim=1).cpu()
         values, indices = probs.topk(3, dim=1)
@@ -63,13 +69,25 @@ class Classifier:
         return out
 
 
-def _prepare(item: Mapping[str, Any]) -> Image.Image:
+class BatchError(ValueError):
+    """The whole batch is unusable (not a single bad item)."""
+
+
+def _resolve(image_root: Path, value: object) -> Path:
+    root = image_root.resolve()
+    path = (root / str(value)).resolve()  # follows symlinks, so a link out of root is caught
+    if root not in path.parents:
+        raise CropError("invalid_crop", "image is outside the allowed root")
+    return path
+
+
+def _prepare(item: Mapping[str, Any], image_root: Path) -> Image.Image:
     """One 224x224 letterboxed image: a whole crop image, or a full image plus a box."""
 
-    path = Path(str(item["image"]))
+    path = _resolve(image_root, item["image"])
     with warnings.catch_warnings():
         warnings.simplefilter("error", Image.DecompressionBombWarning)
-        with Image.open(path) as handle:
+        with Image.open(path) as handle:  # reads the header only
             if handle.width * handle.height > MAX_IMAGE_PIXELS:
                 raise CropError("invalid_crop", "image is too large")
             image = handle.convert("RGB")
@@ -81,26 +99,59 @@ def _prepare(item: Mapping[str, Any]) -> Image.Image:
     return letterbox_crop(image, tuple(float(v) for v in box))[0]
 
 
-def predict_batch(classifier: Classifier, items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Batch inference where one bad item never fails the others (stable reason per item)."""
+def _item_error(reason: str, item_id: str) -> dict[str, Any]:
+    return {"id": item_id, "ok": False, "reason": reason}  # stable codes only, never details
 
-    prepared: list[tuple[str, Image.Image]] = []
-    results: list[dict[str, Any]] = []
+
+def predict_batch(
+    classifier: Classifier, items: Sequence[Any], *, image_root: Path
+) -> dict[str, Any]:
+    """Batch inference in input order. One bad item never fails the others.
+
+    Results carry stable reason codes only (no paths, no raw exception text). Items whose ``id``
+    is missing or repeated are rejected, so results can always be matched to the input.
+    """
+
+    if len(items) > MAX_BATCH_ITEMS:
+        raise BatchError(f"at most {MAX_BATCH_ITEMS} items per batch")
+    counts: dict[str, int] = {}
     for item in items:
-        item_id = str(item.get("id", ""))
-        try:
-            prepared.append((item_id, _prepare(item)))
-        except CropError as exc:
-            results.append({"id": item_id, "ok": False, "reason": exc.reason, "detail": str(exc)})
-        except (OSError, UnidentifiedImageError, Warning, KeyError, TypeError, ValueError) as exc:
-            results.append(
-                {"id": item_id, "ok": False, "reason": "invalid_crop", "detail": str(exc)}
-            )
-    if prepared:
-        predictions = classifier.predict([image for _, image in prepared])
-        for (item_id, _), prediction in zip(prepared, predictions, strict=True):
-            results.append({"id": item_id, "ok": True, "prediction": prediction.as_dict()})
-    results.sort(key=lambda row: row["id"])
+        if isinstance(item, Mapping) and isinstance(item.get("id"), str) and item["id"]:
+            counts[item["id"]] = counts.get(item["id"], 0) + 1
+    results: list[dict[str, Any] | None] = [None] * len(items)
+    ready: list[tuple[int, Image.Image]] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, Mapping):
+            results[index] = _item_error("invalid_item", "")
+            continue
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not item_id:
+            results[index] = _item_error("missing_id", "")
+        elif counts[item_id] > 1:
+            results[index] = _item_error("duplicate_id", item_id)
+        else:
+            try:
+                ready.append((index, _prepare(item, image_root)))
+            except CropError as exc:
+                results[index] = _item_error(exc.reason, item_id)
+            except (
+                OSError,
+                UnidentifiedImageError,
+                Image.DecompressionBombError,
+                Warning,
+                KeyError,
+                TypeError,
+                ValueError,
+            ):
+                results[index] = _item_error("invalid_crop", item_id)
+    if ready:
+        predictions = classifier.predict([image for _, image in ready])
+        for (index, _), prediction in zip(ready, predictions, strict=True):
+            results[index] = {
+                "id": items[index]["id"],
+                "ok": True,
+                "prediction": prediction.as_dict(),
+            }
     artifact = classifier.artifact
     return {
         "checkpoint": {
