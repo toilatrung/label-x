@@ -191,7 +191,7 @@ def create_rework(*, request: Request) -> ReworkRequest:
     key = _idempotency(request)
     request_hash = _request_hash(body)
 
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     relation = Issue.objects.filter(pk=issue_id).values("frame_review__run_id").first()
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Issue không tồn tại.")
@@ -231,7 +231,7 @@ def create_rework(*, request: Request) -> ReworkRequest:
         )
 
     annotator_id = _positive_int(body.get("annotator_user_id"), "annotator_user_id")
-    annotator = User.objects.select_for_update().filter(pk=annotator_id).first()
+    annotator = User.objects.select_for_update(no_key=True).filter(pk=annotator_id).first()
     if annotator is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Annotator không tồn tại.")
     if not _has_role(annotator, dataset_id, (Role.ANNOTATOR,)):
@@ -439,7 +439,7 @@ def submit_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
 
     with transaction.atomic():
-        User.objects.select_for_update().get(pk=user.pk)
+        User.objects.select_for_update(no_key=True).get(pk=user.pk)
         QCRun.objects.select_for_update().get(pk=lookup.issue.frame_review.run_id)
         rework = ReworkRequest.objects.select_for_update().select_related("issue").get(pk=rework_id)
         replay = _existing_submission(
@@ -530,7 +530,7 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     )
     if relation is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
     QCRun.objects.select_for_update().get(pk=relation["issue__frame_review__run_id"])
     rework = (
         ReworkRequest.objects.select_for_update(of=("self",))

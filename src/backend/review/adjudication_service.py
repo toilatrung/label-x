@@ -171,7 +171,7 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
     request_hash = _request_hash(body)
 
     # Serialization locks: User -> Run -> Issue
-    User.objects.select_for_update().get(pk=user.pk)
+    User.objects.select_for_update(no_key=True).get(pk=user.pk)
 
     relation = (
         Issue.objects.filter(pk=issue_id)
