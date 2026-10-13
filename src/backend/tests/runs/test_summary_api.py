@@ -633,3 +633,19 @@ def test_snapshot_runs_response_types_and_nullability_match_contract(world):
     response = world["api"].get(f"/api/snapshots/{world['snap'].pk}/runs/")
     assert response.status_code == 200
     validate_response(spec, "PaginatedRunList", response)
+
+
+@pytest.mark.parametrize("position", ["not-numeric", "-1", "9" * 100, "１２３"])
+def test_well_encoded_cursor_with_invalid_position_is_400_not_500(world, position):
+    import base64
+    from urllib.parse import urlencode
+
+    cursor = base64.b64encode(urlencode({"p": position}).encode()).decode()
+    query = "?" + urlencode({"cursor": cursor})
+    for url in (
+        run_url(world, "tasks-quality"),
+        f"/api/snapshots/{world['snap'].pk}/runs/",
+        "/api/datasets/42/revisions/",
+    ):
+        response = world["api"].get(url + query)
+        assert response.status_code == 400

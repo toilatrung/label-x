@@ -13,6 +13,16 @@ class SummaryCursorPagination(CursorPagination):
 
     def decode_cursor(self, request: Request) -> Cursor | None:
         try:
-            return super().decode_cursor(request)
+            cursor = super().decode_cursor(request)
         except NotFound:
             raise ApiError(400, "VALIDATION_ERROR", "Cursor không hợp lệ.") from None
+        if cursor is not None and cursor.position is not None:
+            value = cursor.position
+            if (
+                not value.isascii()
+                or not value.isdigit()
+                or len(value) > 19
+                or int(value) > 2**63 - 1
+            ):
+                raise ApiError(400, "VALIDATION_ERROR", "Vị trí cursor không hợp lệ.")
+        return cursor

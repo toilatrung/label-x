@@ -93,6 +93,8 @@ class DatasetRevisionsView(ScopedSummaryView):
         },
     )
     def get(self, request: Request, id: int) -> Response:
+        paginator = SummaryPagination()
+        paginator.decode_cursor(request)
         # Dataset identity lives in CVAT; an existing dataset without revisions is [] not 404.
         with read_cvat(_client) as cvat:
             project = cvat.get_project(id)
@@ -113,7 +115,6 @@ class DatasetRevisionsView(ScopedSummaryView):
             )
             .order_by("-id")
         )
-        paginator = SummaryPagination()
         page = paginator.paginate_queryset(revisions, request, view=self) or []
         rows = [
             {
