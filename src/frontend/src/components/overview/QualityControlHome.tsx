@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import { useAuth } from '@/lib/auth/auth-context';
-import { isMockAuth } from '@/lib/auth/config';
 import { errorMessage } from '@/lib/api/errors';
 import { HOME_DATASETS, type HomeDatasetRow } from '@/lib/overview/home-data';
 
@@ -274,7 +273,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   };
 
   const isRealDataActive = datasets.length > 0;
-  const showProductFallback = isMockAuth && !isRealDataActive;
+  const showProductFallback = !isRealDataActive;
 
   return (
     <>
@@ -288,7 +287,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         </div>
         <div className="lx-actions">
           <span className="lx-hint">
-            {isRealDataActive || !isMockAuth ? 'Đồng bộ CVAT —' : 'Đồng bộ CVAT 2 phút trước'}
+            {isRealDataActive ? 'Đồng bộ CVAT —' : 'Đồng bộ CVAT 2 phút trước'}
           </span>
           <button type="button" className="lx-btn" onClick={handleSync}>
             Đồng bộ lại
@@ -314,7 +313,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
             />
           </label>
           <span className="lx-hint">
-            {isRealDataActive || !isMockAuth ? (
+            {isRealDataActive ? (
               isScanningSearch
                 ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
                 : `${filteredDatasets.length} / ${datasets.length} dataset`
@@ -543,10 +542,6 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
               </tbody>
             </table>
           </div>
-        )}
-
-        {!isMockAuth && !isLoading && !initialError && !isRealDataActive && (
-          <div className="lx-state--card-muted">Chưa có Dataset trong phạm vi hiện tại.</div>
         )}
 
         {/* Pagination error and working retry */}

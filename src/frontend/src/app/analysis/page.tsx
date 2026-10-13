@@ -10,7 +10,6 @@ import { SnapshotDetail } from '@/components/snapshots/SnapshotDetail';
 import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import { SnapshotCreateSample, SnapshotInUseExtra, SnapshotInUseSample, SnapshotRevisionFields } from '@/components/snapshots/SnapshotSample';
 import { useAuth } from '@/lib/auth/auth-context';
-import { isMockAuth } from '@/lib/auth/config';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
@@ -107,7 +106,7 @@ function SnapshotWorkspace() {
     }
   }, [item, snapshotDataset, datasetQuery.hasNextPage, datasetQuery.isFetchingNextPage, datasetQuery]);
 
-  const isSampleFallback = isMockAuth && (datasetQuery.isError || (datasetQuery.isSuccess && !allDatasets.length)) && !id;
+  const isSampleFallback = (datasetQuery.isError || (datasetQuery.isSuccess && !allDatasets.length)) && !id;
   const displayDatasetName = item ? snapshotDataset?.name : (selectedDataset?.name ?? (isSampleFallback ? 'Road Vision Urban · v1.4' : undefined));
   const displayGuideline = item ? (item.guideline_version ?? snapshotDataset?.guideline_version ?? undefined)
     : (selectedDataset?.guideline_version ?? (isSampleFallback ? 'v1.2' : undefined));
