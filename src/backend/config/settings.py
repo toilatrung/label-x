@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "effort.apps.EffortConfig",
     "reports.apps.ReportsConfig",
     "releases.apps.ReleasesConfig",
+    "calibration.apps.CalibrationConfig",
 ]
 
 MIDDLEWARE = [
@@ -188,6 +189,9 @@ SPECTACULAR_SETTINGS = {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
         "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
+        "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
+        "ModelKindEnum": "runs.models.ModelKind",
+        "RunRankingSourceEnum": ["risk", "random_audit"],
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],
         "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],

@@ -33,7 +33,7 @@ class DecisionCaseSerializer(serializers.Serializer[Any]):
 
 
 class AdjudicationSerializer(DecisionCaseSerializer):
-    rework_id = serializers.IntegerField(allow_null=True)
+    rework_id = serializers.IntegerField(allow_null=True, required=False)
 
 
 class DecisionCaseHistoryItemSerializer(serializers.Serializer[Any]):
@@ -84,6 +84,6 @@ class SimilarCaseSerializer(serializers.Serializer[Any]):
 
 
 class PaginatedSimilarCaseSerializer(serializers.Serializer[Any]):
-    next = serializers.CharField(allow_null=True)
-    previous = serializers.CharField(allow_null=True)
+    next = serializers.CharField(allow_null=True, required=False)
+    previous = serializers.CharField(allow_null=True, required=False)
     results = SimilarCaseSerializer(many=True)

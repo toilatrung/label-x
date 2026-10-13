@@ -2,6 +2,12 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from calibration.views import (
+    AuditSampleListCreateView,
+    BenchmarkImportCvatView,
+    BenchmarkListCreateView,
+    EvaluationPerformanceView,
+)
 from orchestration.metrics_view import MetricsView
 from review.adjudication_views import (
     DecisionCaseDetailView,
@@ -19,7 +25,13 @@ from runs.kpi_views import (
     WaiverApproveView,
     WaiverCreateView,
 )
-from runs.views import ConfigVersionListView, ConfigVersionPublishView
+from runs.views import (
+    ConfigVersionListView,
+    ConfigVersionPublishView,
+    ConfigVersionRulesView,
+    ModelListView,
+    ModelUpdateView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -64,4 +76,26 @@ urlpatterns = [
         ConfigVersionPublishView.as_view(),
         name="config-versions-publish",
     ),
+    path(
+        "api/config-versions/<int:pk>/rules/",
+        ConfigVersionRulesView.as_view(),
+        name="config-versions-rules",
+    ),
+    path("api/models/", ModelListView.as_view(), name="models-list"),
+    path("api/models/<int:pk>/", ModelUpdateView.as_view(), name="models-update"),
+    path(
+        "api/audit-samples/", AuditSampleListCreateView.as_view(), name="audit-samples-list-create"
+    ),
+    path(
+        "api/benchmarks/import-cvat/",
+        BenchmarkImportCvatView.as_view(),
+        name="benchmarks-import-cvat",
+    ),
+    path("api/benchmarks/", BenchmarkListCreateView.as_view(), name="benchmarks-list-create"),
+    path(
+        "api/evaluation/performance/",
+        EvaluationPerformanceView.as_view(),
+        name="evaluation-performance",
+    ),
+    path("api/calibration/", include("calibration.urls")),
 ]

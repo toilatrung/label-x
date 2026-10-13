@@ -74,7 +74,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Report: <code>GET /api/reports/{id}/?format=json|csv</code> (id = KPI evaluation).</li>
 <li>Audit event cho reference.create/lock, kpi_evaluation.create, waiver.create/approve/reject.</li>
 </ul></li>
-<li><strong>Not Implemented</strong>: <code>format=pdf</code> trả 400 (chưa có thư viện PDF trong stack DEC-001); kiểm leakage held-out (<code>leakage_check=not_checked</code>); KPI-1/KPI-2/KPI-2b/G-1 (xem Known Limitations). Không sửa frontend, không sửa <code>docs/04-api/openapi.yaml</code>.</li>
+<li><strong>Not Implemented</strong>: <code>format=pdf</code> trả 400 (chưa có thư viện PDF trong stack DEC-001); kiểm leakage held-out (<code>leakage_check=not_checked</code>); KPI-1/KPI-2/KPI-2b/G-1 (xem Known Limitations). Không sửa code frontend.</li>
 </ul>
 <h2 id="changes-made">Changes Made</h2>
 <table>
@@ -86,6 +86,8 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>src/backend/runs/views.py</code>, <code>urls.py</code>, <code>serializers.py</code></td><td><code>RunLineageView</code>; tách <code>ledger_entries()</code> sang <code>runs/kpi.py</code> để dùng lại cho báo cáo (hành vi ledger không đổi)</td><td><code>MBE-01</code></td></tr>
 <tr><td><code>src/backend/runs/models.py</code>, <code>migrations/0007_kpi_reference_evaluation_waiver.py</code></td><td>Model <code>Reference</code>, <code>KpiEvaluation</code>, <code>Waiver</code></td><td><code>MBE-01</code></td></tr>
 <tr><td><code>src/backend/runs/kpi.py</code>, <code>kpi_views.py</code>, <code>kpi_serializers.py</code></td><td>Tính gate/metrics và 8 endpoint reference/evaluation/gate/waiver/report</td><td><code>MBE-01</code></td></tr>
+<tr><td><code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td>Thêm <code>ai_evidence</code> + schema <code>WorkspaceAiEvidence</code> vào <code>FrameWorkspace</code> (PO chọn bổ sung contract, 2026-10-13); sinh lại type bằng <code>openapi-typescript@7.13.0</code></td><td><code>MBE-01</code></td></tr>
+<tr><td><code>src/backend/tests/test_contract_runtime_parity.py</code></td><td>Merge PR #335 vào nhánh; bỏ mục <code>/api/frames/{id}/workspace/</code> khỏi <code>PENDING_RUNTIME</code> vì runtime đã có</td><td><code>MBE-01</code></td></tr>
 <tr><td><code>src/backend/config/urls.py</code></td><td>Đăng ký route cấp gốc (<code>/api/references/</code>, <code>/api/evaluations/</code>, <code>/api/waivers/</code>, <code>/api/reports/</code>, <code>/api/runs/{id}/gate/</code>) — ngoài danh sách đường dẫn của task nhưng bắt buộc để có route</td><td><code>MBE-01</code></td></tr>
 <tr><td><code>src/backend/tests/review/test_workspace_lineage.py</code>, <code>tests/runs/test_kpi_api.py</code></td><td>Test API/DB cho các endpoint mới</td><td><code>MBE-01</code></td></tr>
 </tbody></table>
@@ -99,7 +101,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-118.html</code></li>
 <li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-031.html</code></li>
 <li><strong>Review Request</strong>: <code>PO @toilatrung kiểm tay</code></li>
-<li><strong>Commits</strong>: <code>ae9dd80</code>, <code>654a23c</code> (nhánh <code>feat/MBE-01-pipeline-ai</code>)</li>
+<li><strong>Commits</strong>: <code>ae9dd80</code>, <code>654a23c</code>, <code>0ff256d</code> và các commit sửa CI sau đó (nhánh <code>feat/MBE-01-pipeline-ai</code>)</li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table>
@@ -119,12 +121,12 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>manage.py spectacular --validate --fail-on-warn</code></td><td><code>passed</code></td><td>0 warning, 0 error</td></tr>
 <tr><td><code>pytest tests/review/test_workspace_lineage.py tests/runs/test_kpi_api.py</code></td><td><code>passed</code></td><td>4 + 6 passed</td></tr>
 <tr><td><code>pytest -q</code> (toàn bộ backend, DB test riêng <code>labelx_mbe01</code>)</td><td><code>passed</code></td><td>1226 passed, 1 failed, 1 skipped (13 phút). Test hỏng là <code>test_no_standalone_lineage_endpoint</code> (#244, khẳng định endpoint lineage không tồn tại) — đã thay bằng <code>test_standalone_lineage_endpoint_matches_run_detail</code>; chạy lại 3 file liên quan: 14 passed</td></tr>
-<tr><td><code>tests/test_contract_runtime_parity.py::test_m03_contract_matches_runtime_schema</code></td><td><code>failed (dự kiến)</code></td><td>Contract trên <code>develop</code> chưa có <code>/api/frames/{id}/workspace/</code> (nằm trong MBE-00 chưa merge). Đối chiếu runtime với bản nháp MBE-00: không thiếu operation nào của MBE-01 (onlyDocs/onlyRuntime rỗng)</td></tr>
+<tr><td><code>pytest tests/test_contract_runtime_parity.py tests/test_openapi_schema_clean.py tests/test_m03_contract_fixture.py tests/test_contract.py</code> (sau khi merge <code>integration/m-be-mvp</code> + #335)</td><td><code>passed</code></td><td>42 passed. Lần CI đầu đỏ vì nhánh tạo trước khi MBE-00 vào <code>integration/m-be-mvp</code></td></tr>
 <tr><td><code>make check</code> (frontend lint/typecheck/test, detector, validate-kit)</td><td><code>not-run</code></td><td>Task chỉ Backend; chạy phần backend như trên, <code>make validate-kit</code> chạy riêng</td></tr>
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: Sửa <code>src/backend/config/urls.py</code> (ngoài đường dẫn task) để đăng ký route cấp gốc. Lệch so với contract MBE-00 nháp, cần PO quyết khi merge MBE-00: (1) workspace có thêm trường <code>ai_evidence</code> mà schema <code>FrameWorkspace</code> chưa khai báo; (2) runtime bắt buộc <code>Idempotency-Key</code> ở các POST mới (contract để tuỳ chọn); (3) lock trả 409 khi còn bất đồng, contract chưa liệt kê 409/422 cho lock; (4) workspace chưa nhận tham số <code>version</code>; (5) id của <code>/api/reports/{id}/</code> là id KPI evaluation.</li>
+<li><strong>Plan Deviations</strong>: Sửa <code>src/backend/config/urls.py</code> (ngoài đường dẫn task) để đăng ký route cấp gốc. PR đổi base sang <code>integration/m-be-mvp</code> (cùng luồng với #333, #335, #336). Contract: PO chọn bổ sung <code>ai_evidence</code> vào <code>FrameWorkspace</code>; workspace nhận query <code>version</code> (giá trị trả về vẫn là guideline version của snapshot). Còn lệch nhưng không thuộc phạm vi M-03 của test parity: các POST mới bắt buộc <code>Idempotency-Key</code>; lock trả 409 khi còn bất đồng chưa phân xử; enum của nhóm KPI khai báo dạng string trong runtime schema; id của <code>/api/reports/{id}/</code> là id KPI evaluation.</li>
 <li><strong>Approved By</strong>: <code>chờ PO</code></li>
 <li><strong>Known Limitations</strong>: Nội dung GT không được lưu (chỉ checksum) nên KPI-1, KPI-2, KPI-2b, G-1 luôn <code>not_checked</code>/<code>insufficient_sample</code>, không có giá trị giả. <code>E_min</code> mặc định 30 (<code>settings.KPI_E_MIN</code>, chưa chốt, gửi đè qua <code>parameters.e_min</code>). Chưa có khoảng tin cậy. Evaluation tính đồng bộ trong request (status cuối có ngay, vẫn trả 202). Không gọi Qwen thật: evidence AI trong test là bản ghi tổng hợp, không phải runtime model thật.</li>
 </ul>

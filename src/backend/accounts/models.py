@@ -169,3 +169,77 @@ class CvatIdentity(models.Model):
     def __str__(self) -> str:
         emp = f" emp={self.employee.employee_id}" if self.employee else ""
         return f"{self.user} ↔ CVAT #{self.cvat_user_id}{emp}"
+
+
+class WorkflowRule(models.Model):
+    """Quy tắc quy trình (MBE-05, FR-SEC-01, FR-SEC-05)."""
+
+    rule = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, default="")
+    enforced = models.BooleanField(default=False)
+    revision = models.PositiveIntegerField(default=1)
+    locked = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "workflow_rule"
+        ordering = ["id"]
+
+    def __str__(self) -> str:
+        return f"{self.rule} (enforced={self.enforced}, locked={self.locked})"
+
+
+DEFAULT_WORKFLOW_RULES = [
+    {
+        "rule": "anti_self_review",
+        "name": "Reviewer không review annotation của chính mình",
+        "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
+        "enforced": False,
+        "revision": 1,
+        "locked": False,
+    },
+    {
+        "rule": "super_admin_override_reason",
+        "name": "Ghi đè của Super Admin phải có lý do",
+        "description": (
+            "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline"
+        ),
+        "enforced": False,
+        "revision": 1,
+        "locked": False,
+    },
+    {
+        "rule": "audit_logging",
+        "name": "Mọi thao tác ghi nhật ký kiểm toán",
+        "description": "Gắn nhãn Super Admin khi dùng quyền ghi đè; ghi sự kiện từ chối",
+        "enforced": True,
+        "revision": 1,
+        "locked": True,
+    },
+    {
+        "rule": "separation_of_duties",
+        "name": "Người duyệt khác người yêu cầu",
+        "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
+        "enforced": False,
+        "revision": 1,
+        "locked": False,
+    },
+]
+
+
+def ensure_default_workflow_rules() -> list[WorkflowRule]:
+    """Khởi tạo các rule mặc định nếu chưa có trong DB."""
+    rules = []
+    for item in DEFAULT_WORKFLOW_RULES:
+        obj, _ = WorkflowRule.objects.get_or_create(
+            rule=item["rule"],
+            defaults={
+                "name": item["name"],
+                "description": item["description"],
+                "enforced": item["enforced"],
+                "revision": item["revision"],
+                "locked": item["locked"],
+            },
+        )
+        rules.append(obj)
+    return rules

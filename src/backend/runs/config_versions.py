@@ -31,9 +31,30 @@ def create_config_version(
     models: dict[str, Any],
     created_by: User,
     idempotency_key: str,
+    rules: list[dict[str, Any]] | None = None,
+    release_thresholds: dict[str, Any] | None = None,
+    sampling_policy: dict[str, Any] | None = None,
 ) -> ConfigVersion:
     """Create a draft, replaying a matching idempotent request."""
-    payload = {"name": name, "engines": engines, "thresholds": thresholds, "models": models}
+    effective_thresholds = dict(thresholds)
+    if release_thresholds and "release_thresholds" not in effective_thresholds:
+        effective_thresholds["release_thresholds"] = release_thresholds
+    if sampling_policy and "sampling_policy" not in effective_thresholds:
+        effective_thresholds["sampling_policy"] = sampling_policy
+
+    payload: dict[str, Any] = {
+        "name": name,
+        "engines": engines,
+        "thresholds": effective_thresholds,
+        "models": models,
+    }
+    if rules:
+        payload["rules"] = rules
+    if release_thresholds:
+        payload["release_thresholds"] = release_thresholds
+    if sampling_policy:
+        payload["sampling_policy"] = sampling_policy
+
     digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
@@ -47,8 +68,9 @@ def create_config_version(
             config = ConfigVersion.objects.create(
                 name=name,
                 engines=engines,
-                thresholds=thresholds,
+                thresholds=effective_thresholds,
                 models=models,
+                payload=payload,
                 created_by=created_by,
                 idempotency_key=idempotency_key,
                 request_sha256=digest,
