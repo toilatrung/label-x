@@ -377,7 +377,7 @@ def test_budget_exhaustion_stops_provider_calls_and_keeps_run_alive() -> None:
 
 
 def test_zero_budget_never_calls_provider() -> None:
-    """Policy C: budget 0 ⇒ không tạo VlmUnit nào, Evaluation ghi budget_exhausted + cần người xem."""
+    """Policy C: budget 0 ⇒ không có VlmUnit; Evaluation ghi budget_exhausted + cần người xem."""
     run = _make_run(vlm={**VALID, "budget": {"max_calls": 0}})
     _run_shards(run)
     client = FakeClient()
