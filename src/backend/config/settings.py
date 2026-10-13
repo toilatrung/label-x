@@ -184,6 +184,7 @@ SPECTACULAR_SETTINGS = {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
         "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
+        "ModelKindEnum": "runs.models.ModelKind",
         "RunRankingSourceEnum": ["risk", "random_audit"],
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],

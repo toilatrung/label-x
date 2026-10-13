@@ -25,7 +25,13 @@ from runs.kpi_views import (
     WaiverApproveView,
     WaiverCreateView,
 )
-from runs.views import ConfigVersionListView, ConfigVersionPublishView
+from runs.views import (
+    ConfigVersionListView,
+    ConfigVersionPublishView,
+    ConfigVersionRulesView,
+    ModelListView,
+    ModelUpdateView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -68,6 +74,13 @@ urlpatterns = [
         ConfigVersionPublishView.as_view(),
         name="config-versions-publish",
     ),
+    path(
+        "api/config-versions/<int:pk>/rules/",
+        ConfigVersionRulesView.as_view(),
+        name="config-versions-rules",
+    ),
+    path("api/models/", ModelListView.as_view(), name="models-list"),
+    path("api/models/<int:pk>/", ModelUpdateView.as_view(), name="models-update"),
     path(
         "api/audit-samples/", AuditSampleListCreateView.as_view(), name="audit-samples-list-create"
     ),

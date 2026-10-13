@@ -6,6 +6,7 @@ from typing import Any
 
 from rest_framework import serializers
 
+from calibration.serializers import MetricValueSerializer
 from runs.kpi import WAIVABLE
 from runs.serializers import LedgerEntrySerializer
 
@@ -43,17 +44,6 @@ class KpiEvaluationCreateSerializer(serializers.Serializer[Any]):
     score_version = serializers.CharField(max_length=64)
     experiment_id = serializers.IntegerField(required=False, allow_null=True)
     parameters = serializers.DictField()
-
-
-class MetricValueSerializer(serializers.Serializer[Any]):
-    status: Any = serializers.CharField(help_text="computed | not_checked | insufficient_sample")
-    value = serializers.FloatField(allow_null=True, required=False)
-    sample_size = serializers.IntegerField()
-    denominator = serializers.IntegerField()
-    method = serializers.CharField()
-    confidence_interval = serializers.ListField(
-        child=serializers.FloatField(), allow_null=True, required=False
-    )
 
 
 class KpiEvaluationSerializer(serializers.Serializer[Any]):
