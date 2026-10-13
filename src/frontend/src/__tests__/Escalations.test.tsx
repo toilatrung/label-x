@@ -99,7 +99,7 @@ describe('Escalations UI (T-039)', () => {
           results: [issue],
         });
       }
-      if (url.pathname === '/api/decision-cases/') return Response.json([]);
+      if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
       if (url.pathname === '/api/issues/42/adjudications/') {
         return Response.json({
           id: 91,
@@ -215,7 +215,7 @@ describe('Escalations UI (T-039)', () => {
         return Response.json({
           id: 92,
           issue_id: 42,
-          outcome: 'guideline_missing',
+          outcome: 'guideline_gap',
           actor_user_id: 2,
           rule_id: 'VEH-03',
           correct_label: null,
@@ -237,7 +237,7 @@ describe('Escalations UI (T-039)', () => {
     expect(await screen.findByText(/Đã lưu Decision Case #92/)).toBeDefined();
 
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
-    expect((await request?.clone().json()).outcome).toBe('guideline_missing');
+    expect((await request?.clone().json()).outcome).toBe('guideline_gap');
   });
 
   it('enforces the page role matrix without issuing data requests', async () => {
@@ -298,11 +298,11 @@ describe('Escalations UI (T-039)', () => {
     await renderPage('qalead', async (request) => {
       const url = new URL(request.url);
       if (url.pathname !== '/api/decision-cases/') return null;
-      return Response.json([
+      return Response.json({ next: null, previous: null, results: [
         {
           id: 12,
           issue_id: 42,
-          outcome: 'guideline_missing',
+          outcome: 'guideline_gap',
           actor_user_id: 2,
           rule_id: 'VEH-03',
           correct_label: null,
@@ -321,7 +321,7 @@ describe('Escalations UI (T-039)', () => {
           case_version: 'v2',
           created_at: '2026-10-11T03:00:00Z',
         },
-      ]);
+      ] });
     });
     fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
     expect(await screen.findByText('GAP-012')).toBeDefined();
