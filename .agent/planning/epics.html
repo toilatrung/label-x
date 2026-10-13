@@ -180,12 +180,12 @@ ul.dir{columns:2;font-size:14px}
 <tr>
 <td><code>E-12</code></td>
 <td><code>M-04</code></td>
-<td><strong>Gemini VLM có điều kiện, evidence và routing</strong> — Gemini chỉ phân định candidate được trigger; classifier và reviewer/QA giữ các vai trò tách biệt theo CR-115.</td>
+<td><strong>Qwen VLM có điều kiện, evidence và routing</strong> — Qwen chỉ phân định candidate được trigger; classifier và reviewer/QA giữ các vai trò tách biệt theo CR-115.</td>
 <td><code>Trịnh Quang Trung (@toilatrung)</code></td>
 <td><code>EPIC_IN_PROGRESS</code></td>
 <td><code>M04A-01…05, M04B-01…04, M04C-01…04, M04S-01…03</code></td>
 <td>Xem <a href="#e-12">chi tiết</a></td>
-<td><code>CR-115, DEC-002, DEC-003; Gemini quota/data permission</code></td>
+<td><code>CR-115, DEC-002, DEC-003; Qwen quota/data permission</code></td>
 </tr>
 <tr><td><code>E-13</code></td><td><code>M-03</code></td><td><strong>Review Queues và lease nguyên tử</strong> — Reviewer nhận frame theo hàng đợi, lease cấp nguyên tử trên PostgreSQL, self-review bị chặn ở backend.</td><td><code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Frontend)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R01, M03-R02, M03-R04</code></td><td>Xem <a href="#e-13">chi tiết</a></td><td><code>BLOCKER-008, BLOCKER-013, DEC-002, DEC-003, DEC-006</code></td></tr>
 <tr><td><code>E-14</code></td><td><code>M-03</code></td><td><strong>Review Workspace, quyết định và effort log</strong> — Reviewer xem ảnh, annotation, dự đoán, evidence, guideline và ra quyết định có lý do; effort ghi tự động.</td><td><code>Trịnh Quang Trung (Backend); Trần Đức Thọ (Workspace FE), Nguyễn Xuân Việt Anh (effort FE)</code></td><td><code>EPIC_READY</code></td><td><code>M03-R03, M03-R04, M03-R10</code></td><td>Xem <a href="#e-14">chi tiết</a></td><td><code>BLOCKER-008, BLOCKER-009, BLOCKER-013, DEC-002, DEC-003, CR-101, DEC-006</code></td></tr>
@@ -1030,7 +1030,7 @@ ul.dir{columns:2;font-size:14px}
 <h4 id="record-metadata_11">Record Metadata</h4>
 <ul>
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
-<li><strong>Title</strong>: <code>Gemini VLM, ConvNeXt Tiny classifier và routing (CR-115)</code></li>
+<li><strong>Title</strong>: <code>Qwen VLM, ConvNeXt Tiny classifier và routing (CR-115)</code></li>
 <li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
 <li><strong>Status</strong>: <code>EPIC_IN_PROGRESS</code></li>
 <li><strong>Milestone ID</strong>: <code>M-04</code></li>
@@ -1040,18 +1040,18 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>PO Sign-off</strong>: <code>CR-115 / DEC-021, 2026-10-13: READY cho expansion, IN_PROGRESS cho triển khai; task mới pending</code></li>
 </ul>
 <h4 id="objective_11">Objective</h4>
-<p>Triển khai Gemini VLM có điều kiện theo CR-115: chỉ tạo evidence/đề xuất cho candidate được trigger; không tự xác nhận issue, quyết định gate hoặc sửa annotation.</p>
+<p>Triển khai Qwen VLM có điều kiện theo CR-115: chỉ tạo evidence/đề xuất cho candidate được trigger; không tự xác nhận issue, quyết định gate hoặc sửa annotation.</p>
 <h4 id="scope_11">Scope</h4>
 <h5 id="included_11">Included</h5>
 <ul>
-<li>Gemini <code>gemini-3.8-flash</code> qua backend worker: structured JSON, prompt/model/API version, timeout/retry/budget và evidence append-only theo candidate/revision</li>
-<li>Routing classifier–Gemini: candidate đủ tin cậy không gọi VLM; low-score/low-margin/conflict/manual recheck gọi VLM; uncertain/failed/budget exhausted chuyển reviewer</li>
+<li>Qwen <code>qwen3-vl-plus</code> qua backend worker: structured JSON, prompt/model/API version, timeout/retry/budget và evidence append-only theo candidate/revision</li>
+<li>Routing classifier–Qwen: candidate đủ tin cậy không gọi VLM; low-score/low-margin/conflict/manual recheck gọi VLM; uncertain/failed/budget exhausted chuyển reviewer</li>
 <li>ConvNeXt Tiny fine-tune/inference, crop manifest và class-map 10 lớp; unknown là abstention; toàn bộ code/training do PO.</li>
 <li>API evidence/evaluation và workspace handoff theo <code>.agent/planning/M-04-ABC-implementation-2026-10-13.html</code></li>
 </ul>
 <h5 id="excluded_11">Excluded</h5>
 <ul>
-<li>Tự xác nhận lỗi, ghi ReviewDecision/Adjudication hoặc sửa annotation từ Gemini/classifier</li>
+<li>Tự xác nhận lỗi, ghi ReviewDecision/Adjudication hoặc sửa annotation từ Qwen/classifier</li>
 <li>Gửi dữ liệu ảnh ra dịch vụ ngoài khi chưa được phép; credential hoặc quota không được suy ra từ việc duyệt kế hoạch.</li>
 <li>Calibration, KPI, benchmark/load test và nghiệm thu hiệu quả</li>
 </ul>
@@ -1072,8 +1072,8 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h4 id="acceptance-criteria_11">Acceptance Criteria</h4>
 <ul>
-<li>[ ] Gemini <code>gemini-3.8-flash</code> chạy trên crop được phép, kết quả JSON được validate, evidence/ledger/API có provenance và không có duplicate retry</li>
-<li>[ ] Routing classifier–Gemini xử lý classifier-only, trigger, conflict, uncertain, stale revision và budget/error theo kế hoạch M-04 A/B/C</li>
+<li>[ ] Qwen <code>qwen3-vl-plus</code> chạy trên crop được phép, kết quả JSON được validate, evidence/ledger/API có provenance và không có duplicate retry</li>
+<li>[ ] Routing classifier–Qwen xử lý classifier-only, trigger, conflict, uncertain, stale revision và budget/error theo kế hoạch M-04 A/B/C</li>
 <li>[ ] API BE có schema/payload/error handoff; FE theo nhánh develop-fe và #213, không mở rộng scope coding BE.</li>
 <li>[ ] Dependencies and governance links are current.</li>
 <li>[ ] Required reports and verification evidence are defined.</li>

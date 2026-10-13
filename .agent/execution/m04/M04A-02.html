@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M04A-02 — Gemini adapter và worker thực thi — LabelX</title>
+<title>M04A-02 — Qwen adapter và worker thực thi — LabelX</title>
 <meta name="labelx:id" content="m04a-02">
-<meta name="labelx:title" content="M04A-02 — Gemini adapter và worker thực thi">
+<meta name="labelx:title" content="M04A-02 — Qwen adapter và worker thực thi">
 <meta name="labelx:type" content="execution">
 <meta name="labelx:domain" content="governance">
 <meta name="labelx:module" content="templates">
@@ -44,11 +44,11 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / m04a-02</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>m04a-02</span><b>title</b><span>M04A-02 — Gemini adapter và worker thực thi</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[task, execution, template]</span><b>priority</b><span>2</span></div>
-<h1>M04A-02 — Gemini adapter và worker thực thi</h1>
+<div class="meta"><b>id</b><span>m04a-02</span><b>title</b><span>M04A-02 — Qwen adapter và worker thực thi</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[task, execution, template]</span><b>priority</b><span>2</span></div>
+<h1>M04A-02 — Qwen adapter và worker thực thi</h1>
 <h2>Usage Purpose</h2><p>Task nhỏ của M-04, đăng ký theo DEC-021 và CR-115.</p>
-<h2>Record Metadata</h2><ul><li><strong>Task ID</strong>: <code>M04A-02</code></li><li><strong>Epic ID</strong>: <code>E-12</code></li><li><strong>Title</strong>: <code>Gemini adapter và worker thực thi</code></li><li><strong>Owner</strong>: <code>@toilatrung</code></li><li><strong>Status</strong>: <code>pending</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Target Date</strong>: <code>Chưa chốt; theo dependency và ETA owner khi nhận</code></li><li><strong>Priority</strong>: <code>1</code></li></ul>
-<h2>Objective</h2><p>Worker gọi Gemini với crop inline, structured JSON và thinking thấp; validate MIME, size, JSON và taxonomy.</p>
+<h2>Record Metadata</h2><ul><li><strong>Task ID</strong>: <code>M04A-02</code></li><li><strong>Epic ID</strong>: <code>E-12</code></li><li><strong>Title</strong>: <code>Qwen adapter và worker thực thi</code></li><li><strong>Owner</strong>: <code>@toilatrung</code></li><li><strong>Status</strong>: <code>pending</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Target Date</strong>: <code>Chưa chốt; theo dependency và ETA owner khi nhận</code></li><li><strong>Priority</strong>: <code>1</code></li></ul>
+<h2>Objective</h2><p>Worker gọi Qwen với crop inline, structured JSON; validate MIME, size, JSON và taxonomy.</p>
 <h2>Scope</h2><h3>Included</h3><p>Celery task/worker; result types checked|uncertain|failed|not_checked.</p><p>Đường dẫn: <code>src/backend/**; src/classifier_worker/**; docs/04-api/openapi.yaml; tests BE; migrations, dependency lock và hạ tầng runtime do PO sở hữu</code>.</p><h3>Excluded</h3><p>FE, calibration, KPI, đánh giá mở rộng.</p>
 <h2>Preconditions</h2><ul><li>Parent E-12 được READY để expansion và IN_PROGRESS cho code theo DEC-021; task này còn pending.</li><li>Phụ thuộc: <a href="M04A-01.html">M04A-01</a>; task hỗ trợ không chặn đường code PO.</li><li>Mock/contract có thể làm trước credential; smoke thật cần input/model/quota đúng.</li></ul>
 <h2>Related Files</h2><ul><li><strong>Context Package</strong>: <a href="../../planning/M-04-dispatch-2026-10-13.html">Phân công và context M-04</a></li><li><strong>Parent Epic</strong>: <a href="../../planning/epics.html#e-12">E-12</a></li><li><strong>Decisions</strong>: <a href="../../governance/decisions/DEC-021.html">DEC-021</a></li><li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-115.html">CR-115</a></li><li><strong>GitHub</strong>: <a href="https://github.com/toilatrung/label-x/issues/280">#280</a></li><li><strong>Risks</strong>: xem context M-04; <strong>Blockers</strong>: chưa ghi blocker mới; thiếu input phải báo đúng bước bị chặn.</li></ul>
