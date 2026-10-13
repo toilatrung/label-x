@@ -279,8 +279,7 @@ def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
         or not isinstance(model, dict)
         or model.get("sha256") != artifact["model_artifact__checksum"]
         or model.get("version") != artifact["model_artifact__version"]
-        or model.get("class_mapping_version")
-        != artifact["model_artifact__class_mapping_version"]
+        or model.get("class_mapping_version") != artifact["model_artifact__class_mapping_version"]
     ):
         raise ValueError("detector output không khớp model artifact của run")
 
