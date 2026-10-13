@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("runs", "0006_workunit_lease_token"),
+        ("runs", "0007_kpi_reference_evaluation_waiver"),
     ]
 
     operations = [
