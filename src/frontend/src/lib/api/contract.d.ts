@@ -1174,7 +1174,7 @@ export interface components {
          */
         RunStatus: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
         /** @enum {string} */
-        EngineName: "schema" | "geometry" | "duplicate" | "detector" | "metric" | "vlm";
+        EngineName: "schema" | "geometry" | "duplicate" | "detector" | "metric" | "vlm" | "classifier";
         /**
          * @description Trạng thái công khai (FR-AGG-05); không giá trị nào nghĩa là "đạt".
          *     Suy ra từ LedgerEntry theo quy tắc trong docs/04-api/engine-interface.html §3 (T-006,
@@ -1362,6 +1362,37 @@ export interface components {
             frame: components["schemas"]["FrameKey"];
             anchor: components["schemas"]["Anchor"];
             evidence: components["schemas"]["Evidence"];
+            /** @description Đề xuất của classifier ConvNeXt Tiny cho candidate (M04B-03); null nếu chưa chạy hoặc engine classifier không bật. Chỉ là đề xuất của AI, không thay quyết định của reviewer. */
+            classifier?: components["schemas"]["ClassifierEvidence"] | null;
+        };
+        ClassifierTopK: {
+            class_id: number;
+            class_name: string;
+            /** @description Softmax, chưa calibrate */
+            score: number;
+        };
+        /** @description Kết quả classifier cho một candidate. score là giá trị softmax CHƯA calibrate, không phải xác suất đúng. classifier_unknown mặc định false và chỉ true khi không quyết định được (score/margin không hữu hạn); abstention theo ngưỡng do policy định tuyến tính từ score/margin. unknown không phải lớp thứ 11. */
+        ClassifierEvidence: {
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            /** @description Rỗng khi completed. Khi failed: invalid_crop, box_too_small, checkpoint_unavailable, checksum_mismatch, not_configured, timeout, inference_error (không kèm lỗi thô). */
+            reason_code: string;
+            crop_valid: boolean;
+            crop_sha256: string;
+            predicted_class_id: number | null;
+            predicted_class_name: string;
+            annotated_class_id: number | null;
+            score: number | null;
+            /** @description Top-1 trừ top-2 */
+            margin: number | null;
+            top3: components["schemas"]["ClassifierTopK"][];
+            classifier_unknown: boolean;
+            checkpoint_version: string;
+            checkpoint_sha256: string;
+            /** @description smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy */
+            checkpoint_status: string;
+            class_map_version: string;
+            snapshot_revision: string;
         };
         /** @description Kết quả cuối của một đơn vị trong shard */
         EngineUnitResult: {
@@ -2035,7 +2066,7 @@ export interface components {
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (dashscope), model (allowlist, mặc định qwen3-vl-plus), base_url (https, host trong allowlist), prompt_version, timeout_seconds, max_attempts (1 đến 3) và budget {max_calls}. Không nhận api_key hay prompt; API key chỉ ở biến môi trường runtime. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (dashscope), model (allowlist, mặc định qwen3-vl-plus), base_url (https, host trong allowlist), prompt_version, timeout_seconds, max_attempts (1 đến 3) và budget {max_calls}. Không nhận api_key hay prompt; API key chỉ ở biến môi trường runtime. Khoá classifier (M04B-03) gồm model_artifact_id (số nguyên dương trỏ tới ModelArtifact đã đăng ký); không nhận đường dẫn, lệnh hay secret. Khi engines.classifier.enabled=true, publish trả 422 BUSINESS_RULE_UNMET nếu thiếu models.classifier, ModelArtifact không tồn tại, thiếu checksum sha256/artifact_key hoặc class map không phải bdd100k-det-10-v1 đúng 10 lớp. */
             models?: {
                 [key: string]: unknown;
             };

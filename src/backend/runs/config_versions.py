@@ -11,6 +11,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from classifier.config import classifier_publish_errors
 from runs.models import ConfigVersion
 from runs.routing_config import validate_routing_thresholds
 from runs.services import (
@@ -104,5 +105,6 @@ def _assert_publishable_ai_config(config: ConfigVersion) -> None:
     models_cfg = config.models or {}
     if "vlm" in models_cfg:
         errors += validate_vlm_config(models_cfg["vlm"])
+    errors += classifier_publish_errors(config)
     if errors:
         raise BusinessRuleUnmetError(" ".join(errors))

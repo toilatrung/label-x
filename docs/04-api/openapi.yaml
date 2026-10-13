@@ -1634,7 +1634,7 @@ components:
       enum: [queued, running, completed, partial, failed, cancelled]
     EngineName:
       type: string
-      enum: [schema, geometry, duplicate, detector, metric, vlm]
+      enum: [schema, geometry, duplicate, detector, metric, vlm, classifier]
     EngineStatus:
       type: string
       description: |
@@ -1951,6 +1951,68 @@ components:
         frame: { $ref: "#/components/schemas/FrameKey" }
         anchor: { $ref: "#/components/schemas/Anchor" }
         evidence: { $ref: "#/components/schemas/Evidence" }
+        classifier:
+          allOf: [{ $ref: "#/components/schemas/ClassifierEvidence" }]
+          nullable: true
+          description: >-
+            Đề xuất của classifier ConvNeXt Tiny cho candidate (M04B-03); null nếu chưa chạy hoặc
+            engine classifier không bật. Chỉ là đề xuất của AI, không thay quyết định của reviewer.
+    ClassifierTopK:
+      type: object
+      required: [class_id, class_name, score]
+      properties:
+        class_id: { type: integer, minimum: 0, maximum: 9 }
+        class_name: { type: string }
+        score: { type: number, description: "Softmax, chưa calibrate" }
+    ClassifierEvidence:
+      type: object
+      description: >-
+        Kết quả classifier cho một candidate. score là giá trị softmax CHƯA calibrate, không phải
+        xác suất đúng. classifier_unknown mặc định false và chỉ true khi không quyết định được
+        (score/margin không hữu hạn); abstention theo ngưỡng do policy định tuyến tính từ
+        score/margin. unknown không phải lớp thứ 11.
+      required:
+        - status
+        - reason_code
+        - crop_valid
+        - crop_sha256
+        - predicted_class_id
+        - predicted_class_name
+        - annotated_class_id
+        - score
+        - margin
+        - top3
+        - classifier_unknown
+        - checkpoint_version
+        - checkpoint_sha256
+        - checkpoint_status
+        - class_map_version
+        - snapshot_revision
+      properties:
+        status: { type: string, enum: [pending, running, completed, failed, cancelled] }
+        reason_code:
+          type: string
+          description: >-
+            Rỗng khi completed. Khi failed: invalid_crop, box_too_small, checkpoint_unavailable,
+            checksum_mismatch, not_configured, timeout, inference_error (không kèm lỗi thô).
+        crop_valid: { type: boolean }
+        crop_sha256: { type: string }
+        predicted_class_id: { type: integer, nullable: true }
+        predicted_class_name: { type: string }
+        annotated_class_id: { type: integer, nullable: true }
+        score: { type: number, nullable: true }
+        margin: { type: number, nullable: true, description: "Top-1 trừ top-2" }
+        top3:
+          type: array
+          items: { $ref: "#/components/schemas/ClassifierTopK" }
+        classifier_unknown: { type: boolean }
+        checkpoint_version: { type: string }
+        checkpoint_sha256: { type: string }
+        checkpoint_status:
+          type: string
+          description: smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy
+        class_map_version: { type: string }
+        snapshot_revision: { type: string }
     EngineUnitResult:
       type: object
       description: Kết quả cuối của một đơn vị trong shard
@@ -2788,6 +2850,10 @@ components:
             (dashscope), model (allowlist, mặc định qwen3-vl-plus), base_url (https, host trong
             allowlist), prompt_version, timeout_seconds, max_attempts (1 đến 3) và
             budget {max_calls}. Không nhận api_key hay prompt; API key chỉ ở biến môi trường runtime.
+            Khoá classifier (M04B-03) gồm model_artifact_id (số nguyên dương trỏ tới ModelArtifact
+            đã đăng ký); không nhận đường dẫn, lệnh hay secret. Khi engines.classifier.enabled=true,
+            publish trả 422 BUSINESS_RULE_UNMET nếu thiếu models.classifier, ModelArtifact không tồn
+            tại, thiếu checksum sha256/artifact_key hoặc class map không phải bdd100k-det-10-v1 đúng 10 lớp.
     ConfigVersion:
       type: object
       required: [id, name, status, engines, created_by, created_at]

@@ -7,8 +7,14 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
+from classifier.config import CLASSIFIER_ENGINE
 from engines.interface import EngineStatus, LedgerCounts, NotCheckedReason, public_status
-from orchestration.models import VlmBudget, VlmUnit
+from orchestration.classifier_stage import (
+    classifier_stage_started,
+    classifier_units_open,
+    start_classifier_stage,
+)
+from orchestration.models import ClassifierUnit, VlmBudget, VlmUnit
 from orchestration.services import ledger_counts
 from orchestration.vlm_stage import (
     VLM_ENGINE,
@@ -42,9 +48,19 @@ def refresh_run(run_id: int) -> None:
         ):
             # Candidate đã sinh xong: khởi động/bổ sung stage VLM (idempotent, trong khoá run).
             start_vlm_stage(run_id)
+        if (
+            not units_open
+            and CLASSIFIER_ENGINE in (run.engine_versions or {})
+            and not run.cancel_requested_at
+        ):
+            # Candidate đã sinh xong: khởi động/bổ sung stage classifier (idempotent).
+            start_classifier_stage(run_id)
         for result in run.engine_results.all():
             if result.engine == VLM_ENGINE:
                 _refresh_vlm_result(run_id, result)
+                continue
+            if result.engine == CLASSIFIER_ENGINE:
+                _refresh_classifier_result(run_id, result)
                 continue
             ledger = ledger_counts(run_id, result.engine)
             if ledger.total == 0:
@@ -86,6 +102,8 @@ def refresh_run(run_id: int) -> None:
             not vlm_stage_started(run_id) or vlm_units_open(run_id)
         ):
             return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
+        if CLASSIFIER_ENGINE in (run.engine_versions or {}) and classifier_units_open(run_id):
+            return  # classifier chưa xong: run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
         done = sum(u.status == WorkUnit.Status.COMPLETED for u in units)
         if failed == 0:
@@ -134,3 +152,46 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
             "not_checked_units",
         ]
     )
+
+
+def _refresh_classifier_result(run_id: int, result: EngineResult) -> None:
+    """EngineResult của classifier tính từ ClassifierUnit (đơn vị = candidate)."""
+    if not classifier_stage_started(run_id):
+        # Chưa có unit: candidate chưa sinh xong, hoặc run không có candidate nào để phân loại.
+        if not run_has_finished_shards(run_id):
+            return
+        result.status = EngineStatus.NOT_CHECKED.value
+        result.reason = NotCheckedReason.NOT_TRIGGERED.value
+        result.eligible_units = 0
+        result.completed_units = result.failed_units = result.not_checked_units = 0
+    else:
+        statuses = list(
+            ClassifierUnit.objects.filter(run_id=run_id).values_list("status", flat=True)
+        )
+        completed = sum(s == ClassifierUnit.Status.COMPLETED for s in statuses)
+        failed = sum(s == ClassifierUnit.Status.FAILED for s in statuses)
+        pending = sum(
+            s in (ClassifierUnit.Status.PENDING, ClassifierUnit.Status.RUNNING) for s in statuses
+        )
+        ledger = LedgerCounts(completed=completed, failed=failed, pending=pending)
+        result.status = public_status(ledger, finished=not pending).value
+        result.reason = None
+        result.eligible_units = ledger.eligible
+        result.completed_units = completed
+        result.failed_units = failed
+        result.not_checked_units = 0
+    result.save(
+        update_fields=[
+            "status",
+            "reason",
+            "eligible_units",
+            "completed_units",
+            "failed_units",
+            "not_checked_units",
+        ]
+    )
+
+
+def run_has_finished_shards(run_id: int) -> bool:
+    units = list(WorkUnit.objects.filter(run_id=run_id).values_list("status", flat=True))
+    return bool(units) and not any(s in _OPEN for s in units)

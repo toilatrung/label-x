@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from classifier.config import classifier_models_ready
 from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
@@ -73,6 +74,15 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
         unit="frame",
         required=False,
         needs_model=False,
+        needs_reference=False,
+        applicability_version="1.0.0",
+    ),
+    "classifier": EngineDescriptor(
+        name="classifier",
+        version="1.0.0",
+        unit="shape",  # đơn vị classifier là candidate, không phải frame
+        required=False,
+        needs_model=False,  # checkpoint nằm ở config models.classifier -> ModelArtifact
         needs_reference=False,
         applicability_version="1.0.0",
     ),
@@ -256,6 +266,28 @@ def generate_shards_for_snapshot(
             ),
         )
         engine_versions_map[engine_name] = descriptor.version
+
+        if engine_name == "classifier":
+            # Classifier phụ thuộc candidate: ClassifierUnit tạo sau khi candidate sinh xong
+            # (orchestration.classifier_stage). Thiếu/sai models.classifier -> không có model.
+            clf_ready = classifier_models_ready(config_version)
+            if not clf_ready:
+                engine_versions_map.pop(engine_name)
+            engine_results_data.append(
+                {
+                    "engine": engine_name,
+                    "status": EngineStatus.RUNNING if clf_ready else EngineStatus.NOT_CHECKED,
+                    "reason": None if clf_ready else NotCheckedReason.NO_MODEL,
+                    "eligible_units": 0,
+                    "completed_units": 0,
+                    "failed_units": 0,
+                    "not_checked_units": 0,
+                    "required": descriptor.required,
+                    "unit": descriptor.unit,
+                    "applicability_version": descriptor.applicability_version,
+                }
+            )
+            continue
 
         if engine_name == "vlm":
             # VLM phụ thuộc candidate: không có shard theo frame; VlmUnit tạo sau khi candidate
