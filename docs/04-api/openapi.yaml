@@ -1105,15 +1105,24 @@ paths:
       operationId: review_policy_retrieve
       tags: [review]
       summary: Policy lease/idle đang áp dụng (read-only, có version)
-      description: Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+      description: |
+        Pilot DEC-019/CR-113; UI collector đọc giá trị này, không tự đặt ngưỡng.
+        `dataset_id` là tùy chọn: nếu có, caller phải có scope dataset đó (thiếu scope → 403 `OUT_OF_SCOPE`,
+        giá trị không hợp lệ → 400); nếu không có, hành vi như trước (chỉ kiểm vai trò). Policy pilot trả như nhau.
       x-labelx-trace: [FR-REV-13, FR-EVL-06]
       x-labelx-roles: [annotator, reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1 }
       responses:
         "200":
           description: Policy hiện hành
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ReviewPolicy" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "503": { $ref: "#/components/responses/Unavailable" }
   /api/effort-events/:
