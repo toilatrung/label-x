@@ -203,3 +203,26 @@ def test_throttle_is_per_user_and_scoped_to_this_endpoint(rework, world, current
     assert client(world["reviewer"]).get(_url(rework)).status_code == 200
     assert author.get(f"/api/rework/{rework.pk}/").status_code == 200
     assert author.get("/api/rework/?dataset_id=42").status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("error", [AttributeError("x"), OSError("socket"), TimeoutError()])
+def test_attribute_and_os_errors_from_cvat_read_are_502(rework, world, monkeypatch, error):
+    def boom(**_kw):
+        raise error
+
+    monkeypatch.setattr(rework_service, "compute_job_revision", boom)
+    response = client(world["author"]).get(_url(rework))
+    assert response.status_code == 502 and response.data["code"] == "BUSINESS_RULE_UNMET"
+
+
+@pytest.mark.django_db
+def test_api_error_outside_cvat_read_is_not_swallowed(rework, world, monkeypatch):
+    from config.exceptions import ApiError
+
+    def conflict(**_kw):
+        raise ApiError(409, "INVALID_TRANSITION", "x")
+
+    monkeypatch.setattr(rework_service, "compute_job_revision", conflict)
+    response = client(world["author"]).get(_url(rework))
+    assert response.status_code == 409 and response.data["code"] == "INVALID_TRANSITION"

@@ -375,6 +375,8 @@ def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
         httpx.HTTPError,
         SnapshotSourceError,
         LookupError,
+        AttributeError,
+        OSError,
         RuntimeError,
         ValueError,
         TypeError,
