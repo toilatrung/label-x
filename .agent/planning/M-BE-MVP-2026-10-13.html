@@ -1,6 +1,6 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kế hoạch M-BE-MVP</title><meta name="labelx:id" content="m-be-mvp-20261013"><meta name="labelx:title" content="M-BE-MVP — hoàn thiện Backend và nối API lên giao diện cho MVP"><meta name="labelx:type" content="planning"><meta name="labelx:domain" content="project"><meta name="labelx:module" content="backend"><meta name="labelx:tags" content="[m-be-mvp, backend, wiring, mvp]"><meta name="labelx:priority" content="1"><style>body{font:15px/1.6 system-ui;max-width:1250px;margin:30px auto;padding:20px;color:#19334c}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #d5dfe9;vertical-align:top;text-align:left}th{background:#eef4fa}code{background:#eef2f5}h2{margin-top:30px}.warn{background:#fdf2d8;border-left:3px solid #8a5300;padding:8px 14px}</style></head><body>
 <h1>M-BE-MVP — hoàn thiện Backend và nối API lên giao diện cho MVP</h1>
-<p>Ngày lập: 2026-10-13. Chủ trì: PO (@toilatrung). Vị trí: ngay sau M-04, trước M-05 và M-06. Milestone này gom toàn bộ giai đoạn "code Backend rồi nối lên giao diện" để có MVP. Trạng thái milestone: <code>proposed</code>, chờ PO duyệt <a href="../governance/change-requests/CR-118.html">CR-118</a>. Các task nằm ở <code>.agent/execution/mbe/MBE-00…MBE-07.html</code>, đã tạo issue #322…#329 (cha #321) và ghi vào task board. Kế hoạch này gộp và thay phần task song song của <a href="M-04-e2e-acceptance-2026-10-13.html">kế hoạch E2E M-04</a>; WP0–WP5 của kế hoạch đó là gói MBE-01 dưới đây.</p>
+<p>Ngày lập: 2026-10-13. Chủ trì: PO (@toilatrung). Vị trí: ngay sau M-04, trước M-05 và M-06. Milestone này gom toàn bộ giai đoạn "code Backend rồi nối lên giao diện" để có MVP. Trạng thái milestone: <code>in-progress</code>; PO đã duyệt (2026-10-13) <a href="../governance/change-requests/CR-118.html">CR-118</a>. Các task nằm ở <code>.agent/execution/mbe/MBE-00…MBE-07.html</code>, đã tạo issue #322…#329 (cha #321) và ghi vào task board. Kế hoạch này gộp và thay phần task song song của <a href="M-04-e2e-acceptance-2026-10-13.html">kế hoạch E2E M-04</a>; WP0–WP5 của kế hoạch đó là gói MBE-01 dưới đây.</p>
 
 <h2>Quyết định của PO (2026-10-13)</h2>
 <ul>
@@ -57,7 +57,7 @@
 
 <h2>Quy trình và ranh giới</h2>
 <ul>
-<li>Mỗi gói: nhánh riêng từ <code>develop</code>; PR vào <code>develop</code>; comment <code>Đã xem và duyệt</code> theo CR-102 do người được giao. Task đã đăng ký task board và có issue; CR-118 vẫn chờ PO ghi quyết định duyệt.</li>
+<li>Mỗi gói: nhánh riêng từ <code>develop</code>; PR vào <code>develop</code>; comment <code>Đã xem và duyệt</code> theo CR-102 do người được giao. Task đã đăng ký task board và có issue; CR-118 đã được PO duyệt 2026-10-13.</li>
 <li>Ranh giới cứng giữ nguyên: adapter CVAT chỉ đọc (sửa annotation bằng deep link); Celery task idempotent; quyền project/job kiểm ở API; Qwen không tạo ReviewDecision/Adjudication.</li>
 <li>Không sửa <code>src/backend/orchestration/*</code> và serializers của M-04 ngoài MBE-01 do PO giữ, để tránh conflict với phiên A/B/C.</li>
 <li>Khi một dòng BLOCKER-031 được nối: theo quy trình trong blocker (cập nhật <code>contract.d.ts</code>, bỏ <code>NotConnectedNotice</code> của vùng đó, tick cột "Đã nối").</li>
