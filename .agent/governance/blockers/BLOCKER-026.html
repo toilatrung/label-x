@@ -52,7 +52,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Metric queue/shard của T-025 chưa xuất ra ngoài; cần chốt trước khi đóng M-02</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung (Product Owner chốt hoãn hay thêm endpoint); thực hiện: @ducha180104</code></li>
 <li><strong>Reporter</strong>: <code>claude-code (label-x-f5), theo yêu cầu của PO</code></li>
-<li><strong>Status</strong>: <code>resolved</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
 <li><strong>Blocker Type</strong>: <code>decision</code></li>
 <li><strong>Priority</strong>: <code>3</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-10</code></li>
@@ -98,16 +98,16 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="resolution-record">Resolution Record</h2>
 <ul>
-<li><strong>Resolved Date</strong>: <code>2026-10-12</code></li>
-<li><strong>Evidence</strong>: <code>commit a58c9d9, 58aac77, 522f03b; src/backend/tests/orchestration/test_metrics.py; .agent/evidence/M-02-RESOLVE/rbac-7-roles.json; .agent/reports/implementation/M-02-RESOLVE.html; PR #126 MERGED vào develop 2026-10-11T13:55:38Z (merge commit 975f960, CI LabelX gồm backend, frontend, detector, framework, bootstrap-windows đều SUCCESS); review độc lập APPROVE tại d3a6c33 (.agent/reports/review/M-02-RESOLVE.html); DEC-014 phương án A; CR-109 approved; CR-112 (proposed) nhận bốn phần hoãn kèm hạn đề xuất 2026-10-27.</code></li>
-<li><strong>Note</strong>: Điều kiện DEC-014 đủ: #126 merge, review APPROVE, có mã CR cho phần hoãn. Lưu ý: head lúc merge là 9ff3da1; so với commit đã APPROVE (d3a6c33) chỉ thêm một merge commit của develop (#127, #134), không sửa nội dung #126. CR-112 mới ở trạng thái proposed: hạn 2026-10-27 và người thực hiện là đề xuất, PO chưa duyệt. Hạn chế ngữ nghĩa metric (retry, duration, queue_wait) và các mục NOT VERIFIED (SIGKILL/broker thật, SeaweedFS, tính lại hash) giữ nguyên, không bị đóng bởi blocker này.</li>
+<li><strong>Resolved Date</strong>: <code>pending</code></li>
+<li><strong>Evidence</strong>: <code>commit a58c9d9, 58aac77, 522f03b; src/backend/tests/orchestration/test_metrics.py; .agent/evidence/M-02-RESOLVE/rbac-7-roles.json; .agent/reports/implementation/M-02-RESOLVE.html</code> (chưa có live scrape; CR-109 chờ PO)</li>
+<li><strong>Note</strong>: Cập nhật 2026-10-10: đã có endpoint và test, còn chờ PO duyệt CR-109 và review độc lập, nên giữ <code>open</code>. PO chấp nhận hoãn ngày 2026-10-10 để T-025 (PR #93) được merge; blocker này nhắc hoàn thiện trước cuối M-02.</li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
-<li>[x] The blocking condition no longer prevents affected work.</li>
-<li>[x] Resolution evidence is linked.</li>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
 <li>[ ] Affected epic and task statuses are updated.</li>
-<li>[x] Workaround removal is tracked when applicable.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
 </ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
