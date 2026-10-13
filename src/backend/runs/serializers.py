@@ -307,7 +307,8 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
     @extend_schema_field(ClassifierEvidenceSerializer(allow_null=True))
     def get_classifier(self, obj: CandidateRecord) -> dict[str, Any] | None:
         """Đề xuất của classifier (chưa calibrate); null nếu candidate chưa có/không chạy."""
-        unit = ClassifierUnit.objects.filter(candidate_id=obj.pk).first()
+        units = list(obj.classifier_units.all())  # prefetched by the list view
+        unit = units[0] if units else None
         return None if unit is None else classifier_evidence(unit)
 
     def get_frame(self, obj: CandidateRecord) -> dict[str, int]:

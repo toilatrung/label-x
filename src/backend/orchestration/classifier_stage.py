@@ -34,6 +34,7 @@ from classifier.config import (
 )
 from classifier.errors import ClassifierReason, ClassifierRunError
 from classifier.runner import BatchResult, ClassifierRunner, CropItem, default_runner
+from engines.interface import LedgerCounts
 from orchestration.models import CandidateRecord, ClassifierUnit
 from orchestration.vlm_stage import _taxonomy_for_run, crop_provider
 from runs.models import ModelArtifact, QCRun
@@ -169,6 +170,17 @@ def classifier_units_open(run_id: int) -> bool:
     return ClassifierUnit.objects.filter(run_id=run_id, status__in=_OPEN).exists()
 
 
+def classifier_ledger_counts(run_id: int) -> LedgerCounts:
+    """Số đếm ledger của engine classifier từ ClassifierUnit (đơn vị = candidate, không vào
+    LedgerUnit theo frame), để GET /api/runs/{id}/ledger/ không báo 0 khi unit đã completed."""
+    statuses = list(ClassifierUnit.objects.filter(run_id=run_id).values_list("status", flat=True))
+    return LedgerCounts(
+        completed=sum(s == ClassifierUnit.Status.COMPLETED for s in statuses),
+        failed=sum(s == ClassifierUnit.Status.FAILED for s in statuses),
+        pending=sum(s in _OPEN for s in statuses),
+    )
+
+
 def classifier_stage_started(run_id: int) -> bool:
     return ClassifierUnit.objects.filter(run_id=run_id).exists()
 
@@ -252,19 +264,96 @@ def _settle(unit: ClassifierUnit, token: str, **fields: Any) -> bool:
         )
 
 
+def _safe_reason(reason: str | ClassifierReason) -> ClassifierReason:
+    """Chỉ mã lý do trong enum được ghi/trả ra API; giá trị lạ thành inference_error."""
+    try:
+        return ClassifierReason(reason)
+    except ValueError:
+        return ClassifierReason.INFERENCE_ERROR
+
+
 def _fail(unit: ClassifierUnit, token: str, reason: ClassifierReason | str) -> None:
+    code = _safe_reason(reason)
     _settle(
         unit,
         token,
         status=ClassifierUnit.Status.FAILED,
-        reason_code=str(reason),
-        crop_valid=str(reason)
-        not in (ClassifierReason.INVALID_CROP.value, ClassifierReason.BOX_TOO_SMALL.value),
+        reason_code=code.value,
+        crop_valid=code not in (ClassifierReason.INVALID_CROP, ClassifierReason.BOX_TOO_SMALL),
     )
+
+
+def _fail_still_running(units: list[ClassifierUnit], token: str) -> None:
+    """Lưới an toàn: mọi unit của lượt này còn RUNNING (lease của ta) thành failed/inference_error,
+    để một lỗi bất ngờ không để unit/run kẹt "running" và bị sweeper chạy lặp mãi."""
+    for unit in units:
+        try:
+            _fail(unit, token, ClassifierReason.INFERENCE_ERROR)
+        except Exception:
+            logger.exception("classifier unit could not be failed", extra={"unit_id": unit.pk})
 
 
 def _finite(*values: object) -> bool:
     return all(isinstance(v, int | float) and math.isfinite(v) for v in values)
+
+
+def _process_batch(
+    run: QCRun,
+    run_id: int,
+    units: list[ClassifierUnit],
+    token: str,
+    runner: ClassifierRunner | None,
+) -> int:
+    settled = 0
+    artifact = classifier_artifact(run)
+    if artifact is None:
+        for unit in units:
+            _fail(unit, token, ClassifierReason.NOT_CONFIGURED)
+        settled += len(units)
+        return settled
+    provider = crop_provider()
+    crops: list[CropItem] = []
+    by_id: dict[str, ClassifierUnit] = {}
+    crop_hash: dict[str, str] = {}
+    for unit in units:
+        candidate = CandidateRecord.objects.get(pk=unit.candidate_id)
+        try:
+            crop = provider.load(candidate)
+        except Exception:  # lỗi tải crop (kể cả lỗi của provider) -> crop không hợp lệ
+            _fail(unit, token, ClassifierReason.INVALID_CROP)
+            settled += 1
+            continue
+        item_id = str(unit.pk)
+        crops.append(CropItem(item_id, crop.data))
+        by_id[item_id] = unit
+        crop_hash[item_id] = crop.sha256
+    if not crops:
+        return settled
+    try:
+        batch: BatchResult = (runner or default_runner()).run(
+            artifact_key=artifact.artifact_key,
+            expected_sha256=artifact.checksum,
+            crops=crops,
+        )
+    except ClassifierRunError as exc:
+        for unit in by_id.values():
+            _fail(unit, token, exc.reason)
+        settled += len(by_id)
+        return settled
+    except Exception:
+        logger.exception("classifier runner crashed", extra={"qc_run_id": run_id})
+        for unit in by_id.values():
+            _fail(unit, token, ClassifierReason.INFERENCE_ERROR)
+        settled += len(by_id)
+        return settled
+    for item_id, unit in by_id.items():
+        outcome = batch.items.get(item_id)
+        if outcome is None or not outcome.ok or outcome.prediction is None:
+            _fail(unit, token, outcome.reason if outcome and outcome.reason else "inference_error")
+        else:
+            _settle_ok(unit, token, outcome.prediction, batch.checkpoint, crop_hash[item_id])
+        settled += 1
+    return settled
 
 
 def execute_classifier_units(run_id: int, *, runner: ClassifierRunner | None = None) -> int:
@@ -277,56 +366,12 @@ def execute_classifier_units(run_id: int, *, runner: ClassifierRunner | None = N
         units, token = _claim_batch(run_id)
         if not units:
             break
-        artifact = classifier_artifact(run)
-        if artifact is None:
-            for unit in units:
-                _fail(unit, token, ClassifierReason.NOT_CONFIGURED)
-            settled += len(units)
-            continue
-        provider = crop_provider()
-        crops: list[CropItem] = []
-        by_id: dict[str, ClassifierUnit] = {}
-        crop_hash: dict[str, str] = {}
-        for unit in units:
-            candidate = CandidateRecord.objects.get(pk=unit.candidate_id)
-            try:
-                crop = provider.load(candidate)
-            except Exception:  # lỗi tải crop (kể cả lỗi của provider) -> crop không hợp lệ
-                _fail(unit, token, ClassifierReason.INVALID_CROP)
-                settled += 1
-                continue
-            item_id = str(unit.pk)
-            crops.append(CropItem(item_id, crop.data))
-            by_id[item_id] = unit
-            crop_hash[item_id] = crop.sha256
-        if not crops:
-            continue
         try:
-            batch: BatchResult = (runner or default_runner()).run(
-                artifact_key=artifact.artifact_key,
-                expected_sha256=artifact.checksum,
-                crops=crops,
-            )
-        except ClassifierRunError as exc:
-            for unit in by_id.values():
-                _fail(unit, token, exc.reason)
-            settled += len(by_id)
-            continue
+            settled += _process_batch(run, run_id, units, token, runner)
         except Exception:
-            logger.exception("classifier runner crashed", extra={"qc_run_id": run_id})
-            for unit in by_id.values():
-                _fail(unit, token, ClassifierReason.INFERENCE_ERROR)
-            settled += len(by_id)
-            continue
-        for item_id, unit in by_id.items():
-            outcome = batch.items.get(item_id)
-            if outcome is None or not outcome.ok or outcome.prediction is None:
-                _fail(
-                    unit, token, outcome.reason if outcome and outcome.reason else "inference_error"
-                )
-            else:
-                _settle_ok(unit, token, outcome.prediction, batch.checkpoint, crop_hash[item_id])
-            settled += 1
+            logger.exception("classifier batch crashed", extra={"qc_run_id": run_id})
+            _fail_still_running(units, token)
+            settled += len(units)
     refresh_run(run_id)
     return settled
 

@@ -98,7 +98,7 @@ class FakeRunner:
         return BatchResult(checkpoint=dict(CHECKPOINT), items=items)
 
 
-def make_run(*, artifact_ok: bool = True) -> QCRun:
+def make_run(*, artifact_ok: bool = True, artifact: Any = None) -> QCRun:
     user, _ = User.objects.get_or_create(username="qa")
     frames = tuple(
         FrameExport(
@@ -123,7 +123,7 @@ def make_run(*, artifact_ok: bool = True) -> QCRun:
     snap = create_locked_snapshot(
         dataset_id=1, created_by=user, jobs=[job], taxonomy_version="t", guideline_version="g"
     )
-    artifact = make_artifact(**({} if artifact_ok else {"checksum": "bad"}))
+    artifact = artifact or make_artifact(**({} if artifact_ok else {"checksum": "bad"}))
     cfg = ConfigVersion.objects.create(
         name="c",
         status=ConfigVersion.Status.PUBLISHED,
@@ -371,3 +371,102 @@ def test_annotated_class_from_snapshot_label() -> None:
     assert _annotated_class_id(candidate, index, {1: "Car"}) == 2
     assert _annotated_class_id(candidate, index, {1: "person"}) is None  # ngoài class map
     assert _annotated_class_id(candidate, {}, {1: "car"}) is None  # không truy ra annotation
+
+
+def test_cancel_run_cancels_classifier_units_and_engine_result() -> None:
+    run = make_run()
+    run_shards(run)
+    assert ClassifierUnit.objects.filter(run_id=run.pk, status="pending").count() == 3
+    cancel_qc_run(run_id=run.pk, actor=User.objects.get(username="qa"))
+    assert set(ClassifierUnit.objects.filter(run_id=run.pk).values_list("status", flat=True)) == {
+        "cancelled"
+    }
+    assert not classifier_units_open(run.pk)
+
+
+def test_poisonous_worker_strings_cannot_wedge_the_run() -> None:
+    run = make_run()
+    run_shards(run)
+    evil = prediction()
+    evil["top3"][0]["class_name"] = "x" * 500
+    long_checkpoint = {**CHECKPOINT, "version": "v" * 500}
+
+    class Poison(FakeRunner):
+        def run(self, **kwargs: Any) -> BatchResult:
+            batch = super().run(**kwargs)
+            return BatchResult(checkpoint=long_checkpoint, items=batch.items)
+
+    execute_classifier_units(run.pk, runner=Poison())
+    # never stuck: every unit is terminal and the run settled
+    statuses = set(ClassifierUnit.objects.filter(run_id=run.pk).values_list("status", flat=True))
+    assert statuses <= {"completed", "failed"}
+    assert not classifier_units_open(run.pk)
+    assert all(len(u.reason_code) <= 24 for u in ClassifierUnit.objects.filter(run_id=run.pk))
+
+
+def test_unexpected_crash_after_claim_fails_units_instead_of_wedging(monkeypatch) -> None:
+    from orchestration import classifier_stage
+
+    run = make_run()
+    run_shards(run)
+
+    def boom(*args: Any, **kwargs: Any) -> None:
+        raise RuntimeError("db exploded")
+
+    monkeypatch.setattr(classifier_stage, "_settle_ok", boom)
+    execute_classifier_units(run.pk, runner=FakeRunner())
+    assert set(ClassifierUnit.objects.filter(run_id=run.pk).values_list("status", flat=True)) == {
+        "failed"
+    }
+    assert set(ClassifierUnit.objects.values_list("reason_code", flat=True)) == {"inference_error"}
+
+
+def test_unknown_reason_from_runner_is_not_stored() -> None:
+    run = make_run()
+    run_shards(run)
+    execute_classifier_units(
+        run.pk,
+        runner=FakeRunner(lambda i: ItemResult(i, False, reason="sk-LEAK /etc/passwd")),
+    )
+    assert set(ClassifierUnit.objects.values_list("reason_code", flat=True)) == {"inference_error"}
+
+
+def test_candidate_list_does_not_do_one_query_per_candidate() -> None:
+    from rest_framework.test import APIClient
+
+    from accounts.models import Role, RoleAssignment
+
+    run = make_run()
+    run_shards(run)
+    execute_classifier_units(run.pk, runner=FakeRunner())
+    user = User.objects.get(username="qa")
+    RoleAssignment.objects.create(user=user, role=Role.QA_LEAD, dataset_id=1)
+    client = APIClient()
+    client.force_authenticate(user)
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    with CaptureQueriesContext(connection) as queries:
+        response = client.get(f"/api/runs/{run.pk}/candidates/")
+    unit_queries = [q for q in queries if "orchestration_classifierunit" in q["sql"]]
+    assert len(unit_queries) == 1  # one prefetch for the whole page, not one per candidate
+    assert response.status_code == 200 and len(response.json()["results"]) == 3
+    assert all(r["classifier"]["status"] == "completed" for r in response.json()["results"])
+
+
+def test_ledger_endpoint_counts_classifier_units() -> None:
+    from rest_framework.test import APIClient
+
+    from accounts.models import Role, RoleAssignment
+
+    run = make_run()
+    run_shards(run)
+    execute_classifier_units(run.pk, runner=FakeRunner())
+    user = User.objects.get(username="qa")
+    RoleAssignment.objects.create(user=user, role=Role.QA_LEAD, dataset_id=1)
+    client = APIClient()
+    client.force_authenticate(user)
+    rows = {r["engine"]: r for r in client.get(f"/api/runs/{run.pk}/ledger/").json()}
+    row = rows["classifier"]
+    assert (row["status"], row["total"], row["eligible"], row["completed"]) == ("checked", 3, 3, 3)
+    assert row["failed"] == 0 and row["pending"] == 0 and row["coverage"] == 1.0

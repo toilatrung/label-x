@@ -27,6 +27,7 @@ CLASSES: tuple[str, ...] = (
 )
 KNOWN_KEYS = frozenset({"model_artifact_id"})
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_ARTIFACT_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$")
 
 
 def validate_classifier_model_config(raw: object) -> list[str]:
@@ -48,8 +49,15 @@ def artifact_errors(artifact: Any) -> list[str]:
     errors: list[str] = []
     if not _SHA256.fullmatch(str(artifact.checksum or "")):
         errors.append("ModelArtifact của classifier thiếu checksum sha256 hợp lệ.")
-    if not artifact.artifact_key:
+    key = str(artifact.artifact_key or "")
+    if not key:
         errors.append("ModelArtifact của classifier thiếu artifact_key (vị trí manifest).")
+    elif (
+        len(key) > 256
+        or not _ARTIFACT_KEY.fullmatch(key)
+        or any(part in ("..", ".") for part in key.split("/"))
+    ):
+        errors.append("ModelArtifact.artifact_key phải là đường dẫn tương đối, không có '..'.")
     mapping = artifact.class_mapping
     if (
         artifact.class_mapping_version != CLASS_MAP_VERSION
@@ -97,4 +105,25 @@ def classifier_publish_errors(config_version: Any) -> list[str]:
     artifact = ModelArtifact.objects.filter(pk=raw["model_artifact_id"]).first()
     if artifact is None:
         return ["models.classifier.model_artifact_id không trỏ tới ModelArtifact nào."]
-    return artifact_errors(artifact)
+    errors = artifact_errors(artifact)
+    if not errors:
+        errors += _manifest_errors(artifact.artifact_key)
+    return errors
+
+
+def _manifest_errors(artifact_key: str) -> list[str]:
+    """Nếu máy này có CLASSIFIER_ARTIFACT_ROOT thì manifest phải tồn tại dưới đó khi publish.
+
+    Không đặt root (vd. máy chỉ quản trị config) thì không kiểm được tồn tại; lúc chạy, thiếu
+    manifest ra checkpoint_unavailable chứ không im lặng.
+    """
+    from django.conf import settings
+
+    from classifier.runner import artifact_manifest_path
+
+    if (
+        getattr(settings, "CLASSIFIER_ARTIFACT_ROOT", "")
+        and artifact_manifest_path(artifact_key) is None
+    ):
+        return ["Manifest của classifier không tồn tại dưới CLASSIFIER_ARTIFACT_ROOT."]
+    return []

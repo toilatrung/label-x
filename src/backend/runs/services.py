@@ -21,7 +21,7 @@ from engines.duplicate_overlap import (
 from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
 from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
-from orchestration.models import VlmUnit
+from orchestration.models import ClassifierUnit, VlmUnit
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
 from snapshots.models import Snapshot
 from vlm.config import validate_vlm_config
@@ -541,6 +541,10 @@ def cancel_qc_run(*, run_id: int, actor: User, reason: str = "") -> QCRun:
         VlmUnit.objects.filter(
             run_id=run.pk, status__in=[VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING]
         ).update(status=VlmUnit.Status.CANCELLED, finished_at=now)
+        ClassifierUnit.objects.filter(
+            run_id=run.pk,
+            status__in=[ClassifierUnit.Status.PENDING, ClassifierUnit.Status.RUNNING],
+        ).update(status=ClassifierUnit.Status.CANCELLED, finished_at=now)
 
         append_audit_event(
             actor=actor,

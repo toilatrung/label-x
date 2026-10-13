@@ -1941,6 +1941,7 @@ components:
         frame: [FR-AGG-03]
         anchor: [FR-AGG-03, FR-RNK-12]
         evidence: [FR-ENG-08]
+        classifier: [FR-ENG-05]
       properties:
         engine: { $ref: "#/components/schemas/EngineName" }
         engine_version: { type: string }

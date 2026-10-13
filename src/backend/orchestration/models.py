@@ -202,7 +202,9 @@ class ClassifierUnit(models.Model):
     run = models.ForeignKey(
         "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
     )
-    candidate = models.ForeignKey(CandidateRecord, on_delete=models.PROTECT, related_name="+")
+    candidate = models.ForeignKey(
+        CandidateRecord, on_delete=models.PROTECT, related_name="classifier_units"
+    )
     idempotency_key = models.CharField(max_length=64)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     reason_code = models.CharField(max_length=24, blank=True, default="")

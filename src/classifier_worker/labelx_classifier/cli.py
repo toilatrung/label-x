@@ -123,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
         elif args.command == "predict-batch":
+            if not args.image_root.is_dir():
+                raise ValueError("--image-root must be an existing directory")
             items = json.loads(args.input.read_text(encoding="utf-8"))
             if not isinstance(items, list):
                 raise ValueError("--input must be a JSON list")

@@ -128,3 +128,29 @@ def test_publish_allows_valid_classifier_and_disabled_classifier(user: User) -> 
     assert publish_config_version(config_id=ok.pk, actor=user).status == "published"
     off = _draft(user, engines={"schema": {"enabled": True}, "classifier": {"enabled": False}})
     assert publish_config_version(config_id=off.pk, actor=user).status == "published"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "key", ["../../etc", "/etc/passwd", "a/../b", "a//b", "./x", "a b", "x/..", "..", "a" * 300]
+)
+def test_publish_blocks_unsafe_artifact_key(user: User, key: str) -> None:
+    artifact = make_artifact(artifact_key=key)
+    config = _draft(user, models={"classifier": {"model_artifact_id": artifact.pk}})
+    with pytest.raises(BusinessRuleUnmetError, match="artifact_key"):
+        publish_config_version(config_id=config.pk, actor=user)
+
+
+@pytest.mark.django_db
+def test_publish_checks_manifest_exists_when_root_is_configured(
+    user: User, settings: Any, tmp_path: Any
+) -> None:
+    settings.CLASSIFIER_ARTIFACT_ROOT = str(tmp_path)
+    artifact = make_artifact()
+    config = _draft(user, models={"classifier": {"model_artifact_id": artifact.pk}})
+    with pytest.raises(BusinessRuleUnmetError, match="Manifest"):
+        publish_config_version(config_id=config.pk, actor=user)
+    manifest = tmp_path / "classifier" / "smoke-1"
+    manifest.mkdir(parents=True)
+    (manifest / "classifier-manifest.json").write_text("{}")
+    assert publish_config_version(config_id=config.pk, actor=user).status == "published"

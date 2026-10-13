@@ -15,9 +15,11 @@ from rest_framework.views import APIView
 
 from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
+from classifier.config import CLASSIFIER_ENGINE
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from engines.interface import EngineStatus, public_status
+from orchestration.classifier_stage import classifier_ledger_counts
 from orchestration.models import CandidateRecord
 from orchestration.services import ledger_counts
 from review import services as review_services
@@ -469,7 +471,11 @@ class RunLedgerView(RunScopedReadView):
         finished = run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
         entries = []
         for result in run.engine_results.all():
-            counts = ledger_counts(pk, result.engine)
+            counts = (
+                classifier_ledger_counts(pk)
+                if result.engine == CLASSIFIER_ENGINE
+                else ledger_counts(pk, result.engine)
+            )
             displayed_status = result.status
             if counts.total:
                 displayed_status = public_status(counts, finished=finished).value
@@ -548,7 +554,11 @@ class RunCandidateListView(RunScopedReadView):
         tags=["runs"],
     )
     def get(self, request: Request, pk: int) -> Response:
-        queryset = CandidateRecord.objects.filter(run_id=pk).order_by("id")
+        queryset = (
+            CandidateRecord.objects.filter(run_id=pk)
+            .prefetch_related("classifier_units")
+            .order_by("id")
+        )
         engine_filter = request.query_params.get("engine")
         if engine_filter:
             queryset = queryset.filter(engine=engine_filter)
