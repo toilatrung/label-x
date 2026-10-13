@@ -4,11 +4,11 @@
 Không qua DB/orchestration. Key CHỈ đọc từ biến môi trường (VLM_API_KEY cho cổng
 api.shopaikey.com; DASHSCOPE_API_KEY cho DashScope) và không bao giờ được in hay ghi.
 
-Chạy lại (tốn đúng một lời gọi provider thật):
-    VLM_API_KEY="$(cat <file-key-ngoai-repo>)" \\
-        python scripts/m04-smoke-vlm-provider.py [--out PATH]
+Chạy lại (tốn đúng một lời gọi provider thật; dùng venv của backend vì cần Pillow/httpx):
+    cd src/backend && VLM_API_KEY="$(cat <file-key-ngoai-repo>)" \\
+        uv run python ../../scripts/m04-smoke-vlm-provider.py [--out PATH]
 
-Kết quả in ra dạng JSON một dòng; request_id được rút gọn (giữ 8 ký tự cuối). Với --out, cùng nội
+Kết quả in ra dạng JSON một dòng; request_id được rút gọn theo quy tắc duy nhất: "…" + 8 ký tự CUỐI. Với --out, cùng nội
 dung được ghi vào PATH kèm sha256 của file ở dòng cuối stderr.
 """
 

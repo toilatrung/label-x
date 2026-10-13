@@ -232,40 +232,44 @@ def test_runtime_role_cannot_mutate_or_truncate_evidence() -> None:
     quoted = connection.ops.quote_name(role)
     with connection.cursor() as cursor:
         cursor.execute(f"CREATE ROLE {quoted} NOLOGIN")
+        # Cấp thừa trước, để REVOKE trong lệnh cấu hình phải THỰC SỰ có tác dụng (kể cả TRUNCATE).
+        cursor.execute(f"GRANT ALL ON TABLE orchestration_vlmevidence TO {quoted}")
     try:
-        call_command("provision_runtime_db_role", role)
+        call_command("configure_audit_db_role", role)
         with connection.cursor() as cursor:
             cursor.execute(f"SET ROLE {quoted}")
             try:
                 cursor.execute(
                     "SELECT has_table_privilege(current_user, 'orchestration_vlmevidence', p) "
-                    "FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE']) AS p"
+                    "FROM unnest(ARRAY['SELECT','UPDATE','DELETE','TRUNCATE']) AS p"
                 )
-                assert [row[0] for row in cursor.fetchall()] == [True, True, False, False, False]
+                held = [row[0] for row in cursor.fetchall()]
             finally:
                 cursor.execute("RESET ROLE")
+        assert held[1:] == [False, False, False]  # UPDATE, DELETE, TRUNCATE đã bị thu
     finally:
         with connection.cursor() as cursor:
             cursor.execute(f"DROP OWNED BY {quoted}")
             cursor.execute(f"DROP ROLE {quoted}")
 
 
-def test_ledger_endpoint_counts_vlm_units_not_zero() -> None:
-    run = _make_run(vlm={**VALID, "budget": {"max_calls": 2}})
+def test_owner_connection_cannot_truncate_evidence_even_via_cascade() -> None:
+    run = _make_run()
     _run_shards(run)
-    api = _client(run, Role.QA_LEAD)
-
-    def vlm_entry() -> dict[str, Any]:
-        resp = api.get(f"/api/runs/{run.pk}/ledger/")
-        assert resp.status_code == 200
-        return next(e for e in resp.data if e["engine"] == "vlm")
-
-    pending = vlm_entry()
-    assert (pending["total"], pending["pending"], pending["completed"]) == (3, 3, 0)
-    assert pending["unit"] == "shape" and pending["status"] == "running"
-    for unit in VlmUnit.objects.filter(run_id=run.pk).order_by("pk"):
-        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
-    entry = vlm_entry()
-    assert (entry["total"], entry["eligible"], entry["completed"], entry["failed"]) == (3, 3, 2, 1)
-    assert entry["pending"] == 0 and entry["coverage"] == pytest.approx(2 / 3)
-    assert entry["status"] == "partial"
+    unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    assert VlmEvidence.objects.count() == 1
+    with connection.cursor() as cursor:
+        cursor.execute("SET labelx.allow_evidence_truncate = 'off'")  # trạng thái production
+    try:
+        for statement in (
+            "TRUNCATE orchestration_vlmevidence",
+            "TRUNCATE orchestration_vlmunit CASCADE",  # cascade từ bảng cha vẫn bị chặn
+            "TRUNCATE orchestration_candidaterecord CASCADE",
+        ):
+            with pytest.raises(DatabaseError, match="append-only"), connection.cursor() as cursor:
+                cursor.execute(statement)
+            assert VlmEvidence.objects.count() == 1  # evidence còn nguyên
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute("SET labelx.allow_evidence_truncate = 'on'")

@@ -202,3 +202,21 @@ def test_size_is_checked_before_reading_object() -> None:
     with pytest.raises(VlmInvalidCropError):
         _provider(missing).load(candidate)
     assert missing.reads == []  # head None: không đọc object
+
+
+def test_source_byte_cap_boundary_is_50_mib() -> None:
+    run, storage = _setup([(7, [60, 40, 100, 80])])
+    candidate = _candidate(run, ["shape:7"])
+    provider = _provider(storage)
+    frame = provider._frame(candidate)
+    cap = 50 * 1024 * 1024
+    frame.media_size_bytes = cap + 1  # chỉ trong bộ nhớ (snapshot đã khoá, không ghi DB)
+    with pytest.raises(VlmInvalidCropError, match="kích thước byte"):
+        provider.load(candidate)
+    assert storage.reads == []  # bị từ chối trước cả head()/get()
+    frame.media_size_bytes = cap  # đúng trần: qua kiểm trần, rồi mới trượt ở kiểm khớp head()
+    with pytest.raises(VlmInvalidCropError, match="object ảnh gốc"):
+        provider.load(candidate)
+    frame.media_size_bytes = 0
+    with pytest.raises(VlmInvalidCropError, match="kích thước byte"):
+        provider.load(candidate)

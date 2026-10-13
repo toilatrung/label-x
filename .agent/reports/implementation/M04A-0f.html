@@ -101,15 +101,15 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>AC #281 — không chạy VLM trước candidate; ≤ 3 attempt; retry cùng khoá không nhân evidence/budget</td><td>passed (mock)</td><td>tests/orchestration/test_vlm_stage.py (race 10 luồng/5 slot; worker chết; sweeper; cancel)</td></tr>
 <tr><td>AC #282 — GET API đọc đúng model/prompt/policy/revision; disabled/no-model/not-triggered/failed phân biệt được</td><td>passed (mock)</td><td>tests/orchestration/test_vlm_evidence_api.py, test_vlm_crops.py</td></tr>
 <tr><td>AC #283 — một request có run ID, evidence ID, response đã redacted; FE có schema/version/payload mẫu</td><td>partial</td><td>Payload mẫu có ở bảng bàn giao; run ID + evidence ID với provider THẬT chưa có (mới smoke provider)</td></tr>
-<tr><td>Mutation do tôi chạy: 22 mutant trên phần sửa review của #279 (e4 chạy riêng 13 mutant của họ, tôi không có log đó)</td><td>passed có giải thích</td><td>19 bị giết, 3 sống sót ở lần chạy đầu; sau khi thêm test thì verify(), client allowlist, token đơn, publish chỉ-secret được khoá; còn 2 tương đương (port/query đã bị chặn bởi kiểm khác). Script chạy mutant nằm ngoài repo; kết quả chép lại ở dưới, <strong>không kiểm chứng được độc lập</strong></td></tr>
+<tr><td>Mutation do tôi chạy: 21 mutant trên phần sửa review của #279 (e4 chạy riêng 13 mutant của họ, tôi không có log đó)</td><td>passed có giải thích</td><td>15 bị giết, 6 sống sót ở lần chạy đầu (danh sách dưới đây); sau khi thêm test: verify(), client allowlist, token đơn, publish chỉ-secret được khoá; còn 2 tương đương (port/query đã bị chặn bởi kiểm khác). Script chạy mutant nằm ngoài repo; kết quả chép lại ở dưới, <strong>không kiểm chứng được độc lập</strong> (số liệu chép từ stdout của lần chạy; sau đó e4 tự chạy lại và tìm thêm mutant sống sót ở vòng 2: TRUNCATE và trần 50 MiB, đã có test ở commit sau)</td></tr>
 </tbody></table>
 <h2 id="smoke">Smoke provider thật (một lời gọi)</h2>
 <ul>
 <li><strong>Điều kiện</strong>: người dùng cho phép đọc key của PO từ file ngoài repo vào biến môi trường của một lệnh; ảnh <strong>tổng hợp</strong> (hình chữ nhật có hai bánh), không dùng dữ liệu dự án; 1 lời gọi (hạn mức key sắp hết). Key không được in/ghi vào repo, log, report hay commit.</li>
 <li><strong>Đường chạy</strong>: <code>DashScopeClient</code> + <code>run_vlm_unit</code> (không DB, không orchestration) với cấu hình <code>provider=openai_compatible</code>, <code>base_url=https://api.shopaikey.com/v1</code>, <code>model=qwen3-vl-plus</code>, không <code>response_format</code>.</li>
-<li><strong>Kết quả</strong>: <code>status=checked</code>, <code>label="2"</code>, <code>attempts=1</code>, <code>budget_used=1</code>, <code>provider_host=api.shopaikey.com</code>, <code>response_model=qwen3-vl-plus</code>, <code>request_id=…c9681afb</code> (rút gọn, giữ 8 ký tự cuối), <code>crop_sha256=28e53af7…52f9</code>. Phản hồi là JSON thuần theo prompt; backend parse và validate thành công.</li>
+<li><strong>Kết quả</strong>: <code>status=checked</code>, <code>label="2"</code>, <code>attempts=1</code>, <code>budget_used=1</code>, <code>provider_host=api.shopaikey.com</code>, <code>response_model=qwen3-vl-plus</code>, <code>request_id=…486eb4e3</code> (quy tắc duy nhất ở script, report và OpenAPI: "…" + 8 ký tự CUỐI của ID), <code>crop_sha256=28e53af7…52f9</code>. Phản hồi là JSON thuần theo prompt; backend parse và validate thành công.</li>
 <li><strong>Tái chạy</strong>: <code>scripts/m04-smoke-vlm-provider.py</code> (không chứa key; chỉ đọc <code>VLM_API_KEY</code> từ biến môi trường; <code>--out PATH</code> ghi kết quả và in sha256). Mỗi lần chạy tốn đúng một lời gọi provider thật. Lần ghi trong report: <strong>chạy đúng một lần</strong>, ảnh tổng hợp, không qua DB/orchestration, bằng bản script tạm tương đương (script trong repo là bản chuẩn hoá của nó, chưa được chạy lại vì hạn mức key).</li>
-<li><strong>Bằng chứng</strong>: dòng kết quả dưới đây chép nguyên từ stdout của lần chạy duy nhất, chỉ rút gọn <code>request_id</code>; không có tệp đầu ra riêng. sha256 của dòng này (kèm xuống dòng cuối) = <code>483d3f9b377dceed77d93a7da61af1c00132795349bad8ced2f2d34146ae0e5f</code>. Request ID đầy đủ không được lưu.<pre><code>{"status": "checked", "label": "2", "reason_code": null, "attempts": 1, "budget_used": 1, "provider": "openai_compatible", "provider_host": "api.shopaikey.com", "model": "qwen3-vl-plus", "response_model": "qwen3-vl-plus", "request_id": "…c9681afb", "prompt_version": "vlm-prompt-v0", "crop_sha256": "28e53af74c859a779e002bd6143f366c2be7f448136b7d7af782f8f1e9c452f9", "rationale": "Đối tượng là một hình chữ nhật đỏ với hai bánh xe đen, có tỷ lệ chiều dài lớn hơn chiều cao và không có đặc điểm của ô t"}</code></pre></li>
+<li><strong>Bằng chứng</strong>: dòng kết quả dưới đây là stdout của lần chạy duy nhất, <strong>đã sửa tay đúng một trường</strong>: <code>request_id</code> nguyên văn (ID đầy đủ của provider) được thay bằng bản rút gọn theo đúng quy tắc của script ("…" + 8 ký tự cuối). Các trường còn lại giữ nguyên. Không có tệp đầu ra riêng. sha256 (tính trên dòng đã sửa, kèm xuống dòng cuối) = <code>af3b28d08dabe9d44fb3de2634f812049fb7e9fa145f80dbf4caa79248f27e9d</code>. ID đầy đủ không còn trong cây hiện tại; lịch sử git (commit 1f1b3f7) vẫn chứa, và đó là ID phản hồi của nhà cung cấp, không phải secret.<pre><code>{"status": "checked", "label": "2", "reason_code": null, "attempts": 1, "budget_used": 1, "provider": "openai_compatible", "provider_host": "api.shopaikey.com", "model": "qwen3-vl-plus", "response_model": "qwen3-vl-plus", "request_id": "…486eb4e3", "prompt_version": "vlm-prompt-v0", "crop_sha256": "28e53af74c859a779e002bd6143f366c2be7f448136b7d7af782f8f1e9c452f9", "rationale": "Đối tượng là một hình chữ nhật đỏ với hai bánh xe đen, có tỷ lệ chiều dài lớn hơn chiều cao và không có đặc điểm của ô t"}</code></pre></li>
 <li><strong>Ý nghĩa</strong>: chứng minh client, prompt, parse và provenance chạy được với cổng thật. <strong>Không</strong> chứng minh độ đúng của nhãn (ảnh tổng hợp, nhãn "2" không có giá trị đánh giá) và không phải smoke luồng đầy đủ (không có run ID, VlmUnit, evidence ID).</li>
 <li><strong>Do PO/điều phối kiểm riêng</strong> (không phải kết quả của tôi): GET <code>/v1/models</code> có <code>qwen3-vl-plus</code>; <code>qwen-vl-plus</code>/<code>qwen-vl-max</code> trả 503 model_not_found; danh sách model phụ thuộc nhóm/kênh của key.</li>
 </ul>
@@ -132,7 +132,7 @@ ul.dir{columns:2;font-size:14px}
            "class_id": "1", "class_name": "car", "reason_code": null, "evidence_id": 5, "evaluation_id": null,
            "model_version": "qwen3-vl-plus", "provider": "openai_compatible", "provider_host": "api.shopaikey.com",
            "response_model": "qwen3-vl-plus", "prompt_version": "vlm-prompt-v0", "policy_version": "vlm-trigger-v0",
-           "snapshot_revision": "&lt;sha256 snapshot&gt;", "attempts": 1, "request_id": "…c9681afb",
+           "snapshot_revision": "&lt;sha256 snapshot&gt;", "attempts": 1, "request_id": "…486eb4e3",
            "crop_sha256": "&lt;sha256&gt;", "crop": {"frame": {...}, "box": [..], "padded_box": [..], "output_size": [w, h]},
            "rationale": "…lời model, không phải bằng chứng đã xác minh…", "created_at": "…" } }</code></pre>
 <table><thead><tr><th>state</th><th>Ý nghĩa</th><th>engine_status</th></tr></thead><tbody>
@@ -171,7 +171,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Payload task <code>vlm.smoke_unit</code> mang crop base64 qua broker và dùng budget trong bộ nhớ: chỉ cho smoke/test.</li>
 <li><code>current_label</code> trong prompt chỉ được chèn khi thuộc taxonomy; hiện chưa ai truyền (pha C/#289).</li>
 <li>Commit <code>12a4702</code> không tự đứng được (kèm WIP dở); dùng <code>b9ab899</code> trở lên.</li>
-<li>Evidence append-only: trigger DB chặn UPDATE/DELETE theo dòng; TRUNCATE chỉ bị thu quyền của PUBLIC và của runtime role (provision_runtime_db_role). Chủ bảng/superuser vẫn TRUNCATE được; cần chạy ứng dụng bằng role không phải owner (giống audit).</li>
+<li>Evidence append-only: trigger DB chặn UPDATE/DELETE theo dòng và trigger BEFORE TRUNCATE (migration 0006, mức statement) chặn cả chủ bảng/superuser, kể cả <code>TRUNCATE … CASCADE</code> từ bảng cha (test bằng kết nối owner thật). Cờ phiên <code>labelx.allow_evidence_truncate='on'</code> mở khoá (test đặt cờ này cho Django flush); production không đặt nên bị chặn. Superuser vẫn có thể tắt trigger hoặc tự đặt cờ: chặn ở mức role vẫn cần <code>provision_runtime_db_role</code>. REVOKE … FROM PUBLIC trước đây là no-op và đã bỏ.</li>
 <li><code>request_id</code> trong evidence/API chỉ được làm sạch (ký tự an toàn, cắt 64), không che nội dung; <code>rationale</code> là text tự do của model, FE phải render text thuần.</li>
 <li>SnapshotCropProvider giả định shape trong snapshot là rectangle không xoay (normalization chỉ giữ rectangle; <code>rotation</code> bị bỏ qua); kiểm kích thước object bằng <code>head()</code> trước khi đọc nhưng chưa thử với storage thật.</li>
 </ul></li>
@@ -189,12 +189,46 @@ SURVIVED client: bỏ allowlist env (đã thêm test dựng tay)
 KILLED  guard: ngoại lệ api_key_env=True      KILLED  guard: bỏ "apikey"
 SURVIVED guard: bỏ "token" đơn (đã thêm test) SURVIVED publish: bỏ guard khi publish (đã thêm test)
 KILLED  views: bỏ ánh xạ 422</code></pre>
+<h2 id="handoff">Bàn giao</h2>
+<h3>Trạng thái chốt</h3>
+<ul>
+<li>Nhánh cổng <code>feat/M-04-a-gate</code> (dựng lại từ <code>origin/feat/M-04-backend</code>@4bd9509); PR (draft, base <code>feat/M-04-backend</code>) do phiên điều phối mở, không phải tôi. Nhánh làm việc gốc <code>feat/M-04-a-qwen-runtime</code>@39adf66.</li>
+<li><strong>#279, #280, #281, #282</strong>: code + test mock xong, review chéo kỹ thuật xong, issue còn mở chờ QC.</li>
+<li><strong>#283 PARTIAL</strong>: có report, bảng bàn giao API, script smoke và đúng <strong>một</strong> lời gọi provider thật bằng ảnh tổng hợp (không qua DB). CHƯA có smoke luồng đầy đủ (run ID + VlmUnit + evidence ID với provider thật); PO chưa xác nhận lời gọi thứ hai.</li>
+<li>Không có chứng cứ về độ chính xác của Qwen; chưa dùng crop dữ liệu dự án (chưa có xác nhận chính sách dữ liệu của PO cho cổng bên thứ ba).</li>
+</ul>
+<h3>Việc còn lại</h3>
+<ol>
+<li>PO ghi CR/DEC cho cổng OpenAI-compatible bên thứ ba <code>api.shopaikey.com</code> và chính sách dữ liệu crop.</li>
+<li>Smoke luồng đầy đủ: tạo snapshot tổng hợp có ảnh trong storage, run với <code>engines.vlm.enabled</code>, <code>models.vlm</code> hợp lệ và taxonomy trong <code>engines.schema.params</code>; chạy worker; đọc <code>GET /api/runs/{id}/candidates/</code> lấy <code>vlm.evidence_id</code>. Cần key, hạn mức và xác nhận của PO.</li>
+<li>Pha C thay <code>select_candidates_for_vlm</code> bằng routing policy và tăng <code>EVALUATION_GENERATION</code> (#289); đối chiếu mục [chờ contract] trong <code>docs/12-ai/vlm.html</code> với contract thực tế.</li>
+<li>Xác minh với cổng thật: bảng map lỗi HTTP, mã <code>model_not_found</code> (503 theo kiểm tra của điều phối) hiện rơi vào provider_error; danh sách model phụ thuộc key nên allowlist <code>ALLOWED_MODELS</code> chỉ nên mở rộng sau khi gọi <code>/v1/models</code>.</li>
+<li>Đo tải <code>identity()</code> dưới khoá QCRun với run lớn; chạy ESLint/tsc/vitest (CI) và detector checks; QC độc lập CR-102.</li>
+<li>Pha B (#286) và C dùng cùng quy ước ledger: đếm theo đơn vị riêng của engine, không theo frame, nếu cần.</li>
+</ol>
+<h3>Lệnh chạy lại kiểm (DB/Redis cô lập, KHÔNG dùng DB dev)</h3>
+<pre><code>docker run -d --name labelx-x-pg -e POSTGRES_USER=lx -e POSTGRES_PASSWORD=lx \
+  -e POSTGRES_DB=labelx_x -p 127.0.0.1:55441:5432 postgres:17
+cd src/backend && uv sync --frozen --group dev
+export DJANGO_SECRET_KEY=test CELERY_BROKER_URL=memory:// CELERY_RESULT_BACKEND=cache+memory:// \
+  DATABASE_URL=postgres://lx:lx@127.0.0.1:55441/labelx_x CORS_ALLOWED_ORIGINS=http://localhost:3000
+.venv/bin/ruff check . &amp;&amp; .venv/bin/ruff format --check .
+.venv/bin/mypy config accounts audit effort engines guideline cvat_adapter orchestration ranking runs snapshots storage vlm
+.venv/bin/python manage.py makemigrations --check --dry-run
+.venv/bin/pytest -q -p no:cacheprovider      # FULL; cần CORS_ALLOWED_ORIGINS như trên
+cd ../.. &amp;&amp; make validate-kit</code></pre>
+<h3>Cách dùng key / smoke provider</h3>
+<ul>
+<li>Key chỉ ở biến môi trường runtime: <code>VLM_API_KEY</code> cho <code>api.shopaikey.com</code>, <code>DASHSCOPE_API_KEY</code> cho DashScope (bị ràng host). Không đặt key vào repo, config, log, evidence, report hay commit; không in ra.</li>
+<li>Smoke một lời gọi: <code>cd src/backend &amp;&amp; VLM_API_KEY="$(cat &lt;file-key-ngoài-repo&gt;)" uv run python ../../scripts/m04-smoke-vlm-provider.py --out &lt;path&gt;</code>. Chỉ ảnh tổng hợp; hạn mức key có hạn; mỗi lần chạy tốn một lời gọi.</li>
+<li>Chỉ dùng key khi người dùng/PO xác nhận trực tiếp. File key do điều phối giữ, cần xoá sau khi smoke xong.</li>
+</ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[x] Mọi thay đổi ánh xạ tới task #279–#282.</li>
 <li>[ ] #283: smoke luồng đầy đủ (run ID + evidence ID, response redacted) với provider thật — chưa.</li>
 <li>[x] Deviations và limitations nêu rõ.</li>
 <li>[x] Build/lint/test backend: ruff, format, mypy (149 file), pytest FULL 1111 passed 1 skipped, validate-kit PASS. [ ] ESLint/tsc/vitest frontend và detector chưa chạy.</li>
-<li>[ ] Review chéo pha A và QC độc lập: chờ phiên điều phối.</li>
+<li>[x] Review chéo kỹ thuật chỉ-đọc đã làm bởi e4 (#279, report, vòng sửa) và codex (#280/#281/#282, N1); các lỗi tìm ra đã đóng bằng commit mới. [ ] QC độc lập theo CR-102 chưa làm.</li>
 </ul>
 </article></main></body></html>
