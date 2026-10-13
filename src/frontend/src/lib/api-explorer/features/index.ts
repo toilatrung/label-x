@@ -41,7 +41,7 @@ const ESCALATION_REVIEW_IDS = [
   'escalations_list',
   'issues_adjudicate',
   'decision_cases_list',
-  'decision_cases_retrieve',
+  'decision_cases_detail',
   'issues_similar_cases',
 ] as const;
 

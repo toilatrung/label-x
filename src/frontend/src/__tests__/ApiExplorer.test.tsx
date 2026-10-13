@@ -75,6 +75,22 @@ describe('API Explorer', () => {
     expect(API_ENDPOINTS.every(endpoint => endpoint.section)).toBe(true);
   });
 
+  it('uses the OpenAPI operation ID for Decision Case detail in Escalations', () => {
+    const openapi = readFileSync('../../docs/04-api/openapi.yaml', 'utf8');
+    const operationId = openapi.match(/\/api\/decision-cases\/\{id\}\/:\s*get:\s*operationId:\s*(\S+)/)?.[1];
+    expect(operationId).toBeDefined();
+    const detail = API_ENDPOINTS.find(endpoint => endpoint.path === '/api/decision-cases/{id}/');
+    expect(detail?.id).toBe(operationId);
+    expect(detail?.group).toBe('Escalations');
+    expect(API_ENDPOINTS.some(endpoint => endpoint.id === 'decision_cases_retrieve')).toBe(false);
+    render(<ApiExplorer />);
+    fireEvent.change(screen.getByPlaceholderText('Tìm theo path, operation hoặc nhóm...'), { target: { value: operationId } });
+    expect(screen.getByText('/api/decision-cases/{id}/')).toBeInTheDocument();
+    expect(screen.getByLabelText(`Response ${operationId}`)).toBeDefined();
+    expect(screen.getByRole('button', { name: `Sao chép request ${operationId}` })).toBeDefined();
+    expect(screen.getByRole('button', { name: `Sao chép payload ${operationId}` })).toBeDefined();
+  });
+
   it('includes backend-only and design-driven operations outside the OpenAPI baseline', () => {
     render(<ApiExplorer />);
     expect(screen.getByText('/api/decision-cases/')).toBeInTheDocument();
