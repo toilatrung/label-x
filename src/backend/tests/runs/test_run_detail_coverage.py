@@ -194,12 +194,21 @@ def test_rework_pagination_and_filter_page_2_stable_no_dupes(run_lineage_world, 
 
 
 @pytest.mark.django_db
-def test_no_standalone_lineage_endpoint(run_lineage_world):
+def test_standalone_lineage_endpoint_matches_run_detail(run_lineage_world):
+    # MBE-01 thêm GET /api/runs/{id}/lineage/; chuỗi phải khớp nguồn vận hành của run detail.
     api = _client(run_lineage_world["reviewer"])
-    run_id = run_lineage_world["run"].pk
-    # /api/runs/{id}/lineage/ must not exist (404)
-    res = api.get(f"/api/runs/{run_id}/lineage/")
-    assert res.status_code == 404
+    origin = run_lineage_world["run"]
+    final = run_lineage_world["final"]
+    res = api.get(f"/api/runs/{origin.pk}/lineage/")
+    assert res.status_code == 200, res.data
+    kinds = {node["run_id"]: node["kind"] for node in res.data["chain"]}
+    assert kinds[origin.pk] == "original" and kinds[final.pk] == "final"
+    assert res.data["chain"][0]["run_id"] == origin.pk
+    detail = api.get(f"/api/runs/{origin.pk}/").json()
+    selected = detail["operational_source"]
+    expected_final = selected["run_id"] if selected["reason"] == "selected_final" else None
+    assert res.data["final_run_id"] == expected_final
+    assert api.get(f"/api/runs/{final.pk}/lineage/").data["chain"] == res.data["chain"]
 
 
 @pytest.mark.django_db

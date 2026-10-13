@@ -17,12 +17,12 @@ from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
-from engines.interface import EngineStatus, public_status
 from orchestration.models import CandidateRecord
-from orchestration.services import ledger_counts
 from review import services as review_services
+from review.lineage import run_lineage
 from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
+from runs.kpi import ledger_entries
 from runs.models import ConfigVersion, QCRun, RunRanking, WorkUnit
 from runs.serializers import (
     CandidateSerializer,
@@ -37,6 +37,7 @@ from runs.serializers import (
     RankedFrameSerializer,
     RunCreateSerializer,
     RunDetailSerializer,
+    RunLineageSerializer,
     RunSerializer,
     WorkUnitSerializer,
 )
@@ -368,6 +369,43 @@ class RunDetailView(APIView):
         return Response(RunDetailSerializer(run).data)
 
 
+class RunLineageView(APIView):
+    """Run lineage: GET /api/runs/{id}/lineage/."""
+
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (
+        Role.REVIEWER,
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.PRODUCT_OWNER,
+        Role.DATA_MODEL_OWNER,
+    )
+    action_name = "runs.lineage"
+    object_type = "run"
+    requires_dataset = True
+
+    def get_dataset_id(self, _request: Request) -> int | None:
+        return (
+            QCRun.objects.filter(pk=self.kwargs["pk"]).values_list("dataset_id", flat=True).first()
+        )
+
+    @extend_schema(
+        operation_id="runs_lineage",
+        responses={
+            200: RunLineageSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
+    )
+    def get(self, _request: Request, pk: int) -> Response:
+        run = QCRun.objects.filter(pk=pk).first()
+        if run is None:
+            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
+        return Response(run_lineage(run))
+
+
 class RunCancelView(APIView):
     """Cancel run: POST /api/runs/{id}/cancel/."""
 
@@ -467,35 +505,7 @@ class RunLedgerView(RunScopedReadView):
     )
     def get(self, _request: Request, pk: int) -> Response:
         run = QCRun.objects.prefetch_related("engine_results").get(pk=pk)
-        finished = run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
-        entries = []
-        for result in run.engine_results.all():
-            counts = ledger_counts(pk, result.engine)
-            displayed_status = result.status
-            if counts.total:
-                displayed_status = public_status(counts, finished=finished).value
-            elif finished and displayed_status == EngineStatus.RUNNING:
-                displayed_status = EngineStatus.NOT_CHECKED
-            entries.append(
-                {
-                    "engine": result.engine,
-                    "status": displayed_status,
-                    "required": result.required,
-                    "unit": result.unit,
-                    "total": counts.total,
-                    "eligible": counts.eligible,
-                    "excluded": counts.excluded,
-                    "applicability_version": result.applicability_version,
-                    "completed": counts.completed,
-                    "failed": counts.failed,
-                    "pending": counts.pending,
-                    "not_checked": counts.not_checked,
-                    "not_checked_reasons": {
-                        key.value: value for key, value in counts.not_checked_reasons.items()
-                    },
-                    "coverage": counts.coverage,
-                }
-            )
+        entries = ledger_entries(run)
         return Response(LedgerEntrySerializer(entries, many=True).data)
 
 

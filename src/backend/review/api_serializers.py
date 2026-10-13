@@ -247,6 +247,34 @@ class FrameIssuesSerializer(serializers.Serializer[Any]):
     issues = IssueSerializer(many=True)
 
 
+class AiEvidenceSerializer(serializers.Serializer[Any]):
+    """Đề xuất AI cho một issue; không phải quyết định review."""
+
+    issue_id = serializers.IntegerField()
+    candidate_id = serializers.IntegerField()
+    evaluation_id = serializers.IntegerField()
+    generation = serializers.IntegerField()
+    evaluation_source = serializers.CharField(help_text="auto | manual")
+    status: Any = serializers.CharField(
+        help_text="pending | running | completed | failed | cancelled"
+    )
+    source: Any = serializers.CharField(help_text="classifier | qwen")
+    reason_code = serializers.CharField(allow_null=True)
+    reasons = serializers.ListField(child=serializers.CharField())
+    review_required = serializers.BooleanField()
+    suggestion = serializers.DictField(allow_null=True)
+    evidence_refs = serializers.DictField(allow_null=True)
+    snapshot_revision = serializers.CharField()
+    poll_url = serializers.CharField()
+
+
+class FrameWorkspaceSerializer(FrameIssuesSerializer):
+    lease = LeaseSerializer(allow_null=True)
+    queue = serializers.ChoiceField(choices=["risk", "random"], allow_null=True)
+    undecided_issue_count = serializers.IntegerField()
+    ai_evidence = AiEvidenceSerializer(many=True)
+
+
 class ManualIssueCreateSerializer(serializers.Serializer[Any]):
     frame_id = serializers.IntegerField(min_value=1)
     lease_id = serializers.IntegerField(min_value=1)
