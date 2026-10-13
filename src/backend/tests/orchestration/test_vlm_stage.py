@@ -25,7 +25,7 @@ from engines.interface import (
     ObjectRef,
 )
 from orchestration.dispatch import redispatch_pending, run_work_unit
-from orchestration.models import VlmAttempt, VlmBudget, VlmUnit
+from orchestration.models import Evaluation, VlmAttempt, VlmBudget, VlmUnit
 from orchestration.registry import registry
 from orchestration.vlm_stage import (
     DbBudgetGate,
@@ -348,6 +348,7 @@ def test_candidate_selection_seam_and_created_count(monkeypatch: pytest.MonkeyPa
     assert stage.EVALUATION_GENERATION == 1
     assert set(VlmUnit.objects.values_list("evaluation_generation", flat=True)) == {1}
     # Policy thay thế qua điểm nối: chỉ chọn một candidate; start trả đúng số unit chèn thật.
+    Evaluation.objects.all().delete()  # Evaluation giữ FK PROTECT tới VlmUnit
     VlmUnit.objects.all().delete()
     first = stage.select_candidates_for_vlm(run)[0]
     monkeypatch.setattr(stage, "select_candidates_for_vlm", lambda r: [first])
@@ -376,13 +377,16 @@ def test_budget_exhaustion_stops_provider_calls_and_keeps_run_alive() -> None:
 
 
 def test_zero_budget_never_calls_provider() -> None:
+    """Policy C: budget 0 ⇒ không có VlmUnit; Evaluation ghi budget_exhausted + cần người xem."""
     run = _make_run(vlm={**VALID, "budget": {"max_calls": 0}})
     _run_shards(run)
     client = FakeClient()
-    for u in VlmUnit.objects.filter(run_id=run.pk):
-        assert execute_vlm_unit(u.pk, client=client) == "failed"
-    assert client.calls == 0
-    assert _vlm_result(run).status == "failed"
+    assert VlmUnit.objects.filter(run_id=run.pk).count() == 0 and client.calls == 0
+    rows = Evaluation.objects.filter(run_id=run.pk)
+    assert rows.count() == 3
+    assert set(rows.values_list("primary_reason", flat=True)) == {"budget_exhausted"}
+    assert all(r.human_review_required and not r.call_qwen for r in rows)
+    assert _vlm_result(run).status == "not_checked"
 
 
 def test_budget_is_atomic_under_concurrency() -> None:

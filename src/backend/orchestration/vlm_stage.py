@@ -59,7 +59,7 @@ from vlm.tasks import result_to_dict
 logger = logging.getLogger("labelx.orchestration")
 
 VLM_ENGINE = "vlm"
-TRIGGER_POLICY_VERSION = "vlm-trigger-v0"
+TRIGGER_POLICY_VERSION = "classification-routing-v0"  # policy C; pha A dùng vlm-trigger-v0
 SKIP_NO_TAXONOMY = "not_applicable"
 # Lượt đánh giá logic đầu tiên. Manual recheck/re-evaluate (M04C-02/#289) sẽ tăng generation; ràng
 # buộc unique (run, candidate, generation) và khoá idempotency đã hỗ trợ nhiều generation.
@@ -146,30 +146,54 @@ def _taxonomy_for_run(run: QCRun) -> tuple[TaxonomyLabel, ...] | None:
     return tuple(TaxonomyLabel(str(label.label_id), label.name) for label in taxonomy.labels)
 
 
-def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
-    """ĐIỂM NỐI policy: candidate nào cần hỏi VLM.
+def _classifier_pending(run: QCRun) -> bool:
+    """Run có classifier bật mà stage đó chưa xong: policy cần kết quả classifier nên phải chờ."""
+    from classifier.config import CLASSIFIER_ENGINE
+    from orchestration.classifier_stage import classifier_stage_started, classifier_units_open
 
-    Pha A (`vlm-trigger-v0`) CHƯA có policy thật: mọi candidate của run (trừ engine vlm) đều thành
-    VlmUnit; budget là chặn trên duy nhất. M04C-01 (`routing_policy.route`) thay thân hàm này, giữ
-    nguyên chữ ký, để chỉ candidate low-score/low-margin/conflict/manual recheck mới được gửi.
+    if CLASSIFIER_ENGINE not in (run.engine_versions or {}):
+        return False
+    return not classifier_stage_started(run.pk) or classifier_units_open(run.pk)
+
+
+def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
+    """Candidate cần hỏi Qwen theo policy `classification-routing-v0` (M04C-01).
+
+    Chỉ candidate có `call_qwen` (low score/margin, unknown, conflict) được chọn; classifier-only,
+    invalid_crop và budget_exhausted thì không. Giữ chữ ký của pha A; xem `start_vlm_stage` để ghi
+    cả quyết định của candidate không được chọn vào Evaluation.
     """
-    return list(
+    from orchestration.evaluation_service import budget_exhausted, route_candidates
+
+    candidates = list(
         CandidateRecord.objects.filter(run_id=run.pk)
         .exclude(engine=VLM_ENGINE)
         .select_related("run")
         .order_by("pk")
     )
+    routed = route_candidates(run, candidates, exhausted=budget_exhausted(run.pk))
+    return [c for c, decision in routed if decision.call_qwen]
 
 
 def start_vlm_stage(run_id: int) -> int:
-    """Khởi động/bổ sung stage VLM sau khi candidate đã sinh. Idempotent; trả số VlmUnit mới.
+    """Khởi động/bổ sung stage VLM sau khi candidate (và classifier nếu bật) đã xong.
 
-    Gọi trong transaction đã khoá QCRun (refresh_run). Dispatch Celery chạy sau commit.
+    Idempotent; trả số VlmUnit mới. Mỗi candidate nhận một Evaluation generation 1 ghi quyết định
+    định tuyến (kể cả classifier-only); chỉ candidate cần Qwen mới có VlmUnit. Gọi trong
+    transaction đã khoá QCRun (refresh_run). Dispatch Celery chạy sau commit.
     """
+    from orchestration.evaluation_service import (
+        budget_exhausted,
+        create_auto_evaluations,
+        route_candidates,
+    )
+
     run = QCRun.objects.select_related("config_version", "snapshot").get(pk=run_id)
     raw = run_vlm_config(run)
     if raw is None or run.cancel_requested_at:
         return 0
+    if _classifier_pending(run):
+        return 0  # policy dựa trên kết quả classifier: chờ classifier xong rồi mới định tuyến
     config = parse_vlm_config(raw)
     budget, _ = VlmBudget.objects.get_or_create(
         run_id=run_id, defaults={"max_calls": config.budget.max_calls}
@@ -180,38 +204,28 @@ def start_vlm_stage(run_id: int) -> int:
             VlmBudget.objects.filter(pk=budget.pk).update(skipped_reason=SKIP_NO_TAXONOMY)
         return 0
     provider = crop_provider()
-    revision = run.snapshot.revision_sha256 or str(run.snapshot_id)
-    existing = set(VlmUnit.objects.filter(run_id=run_id).values_list("candidate_id", flat=True))
-    wanted = [c for c in select_candidates_for_vlm(run) if c.pk not in existing]
+    from orchestration.models import Evaluation
+
+    done = set(
+        Evaluation.objects.filter(run_id=run_id, generation=EVALUATION_GENERATION).values_list(
+            "candidate_id", flat=True
+        )
+    )
+    wanted = [
+        c
+        for c in CandidateRecord.objects.filter(run_id=run_id)
+        .exclude(engine=VLM_ENGINE)
+        .select_related("run")
+        .order_by("pk")
+        if c.pk not in done
+    ]
+    routed = route_candidates(run, wanted, exhausted=budget_exhausted(run_id))
     prepare = getattr(provider, "prepare", None)
     if prepare is not None:
-        prepare(wanted)  # nạp trước dữ liệu để identity() không truy vấn từng candidate
-    before = VlmUnit.objects.filter(run_id=run_id).count()
-    VlmUnit.objects.bulk_create(
-        [
-            VlmUnit(
-                run_id=run_id,
-                candidate=candidate,
-                evaluation_generation=EVALUATION_GENERATION,
-                policy_version=TRIGGER_POLICY_VERSION,
-                model=config.model,
-                prompt_version=config.prompt_version,
-                crop_identity=(identity := provider.identity(candidate)),
-                idempotency_key=compute_vlm_idempotency_key(
-                    evaluation_generation=EVALUATION_GENERATION,
-                    candidate_dedup_key=candidate.dedup_key,
-                    crop_identity=identity,
-                    snapshot_revision=revision,
-                    policy_version=TRIGGER_POLICY_VERSION,
-                    model=config.model,
-                    prompt_version=config.prompt_version,
-                ),
-            )
-            for candidate in wanted
-        ],
-        ignore_conflicts=True,
-    )
-    created = VlmUnit.objects.filter(run_id=run_id).count() - before
+        prepare([c for c, d in routed if d.call_qwen])  # nạp trước để identity() không N+1
+    # Điểm nối là nguồn quyết định cuối cùng: chỉ candidate nó chọn mới có VlmUnit.
+    selected = {c.pk for c in select_candidates_for_vlm(run)}
+    created = create_auto_evaluations(run, routed, config, selected_ids=selected)
     if VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists():
         transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
     return created
@@ -219,9 +233,12 @@ def start_vlm_stage(run_id: int) -> int:
 
 def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
     run = QCRun.objects.get(pk=run_id)
-    if run.cancel_requested_at or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
+    if run.cancel_requested_at:
         return 0
     qs = VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING)
+    if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
+        # Run đã kết thúc: chỉ re-evaluate thủ công (generation > 1) còn được chạy.
+        qs = qs.filter(evaluation_generation__gt=EVALUATION_GENERATION)
     if stale_after is not None:
         cutoff = timezone.now() - timedelta(seconds=stale_after)
         qs = qs.filter(Q(dispatched_at__isnull=True) | Q(dispatched_at__lte=cutoff))
@@ -300,9 +317,11 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
     with transaction.atomic():
         run = QCRun.objects.select_for_update().get(pk=run_id)
         unit = VlmUnit.objects.select_for_update().get(pk=unit_id)
+        run_active = run.status in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
+        manual_after_end = not run_active and unit.evaluation_generation > EVALUATION_GENERATION
         if (
             run.cancel_requested_at
-            or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
+            or not (run_active or manual_after_end)
             or unit.status
             in (VlmUnit.Status.COMPLETED, VlmUnit.Status.FAILED, VlmUnit.Status.CANCELLED)
         ):

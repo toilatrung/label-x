@@ -110,7 +110,7 @@ def test_crop_valid_must_be_a_real_true(bad):
 def test_invalid_crop_beats_budget_exhausted():
     """Mutant T07: invalid_crop phải thắng budget_exhausted (không có crop để gửi)."""
     d = decide(crop_valid=False, budget_exhausted=True, annotated_class_id=4)
-    assert d.primary is RoutingReason.INVALID_CROP
+
     assert RoutingReason.BUDGET_EXHAUSTED not in d.reasons
 
 

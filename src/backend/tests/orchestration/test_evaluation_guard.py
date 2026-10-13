@@ -14,7 +14,7 @@ from orchestration.evaluation_guard import (
     resolve_idempotency,
     validate_idempotency_key,
 )
-from orchestration.evaluation_serializers import EvaluationCreateSerializer
+from orchestration.evaluation_serializers import CandidateEvaluationCreateSerializer
 
 REQ = EvaluationRequest(candidate_id=7, reason="nghi ngờ nhãn", expected_revision="abc")
 
@@ -85,14 +85,16 @@ def test_valid_key_is_trimmed():
 
 
 def test_serializer_accepts_reason_and_revision_only():
-    s = EvaluationCreateSerializer(data={"reason": " x ", "expected_revision": "abc"})
+    s = CandidateEvaluationCreateSerializer(data={"reason": " x ", "expected_revision": "abc"})
     assert s.is_valid(), s.errors
     assert s.validated_data == {"reason": "x", "expected_revision": "abc"}
 
 
 @pytest.mark.parametrize("extra", ["prompt", "model_id", "api_key", "image"])
 def test_serializer_rejects_forbidden_fields(extra):
-    s = EvaluationCreateSerializer(data={"reason": "x", "expected_revision": "abc", extra: "y"})
+    s = CandidateEvaluationCreateSerializer(
+        data={"reason": "x", "expected_revision": "abc", extra: "y"}
+    )
     assert not s.is_valid()
     assert extra in s.errors
 
@@ -102,7 +104,7 @@ def test_serializer_rejects_forbidden_fields(extra):
     [{}, {"reason": "x"}, {"expected_revision": "a"}, {"reason": "", "expected_revision": "a"}],
 )
 def test_serializer_requires_fields(data):
-    assert not EvaluationCreateSerializer(data=data).is_valid()
+    assert not CandidateEvaluationCreateSerializer(data=data).is_valid()
 
 
 def test_user_reason_is_audit_only_and_not_a_reason_code():
@@ -120,7 +122,9 @@ def test_user_reason_is_audit_only_and_not_a_reason_code():
 
 
 def test_reason_length_limit_is_500_not_derived_from_the_constant():
-    ok = EvaluationCreateSerializer(data={"reason": "x" * 500, "expected_revision": "abc"})
-    too_long = EvaluationCreateSerializer(data={"reason": "x" * 501, "expected_revision": "abc"})
+    ok = CandidateEvaluationCreateSerializer(data={"reason": "x" * 500, "expected_revision": "abc"})
+    too_long = CandidateEvaluationCreateSerializer(
+        data={"reason": "x" * 501, "expected_revision": "abc"}
+    )
     assert ok.is_valid(), ok.errors
     assert not too_long.is_valid() and "reason" in too_long.errors

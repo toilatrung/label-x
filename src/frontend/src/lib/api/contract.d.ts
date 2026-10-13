@@ -348,6 +348,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/candidates/{id}/evaluations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yêu cầu đánh giá lại candidate (re-evaluate, M04C-02)
+         * @description Tạo một Evaluation mới (generation tiếp theo) cho candidate: định tuyến lại bằng policy
+         *     `classification-routing-v0` với lý do `manual_recheck`, rồi (nếu policy cho phép) xếp một lượt Qwen.
+         *     Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/candidate-evaluations/{id}/`).
+         *     Cùng `Idempotency-Key` + cùng payload + cùng người → trả lại Evaluation cũ (không tạo mới, không tính budget
+         *     lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
+         *     `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
+         *     409 `IDEMPOTENCY_KEY_REUSED` khi key đã dùng cho payload hoặc người khác. 422 khi run không bật VLM, thiếu
+         *     taxonomy, đã huỷ hoặc classifier của candidate chưa chạy xong. Không ghi đè evidence/decision cũ và không
+         *     tạo ReviewDecision/Adjudication: kết quả AI chỉ là đề xuất. FE chỉ gửi `reason` (ghi chú audit, không vào
+         *     prompt) và `expected_revision`; không gửi prompt, model, ảnh hay khoá API.
+         */
+        post: operations["candidates_evaluate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate-evaluations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Đọc Evaluation (poll kết quả định tuyến/Qwen)
+         * @description `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
+         *     tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Ngoài tập v0 còn có `classifier_untrusted`
+         *     (checkpoint khác `trained`, kể cả smoke_only) và `classifier_unavailable` (không có/lỗi hạ tầng/dữ liệu
+         *     sai kiểu). `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, classifier
+         *     không đáng tin, Qwen lỗi hoặc uncertain). `policy` lưu theo evaluation; ngưỡng chỉ là routing tạm, không phải
+         *     ngưỡng calibration.
+         */
+        get: operations["candidate_evaluations_read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{id}/ranking/": {
         parameters: {
             query?: never;
@@ -1451,6 +1505,77 @@ export interface components {
             rationale?: string | null;
             /** Format: date-time */
             created_at?: string | null;
+        };
+        ClassifierTopK: {
+            class_id: number;
+            class_name: string;
+            /** @description Softmax, chưa calibrate */
+            score: number;
+        };
+        /** @description Kết quả classifier cho một candidate. score là giá trị softmax CHƯA calibrate, không phải xác suất đúng. classifier_unknown mặc định false và chỉ true khi không quyết định được (score/margin không hữu hạn); abstention theo ngưỡng do policy định tuyến tính từ score/margin. unknown không phải lớp thứ 11. */
+        ClassifierEvidence: {
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            /** @description Rỗng khi completed. Khi failed: invalid_crop, box_too_small, checkpoint_unavailable, checksum_mismatch, not_configured, timeout, inference_error (không kèm lỗi thô). */
+            reason_code: string;
+            crop_valid: boolean;
+            crop_sha256: string;
+            predicted_class_id: number | null;
+            predicted_class_name: string;
+            annotated_class_id: number | null;
+            score: number | null;
+            /** @description Top-1 trừ top-2 */
+            margin: number | null;
+            top3: components["schemas"]["ClassifierTopK"][];
+            classifier_unknown: boolean;
+            checkpoint_version: string;
+            checkpoint_sha256: string;
+            /** @description smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy */
+            checkpoint_status: string;
+            class_map_version: string;
+            snapshot_revision: string;
+        };
+        CandidateEvaluationCreate: {
+            /** @description Ghi chú tự do của người dùng, chỉ để audit; KHÔNG bao giờ vào prompt VLM và không phải reason_code */
+            reason: string;
+            /** @description revision_sha256 của snapshot mà client đang xem */
+            expected_revision: string;
+        };
+        CandidateEvaluationPolicy: {
+            /** @example classification-routing-v0 */
+            name: string;
+            version: string;
+            score_threshold: number;
+            margin_threshold: number;
+            /** @description routing_temporary: không phải ngưỡng calibration */
+            threshold_semantics: string;
+            policy_sha256: string;
+        };
+        /** @description Một lượt đánh giá logic của candidate; AI chỉ là đề xuất. */
+        CandidateEvaluation: {
+            id: number;
+            candidate_id: number;
+            run_id: number;
+            /** @description 1 là lượt tự động; manual recheck tăng dần */
+            generation: number;
+            /** @enum {string} */
+            source: "auto" | "manual";
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            reason_code: string | null;
+            reasons: string[];
+            review_required: boolean;
+            call_qwen: boolean;
+            policy: components["schemas"]["CandidateEvaluationPolicy"];
+            /** @description trained | smoke_only | null */
+            checkpoint_status?: string | null;
+            snapshot_revision: string;
+            requested_by_user_id?: number | null;
+            note?: string | null;
+            vlm?: components["schemas"]["CandidateVlm"] | null;
+            /** Format: date-time */
+            created_at: string;
+            poll_url: string;
         };
         /** @description Kết quả cuối của một đơn vị trong shard */
         EngineUnitResult: {
@@ -2830,6 +2955,66 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    candidates_evaluate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Khoá idempotency, 1 đến 128 ký tự. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateEvaluationCreate"];
+            };
+        };
+        responses: {
+            /** @description Đã nhận; đọc kết quả tại poll_url */
+            202: {
+                headers: {
+                    /** @description URL poll của evaluation */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateEvaluation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    candidate_evaluations_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Evaluation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateEvaluation"];
+                };
+            };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };

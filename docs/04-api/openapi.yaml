@@ -477,6 +477,75 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /api/candidates/{id}/evaluations/:
+    post:
+      operationId: candidates_evaluate
+      tags: [runs]
+      summary: Yêu cầu đánh giá lại candidate (re-evaluate, M04C-02)
+      description: |
+        Tạo một Evaluation mới (generation tiếp theo) cho candidate: định tuyến lại bằng policy
+        `classification-routing-v0` với lý do `manual_recheck`, rồi (nếu policy cho phép) xếp một lượt Qwen.
+        Trả 202 kèm `poll_url`/`Location` (kết quả chạy bất đồng bộ, đọc bằng `GET /api/candidate-evaluations/{id}/`).
+        Cùng `Idempotency-Key` + cùng payload + cùng người → trả lại Evaluation cũ (không tạo mới, không tính budget
+        lần hai); key mới → luôn là evaluation mới dù revision/model không đổi. 409 `BUSINESS_RULE_UNMET` với
+        `details.reason_code=stale_revision` khi `expected_revision` không còn là revision hiện tại của snapshot;
+        409 `IDEMPOTENCY_KEY_REUSED` khi key đã dùng cho payload hoặc người khác. 422 khi run không bật VLM, thiếu
+        taxonomy, đã huỷ hoặc classifier của candidate chưa chạy xong. Không ghi đè evidence/decision cũ và không
+        tạo ReviewDecision/Adjudication: kết quả AI chỉ là đề xuất. FE chỉ gửi `reason` (ghi chú audit, không vào
+        prompt) và `expected_revision`; không gửi prompt, model, ảnh hay khoá API.
+      x-labelx-trace: [FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Khoá idempotency, 1 đến 128 ký tự.
+          schema: { type: string, minLength: 1, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CandidateEvaluationCreate" }
+      responses:
+        "202":
+          description: Đã nhận; đọc kết quả tại poll_url
+          headers:
+            Location:
+              description: URL poll của evaluation
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/candidate-evaluations/{id}/:
+    get:
+      operationId: candidate_evaluations_read
+      tags: [runs]
+      summary: Đọc Evaluation (poll kết quả định tuyến/Qwen)
+      description: |
+        `status` suy ra từ lượt Qwen: không cần Qwen thì `completed` ngay. `reason_code` theo payload FE v0 do hệ thống
+        tính (lý do định tuyến; nếu Qwen lỗi thì mã lỗi của Qwen). Ngoài tập v0 còn có `classifier_untrusted`
+        (checkpoint khác `trained`, kể cả smoke_only) và `classifier_unavailable` (không có/lỗi hạ tầng/dữ liệu
+        sai kiểu). `review_required=true` khi AI không đủ khả năng đề xuất đáng tin (crop lỗi, hết budget, classifier
+        không đáng tin, Qwen lỗi hoặc uncertain). `policy` lưu theo evaluation; ngưỡng chỉ là routing tạm, không phải
+        ngưỡng calibration.
+      x-labelx-trace: [FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Evaluation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CandidateEvaluation" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/runs/{id}/ranking/:
     get:
       operationId: runs_ranking
@@ -2013,6 +2082,111 @@ components:
         crop: { type: object, nullable: true, additionalProperties: true, description: "Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra" }
         rationale: { type: string, nullable: true, description: "Văn bản tự do do model sinh, không phải bằng chứng đã xác minh; FE phải render dạng text thuần (không HTML/Markdown)" }
         created_at: { type: string, format: date-time, nullable: true }
+    ClassifierTopK:
+      type: object
+      required: [class_id, class_name, score]
+      properties:
+        class_id: { type: integer, minimum: 0, maximum: 9 }
+        class_name: { type: string }
+        score: { type: number, description: "Softmax, chưa calibrate" }
+    ClassifierEvidence:
+      type: object
+      description: >-
+        Kết quả classifier cho một candidate. score là giá trị softmax CHƯA calibrate, không phải
+        xác suất đúng. classifier_unknown mặc định false và chỉ true khi không quyết định được
+        (score/margin không hữu hạn); abstention theo ngưỡng do policy định tuyến tính từ
+        score/margin. unknown không phải lớp thứ 11.
+      required:
+        - status
+        - reason_code
+        - crop_valid
+        - crop_sha256
+        - predicted_class_id
+        - predicted_class_name
+        - annotated_class_id
+        - score
+        - margin
+        - top3
+        - classifier_unknown
+        - checkpoint_version
+        - checkpoint_sha256
+        - checkpoint_status
+        - class_map_version
+        - snapshot_revision
+      properties:
+        status: { type: string, enum: [pending, running, completed, failed, cancelled] }
+        reason_code:
+          type: string
+          description: >-
+            Rỗng khi completed. Khi failed: invalid_crop, box_too_small, checkpoint_unavailable,
+            checksum_mismatch, not_configured, timeout, inference_error (không kèm lỗi thô).
+        crop_valid: { type: boolean }
+        crop_sha256: { type: string }
+        predicted_class_id: { type: integer, nullable: true }
+        predicted_class_name: { type: string }
+        annotated_class_id: { type: integer, nullable: true }
+        score: { type: number, nullable: true }
+        margin: { type: number, nullable: true, description: "Top-1 trừ top-2" }
+        top3:
+          type: array
+          items: { $ref: "#/components/schemas/ClassifierTopK" }
+        classifier_unknown: { type: boolean }
+        checkpoint_version: { type: string }
+        checkpoint_sha256: { type: string }
+        checkpoint_status:
+          type: string
+          description: smoke_only hoặc trained (do worker suy ra); rỗng nếu chưa chạy
+        class_map_version: { type: string }
+        snapshot_revision: { type: string }
+    CandidateEvaluationCreate:
+      type: object
+      required: [reason, expected_revision]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Ghi chú tự do của người dùng, chỉ để audit; KHÔNG bao giờ vào prompt VLM và không phải reason_code
+        expected_revision:
+          type: string
+          maxLength: 128
+          description: revision_sha256 của snapshot mà client đang xem
+    CandidateEvaluationPolicy:
+      type: object
+      required: [name, version, score_threshold, margin_threshold, threshold_semantics, policy_sha256]
+      properties:
+        name: { type: string, example: classification-routing-v0 }
+        version: { type: string }
+        score_threshold: { type: number }
+        margin_threshold: { type: number }
+        threshold_semantics: { type: string, description: "routing_temporary: không phải ngưỡng calibration" }
+        policy_sha256: { type: string }
+    CandidateEvaluation:
+      type: object
+      description: Một lượt đánh giá logic của candidate; AI chỉ là đề xuất.
+      required: [id, candidate_id, run_id, generation, source, status, reason_code, reasons, review_required, call_qwen, policy, snapshot_revision, created_at, poll_url]
+      properties:
+        id: { type: integer }
+        candidate_id: { type: integer }
+        run_id: { type: integer }
+        generation: { type: integer, description: "1 là lượt tự động; manual recheck tăng dần" }
+        source: { type: string, enum: [auto, manual] }
+        status: { type: string, enum: [pending, running, completed, failed, cancelled] }
+        reason_code: { type: string, nullable: true }
+        reasons: { type: array, items: { type: string } }
+        review_required: { type: boolean }
+        call_qwen: { type: boolean }
+        policy: { $ref: "#/components/schemas/CandidateEvaluationPolicy" }
+        checkpoint_status: { type: string, nullable: true, description: "trained | smoke_only | null" }
+        snapshot_revision: { type: string }
+        requested_by_user_id: { type: integer, nullable: true }
+        note: { type: string, nullable: true }
+        vlm:
+          allOf: [{ $ref: "#/components/schemas/CandidateVlm" }]
+          nullable: true
+        created_at: { type: string, format: date-time }
+        poll_url: { type: string }
     EngineUnitResult:
       type: object
       description: Kết quả cuối của một đơn vị trong shard
