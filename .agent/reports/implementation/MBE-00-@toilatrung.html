@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBE-00 Implementation Report — LabelX</title>
+<meta name="labelx:id" content="MBE-00-@toilatrung">
+<meta name="labelx:title" content="MBE-00 — Contract OpenAPI một lần">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="reports">
+<meta name="labelx:tags" content="[implementation, report, mbe-00, openapi]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / implementation / MBE-00-@toilatrung</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>MBE-00-@toilatrung</span><b>title</b><span>MBE-00 — Contract OpenAPI một lần</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>reports</span><b>tags</b><span>[implementation, report, mbe-00, openapi]</span><b>priority</b><span>3</span></div>
+<h1 id="mbe-00">MBE-00 — Contract OpenAPI một lần cho mọi endpoint còn thiếu</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Bằng chứng công việc cho task MBE-00 (issue #322, parent #321, CR-118).</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>MBE-00-@toilatrung</code></li>
+<li><strong>Title</strong>: <code>Contract OpenAPI một lần cho mọi endpoint còn thiếu</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung</code></li>
+<li><strong>Executor</strong>: <code>claude-code</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>MBE-00</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: 33 operation mới trong <code>docs/04-api/openapi.yaml</code> (31 của MBE-02…MBE-07 + <code>frames/{id}/workspace</code>, <code>runs/{id}/lineage</code> của MBE-01), kèm schema, mã lỗi 400/403/404/409/422, vai trò, phân trang cursor; trường cộng thêm không phá payload cũ: <code>QueueNextRequest.frame_id</code>, <code>RankedFrame.priority/thumbnail_url</code>, tham số <code>q</code>/<code>priority</code> của ranking, <code>AdjudicationCreate.after_adjudication</code>, <code>Adjudication.rework_id</code>, <code>WorkflowRule.revision/locked</code>. Sinh lại <code>contract.d.ts</code>.</li>
+<li><strong>Not Implemented</strong>: không viết code backend/frontend; <code>docs/04-api/rbac-matrix.html</code> (dòng Calibration/Audit thuộc MBE-07); các endpoint † đã có trong contract (evaluations, references, gate, waivers, reports/{id}) giữ nguyên. Chưa tách hai commit (1) MBE-04…07, (2) MBE-02/03 như task đề ra: gộp một commit, PO quyết định có tách khi merge.</li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead>
+<tbody>
+<tr><td><code>docs/04-api/openapi.yaml</code></td><td>+33 operation, +schema, +3 tag (releases, audit, calibration), trường cộng thêm</td><td><code>MBE-00</code></td></tr>
+<tr><td><code>src/frontend/src/lib/api/contract.d.ts</code></td><td>File sinh bằng <code>npm run gen:api:contract</code></td><td><code>MBE-00</code></td></tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <code>.agent/execution/mbe/MBE-00.html</code></li>
+<li><strong>Context Packages</strong>: none</li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: none</li>
+<li><strong>Change Requests</strong>: <code>CR-118</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-031.html</code></li>
+<li><strong>Review Request</strong>: PO kiểm tay (không QC độc lập, quyết định PO 2026-10-13)</li>
+<li><strong>Commits</strong>: xem PR của nhánh <code>feat/MBE-00-openapi-contract</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>agent task start MBE-00</code></td><td><code>not-run</code></td><td>Không dùng CLI agent trong phiên này</td></tr>
+<tr><td><code>agent task verify MBE-00</code></td><td><code>not-run</code></td><td>Không dùng CLI agent trong phiên này</td></tr>
+<tr><td><code>agent task report MBE-00 --executor claude-code</code></td><td><code>not-run</code></td><td>Báo cáo viết tay từ template</td></tr>
+<tr><td><code>agent review request MBE-00 --reviewer @toilatrung</code></td><td><code>not-run</code></td><td>PO kiểm tay</td></tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><code>pytest tests/test_contract.py</code> (env giả DJANGO_SECRET_KEY, DATABASE_URL sqlite)</td><td><code>passed</code></td><td>21 passed (OpenAPI 3 hợp lệ, $ref hợp lệ, truy vết SRS, vai trò, operationId duy nhất, lỗi dùng Error chung)</td></tr>
+<tr><td><code>npm run gen:api:contract</code></td><td><code>passed</code></td><td>sinh lại contract.d.ts, +1946 dòng, không xoá dòng nào (git diff --patience)</td></tr>
+<tr><td><code>tsc --noEmit</code> (lọc <code>.next/</code>)</td><td><code>passed</code></td><td>không lỗi trong <code>src/</code>; lỗi sẵn có chỉ ở artifact <code>.next/dev/types</code></td></tr>
+<tr><td><code>make check</code></td><td><code>not-run</code></td><td>cần <code>make infra-up</code>; chạy trước khi báo xong</td></tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: gộp một commit thay vì hai (xem Scope); nhánh tạo từ nhánh <code>docs/M-BE-MVP-parallel-lanes</code> (chứa bản ghi task MBE-00…07 chưa vào <code>develop</code>) thay vì trực tiếp từ <code>develop</code>.</li>
+<li><strong>Approved By</strong>: CR-118</li>
+<li><strong>Known Limitations</strong>: hình dạng schema (ví dụ <code>RunReport</code>, <code>ReleaseManifest</code>, <code>ConfigVersionRules</code>, vai trò từng endpoint) là đề xuất MVP, PO cần kiểm tay trước khi Việt Anh bắt đầu code. Chưa đối chiếu với runtime backend vì không có view mới nào.</li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[ ] Acceptance criteria results and evidence are linked (chờ <code>make check</code> + PO).</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[ ] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent (PO kiểm tay theo quyết định).</li>
+<li>[ ] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không đánh dấu task done khi PO chưa kiểm.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul><li>Lưu tại <code>.agent/reports/implementation/MBE-00-@toilatrung.html</code>.</li></ul>
+</article></main></body></html>
