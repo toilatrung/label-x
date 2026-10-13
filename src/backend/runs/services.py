@@ -389,12 +389,42 @@ def create_qc_run(
     model_artifact: ModelArtifact | None = None
     config_models = config_version.models or (config_version.payload or {}).get("models", {})
     if config_models:
-        model_name = config_models.get("name")
-        model_ver = config_models.get("version")
+        detector_model = config_models.get("detector", config_models)
+        model_name = detector_model.get("name") if isinstance(detector_model, dict) else None
+        model_ver = detector_model.get("version") if isinstance(detector_model, dict) else None
         if model_name and model_ver:
             model_artifact = ModelArtifact.objects.filter(
                 name=model_name, version=model_ver
             ).first()
+
+    detector_config = (
+        config_version.engines or (config_version.payload or {}).get("engines", {})
+    ).get("detector", {})
+    if (
+        isinstance(detector_config, dict)
+        and detector_config.get("enabled")
+        and model_artifact is not None
+    ):
+        from engines.detector import probability
+        from orchestration.detector_engine import artifact_binding, taxonomy_mapping
+
+        binding_run = QCRun(
+            snapshot=snapshot, config_version=config_version, model_artifact=model_artifact
+        )
+        try:
+            artifact_binding(binding_run)
+            taxonomy_mapping(binding_run)
+            params = detector_config.get("params", {})
+            for name, default in (
+                ("match_iou", 0.5),
+                ("conflict_confidence", 0.5),
+                ("missing_confidence", 0.5),
+            ):
+                value = probability(params.get(name, default))
+                if name == "match_iou" and value == 0:
+                    raise ValueError("match_iou must be greater than zero")
+        except (ValueError, AttributeError) as exc:
+            raise BusinessRuleUnmetError(str(exc)) from None
 
     dataset_id = snapshot.dataset_id
     scope_hash = (

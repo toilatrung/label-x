@@ -46,6 +46,9 @@ class RoutingReason(StrEnum):
     # Mở rộng so với payload FE v0 (cần ghi vào #278): classifier không đáng tin / không dùng được.
     CLASSIFIER_UNTRUSTED = "classifier_untrusted"
     CLASSIFIER_UNAVAILABLE = "classifier_unavailable"
+    STRUCTURAL_FINDING = "structural_finding"
+    MISSING_OBJECT = "missing_object"
+    DETECTOR_NO_MATCH = "detector_no_match"
 
 
 # Thứ tự ưu tiên khi nhiều lý do cùng đúng; lý do đầu tiên là `primary`.
@@ -262,6 +265,48 @@ _CROP_FAILURES = frozenset({"invalid_crop", "box_too_small"})
 
 class ClassifierNotReadyError(RuntimeError):
     """Classifier pending/running: orchestration phải CHỜ, không quyết định hay gọi Qwen sớm."""
+
+
+def route_candidate(
+    candidate: Mapping[str, Any],
+    *,
+    crop_valid: bool,
+    budget_exhausted: bool = False,
+    manual_recheck: bool = False,
+) -> RoutingDecision:
+    """Model-neutral v1; never reads/waits for classifier. Legacy policy remains readable."""
+    record = {"name": "candidate-vlm-routing-v1", "version": "v1"}
+    record["policy_sha256"] = hashlib.sha256(
+        json.dumps(record, sort_keys=True).encode()
+    ).hexdigest()
+    evidence = candidate.get("evidence")
+    evidence = evidence if isinstance(evidence, Mapping) else {}
+    if evidence.get("trigger_reason") == "detector_no_match":
+        reason = RoutingReason.DETECTOR_NO_MATCH
+        return RoutingDecision(reason, (reason,), False, True, record)
+    if crop_valid is not True:
+        reason = RoutingReason.INVALID_CROP
+        return RoutingDecision(reason, (reason,), False, True, record)
+    reason = (
+        RoutingReason.MANUAL_RECHECK
+        if manual_recheck
+        else RoutingReason.UNKNOWN
+        if evidence.get("trigger_reason") == "unknown"
+        else RoutingReason.LABEL_CONFLICT
+        if evidence.get("trigger_reason") == "label_conflict"
+        else RoutingReason.MISSING_OBJECT
+        if evidence.get("trigger_reason") == "missing_object"
+        else RoutingReason.STRUCTURAL_FINDING
+    )
+    if budget_exhausted:
+        return RoutingDecision(
+            RoutingReason.BUDGET_EXHAUSTED,
+            (RoutingReason.BUDGET_EXHAUSTED, reason),
+            False,
+            True,
+            record,
+        )
+    return RoutingDecision(reason, (reason,), True, False, record)
 
 
 def routing_input_from_candidate(

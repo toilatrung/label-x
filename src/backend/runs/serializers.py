@@ -261,7 +261,7 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     engine_status = serializers.CharField(
         help_text="checked | partial | failed | not_checked | running (payload FE v0)"
     )
-    source: Any = serializers.CharField(help_text="Luôn là qwen")
+    source: Any = serializers.CharField(help_text="qwen | policy (detector_no_match)")
     conclusion = serializers.CharField(
         allow_null=True, help_text="confirmed | uncertain | null; chỉ là đề xuất AI"
     )
@@ -269,7 +269,10 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     class_name = serializers.CharField(allow_null=True)
     reason_code = serializers.CharField(
         allow_null=True,
-        help_text="invalid_crop | provider_error | parse_failure | budget_exhausted | null",
+        help_text=(
+            "invalid_crop | provider_error | parse_failure | budget_exhausted | "
+            "detector_no_match | null"
+        ),
     )
     evidence_id = serializers.IntegerField(allow_null=True)
     evaluation_id = serializers.CharField(allow_null=True)
@@ -288,12 +291,37 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     created_at = serializers.DateTimeField(allow_null=True)
 
 
+class DetectorTop3Serializer(serializers.Serializer[Any]):
+    class_id = serializers.CharField()
+    class_name = serializers.CharField()
+    score = serializers.FloatField(min_value=0, max_value=1)
+
+
+class CandidateDetectorSerializer(serializers.Serializer[Any]):
+    source: Any = serializers.ChoiceField(choices=["detector"])
+    engine_status = serializers.ChoiceField(choices=["checked"])
+    class_id = serializers.CharField(allow_null=True)
+    class_name = serializers.CharField(allow_null=True)
+    top3 = DetectorTop3Serializer(many=True)
+    margin = serializers.FloatField(allow_null=True, min_value=0, max_value=1)
+    background_score = serializers.FloatField(allow_null=True, min_value=0, max_value=1)
+    unknown = serializers.BooleanField()
+    reason_code = serializers.ChoiceField(
+        choices=["label_conflict", "missing_object", "unknown", "detector_no_match"]
+    )
+    model_version = serializers.CharField()
+    model_sha256 = serializers.CharField()
+    policy_version = serializers.CharField()
+    human_review_required = serializers.BooleanField()
+
+
 class CandidateSerializer(serializers.ModelSerializer[Any]):
     """Schema for Candidate matching OpenAPI components.schemas.Candidate."""
 
     frame = serializers.SerializerMethodField()
     severity = serializers.SerializerMethodField()
     vlm = serializers.SerializerMethodField()
+    detector = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateRecord
@@ -307,6 +335,7 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
             "anchor",
             "evidence",
             "vlm",
+            "detector",
         ]
         read_only_fields = fields
 
@@ -319,13 +348,64 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
     def get_severity(self, obj: CandidateRecord) -> str | None:
         return getattr(obj, "severity", None)
 
+    @extend_schema_field(CandidateDetectorSerializer(allow_null=True))
+    def get_detector(self, obj: CandidateRecord) -> dict[str, Any] | None:
+        if obj.engine != "detector" or not isinstance(obj.evidence, dict):
+            return None
+        from orchestration.detector_engine import CLASSES
+
+        evidence = obj.evidence
+        proposal = evidence.get("proposal", {})
+        scores = proposal.get("class_scores", [])
+        mapping = evidence.get("class_map", {})
+        top3 = []
+        if len(scores) == len(CLASSES) + 1:
+            ranked = sorted(range(len(CLASSES)), key=lambda i: (-scores[i], i))[:3]
+            top3 = [
+                {"class_id": mapping.get(CLASSES[i]), "class_name": CLASSES[i], "score": scores[i]}
+                for i in ranked
+            ]
+        unknown = bool(proposal.get("unknown", False))
+        return {
+            "source": "detector",
+            "engine_status": "checked",
+            "class_id": None if unknown else proposal.get("class_id"),
+            "class_name": None if unknown else proposal.get("class_name"),
+            "top3": top3,
+            "margin": proposal.get("margin"),
+            "background_score": proposal.get("background_score"),
+            "unknown": unknown,
+            "reason_code": evidence.get("trigger_reason", ""),
+            "model_version": evidence.get("model_version", ""),
+            "model_sha256": evidence.get("model_sha256", ""),
+            "policy_version": evidence.get("matching_policy", ""),
+            "human_review_required": evidence.get("trigger_reason") == "detector_no_match",
+        }
+
     @extend_schema_field(CandidateVlmSerializer)
     def get_vlm(self, obj: CandidateRecord) -> dict[str, Any]:
         units = self.context.get("vlm_units", {})
         states = self.context.setdefault("vlm_engine_state", {})
         if obj.run_id not in states:
             states[obj.run_id] = run_vlm_engine_state(obj.run_id)
-        return build_vlm_view(units.get(obj.pk), states[obj.run_id])
+        view = build_vlm_view(units.get(obj.pk), states[obj.run_id])
+        from orchestration.candidate_routing import routing_evidence, unmatched_targets
+
+        unmatched = self.context.setdefault("detector_unmatched_targets", {})
+        if obj.run_id not in unmatched:
+            unmatched[obj.run_id] = unmatched_targets(obj.run_id)
+        if (
+            routing_evidence(obj, unmatched[obj.run_id]).get("trigger_reason")
+            == "detector_no_match"
+        ):
+            view.update(
+                state="not_triggered",
+                engine_status="not_checked",
+                source="policy",
+                reason_code="detector_no_match",
+                conclusion=None,
+            )
+        return view
 
 
 class PaginatedCandidateListSerializer(serializers.Serializer[Any]):

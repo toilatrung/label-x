@@ -1,0 +1,32 @@
+services:
+  detector:
+    image: labelx-detector-worker:dev
+    entrypoint: [python, -m, labelx_detector.service]
+    environment:
+      DETECTOR_SERVICE_TOKEN: ${DETECTOR_SERVICE_TOKEN:?Set a private token of at least 32 characters}
+      DETECTOR_DEVICE: ${DETECTOR_DEVICE:-cuda:0}
+    ports:
+      - "127.0.0.1:8501:8501"
+    volumes:
+      - type: bind
+        source: ${DETECTOR_MODELS_DIR:?Set the absolute verified checkpoint directory}
+        target: /models
+        read_only: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os,urllib.request; req=urllib.request.Request('http://127.0.0.1:8501/health',headers={'Authorization':'Bearer '+os.environ['DETECTOR_SERVICE_TOKEN']}); urllib.request.urlopen(req,timeout=5).close()"
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3

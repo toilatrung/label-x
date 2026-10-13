@@ -1365,6 +1365,30 @@ export interface components {
             /** @description ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/. */
             id?: number;
             vlm?: components["schemas"]["CandidateVlm"];
+            detector?: components["schemas"]["CandidateDetector"] | null;
+        };
+        /** @description Detector evidence, not a human decision. Background is not an eleventh taxonomy class. */
+        CandidateDetector: {
+            /** @enum {string} */
+            source: "detector";
+            /** @enum {string} */
+            engine_status: "checked";
+            class_id: string | null;
+            class_name: string | null;
+            top3: {
+                class_id: string;
+                class_name: string;
+                score: number;
+            }[];
+            margin: number | null;
+            background_score: number | null;
+            unknown: boolean;
+            /** @enum {string} */
+            reason_code: "label_conflict" | "missing_object" | "unknown" | "detector_no_match";
+            model_version: string;
+            model_sha256: string;
+            policy_version: string;
+            human_review_required: boolean;
         };
         /**
          * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
@@ -1419,13 +1443,13 @@ export interface components {
             state: string;
             /** @description checked | partial | failed | not_checked | running (payload FE v0) */
             engine_status: string;
-            /** @description Luôn là qwen */
+            /** @description qwen | policy (detector_no_match) */
             source: string;
             /** @description confirmed | uncertain | null */
             conclusion?: string | null;
             class_id?: string | null;
             class_name?: string | null;
-            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | null */
+            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | detector_no_match | null */
             reason_code?: string | null;
             evidence_id?: number | null;
             /** @description Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa */
@@ -1586,7 +1610,7 @@ export interface components {
         /**
          * @description Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
          *     cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
-         *     detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
+         *     detector: dự đoán của một run, id = "<run_id>:<task_id>:<frame>:<index>" (không ổn định qua run).
          *     reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
          */
         ObjectRef: {
@@ -1597,7 +1621,7 @@ export interface components {
         /** @description Neo issue theo DEC-006 và SRS tab:anchors; kind quyết định trường nào bắt buộc */
         Anchor: {
             /** @enum {string} */
-            kind: "prediction_region" | "annotation" | "annotation_cluster" | "annotation_rule" | "manual_object" | "manual_region";
+            kind: "prediction_region" | "detector_box" | "annotation" | "annotation_cluster" | "annotation_rule" | "manual_object" | "manual_region";
             objects: components["schemas"]["ObjectRef"][];
             rule_id?: string | null;
             bbox?: components["schemas"]["BBox"] | null;

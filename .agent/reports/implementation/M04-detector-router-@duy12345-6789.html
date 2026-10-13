@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-04 — Tích hợp detector và Router</title>
+<meta name="labelx:id" content="m04-detector-router-duy12345-6789">
+<meta name="labelx:title" content="M04 detector-router implementation">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="orchestration">
+<meta name="labelx:tags" content="[implementation, m-04, detector, router]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>M-04 / detector + router / implementation</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>m04-detector-router-duy12345-6789</span><b>title</b><span>Tích hợp detector và Router</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>orchestration</span><b>tags</b><span>[implementation, m-04, detector, router]</span><b>priority</b><span>3</span></div>
+<h1 id="m04-detector-router">Faster R-CNN → candidate → Router → VLM</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Triển khai theo yêu cầu trực tiếp của người dùng và bản bàn giao ngày 13/10/2026, trên nhánh riêng <code>feat/m04-detector-router</code> từ <code>feat/M-04-backend@86a7697</code>. Không tự phê duyệt CR-117, không merge/push, không xóa classifier và không sửa CVAT.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04-detector-router</code></li>
+<li><strong>Title</strong>: <code>Tích hợp Faster R-CNN độc lập và Router trung tính</code></li>
+<li><strong>Owner</strong>: <code>@duy12345-6789; PO @toilatrung sở hữu contract M-04</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>M-04 #278; tích hợp detector theo chỉ đạo người dùng</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<pre>Snapshot bất biến → 3 engine cấu trúc + Faster R-CNN → candidate có provenance
+    → Router v1 (không chờ classifier)
+        ├─ detector_no_match → người review, 0 lần gọi Qwen
+        ├─ crop lỗi / budget hết → reason rõ, không gửi provider
+        └─ candidate hợp lệ → crop + taxonomy + nhãn hiện tại/đề xuất → VLM evidence
+VLM chỉ là đề xuất; không tự tạo quyết định người review hoặc sửa CVAT.</pre>
+<ul>
+<li><strong>Implemented</strong>: <code>Warm GPU HTTP worker có xác thực; 11 score ROI trước NMS; matching Hungarian one-to-one; E1/E2/unknown/no-match; snapshot hash/size/artifact binding; runner registry; queue riêng; crop bbox detector; current-label/proposal context; policy v1; API/OpenAPI/type FE additive.</code></li>
+<li><strong>Not Implemented</strong>: <code>Qwen thật chưa gọi; chưa benchmark batch N/OOM/p50/p95; chưa canary/shadow trên project thật; chưa review độc lập, chưa gỡ classifier, chưa đổi governance thành approved; chưa thay giao diện FE; server demo :8000 chưa được redeploy theo nhánh này.</code></li>
+</ul>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead>
+<tr>
+<th>File or Artifact</th>
+<th>Change Summary</th>
+<th>Task ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/backend/engines/detector.py; orchestration/detector_engine.py</code></td>
+<td>Kiểm protocol/provenance; ghép tối ưu IoU; nhãn CVAT map theo tên taxonomy (không nhầm index model thành label_id).</td>
+<td><code>M-04 / CR-117</code></td>
+</tr>
+<tr><td>src/detector_worker/labelx_detector/service.py</td><td>Load model một lần, verify trước deserialize; giữ class_scores theo ROI gốc qua NMS; background cao là unknown, không phải lớp thứ 11; token chỉ trong env, service bind host loopback.</td><td>M-04</td></tr>
+<tr><td>orchestration/candidate_routing.py; routing_policy.py; vlm_stage.py</td><td>Policy mới không đọc classifier. Annotation không match detector chuyển human, không gọi Qwen; detector fail không có evidence no-match nên không chặn engine cấu trúc.</td><td>M-04</td></tr>
+<tr><td>orchestration/vlm_crops.py; vlm/contract.py; vlm/config.py</td><td>Crop theo annotation union hoặc detector bbox có hash/provenance; prompt-v1 phân biệt nhãn annotation và đề xuất detector; multi-target không tự sửa từng object.</td><td>M-04</td></tr>
+<tr><td>runs/serializers.py; docs/04-api/openapi.yaml; src/frontend/src/lib/api/contract.d.ts</td><td>Thêm candidate.detector nullable; source detector, top3/margin/background/model hash; no-match hiện source policy và not_checked. Bảo toàn hợp đồng cũ và classifier compatibility.</td><td>M-04</td></tr>
+<tr><td>infrastructure/docker-compose.detector.yml; scripts/init-develop-environment.mk</td><td>make detector-up/down, dev-detector-worker. Concurrency 1, healthcheck authenticated, mount checkpoint chỉ đọc. Không lưu token vào ConfigVersion.</td><td>M-04</td></tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/278">M-04 #278</a></li>
+<li><strong>Context Packages</strong>: <code>01-tich-hop-faster-rcnn-va-router.html (người dùng cung cấp)</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <a href="https://github.com/toilatrung/label-x/issues/278#issuecomment-6149383863">Chỉ đạo PO có điều kiện Q1/Q2/Q3</a></li>
+<li><strong>Change Requests</strong>: <code>.agent/governance/change-requests/CR-117.html (chưa approved; không chỉnh status)</code></li>
+<li><strong>Risks or Blockers</strong>: <code>Ngưỡng 0.5 là thử nghiệm versioned trong ConfigVersion, không phải quality/calibration; ROI post-NMS không bao phủ mọi background proposal.</code></li>
+<li><strong>Review Request</strong>: <code>pending independent review</code></li>
+<li><strong>Commits</strong>: <code>local working changes; chưa commit/push</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Triển khai theo yêu cầu trực tiếp</code></td>
+<td><code>passed</code></td>
+<td>Baseline 86a7697; nhánh riêng feat/m04-detector-router.</td>
+</tr>
+<tr>
+<td><code>ruff / mypy / worker pytest</code></td>
+<td><code>passed</code></td>
+<td>Ruff backend; mypy 155 source files; detector worker 15 tests.</td>
+</tr>
+<tr>
+<td><code>validate-framework.py</code></td>
+<td><code>passed</code></td>
+<td>FRAMEWORK_VALIDATION_PASS.</td>
+</tr>
+<tr>
+<td><code>Review độc lập / push / merge</code></td>
+<td><code>not-run</code></td>
+<td>Không tự ký duyệt; chưa có PR cho thay đổi này.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU HTTP service trên BDD100K val task 21 frame 0</td>
+<td><code>passed</code></td>
+<td>9 checks: auth/health/infer/frame/full11score/NMS-origin/replay/model-hash/media-hash. 48 detections; không suy ra chất lượng/throughput từ một ảnh.</td>
+</tr>
+<tr><td>Bridge snapshot → GPU → candidate → crop → VLM evidence</td><td>passed</td><td>1 opt-in test trên PostgreSQL riêng; ảnh và detector thật, storage fixture và Qwen giả. Replay không nhân evidence/call.</td></tr>
+<tr><td>Backend full suite</td><td>passed</td><td>1244 passed, 2 skipped, 919.97s trên PostgreSQL test riêng. Hai trường hợp opt-in không được tính là PASS. Lượt đầu bị quyền thư mục tạm Windows; đã chạy lại ngoài sandbox. Các lỗi enum Swagger và trace SRS đã sửa; strict schema/parity 50/50 PASS, không tắt kiểm tra.</td></tr>
+<tr><td>Regression sau kiểm tra cuối</td><td>passed</td><td>51 tests PASS sau khi bổ sung guard ID prediction theo run/task/frame và chỉnh fixture. Bao gồm matching, adapter, response serializer, strict runtime schema/parity và trace SRS. Full-suite ở hàng trên chạy trước guard nhỏ này; không gọi đây là một full-suite mới. Mypy 155 files, Ruff và framework validation đã kiểm lại.</td></tr>
+<tr><td>Runtime production / Qwen thật / OOM / p50/p95</td><td>not-run</td><td>Không gửi ảnh ra provider thật, không sửa DB demo và không tuyên bố full E2E production.</td></tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>Giữ classifier compatibility, nhưng đường VLM mới không dùng nó. Bổ sung annotation-no-match human branch theo PO, thay vì mọi candidate đều gọi VLM tuyệt đối.</code></li>
+<li><strong>Approved By</strong>: <code>Người dùng trực tiếp cho phép triển khai local; không thay thế quyết định phê duyệt CR-117 hay review PO.</code></li>
+<li><strong>Known Limitations</strong>: <code>GPU test dùng 1 frame BDD100K val, chưa đủ cả 10 lớp và không chứng minh precision/recall. Test bridge DB dùng snapshot và storage fixture + Qwen client giả; không tuyên bố full-stack production PASS.</code></li>
+</ul>
+<h3>Chạy trên máy local</h3>
+<ol><li>Đăng ký ModelArtifact với checksum frozen, class_mapping_version bdd100k-det-10-v1, class_mapping.classes đúng thứ tự manifest.</li><li>ConfigVersion models.detector={name,version}; schema.params.taxonomy gồm đúng 10 tên lớp và label_id CVAT; engines.detector.enabled=true. Khi thiếu model: no_model/not_checked; artifact sai/taxonomy sai: 422.</li><li>Trong src/backend/.env, đặt DETECTOR_SERVICE_TOKEN riêng (ASCII, ít nhất 32 ký tự), DETECTOR_MODELS_DIR là đường dẫn tuyệt đối tới model đã verify; backend dùng DETECTOR_WORKER_URL=http://127.0.0.1:8501 và cùng token. make detector-up đọc file env này. Không đưa secret vào config hoặc Git.</li><li>make detector-image; make detector-up; make dev-detector-worker. Worker thường vẫn nhận queue celery, worker riêng nhận queue detector. Nếu backend nằm máy khác, HTTPS/mTLS và firewall là bắt buộc.</li><li>Bật vlm-prompt-v1 trong config VLM được publish mới; không sửa ConfigVersion đã publish. Để rollback, publish config mới engines.detector.enabled=false; giữ evidence và classifier compatibility.</li></ol>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] Every reported change maps to an authorized task.</li>
+<li>[ ] Acceptance criteria results and evidence are linked.</li>
+<li>[ ] Deviations and limitations are explicit.</li>
+<li>[ ] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[ ] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

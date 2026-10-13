@@ -126,6 +126,7 @@ class AnchorSerializer(serializers.Serializer[Any]):
     kind = serializers.ChoiceField(
         choices=[
             "prediction_region",
+            "detector_box",
             "annotation",
             "annotation_cluster",
             "annotation_rule",

@@ -60,7 +60,7 @@ def test_checked_unit_writes_one_evidence_with_provenance_and_api_exposes_it() -
         "car",
     )
     assert evidence.model == "qwen3-vl-plus" and evidence.prompt_version == "vlm-prompt-v0"
-    assert evidence.policy_version == "vlm-trigger-v0" and evidence.snapshot_revision
+    assert evidence.policy_version == "candidate-vlm-routing-v1" and evidence.snapshot_revision
     assert (
         evidence.provider == "dashscope" and evidence.provider_host == "dashscope-intl.aliyuncs.com"
     )
@@ -74,7 +74,10 @@ def test_checked_unit_writes_one_evidence_with_provenance_and_api_exposes_it() -
     assert vlm["conclusion"] == "confirmed" and vlm["source"] == "qwen"
     assert (vlm["class_id"], vlm["class_name"]) == ("1", "car")
     assert vlm["evidence_id"] == evidence.pk and vlm["model_version"] == "qwen3-vl-plus"
-    assert vlm["prompt_version"] == "vlm-prompt-v0" and vlm["policy_version"] == "vlm-trigger-v0"
+    assert (
+        vlm["prompt_version"] == "vlm-prompt-v0"
+        and vlm["policy_version"] == "candidate-vlm-routing-v1"
+    )
     assert vlm["snapshot_revision"] == evidence.snapshot_revision
     assert vlm["provider_host"] == "dashscope-intl.aliyuncs.com" and vlm["attempts"] == 1
     assert vlm["reason_code"] is None and vlm["evaluation_id"] is None

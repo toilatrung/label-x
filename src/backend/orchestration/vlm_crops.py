@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import math
 from typing import Any
 
 from PIL import Image, UnidentifiedImageError
@@ -51,6 +52,8 @@ def _shape_box(shape: dict[str, Any]) -> tuple[float, float, float, float] | Non
     if not isinstance(points, list) or len(points) != 4:
         return None
     if any(isinstance(p, bool) or not isinstance(p, int | float) for p in points):
+        return None
+    if any(not math.isfinite(p) for p in points):
         return None
     x1, y1, x2, y2 = (float(p) for p in points)
     return min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
@@ -128,7 +131,7 @@ class SnapshotCropProvider:
             frame = self._frame(candidate)
         except VlmInvalidCropError:
             return ""
-        box = union_box(frame.shapes, _object_ids(candidate))
+        box = self.candidate_box(candidate, frame)
         if box is None:
             return ""
         payload = {"media": frame.media_sha256, "box": box, "pad": PADDING_RATIO}
@@ -136,7 +139,7 @@ class SnapshotCropProvider:
 
     def load(self, candidate: CandidateRecord) -> CropInput:
         frame = self._frame(candidate)
-        box = union_box(frame.shapes, _object_ids(candidate))
+        box = self.candidate_box(candidate, frame)
         if box is None:
             raise VlmInvalidCropError("anchor không phân giải được thành bbox hợp lệ")
         if frame.width <= 0 or frame.height <= 0 or frame.width * frame.height > MAX_SOURCE_PIXELS:
@@ -188,6 +191,66 @@ class SnapshotCropProvider:
             "encoding": "png",
         }
         return CropInput(data, "image/png", origin)
+
+    def candidate_box(
+        self, candidate: CandidateRecord, frame: SnapshotFrame
+    ) -> tuple[float, float, float, float] | None:
+        if isinstance(candidate.anchor, dict) and candidate.anchor.get("kind") == "detector_box":
+            from engines.detector import box
+            from orchestration.detector_engine import FROZEN_SHA256
+
+            evidence = candidate.evidence if isinstance(candidate.evidence, dict) else {}
+            expected = {
+                "snapshot_id": candidate.run.snapshot_id,
+                "snapshot_revision": candidate.run.snapshot.revision_sha256,
+                "cvat_task_id": candidate.cvat_task_id,
+                "frame_number": candidate.frame_number,
+                "media_sha256": frame.media_sha256,
+                "width": frame.width,
+                "height": frame.height,
+            }
+            if (
+                candidate.engine != "detector"
+                or evidence.get("frame") != expected
+                or evidence.get("model_sha256") != FROZEN_SHA256
+            ):
+                return None
+            try:
+                return box(evidence.get("crop_bbox"), frame.width, frame.height)
+            except ValueError:
+                return None
+        return union_box(frame.shapes, _object_ids(candidate))
+
+
+def candidate_context(candidate: CandidateRecord, revision: str) -> Any:
+    from vlm.contract import CandidateContext
+
+    frame = SnapshotCropProvider()._frame(candidate)
+    wanted = set(_object_ids(candidate))
+    labels = tuple(
+        sorted(
+            {
+                str(shape["label_id"])
+                for shape in frame.shapes
+                if _shape_id(shape) in wanted and "label_id" in shape
+            }
+        )
+    )
+    evidence = candidate.evidence if isinstance(candidate.evidence, dict) else {}
+    proposal = evidence.get("proposal", {})
+    proposed = (
+        proposal.get("class_id")
+        if isinstance(proposal, dict) and not proposal.get("unknown")
+        else None
+    )
+    return CandidateContext(
+        candidate.dedup_key,
+        revision,
+        current_label=labels[0] if len(labels) == 1 else None,
+        annotated_labels=labels,
+        proposed_label=proposed,
+        trigger_reason=str(evidence.get("trigger_reason", "structural_finding")),
+    )
 
 
 def _encode(region: Image.Image) -> tuple[bytes, tuple[int, int]]:

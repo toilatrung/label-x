@@ -1943,6 +1943,7 @@ components:
         evidence: [FR-ENG-08]
         id: [FR-AGG-01]
         vlm: [FR-ENG-10]
+        detector: [FR-ENG-05, FR-ENG-08]
       properties:
         engine: { $ref: "#/components/schemas/EngineName" }
         engine_version: { type: string }
@@ -1958,6 +1959,35 @@ components:
           description: ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/.
         vlm:
           $ref: "#/components/schemas/CandidateVlm"
+        detector:
+          allOf: [{ $ref: "#/components/schemas/CandidateDetector" }]
+          nullable: true
+    CandidateDetector:
+      type: object
+      description: Detector evidence, not a human decision. Background is not an eleventh taxonomy class.
+      required: [source, engine_status, class_id, class_name, top3, margin, background_score, unknown, reason_code, model_version, model_sha256, policy_version, human_review_required]
+      properties:
+        source: { type: string, enum: [detector] }
+        engine_status: { type: string, enum: [checked] }
+        class_id: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        top3:
+          type: array
+          items:
+            type: object
+            required: [class_id, class_name, score]
+            properties:
+              class_id: { type: string }
+              class_name: { type: string }
+              score: { type: number, minimum: 0, maximum: 1 }
+        margin: { type: number, nullable: true, minimum: 0, maximum: 1 }
+        background_score: { type: number, nullable: true, minimum: 0, maximum: 1 }
+        unknown: { type: boolean }
+        reason_code: { type: string, enum: [label_conflict, missing_object, unknown, detector_no_match] }
+        model_version: { type: string }
+        model_sha256: { type: string }
+        policy_version: { type: string }
+        human_review_required: { type: boolean }
     CandidateVlm:
       type: object
       example:
@@ -1993,11 +2023,11 @@ components:
       properties:
         state: { type: string, description: "disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled" }
         engine_status: { type: string, description: "checked | partial | failed | not_checked | running (payload FE v0)" }
-        source: { type: string, description: Luôn là qwen }
+        source: { type: string, description: "qwen | policy (detector_no_match)" }
         conclusion: { type: string, nullable: true, description: "confirmed | uncertain | null" }
         class_id: { type: string, nullable: true }
         class_name: { type: string, nullable: true }
-        reason_code: { type: string, nullable: true, description: "invalid_crop | provider_error | parse_failure | budget_exhausted | null" }
+        reason_code: { type: string, nullable: true, description: "invalid_crop | provider_error | parse_failure | budget_exhausted | detector_no_match | null" }
         evidence_id: { type: integer, nullable: true }
         evaluation_id: { type: string, nullable: true, description: Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa }
         model_version: { type: string, nullable: true, description: Model ID đã yêu cầu }
@@ -2203,7 +2233,7 @@ components:
       description: |
         Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
         cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
-        detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
+        detector: dự đoán của một run, id = "<run_id>:<task_id>:<frame>:<index>" (không ổn định qua run).
         reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
       required: [namespace, id]
       properties:
@@ -2218,7 +2248,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [prediction_region, annotation, annotation_cluster, annotation_rule, manual_object, manual_region]
+          enum: [prediction_region, detector_box, annotation, annotation_cluster, annotation_rule, manual_object, manual_region]
         objects:
           type: array
           items: { $ref: "#/components/schemas/ObjectRef" }

@@ -65,6 +65,9 @@ class CandidateContext:
     snapshot_revision: str
     current_label: str | None = None  # nhãn annotator/classifier đang tranh chấp (class_id)
     classifier_top3: tuple[tuple[str, float], ...] = ()
+    annotated_labels: tuple[str, ...] = ()
+    proposed_label: str | None = None
+    trigger_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -187,13 +190,27 @@ def build_prompt(
     prompt_version: str, taxonomy: Sequence[TaxonomyLabel], context: CandidateContext
 ) -> str:
     """Prompt phía backend. Bản duy nhất hiện có: `vlm-prompt-v0`."""
-    if prompt_version != "vlm-prompt-v0":
+    if prompt_version not in ("vlm-prompt-v0", "vlm-prompt-v1"):
         raise VlmParseError(f"prompt_version không biết: {prompt_version}")
     labels = "\n".join(f"- {_plain(t.class_id)}: {_plain(t.class_name)}" for t in taxonomy)
     hint = ""
     known = {t.class_id for t in taxonomy}
     if context.current_label is not None and context.current_label in known:
         hint = f"\nNhãn đang được đề xuất cho vùng này: {_plain(context.current_label)}."
+    if prompt_version == "vlm-prompt-v1":
+        annotated = [label for label in context.annotated_labels if label in known]
+        hint = (
+            "\nNhãn annotation hiện tại: " + (", ".join(map(_plain, annotated)) or "không có") + "."
+        )
+        if context.proposed_label in known:
+            hint += (
+                f"\nNhãn detector đề xuất (chưa xác nhận): {_plain(context.proposed_label or '')}."
+            )
+        if len(annotated) > 1:
+            hint += (
+                "\nVùng chứa nhiều annotation: kết luận chỉ là evidence cấp candidate, "
+                "không sửa từng object."
+            )
     return (
         "Bạn kiểm tra một ảnh crop của một đối tượng trong bộ dữ liệu giao thông.\n"
         "Chọn đúng MỘT class_id trong danh sách dưới đây nếu chắc chắn; nếu ảnh mờ, bị che, "

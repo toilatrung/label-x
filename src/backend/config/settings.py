@@ -179,6 +179,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     # Several models share the field names "status"/"action"; pin stable component names.
     "ENUM_NAME_OVERRIDES": {
+        "DetectorSourceEnum": ["detector"],
+        "RiskRandomAuditSourceEnum": ["risk", "random_audit"],
+        "DetectorReasonEnum": ["label_conflict", "missing_object", "unknown", "detector_no_match"],
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
@@ -235,6 +238,8 @@ CELERY_TASK_PUBLISH_RETRY_POLICY = {
 }
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+DETECTOR_WORKER_URL = env("DETECTOR_WORKER_URL", default="")
+DETECTOR_SERVICE_TOKEN = env("DETECTOR_SERVICE_TOKEN", default="")
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 

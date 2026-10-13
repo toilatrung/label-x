@@ -16,6 +16,7 @@ class VlmReasonCode(StrEnum):
     PROVIDER_ERROR = "provider_error"
     PARSE_FAILURE = "parse_failure"
     BUDGET_EXHAUSTED = "budget_exhausted"
+    DETECTOR_NO_MATCH = "detector_no_match"
 
 
 class VlmProviderFailure(StrEnum):

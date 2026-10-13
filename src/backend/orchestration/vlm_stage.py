@@ -59,7 +59,7 @@ from vlm.tasks import result_to_dict
 logger = logging.getLogger("labelx.orchestration")
 
 VLM_ENGINE = "vlm"
-TRIGGER_POLICY_VERSION = "vlm-trigger-v0"
+TRIGGER_POLICY_VERSION = "candidate-vlm-routing-v1"
 SKIP_NO_TAXONOMY = "not_applicable"
 # Lượt đánh giá logic đầu tiên. Manual recheck/re-evaluate (M04C-02/#289) sẽ tăng generation; ràng
 # buộc unique (run, candidate, generation) và khoá idempotency đã hỗ trợ nhiều generation.
@@ -153,12 +153,26 @@ def select_candidates_for_vlm(run: QCRun) -> list[CandidateRecord]:
     VlmUnit; budget là chặn trên duy nhất. M04C-01 (`routing_policy.route`) thay thân hàm này, giữ
     nguyên chữ ký, để chỉ candidate low-score/low-margin/conflict/manual recheck mới được gửi.
     """
-    return list(
+    candidates = list(
         CandidateRecord.objects.filter(run_id=run.pk)
         .exclude(engine=VLM_ENGINE)
         .select_related("run")
         .order_by("pk")
     )
+    from orchestration.candidate_routing import routing_evidence, unmatched_targets
+    from orchestration.routing_policy import RoutingReason, route_candidate
+
+    targets = unmatched_targets(run.pk)
+
+    return [
+        candidate
+        for candidate in candidates
+        if route_candidate(
+            {"engine": candidate.engine, "evidence": routing_evidence(candidate, targets)},
+            crop_valid=True,
+        ).primary
+        != RoutingReason.DETECTOR_NO_MATCH
+    ]
 
 
 def start_vlm_stage(run_id: int) -> int:
@@ -417,6 +431,27 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
     public = config.as_public_dict()
+    from orchestration.candidate_routing import routing_evidence, unmatched_targets
+    from orchestration.routing_policy import RoutingReason, route_candidate
+
+    decision = route_candidate(
+        {
+            "engine": candidate.engine,
+            "evidence": routing_evidence(candidate, unmatched_targets(run.pk)),
+        },
+        crop_valid=True,
+    )
+    if unit.policy_version == TRIGGER_POLICY_VERSION:
+        public["routing"] = {
+            "policy": dict(decision.policy),
+            "reason": decision.primary.value,
+            "source_engine": candidate.engine,
+            "human_review_required": decision.human_review_required,
+        }
+    if decision.primary == RoutingReason.DETECTOR_NO_MATCH:
+        _fail(unit, token, VlmReasonCode.DETECTOR_NO_MATCH, revision=revision, config=public)
+        refresh_run(unit.run_id)
+        return VlmUnit.Status.FAILED
     if (config.model, config.prompt_version) != (unit.model, unit.prompt_version):
         # Config của run không còn khớp lúc unit được tạo: không gọi provider với model/prompt
         # khác với khoá idempotency và evidence.
@@ -434,10 +469,17 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         _fail(unit, token, VlmReasonCode.INVALID_CROP, revision=revision, config=public)
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
+    from orchestration.vlm_crops import candidate_context
+
+    try:
+        context = candidate_context(candidate, revision)
+    except VlmError:
+        # Legacy fixtures/invalid structural anchors still let crop provider define validity.
+        context = CandidateContext(candidate_id=candidate.dedup_key, snapshot_revision=revision)
     request = VlmRequest(
         crop=crop,
         taxonomy=taxonomy,
-        context=CandidateContext(candidate_id=candidate.dedup_key, snapshot_revision=revision),
+        context=context,
         config=config,
     )
     gate = DbBudgetGate(unit)

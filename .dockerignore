@@ -2,6 +2,7 @@
 .codegraph
 .cache
 **/.venv
+**/.venv-wsl
 **/__pycache__
 **/.pytest_cache
 **/.ruff_cache

@@ -29,7 +29,7 @@ endif
         cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend \
-        check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
+        check lint format test detector-lint detector-test detector-image detector-up detector-down dev-detector-worker typecheck gen-api validate-kit clean
 
 help: ## Liệt kê lệnh
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -147,6 +147,15 @@ dev-backend: ## Chạy Django API ở :8000
 
 dev-worker: ## Chạy Celery worker
 	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -l info
+
+dev-detector-worker: ## Consumer queue detector riêng (một request GPU tại một thời điểm)
+	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -Q detector --pool=solo --concurrency=1 -l info
+
+detector-up: ## Worker GPU dài hạn; cần DETECTOR_MODELS_DIR và DETECTOR_SERVICE_TOKEN
+	docker compose --env-file "$(BACKEND)/.env" -f "$(ROOT)/infrastructure/docker-compose.detector.yml" up -d
+
+detector-down: ## Dừng worker GPU (không xóa model/evidence)
+	docker compose -f "$(ROOT)/infrastructure/docker-compose.detector.yml" down
 
 dev-beat: ## Chạy Celery beat (chưa có task/lịch polling CVAT)
 	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config beat -l info

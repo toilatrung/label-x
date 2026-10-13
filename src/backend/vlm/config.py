@@ -76,7 +76,7 @@ def default_api_key_env(base_url: str) -> str:
     return HOST_KEY_ENV.get(urlparse(base_url).hostname or "", DEFAULT_API_KEY_ENV)
 
 
-PROMPT_VERSIONS = frozenset({"vlm-prompt-v0"})
+PROMPT_VERSIONS = frozenset({"vlm-prompt-v0", "vlm-prompt-v1"})
 
 MAX_ATTEMPTS_LIMIT = 3  # tối đa 3 attempts/lượt logic (M04A-03)
 MAX_TIMEOUT_SECONDS = 120.0

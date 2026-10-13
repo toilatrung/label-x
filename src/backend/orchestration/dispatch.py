@@ -267,7 +267,10 @@ def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
     queued = 0
     for unit in pending:
         try:
-            run_work_unit.delay(unit.pk)
+            if unit.engine == "detector":
+                run_work_unit.apply_async(args=(unit.pk,), queue="detector")
+            else:
+                run_work_unit.delay(unit.pk)
         except Exception:
             logger.exception(
                 "dispatch failed", extra={"qc_run_id": run_id, "work_unit_id": unit.pk}
