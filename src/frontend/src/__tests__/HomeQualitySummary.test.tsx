@@ -164,7 +164,7 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(screen.queryByText(/NaN/)).toBeNull();
     });
 
-    it('QualityControlHome renders the canonical 4-row product table when the dataset API fails or is empty', async () => {
+    it('QualityControlHome renders the canonical product table in explicit mock mode', async () => {
       const { authApi } = setupMockEnv(() => {
         return Response.json({ detail: 'No backend available' }, { status: 500 });
       });
@@ -179,25 +179,9 @@ describe('FE-01: Quality Control Home and Quality Summary (M1/M2/M3 QA Repair)',
       expect(await screen.findByText('Road Vision Highway')).toBeDefined();
       expect(screen.queryByText(/Máy chủ gặp lỗi|Không thể tải danh sách Dataset/)).toBeNull();
       expect(document.querySelector('.lx-notice')).toBeNull();
-
-      const urbanRows = screen.getAllByText('Road Vision Urban');
-      expect(urbanRows).toHaveLength(2);
-      expect(screen.getByText('v1.4')).toBeDefined();
-      expect(screen.getByText('v1.3')).toBeDefined();
-      expect(screen.getByText('Parking Lot')).toBeDefined();
-      expect(screen.getByText('12,500')).toBeDefined();
-      expect(screen.getByText('11,800')).toBeDefined();
-      expect(screen.getByText('5,600')).toBeDefined();
-      expect(screen.getByText('3,000')).toBeDefined();
-      expect(screen.getByRole('button', { name: 'Tạo snapshot đầu tiên' })).toBeDefined();
-
-      // Canonical rows behave like product data and navigate normally.
-      const firstRow = screen.getAllByRole('row')[1];
-      fireEvent.click(firstRow);
-      expect(mockPush).toHaveBeenCalledWith('/?view=summary');
     });
 
-    it('canonical dataset IDs enter product context without triggering an extra request', async () => {
+    it('uses canonical mock datasets without triggering an extra request', async () => {
       const requestedDatasetUrls: string[] = [];
       const onDatasetSelect = vi.fn();
       const { authApi } = setupMockEnv((req) => {

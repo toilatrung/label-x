@@ -77,7 +77,7 @@ describe('EngineThresholdsTable component (T-029)', () => {
     const row = metricTitle.closest('tr');
     expect(row).toBeDefined();
     expect(within(row!).getByText('Chưa có Ground Truth')).toBeDefined();
-    expect(within(row!).queryByText('Chưa được cấu hình/không có dữ liệu từ API')).toBeNull();
+    expect(within(row!).queryByText('Chưa được cấu hình')).toBeNull();
   });
 
   it('displays indeterminate status and unconfigured notice when engines are missing or lack required params without fake fallbacks', () => {
@@ -100,7 +100,7 @@ describe('EngineThresholdsTable component (T-029)', () => {
     expect(unknownControls.every((control) => !(control as HTMLInputElement).checked)).toBe(true);
 
     // Five non-Metric engines display the generic notice; Metric has a specific Ground Truth state.
-    const unconfiguredNotices = screen.getAllByText('Chưa được cấu hình/không có dữ liệu từ API');
+    const unconfiguredNotices = screen.getAllByText('Chưa được cấu hình');
     expect(unconfiguredNotices.length).toBe(5);
     expect(screen.getByText('Chưa có Ground Truth')).toBeDefined();
 
@@ -127,7 +127,7 @@ describe('EngineThresholdsTable component (T-029)', () => {
 
     const row = screen.getByText('Schema / Taxonomy').closest('tr')!;
     expect(within(row).getByText(JSON.stringify(params))).toBeDefined();
-    expect(within(row).queryByText('Chưa được cấu hình/không có dữ liệu từ API')).toBeNull();
+    expect(within(row).queryByText('Chưa được cấu hình')).toBeNull();
   });
 
   it('renders loading state when isLoading is true', () => {

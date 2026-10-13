@@ -64,7 +64,7 @@ export function CandidateEvidenceList({
           <div className="lx-callout lx-callout--neutral" role="status">
             <strong>Chưa có dữ liệu candidate</strong>
             <div>
-              Chưa có dữ liệu candidate từ backend cho lần chạy này.
+              Lần chạy này chưa có dữ liệu candidate.
             </div>
           </div>
         ) : candidates.length === 0 ? (

@@ -1,20 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SAMPLE_IN_USE, SAMPLE_IN_USE_EXTRA, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
+import { SAMPLE_IN_USE, SAMPLE_SNAPSHOT_FORM } from '@/lib/mock/snapshots';
 
-/** Ba trường của Snapshot đang dùng chưa có API; luôn là dữ liệu minh họa, một cảnh báo cho cả khối. */
+/** Lỗi tải dữ liệu Quality Control Run gắn với Snapshot. Không thay bằng fixture. */
 export function SnapshotInUseExtra({ error }: { error?: string }) {
-  void error;
-  return (
-    <div className="lx-stack lx-stack--divider">
-      <dl className="lx-kv">
-        {SAMPLE_IN_USE_EXTRA.map(([label, value, mono]) => (
-          <React.Fragment key={label}><dt>{label}</dt><dd className={mono ? 'lx-mono' : undefined}>{value}</dd></React.Fragment>
-        ))}
-      </dl>
-    </div>
-  );
+  return <div className="lx-callout" role="alert">{error || 'Không tải được Quality Control Run của Snapshot.'}</div>;
 }
 
 /** Bản minh họa đủ thiết kế của thẻ "Snapshot đang dùng", dùng khi không tải được Dataset. */
@@ -36,21 +27,20 @@ export function SnapshotInUseSample() {
   );
 }
 
-/** Dataset, Annotation revision, Seed: hai trường sau chưa có API nên khoá và dùng giá trị minh họa. */
+/** Các trường chỉ đọc phản ánh đúng contract tạo Snapshot; revision do backend khóa, seed thuộc bước tạo Run. */
 export function SnapshotRevisionFields({ dataset }: { dataset: React.ReactNode }) {
-  const f = SAMPLE_SNAPSHOT_FORM;
   return (
     <>
       <div className="lx-grid lx-grid--3">
         {dataset}
         <div className="lx-field">
           <label className="lx-label" htmlFor="snapshot-revision">Annotation revision</label>
-          <select id="snapshot-revision" className="lx-select" disabled>{f.revisions.map(item => <option key={item}>{item}</option>)}</select>
+          <select id="snapshot-revision" className="lx-select" disabled><option>Khóa tự động khi tạo Snapshot</option></select>
         </div>
         <div className="lx-field">
           <label className="lx-label" htmlFor="snapshot-seed">Mã hạt giống lấy mẫu (seed)</label>
-          <input id="snapshot-seed" className="lx-input" value={f.seed} readOnly disabled />
-          <span className="lx-hint">Giữ nguyên để tái lập mẫu</span>
+          <input id="snapshot-seed" className="lx-input" value="—" readOnly disabled />
+          <span className="lx-hint">Cấu hình khi tạo Quality Control Run</span>
         </div>
       </div>
     </>

@@ -260,7 +260,7 @@ export function EngineThresholdsTable({
                   ? <><div className={layout === 'analysis' ? 'lx-muted' : 'lx-cell__main'}>{layout === 'analysis' && version !== '—' ? `${version} · ` : ''}{effectiveThreshold}</div>{hasParams && layout !== 'analysis' && <div className="lx-cell__sub lx-mono">{JSON.stringify(params)}</div>}</>
                   : hasParams
                     ? <div className="lx-cell__main lx-mono">{JSON.stringify(params)}</div>
-                    : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình/không có dữ liệu từ API'}</span>;
+                    : <span className="lx-subtle">{isEnabled === false && layout === 'analysis' ? 'Tắt · kết quả sẽ là Not checked' : 'Chưa được cấu hình'}</span>;
 
               return (
                 <tr key={meta.key}>

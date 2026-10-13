@@ -281,7 +281,7 @@ describe('Escalations UI (T-039)', () => {
     expect(screen.queryByText(/IoU/)).toBeNull();
   });
 
-  it('opens Guideline Gap design from an issue without saving it (FE-12)', async () => {
+  it('uses the real adjudication outcome when creating a Guideline Gap (FE-12)', async () => {
     const { calls } = await renderPage();
     await screen.findByText('QC-00042');
     expect(screen.queryByText('QC-00098')).toBeNull();
@@ -289,21 +289,46 @@ describe('Escalations UI (T-039)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     const before = calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
-    expect(screen.getByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeDefined();
-    expect(screen.getByText(/QC-00042 · Quy tắc VEH-03/)).toBeDefined();
-    fireEvent.click(screen.getByRole('dialog').querySelector('button[type="submit"]')!);
-    expect(screen.getByText('Mô tả nội dung còn thiếu.')).toBeDefined();
+    expect((screen.getByRole('radio', { name: 'Guideline còn thiếu' }) as HTMLInputElement).checked).toBe(true);
+    expect(screen.queryByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeNull();
     expect(calls.length).toBe(before);
   });
 
-  it('shows the three design tabs, sample rows and the not-connected notice (FE-06)', async () => {
-    await renderPage();
+  it('shows the three design tabs with rows returned by the Decision Case API (FE-06)', async () => {
+    await renderPage('qalead', async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname !== '/api/decision-cases/') return null;
+      return Response.json([
+        {
+          id: 12,
+          issue_id: 42,
+          outcome: 'guideline_missing',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: null,
+          reason: 'Xe buýt mini chở hàng thuộc nhãn nào',
+          case_version: 'v2',
+          created_at: '2026-10-11T02:00:00Z',
+        },
+        {
+          id: 40,
+          issue_id: 84,
+          outcome: 'confirm',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: 'truck',
+          reason: 'Xe bán tải có nắp thùng',
+          case_version: 'v2',
+          created_at: '2026-10-11T03:00:00Z',
+        },
+      ]);
+    });
     fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
-    expect(screen.getByText('GAP-012')).toBeDefined();
+    expect(await screen.findByText('GAP-012')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('Chức năng vẫn chưa được kết nối với server');
+    expect(screen.queryByText(/chưa được kết nối với server/)).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
-    expect(screen.getByText('CASE-040')).toBeDefined();
+    expect(await screen.findByText('CASE-040')).toBeDefined();
     expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Decision Cases/ })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Adjudication/ })).toBeDefined();

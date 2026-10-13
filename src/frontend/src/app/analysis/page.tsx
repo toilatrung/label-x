@@ -10,6 +10,7 @@ import { SnapshotDetail } from '@/components/snapshots/SnapshotDetail';
 import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import { SnapshotCreateSample, SnapshotInUseExtra, SnapshotInUseSample, SnapshotRevisionFields } from '@/components/snapshots/SnapshotSample';
 import { useAuth } from '@/lib/auth/auth-context';
+import { isMockAuth } from '@/lib/auth/config';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
@@ -106,7 +107,7 @@ function SnapshotWorkspace() {
     }
   }, [item, snapshotDataset, datasetQuery.hasNextPage, datasetQuery.isFetchingNextPage, datasetQuery]);
 
-  const isSampleFallback = (datasetQuery.isError || (datasetQuery.isSuccess && !allDatasets.length)) && !id;
+  const isSampleFallback = isMockAuth && (datasetQuery.isError || (datasetQuery.isSuccess && !allDatasets.length)) && !id;
   const displayDatasetName = item ? snapshotDataset?.name : (selectedDataset?.name ?? (isSampleFallback ? 'Road Vision Urban · v1.4' : undefined));
   const displayGuideline = item ? (item.guideline_version ?? snapshotDataset?.guideline_version ?? undefined)
     : (selectedDataset?.guideline_version ?? (isSampleFallback ? 'v1.2' : undefined));
@@ -162,6 +163,8 @@ function SnapshotWorkspace() {
                       {dataset.name} · project #{dataset.cvat_project_id}</option>)}
                   </select></div>} />
               {datasetQuery.isPending && <p role="status">Đang tải Dataset…</p>}
+              {datasetQuery.isError && <div className="lx-callout" role="alert">{errorMessage(datasetQuery.error)}
+                <button className="lx-btn" type="button" onClick={() => void datasetQuery.refetch()}>Thử lại</button></div>}
               {datasetQuery.hasNextPage && <button className="lx-btn" type="button" disabled={datasetQuery.isFetchingNextPage}
                 onClick={() => void datasetQuery.fetchNextPage()}>Tải thêm Dataset</button>}
               {datasetId === null && <p className="lx-muted">Vui lòng chọn một Dataset để tạo Snapshot.</p>}

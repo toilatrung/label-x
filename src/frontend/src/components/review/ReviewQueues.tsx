@@ -4,6 +4,7 @@ import React, { useState, useTransition, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth/auth-context';
+import { isMockAuth } from '@/lib/auth/config';
 import {
   getRunDetails,
   getRunRanking,
@@ -668,7 +669,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         </section>
       ) : (
         !datasetId || !effectiveRunId ? (
-          <ReviewQueueSample />
+          isMockAuth ? <ReviewQueueSample /> : null
         ) : runQuery.isSuccess && (
           <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
           {/* Queue Selection Tabs */}

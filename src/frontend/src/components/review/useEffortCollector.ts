@@ -163,13 +163,27 @@ export function useEffortCollector({
       return;
     }
 
-    const timer = setTimeout(() => {
-      if (sessionRef.current) {
-        void sessionRef.current.collector.loseLease();
+    // Browsers and Node clamp a timeout to a signed 32-bit integer. Tests can
+    // intentionally pin `now` far in the past, and a long-lived lease from an
+    // API fixture must not overflow into an immediate one-millisecond timer.
+    const maxTimeoutMs = 2_147_483_647;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleExpiry = () => {
+      const currentNow = collectorOptions?.now ? collectorOptions.now() : Date.now();
+      const currentRemainingMs = expiry - currentNow;
+      if (currentRemainingMs <= 0) {
+        if (sessionRef.current) {
+          void sessionRef.current.collector.loseLease();
+        }
+        return;
       }
-    }, remainingMs);
+      timer = setTimeout(scheduleExpiry, Math.min(currentRemainingMs, maxTimeoutMs));
+    };
+    scheduleExpiry();
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isGrantStructurallyValid, grant, grantIdentityKey, collectorOptions]);
 
   // Clean up on component unmount

@@ -896,7 +896,7 @@ export function ReviewWorkspace({
               </a>
             ) : (
               <span className="lx-subtle lx-text-11">
-                CVAT link: Chưa có từ API
+                CVAT link chưa khả dụng
               </span>
             )}
           </div>

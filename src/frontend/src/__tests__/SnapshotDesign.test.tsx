@@ -73,12 +73,12 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(side.queryByText('Dữ liệu minh họa')).toBeNull();
   });
 
-  it('falls back to design values when the runs cannot be read', async () => {
+  it('shows the run API error without falling back to design values', async () => {
     vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
     wrap(<AnalysisPage />);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
-    expect(side.queryByText(/kết nối với server/)).toBeNull();
-    expect(await side.findByText('Detector v2.3 · Classifier v1.8')).toBeDefined();
+    expect(await side.findByText(/Không kết nối được máy chủ/)).toBeDefined();
+    expect(side.queryByText('Detector v2.3 · Classifier v1.8')).toBeNull();
   });
 
   it('says so when the locked snapshot has no run yet', async () => {
