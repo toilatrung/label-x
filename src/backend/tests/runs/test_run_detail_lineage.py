@@ -1,7 +1,11 @@
 """M03-R05/R10 integration: D05 lineage on Run detail and the registered review-policy URL."""
 
+from pathlib import Path
+
 import pytest
+import yaml
 from django.test import override_settings
+from drf_spectacular.generators import SchemaGenerator
 
 from tests.review.test_queue_lease import client, world  # noqa: F401  (fixture)
 
@@ -21,8 +25,23 @@ def test_run_detail_exposes_lineage_fields_but_list_stays_light(world):  # noqa:
     assert detail.status_code == 200, detail.data
     for field in ("verification_lineage", "selected_final_sources", "operational_source"):
         assert field in detail.data
+    assert detail.data["verification_lineage"] == []
+    assert detail.data["selected_final_sources"] == []
     operational = detail.data["operational_source"]
     assert "scope_complete" in operational and "blocked_reasons" in operational
+
+
+def test_lineage_contract_matches_runtime_array_item_schemas():
+    from tests.contract_parity import shape
+
+    root = Path(__file__).resolve().parents[4]
+    contract = yaml.safe_load((root / "docs/04-api/openapi.yaml").read_text(encoding="utf-8"))
+    runtime = SchemaGenerator().get_schema(request=None, public=True)
+    expected = contract["components"]["schemas"]["RunDetail"]["allOf"][1]["properties"]
+    actual = runtime["components"]["schemas"]["RunDetail"]["properties"]
+    for field in ("verification_lineage", "selected_final_sources"):
+        assert expected[field]["type"] == actual[field]["type"] == "array"
+        assert shape(contract, expected[field]) == shape(runtime, actual[field])
 
 
 @pytest.mark.django_db

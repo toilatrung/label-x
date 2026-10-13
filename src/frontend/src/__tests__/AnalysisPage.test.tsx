@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AnalysisPage from '@/app/analysis/page';
@@ -64,6 +64,8 @@ function renderWithClient(queryClient?: QueryClient) {
 describe('AnalysisPage regression tests (R-1, F-1, F-2)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(api.getSnapshots).mockResolvedValue({ results: [], next: null, previous: null });
+    vi.mocked(api.getTasks).mockResolvedValue([]);
     mockAuthContext = {
       user: { id: 1, username: 'tester', role: 'qa_lead' as const, fullName: 'QA Lead' },
       session: {
@@ -80,6 +82,53 @@ describe('AnalysisPage regression tests (R-1, F-1, F-2)', () => {
       logout: vi.fn(),
       hasPermission: () => true,
     };
+  });
+
+  describe('Real API failure and empty states', () => {
+    it('keeps dataset 503 visible, blocks creation and retries without sample data', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+      vi.mocked(api.getDatasets).mockRejectedValueOnce(new Error('Dataset unavailable'))
+        .mockResolvedValue({ results: [{ id: 42, cvat_project_id: 42, name: 'Real CVAT project', taxonomy_version: null, guideline_version: null }], next: null, previous: null });
+      renderWithClient();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Thử lại' })).toBeDefined());
+      expect(screen.queryByText(/Road Vision Urban/)).toBeNull();
+      expect(screen.queryByText('SNP-014')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Tạo snapshot và cấu hình →' })).toBeNull();
+      expect(screen.getByLabelText('Dataset / project CVAT')).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+      await waitFor(() => expect(screen.getByText('Real CVAT project · project #42')).toBeDefined());
+      expect(api.getDatasets).toHaveBeenCalledTimes(2);
+    });
+
+    it('shows empty CVAT scope rather than design fixtures', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+      vi.mocked(api.getDatasets).mockResolvedValue({ results: [], next: null, previous: null });
+      renderWithClient();
+      await waitFor(() => expect(screen.getByText('Chưa có Dataset trong phạm vi truy cập CVAT của bạn.')).toBeDefined());
+      expect(screen.queryByText(/Road Vision Urban/)).toBeNull();
+      expect(screen.queryByText('SNP-014')).toBeNull();
+      expect(screen.queryByText('Đã khoá')).toBeNull();
+    });
+
+    it('keeps snapshot history errors visible instead of showing a locked sample', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+      vi.mocked(api.getDatasets).mockResolvedValue({ results: [{ id: 42, cvat_project_id: 42, name: 'Urban', taxonomy_version: null, guideline_version: null }], next: null, previous: null });
+      vi.mocked(api.getSnapshots).mockRejectedValue(new Error('History unavailable'));
+      renderWithClient();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Thử lại lịch sử Snapshot' })).toBeDefined());
+      expect(screen.queryByText('SNP-014')).toBeNull();
+      expect(screen.queryByText('Đã khoá')).toBeNull();
+    });
+
+    it('preserves Sketchup fields without presenting sample revision/seed as API values', async () => {
+      mockSearchParams.mockReturnValue(new URLSearchParams(''));
+      vi.mocked(api.getDatasets).mockResolvedValue({ results: [], next: null, previous: null });
+      renderWithClient();
+      expect(screen.getByLabelText('Annotation revision')).toBeDisabled();
+      expect(screen.getByLabelText('Mã hạt giống lấy mẫu (seed)')).toHaveAttribute('value', '—');
+      expect(screen.getByText('Chức năng vẫn chưa được kết nối với server')).toBeDefined();
+      expect(screen.queryByText(/a91f3c/)).toBeNull();
+    });
   });
 
   describe('F-1: Dataset context on deep-linked Snapshot', () => {
