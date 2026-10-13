@@ -17,13 +17,12 @@ from accounts.models import Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
-from engines.interface import EngineStatus, public_status
 from orchestration.models import CandidateRecord
-from orchestration.services import ledger_counts
 from review import services as review_services
 from review.lineage import run_lineage
 from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
+from runs.kpi import ledger_entries
 from runs.models import ConfigVersion, QCRun, RunRanking, WorkUnit
 from runs.serializers import (
     CandidateSerializer,
@@ -506,35 +505,7 @@ class RunLedgerView(RunScopedReadView):
     )
     def get(self, _request: Request, pk: int) -> Response:
         run = QCRun.objects.prefetch_related("engine_results").get(pk=pk)
-        finished = run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
-        entries = []
-        for result in run.engine_results.all():
-            counts = ledger_counts(pk, result.engine)
-            displayed_status = result.status
-            if counts.total:
-                displayed_status = public_status(counts, finished=finished).value
-            elif finished and displayed_status == EngineStatus.RUNNING:
-                displayed_status = EngineStatus.NOT_CHECKED
-            entries.append(
-                {
-                    "engine": result.engine,
-                    "status": displayed_status,
-                    "required": result.required,
-                    "unit": result.unit,
-                    "total": counts.total,
-                    "eligible": counts.eligible,
-                    "excluded": counts.excluded,
-                    "applicability_version": result.applicability_version,
-                    "completed": counts.completed,
-                    "failed": counts.failed,
-                    "pending": counts.pending,
-                    "not_checked": counts.not_checked,
-                    "not_checked_reasons": {
-                        key.value: value for key, value in counts.not_checked_reasons.items()
-                    },
-                    "coverage": counts.coverage,
-                }
-            )
+        entries = ledger_entries(run)
         return Response(LedgerEntrySerializer(entries, many=True).data)
 
 
