@@ -12,7 +12,7 @@ from PIL import Image
 from .artifact import ChecksumMismatchError, ClassifierArtifact, ManifestError
 from .crops import letterbox_crop
 from .dataset import DatasetError, SplitConfig, build_dataset, parse_label_map
-from .infer import Classifier
+from .infer import Classifier, predict_batch
 from .train import TrainingDataError, train_classifier
 
 
@@ -52,6 +52,11 @@ def _parser() -> argparse.ArgumentParser:
     predict.add_argument("--image", type=Path, required=True)
     predict.add_argument("--box", type=float, nargs=4, metavar=("X1", "Y1", "X2", "Y2"))
     predict.add_argument("--device", default="cpu")
+
+    batch = sub.add_parser("predict-batch", help="classify a JSON list of {id, image, box?}")
+    batch.add_argument("--manifest", type=Path, required=True)
+    batch.add_argument("--input", type=Path, required=True, help="JSON list of items")
+    batch.add_argument("--device", default="cpu")
     return parser
 
 
@@ -111,6 +116,12 @@ def main(argv: list[str] | None = None) -> int:
                     }
                 )
             )
+        elif args.command == "predict-batch":
+            items = json.loads(args.input.read_text(encoding="utf-8"))
+            if not isinstance(items, list):
+                raise ValueError("--input must be a JSON list")
+            classifier = Classifier.load(args.manifest, device=args.device)
+            print(json.dumps(predict_batch(classifier, items)))
         else:
             classifier = Classifier.load(args.manifest, device=args.device)
             with Image.open(args.image) as image:
