@@ -9,9 +9,9 @@
 <p><strong>Trước:</strong> roadmap R-001 gồm M-01…M-06 và M-FE01. Phần còn lại sau M-04 nằm rải rác ở M-05 (đo hiệu quả, gate, báo cáo), M-06 (vận hành, nghiệm thu), M-FE01 Phase 2 (nối API) và BLOCKER-031 (22 dòng API chưa nối). Hồ sơ M-01…M-03 còn nhiều task ở trạng thái <code>review</code> chờ QC.</p>
 <p><strong>Sau (đề xuất):</strong></p>
 <ol>
-<li>Thêm milestone <code>M-BE-MVP</code> sau M-04: hoàn thiện Backend còn thiếu và nối API lên giao diện (gói MBE-00…MBE-09 trong <a href="../../planning/M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>), gồm pipeline AI đầu cuối hiển thị trong Review Workspace và các dòng API của BLOCKER-031.</li>
+<li>Thêm milestone <code>M-BE-MVP</code> sau M-04: hoàn thiện Backend còn thiếu và nối API lên giao diện (gói MBE-00…MBE-07 trong <a href="../../planning/M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>), gồm pipeline AI đầu cuối hiển thị trong Review Workspace và các dòng API của BLOCKER-031.</li>
 <li>Mở rộng contract <code>docs/04-api/openapi.yaml</code> một lần (MBE-00) cho các endpoint nhóm B của BLOCKER-031 (đáp ứng yêu cầu "cần CR mới" của BLOCKER-031 mục B và dòng 4, 6, 9, 11, 15).</li>
-<li>Cập nhật 2026-10-13 theo yêu cầu PO: toàn bộ API của BLOCKER-031 (22 dòng, 33 endpoint) hoàn thành ở mức MVP, không còn gói hoãn P1/P2; không đặt hạn; công việc chia thành 9 làn song song (xem "Chia làn song song" trong kế hoạch). Phần này chưa được duyệt cho tới khi PO duyệt CR-118.</li>
+<li>Cập nhật 2026-10-13 theo yêu cầu PO: toàn bộ API của BLOCKER-031 (22 dòng, 33 endpoint) hoàn thành ở mức MVP, không còn gói hoãn P1/P2; không đặt hạn; công việc chỉ Backend, hai người làm song song (xem "Gói công việc" trong kế hoạch). Phần này chưa được duyệt cho tới khi PO duyệt CR-118.</li>
 <li>Trong giai đoạn M-BE-MVP không chạy QC độc lập; PO kiểm thử thủ công trên giao diện. Task xong theo "PO manual test", không có báo cáo QA theo SHA. CI <code>make check</code> và <code>make validate-kit</code> giữ nguyên.</li>
 </ol>
 <p>Không đổi: ranh giới cứng (adapter CVAT chỉ đọc; Celery idempotent; quyền project/job kiểm ở API), stack (DEC-001), vai trò Qwen chỉ đề xuất, payload FE v0.</p>
@@ -20,7 +20,7 @@
 <h2>Impact Assessment</h2>
 <ul>
 <li>Affected Baselines : <code>.agent/planning/roadmap.html</code>, <code>.agent/planning/milestones.html</code>, <code>docs/04-api/openapi.yaml</code> (khi MBE-00 được duyệt)</li>
-<li>Affected Epics or Tasks : E-02, E-03, E-04, E-11, E-12, E-13…E-22 (phần Backend và nối FE); MBE-00…MBE-09; FE-11…FE-14 của M-FE01</li>
+<li>Affected Epics or Tasks : E-02, E-03, E-04, E-11, E-12, E-13…E-22 (phần Backend và nối FE); MBE-00…MBE-07 (chỉ Backend); FE-11…FE-14 của M-FE01</li>
 <li>Schedule Impact : M-BE-MVP bắt đầu 2026-10-14, PO quyết không đặt hạn và làm liên tục (2026-10-13); mốc 2026-10-20 của CR-101 không còn ràng buộc milestone này; M-05 và M-06 giữ khung cũ nhưng nghiệm thu theo hiệu quả bị đẩy sau MVP</li>
 <li>Cost or Resource Impact : cần dev rảnh cho BE/FE theo bảng owner đề xuất; chưa xác nhận ai rảnh</li>
 <li>Security or Compliance Impact : giữ nguyên quy tắc dữ liệu và key; không có quyền gửi ảnh thật ra cổng bên thứ ba cho tới khi PO xác nhận</li>
@@ -29,11 +29,11 @@
 <h2>Rủi ro đã biết khi bỏ QC độc lập</h2>
 <ul><li>Không có bằng chứng QA theo SHA; lỗi chỉ lộ khi PO kiểm tay. Quy trình đóng task (mục 4 của <code>labelx-qc-integrate</code>) không thoả; task ghi "PO manual test" thay vì <code>done</code>.</li><li>Hồ sơ M-01…M-03 ở trạng thái <code>review</code> vẫn tồn đọng và không được đóng bởi CR này.</li><li>Một PR mỗi gói vẫn cần comment <code>Đã xem và duyệt</code> theo CR-102 trừ khi PO quyết khác.</li></ul>
 <h2>Related Files</h2>
-<ul><li>Affected Documents : <code>.agent/planning/M-BE-MVP-2026-10-13.html</code>, <code>.agent/execution/mbe/MBE-00.html … MBE-09.html</code>, <code>.agent/planning/M-04-e2e-acceptance-2026-10-13.html</code></li><li>Decisions : none</li><li>Risks : none</li><li>Issues or Blockers : <code>.agent/governance/blockers/BLOCKER-031.html</code>, BLOCKER-030, <a href="CR-117.html">CR-117</a></li></ul>
+<ul><li>Affected Documents : <code>.agent/planning/M-BE-MVP-2026-10-13.html</code>, <code>.agent/execution/mbe/MBE-00.html … MBE-07.html</code>, <code>.agent/planning/M-04-e2e-acceptance-2026-10-13.html</code></li><li>Decisions : none</li><li>Risks : none</li><li>Issues or Blockers : <code>.agent/governance/blockers/BLOCKER-031.html</code>, BLOCKER-030, <a href="CR-117.html">CR-117</a></li></ul>
 <h2>Approval</h2>
 <ul><li>Approval Decision : <code>pending</code></li><li>Approver : <code>chưa có</code></li><li>Decision Date : <code>chưa có</code></li><li>Conditions : <code>none</code></li><li>Rationale : <code>chưa có</code></li></ul>
 <h2>Implementation Plan</h2>
-<ul><li>Responsible Owner : <code>Trịnh Quang Trung (@toilatrung)</code></li><li>Tasks : MBE-00…MBE-09 (bản nháp, chưa đăng ký)</li><li>Validation Method : <code>make validate-kit</code>; PO manual test theo runbook MBE-09; <code>make check</code> xanh trên SHA cuối</li><li>Rollback Method : gỡ hàng <code>M-BE-MVP</code> khỏi <code>milestones.html</code> và <code>roadmap.html</code>, đánh dấu CR-118 <code>rejected</code> hoặc <code>withdrawn</code>; không có thay đổi code đi kèm CR này.</li></ul>
+<ul><li>Responsible Owner : <code>Trịnh Quang Trung (@toilatrung)</code></li><li>Tasks : MBE-00…MBE-07, issue #322…#329 (cha #321), đã ghi task board; chỉ Backend, @toilatrung MBE-00…03 và @Vietanhhhhhh2003 MBE-04…07</li><li>Validation Method : <code>make validate-kit</code>; PO kiểm tay API; <code>make check</code> xanh trên SHA cuối</li><li>Rollback Method : gỡ hàng <code>M-BE-MVP</code> khỏi <code>milestones.html</code> và <code>roadmap.html</code>, đánh dấu CR-118 <code>rejected</code> hoặc <code>withdrawn</code>; không có thay đổi code đi kèm CR này.</li></ul>
 <h2>Completion Criteria</h2>
 <ul><li>[ ] PO ghi quyết định duyệt trước khi đổi baseline hoặc đăng ký task.</li><li>[ ] Task MBE-xx được duyệt đăng ký trong task board và issue.</li><li>[ ] Hàng <code>M-BE-MVP</code> khớp trạng thái thật sau duyệt.</li><li>[ ] Status là <code>implemented</code>, <code>rejected</code>, <code>withdrawn</code> hoặc <code>superseded</code>.</li></ul>
 </article></main>
