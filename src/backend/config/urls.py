@@ -15,6 +15,16 @@ from review.adjudication_views import (
     EscalationsListView,
 )
 from review.gap_views import GuidelineGapCollectionView
+from runs.kpi_views import (
+    KpiEvaluationCreateView,
+    KpiEvaluationDetailView,
+    ReferenceCreateView,
+    ReferenceLockView,
+    ReportView,
+    RunGateView,
+    WaiverApproveView,
+    WaiverCreateView,
+)
 from runs.views import ConfigVersionListView, ConfigVersionPublishView
 
 urlpatterns = [
@@ -26,6 +36,7 @@ urlpatterns = [
     path("api/guidelines/", include("guideline.urls")),
     path("api/snapshots/", include("snapshots.urls")),
     path("api/datasets/", include("snapshots.dataset_urls")),
+    path("api/runs/<int:pk>/gate/", RunGateView.as_view(), name="runs-gate"),
     path("api/runs/", include("runs.urls")),
     path("api/candidates/", include("orchestration.candidate_urls")),
     path("api/candidate-evaluations/", include("orchestration.evaluation_urls")),
@@ -44,6 +55,13 @@ urlpatterns = [
         DecisionCaseDetailView.as_view(),
         name="decision-cases-detail",
     ),
+    path("api/references/", ReferenceCreateView.as_view(), name="references-create"),
+    path("api/references/<int:pk>/lock/", ReferenceLockView.as_view(), name="references-lock"),
+    path("api/evaluations/", KpiEvaluationCreateView.as_view(), name="evaluations-create"),
+    path("api/evaluations/<int:pk>/", KpiEvaluationDetailView.as_view(), name="evaluations-detail"),
+    path("api/waivers/", WaiverCreateView.as_view(), name="waivers-create"),
+    path("api/waivers/<int:pk>/approve/", WaiverApproveView.as_view(), name="waivers-approve"),
+    path("api/reports/<int:pk>/", ReportView.as_view(), name="reports-retrieve"),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",
