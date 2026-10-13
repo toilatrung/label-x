@@ -8,6 +8,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { canAccessReview } from '@/lib/auth/roles';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ReviewWorkspace } from '@/components/review/ReviewWorkspace';
+import { ReviewWorkspaceSample } from '@/components/review/ReviewWorkspaceSample';
 
 function ReviewWorkspaceContent() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function ReviewWorkspaceContent() {
       </div>
       <div className="lx-actions">
         <span className="lx-hint">
-          {frameId ? `Frame #${frameId}` : 'Chưa chọn frame'} · {session?.user?.display_name || 'Reviewer'}
+          {frameId ? `Frame #${frameId}` : 'Job 2272 · validation'} · {session?.user?.display_name || 'Reviewer'}
         </span>
         <Link href="/review" className="lx-btn">
           Về hàng đợi
@@ -56,22 +57,7 @@ function ReviewWorkspaceContent() {
           initialLease={initialLease}
         />
       ) : (
-        <div
-          className="lx-card lx-card__body lx-stack"
-          style={{ maxWidth: '640px', margin: '48px auto', textAlign: 'center', gap: '16px' }}
-        >
-          <div className="lx-stack" style={{ gap: '8px' }}>
-            <h2 className="lx-h2">Chưa có thông tin khung hình (frame_id)</h2>
-            <p className="lx-muted">
-              Review Workspace yêu cầu khung hình cụ thể để hiển thị. Vui lòng chọn frame từ hàng đợi ReviewQueues (T-034) hoặc mở với tham số đường dẫn <code className="lx-mono">?frame_id=&lt;id&gt;</code>.
-            </p>
-          </div>
-          <div>
-            <Link href="/review" className="lx-btn lx-btn--primary">
-              Về trung tâm hàng đợi Review
-            </Link>
-          </div>
-        </div>
+        <ReviewWorkspaceSample />
       )}
     </AppShell>
   );
@@ -86,7 +72,7 @@ export default function ReviewWorkspacePage() {
     >
       <Suspense
         fallback={
-          <div className="lx-card lx-card__body" style={{ textAlign: 'center', padding: '48px' }}>
+          <div className="lx-card lx-card__body lx-ws__empty">
             Đang tải Review Workspace...
           </div>
         }

@@ -219,7 +219,7 @@ describe('AnalysisPage regression tests (R-1, F-1, F-2)', () => {
 
       await waitFor(() => {
         expect(screen.getByText('SNP-2100')).toBeDefined();
-        expect(screen.getByText('hash-page-21')).toBeDefined();
+        expect(screen.getByText('hash-p')).toBeDefined();
       }, { timeout: 3000 });
     });
 

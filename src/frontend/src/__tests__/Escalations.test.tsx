@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import EscalationsPage from '@/app/escalations/page';
@@ -70,6 +70,8 @@ function testQueryClient() {
 describe('Escalations UI (T-039)', () => {
   beforeEach(() => {
     replace.mockClear();
+    HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+    HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
   });
 
   async function renderPage(
@@ -97,7 +99,7 @@ describe('Escalations UI (T-039)', () => {
           results: [issue],
         });
       }
-      if (url.pathname === '/api/decision-cases/') return Response.json([]);
+      if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
       if (url.pathname === '/api/issues/42/adjudications/') {
         return Response.json({
           id: 91,
@@ -119,35 +121,42 @@ describe('Escalations UI (T-039)', () => {
         <AuthProvider><EscalationsPage /></AuthProvider>
       </QueryClientProvider>,
     );
+    const adjudication = await screen.findByRole('tab', { name: /Adjudication/ }).catch(() => null);
+    if (adjudication) fireEvent.click(adjudication);
     return { api, calls };
   }
 
   it('renders API evidence and reviewer decisions, then loads beyond the first page', async () => {
     const { calls } = await renderPage();
-    expect(await screen.findByText('Escalations & Decision Cases')).toBeDefined();
-    expect(await screen.findByText('#42')).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Escalations' })).toBeDefined();
+    expect(await screen.findByText('QC-00042')).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByText('detector')).toBeDefined();
+    expect(screen.getByText(/Vị trí neo:/)).toBeDefined();
+    expect(screen.getByText(/Chính sách neo:/)).toBeDefined();
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      'Engine / Quy tắc', 'Kỳ vọng / Thực tế', 'Dự đoán', 'Độ tin cậy / Intersection over Union']);
+    expect(screen.queryByText(/Anchor|Policy|Evidence/)).toBeNull();
     expect(screen.getByText('Thực tế: truck')).toBeDefined();
     expect(screen.getByText('Không chắc nhãn xe.')).toBeDefined();
     expect(screen.getByText(/sha-review-1/)).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }));
-    expect(await screen.findByText('#84')).toBeDefined();
+    expect(await screen.findByText('QC-00084')).toBeDefined();
     expect(calls.some((call) => new URL(call.url).searchParams.get('cursor') === '42')).toBe(true);
   });
 
   it('validates and posts the adjudication contract with an idempotency key', async () => {
     const { calls } = await renderPage();
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
 
     fireEvent.change(screen.getByLabelText('Nhãn đúng'), { target: { value: 'car' } });
-    fireEvent.change(screen.getByLabelText('Lý do *'), {
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), {
       target: { value: 'Evidence và guideline thống nhất.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
 
     expect(await screen.findByText(/Đã lưu Decision Case #91/)).toBeDefined();
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
@@ -173,10 +182,10 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     expect(screen.getByText(/không được tự phân xử/i)).toBeDefined();
-    expect((screen.getByRole('button', { name: 'Lưu kết luận phân xử' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Lưu phân xử' }) as HTMLButtonElement).disabled).toBe(true);
     expect(calls.some((call) => call.method === 'POST')).toBe(false);
   });
 
@@ -192,10 +201,10 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    fireEvent.change(screen.getByLabelText('Lý do *'), { target: { value: 'Đủ bằng chứng.' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), { target: { value: 'Đủ bằng chứng.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
     expect(await screen.findByText(/SAME_REQUESTER_APPROVER/)).toBeDefined();
     expect(screen.getByText(/Người duyệt phải khác người yêu cầu/)).toBeDefined();
   });
@@ -206,7 +215,7 @@ describe('Escalations UI (T-039)', () => {
         return Response.json({
           id: 92,
           issue_id: 42,
-          outcome: 'guideline_missing',
+          outcome: 'guideline_gap',
           actor_user_id: 2,
           rule_id: 'VEH-03',
           correct_label: null,
@@ -218,29 +227,29 @@ describe('Escalations UI (T-039)', () => {
       return null;
     });
 
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    fireEvent.click(screen.getByLabelText('Thiếu guideline'));
-    fireEvent.change(screen.getByLabelText('Lý do *'), {
+    fireEvent.click(screen.getByLabelText('Guideline còn thiếu'));
+    fireEvent.change(screen.getByLabelText('Lý do phân xử *'), {
       target: { value: 'Guideline chưa bao phủ tình huống này.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu kết luận phân xử' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu phân xử' }));
     expect(await screen.findByText(/Đã lưu Decision Case #92/)).toBeDefined();
 
     const request = calls.find((call) => new URL(call.url).pathname === '/api/issues/42/adjudications/');
-    expect((await request?.clone().json()).outcome).toBe('guideline_missing');
+    expect((await request?.clone().json()).outcome).toBe('guideline_gap');
   });
 
   it('enforces the page role matrix without issuing data requests', async () => {
     const { calls } = await renderPage('reviewer');
     expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
-    expect(screen.queryByText('Escalations & Decision Cases')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Escalations' })).toBeNull();
     expect(calls).toHaveLength(0);
   });
 
   it('queries Decision Cases by the requested case version', async () => {
     const { calls } = await renderPage();
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
     await waitFor(() => expect(calls.some((call) => new URL(call.url).pathname === '/api/decision-cases/')).toBe(true));
 
@@ -254,8 +263,82 @@ describe('Escalations UI (T-039)', () => {
 
   it('requires an override reason for a global Super Admin', async () => {
     await renderPage('admin');
-    await screen.findByText('#42');
+    await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    expect(screen.getByLabelText('Lý do override *')).toBeDefined();
+    expect(screen.getByLabelText('Lý do ghi đè *')).toBeDefined();
+  });
+
+  it('renders the three-column summary and the locked Sau khi phân xử field (FE-12)', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('QC-00042');
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    expect(screen.getByText('Quyết định của reviewer')).toBeDefined();
+    expect(screen.getByText('Hướng dẫn liên quan')).toBeDefined();
+    expect(screen.getAllByText('Bằng chứng').length).toBeGreaterThan(0);
+    const after = screen.getByLabelText('Sau khi phân xử') as HTMLSelectElement;
+    expect(after.disabled).toBe(true);
+    expect(calls.some((call) => new URL(call.url).pathname.startsWith('/api/rework'))).toBe(false);
+    expect(screen.queryByText(/IoU/)).toBeNull();
+  });
+
+  it('uses the real adjudication outcome when creating a Guideline Gap (FE-12)', async () => {
+    const { calls } = await renderPage();
+    await screen.findByText('QC-00042');
+    expect(screen.queryByText('QC-00098')).toBeNull();
+    expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
+    const before = calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect((screen.getByRole('radio', { name: 'Guideline còn thiếu' }) as HTMLInputElement).checked).toBe(true);
+    expect(screen.queryByRole('dialog', { name: 'Tạo Guideline Gap' })).toBeNull();
+    expect(calls.length).toBe(before);
+  });
+
+  it('uses sketchup data for Guideline Gaps and API data for Decision Cases (FE-06)', async () => {
+    await renderPage('qalead', async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname !== '/api/decision-cases/') return null;
+      return Response.json({ next: null, previous: null, results: [
+        {
+          id: 12,
+          issue_id: 42,
+          outcome: 'guideline_gap',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: null,
+          reason: 'Xe buýt mini chở hàng thuộc nhãn nào',
+          case_version: 'v2',
+          created_at: '2026-10-11T02:00:00Z',
+        },
+        {
+          id: 40,
+          issue_id: 84,
+          outcome: 'confirm',
+          actor_user_id: 2,
+          rule_id: 'VEH-03',
+          correct_label: 'truck',
+          reason: 'Xe bán tải có nắp thùng',
+          case_version: 'v2',
+          created_at: '2026-10-11T03:00:00Z',
+        },
+      ] });
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Guideline Gaps/ }));
+    expect(await screen.findByText('GAP-012')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Tạo Guideline Gap' })).toBeDefined();
+    expect(screen.queryByText(/chưa được kết nối với server/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo Guideline Gap' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tạo Guideline Gap' });
+    fireEvent.change(within(dialog).getByLabelText('Quy tắc liên quan *'), { target: { value: 'VEH-03' } });
+    fireEvent.change(within(dialog).getByLabelText('Nội dung hướng dẫn còn thiếu *'), { target: { value: 'Tình huống mới từ sketchup' } });
+    fireEvent.change(within(dialog).getByLabelText('Lý do / bằng chứng *'), { target: { value: 'Ba case chưa thống nhất' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tạo Guideline Gap' }));
+    expect(await screen.findByText('GAP-013')).toBeDefined();
+    expect(screen.getByText('Tình huống mới từ sketchup')).toBeDefined();
+    fireEvent.click(screen.getByRole('tab', { name: /Decision Cases/ }));
+    expect(await screen.findByText('CASE-040')).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Guideline Gaps/ })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Decision Cases/ })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Adjudication/ })).toBeDefined();
   });
 });

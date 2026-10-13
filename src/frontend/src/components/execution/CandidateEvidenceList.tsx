@@ -64,7 +64,7 @@ export function CandidateEvidenceList({
           <div className="lx-callout lx-callout--neutral" role="status">
             <strong>Chưa có dữ liệu candidate</strong>
             <div>
-              Chưa có dữ liệu candidate từ backend cho lần chạy này.
+              Lần chạy này chưa có dữ liệu candidate.
             </div>
           </div>
         ) : candidates.length === 0 ? (
@@ -146,7 +146,7 @@ export function CandidateEvidenceList({
                           )}
                           {ev.iou !== undefined && ev.iou !== null && (
                             <div>
-                              <strong>IoU: </strong>
+                              <strong>Intersection over Union (IoU): </strong>
                               <span className="lx-mono">{(ev.iou as number).toFixed(4)}</span>
                             </div>
                           )}

@@ -251,7 +251,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       await renderReviewPage('reviewer');
 
       // Check header and wait for tabs to render upon run query success
-      expect(await screen.findByText('Trung tâm kiểm tra (Review Queues)')).toBeDefined();
+      expect(await screen.findByText('Trung tâm kiểm tra')).toBeDefined();
       expect(await screen.findByRole('tab', { name: /Hàng đợi rủi ro/i })).toBeDefined();
 
       // Check frame key contains both task and frame number
@@ -342,7 +342,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       const { calls } = await renderReviewPage('annotator');
 
       expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
-      expect(screen.queryByText('Trung tâm kiểm tra (Review Queues)')).toBeNull();
+      expect(screen.queryByText('Trung tâm kiểm tra')).toBeNull();
 
       // Assert 0 data queries to ranking, run, or queue
       const dataCalls = calls.filter((c) => !c.url.includes('/api/auth/'));
@@ -380,7 +380,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       );
 
       expect(await screen.findByText('IDENTITY_MAPPING_MISSING')).toBeDefined();
-      expect(screen.queryByText('Trung tâm kiểm tra (Review Queues)')).toBeNull();
+      expect(screen.queryByText('Trung tâm kiểm tra')).toBeNull();
       const dataCalls = calls.filter((c) => !c.url.includes('/api/auth/'));
       expect(dataCalls.length).toBe(0);
     });
@@ -388,7 +388,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
     it('never calls GET /api/runs/ (history list) for reviewer', async () => {
       const { calls } = await renderReviewPage('reviewer');
 
-      await screen.findByText('Trung tâm kiểm tra (Review Queues)');
+      await screen.findByText('Trung tâm kiểm tra');
 
       const runsListCalls = calls.filter((c) => {
         const path = new URL(c.url).pathname;
@@ -532,7 +532,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(claimBtn);
 
       // Now switch dataset from 1 to 2 via ReviewDatasetPicker
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -603,7 +603,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(claimBtn);
 
       // Switch dataset from 1 to 2 via ReviewDatasetPicker while claim is pending
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -702,7 +702,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       const callsBeforeSwitch = calls.length;
 
       // 2. Switch dataset selector from 1 to 2
-      const datasetSelect = screen.getByLabelText(/Bộ dữ liệu/i);
+      const datasetSelect = screen.getByLabelText(/^Dataset$/i);
       fireEvent.change(datasetSelect, { target: { value: '2' } });
       expect((datasetSelect as HTMLSelectElement).value).toBe('2');
 
@@ -711,7 +711,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(screen.queryByRole('table', { name: /Bảng danh sách frame xếp hạng/i })).toBeNull();
       expect(screen.queryByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeNull();
       expect(
-        screen.getByText(/Vui lòng nhập Mã QC Run để tải hàng đợi kiểm tra/i)
+        screen.getByText(/Nhập mã Quality Control Run để tải hàng đợi kiểm tra/i)
       ).toBeDefined();
 
       // No new ranking or claim requests for run 12 sent under dataset 2
@@ -721,7 +721,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(newCallsForRun12).toHaveLength(0);
 
       // 4. Select a new run explicitly for dataset 2 (Run 99)
-      const runInput = screen.getByLabelText(/Mã QC Run/i);
+      const runInput = screen.getByLabelText(/Mã Quality Control Run/i);
       fireEvent.change(runInput, { target: { value: '99' } });
       const submitBtn = screen.getByRole('button', { name: /Tải hàng đợi/i });
       fireEvent.click(submitBtn);

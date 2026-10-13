@@ -19,7 +19,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const rule = (rule_id: string, content: string) => ({ rule_id, section: '3.1', content, guideline_version: 'bdd-v1.2' });
 
 // Sign in through the mock auth routes, then answer guideline calls with `handler`.
-async function setup(username: string, handler: (url: URL) => Response) {
+async function setup(username: string, handler: (url: URL) => Response, openGuidelineTab = true) {
   const api = installMockAuthApi();
   await api.signIn(username);
   const passthrough = api.fetchSpy.getMockImplementation()!;
@@ -29,6 +29,9 @@ async function setup(username: string, handler: (url: URL) => Response) {
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><AuthProvider><GuidelinesPage /></AuthProvider></QueryClientProvider>);
+  // Khối rule guideline nằm ở tab Phiên bản guideline (thiết kế); vai trò bị chặn không có tab.
+  const guidelineTab = await screen.findByRole('tab', { name: 'Phiên bản guideline' }, { timeout: 1500 }).catch(() => null);
+  if (guidelineTab && openGuidelineTab) fireEvent.click(guidelineTab);
   const ruleCalls = () => api.fetchSpy.mock.calls.map(([request]) => new URL(request.url))
     .filter((url) => url.pathname === RULES_PATH);
   return { api, ruleCalls };
@@ -135,5 +138,18 @@ describe('Guidelines page', () => {
     const { ruleCalls } = await setup('annotator', () => json({ next: null, previous: null, results: [] }));
     expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
     expect(ruleCalls()).toHaveLength(0);
+  });
+});
+
+describe('Models và Guidelines design regions (FE-09)', () => {
+  it('shows all design models and guideline versions without implementation notices', async () => {
+    await setup('qalead', () => json({ next: null, previous: null, results: [] }), false);
+    expect(await screen.findByText('Classifier')).toBeDefined();
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh mô hình' })[0]);
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Phiên bản guideline' }));
+    expect(screen.getByText('Guideline v1.3')).toBeDefined();
+    expect(screen.getByText('Road Vision Urban v1.3 – v1.4')).toBeDefined();
   });
 });

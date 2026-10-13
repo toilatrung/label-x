@@ -134,14 +134,15 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
 
     // Hiển thị đầy đủ các engine
     expect(screen.getByText('Schema / Taxonomy')).toBeDefined();
-    expect(screen.getByText('Geometry')).toBeDefined();
+    expect(within(screen.getByRole('region', { name: 'Cấu hình ngưỡng engine' })).getByText('Geometry')).toBeDefined();
     expect(screen.getByText('Duplicate / Overlap')).toBeDefined();
     expect(screen.getByText('Mô hình độc lập (Detector)')).toBeDefined();
     expect(screen.getByText('Mô hình thị giác – ngôn ngữ (VLM)')).toBeDefined();
     expect(screen.getByText('Metric')).toBeDefined();
 
     // Hiển thị ngưỡng hiệu lực từ params
-    expect(screen.getByText(/Intersection over Union \(IoU\) ≥ 0.85/)).toBeDefined();
+    const engineThresholds = within(screen.getByLabelText('Cấu hình ngưỡng engine'));
+    expect(engineThresholds.getByText(/Intersection over Union ≥ 0.85/)).toBeDefined();
     expect(screen.getByText(/Dung sai biên 2 px · Diện tích tối thiểu 24 px²/)).toBeDefined();
     expect(screen.getByText(/Detector v2.3 · Ngưỡng tin cậy ≥ 0.6/)).toBeDefined();
 
@@ -157,9 +158,7 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     );
 
     expect(await screen.findByText('Chưa có cấu hình đã phát hành')).toBeDefined();
-    expect(
-      screen.getByText(/Không thể xác nhận ngưỡng từ dữ liệu hiện có/)
-    ).toBeDefined();
+    expect(screen.getByText(/Trạng thái này không đồng nghĩa engine đang tắt/)).toBeDefined();
     expect(screen.getByText('Chưa có mapping guideline.')).toBeDefined();
   });
 
@@ -228,5 +227,42 @@ describe('Rules & Thresholds page (T-017 & T-029)', () => {
     expect(await screen.findByText('403 - Quyền truy cập bị từ chối')).toBeDefined();
     expect(mappingCalls()).toHaveLength(0);
     expect(configCalls()).toHaveLength(0);
+  });
+});
+
+describe('Rules & Thresholds design regions (FE-09)', () => {
+  it('renders the three design tabs with locked sample controls and a blocked save button', async () => {
+    const { api } = await setup('qalead', () => json({ next: null, previous: null, results: [] }));
+    expect(await screen.findByText('S-001')).toBeDefined();
+    expect(screen.getByText('Cấu hình hiện tại v7')).toBeDefined();
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
+    // Công tắc bị khoá: không đổi trạng thái khi bấm
+    const toggle = screen.getByRole('checkbox', { name: 'A-003' }) as HTMLInputElement;
+    expect(toggle.disabled).toBe(true);
+    expect(toggle.checked).toBe(false);
+    const before = api.fetchSpy.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu thành v8' }));
+    expect(api.fetchSpy.mock.calls.length).toBe(before);
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh quy tắc' })[0]);
+    expect(screen.queryByText(/kết nối với server/)).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Ngưỡng phát hành' }));
+    const coverage = screen.getByLabelText('Coverage tối thiểu để phát hành') as HTMLInputElement;
+    expect(coverage.readOnly).toBe(true);
+    expect(coverage.value).toBe('95%');
+    fireEvent.click(screen.getByRole('tab', { name: 'Chính sách lấy mẫu' }));
+    expect((screen.getByLabelText('Cách chọn seed') as HTMLSelectElement).disabled).toBe(true);
+  });
+
+  it('disables write controls for roles without Configuration access', async () => {
+    await setup('reviewer', () => json({ next: null, previous: null, results: [] }));
+    expect(await screen.findByText('S-001')).toBeDefined();
+    expect((screen.getByRole('button', { name: 'Lưu thành v8' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('hides the empty-mapping row when the mapping request failed', async () => {
+    await setup('reviewer', () => json({ code: 'SERVER_ERROR', message: 'x' }, 500));
+    await screen.findByText('Không tải được mapping');
+    expect(screen.queryByText('Chưa có mapping guideline.')).toBeNull();
   });
 });

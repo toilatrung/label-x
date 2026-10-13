@@ -100,7 +100,7 @@ async function renderWorkspace(
     }
 
     if (url.pathname === '/api/decision-cases/') {
-      return Response.json([{
+      return Response.json({ next: null, previous: null, results: [{
         id: 301,
         issue_id: 101,
         outcome: 'confirm',
@@ -110,7 +110,7 @@ async function renderWorkspace(
         reason: 'Workspace shared Decision Case lookup',
         case_version: 'v2',
         created_at: '2026-10-11T02:00:00Z',
-      }]);
+      }] });
     }
 
     return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
@@ -154,7 +154,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
 
     await screen.findByText('QC-00101');
     expect(
-      screen.getByText(/Chưa có snapshot revision đã xác thực từ context/)
+      screen.getByText(/Chưa có revision của Snapshot đã xác thực/)
     ).toBeDefined();
 
     const submitBtn = screen.getByRole('button', { name: 'Lưu quyết định' });
@@ -169,7 +169,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Frame Review' }));
 
     expect(
-      screen.getByText(/Tạo manual issue tạm khóa: Thiếu anchor policy_version đã duyệt từ T-035/)
+      screen.getByText(/Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo đã duyệt/)
     ).toBeDefined();
   });
 
@@ -274,7 +274,8 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     await screen.findByText('QC-00101');
 
     // Read-only notice displayed
-    expect(screen.getByText(/Chế độ xem kiểm tra \(Read-only\)/)).toBeDefined();
+    expect(screen.getByText(/Chế độ chỉ xem/)).toBeDefined();
+    expect(screen.queryByText(/LeaseGrant|T-034|T-035|Plain Reviewer/)).toBeNull();
 
     // Mutations are locked
     expect((screen.getByRole('button', { name: 'Lưu quyết định' }) as HTMLButtonElement).disabled).toBe(true);

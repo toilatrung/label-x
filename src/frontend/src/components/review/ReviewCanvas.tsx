@@ -345,7 +345,7 @@ export function ReviewCanvas({
                 fontFamily="Inter, sans-serif"
                 fontSize="14"
               >
-                Không có image_url từ API (nguồn media chưa khả dụng)
+                Nguồn ảnh hiện không khả dụng
               </text>
             </g>
           )}
@@ -530,7 +530,7 @@ export function ReviewCanvas({
             zIndex: 10,
           }}
         >
-          Kích thước khung hình chưa xác định từ API (vẽ vùng tạo issue tạm khóa)
+          Chưa xác định kích thước khung hình (vẽ vùng tạo issue tạm khóa)
         </div>
       )}
     </div>

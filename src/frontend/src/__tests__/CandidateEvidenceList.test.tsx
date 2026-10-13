@@ -127,7 +127,7 @@ describe('CandidateEvidenceList component (T-029)', () => {
     // Should indicate API is not connected or no candidate data received
     expect(screen.getByText('Chưa có dữ liệu candidate')).toBeDefined();
     expect(
-      screen.getByText(/Chưa có dữ liệu candidate từ backend cho lần chạy này/)
+      screen.getByText('Lần chạy này chưa có dữ liệu candidate.')
     ).toBeDefined();
 
     // Must NOT show "Chưa có candidate nghi vấn" which is reserved for empty list []
