@@ -34,6 +34,13 @@ def redact_request_id(value: object) -> str | None:
     return _SAFE_ID.sub("", value)[:MAX_REQUEST_ID_CHARS] or None
 
 
+def redact_model_id(value: object) -> str | None:
+    """Model ID do provider/cổng báo về: giữ ký tự an toàn, cắt ngắn (ghi provenance)."""
+    if not isinstance(value, str) or not value:
+        return None
+    return re.sub(r"[^A-Za-z0-9_.:/-]", "", value)[:MAX_REQUEST_ID_CHARS] or None
+
+
 def _error_code(response: httpx.Response) -> str:
     """Mã lỗi từ body (nếu có) đã làm sạch; không bao giờ trả nội dung tự do."""
     try:
@@ -100,7 +107,7 @@ class DashScopeClient:
     def preflight(self, request: VlmRequest) -> None:
         self._api_key(request)
 
-    def complete(self, request: VlmRequest) -> tuple[str, str | None]:
+    def complete(self, request: VlmRequest) -> tuple[str, str | None, str | None]:
         cfg = request.config
         api_key = self._api_key(request)
         prompt = build_prompt(cfg.prompt_version, request.taxonomy, request.context)
@@ -145,4 +152,5 @@ class DashScopeClient:
         request_id = response.headers.get("x-request-id") or (
             payload.get("id") if isinstance(payload, dict) else None
         )
-        return text, redact_request_id(request_id)
+        reported = payload.get("model") if isinstance(payload, dict) else None
+        return text, redact_request_id(request_id), redact_model_id(reported)

@@ -16,24 +16,32 @@ from urllib.parse import urlparse
 from vlm.errors import VlmConfigError
 
 PROVIDER_DASHSCOPE = "dashscope"
+PROVIDER_OPENAI_COMPATIBLE = "openai_compatible"
+# Provider hợp lệ. `openai_compatible` = cổng tương thích OpenAI (kể cả bên thứ ba): crop ảnh đi
+# qua bên trung gian nên cần PO xác nhận chính sách dữ liệu trước smoke thật.
+ALLOWED_PROVIDERS = frozenset({PROVIDER_OPENAI_COMPATIBLE, PROVIDER_DASHSCOPE})
 DEFAULT_MODEL = "qwen3-vl-plus"
-DEFAULT_API_KEY_ENV = "DASHSCOPE_API_KEY"
+DEFAULT_API_KEY_ENV = "VLM_API_KEY"
 # Chỉ đọc biến môi trường trong allowlist: tên tuỳ ý sẽ làm lộ secret khác (DJANGO_SECRET_KEY...)
 # sang host provider qua header Authorization.
-ALLOWED_API_KEY_ENVS = frozenset({DEFAULT_API_KEY_ENV})
+ALLOWED_API_KEY_ENVS = frozenset({DEFAULT_API_KEY_ENV, "DASHSCOPE_API_KEY"})
 
 # Allowlist model ID. Chỉ bản Instruct, không "thinking" (CR-116). Mở rộng cần change request.
+# Cổng OpenAI-compatible có thể dùng định danh khác (qwen-vl-plus, qwen-vl-max, qwen3-vl-...): CHƯA
+# biết ID nào hợp lệ; chỉ thêm vào tập này sau khi lấy GET /v1/models bằng key thật. Không đoán.
 ALLOWED_MODELS = frozenset({"qwen3-vl-plus"})
 
-# Allowlist host (chống SSRF/gửi crop tới host lạ). Tên host lấy từ tài liệu Alibaba Model Studio
-# qua tìm kiếm; CHƯA xác minh region nào PO được phép dùng -> xem blocker/NOT VERIFIED trong report.
-ALLOWED_BASE_URL_HOSTS = frozenset(
-    {
-        "dashscope.aliyuncs.com",
-        "dashscope-intl.aliyuncs.com",
-        "dashscope-us.aliyuncs.com",
-    }
-)
+# Allowlist host -> đường dẫn base_url duy nhất được phép (chống SSRF/gửi crop tới host lạ).
+# DashScope: tên host lấy từ tài liệu Alibaba qua tìm kiếm, CHƯA xác minh region PO được dùng.
+# api.shopaikey.com: cổng OpenAI-compatible bên thứ ba do PO chỉ định (qua phiên điều phối),
+# KHÔNG phải DashScope trực tiếp; chưa xác minh chính sách dữ liệu hay danh sách model của cổng.
+ALLOWED_BASE_URLS: dict[str, frozenset[str]] = {
+    "dashscope.aliyuncs.com": frozenset({"/compatible-mode/v1"}),
+    "dashscope-intl.aliyuncs.com": frozenset({"/compatible-mode/v1"}),
+    "dashscope-us.aliyuncs.com": frozenset({"/compatible-mode/v1"}),
+    "api.shopaikey.com": frozenset({"/v1"}),
+}
+ALLOWED_BASE_URL_HOSTS = frozenset(ALLOWED_BASE_URLS)
 
 PROMPT_VERSIONS = frozenset({"vlm-prompt-v0"})
 
@@ -71,12 +79,18 @@ class VlmConfig:
     budget: VlmBudget
     api_key_env: str = DEFAULT_API_KEY_ENV
 
+    @property
+    def host(self) -> str:
+        """Host của base_url (không secret) để ghi provenance."""
+        return urlparse(self.base_url).hostname or ""
+
     def as_public_dict(self) -> dict[str, Any]:
         """Dạng an toàn để ghi evidence: không có secret (chỉ tên biến môi trường)."""
         return {
             "provider": self.provider,
             "model": self.model,
             "base_url": self.base_url,
+            "host": self.host,
             "prompt_version": self.prompt_version,
             "timeout_seconds": self.timeout_seconds,
             "max_attempts": self.max_attempts,
@@ -106,7 +120,7 @@ def _base_url_errors(base_url: Any) -> list[str]:
         return [message]
     if (
         parsed.scheme != "https"
-        or parsed.hostname not in ALLOWED_BASE_URL_HOSTS
+        or parsed.hostname not in ALLOWED_BASE_URLS
         or parsed.netloc != parsed.hostname  # chặn userinfo và mọi port tường minh
         or port is not None
         or parsed.query
@@ -114,6 +128,7 @@ def _base_url_errors(base_url: Any) -> list[str]:
         or parsed.params
         or not _PATH_OK.match(parsed.path.rstrip("/"))
         or ".." in parsed.path.split("/")
+        or parsed.path.rstrip("/") not in ALLOWED_BASE_URLS[parsed.hostname or ""]
     ):
         return [message]
     return []
@@ -133,8 +148,9 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
     for key in ("api_key", "apiKey", "secret", "prompt", "system_prompt"):
         if key in raw:
             errors.append(f"models.vlm không được chứa '{key}' (secret/prompt không vào config).")
-    if raw.get("provider") != PROVIDER_DASHSCOPE:
-        errors.append(f"models.vlm.provider phải là '{PROVIDER_DASHSCOPE}'.")
+    provider = raw.get("provider")
+    if not isinstance(provider, str) or provider not in ALLOWED_PROVIDERS:
+        errors.append(f"models.vlm.provider phải thuộc: {sorted(ALLOWED_PROVIDERS)}.")
     model = raw.get("model")
     if not isinstance(model, str) or model not in ALLOWED_MODELS:
         errors.append(f"models.vlm.model phải thuộc allowlist: {sorted(ALLOWED_MODELS)}.")

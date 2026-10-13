@@ -64,6 +64,7 @@ def _failed(
     reason: VlmReasonCode,
     attempts: int,
     request_id: str | None = None,
+    response_model: str | None = None,
 ) -> VlmResult:
     return VlmResult(
         status=VlmStatus.FAILED,
@@ -71,6 +72,9 @@ def _failed(
         attempts=attempts,
         request_id=request_id,
         model=request.config.model,
+        response_model=response_model,
+        provider=request.config.provider,
+        provider_host=request.config.host,
         prompt_version=request.config.prompt_version,
         crop_sha256=request.crop.sha256,
     )
@@ -95,34 +99,41 @@ def run_vlm_unit(
         return _failed(request, VlmReasonCode.PROVIDER_ERROR, attempts)
     last_reason = VlmReasonCode.PROVIDER_ERROR
     request_id: str | None = None
+    response_model: str | None = None
     while attempts < request.config.max_attempts:
         try:
             client.preflight(request)  # chưa đủ điều kiện gửi (thiếu key...) thì KHÔNG tính budget
         except VlmProviderError as exc:
-            return _failed(request, exc.reason_code, attempts, request_id)
+            return _failed(request, exc.reason_code, attempts, request_id, response_model)
         if not budget.try_consume():
             # Không gọi provider khi hết budget; chuyển người review (reason rõ).
-            return _failed(request, VlmReasonCode.BUDGET_EXHAUSTED, attempts, request_id)
+            return _failed(
+                request, VlmReasonCode.BUDGET_EXHAUSTED, attempts, request_id, response_model
+            )
         attempts += 1
         try:
-            text, request_id = client.complete(request)
+            reply = client.complete(request)
+            text, request_id = reply[0], reply[1]
+            response_model = reply[2] if len(reply) > 2 else None
             verdict = parse_response(text, request.taxonomy)
         except VlmParseError as exc:
             # Phản hồi sai schema là kết quả của model, không retry để khỏi đốt budget.
-            return _failed(request, exc.reason_code, attempts, request_id)
+            return _failed(request, exc.reason_code, attempts, request_id, response_model)
         except VlmProviderError as exc:
             last_reason = exc.reason_code
             logger.warning("vlm provider failure", extra={"failure": exc.failure.value})
             if not exc.retryable or attempts >= request.config.max_attempts:
-                return _failed(request, last_reason, attempts, request_id)
+                return _failed(request, last_reason, attempts, request_id, response_model)
             sleep(backoff_seconds(attempts))
             continue
         except VlmError as exc:
-            return _failed(request, exc.reason_code, attempts, request_id)
+            return _failed(request, exc.reason_code, attempts, request_id, response_model)
         except Exception:
             # Chặn exception thô (lỗi lập trình/thư viện); chi tiết chỉ ở log, không ra API.
             logger.exception("vlm unexpected failure")
-            return _failed(request, VlmReasonCode.PROVIDER_ERROR, attempts, request_id)
+            return _failed(
+                request, VlmReasonCode.PROVIDER_ERROR, attempts, request_id, response_model
+            )
         return VlmResult(
             status=verdict.status,
             label=verdict.label,
@@ -130,7 +141,10 @@ def run_vlm_unit(
             attempts=attempts,
             request_id=request_id,
             model=request.config.model,
+            response_model=response_model,
+            provider=request.config.provider,
+            provider_host=request.config.host,
             prompt_version=request.config.prompt_version,
             crop_sha256=request.crop.sha256,
         )
-    return _failed(request, last_reason, attempts, request_id)
+    return _failed(request, last_reason, attempts, request_id, response_model)
