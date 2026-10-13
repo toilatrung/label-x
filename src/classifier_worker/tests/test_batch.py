@@ -15,14 +15,17 @@ def items(trained, tmp_path):  # noqa: F811
     ready = tmp_path / "ready.png"
     Image.new("RGB", (224, 224), (10, 200, 10)).save(ready)
     small = tmp_path / "small.png"
-    Image.new("RGB", (100, 100)).save(small)
+    Image.new("RGB", (100, 40), (200, 10, 10)).save(small)  # any size: letterboxed like training
+    tiny = tmp_path / "tiny.png"
+    Image.new("RGB", (2, 2)).save(tiny)
     broken = tmp_path / "broken.png"
     broken.write_bytes(b"not an image")
     frame = str(root / "images/snapshots/source/t1.png")
     return [
         {"id": "b-box", "image": frame, "box": [10, 20, 110, 80]},
         {"id": "a-ready", "image": str(ready)},
-        {"id": "c-wrong-size", "image": str(small)},
+        {"id": "c-other-size", "image": str(small)},
+        {"id": "i-tiny", "image": str(tiny)},
         {"id": "d-missing", "image": str(tmp_path / "nope.png")},
         {"id": "e-broken", "image": str(broken)},
         {"id": "f-tiny-box", "image": frame, "box": [10, 10, 12, 12]},
@@ -36,9 +39,10 @@ def test_one_bad_item_does_not_fail_the_others(trained, items):  # noqa: F811
     out = predict_batch(Classifier.load(artifact.path), items)
     by_id = {row["id"]: row for row in out["results"]}
     assert [row["id"] for row in out["results"]] == sorted(by_id)
-    assert by_id["a-ready"]["ok"] and by_id["b-box"]["ok"]
-    for bad in ("c-wrong-size", "d-missing", "e-broken", "g-bad-box", "h-no-image"):
+    assert by_id["a-ready"]["ok"] and by_id["b-box"]["ok"] and by_id["c-other-size"]["ok"]
+    for bad in ("d-missing", "e-broken", "g-bad-box", "h-no-image"):
         assert by_id[bad]["ok"] is False and by_id[bad]["reason"] == "invalid_crop"
+    assert by_id["i-tiny"]["reason"] == "box_too_small"
     assert by_id["f-tiny-box"] == {
         "id": "f-tiny-box",
         "ok": False,
@@ -65,7 +69,7 @@ def test_cli_predict_batch(trained, items, tmp_path, capsys):  # noqa: F811
     path.write_text(json.dumps(items))
     assert main(["predict-batch", "--manifest", str(artifact.path), "--input", str(path)]) == 0
     out = json.loads(capsys.readouterr().out)
-    assert sum(1 for r in out["results"] if r["ok"]) == 2
+    assert sum(1 for r in out["results"] if r["ok"]) == 3
     path.write_text(json.dumps({"id": "x"}))
     assert main(["predict-batch", "--manifest", str(artifact.path), "--input", str(path)]) == 2
 

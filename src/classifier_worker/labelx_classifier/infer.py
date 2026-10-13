@@ -13,7 +13,7 @@ from PIL import Image, UnidentifiedImageError
 from torch import nn
 
 from .artifact import ClassifierArtifact
-from .crops import INPUT_SIZE, CropError, letterbox_crop
+from .crops import CropError, letterbox_crop
 from .model import to_tensor
 from .taxonomy import CLASSES
 
@@ -64,7 +64,7 @@ class Classifier:
 
 
 def _prepare(item: Mapping[str, Any]) -> Image.Image:
-    """One crop-ready 224x224 image: either a ready crop or a full image plus a box."""
+    """One 224x224 letterboxed image: a whole crop image, or a full image plus a box."""
 
     path = Path(str(item["image"]))
     with warnings.catch_warnings():
@@ -74,10 +74,8 @@ def _prepare(item: Mapping[str, Any]) -> Image.Image:
                 raise CropError("invalid_crop", "image is too large")
             image = handle.convert("RGB")
     box = item.get("box")
-    if box is None:
-        if image.size != (INPUT_SIZE, INPUT_SIZE):
-            raise CropError("invalid_crop", f"a ready crop must be {INPUT_SIZE}x{INPUT_SIZE}")
-        return image
+    if box is None:  # the whole image is the crop: same letterbox as training crops
+        return letterbox_crop(image, (0, 0, image.width, image.height))[0]
     if not isinstance(box, list | tuple) or len(box) != 4:
         raise CropError("invalid_crop", "box must be [x1, y1, x2, y2]")
     return letterbox_crop(image, tuple(float(v) for v in box))[0]
