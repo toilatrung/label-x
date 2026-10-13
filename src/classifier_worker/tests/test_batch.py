@@ -225,3 +225,20 @@ def test_cli_exit_codes_distinguish_checksum_and_manifest_errors(trained, tmp_pa
     raw["model"]["sha256"] = "nope"
     bad.write_text(json.dumps(raw))
     assert main(["verify", "--manifest", str(bad)]) == 4
+
+
+def test_cli_image_root_must_exist(trained, workdir, capsys):  # noqa: F811
+    path = workdir / "in.json"
+    path.write_text(json.dumps([{"id": "a", "image": "ready.png"}]))
+    code = main(
+        [
+            "predict-batch",
+            "--manifest",
+            str(trained[2].path),
+            "--input",
+            str(path),
+            "--image-root",
+            str(workdir / "does-not-exist"),
+        ]
+    )
+    assert code == 2 and capsys.readouterr().out == ""
