@@ -1386,7 +1386,7 @@ export interface components {
          *       "policy_version": "vlm-trigger-v0",
          *       "snapshot_revision": "<sha256 của snapshot>",
          *       "attempts": 1,
-         *       "request_id": "chatcmpl-…c9681afb",
+         *       "request_id": "…c9681afb",
          *       "crop_sha256": "<sha256 của crop>",
          *       "crop": {
          *         "frame": {
