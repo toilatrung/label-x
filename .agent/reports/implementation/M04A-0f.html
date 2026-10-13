@@ -152,7 +152,7 @@ ul.dir{columns:2;font-size:14px}
 <li><code>evaluation_id</code> luôn <code>null</code> ở pha A (resource evaluation thuộc M04C-02).</li>
 </ul>
 <h3 id="handoff-ledger">Ledger / run</h3>
-<p>Engine <code>vlm</code> xuất hiện trong ledger/engine results với <code>unit=shape</code> (đơn vị VLM là candidate). Số đếm ledger của vlm tính từ <code>VlmUnit</code> (completed/failed/pending; unit bị huỷ không vào mẫu số), không từ LedgerUnit theo frame: <code>total</code>, <code>eligible</code>, <code>completed</code>, <code>coverage</code> phản ánh đúng số candidate (có test). Lỗi VLM không làm fail run; run chỉ chốt sau khi mọi VlmUnit xong. Pha B/C cần cùng quy ước nếu engine của họ không đếm theo frame.</p>
+<p>Engine <code>vlm</code> xuất hiện trong ledger/engine results với <code>unit=shape</code> (đơn vị VLM là candidate). Số đếm ledger của vlm tính từ <code>VlmUnit</code> (test <code>test_ledger_endpoint_counts_vlm_units_not_zero</code> trong <code>tests/orchestration/test_vlm_evidence_api.py</code>, khôi phục ở commit sau b400cc8 sau khi lỡ xoá) (completed/failed/pending; unit bị huỷ không vào mẫu số), không từ LedgerUnit theo frame: <code>total</code>, <code>eligible</code>, <code>completed</code>, <code>coverage</code> phản ánh đúng số candidate (có test). Lỗi VLM không làm fail run; run chỉ chốt sau khi mọi VlmUnit xong. Pha B/C cần cùng quy ước nếu engine của họ không đếm theo frame.</p>
 <h2 id="deviations">Deviations</h2>
 <ul>
 <li><strong>Plan Deviations</strong>: (1) provider đổi sang cổng OpenAI-compatible bên thứ ba <code>api.shopaikey.com</code> theo chỉ đạo PO qua điều phối (không phải DashScope trực tiếp); (2) engine vlm đổi <code>unit="shape"</code>, <code>needs_model=False</code> (model nằm ở <code>models.vlm</code>); (3) task Celery <code>vlm.run_unit</code> đổi thành <code>vlm.smoke_unit</code> và chỉ dùng smoke; (4) #283 chưa đóng: thiếu smoke luồng đầy đủ với run ID + evidence ID thật.</li>
@@ -171,7 +171,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Payload task <code>vlm.smoke_unit</code> mang crop base64 qua broker và dùng budget trong bộ nhớ: chỉ cho smoke/test.</li>
 <li><code>current_label</code> trong prompt chỉ được chèn khi thuộc taxonomy; hiện chưa ai truyền (pha C/#289).</li>
 <li>Commit <code>12a4702</code> không tự đứng được (kèm WIP dở); dùng <code>b9ab899</code> trở lên.</li>
-<li>Evidence append-only: trigger DB chặn UPDATE/DELETE theo dòng và trigger BEFORE TRUNCATE (migration 0006, mức statement) chặn cả chủ bảng/superuser, kể cả <code>TRUNCATE … CASCADE</code> từ bảng cha (test bằng kết nối owner thật). Cờ phiên <code>labelx.allow_evidence_truncate='on'</code> mở khoá (test đặt cờ này cho Django flush); production không đặt nên bị chặn. Superuser vẫn có thể tắt trigger hoặc tự đặt cờ: chặn ở mức role vẫn cần <code>provision_runtime_db_role</code>. REVOKE … FROM PUBLIC trước đây là no-op và đã bỏ.</li>
+<li>Evidence append-only: trigger DB chặn UPDATE/DELETE theo dòng và trigger BEFORE TRUNCATE (migration 0006, mức statement) chặn cả chủ bảng/superuser, kể cả <code>TRUNCATE … CASCADE</code> từ bảng cha (test bằng kết nối owner thật). Cờ phiên <code>labelx.allow_evidence_truncate='on'</code> mở khoá (test đặt cờ này cho Django flush); production không đặt nên bị chặn. Cờ <code>labelx.allow_evidence_truncate</code> là biến phiên (GUC): owner/superuser tự <code>SET</code> 'on' rồi TRUNCATE được, nên trigger chặn nhầm tay và CASCADE chứ KHÔNG chặn người cố ý. Superuser cũng có thể tắt trigger: chặn ở mức role vẫn cần <code>provision_runtime_db_role</code>. REVOKE … FROM PUBLIC trước đây là no-op và đã bỏ.</li>
 <li><code>request_id</code> trong evidence/API chỉ được làm sạch (ký tự an toàn, cắt 64), không che nội dung; <code>rationale</code> là text tự do của model, FE phải render text thuần.</li>
 <li>SnapshotCropProvider giả định shape trong snapshot là rectangle không xoay (normalization chỉ giữ rectangle; <code>rotation</code> bị bỏ qua); kiểm kích thước object bằng <code>head()</code> trước khi đọc nhưng chưa thử với storage thật.</li>
 </ul></li>
@@ -204,6 +204,7 @@ KILLED  views: bỏ ánh xạ 422</code></pre>
 <li>Pha C thay <code>select_candidates_for_vlm</code> bằng routing policy và tăng <code>EVALUATION_GENERATION</code> (#289); đối chiếu mục [chờ contract] trong <code>docs/12-ai/vlm.html</code> với contract thực tế.</li>
 <li>Xác minh với cổng thật: bảng map lỗi HTTP, mã <code>model_not_found</code> (503 theo kiểm tra của điều phối) hiện rơi vào provider_error; danh sách model phụ thuộc key nên allowlist <code>ALLOWED_MODELS</code> chỉ nên mở rộng sau khi gọi <code>/v1/models</code>.</li>
 <li>Đo tải <code>identity()</code> dưới khoá QCRun với run lớn; chạy ESLint/tsc/vitest (CI) và detector checks; QC độc lập CR-102.</li>
+<li>Migration của pha B (classifier) sẽ là 0007 sau 0006 của pha A.</li>
 <li>Pha B (#286) và C dùng cùng quy ước ledger: đếm theo đơn vị riêng của engine, không theo frame, nếu cần.</li>
 </ol>
 <h3>Lệnh chạy lại kiểm (DB/Redis cô lập, KHÔNG dùng DB dev)</h3>

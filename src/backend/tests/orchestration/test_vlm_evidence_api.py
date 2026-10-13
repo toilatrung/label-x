@@ -273,3 +273,24 @@ def test_owner_connection_cannot_truncate_evidence_even_via_cascade() -> None:
     finally:
         with connection.cursor() as cursor:
             cursor.execute("SET labelx.allow_evidence_truncate = 'on'")
+
+
+def test_ledger_endpoint_counts_vlm_units_not_zero() -> None:
+    run = _make_run(vlm={**VALID, "budget": {"max_calls": 2}})
+    _run_shards(run)
+    api = _client(run, Role.QA_LEAD)
+
+    def vlm_entry() -> dict[str, Any]:
+        resp = api.get(f"/api/runs/{run.pk}/ledger/")
+        assert resp.status_code == 200
+        return next(e for e in resp.data if e["engine"] == "vlm")
+
+    pending = vlm_entry()
+    assert (pending["total"], pending["pending"], pending["completed"]) == (3, 3, 0)
+    assert pending["unit"] == "shape" and pending["status"] == "running"
+    for unit in VlmUnit.objects.filter(run_id=run.pk).order_by("pk"):
+        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    entry = vlm_entry()
+    assert (entry["total"], entry["eligible"], entry["completed"], entry["failed"]) == (3, 3, 2, 1)
+    assert entry["pending"] == 0 and entry["coverage"] == pytest.approx(2 / 3)
+    assert entry["status"] == "partial"
