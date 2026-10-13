@@ -47,14 +47,14 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>M04B-classifier-implementation-@label-x-47</span><b>title</b><span>M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</span><b>type</b><span>report</span><b>domain</b><span>governance</span><b>module</b><span>reports</span><b>tags</b><span>[report, implementation, m-04, m04b, classifier]</span><b>priority</b><span>2</span></div>
 <h1 id="M04B-classifier-implementation">M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<p>Báo cáo triển khai pha B của M-04 (ConvNeXt Tiny 10 lớp, crop 224×224): bằng chứng thật, giới hạn và phần chưa kiểm chứng. <strong>Checkpoint duy nhất tồn tại là <code>smoke_only</code> trên dữ liệu tổng hợp; chưa có huấn luyện thật (BLOCKER-030).</strong></p>
+<p>Báo cáo triển khai pha B của M-04 (ConvNeXt Tiny 10 lớp, crop 224×224): bằng chứng thật, giới hạn và phần chưa kiểm chứng. <strong>Checkpoint duy nhất tồn tại là <code>smoke_only</code> trên dữ liệu tổng hợp; chưa có huấn luyện thật (BLOCKER-032).</strong></p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>M04B-classifier-implementation-@label-x-47</code></li>
 <li><strong>Title</strong>: <code>M04B — Classifier ConvNeXt Tiny (pha B: M04B-01…M04B-04)</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung (PO, chủ task M04B-01…04)</code></li>
 <li><strong>Executor</strong>: <code>phiên Claude label-x-47, điều phối bởi label-x-m04-5a</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
 <li><strong>Task ID</strong>: <code>M04B-01, M04B-02, M04B-03, M04B-04 (issue #284, #285, #286, #287)</code></li>
 <li><strong>Epic ID</strong>: <code>E-12</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-13</code></li>
@@ -67,8 +67,8 @@ ul.dir{columns:2;font-size:14px}
 <li>M04B-03 (#286): <code>models.classifier</code> → <code>ModelArtifact</code> (400 khi sai schema, 422 khi publish thiếu manifest/class map), <code>ClassifierUnit</code> + migration, stage sau candidate chạy batch qua worker tách tiến trình, <code>EngineResult</code> classifier, field <code>classifier</code> trên Candidate API (openapi + contract.d.ts).</li>
 <li>M04B-04 (#287): smoke CLI end-to-end với trọng số ImageNet thật trên fixture tổng hợp; smoke backend→worker thật→checkpoint <code>smoke_only</code> (test bỏ qua mặc định, bật bằng biến môi trường); bảng bàn giao API đợt 2 bên dưới.</li>
 </ul>
-<p><strong>Phạm vi PR này (nhánh cổng)</strong>: chỉ phần worker M04B-01/02 và BLOCKER-030/report. <strong>M04B-03 backend</strong> (<code>src/backend/**</code>, migration, <code>docs/04-api/openapi.yaml</code>, <code>contract.d.ts</code>) nằm ở <code>feat/M-04-b-classifier</code>, <strong>KHÔNG vào PR này</strong> vì phụ thuộc PR pha A; bảng Changes Made bên dưới liệt kê cả phần đó để bàn giao, đánh dấu M04B-03.</p>
-<p><strong>Not Implemented</strong>: huấn luyện/đánh giá trên dữ liệu thật (BLOCKER-030); crop thật từ snapshot/CVAT (phụ thuộc M04A-04/#282, hiện dùng <code>NoCropProvider</code> mặc định ⇒ <code>invalid_crop</code> hiện rõ); policy định tuyến classifier–Qwen (pha C); calibration/KPI (ngoài phạm vi M-04); job CI cho <code>src/classifier_worker</code> (đề xuất, thuộc PO); đánh số lại migration và rebase lên A tại cổng.</p>
+<p><strong>Phạm vi PR này (nhánh cổng)</strong>: chỉ phần worker M04B-01/02 và BLOCKER-032/report. <strong>M04B-03 backend</strong> (<code>src/backend/**</code>, migration, <code>docs/04-api/openapi.yaml</code>, <code>contract.d.ts</code>) nằm ở <code>feat/M-04-b-classifier</code>, <strong>KHÔNG vào PR này</strong> vì phụ thuộc PR pha A; bảng Changes Made bên dưới liệt kê cả phần đó để bàn giao, đánh dấu M04B-03.</p>
+<p><strong>Not Implemented</strong>: huấn luyện/đánh giá trên dữ liệu thật (BLOCKER-032); crop thật từ snapshot/CVAT (phụ thuộc M04A-04/#282, hiện dùng <code>NoCropProvider</code> mặc định ⇒ <code>invalid_crop</code> hiện rõ); policy định tuyến classifier–Qwen (pha C); calibration/KPI (ngoài phạm vi M-04); job CI cho <code>src/classifier_worker</code> (đề xuất, thuộc PO); đánh số lại migration và rebase lên A tại cổng.</p>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td><code>src/classifier_worker/labelx_classifier/{taxonomy,crops,dataset}.py</code></td><td>10 lớp bdd100k-det-10-v1, letterbox crop, builder dataset có provenance/split/manifest, từ chối input sai kiểu/ảnh bomb, chỉ xoá crop do chính tool tạo</td><td>M04B-01</td></tr>
@@ -79,7 +79,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>src/backend/runs/{services,serializers,config_versions}.py</code>, <code>review/api_serializers.py</code></td><td>Engine classifier trong allowlist/descriptor, validate 400/422, field classifier trên Candidate</td><td>M04B-03</td></tr>
 <tr><td><code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code></td><td>ClassifierEvidence/ClassifierTopK, EngineName thêm classifier, mô tả publish 422 (contract.d.ts +33/−2, sinh bằng npm run gen:api:contract)</td><td>M04B-03</td></tr>
 <tr><td><code>src/backend/tests/classifier/**</code></td><td>56 test + 1 smoke e2e (bỏ qua mặc định)</td><td>M04B-03, M04B-04</td></tr>
-<tr><td><code>.agent/governance/blockers/BLOCKER-030.html</code></td><td>Blocker thiếu crop nhãn thật và GPU</td><td>M04B-02</td></tr>
+<tr><td><code>.agent/governance/blockers/BLOCKER-032.html</code></td><td>Blocker thiếu crop nhãn thật và GPU</td><td>M04B-02</td></tr>
 </tbody></table>
 <h2 id="related-files">Related Files</h2>
 <ul>
@@ -89,7 +89,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không sửa)</li>
 <li><strong>Decisions</strong>: <code>DEC-021</code></li>
 <li><strong>Change Requests</strong>: <code>CR-115, CR-116</code></li>
-<li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-030.html</code></li>
+<li><strong>Risks or Blockers</strong>: <code>.agent/governance/blockers/BLOCKER-032.html</code></li>
 <li><strong>Review Request</strong>: <code>cross-review chỉ đọc bởi label-x-e4 (đã làm 3 vòng cho worker; #286 đang chờ)</code></li>
 <li><strong>Commits</strong> (nhánh cổng <code>feat/M-04-b-gate</code>): <code>7942d63, df23e26, 23a1f0e, 0ebaee0, 00867cf, 3dcbd25, 16653d6, ae99f9d</code> (+ commit report này). Backend M04B-03 ở <code>feat/M-04-b-classifier</code> (3a9ca08, 8f8c0f2, 9d26d77), không thuộc PR này.</li>
 </ul>
@@ -123,7 +123,7 @@ ul.dir{columns:2;font-size:14px}
 <p><strong>Approved By</strong>: <code>not-applicable</code> (chưa có review/QC độc lập)</p>
 <p><strong>Known Limitations</strong>:</p>
 <ul>
-<li><strong>Chưa huấn luyện thật</strong>: không có crop nhãn thật/snapshot+ảnh thật trong repo; chỉ có torch CPU (CUDA không dùng được trong WSL) — BLOCKER-030. Mọi checkpoint hiện tạo ra là <code>smoke_only</code>; mọi số đo là kiểm cơ chế, không có accuracy đáng tin, không dùng held-out.</li>
+<li><strong>Chưa huấn luyện thật</strong>: không có crop nhãn thật/snapshot+ảnh thật trong repo; chỉ có torch CPU (CUDA không dùng được trong WSL) — BLOCKER-032. Mọi checkpoint hiện tạo ra là <code>smoke_only</code>; mọi số đo là kiểm cơ chế, không có accuracy đáng tin, không dùng held-out.</li>
 <li><code>training.status = trained</code> chỉ chứng minh điều kiện kỹ thuật (data_origin khai báo là real, ImageNet pretrained, ≥3 epoch, val không rỗng, đủ 10 lớp); <code>data_origin</code> do người chạy khai và không được tool xác minh.</li>
 <li>Pin: Python 3.12.15, torch 2.14.1+cpu, torchvision 0.29.1+cpu (index PyTorch CPU) trong <code>src/classifier_worker/uv.lock</code> — PO xem lại khi duyệt PR (thêm phụ thuộc lớn ~800 MB venv).</li>
 <li>Trọng số ImageNet tải từ <code>download.pytorch.org</code> lúc chạy smoke (≈109 MB, mất ~10 phút trên máy này); checkpoint smoke 111,372,631 byte nằm ngoài git.</li>
@@ -169,7 +169,7 @@ ul.dir{columns:2;font-size:14px}
 </ul>
 <h2 id="handover">Bàn giao</h2>
 <table><thead><tr><th>Việc còn lại</th><th>Lệnh / ghi chú</th></tr></thead><tbody>
-<tr><td>Huấn luyện thật (BLOCKER-030)</td><td>Cần PO/Data Owner xác nhận quyền dữ liệu + snapshot khoá + ảnh + label map. Chạy: <code>cd src/classifier_worker &amp;&amp; uv run labelx-classifier build-dataset --snapshot S.json --label-map L.json --image-root IMG --out DS --revision-sha256 R --data-origin real --group-by task --val-fraction 0.2</code> rồi <code>uv run labelx-classifier train --dataset DS --out MODEL --version V --epochs 3+</code>; kiểm: <code>verify --manifest MODEL/classifier-manifest.json</code>. status trained chỉ khi đủ điều kiện (xem status_reasons).</td></tr>
+<tr><td>Huấn luyện thật (BLOCKER-032)</td><td>Cần PO/Data Owner xác nhận quyền dữ liệu + snapshot khoá + ảnh + label map. Chạy: <code>cd src/classifier_worker &amp;&amp; uv run labelx-classifier build-dataset --snapshot S.json --label-map L.json --image-root IMG --out DS --revision-sha256 R --data-origin real --group-by task --val-fraction 0.2</code> rồi <code>uv run labelx-classifier train --dataset DS --out MODEL --version V --epochs 3+</code>; kiểm: <code>verify --manifest MODEL/classifier-manifest.json</code>. status trained chỉ khi đủ điều kiện (xem status_reasons).</td></tr>
 <tr><td>Áp backend #286 sau khi A vào</td><td>Cherry-pick 3a9ca08 + 8f8c0f2 từ <code>feat/M-04-b-classifier</code> lên nền có A, giải xung đột (openapi/serializers/models/services/config_versions/runsync/dispatch/tasks), đổi migration thành 0007 phụ thuộc 0006 của A, chuyển ledger classifier vào <code>orchestration.services.ledger_counts</code>, sinh lại <code>contract.d.ts</code> bằng <code>npm run gen:api:contract</code> (không gỡ xung đột tay).</td></tr>
 <tr><td>Pytest FULL backend</td><td><code>cd src/backend &amp;&amp; uv run pytest tests</code> trên DB/Redis cô lập (Postgres + Redis riêng). Chưa chạy lại sau sửa review.</td></tr>
 <tr><td>Smoke worker thật qua backend</td><td><code>LABELX_CLASSIFIER_E2E_ROOT=&lt;dir model&gt; LABELX_CLASSIFIER_E2E_CMD="uv run --project &lt;dir src/classifier_worker&gt; labelx-classifier" uv run pytest tests/classifier/test_e2e_real_worker.py</code> (đã pass 1 lần với checkpoint smoke_only trên crop PNG tổng hợp); crop thật cần <code>CropProvider</code> của M04A-04.</td></tr>
