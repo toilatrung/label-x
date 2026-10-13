@@ -162,3 +162,74 @@ def test_get_run_detail_lists_all_reasons_and_writes_nothing(final_world):  # no
         if q["sql"].lstrip().upper().startswith(("INSERT", "UPDATE", "DELETE"))
     ]
     assert writes == []
+
+
+def _retry_attempt(origin: QCRun, base: QCRun, suffix: str) -> QCRun:
+    return QCRun.objects.create(
+        snapshot=base.snapshot,
+        config_version=base.config_version,
+        seed=base.seed,
+        dataset_id=base.dataset_id,
+        scope_hash=base.scope_hash,
+        created_by=base.created_by,
+        origin_run=origin,
+        is_final=True,
+        idempotency_key=f"{base.idempotency_key}-{suffix}",
+    )
+
+
+@pytest.mark.django_db
+def test_two_attempts_with_the_same_reason_are_listed_once(final_world):  # noqa: F811
+    origin, first = final_world["run"], final_world["final"]
+    _complete_final(first)
+    LedgerUnit.objects.filter(run=first).update(outcome="pending")
+    second = _retry_attempt(origin, first, "same-reason")
+    _complete_final(second)
+    LedgerUnit.objects.filter(run=second).update(outcome="pending")
+
+    assert [
+        a["reason"] for a in run_lineage_fields(origin)["operational_source"]["final_attempts"]
+    ] == [  # type: ignore[index]
+        "coverage_incomplete",
+        "coverage_incomplete",
+    ]
+    assert _reasons(origin) == ["coverage_incomplete"]
+
+
+@pytest.mark.django_db
+def test_valid_selected_final_hides_blockers_of_other_attempts(final_world):  # noqa: F811
+    """Intended: a valid final means the scope is not blocked, whatever an older attempt said."""
+
+    origin, broken = final_world["run"], final_world["final"]
+    _complete_final(broken)
+    _break_ledger(broken, "failed_unit")
+    _candidate(broken, "old-attempt-new")
+    valid = _retry_attempt(origin, broken, "valid")
+    _complete_final(valid)
+
+    source = run_lineage_fields(origin)["operational_source"]
+    assert source["scope_complete"] is True and source["run_id"] == valid.pk  # type: ignore[index]
+    assert source["blocked_reasons"] == []  # type: ignore[index]
+    assert {a["run_id"] for a in source["final_attempts"]} == {broken.pk, valid.pk}  # type: ignore[index]
+
+
+@pytest.mark.django_db
+def test_origin_with_open_issue_reports_only_that_reason(final_world):  # noqa: F811
+    origin, final = final_world["run"], final_world["final"]
+    _complete_final(final)
+    Issue.objects.filter(pk=final_world["issue"].pk).update(state=Issue.State.PENDING_REVIEW)
+
+    source = run_lineage_fields(origin)["operational_source"]
+    assert source["blocked_reasons"] == ["origin_has_open_issue"]  # type: ignore[index]
+    assert source["final_attempts"] == []  # type: ignore[index]
+    assert source["scope_complete"] is False and source["run_id"] == origin.pk  # type: ignore[index]
+
+
+@pytest.mark.django_db
+def test_origin_without_any_final_attempt_reports_no_valid_final(final_world):  # noqa: F811
+    origin, final = final_world["run"], final_world["final"]
+    QCRun.objects.filter(pk=final.pk).update(is_final=False)  # no final attempt remains
+
+    source = run_lineage_fields(origin)["operational_source"]
+    assert source["blocked_reasons"] == ["no_valid_final"]  # type: ignore[index]
+    assert source["final_attempts"] == []  # type: ignore[index]
