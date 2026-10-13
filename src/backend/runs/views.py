@@ -51,6 +51,7 @@ from runs.services import (
     create_qc_run,
     retry_failed_qc_run,
 )
+from runs.vlm_read import load_candidate_units
 from snapshots.models import Snapshot
 
 
@@ -133,6 +134,7 @@ class ConfigVersionPublishView(APIView):
             403: ErrorSerializer,
             404: ErrorSerializer,
             409: ErrorSerializer,
+            422: ErrorSerializer,
         },
         tags=["config"],
     )
@@ -143,6 +145,10 @@ class ConfigVersionPublishView(APIView):
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", str(exc)) from exc
         except InvalidTransitionError as exc:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", str(exc)) from exc
+        except BusinessRuleUnmetError as exc:
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, "BUSINESS_RULE_UNMET", str(exc)
+            ) from exc
         return Response(ConfigVersionSerializer(config).data)
 
 
@@ -555,7 +561,11 @@ class RunCandidateListView(RunScopedReadView):
 
         paginator = CandidateCursorPagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        serializer = CandidateSerializer(page, many=True)
+        serializer = CandidateSerializer(
+            page,
+            many=True,
+            context={"vlm_units": load_candidate_units(c.pk for c in page or [])},
+        )
         response = paginator.get_paginated_response(serializer.data)
         response.data.update(raw_count=None, dedup_count=dedup_count)
         return response
