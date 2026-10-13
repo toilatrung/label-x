@@ -24,7 +24,7 @@ export function AppShell({
   flowNavVariant,
   context,
 }: AppShellProps) {
-  const resolvedVariant = flowNavVariant ?? (['analysis', 'reports'].includes(activeKey ?? '') ? 'tabs' : 'stepper');
+  const resolvedVariant = flowNavVariant ?? (['analysis', 'review', 'reports'].includes(activeKey ?? '') ? 'tabs' : 'stepper');
   return (
     <div className="lx lx-shell">
       <TopBar activeKey={activeKey} />
