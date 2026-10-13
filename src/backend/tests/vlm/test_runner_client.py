@@ -59,7 +59,7 @@ def test_success_builds_openai_request_and_redacts() -> None:
 
     result = run_vlm_unit(_req(), _client(handler), CounterBudget(5), sleep=lambda s: None)
     assert result.status is VlmStatus.CHECKED and result.label == "bus"
-    assert result.attempts == 1 and result.request_id == "req-123"
+    assert result.attempts == 1 and result.request_id == "…req-123"
     assert seen["url"].endswith("/compatible-mode/v1/chat/completions")
     body = seen["body"]
     assert body["model"] == "qwen3-vl-plus" and "response_format" not in body
@@ -202,8 +202,10 @@ def test_malformed_200_body_is_server_error() -> None:
 
 
 def test_redact_request_id() -> None:
-    assert redact_request_id("req 123/\n$$") == "req123"[:0] + "req123"
-    assert redact_request_id("x" * 200) == "x" * 64
+    assert redact_request_id("req 123/\n$$") == "…req123"
+    assert redact_request_id("prefix-123456789") == "…23456789"
+    assert redact_request_id("…23456789") == "…23456789"  # idempotent
+    assert redact_request_id("x" * 200 + "last-123") == "…last-123"
     assert redact_request_id(None) is None and redact_request_id("") is None
 
 

@@ -12,7 +12,7 @@ from rest_framework import serializers
 from orchestration.evaluation_guard import MAX_REASON_LENGTH
 
 
-class EvaluationCreateSerializer(serializers.Serializer[Any]):
+class CandidateEvaluationCreateSerializer(serializers.Serializer[Any]):
     reason = serializers.CharField(max_length=MAX_REASON_LENGTH, trim_whitespace=True)
     expected_revision = serializers.CharField(max_length=128)
 

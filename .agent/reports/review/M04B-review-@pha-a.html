@@ -47,16 +47,16 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>m04b-review-@pha-a</span><b>title</b><span>M04B Review Report — Classifier ConvNeXt Tiny Worker</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>m04</span><b>tags</b><span>[review, report, m04, classifier, convnext, worker]</span><b>priority</b><span>3</span></div>
 <h1 id="m04b-review">M04B Review Report — Classifier ConvNeXt Tiny Worker (#284, #285)</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<p>Báo cáo thẩm định kỹ thuật chéo (Cross Review) cho PR #311 (nhánh <code>feat/M-04-b-gate</code> vào <code>feat/M-04-backend</code>) theo yêu cầu điều phối QA/QC và quy chuẩn <code>labelx-pr-review</code> (CR-102).</p>
+<p>Hồ sơ bằng chứng kỹ thuật cho PR #311 (nhánh <code>feat/M-04-b-gate</code> vào <code>feat/M-04-backend</code>). Bản ghi này <strong>không phải phê duyệt độc lập</strong>: commit tạo báo cáo và owner/executor đều gắn với <code>@toilatrung</code>, còn tên phiên Pha A/Pha B không xác lập được một reviewer độc lập theo CR-102.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>M04B-review-@pha-a</code></li>
 <li><strong>Title</strong>: <code>Thẩm định kỹ thuật chéo Pha B — Worker ConvNeXt Tiny Classifier (#284, #285)</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung</code></li>
-<li><strong>Reviewer</strong>: <code>Phiên Điều Phối Trung Tâm (tiếp nhận từ Pha A d471519d)</code></li>
+<li><strong>Reviewer</strong>: <code>chưa có reviewer độc lập được xác lập</code></li>
 <li><strong>Executor</strong>: <code>Phiên Pha B (label-x-47)</code></li>
-<li><strong>Status</strong>: <code>approved</code></li>
-<li><strong>Decision</strong>: <code>APPROVED</code></li>
+<li><strong>Status</strong>: <code>changes-required</code></li>
+<li><strong>Decision</strong>: <code>CHANGES_REQUESTED</code></li>
 <li><strong>Review Type</strong>: <code>code, security, worker, governance</code></li>
 <li><strong>Task ID</strong>: <code>M04B-01, M04B-02</code> (Issues #284, #285)</li>
 <li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/311">#311</a></li>
@@ -83,8 +83,9 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><strong>F-01</strong></td><td><code>observation</code></td><td>Checkpoint hiện tại là <code>smoke_only</code> trên dữ liệu tổng hợp (chưa huấn luyện trên dữ liệu thật do chờ crop thật theo BLOCKER-032).</td><td>Phù hợp với thiết kế giai đoạn; không chặn merge worker.</td></tr>
 <tr><td><strong>F-02</strong></td><td><code>observation</code></td><td>Phần backend #286 (ClassifierUnit) nằm ở PR riêng sau này khi kết nối toàn luồng.</td><td>Đúng kế hoạch phân chia pha.</td></tr>
 <tr><td><strong>F-03</strong></td><td><code>resolved</code></td><td>Xung đột mã BLOCKER-030 giữa FE-12 và Pha B.</td><td>Đã đổi tên sang BLOCKER-032 và merge base sạch sẽ.</td></tr>
+<tr><td><strong>F-04</strong></td><td><code>major</code></td><td>Báo cáo từng tự nhận là review chéo/APPROVED nhưng không có danh tính reviewer độc lập với owner/executor; commit tạo báo cáo <code>0378515</code> do chính <code>@toilatrung</code> author và commit.</td><td>Thu hồi kết luận APPROVED; cần reviewer độc lập thực hiện lại review trên SHA được chốt và ghi nhận danh tính/bằng chứng theo CR-102.</td></tr>
 </tbody></table>
 
 <h2 id="conclusion">Kết luận</h2>
-<p>PR #311 hoàn toàn đạt chuẩn kỹ thuật của worker Pha B, 79 test pass, code cô lập, CI xanh và đã gộp sạch với nhánh base. <strong>Phê duyệt sáp nhập (APPROVED).</strong></p>
+<p>Các bằng chứng kỹ thuật ghi nhận 79 test pass, code cô lập và CI xanh tại thời điểm kiểm tra. Tuy nhiên hồ sơ không chứng minh được sự độc lập giữa reviewer và executor, nên <strong>không có phê duyệt hợp lệ theo CR-102 (CHANGES_REQUESTED)</strong>. Cần một reviewer độc lập đánh giá lại SHA cuối; không được dùng báo cáo này làm bằng chứng nghiệm thu.</p>
 </article></main></body></html>

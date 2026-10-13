@@ -321,10 +321,27 @@ def redispatch_pending(
         run__status__in=_ACTIVE_RUN,
         run__cancel_requested_at__isnull=True,
     ).update(status=VlmUnit.Status.PENDING)
+    # Re-evaluate thủ công (generation > 1) chạy cả sau khi run kết thúc: cũng thu hồi lease cũ.
+    VlmUnit.objects.filter(
+        status=VlmUnit.Status.RUNNING,
+        started_at__lte=running_cutoff,
+        evaluation_generation__gt=1,
+        run__cancel_requested_at__isnull=True,
+    ).update(status=VlmUnit.Status.PENDING)
     run_ids = list(
         QCRun.objects.filter(
             status__in=_ACTIVE_RUN, cancel_requested_at__isnull=True, created_at__lte=cutoff
         ).values_list("pk", flat=True)
+    )
+    manual_run_ids = list(
+        VlmUnit.objects.filter(
+            status=VlmUnit.Status.PENDING,
+            evaluation_generation__gt=1,
+            run__cancel_requested_at__isnull=True,
+        )
+        .exclude(run_id__in=run_ids)
+        .values_list("run_id", flat=True)
+        .distinct()
     )
     return {
         "runs": len(run_ids),
@@ -332,7 +349,8 @@ def redispatch_pending(
             dispatch_run_safely(pk, older_than_seconds)
             + dispatch_vlm_units_safely(pk, older_than_seconds)
             for pk in run_ids
-        ),
+        )
+        + sum(dispatch_vlm_units_safely(pk, older_than_seconds) for pk in manual_run_ids),
     }
 
 

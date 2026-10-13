@@ -1,19 +1,18 @@
-"""Policy định tuyến classifier → Qwen `classification-routing-v0` (M04C-01, CR-115/CR-116).
+"""Policy định tuyến Faster R-CNN → Qwen (M04C-01, CR-117).
 
 Không phụ thuộc Django/DB: orchestrator và evaluation API (M04C-02) dùng chung một hàm
 quyết định, và lưu `RoutingPolicy.as_record()` cùng mỗi evaluation.
 
 Ranh giới:
-- score ≥ 0,85 và margin ≥ 0,15 là NGƯỠNG ĐỊNH TUYẾN TẠM, không phải ngưỡng quality hay
-  calibration; score classifier không phải xác suất đã hiệu chuẩn.
-- Conflict luôn ưu tiên hơn score cao: score cao không bao giờ biến conflict thành classifier-only.
+- confidence ≥ 0,85 là NGƯỠNG ĐỊNH TUYẾN TẠM, không phải ngưỡng quality hay calibration.
+- Faster R-CNN không trả top-k nên không tự chế margin; ngưỡng margin chỉ áp dụng khi nguồn vào
+  thực sự cung cấp giá trị đó.
+- Conflict luôn ưu tiên hơn score cao.
 - Policy chỉ quyết định có gọi Qwen hay không; không tạo ReviewDecision/Adjudication.
-- unknown là abstention, không phải lớp thứ 11.
-- Classifier chỉ đáng tin khi `checkpoint_status == "trained"`: smoke_only, rỗng hoặc thiếu coi như
-  KHÔNG đáng tin ⇒ luôn gọi Qwen và yêu cầu người xem (`classifier_untrusted`). Quyết định tạm
-  an toàn, đảo lại được khi PO chốt.
-- Classifier không dùng được (thiếu, lỗi hạ tầng, dữ liệu sai kiểu) ⇒ `classifier_unavailable`,
-  vẫn gọi Qwen làm fallback nhưng không gọi là low_score.
+- Detector không dùng được hoặc evidence sai kiểu vẫn gọi Qwen làm fallback.
+
+Tên policy và các reason `classifier_*` được giữ để tương thích payload FE v0 đã đóng băng; nguồn
+runtime thực tế là candidate của engine `detector`, không có classifier riêng.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 
 POLICY_NAME = "classification-routing-v0"
 POLICY_VERSION = "v0"
@@ -43,7 +42,7 @@ class RoutingReason(StrEnum):
     MANUAL_RECHECK = "manual_recheck"
     INVALID_CROP = "invalid_crop"
     BUDGET_EXHAUSTED = "budget_exhausted"
-    # Mở rộng so với payload FE v0 (cần ghi vào #278): classifier không đáng tin / không dùng được.
+    # Tên tương thích FE v0; nguồn runtime hiện là detector theo CR-117.
     CLASSIFIER_UNTRUSTED = "classifier_untrusted"
     CLASSIFIER_UNAVAILABLE = "classifier_unavailable"
 
@@ -58,7 +57,6 @@ _TRIGGER_PRIORITY = (
     RoutingReason.LOW_SCORE,
     RoutingReason.LOW_MARGIN,
 )
-TRUSTED_CHECKPOINT = "trained"
 
 
 class RoutingPolicyError(ValueError):
@@ -125,16 +123,17 @@ class RoutingInput:
     """Dữ kiện của một candidate; không chứa prompt, ảnh hay secret."""
 
     crop_valid: bool = True
-    classifier_unknown: bool = False
+    source_unknown: bool = False
     predicted_class_id: int | None = None
     annotated_class_id: int | None = None
     score: float | None = None
     margin: float | None = None
     manual_recheck: bool = False
     budget_exhausted: bool = False
-    # False: classifier không có/lỗi hạ tầng/dữ liệu sai kiểu ⇒ classifier_unavailable.
-    classifier_available: bool = True
-    # "trained" mới đáng tin; "smoke_only", rỗng hoặc thiếu ⇒ classifier_untrusted.
+    # False: detector không có/lỗi hạ tầng/dữ liệu sai kiểu ⇒ reason tương thích
+    # `classifier_unavailable`.
+    source_available: bool = True
+    source_trusted: bool = True
     checkpoint_status: str = ""
 
 
@@ -174,9 +173,9 @@ def _trigger_reasons(policy: RoutingPolicy, data: RoutingInput) -> list[RoutingR
     found: set[RoutingReason] = set()
     if data.manual_recheck:
         found.add(RoutingReason.MANUAL_RECHECK)
-    if not data.classifier_available:
+    if not data.source_available:
         found.add(RoutingReason.CLASSIFIER_UNAVAILABLE)
-        # Không có kết quả classifier thì không có score/margin để gọi là "thấp".
+        # Không có kết quả detector thì không có score/margin để gọi là "thấp".
         return [reason for reason in _TRIGGER_PRIORITY if reason in found]
     # Chỉ so nhãn khi cả hai là int thật; kiểu khác không bao giờ thành conflict giả.
     if (
@@ -185,14 +184,16 @@ def _trigger_reasons(policy: RoutingPolicy, data: RoutingInput) -> list[RoutingR
         and data.predicted_class_id != data.annotated_class_id
     ):
         found.add(RoutingReason.LABEL_CONFLICT)
-    if data.classifier_unknown:
+    if data.source_unknown:
         found.add(RoutingReason.UNKNOWN)
-    if data.checkpoint_status != TRUSTED_CHECKPOINT:
+    if not data.source_trusted:
         found.add(RoutingReason.CLASSIFIER_UNTRUSTED)
     # Thiếu/NaN/ngoài [0,1] coi như không đủ tin cậy, không coi là đạt ngưỡng.
     if not _valid_number(data.score) or data.score < policy.score_threshold:  # type: ignore[operator]
         found.add(RoutingReason.LOW_SCORE)
-    if not _valid_number(data.margin) or data.margin < policy.margin_threshold:  # type: ignore[operator]
+    if data.margin is not None and (
+        not _valid_number(data.margin) or data.margin < policy.margin_threshold
+    ):
         found.add(RoutingReason.LOW_MARGIN)
     return [reason for reason in _TRIGGER_PRIORITY if reason in found]
 
@@ -202,12 +203,8 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
 
     LƯU Ý: route() tin `RoutingInput` đã chuẩn hoá. Gọi trực tiếp với nhãn sai kiểu (chuỗi, bool,
     float) thì phép so conflict BỎ QUA (không báo conflict giả nhưng cũng không báo lỗi). Mọi đường
-    vào phải đi qua `routing_input_from_candidate`, hàm này biến dữ liệu sai kiểu thành
-    classifier_unavailable.
-
-    Unknown (abstention) do policy quyết: contract classifier luôn trả classifier_unknown=false,
-    nên adapter coi "completed mà predicted_class_id null" là unknown (xem
-    routing_input_from_candidate). Không có lớp thứ 11.
+    vào phải đi qua `routing_input_from_candidate`, hàm này biến detector evidence sai kiểu thành
+    nguồn không khả dụng.
 
     Thứ tự: crop lỗi (không có gì để gửi) → các lý do trigger; nếu cần Qwen mà hết budget
     thì không gọi và chuyển người review. Không có trigger → classifier_only.
@@ -245,23 +242,15 @@ def route(policy: RoutingPolicy, data: RoutingInput) -> RoutingDecision:
         primary=triggers[0],
         reasons=tuple(triggers),
         call_qwen=True,
-        # Classifier không đáng tin: gọi Qwen VÀ yêu cầu người xem, không để qua mặt review.
+        # Nguồn không đáng tin: gọi Qwen VÀ yêu cầu người xem, không để qua mặt review.
         human_review_required=RoutingReason.CLASSIFIER_UNTRUSTED in triggers,
         policy=record,
         checkpoint_status=data.checkpoint_status,
     )
 
 
-# Adapter theo contract classifier chính thức của #286 (feat/M-04-b-classifier @3a9ca080):
-# `Candidate.classifier` là object|null. Chỉ sửa phần này khi contract đổi, không đụng route().
-CLASSIFIER_KEY = "classifier"
+DETECTOR_ENGINE = "detector"
 ANNOTATED_CLASS_KEY = "annotated_class_id"
-# Lý do classifier thất bại vì crop (không phải hạ tầng) ⇒ crop_valid=false.
-_CROP_FAILURES = frozenset({"invalid_crop", "box_too_small"})
-
-
-class ClassifierNotReadyError(RuntimeError):
-    """Classifier pending/running: orchestration phải CHỜ, không quyết định hay gọi Qwen sớm."""
 
 
 def routing_input_from_candidate(
@@ -270,50 +259,37 @@ def routing_input_from_candidate(
     manual_recheck: bool = False,
     budget_exhausted: bool = False,
 ) -> RoutingInput:
-    """Dựng RoutingInput từ candidate; dữ liệu thiếu/sai kiểu ⇒ không đủ tin cậy, không đoán.
+    """Dựng input trực tiếp từ candidate Faster R-CNN.
 
-    - `classifier` null/không phải object, failed vì hạ tầng (inference_error, timeout,
-      checkpoint_unavailable, checksum_mismatch...), cancelled hoặc có số/nhãn sai kiểu ⇒
-      `classifier_unavailable` (vẫn gọi Qwen, không phải low_score).
-    - `pending`/`running` ⇒ ClassifierNotReadyError (chờ).
-    - `crop_valid` phải là bool thật; False, failed vì crop (invalid_crop/box_too_small) hoặc
-      không phải bool ⇒ invalid_crop. Không có classifier thì không giả định crop hỏng.
-    - Contract luôn trả `classifier_unknown=false`; abstention do policy quyết: classifier completed
-      mà không có lớp dự đoán (`predicted_class_id` null) được coi là unknown.
-    - `checkpoint_status` khác "trained" ⇒ classifier_untrusted (xem `route`).
+    Contract detector dùng ``engine=detector`` và ``evidence`` chứa ``class_id``, ``class_name``
+    cùng ``confidence``. Detector hiện không trả top-k/margin nên margin để ``None``. Candidate
+    từ engine khác hoặc evidence sai schema được định tuyến an toàn sang Qwen.
     """
-    raw = candidate.get(CLASSIFIER_KEY)
-    if not isinstance(raw, Mapping):
+    raw = candidate.get("evidence")
+    if candidate.get("engine") != DETECTOR_ENGINE or not isinstance(raw, Mapping):
         return RoutingInput(
-            classifier_available=False,
+            source_available=False,
             manual_recheck=manual_recheck,
             budget_exhausted=budget_exhausted,
         )
-    clf: Mapping[str, Any] = raw
-    status = clf.get("status")
-    if status in ("pending", "running"):
-        raise ClassifierNotReadyError(f"classifier {status}")
-    crop_ok = clf.get("crop_valid") is True and clf.get("reason_code") not in _CROP_FAILURES
+    evidence: Mapping[str, Any] = raw
+    predicted = evidence.get("class_id")
+    score = evidence.get("confidence")
+    annotated = evidence.get(ANNOTATED_CLASS_KEY, candidate.get(ANNOTATED_CLASS_KEY))
     common: dict[str, Any] = {
-        "crop_valid": crop_ok,
         "manual_recheck": manual_recheck,
         "budget_exhausted": budget_exhausted,
-        "checkpoint_status": str(clf.get("checkpoint_status") or ""),
+        "checkpoint_status": "trained",
     }
-    if not crop_ok:
-        return RoutingInput(classifier_available=False, **common)
-    if status != "completed":  # failed (hạ tầng), cancelled hoặc giá trị lạ
-        return RoutingInput(classifier_available=False, **common)
-    predicted = clf.get("predicted_class_id")
-    annotated = clf.get(ANNOTATED_CLASS_KEY, candidate.get(ANNOTATED_CLASS_KEY))
     for value in (predicted, annotated):
         if value is not None and not _real_int(value):
-            return RoutingInput(classifier_available=False, **common)
+            return RoutingInput(source_available=False, **common)
+    if predicted is None or not _valid_number(score):
+        return RoutingInput(source_available=False, **common)
     return RoutingInput(
-        classifier_unknown=bool(clf.get("classifier_unknown")) or predicted is None,
         predicted_class_id=predicted,
         annotated_class_id=annotated,
-        score=clf.get("score"),
-        margin=clf.get("margin"),
+        score=float(cast(int | float, score)),
+        margin=None,
         **common,
     )

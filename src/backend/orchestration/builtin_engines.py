@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from engines.detector import DETECTOR_DESCRIPTOR, run_detector_engine
 from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     Annotation,
@@ -55,6 +56,10 @@ def run_duplicate(engine_input: EngineInput) -> EngineOutput:
 
 
 def register_builtin_engines(target: EngineRegistry) -> None:
-    descriptor = DUPLICATE_OVERLAP_DESCRIPTOR
-    if not any(d.name == descriptor.name for d in target.descriptors()):
-        target.register(descriptor, run_duplicate)
+    registered = {(d.name, d.version) for d in target.descriptors()}
+    for descriptor, runner in (
+        (DUPLICATE_OVERLAP_DESCRIPTOR, run_duplicate),
+        (DETECTOR_DESCRIPTOR, run_detector_engine),
+    ):
+        if (descriptor.name, descriptor.version) not in registered:
+            target.register(descriptor, runner)
