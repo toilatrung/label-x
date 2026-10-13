@@ -16,7 +16,8 @@ from django.db.models import Q
 from django.utils import timezone
 
 from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
-from orchestration.models import ShardCommit, VlmUnit
+from orchestration.classifier_stage import dispatch_classifier_units_safely
+from orchestration.models import ClassifierUnit, ShardCommit, VlmUnit
 from orchestration.retry import default_policy
 from orchestration.runsync import refresh_run
 from orchestration.services import (
@@ -321,6 +322,12 @@ def redispatch_pending(
         run__status__in=_ACTIVE_RUN,
         run__cancel_requested_at__isnull=True,
     ).update(status=VlmUnit.Status.PENDING)
+    ClassifierUnit.objects.filter(
+        status=ClassifierUnit.Status.RUNNING,
+        started_at__lte=running_cutoff,
+        run__status__in=_ACTIVE_RUN,
+        run__cancel_requested_at__isnull=True,
+    ).update(status=ClassifierUnit.Status.PENDING)
     run_ids = list(
         QCRun.objects.filter(
             status__in=_ACTIVE_RUN, cancel_requested_at__isnull=True, created_at__lte=cutoff
@@ -331,6 +338,7 @@ def redispatch_pending(
         "queued": sum(
             dispatch_run_safely(pk, older_than_seconds)
             + dispatch_vlm_units_safely(pk, older_than_seconds)
+            + dispatch_classifier_units_safely(pk, older_than_seconds)
             for pk in run_ids
         ),
     }

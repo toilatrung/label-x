@@ -8,7 +8,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from orchestration.models import CandidateRecord
+from classifier.config import validate_classifier_model_config
+from orchestration.models import CandidateRecord, ClassifierUnit
 from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
@@ -155,7 +156,7 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
     models = serializers.DictField(required=False, default=dict)
 
     def validate_engines(self, value: dict[str, Any]) -> dict[str, Any]:
-        allowed = {"schema", "geometry", "duplicate", "detector", "metric", "vlm"}
+        allowed = {"schema", "geometry", "duplicate", "detector", "metric", "vlm", "classifier"}
         if not value or any(
             name not in allowed
             or not isinstance(config, dict)
@@ -187,6 +188,10 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
         """models.vlm phải đúng schema Qwen (M04A-01): allowlist model/host, không secret/prompt."""
         if "vlm" in value:
             errors = validate_vlm_config(value["vlm"])
+            if errors:
+                raise serializers.ValidationError(errors)
+        if "classifier" in value:
+            errors = validate_classifier_model_config(value["classifier"])
             if errors:
                 raise serializers.ValidationError(errors)
         return value
@@ -288,12 +293,63 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     created_at = serializers.DateTimeField(allow_null=True)
 
 
+class ClassifierTopKSerializer(serializers.Serializer[Any]):
+    class_id = serializers.IntegerField()
+    class_name = serializers.CharField()
+    score = serializers.FloatField()
+
+
+class ClassifierEvidenceSerializer(serializers.Serializer[Any]):
+    """Kết quả classifier cho một candidate. `score` là softmax chưa calibrate, không phải
+    xác suất đúng. `classifier_unknown` chỉ True khi không quyết định được; abstention theo
+    ngưỡng do policy định tuyến tính từ score/margin."""
+
+    status = serializers.ChoiceField(choices=[s.value for s in ClassifierUnit.Status])
+    reason_code = serializers.CharField(allow_blank=True)
+    crop_valid = serializers.BooleanField()
+    crop_sha256 = serializers.CharField(allow_blank=True)
+    predicted_class_id = serializers.IntegerField(allow_null=True)
+    predicted_class_name = serializers.CharField(allow_blank=True)
+    annotated_class_id = serializers.IntegerField(allow_null=True)
+    score = serializers.FloatField(allow_null=True)
+    margin = serializers.FloatField(allow_null=True)
+    top3 = ClassifierTopKSerializer(many=True)
+    classifier_unknown = serializers.BooleanField()
+    checkpoint_version = serializers.CharField(allow_blank=True)
+    checkpoint_sha256 = serializers.CharField(allow_blank=True)
+    checkpoint_status = serializers.CharField(allow_blank=True)
+    class_map_version = serializers.CharField(allow_blank=True)
+    snapshot_revision = serializers.CharField(allow_blank=True)
+
+
+def classifier_evidence(unit: ClassifierUnit) -> dict[str, Any]:
+    return {
+        "status": unit.status,
+        "reason_code": unit.reason_code,
+        "crop_valid": unit.crop_valid,
+        "crop_sha256": unit.crop_sha256,
+        "predicted_class_id": unit.predicted_class_id,
+        "predicted_class_name": unit.predicted_class_name,
+        "annotated_class_id": unit.annotated_class_id,
+        "score": unit.score,
+        "margin": unit.margin,
+        "top3": unit.top3 or [],
+        "classifier_unknown": unit.classifier_unknown,
+        "checkpoint_version": unit.checkpoint_version,
+        "checkpoint_sha256": unit.checkpoint_sha256,
+        "checkpoint_status": unit.checkpoint_status,
+        "class_map_version": unit.class_map_version,
+        "snapshot_revision": unit.snapshot_revision,
+    }
+
+
 class CandidateSerializer(serializers.ModelSerializer[Any]):
     """Schema for Candidate matching OpenAPI components.schemas.Candidate."""
 
     frame = serializers.SerializerMethodField()
     severity = serializers.SerializerMethodField()
     vlm = serializers.SerializerMethodField()
+    classifier = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateRecord
@@ -307,8 +363,16 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
             "anchor",
             "evidence",
             "vlm",
+            "classifier",
         ]
         read_only_fields = fields
+
+    @extend_schema_field(ClassifierEvidenceSerializer(allow_null=True))
+    def get_classifier(self, obj: CandidateRecord) -> dict[str, Any] | None:
+        """Đề xuất của classifier (chưa calibrate); null nếu candidate chưa có/không chạy."""
+        units = list(obj.classifier_units.all())  # prefetched by the list view
+        unit = units[0] if units else None
+        return None if unit is None else classifier_evidence(unit)
 
     def get_frame(self, obj: CandidateRecord) -> dict[str, int]:
         return {

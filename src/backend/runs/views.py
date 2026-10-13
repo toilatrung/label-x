@@ -549,7 +549,11 @@ class RunCandidateListView(RunScopedReadView):
         tags=["runs"],
     )
     def get(self, request: Request, pk: int) -> Response:
-        queryset = CandidateRecord.objects.filter(run_id=pk).order_by("id")
+        queryset = (
+            CandidateRecord.objects.filter(run_id=pk)
+            .prefetch_related("classifier_units")
+            .order_by("id")
+        )
         engine_filter = request.query_params.get("engine")
         if engine_filter:
             queryset = queryset.filter(engine=engine_filter)

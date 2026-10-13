@@ -107,9 +107,26 @@ def vlm_ledger_counts(run_id: int) -> LedgerCounts:
     )
 
 
+def classifier_ledger_counts(run_id: int) -> LedgerCounts:
+    """Ledger của engine classifier tính từ ClassifierUnit (đơn vị là candidate, không có
+    LedgerUnit theo frame). Unit bị huỷ không nằm trong mẫu số."""
+    from orchestration.models import ClassifierUnit
+
+    statuses = list(ClassifierUnit.objects.filter(run_id=run_id).values_list("status", flat=True))
+    return LedgerCounts(
+        completed=sum(s == ClassifierUnit.Status.COMPLETED for s in statuses),
+        failed=sum(s == ClassifierUnit.Status.FAILED for s in statuses),
+        pending=sum(
+            s in (ClassifierUnit.Status.PENDING, ClassifierUnit.Status.RUNNING) for s in statuses
+        ),
+    )
+
+
 def ledger_counts(run_id: int, engine: str) -> LedgerCounts:
     if engine == "vlm":
         return vlm_ledger_counts(run_id)
+    if engine == "classifier":
+        return classifier_ledger_counts(run_id)
     rows = LedgerUnit.objects.filter(run_id=run_id, engine=engine).values_list(
         "outcome", "not_checked_reason"
     )

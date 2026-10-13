@@ -8,7 +8,10 @@ from typing import Any
 from celery import shared_task
 
 from engines.interface import EngineInput
-from orchestration import vlm_stage  # noqa: F401  (đăng ký task orchestration.run_vlm_unit)
+from orchestration import (
+    classifier_stage,  # noqa: F401  (đăng ký task orchestration.run_classifier_units)
+    vlm_stage,  # noqa: F401  (đăng ký task orchestration.run_vlm_unit)
+)
 from orchestration.models import ShardCommit
 from orchestration.registry import EngineRegistry, registry
 from orchestration.retry import RetryPolicy, default_policy

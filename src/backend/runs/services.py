@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit.services import append_audit_event
+from classifier.config import classifier_models_ready
 from engines.duplicate_overlap import (
     DUPLICATE_OVERLAP_DESCRIPTOR,
     DUPLICATE_OVERLAP_ENGINE_NAME,
@@ -20,7 +21,7 @@ from engines.duplicate_overlap import (
 from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
 from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
-from orchestration.models import VlmUnit
+from orchestration.models import ClassifierUnit, VlmUnit
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
 from snapshots.models import Snapshot
 from vlm.config import validate_vlm_config
@@ -73,6 +74,15 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
         unit="frame",
         required=False,
         needs_model=False,
+        needs_reference=False,
+        applicability_version="1.0.0",
+    ),
+    "classifier": EngineDescriptor(
+        name="classifier",
+        version="1.0.0",
+        unit="shape",  # đơn vị classifier là candidate, không phải frame
+        required=False,
+        needs_model=False,  # checkpoint nằm ở config models.classifier -> ModelArtifact
         needs_reference=False,
         applicability_version="1.0.0",
     ),
@@ -256,6 +266,28 @@ def generate_shards_for_snapshot(
             ),
         )
         engine_versions_map[engine_name] = descriptor.version
+
+        if engine_name == "classifier":
+            # Classifier phụ thuộc candidate: ClassifierUnit tạo sau khi candidate sinh xong
+            # (orchestration.classifier_stage). Thiếu/sai models.classifier -> không có model.
+            clf_ready = classifier_models_ready(config_version)
+            if not clf_ready:
+                engine_versions_map.pop(engine_name)
+            engine_results_data.append(
+                {
+                    "engine": engine_name,
+                    "status": EngineStatus.RUNNING if clf_ready else EngineStatus.NOT_CHECKED,
+                    "reason": None if clf_ready else NotCheckedReason.NO_MODEL,
+                    "eligible_units": 0,
+                    "completed_units": 0,
+                    "failed_units": 0,
+                    "not_checked_units": 0,
+                    "required": descriptor.required,
+                    "unit": descriptor.unit,
+                    "applicability_version": descriptor.applicability_version,
+                }
+            )
+            continue
 
         if engine_name == "vlm":
             # VLM phụ thuộc candidate: không có shard theo frame; VlmUnit tạo sau khi candidate
@@ -509,6 +541,10 @@ def cancel_qc_run(*, run_id: int, actor: User, reason: str = "") -> QCRun:
         VlmUnit.objects.filter(
             run_id=run.pk, status__in=[VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING]
         ).update(status=VlmUnit.Status.CANCELLED, finished_at=now)
+        ClassifierUnit.objects.filter(
+            run_id=run.pk,
+            status__in=[ClassifierUnit.Status.PENDING, ClassifierUnit.Status.RUNNING],
+        ).update(status=ClassifierUnit.Status.CANCELLED, finished_at=now)
 
         append_audit_event(
             actor=actor,

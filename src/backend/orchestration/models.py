@@ -243,3 +243,62 @@ class VlmEvidence(models.Model):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise VlmEvidenceImmutableError("VlmEvidence là append-only, không được xoá.")
+
+
+class ClassifierUnit(models.Model):
+    """Một lượt classifier ConvNeXt Tiny cho một candidate (M04B-03, đơn vị = candidate).
+
+    Chỉ là đề xuất của AI: `score` là giá trị softmax chưa calibrate, KHÔNG phải xác suất đúng.
+    `classifier_unknown` mặc định False; abstention theo ngưỡng thuộc policy định tuyến (pha C),
+    classifier chỉ đặt True khi không quyết định được (score/margin không hữu hạn).
+    Khoá idempotency gồm candidate, crop, snapshot revision, checkpoint sha256 và class map.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        RUNNING = "running", "Running"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    run = models.ForeignKey(
+        "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
+    )
+    candidate = models.ForeignKey(
+        CandidateRecord, on_delete=models.PROTECT, related_name="classifier_units"
+    )
+    idempotency_key = models.CharField(max_length=64)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    reason_code = models.CharField(max_length=24, blank=True, default="")
+    crop_identity = models.CharField(max_length=64, blank=True, default="")
+    crop_sha256 = models.CharField(max_length=64, blank=True, default="")
+    crop_valid = models.BooleanField(default=False)
+    predicted_class_id = models.PositiveSmallIntegerField(null=True, blank=True)
+    predicted_class_name = models.CharField(max_length=32, blank=True, default="")
+    annotated_class_id = models.PositiveSmallIntegerField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    margin = models.FloatField(null=True, blank=True)
+    top3 = models.JSONField(default=list)
+    classifier_unknown = models.BooleanField(default=False)
+    checkpoint_version = models.CharField(max_length=64, blank=True, default="")
+    checkpoint_sha256 = models.CharField(max_length=64, blank=True, default="")
+    checkpoint_status = models.CharField(max_length=16, blank=True, default="")
+    class_map_version = models.CharField(max_length=64, blank=True, default="")
+    snapshot_revision = models.CharField(max_length=64, blank=True, default="")
+    lease_token = models.CharField(max_length=32, blank=True, default="")
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["run", "idempotency_key"], name="uniq_classifier_unit_key_per_run"
+            ),
+            models.UniqueConstraint(
+                fields=["run", "candidate"], name="uniq_classifier_unit_candidate"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"ClassifierUnit run={self.run_id} candidate={self.candidate_id} [{self.status}]"
