@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04S-02 — Đối chiếu class map BDD100K và crop mẫu — LabelX</title>
+<meta name="labelx:id" content="m04s-02">
+<meta name="labelx:title" content="M04S-02 — Đối chiếu class map BDD100K và crop mẫu">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[task, execution, template]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / m04s-02</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>m04s-02</span><b>title</b><span>M04S-02 — Đối chiếu class map BDD100K và crop mẫu</span><b>type</b><span>execution</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[task, execution, template]</span><b>priority</b><span>2</span></div>
+<h1>M04S-02 — Đối chiếu class map BDD100K và crop mẫu</h1>
+<h2>Usage Purpose</h2><p>Task nhỏ của M-04, đăng ký theo DEC-021 và CR-115.</p>
+<h2>Record Metadata</h2><ul><li><strong>Task ID</strong>: <code>M04S-02</code></li><li><strong>Epic ID</strong>: <code>E-12</code></li><li><strong>Title</strong>: <code>Đối chiếu class map BDD100K và crop mẫu</code></li><li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li><li><strong>Status</strong>: <code>pending</code></li><li><strong>Created Date</strong>: <code>2026-10-13</code></li><li><strong>Target Date</strong>: <code>Chưa chốt; theo dependency và ETA owner khi nhận</code></li><li><strong>Priority</strong>: <code>2</code></li></ul>
+<h2>Objective</h2><p>Đọc model manifest hiện có, đối chiếu đủ 10 lớp và chuẩn bị danh sách tối đa 20 locator crop/annotation mẫu có provenance nếu đã có nguồn.</p>
+<h2>Scope</h2><h3>Included</h3><p>Chỉ inventory HTML: class name/ID, nguồn, kích thước, frame/revision và case dễ nhầm. Không fine-tune, sửa taxonomy hay xuất ảnh ra dịch vụ.</p><p>Đường dẫn: <code>.agent/reports/implementation/M04S-02-@vietanhhhhhh2003.html</code>.</p><h3>Excluded</h3><p>BE, migrations, OpenAPI, runtime, dependencies, global CI, shared files của PO.</p>
+<h2>Preconditions</h2><ul><li>Parent E-12 được READY để expansion và IN_PROGRESS cho code theo DEC-021; task này còn pending.</li><li>Phụ thuộc: none, kể cả người khác và PO. Đầu vào chỉ lấy từ model manifest và dữ liệu đã có trong repo; đầu ra là file độc lập, PO dùng khi muốn, không là điều kiện của task nào.</li><li>60–90 phút; thiếu dữ liệu ghi rõ, PO tự làm M04B-01 không phải chờ task này.</li></ul>
+<h2>Related Files</h2><ul><li><strong>Context Package</strong>: <a href="../../planning/M-04-dispatch-2026-10-13.html">Phân công và context M-04</a></li><li><strong>Parent Epic</strong>: <a href="../../planning/epics.html#e-12">E-12</a></li><li><strong>Decisions</strong>: <a href="../../governance/decisions/DEC-021.html">DEC-021</a></li><li><strong>Change Requests</strong>: <a href="../../governance/change-requests/CR-115.html">CR-115</a></li><li><strong>GitHub</strong>: <a href="https://github.com/toilatrung/label-x/issues/293">#293</a></li><li><strong>Risks</strong>: xem context M-04; <strong>Blockers</strong>: chưa ghi blocker mới; thiếu input phải báo đúng bước bị chặn.</li></ul>
+<h2>Acceptance Criteria</h2><ul><li>[ ] Liệt kê đủ class map theo source; đánh dấu nguồn chưa có. Crop chỉ là mẫu tham khảo, không phải tập train/validation hoặc calibration đạt.</li><li>[ ] Có evidence đúng SHA, không secret và không ghi mock thành runtime pass.</li></ul>
+<h2>Verification Requirements</h2><ul><li><strong>Automated Checks</strong>: make validate-kit; kiểm nội dung report.</li><li><strong>Manual Checks</strong>: đối chiếu source/manifest/checklist; không cần sửa code BE.</li><li><strong>Expected Evidence</strong>: report HTML theo task và SHA; .agent/reports/implementation/M04S-02-@vietanhhhhhh2003.html</li></ul>
+<h2>Completion Criteria</h2><ul><li>[ ] Mọi AC có bằng chứng; review/QC độc lập theo quy trình.</li><li>[ ] Issue/task-board/commit-map cập nhật; chưa có implementation trong lần tạo task.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không sửa ngoài path/scope; không chuyển quyền BE của PO cho thành viên khác.</li><li>Không tự đóng issue/milestone vì tạo task hoặc mock chạy.</li><li>Không tự gửi dữ liệu/chi phí API trong task hỗ trợ.</li></ul>
+<h2>Output Requirements</h2><p>Task đã đăng ký task-board và issue #293. Nhánh riêng từ develop → develop; report -@username.html. Ghi Nhận + ETA trước khi bắt đầu.</p>
+</article></main></body></html>
+
