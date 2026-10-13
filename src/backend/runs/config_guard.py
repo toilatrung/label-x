@@ -35,22 +35,29 @@ def is_secret_like_key(key: str) -> bool:
     return normalized in _SECRET_EXACT or any(s in normalized for s in _SECRET_SUBSTRINGS)
 
 
-def find_secret_keys(value: Any, path: str = "", depth: int = 0) -> list[str]:
-    """Đường dẫn các khoá giống secret (không bao giờ trả giá trị)."""
+_EXEMPT_PATH = ("models", "vlm", "api_key_env")
+
+
+def find_secret_keys(value: Any, path: tuple[str, ...] = (), depth: int = 0) -> list[str]:
+    """Đường dẫn các khoá giống secret (không bao giờ trả giá trị).
+
+    Đường dẫn là tuple cấu trúc (không nối bằng dấu chấm) nên khoá có dấu chấm như
+    "vlm.api_key_env" không thể giả mạo ngoại lệ; ngoại lệ chỉ đúng ("models","vlm","api_key_env").
+    """
     found: list[str] = []
+    shown = ".".join(path) or "<root>"
     if depth > MAX_DEPTH:
-        return [f"{path or '<root>'} (quá sâu)"]
+        return [f"{shown} (quá sâu)"]
     if isinstance(value, Mapping):
         for key, child in value.items():
             name = str(key)
-            child_path = f"{path}.{name}" if path else name
-            exempt = child_path == "models.vlm.api_key_env"
-            if is_secret_like_key(name) and not exempt:
-                found.append(child_path)
+            child_path = (*path, name)
+            if is_secret_like_key(name) and child_path != _EXEMPT_PATH:
+                found.append(".".join(child_path))
             found += find_secret_keys(child, child_path, depth + 1)
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            found += find_secret_keys(child, f"{path}[{index}]", depth + 1)
+            found += find_secret_keys(child, (*path, f"[{index}]"), depth + 1)
     return found
 
 

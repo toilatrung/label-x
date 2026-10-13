@@ -145,6 +145,10 @@ def test_http_create_rejects_bad_vlm_with_400_never_500(vlm: dict[str, Any]) -> 
         ("thresholds", {"client-secret": "sk-leak-6"}),
         ("thresholds", {"password": "x"}),
         ("thresholds", {"token": "x"}),
+        ("models", {"vlm.api_key_env": "sk-leak-dot"}),  # khoá có dấu chấm giả đường dẫn ngoại lệ
+        ("models", {"other": {"api_key_env": "sk-leak-9"}}),
+        ("models", {"vlm": {**VALID, "nested": {"api_key_env": "sk-leak-10"}}}),
+        ("thresholds", {"api_key_env": "sk-leak-11"}),
         ("thresholds", {"Cookie": "x"}),
         ("thresholds", {"access_token": "x"}),
     ],

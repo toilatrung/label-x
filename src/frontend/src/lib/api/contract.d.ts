@@ -1362,6 +1362,47 @@ export interface components {
             frame: components["schemas"]["FrameKey"];
             anchor: components["schemas"]["Anchor"];
             evidence: components["schemas"]["Evidence"];
+            /** @description ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/. */
+            id?: number;
+            vlm?: components["schemas"]["CandidateVlm"];
+        };
+        /** @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian. */
+        CandidateVlm: {
+            /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled */
+            state: string;
+            /** @description checked | partial | failed | not_checked | running (payload FE v0) */
+            engine_status: string;
+            /** @description Luôn là qwen */
+            source: string;
+            /** @description confirmed | uncertain | null */
+            conclusion?: string | null;
+            class_id?: string | null;
+            class_name?: string | null;
+            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | null */
+            reason_code?: string | null;
+            evidence_id?: number | null;
+            /** @description Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa */
+            evaluation_id?: string | null;
+            /** @description Model ID đã yêu cầu */
+            model_version?: string | null;
+            provider?: string | null;
+            provider_host?: string | null;
+            /** @description Model ID mà provider báo về */
+            response_model?: string | null;
+            prompt_version?: string | null;
+            policy_version?: string | null;
+            snapshot_revision?: string | null;
+            attempts: number;
+            /** @description ID provider đã redacted */
+            request_id?: string | null;
+            crop_sha256?: string | null;
+            /** @description Ánh xạ crop về ảnh gốc: frame, box, padded_box, kích thước đầu ra */
+            crop?: {
+                [key: string]: unknown;
+            } | null;
+            rationale?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
         };
         /** @description Kết quả cuối của một đơn vị trong shard */
         EngineUnitResult: {
