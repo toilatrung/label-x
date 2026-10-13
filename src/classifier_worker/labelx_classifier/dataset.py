@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import shutil
 from collections import Counter
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -26,6 +28,9 @@ SCHEMA_VERSION = "labelx.classifier.dataset.v1"
 GROUP_KEYS = ("task", "job", "frame")
 FIT_SPLITS = ("train", "val")
 HELD_OUT = "held_out"
+ALL_SPLITS = ("train", "val", HELD_OUT)
+DATA_ORIGINS = ("fixture", "real")
+MAX_FRAME_PIXELS = 64_000_000
 
 
 class DatasetError(ValueError):
@@ -111,6 +116,32 @@ def _reject(reason: str, job: Mapping, frame: Mapping, shape: Mapping, detail: s
     }
 
 
+def _number(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
+        raise ValueError("expected a finite number")
+    return float(value)
+
+
+def _parse_shape(shape: Mapping[str, Any]) -> tuple[int, list[float], float, dict[str, Any]]:
+    """Strictly typed view of one shape; raises ``ValueError`` on any malformed field."""
+
+    label_id = shape.get("label_id")
+    if isinstance(label_id, bool) or not isinstance(label_id, int):
+        raise ValueError("label_id must be an integer")
+    points = shape.get("points")
+    if not isinstance(points, list | tuple) or len(points) not in (4,):
+        raise ValueError("points must be a list of 4 numbers")
+    box = [_number(value) for value in points]
+    rotation = _number(shape.get("rotation") or 0.0)
+    source = shape.get("source")
+    if not isinstance(source, Mapping) or not isinstance(source.get("kind"), str):
+        raise ValueError("source.kind is required")
+    source_id = source.get("id")
+    if isinstance(source_id, bool) or not isinstance(source_id, int | str):
+        raise ValueError("source.id is required")
+    return label_id, box, rotation, {"kind": source["kind"], "id": source_id}
+
+
 def build_dataset(
     snapshot: Mapping[str, Any],
     *,
@@ -121,89 +152,61 @@ def build_dataset(
     group_by: str = "task",
     snapshot_revision_sha256: str | None = None,
     min_side: int = MIN_SIDE_PX,
+    data_origin: str = "fixture",
 ) -> dict[str, Any]:
     """Write crops under ``out_dir`` and return the manifest (also saved as JSON)."""
 
+    if data_origin not in DATA_ORIGINS:
+        raise DatasetError(f"data_origin must be one of {DATA_ORIGINS}")
     if group_by not in GROUP_KEYS:
         raise DatasetError(f"group_by must be one of {GROUP_KEYS}")
     if snapshot.get("schema_version") != "labelx.snapshot.v1":
         raise DatasetError("snapshot.schema_version must be labelx.snapshot.v1")
+    if not isinstance(snapshot.get("jobs"), list):
+        raise DatasetError("snapshot.jobs must be a list")
     split = split or SplitConfig()
     snapshot_sha = sha256_hex(canonical_json(snapshot))
     crops_dir = out_dir / "crops"
+    if crops_dir.exists():
+        shutil.rmtree(crops_dir)  # no stale crops from an earlier build into the same out_dir
     records: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     image_cache: dict[tuple[int, int], Image.Image | None] = {}
 
     for job, frame, shape in iter_candidates(snapshot):
-        if shape.get("outside"):
-            rejected.append(_reject("outside_shape", job, frame, shape))
-            continue
-        points = shape.get("points") or []
-        if len(points) != 4 or float(shape.get("rotation") or 0.0) != 0.0:
-            rejected.append(_reject("not_axis_aligned_rectangle", job, frame, shape))
-            continue
-        name = label_map.get(shape.get("label_id"))
-        if name is None:
-            rejected.append(_reject("label_not_in_label_map", job, frame, shape))
-            continue
-        if name not in CLASS_INDEX:
-            rejected.append(_reject("class_outside_taxonomy", job, frame, shape, name))
-            continue
-        cache_key = (job["cvat_job_id"], frame["frame_index"])
-        if cache_key not in image_cache:
-            image_cache[cache_key] = _load_frame(image_root, frame)
-        image = image_cache[cache_key]
-        if image is None:
-            rejected.append(_reject("frame_image_unavailable", job, frame, shape))
-            continue
         try:
-            crop, geometry = letterbox_crop(image, tuple(points), min_side=min_side)
-        except CropError as exc:
-            rejected.append(_reject(exc.reason, job, frame, shape, str(exc)))
+            record = _process_shape(
+                job,
+                frame,
+                shape,
+                snapshot_sha,
+                snapshot,
+                image_root,
+                crops_dir,
+                out_dir,
+                label_map,
+                split,
+                group_by,
+                min_side,
+                image_cache,
+                snapshot_revision_sha256,
+            )
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            rejected.append(
+                _reject("malformed_shape", _safe(job), _safe(frame), _safe(shape), str(exc))
+            )
             continue
-        source = shape["source"]
-        crop_id = (
-            f"{snapshot_sha[:12]}-j{job['cvat_job_id']}-f{frame['frame_index']}"
-            f"-{source['kind']}{source['id']}"
-        )
-        group = _group_of(group_by, job, frame)
-        assigned = split.assign(group)
-        path = crops_dir / assigned / name.replace(" ", "_") / f"{crop_id}.png"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        crop.save(path, format="PNG")
-        records.append(
-            {
-                "crop_id": crop_id,
-                "path": path.relative_to(out_dir).as_posix(),
-                "class_name": name,
-                "class_id": CLASS_INDEX[name],
-                "split": assigned,
-                "source_group": group,
-                "crop_sha256": file_sha256(path),
-                "pixel_sha256": sha256_hex(crop.tobytes()),
-                "provenance": {
-                    "snapshot_sha256": snapshot_sha,
-                    "snapshot_revision_sha256": snapshot_revision_sha256,
-                    "dataset_id": snapshot.get("dataset_id"),
-                    "cvat_task_id": job["cvat_task_id"],
-                    "cvat_job_id": job["cvat_job_id"],
-                    "frame_index": frame["frame_index"],
-                    "source_frame_id": frame.get("source_frame_id"),
-                    "frame_media_sha256": (frame.get("media") or {}).get("sha256"),
-                    "annotation_source": {"kind": source["kind"], "id": source["id"]},
-                    "label_id": shape["label_id"],
-                    "box": [float(value) for value in points],
-                    "geometry": geometry.as_dict(),
-                },
-            }
-        )
+        if "reason" in record:
+            rejected.append(record)
+        else:
+            records.append(record)
 
     records.sort(key=lambda record: record["crop_id"])
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "class_mapping": {"version": MAPPING_VERSION, "classes": list(CLASSES)},
         "input_size": INPUT_SIZE,
+        "data_origin": data_origin,
         "snapshot": {
             "sha256": snapshot_sha,
             "revision_sha256": snapshot_revision_sha256,
@@ -227,6 +230,7 @@ def build_dataset(
             "groups_by_split": _groups_by_split(records),
             "rejected_by_reason": dict(sorted(Counter(r["reason"] for r in rejected).items())),
         },
+        "leakage_warnings": _leakage_warnings(records),
         "crops": records,
         "rejected": rejected,
     }
@@ -238,6 +242,99 @@ def build_dataset(
     return manifest
 
 
+def _safe(value: object) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _process_shape(
+    job,
+    frame,
+    shape,
+    snapshot_sha,
+    snapshot,
+    image_root,
+    crops_dir,
+    out_dir,  # noqa: PLR0913
+    label_map,
+    split,
+    group_by,
+    min_side,
+    image_cache,
+    revision,
+) -> dict[str, Any]:
+    """Return a crop record, or a rejection dict (has ``reason``)."""
+
+    if shape.get("outside") is True:
+        return _reject("outside_shape", job, frame, shape)
+    points = shape.get("points")
+    if isinstance(points, list | tuple) and len(points) != 4:
+        return _reject("not_axis_aligned_rectangle", job, frame, shape)
+    label_id, box, rotation, source = _parse_shape(shape)
+    if rotation != 0.0:
+        return _reject("not_axis_aligned_rectangle", job, frame, shape)
+    name = label_map.get(label_id)
+    if name is None:
+        return _reject("label_not_in_label_map", job, frame, shape)
+    if name not in CLASS_INDEX:
+        return _reject("class_outside_taxonomy", job, frame, shape, name)
+    cache_key = (job["cvat_job_id"], frame["frame_index"])
+    if cache_key not in image_cache:
+        image_cache[cache_key] = _load_frame(image_root, frame)
+    loaded = image_cache[cache_key]
+    if isinstance(loaded, str):
+        return _reject(loaded, job, frame, shape)
+    try:
+        crop, geometry = letterbox_crop(loaded, tuple(box), min_side=min_side)
+    except CropError as exc:
+        return _reject(exc.reason, job, frame, shape, str(exc))
+    crop_id = (
+        f"{snapshot_sha[:12]}-j{job['cvat_job_id']}-f{frame['frame_index']}"
+        f"-{source['kind']}{source['id']}"
+    )
+    group = _group_of(group_by, job, frame)
+    assigned = split.assign(group)
+    path = crops_dir / assigned / name.replace(" ", "_") / f"{crop_id}.png"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    crop.save(path, format="PNG")
+    return {
+        "crop_id": crop_id,
+        "path": path.relative_to(out_dir).as_posix(),
+        "class_name": name,
+        "class_id": CLASS_INDEX[name],
+        "split": assigned,
+        "source_group": group,
+        "crop_sha256": file_sha256(path),
+        "pixel_sha256": sha256_hex(crop.tobytes()),
+        "provenance": {
+            "snapshot_sha256": snapshot_sha,
+            "snapshot_revision_sha256": revision,
+            "dataset_id": snapshot.get("dataset_id"),
+            "cvat_task_id": job["cvat_task_id"],
+            "cvat_job_id": job["cvat_job_id"],
+            "frame_index": frame["frame_index"],
+            "source_frame_id": frame.get("source_frame_id"),
+            "frame_media_sha256": frame["media"]["sha256"],
+            "annotation_source": source,
+            "label_id": label_id,
+            "box": box,
+            "geometry": geometry.as_dict(),
+        },
+    }
+
+
+def _leakage_warnings(records: list[dict[str, Any]]) -> list[str]:
+    """Tasks spread over several splits (only possible with group_by job/frame)."""
+
+    splits: dict[int, set[str]] = {}
+    for record in records:
+        splits.setdefault(record["provenance"]["cvat_task_id"], set()).add(record["split"])
+    return [
+        f"task {task} spans splits {sorted(found)}"
+        for task, found in sorted(splits.items())
+        if len(found) > 1
+    ]
+
+
 def _groups_by_split(records: list[dict[str, Any]]) -> dict[str, int]:
     groups: dict[str, set[str]] = {}
     for record in records:
@@ -245,20 +342,27 @@ def _groups_by_split(records: list[dict[str, Any]]) -> dict[str, int]:
     return {key: len(value) for key, value in sorted(groups.items())}
 
 
-def _load_frame(image_root: Path, frame: Mapping[str, Any]) -> Image.Image | None:
-    media = frame.get("media") or {}
+def _load_frame(image_root: Path, frame: Mapping[str, Any]) -> Image.Image | str:
+    """The frame image, or a rejection reason string."""
+
+    media = frame.get("media")
+    media = media if isinstance(media, Mapping) else {}
     key = media.get("storage_key")
-    if not key:
-        return None
+    expected = media.get("sha256")
+    if not isinstance(key, str) or not key:
+        return "frame_image_unavailable"
+    if not isinstance(expected, str) or not expected:
+        return "frame_media_sha256_missing"  # without a recorded hash provenance cannot be proven
     root = image_root.resolve()
     path = (root / key).resolve()
     if root not in path.parents or not path.is_file():
-        return None
-    expected = media.get("sha256")
-    if expected and file_sha256(path) != expected:
-        return None  # provenance mismatch: never crop from a file that is not the snapshot's frame
+        return "frame_image_unavailable"
+    if file_sha256(path) != expected:
+        return "frame_image_unavailable"  # not the snapshot's frame: never crop from it
     try:
         with Image.open(path) as handle:
+            if handle.width * handle.height > MAX_FRAME_PIXELS:
+                return "frame_too_large"
             return handle.convert("RGB")
-    except (OSError, UnidentifiedImageError):
-        return None
+    except (OSError, UnidentifiedImageError, Image.DecompressionBombError, ValueError):
+        return "frame_image_unavailable"

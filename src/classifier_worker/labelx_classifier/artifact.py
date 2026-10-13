@@ -16,6 +16,22 @@ from .crops import INPUT_SIZE, PAD_FILL
 from .model import IMAGENET_MEAN, IMAGENET_STD, PRETRAINED_SOURCE, build_model
 from .taxonomy import CLASSES, MAPPING_VERSION
 
+PREPROCESSING = {
+    "input_size": INPUT_SIZE,
+    "resize": "aspect-preserving fit + centered padding",
+    "pad_fill_rgb": list(PAD_FILL),
+    "color": "RGB",
+    "scale": "1/255",
+    "mean": list(IMAGENET_MEAN),
+    "std": list(IMAGENET_STD),
+}
+OUTPUT_SEMANTICS = {
+    "top_k": 3,
+    "score": "softmax top-1 value; uncalibrated, not a probability of correctness",
+    "margin": "top-1 score minus top-2 score",
+    "calibrated": False,
+    "unknown": "abstention decided by routing policy, not a class",
+}
 SCHEMA_VERSION = "labelx.classifier.model.v1"
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 STATUSES = ("smoke_only", "trained")
@@ -69,8 +85,12 @@ class ClassifierArtifact:
             raise ManifestError("model.sha256 must be 64 lowercase hex characters")
         if classes != CLASSES or mapping.get("version") != MAPPING_VERSION:
             raise ManifestError("class_mapping must be the 10-class bdd100k-det-10-v1 map")
-        if pre.get("input_size") != INPUT_SIZE:
-            raise ManifestError(f"preprocessing.input_size must be {INPUT_SIZE}")
+        if pre != PREPROCESSING:
+            raise ManifestError("preprocessing does not match what inference actually applies")
+        if raw.get("output_semantics") != OUTPUT_SEMANTICS:
+            raise ManifestError("output_semantics does not match what inference actually returns")
+        if model.get("architecture") != "convnext_tiny":
+            raise ManifestError("model.architecture must be convnext_tiny")
         if Path(filename).name != filename:
             raise ManifestError("model.checkpoint_filename must be a bare file name")
         status = str(raw.get("training", {}).get("status", ""))
@@ -127,22 +147,8 @@ def freeze_checkpoint(
             "torch": torch.__version__,
         },
         "class_mapping": {"version": MAPPING_VERSION, "classes": list(CLASSES)},
-        "preprocessing": {
-            "input_size": INPUT_SIZE,
-            "resize": "aspect-preserving fit + centered padding",
-            "pad_fill_rgb": list(PAD_FILL),
-            "color": "RGB",
-            "scale": "1/255",
-            "mean": list(IMAGENET_MEAN),
-            "std": list(IMAGENET_STD),
-        },
-        "output_semantics": {
-            "top_k": 3,
-            "score": "softmax top-1 value; uncalibrated, not a probability of correctness",
-            "margin": "top-1 score minus top-2 score",
-            "calibrated": False,
-            "unknown": "abstention decided by routing policy, not a class",
-        },
+        "preprocessing": PREPROCESSING,
+        "output_semantics": OUTPUT_SEMANTICS,
         "training": training,
     }
     manifest_path = out_dir / "classifier-manifest.json"

@@ -42,7 +42,6 @@ def trained(tmp_path_factory):
         dataset,
         root / "model",
         version="smoke-test",
-        status="smoke_only",
         epochs=1,
         batch_size=8,
         device="cpu",
@@ -154,7 +153,6 @@ def test_training_refuses_empty_train_split(tmp_path):
             tmp_path / "d",
             tmp_path / "m",
             version="x",
-            status="smoke_only",
             epochs=1,
             pretrained=False,
         )
