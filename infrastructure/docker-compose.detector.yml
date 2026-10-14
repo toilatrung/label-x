@@ -1,7 +1,7 @@
 name: labelx-detector
 services:
   detector-worker:
-    image: labelx-detector-worker:dev
+    image: ${DETECTOR_IMAGE:-labelx-detector-worker:dev}
     build:
       context: ..
       dockerfile: infrastructure/detector-worker/Dockerfile
@@ -9,7 +9,7 @@ services:
     environment:
       DETECTOR_SERVICE_TOKEN: ${DETECTOR_SERVICE_TOKEN:?Set a random detector service token}
       DETECTOR_DEVICE: ${DETECTOR_DEVICE:-cuda:0}
-    ports: ["127.0.0.1:8501:8501"]
+    ports: ["127.0.0.1:${DETECTOR_HOST_PORT:-8501}:8501"]
     volumes:
       - type: bind
         source: ${DETECTOR_MODEL_DIR:?Set the absolute host checkpoint directory}
