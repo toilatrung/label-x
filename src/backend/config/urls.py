@@ -15,6 +15,7 @@ from review.adjudication_views import (
     EscalationsListView,
 )
 from review.gap_views import GuidelineGapCollectionView
+from runs.gpu_worker_views import WorkerConfigView, WorkerProbeView
 from runs.kpi_views import (
     KpiEvaluationCreateView,
     KpiEvaluationDetailView,
@@ -36,6 +37,8 @@ from vlm.settings_views import VlmSettingsView
 
 urlpatterns = [
     path("api/configuration/vlm/", VlmSettingsView.as_view(), name="vlm-settings"),
+    path("api/gpu-worker/config/", WorkerConfigView.as_view(), name="gpu-worker-config"),
+    path("api/gpu-worker/probe/", WorkerProbeView.as_view(), name="gpu-worker-probe"),
     path("admin/", admin.site.urls),
     path("internal/metrics/", MetricsView.as_view(), name="internal-metrics"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

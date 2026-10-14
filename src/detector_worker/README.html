@@ -7,6 +7,24 @@
 <p>Worker độc lập chạy Faster R-CNN R-50-FPN 3x của SysCV BDD100K model zoo bằng MMDetection 2.x. Worker xác minh SHA-256 <em>trước</em> khi MMDetection đọc checkpoint và xuất box <code>x1,y1,x2,y2</code> theo pixel ảnh gốc.</p>
 <blockquote><strong>Trạng thái artifact ngày 07/10/2026:</strong> checkpoint được phục hồi từ Wayback theo quyết định của PO tại issue #17, khớp MD5 gốc <code>d2a866749432b7bd8436f0001c1625d7</code> và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Wayback chỉ là nguồn phục hồi; runtime phải dùng bản đã xác minh trong kho artifact nội bộ.</blockquote>
 <h2>Build image</h2>
+<h2>Backend trên host → warm worker (BLOCKER-033)</h2>
+<p>Django/Celery không cài torch và không gọi CLI trong host nữa. Backend gửi byte ảnh qua HTTP tới worker đã nạp model; không gửi đường dẫn host vào container. CLI <code>infer/verify/fetch</code> vẫn dùng được độc lập để quản lý artifact và chạy offline.</p>
+<ol>
+<li>Đặt checkpoint đã verify ở host (không commit file .pth). Trong Ubuntu/WSL dùng đường dẫn Linux; trong Windows dùng đường dẫn Windows. Không dùng <code>/models/...</code> hay <code>/app/...</code> làm đường dẫn của backend host.</li>
+<li>Khởi tạo <code>src/backend/.env</code> bằng <code>make env</code> nếu chưa có. Từ root repo chạy:
+<pre><code>uv run --project src/backend --frozen python scripts/development/detector_runtime.py configure \
+  --checkpoint /absolute/host/path/faster_rcnn_r50_fpn_3x_det_bdd100k.pth
+make detector-up
+make detector-check
+make detector-register</code></pre>
+<p><code>configure</code> chỉ cập nhật các biến detector trong .env local, sinh token ngẫu nhiên khi chưa có, không in token. <code>detector-up</code> build image, mount thư mục checkpoint read-only, bật GPU nếu device là cuda, chờ model đã nạp và HTTP health thành công. Muốn CPU đặt <code>DETECTOR_DEVICE=cpu</code> trong .env trước khi up. Checkpoint, manifest và Config MMDetection trong image phải đồng bộ với checkout backend.</p></li>
+<li><code>detector-register</code> xác minh SHA-256/checkpoint, manifest 10 lớp, version và worker trước khi đăng ký ModelArtifact. Chạy lại idempotent; artifact khác checksum/class map không bị ghi đè. Lệnh <code>detector-check</code> chỉ đọc, không ghi DB.</li>
+<li>Tạo/publish ConfigVersion mới, bật <code>engines.detector.enabled=true</code>, và đặt <code>models</code> bằng đúng cặp name/version lệnh register in ra. Không đưa token hay đường dẫn vào ConfigVersion. Không tự sửa cấu hình đã publish. Tạo run mới trên snapshot locked rồi kiểm tra detector <code>checked</code>, completed_units bằng eligible_units và failed_units=0. Run cũ <code>no_model</code> không được viết lại: thiếu ModelArtifact trong cấu hình thì backend vẫn giữ <code>no_model</code>, không giả success.</li>
+<li>Chạy Celery bằng <code>make dev-worker</code> (khởi động lại nếu vừa đổi .env), xem log bằng <code>make detector-logs</code>; tắt riêng detector bằng <code>make detector-down</code>, không xoá checkpoint hay DB.</li>
+</ol>
+<p>Chỉ publish <code>127.0.0.1:8501</code>. Mọi request health/infer cần Bearer token; backend không dùng proxy môi trường hay follow redirect. Không expose worker qua HTTP công khai; môi trường nhiều máy cần HTTPS/mTLS do vận hành triển khai trước. Request tối đa 70 MiB, tối đa 256 ảnh; giảm shard_size nếu shard ảnh vượt giới hạn. Batch GPU mặc định 1 (tối đa 4), một request inference tại một thời điểm.</p>
+<p>Preflight lỗi: kiểm tra Docker/NVIDIA, checkpoint host tồn tại, token >=32 ký tự, worker healthy, và cấu hình models trỏ đúng ModelArtifact. <code>not_checked/no_model</code> khác với lỗi HTTP worker: lỗi HTTP không được biến thành <code>checked</code>. Không kết luận accuracy, calibration hay quality gate từ smoke một frame.</p>
+<h2>Build image offline CLI</h2>
 <pre><code>make detector-image
 
 # Máy dùng Docker Engine CLI trong WSL

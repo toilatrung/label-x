@@ -198,6 +198,22 @@ detector-lint: ## Ruff worker Detector (target Python 3.7 của image MMDetectio
 detector-image: ## Build image GPU worker Detector (vẫn chạy được với --device cpu)
 	docker build -f "$(ROOT)/infrastructure/detector-worker/Dockerfile" -t labelx-detector-worker:dev "$(ROOT)"
 
+.PHONY: detector-up detector-down detector-logs detector-check detector-register
+detector-up: ## Bật warm detector-worker, mount checkpoint host read-only và đợi healthy
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py up
+
+detector-down: ## Tắt riêng detector-worker (giữ checkpoint và hạ tầng khác)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py down
+
+detector-logs: ## Xem log detector-worker
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py logs
+
+detector-check: ## Kiểm tra checkpoint host + worker + provenance; không ghi DB
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check_detector
+
+detector-register: ## Đăng ký artifact đã verify; không tự sửa/publish ConfigVersion
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check_detector --register
+
 gen-api: ## Sinh type TypeScript từ OpenAPI (cần dev-backend đang chạy)
 	cd "$(FRONTEND)" && npm run gen:api
 

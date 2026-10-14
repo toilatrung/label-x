@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import math
 import re
-import subprocess
 import tempfile
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
+import httpx
 from django.conf import settings
 from django.core.files.storage import storages
 
@@ -28,6 +30,7 @@ from engines.interface import (
     ObjectRef,
 )
 from engines.matching import BoundingBox, match_one_to_one
+from engines.worker_adapter.client import request_json
 from snapshots.models import SnapshotFrame
 
 DETECTOR_ENGINE_NAME = "detector"
@@ -144,42 +147,120 @@ def _required_setting(name: str) -> str:
     return value
 
 
-def _run_worker(input_dir: Path, output: Path, engine_input: EngineInput) -> dict[str, Any]:
+def _run_worker(input_dir: Path, engine_input: EngineInput) -> dict[str, Any]:
+    """Host Celery sends image bytes, never host paths, to the warm GPU container."""
     params = engine_input.config.params
-    command = str(getattr(settings, "DETECTOR_COMMAND", "labelx-detector"))
-    args = [
-        command,
-        "infer",
-        "--input-dir",
-        str(input_dir),
-        "--output",
-        str(output),
-        "--checkpoint",
-        _required_setting("DETECTOR_CHECKPOINT_PATH"),
-        "--manifest",
-        _required_setting("DETECTOR_MANIFEST_PATH"),
-        "--config",
-        _required_setting("DETECTOR_CONFIG_PATH"),
-        "--device",
-        str(params.get("device", getattr(settings, "DETECTOR_DEVICE", "cuda:0"))),
-        "--batch-size",
-        str(int(params.get("batch_size", 1))),
-        "--score-threshold",
-        str(float(params.get("score_threshold", 0.05))),
-    ]
-    timeout = float(getattr(settings, "DETECTOR_TIMEOUT_SECONDS", 1800))
-    completed = subprocess.run(  # noqa: S603 - argv only; no shell, command is trusted setting
-        args, capture_output=True, text=True, timeout=timeout, check=False
+    from runs.gpu_worker import WorkerUnavailable, config_for_run, probe, request_worker
+    from runs.models import QCRun
+
+    remote = config_for_run(engine_input.run_id)
+    if remote is None:
+        model = registered_model(engine_input.run_id)
+    else:
+        run = QCRun.objects.select_related("model_artifact").get(pk=engine_input.run_id)
+        if run.model_artifact is None:
+            raise DetectorProvenanceError("detector run thiếu ModelArtifact")
+        readiness = probe(remote, run.model_artifact)
+        if readiness["state"] != "ready":
+            raise WorkerUnavailable("GPU Worker chưa sẵn sàng cho shard detector.")
+        model = readiness["model"]
+    images = []
+    for path in sorted(input_dir.iterdir()):
+        raw = path.read_bytes()
+        images.append(
+            {
+                "path": path.name,
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "image_base64": base64.b64encode(raw).decode("ascii"),
+            }
+        )
+    body = {
+        "model_sha256": model["sha256"],
+        "images": images,
+        "batch_size": int(params.get("batch_size", 1)),
+        "score_threshold": float(params.get("score_threshold", 0.05)),
+    }
+    payload = (
+        request_worker(remote, "/infer", body)
+        if remote is not None
+        else worker_request("POST", "/infer", body)
     )
-    if completed.returncode:
-        raise RuntimeError(f"detector worker failed (exit={completed.returncode})")
-    try:
-        payload = json.loads(output.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError("detector worker không trả JSON hợp lệ") from exc
-    if not isinstance(payload, dict):
-        raise ValueError("detector worker output phải là object")
+    if payload.get("schema_version") != "labelx.detector.predictions.v1":
+        raise ValueError("detector worker prediction schema mismatch")
+    verified_run_model(payload, engine_input.run_id)
     return payload
+
+
+def worker_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+    url = _required_setting("DETECTOR_WORKER_URL")
+    parsed = urlsplit(url)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or parsed.path not in {"", "/"}
+    ):
+        raise ValueError("unsafe detector worker URL")
+    if parsed.scheme == "http" and parsed.hostname not in {"localhost", "127.0.0.1", "::1"}:
+        raise ValueError("remote detector worker requires HTTPS/mTLS")
+    token = _required_setting("DETECTOR_SERVICE_TOKEN")
+    if len(token) < 32 or not token.isascii() or any(c.isspace() for c in token):
+        raise ValueError("detector service token must be at least 32 ASCII characters")
+    try:
+        result = request_json(
+            method,
+            url.rstrip("/") + path,
+            token=token,
+            timeout=settings.DETECTOR_TIMEOUT_SECONDS,
+            body=body,
+        )
+    except (httpx.HTTPError, ValueError):
+        raise RuntimeError("detector worker unavailable or invalid response") from None
+    if not isinstance(result, dict):
+        raise ValueError("detector worker response must be an object")
+    return result
+
+
+def artifact_for_run(run_id: int) -> Mapping[str, Any] | None:
+    from runs.models import QCRun
+
+    return (
+        QCRun.objects.filter(pk=run_id)
+        .values(
+            "model_artifact__checksum",
+            "model_artifact__version",
+            "model_artifact__class_mapping_version",
+            "model_artifact__class_mapping",
+        )
+        .first()
+    )
+
+
+def verified_run_model(payload: dict[str, Any], run_id: int) -> dict[str, Any]:
+    from runs.gpu_worker import config_for_run, verify_remote
+    from runs.models import QCRun
+
+    if config_for_run(run_id) is not None:
+        run = QCRun.objects.select_related("model_artifact").get(pk=run_id)
+        if run.model_artifact is None:
+            raise DetectorProvenanceError("detector run thiếu artifact")
+        return verify_remote(payload, run.model_artifact)
+    return verify_artifact(payload.get("model"), artifact_for_run(run_id))
+
+
+def registered_model(run_id: int) -> dict[str, Any]:
+    artifact = artifact_for_run(run_id)
+    if not artifact:
+        raise DetectorProvenanceError("detector run does not exist")
+    model = {
+        "sha256": artifact["model_artifact__checksum"],
+        "version": artifact["model_artifact__version"],
+        "class_mapping_version": artifact["model_artifact__class_mapping_version"],
+    }
+    return verify_artifact(model, artifact)
 
 
 def _detection_candidate(
@@ -397,7 +478,6 @@ def predict_frames(
         root = Path(directory)
         input_dir = root / "input"
         input_dir.mkdir()
-        output = root / "predictions.json"
         path_to_frame: dict[str, SnapshotFrame] = {}
         storage = storages["snapshots"]
         for key in sorted(wanted):
@@ -405,23 +485,14 @@ def predict_frames(
             suffix = Path(frame.file_name).suffix.lower() or ".jpg"
             name = f"{key[0]}-{key[1]}{suffix}"
             with storage.open(frame.media_storage_key, "rb") as source:
-                (input_dir / name).write_bytes(source.read())
+                raw = source.read()
+            if hashlib.sha256(raw).hexdigest() != frame.media_sha256:
+                raise ValueError("detector media không khớp snapshot đã khoá")
+            (input_dir / name).write_bytes(raw)
             path_to_frame[name] = frame
-        payload = _run_worker(input_dir, output, engine_input)
+        payload = _run_worker(input_dir, engine_input)
 
-    from runs.models import QCRun
-
-    artifact = (
-        QCRun.objects.filter(pk=engine_input.run_id)
-        .values(
-            "model_artifact__checksum",
-            "model_artifact__version",
-            "model_artifact__class_mapping_version",
-            "model_artifact__class_mapping",
-        )
-        .first()
-    )
-    model = verify_artifact(payload.get("model"), artifact)
+    model = verified_run_model(payload, engine_input.run_id)
 
     images = payload.get("images")
     if not isinstance(images, list):

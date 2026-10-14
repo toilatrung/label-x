@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPU Worker qua Tailscale — triển khai và manual test</title>
+<meta name="labelx:id" content="gpu-worker-tailscale-duy12345-6789">
+<meta name="labelx:title" content="GPU Worker qua Tailscale: backend, cấu hình và manual test">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="engines"><meta name="labelx:tags" content="[gpu-worker, tailscale, implementation, manual-test]">
+<meta name="labelx:priority" content="1">
+<style>body{max-width:1100px;margin:32px auto;padding:0 20px;font:15px/1.6 system-ui;color:#1a1d23}h1{font-size:25px}h2{font-size:20px;border-bottom:1px solid #ddd;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th,pre{background:#f3f4f6}pre{padding:16px;overflow:auto}code{overflow-wrap:anywhere}.note{border-left:4px solid #8a5300;background:#fdf2d8;padding:12px}a{color:#1d5ea8}</style>
+</head><body><main><article>
+<h1>GPU Worker qua Tailscale</h1>
+<p class="note">Cập nhật local 14/10/2026: toàn bộ code nằm tại <code>PRJ_Vin_DMS/label-x</code>, nhánh <code>local/gpu-worker-runtime</code> (không phải GitHub main/develop). Tab GPU Worker ở <code>/configuration/guidelines</code> cho đổi URL và kiểm tra detector; worker tự nạp model khi khởi động, không có lệnh reload model từ trình duyệt. Đã kiểm tra HTTP cổng 3000/8000 nhưng không kết nối được; Ubuntu WSL báo <code>Wsl/Service/0x8007274c</code>. Chưa restart/apply migration trên DB demo, chưa có bằng chứng runtime FE/BE mới. Không tự restart WSL/Docker để tránh gián đoạn service khác.</p>
+<p class="note">Đã merge PR #346 và cập nhật nền develop #347; đã hoàn thiện <code>/scripts/worker</code>. Bản triển khai đã công bố tại <a href="https://github.com/toilatrung/label-x/pull/348">Draft PR #348</a>, thay thế Draft #345 đã đóng. Kết nối hai máy/Tailscale thật và clean image build chưa được xác minh, chờ manual test. Các ghi chú chưa push ở phần bằng chứng cũ mô tả thời điểm trước công bố.</p>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo theo cấu trúc <code>.agent/templates/implementation-report-template.html</code>; tiếp nối yêu cầu BLOCKER-033 mục 1. Người dùng đã duyệt hướng triển khai trong chat và yêu cầu autotest nhẹ, tự manual test sau. Không thay thế review/approval của PO.</p>
+<h2 id="record-metadata">Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>GPU-worker-tailscale-duy12345-6789</code></li>
+<li><strong>Title</strong>: <code>Remote GPU Worker + cấu hình UI</code></li>
+<li><strong>Owner</strong>: <code>@duy12345-6789</code></li>
+<li><strong>Executor</strong>: <code>Codex hỗ trợ @duy12345-6789</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>BLOCKER-033 mục 1, mở rộng theo yêu cầu người dùng</code></li>
+<li><strong>Epic ID</strong>: <code>M-BE-MVP</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-14</code></li></ul>
+<h2 id="scope">Scope</h2>
+<ul><li><strong>Implemented</strong>: <code>Backend Tailscale HTTPS; cấu hình revision; preflight; run binding; worker readiness; tab cấu hình; OpenAPI/type FE; script GPU host độc lập PowerShell/Bash/Python; test nhỏ</code></li>
+<li><strong>Not Implemented</strong>: <code>cấu hình tailnet thật; public Internet exposure; load balancing; tự sửa run/config đã publish</code></li></ul>
+<p><strong>Luồng:</strong> server Label-X → HTTPS trong Tailscale → Tailscale Serve → worker localhost:8501 → Faster R-CNN. Checkpoint chỉ cần ở máy GPU; server giữ manifest và ModelArtifact. Chỉ mode legacy ENV còn kiểm checkpoint trên host để tương thích bản local trước.</p>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>runs/gpu_worker.py</code></td><td>HTTPS hostname exact allowlist; credential lookup server-side; health timeout 5 giây; no proxy/redirect; verify manifest/10 lớp/checksum/version; không cần checkpoint server.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>runs/gpu_worker_views.py</code></td><td>Admin toàn hệ thống; đọc/lưu cấu hình và probe; optimistic revision, audit trong transaction; không lưu token.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>runs/models.py; migrations/0009_gpu_worker_config.py; runs/services.py</code></td><td>Config revision mới mỗi lần lưu; run giữ FK tới revision đã chọn. Worker không ready → từ chối tạo run detector; không sinh kết quả giả.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>engines/detector.py</code></td><td>Health trước shard, dùng worker đã gắn run; verify response; kiểm hash ảnh snapshot. Không tự chuyển run cũ sang worker hiện tại.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>src/detector_worker/labelx_detector/service.py</code></td><td>Health có device/classes/artifact_verified; inference có provenance; HTTP nhiều thread giữ health responsive, lock GPU và trả 503 khi busy để retry có giới hạn.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>ModelsGuidelines.dc.html; GpuWorkerPanel.tsx; ModelsGuidelinesCard.tsx</code></td><td>Tab GPU Worker tại /configuration/guidelines; dùng lx-* theo hai skill thiết kế. Không sửa các tab mô hình/guideline cũ ngoài phạm vi.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>docs/04-api/openapi.yaml; contract.d.ts</code></td><td>Contract và type mới đồng bộ. Migration mới chỉ được apply trong DB test, chưa apply DB demo.</td><td>BLOCKER-033.1</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2><ul>
+<li><strong>Worker guide</strong>: <a href="../../../scripts/worker/README.md">scripts/worker/README.md</a> — chạy từ máy GPU, không cần backend .env, Django, Node hay database.</li>
+<li><strong>Task Records</strong>: <a href="../../governance/blockers/BLOCKER-033.html">BLOCKER-033</a></li>
+<li><strong>Context Packages</strong>: <code>CLAUDE.md, AGENT.html, labelx-design và labelx-design-fidelity</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code> (không sửa canonical)</li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không sửa canonical)</li>
+<li><strong>Decisions</strong>: <code>Người dùng chốt Tailscale + HTTPS và duyệt triển khai trong chat</code></li>
+<li><strong>Change Requests</strong>: <code>Thiết kế/API mới cần PO review khi bàn giao; chưa tuyên bố có approval GitHub</code></li>
+<li><strong>Risks or Blockers</strong>: <code>runtime hai máy chưa kiểm; registry từng lỗi CA; máy hiện tại chặn chạy .ps1 bởi ExecutionPolicy (dùng Python trực tiếp, không hạ policy)</code></li>
+<li><strong>Review Request</strong>: <code>pending; người dùng manual test trước</code></li>
+<li><strong>Commits</strong>: <code>PR #346 merge e4e4a0848b9645a37307ab8ecd89a0bd38d7b6aa; develop local e4e4a08; remote-config d7b3906; merge nhánh triển khai 587a550; worker scripts 1066018. Các thay đổi triển khai mới chưa push.</code></li></ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>pytest tests/runs/test_gpu_worker.py tests/engines/test_detector.py tests/engines/test_detector_runtime.py tests/test_contract_runtime_parity.py</code></td><td>passed</td><td>Chạy lại sau merge PR #346 và thêm script: 77 passed, 1 skipped, 26.85s. Skip GPU opt-in có chủ đích. DB test riêng, HTTP remote giả lập rõ ràng.</td></tr>
+<tr><td><code>python -m unittest discover -s scripts/worker/tests -v</code></td><td>passed</td><td>15 passed, 0.149s. Mock Docker/network; kiểm hash, token, isolated project, profile, stop không xóa volume, health contract và lệnh Tailscale chỉ in ra. Lần đầu bị sandbox Windows chặn thư mục tạm; chạy lại với quyền phù hợp thành công.</td></tr>
+<tr><td><code>ruff check scripts/worker; ruff format --check scripts/worker; bash -n scripts/worker/gpu-worker.sh; PowerShell Parser.ParseFile</code></td><td>passed</td><td>Bash launcher --help và Python --help chạy thành công. PowerShell kiểm cú pháp thành công; thực thi trực tiếp .ps1 bị ExecutionPolicy chặn, chưa tuyên bố runtime launcher PASS.</td></tr>
+<tr><td><code>docker compose ... config --quiet; worker.verify_checkpoint(checkpoint_thật)</code></td><td>passed</td><td>Compose schema kiểm với token giả, không start container; checkpoint host thật khớp SHA-256 manifest (read-only). Chưa chạy build/start từ script mới.</td></tr>
+<tr><td><code>vitest run src/__tests__/GpuWorkerPanel.test.tsx --maxWorkers=1</code></td><td>passed</td><td>Chạy lại trong label-x: 11 passed, 2.88s; thêm hiển thị detector verified khi ready, xóa kết quả cũ khi đổi host, không tự suy diễn lỗi nạp model khi offline, tải lại cấu hình không gọi load/probe. ESLint component/test và tsc --noEmit PASS. Lần đầu Vitest bị sandbox chặn subprocess; chạy lại quyền phù hợp PASS.</td></tr>
+<tr><td><code>worker CPU pytest</code></td><td>passed</td><td>24 passed, 2.93s; có case health vẫn trả lời khi inference bận và request inference thứ hai bị chặn.</td></tr>
+</tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>mypy + migration check + Django check</td><td>passed</td><td>186 source files; no migration changes; zero system issues.</td></tr>
+<tr><td>Ruff backend/worker, FE lint + TypeScript</td><td>passed</td><td>Các file mới và file liên quan đã kiểm. Không chạy full make check theo yêu cầu autotest nhẹ.</td></tr>
+<tr><td>Design verification</td><td>passed</td><td>verify-design: screens=25, tabStates=19; visual comparison 1440/390 px để manual test, chưa xác minh pixel fidelity.</td></tr>
+<tr><td>Tailnet thật / GPU remote / clean image build</td><td>not-run</td><td>Để người dùng manual test. Bằng chứng GPU local trước đây không đại diện cho kết nối hai máy.</td></tr>
+</tbody></table>
+<h2 id="api-manual">API để manual test</h2>
+<table><thead><tr><th>API</th><th>Request</th><th>Response/điều kiện</th></tr></thead><tbody>
+<tr><td>GET /api/gpu-worker/config/</td><td>Session admin toàn hệ thống</td><td>config hoặc null, credential_refs, allowed_hosts. Không có giá trị secret.</td></tr>
+<tr><td>PUT /api/gpu-worker/config/</td><td>revision, name, url, credential_ref, enabled, timeout_seconds; CSRF</td><td>200 envelope của revision mới; 400 validation; 403 quyền; 409 revision cũ. Không tự gọi mạng khi lưu.</td></tr>
+<tr><td>POST /api/gpu-worker/probe/</td><td>{"revision": revision_đã_lưu}; CSRF</td><td>200 gồm revision, state, message, checked_at, latency_ms, device, model. Chỉ state=ready là sẵn sàng; state=unavailable hoặc disabled không phải thành công inference.</td></tr>
+<tr><td>POST /api/runs/ (API hiện có)</td><td>Snapshot/config hợp lệ có detector và ModelArtifact</td><td>Worker cấu hình không ready → 422 BUSINESS_RULE_UNMET, không tạo run. Ready → run giữ revision worker; mỗi shard kiểm tra lại. Mất mạng/busy giữa chừng dùng cơ chế retry giới hạn hiện có.</td></tr>
+</tbody></table>
+<h2 id="manual-steps">Các bước manual test</h2><ol>
+<li>Đảm bảo code backend/frontend đang chạy từ <code>PRJ_Vin_DMS/label-x</code>, nhánh <code>local/gpu-worker-runtime</code>. Cần khôi phục WSL trước nếu vẫn báo timeout, sau đó restart server từ đúng thư mục. Phiên này chưa chạy migrate/refresh vì chưa xác minh được instance đang chạy.</li>
+<li>Trên server Label-X: cài dependencies theo README, chạy <code>uv run --frozen python manage.py migrate</code> trong src/backend để apply migration mới. Thao tác này chưa chạy vào DB demo trong phiên triển khai.</li>
+<li>Cấu hình server .env: <code>GPU_WORKER_ALLOWED_HOSTS</code> là danh sách hostname Tailscale chính xác, phân tách dấu phẩy; <code>GPU_WORKER_CREDENTIALS</code> là JSON map alias → token. Không gửi token vào chat/Git. Token phải >=32 ký tự ASCII không có khoảng trắng. Restart backend và Celery sau đổi env.</li>
+<li>Trên máy GPU, từ root worktree: <code>python scripts/worker/worker.py configure --checkpoint &lt;đường-dẫn-checkpoint&gt;</code>, tiếp theo <code>build</code>, <code>start</code>, <code>check</code>. Token sinh trong <code>.cache/gpu-worker/worker.env</code> ngoài Git; chuyển qua kênh secret để khớp alias server. Chạy <code>tailscale-command</code> để xem lệnh Serve, tự kiểm tra grants/ACL rồi bật HTTPS trong tailnet; không dùng Funnel. Chi tiết trong README worker. Script chỉ quản lý project <code>labelx-gpu-worker</code>, không đụng stack dev của PR #346. Nếu port bận, thêm <code>--port 8502</code> khi configure và dùng đúng port Serve.</li>
+<li>Đăng nhập admin toàn hệ thống → Configuration → Models và Guidelines → GPU Worker (<code>/configuration/guidelines</code>). Nhập tên/HTTPS URL, chọn alias, timeout; Lưu cấu hình rồi Kiểm tra kết nối. Mong đợi Sẵn sàng, Detector Đã nạp và xác minh, CUDA, model/version ánh xạ lớp/checksum và thời điểm kiểm tra thật. FE lấy các field sẵn có trong WorkerProbe/WorkerModel, không thêm API load model hoặc giả định có field classes trong response server. Tải lại cấu hình không nạp lại model. Kết quả là tại thời điểm probe, không phải monitoring liên tục.</li>
+<li>Đăng ký artifact bằng <code>uv run --frozen python manage.py check_detector --register</code> sau khi lưu worker remote. Lệnh verify manifest/worker, không cần checkpoint trên server; không overwrite artifact lệch. ConfigVersion mới phải bật detector và models trỏ đúng name/version đã đăng ký; không sửa config đã publish.</li>
+<li>Tạo run mới trên snapshot BDD100K locked. Kiểm tra detector checked, completed_units=eligible_units, failed_units=0; candidate có artifact_verified và checkpoint_sha256 đúng. Số candidate phụ thuộc ảnh/threshold, không dùng 48 của smoke cũ làm tiêu chí.</li>
+<li>Thử tắt worker/Tailscale, sai token, model khác hoặc worker dùng CPU: không được hiện Sẵn sàng và không được tạo run detector khi preflight thất bại. Nếu mất mạng sau khi run đã tạo, kiểm tra retry và trạng thái lỗi thực tế, không checked giả.</li>
+<li>Mở hai tab admin: lưu ở tab A, lưu revision cũ ở B phải báo lỗi; tải lại để tiếp tục. Đổi sang máy GPU khác đã allowlist: run mới dùng revision mới, run cũ giữ revision cũ. Giữ credential/host cũ cho tới khi các run đang chạy kết thúc.</li>
+<li>Kiểm tra giao diện ở 1440px và 390px, loading/error/empty, quyền reviewer và Quality Control Admin chỉ có scope dataset. API server vẫn chặn dù gọi trực tiếp.</li>
+</ol>
+<h2 id="deviations">Deviations</h2><ul>
+<li><strong>Plan Deviations</strong>: <code>/scripts/worker triển khai cuối theo yêu cầu mới; chỉ autotest trọng tâm, không full suite.</code></li>
+<li><strong>Approved By</strong>: <code>Người dùng duyệt kế hoạch trong chat; PO review/merge vẫn pending.</code></li>
+<li><strong>Known Limitations</strong>: <code>Không có bằng chứng Tailscale hai máy, không accuracy/calibration/production readiness. Có mode ENV legacy khi chưa chọn worker DB; run legacy không tự gắn worker mới.</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul>
+<li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[ ] Git Nexus mappings are updated when commits exist (pending reviewer handoff; không sửa canonical PO).</li>
+<li>[x] Script /scripts/worker hoàn tất và autotest nhẹ PASS.</li><li>[ ] Manual test hai máy hoàn tất.</li></ul>
+<h2 id="ci-pr348-fix">Sửa CI PR #348 — 14/10/2026</h2>
+<p>CI head <code>66ce79e</code>, <a href="https://github.com/toilatrung/label-x/actions/runs/38549225212">run 38549225212</a>: backend 3 failed, 1430 passed, 3 skipped; frontend, detector, framework, bootstrap Windows PASS. Lỗi không phải do GPU/Tailscale offline.</p>
+<ul><li><code>test_only_adapter_constructs_httpx_client_in_backend</code>: detector và runs trực tiếp tạo HTTP client. Tách transport dùng chung vào <code>engines/worker_adapter/client.py</code>; giữ URL validation tại caller, timeout/no proxy/no redirect/auth/error redaction. CVAT giữ nguyên hook read-only; guard chỉ cho phép đúng ba adapter CVAT/VLM/worker, thay vì miễn kiểm mọi file tên client.py.</li>
+<li><code>test_every_operation_traces_to_srs</code> và <code>test_every_operation_declares_known_roles</code>: ba operation GPU Worker thiếu metadata. Bổ sung FR-ENG-01/05, FR-SEC-01/05 đúng trách nhiệm và roles super_admin/qc_admin trong contract cùng schema runtime; thêm ba ca đối chiếu hai schema.</li>
+<li>Kiểm tra local trước push: nhóm contract/CVAT/worker 77 passed, 1 skipped (trước thêm ba ca parity mới). Trong lúc sửa, develop merge PR #349 (<code>d9155d9</code>) làm PR xung đột tại detector; lượt full local cũ đã dừng, không coi là PASS. Merge mới <code>c7935b4</code> giữ predict_frames/metric của #349 cùng HTTP transport và hash/provenance của #348. Chạy lại nhóm CVAT/contract/metric/detector/worker: 127 passed, 1 skipped, 41.61s; Ruff toàn backend PASS, format 356 files PASS, mypy 191 files PASS. Full backend suite trên nền mới chạy riêng; CI head sau push cần theo dõi. Framework validation và diff check PASS.</li>
+<li>CD chỉ workflow_dispatch trên main và có kiểm upstream/deployment target. Không kích hoạt deploy từ PR, không thay workflow hoặc bỏ quality gate.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2><p>Không tự approve/merge, không đánh dấu BLOCKER-033 resolved, không đưa secret vào Git/ConfigVersion, không dùng unit test để khẳng định kết nối Tailscale thật.</p>
+<h2 id="output-requirements">Output Requirements</h2><p>Report per-user theo CR-100. Bản thiết kế <code>docs/design/screens/ModelsGuidelines.dc.html</code> và OpenAPI là phần thay đổi cần review trước khi merge. Không tạo/push PR mới trong phiên này.</p>
+</article></main></body></html>

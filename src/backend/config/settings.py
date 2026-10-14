@@ -287,12 +287,21 @@ ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
     "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", default=300
 )
 # Faster R-CNN chạy ngoài process backend; worker phải mount checkpoint/config bất biến.
-DETECTOR_COMMAND = env("DETECTOR_COMMAND", default="labelx-detector")
-DETECTOR_CHECKPOINT_PATH = env("DETECTOR_CHECKPOINT_PATH", default="")
-DETECTOR_MANIFEST_PATH = env("DETECTOR_MANIFEST_PATH", default="")
-DETECTOR_CONFIG_PATH = env("DETECTOR_CONFIG_PATH", default="")
+DETECTOR_WORKER_URL = env("DETECTOR_WORKER_URL", default="http://127.0.0.1:8501")
+DETECTOR_SERVICE_TOKEN = env("DETECTOR_SERVICE_TOKEN", default="")
+DETECTOR_CHECKPOINT_PATH = env(
+    "DETECTOR_CHECKPOINT_PATH",
+    default=str(BASE_DIR.parent.parent / ".cache/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth"),
+)
+DETECTOR_MANIFEST_PATH = env(
+    "DETECTOR_MANIFEST_PATH",
+    default=str(BASE_DIR.parent / "detector_worker/model-manifest.json"),
+)
 DETECTOR_DEVICE = env("DETECTOR_DEVICE", default="cuda:0")
 DETECTOR_TIMEOUT_SECONDS = env.int("DETECTOR_TIMEOUT_SECONDS", default=1800)
+# Exact Tailscale HTTPS hostnames approved by Operations; empty fails closed for UI configs.
+GPU_WORKER_ALLOWED_HOSTS = env.list("GPU_WORKER_ALLOWED_HOSTS", default=[])
+GPU_WORKER_CREDENTIALS = env.json("GPU_WORKER_CREDENTIALS", default={})
 CELERY_BEAT_SCHEDULE = {
     "orchestration-redispatch-pending": {
         "task": "orchestration.redispatch_pending",

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-033 — Detector runtime</title>
+<meta name="labelx:id" content="blocker-033-detector-duy12345-6789">
+<meta name="labelx:title" content="BLOCKER-033: host backend nối Faster R-CNN GPU worker">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="engines">
+<meta name="labelx:tags" content="[implementation, blocker-033, detector, gpu]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>BLOCKER-033 · Faster R-CNN</span><span class="sp"></span></header>
+<main><article>
+<h1>BLOCKER-033: nối backend host với Faster R-CNN</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Sửa riêng mục 1 theo yêu cầu người dùng. Nền <code>develop:24835df</code>, nhánh <code>fix/blocker-033-detector-runtime</code>, PR về develop. Không tự đóng blocker hoặc duyệt PR.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>BLOCKER-033-detector-duy12345-6789</code></li>
+<li><strong>Title</strong>: <code>Host → warm GPU detector</code></li>
+<li><strong>Owner</strong>: <code>@duy12345-6789</code></li>
+<li><strong>Executor</strong>: <code>Codex hỗ trợ người chịu trách nhiệm @duy12345-6789</code></li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Task ID</strong>: <code>BLOCKER-033 mục 1</code></li>
+<li><strong>Epic ID</strong>: <code>M-BE-MVP</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-14</code></li>
+</ul>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: <code>HTTP adapter; warm GPU worker; Compose/Make lifecycle; host path defaults; verified explicit ModelArtifact registration; regression tests</code></li>
+<li><strong>Not Implemented</strong>: <code>VLM; metric/gate; FE; BLOCKER-033 mục 2–10; tự sửa ConfigVersion; download/checkpoint vào Git; remote TLS/mTLS deployment</code></li>
+</ul>
+<p><strong>Nguyên nhân:</strong> backend cũ gọi CLI trên host nhưng env mẫu dùng /models và /app của container. Hơn nữa, runs.services chỉ sinh detector work unit khi ConfigVersion.models tìm được ModelArtifact có checksum. Vì vậy chạy container đơn thuần không tự hết no_model.</p>
+<p><strong>Luồng mới:</strong> ConfigVersion(name/version) → ModelArtifact → QCRun/WorkUnit → xác minh checkpoint host → byte ảnh qua HTTP/token loopback → worker GPU → xác minh provenance response → Candidate/Ledger → EngineResult checked. Không thay request/response API công khai hoặc contract FE.</p>
+<h2 id="changes-made">Changes Made</h2>
+<table>
+<thead>
+<tr>
+<th>File or Artifact</th>
+<th>Change Summary</th>
+<th>Task ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/backend/engines/detector.py</code></td><td>HTTP thay subprocess; token, timeout, no proxy/redirect; checksum/class map trước inference và provenance response sau inference.</td><td>BLOCKER-033.1</td>
+</tr>
+<tr><td><code>src/detector_worker/labelx_detector/service.py</code></td><td>Warm load sau verify; serialized GPU; health auth; request size/integrity/path validation; lỗi redacted.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>src/backend/runs/management/commands/check_detector.py</code></td><td>Preflight read-only; --register tường minh/idempotent, từ chối overwrite artifact lệch.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>infrastructure/docker-compose.detector*.yml; scripts/development/detector_runtime.py; scripts/init-develop-environment.mk</code></td><td>GPU/CPU lifecycle riêng; read-only checkpoint; port loopback; token chỉ trong env local. configure chỉ đổi biến detector.</td><td>BLOCKER-033.1</td></tr>
+<tr><td><code>src/backend/config/settings.py; src/backend/.env.example; src/detector_worker/README.html</code></td><td>Mặc định path host, hướng dẫn configure/up/check/register/models/new run.</td><td>BLOCKER-033.1</td></tr>
+</tbody>
+</table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="../../governance/blockers/BLOCKER-033.html">BLOCKER-033</a>; yêu cầu người dùng sửa mục 1 sau PR #344.</li>
+<li><strong>Context Packages</strong>: <code>AGENT.html; CLAUDE.md; detector README; runs.services/create_qc_run</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001; lựa chọn HTTP worker đã được người dùng xác nhận ở luồng M04 trước đó</code></li>
+<li><strong>Change Requests</strong>: <code>CR-117 (classifier đã gỡ); không đổi API công khai</code></li>
+<li><strong>Risks or Blockers</strong>: <code>Docker registry lỗi CA khi build image; quality gate NOT VERIFIED</code></li>
+<li><strong>Review Request</strong>: <code>@toilatrung / @DucHa180104; pending</code></li>
+<li><strong>Commits</strong>: <code>Nền 24835df; SHA bản sửa được ghi trong PR sau commit</code></li>
+</ul>
+<h2 id="command-evidence">Command Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>manage.py check_detector</code></td><td>passed</td><td>HTTP /health 200, checkpoint/provenance verified. Không ghi DB demo.</td>
+</tr>
+<tr>
+<td><code>pytest tests/engines/test_detector.py tests/engines/test_detector_runtime.py (GPU opt-in)</code></td><td>passed</td><td>50 passed; PostgreSQL test riêng; 1 frame BDD100K val thật, detector checked; 48 candidate verified; redelivery không nhân đôi.</td>
+</tr>
+<tr>
+<td><code>python -m pytest src/detector_worker/tests</code></td><td>passed</td><td>23 passed (CPU unit tests, Python local; không thay smoke GPU).</td>
+</tr>
+<tr>
+<td><code>docker build -f infrastructure/detector-worker/Dockerfile ...</code></td><td>failed (environment)</td><td>Registry TLS certificate unknown authority; không tắt SSL. Smoke dùng image 877a14f + source checkout mount read-only, không tuyên bố clean build PASS.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ruff check / ruff format --check backend + detector</code></td><td>passed</td><td>Backend 346 files; worker 12 files. Các script mới cũng lint PASS.</td>
+</tr>
+<tr><td><code>mypy; makemigrations --check --dry-run; manage.py check</code></td><td>passed</td><td>183 source files; no changes detected; zero system issues.</td></tr>
+<tr><td><code>docker compose detector + GPU config --quiet</code></td><td>passed</td><td>Không in config/token; port 127.0.0.1:8501, read-only mount.</td></tr>
+<tr><td><code>python scripts/validate-framework.py; git diff --check</code></td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; không sửa canonical của PO.</td></tr>
+<tr><td><code>full backend pytest sau bản sửa cuối</code></td><td>running</td><td>Sẽ cập nhật kết quả thực tế trước handoff; không dùng số cũ.</td></tr>
+<tr><td><code>make check / frontend lint,typecheck,tests</code></td><td>not-run</td><td>Không sửa FE; chưa cài dependencies FE trong worktree mới. CI sẽ chạy toàn bộ; không khẳng định full make check PASS.</td></tr>
+</tbody>
+</table>
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: <code>Chỉ mount code mới vào image có sẵn để chạy GPU vì build registry lỗi CA; chưa chứng minh clean image build.</code></li>
+<li><strong>Approved By</strong>: <code>Người dùng yêu cầu sửa detector; review/QA phê duyệt PR vẫn pending.</code></li>
+<li><strong>Known Limitations</strong>: <code>Một frame val, không phủ 10 lớp, không kết luận accuracy/calibration/production readiness. Test chạy WorkUnit task đồng bộ, chưa chứng minh delivery qua broker Celery thật. Demo DB và ConfigVersion cũ không bị sửa. BLOCKER-033 tổng vẫn open.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Every reported change maps to an authorized task.</li>
+<li>[x] Acceptance criteria results and evidence are linked.</li>
+<li>[x] Deviations and limitations are explicit.</li>
+<li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li>
+<li>[ ] Git Nexus mappings are updated when commits exist.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/BLOCKER-033-detector-@duy12345-6789.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

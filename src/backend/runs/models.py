@@ -126,6 +126,37 @@ class ModelArtifact(dj_models.Model):
         return f"{self.name}:{self.version} ({self.checksum[:8]})"
 
 
+class GpuWorkerConfig(dj_models.Model):
+    """Append-only configuration revisions. Credentials live only in server environment."""
+
+    name = dj_models.CharField(max_length=128)
+    url = dj_models.URLField(max_length=255)
+    credential_ref = dj_models.CharField(max_length=64)
+    enabled = dj_models.BooleanField(default=True)
+    timeout_seconds = dj_models.PositiveIntegerField(default=120)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.name} (revision {self.pk})"
+
+
+class GpuWorkerSelection(dj_models.Model):
+    """Singleton pointer; updating it never changes a running run's revision."""
+
+    config = dj_models.ForeignKey(GpuWorkerConfig, on_delete=dj_models.PROTECT, null=True)
+
+    def __str__(self) -> str:
+        return f"GPU Worker selection: {self.config_id}"
+
+
+class RunGpuWorker(dj_models.Model):
+    run = dj_models.OneToOneField("QCRun", on_delete=dj_models.CASCADE)
+    config = dj_models.ForeignKey(GpuWorkerConfig, on_delete=dj_models.PROTECT, null=True)
+
+    def __str__(self) -> str:
+        return f"Run {self.run_id}: GPU Worker revision {self.config_id}"
+
+
 class ModelKind(dj_models.TextChoices):
     VLM = "vlm", "vlm"
     DETECTOR = "detector", "detector"
