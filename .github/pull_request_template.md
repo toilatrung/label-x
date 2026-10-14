@@ -12,6 +12,7 @@
 
 ## Kiểm tra
 
+- [ ] `make contract` pass (OpenAPI, truy vết SRS và role; chạy trước test theo module)
 - [ ] `make check` pass cục bộ (lint, typecheck, test, validate-kit)
 - [ ] Đã thêm/cập nhật test cho hành vi mới (`src/backend/tests/`)
 - [ ] Tài liệu trong `docs/`, `.agent/` viết bằng HTML có `<meta name="labelx:*">` (CR-103); `make validate-kit` pass

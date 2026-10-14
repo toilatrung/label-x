@@ -107,7 +107,7 @@ export function ConfigVersionModal({ onClose, onPublished }: Props) {
               {enabledEngines.length === 0 && <span role="alert" className="lx-gap__error">Cần bật ít nhất một engine.</span>}
             </fieldset>
             <div className="lx-field"><label className="lx-label" htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea className="lx-textarea" id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); reset(); }} /></div>
-            <div className="lx-field"><label className="lx-label" htmlFor="config-models">Mô hình tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); reset(); }} /></div>
+            <div className="lx-field"><label className="lx-label" htmlFor="config-models">Mô hình tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); reset(); }} />{enabledEngines.includes('vlm') && <p className="lx-muted">VLM dùng kết nối đã lưu tại <a href="/configuration/guidelines">Mô hình &amp; Guidelines</a> khi không nhập models.vlm. API key được quản lý tại màn đó.</p>}</div>
           </div>
           {error && <div className="lx-gap__notice" role="alert"><strong>Không tạo được phiên bản cấu hình.</strong> {error}</div>}
           {draftId && <div className="lx-gap__notice">Phiên bản v{draftId} đã được tạo nhưng chưa xác nhận phát hành. <button type="button" className="lx-btn lx-btn--sm" disabled={busy} onClick={retryPublish}>Thử phát hành lại</button></div>}

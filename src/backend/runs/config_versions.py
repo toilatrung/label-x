@@ -65,6 +65,30 @@ def create_config_version(
         return existing
     try:
         with transaction.atomic():
+            # Resolve the shared connection once; published configurations keep this version.
+            if engines.get("vlm", {}).get("enabled"):
+                from vlm.connection import current_connection
+
+                shared = current_connection()
+                if shared is not None:
+                    if "vlm" not in models:
+                        models = {
+                            **models,
+                            "vlm": {
+                                **shared.config,
+                                "connection_id": shared.pk,
+                            },
+                        }
+                    routing = effective_thresholds.get("classification_routing", {})
+                    if isinstance(routing, dict) and "score_threshold" not in routing:
+                        effective_thresholds = {
+                            **effective_thresholds,
+                            "classification_routing": {
+                                **routing,
+                                "score_threshold": shared.confidence_threshold,
+                            },
+                        }
+                    payload = {**payload, "models": models, "thresholds": effective_thresholds}
             config = ConfigVersion.objects.create(
                 name=name,
                 engines=engines,
@@ -128,5 +152,7 @@ def _assert_publishable_ai_config(config: ConfigVersion) -> None:
     errors += validate_config_safety(config.engines or {}, config.thresholds or {}, models_cfg)
     if "vlm" in models_cfg:
         errors += validate_vlm_config(models_cfg["vlm"])
+    elif (config.engines or {}).get("vlm", {}).get("enabled"):
+        errors.append("Thiết lập kết nối VLM tại Configuration / Models và Guidelines trước.")
     if errors:
         raise BusinessRuleUnmetError(" ".join(errors))
