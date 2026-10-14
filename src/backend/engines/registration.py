@@ -36,7 +36,13 @@ def run_registered_geometry_engine(engine_input: EngineInput) -> EngineOutput:
 def run_registered_schema_taxonomy_engine(engine_input: EngineInput) -> EngineOutput:
     """Load snapshot/taxonomy inputs, then call the pure Schema engine."""
     snapshot = _snapshot(engine_input.snapshot_id)
-    if not isinstance(engine_input.config.params.get("taxonomy"), Mapping):
+    context = snapshot.provenance.get("guideline_context")
+    params = (
+        {"taxonomy": context.get("taxonomy")}
+        if isinstance(context, Mapping)
+        else engine_input.config.params
+    )
+    if not isinstance(params.get("taxonomy"), Mapping):
         return EngineOutput(
             idempotency_key=engine_input.idempotency_key,
             engine=engine_input.engine,
@@ -53,7 +59,7 @@ def run_registered_schema_taxonomy_engine(engine_input: EngineInput) -> EngineOu
             ),
         )
     taxonomy = taxonomy_from_params(
-        engine_input.config.params,
+        params,
         expected_version=snapshot.taxonomy_version,
     )
     return run_schema_taxonomy_engine(
@@ -123,7 +129,7 @@ def register_structural_engines(target: EngineRegistry = registry) -> None:
 
 def _snapshot(snapshot_id: int) -> Snapshot:
     try:
-        return Snapshot.objects.only("id", "taxonomy_version", "normalized_json").get(
+        return Snapshot.objects.only("id", "taxonomy_version", "normalized_json", "provenance").get(
             pk=snapshot_id,
             status=Snapshot.Status.LOCKED,
         )

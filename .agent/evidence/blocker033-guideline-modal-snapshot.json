@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-14",
+  "scope": "A-03 modal import + manual taxonomy + per-Snapshot guideline",
+  "backend": {
+    "passed": 73,
+    "suites": [
+      "guideline",
+      "snapshots/test_api",
+      "snapshots/test_orchestration"
+    ]
+  },
+  "frontend": {
+    "passed": 470,
+    "files": 44,
+    "location": "/tmp/b033-r2-frontend",
+    "source_equality": "diff -qr src/frontend/src /tmp/b033-r2-frontend/src: no differences",
+    "direct_workspace_run": "18 passed; 2 workers failed to start on /mnt/h; rerun all suites on Linux"
+  },
+  "checks": {
+    "typescript": "pass",
+    "mypy": "20 source files pass",
+    "ruff": "pass",
+    "eslint": "pass",
+    "diff_check": "pass"
+  },
+  "behavior": [
+    "embedded taxonomy preview + import",
+    "missing taxonomy requires manual definition",
+    "manual taxonomy participates in checksum",
+    "import does not change Dataset binding",
+    "Snapshot can select guideline without Dataset default",
+    "Snapshot override keeps default unchanged",
+    "locked Snapshot and rework policy remain pinned"
+  ],
+  "live_cvat": "not claimed"
+}

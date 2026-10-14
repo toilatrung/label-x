@@ -25,6 +25,9 @@ async function setup(username: string, handler: (url: URL) => Response, openGuid
   const passthrough = api.fetchSpy.getMockImplementation()!;
   api.fetchSpy.mockImplementation(async (request: Request) => {
     const url = new URL(request.url);
+    if (url.pathname === '/api/guidelines/versions/') return json({ next: null, previous: null, results: [] });
+    if (/^\/api\/datasets\/\d+\/guideline\/$/.test(url.pathname)) return json({ dataset_id: 1,
+      guideline_version: null, guideline_checksum: null, taxonomy_version: null, taxonomy_ready: false, revision: 0 });
     return url.pathname === RULES_PATH ? handler(url) : passthrough(request);
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -142,14 +145,15 @@ describe('Guidelines page', () => {
 });
 
 describe('Models và Guidelines design regions (FE-09)', () => {
-  it('shows all design models and guideline versions without implementation notices', async () => {
+  it('shows models and the real guideline library instead of sample versions', async () => {
     await setup('qalead', () => json({ next: null, previous: null, results: [] }), false);
     expect(await screen.findByText('Classifier')).toBeDefined();
     expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh mô hình' })[0]);
     expect(screen.queryByRole('status')).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'Phiên bản guideline' }));
-    expect(screen.getByText('Guideline v1.3')).toBeDefined();
-    expect(screen.getByText('Road Vision Urban v1.3 – v1.4')).toBeDefined();
+    expect(await screen.findByText('Chưa có phiên bản Guideline.')).toBeDefined();
+    expect(screen.queryByText('Guideline v1.3')).toBeNull();
+    expect(screen.queryByText('Road Vision Urban v1.3 – v1.4')).toBeNull();
   });
 });

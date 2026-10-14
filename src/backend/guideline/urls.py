@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from guideline.config_views import GuidelineImportView, GuidelinePreviewView
 from guideline.views import (
     GuidelineMappingListView,
     GuidelineRuleDetailView,
@@ -10,6 +11,8 @@ from guideline.views import (
 )
 
 urlpatterns = [
+    path("preview/", GuidelinePreviewView.as_view(), name="guidelines-preview"),
+    path("import/", GuidelineImportView.as_view(), name="guidelines-import"),
     path("versions/", GuidelineVersionsListView.as_view(), name="guidelines-versions-list"),
     path("mappings/", GuidelineMappingListView.as_view(), name="guidelines-mappings-list"),
     path("rules/", GuidelineRuleListView.as_view(), name="guidelines-rules-list"),
