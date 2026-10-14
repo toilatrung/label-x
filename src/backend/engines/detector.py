@@ -375,8 +375,10 @@ def _annotation_candidate(
     )
 
 
-def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
-    """Tải ảnh shard, gọi CLI Faster R-CNN và đổi từng detection thành Candidate."""
+def predict_frames(
+    engine_input: EngineInput,
+) -> tuple[dict[FrameKey, tuple[SnapshotFrame, list[Any]]], dict[str, Any]]:
+    """Run verified inference, retaining every detection (including correct matches)."""
     wanted = {
         (unit.frame.cvat_task_id, unit.frame.frame_number): unit for unit in engine_input.units
     }
@@ -424,7 +426,7 @@ def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
     images = payload.get("images")
     if not isinstance(images, list):
         raise ValueError("detector output thiếu images")
-    candidates: list[Candidate] = []
+    predictions: dict[FrameKey, tuple[SnapshotFrame, list[Any]]] = {}
     seen: set[str] = set()
     for image in images:
         if not isinstance(image, dict) or image.get("path") not in path_to_frame:
@@ -436,11 +438,24 @@ def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
         detections = image.get("detections")
         if not isinstance(detections, list):
             raise ValueError("detector output thiếu detections")
-        candidates.extend(
-            _candidates_for_frame(engine_input, path_to_frame[path], detections, model=model)
+        frame = path_to_frame[path]
+        predictions[FrameKey(frame.snapshot_job.cvat_task_id, frame.frame_index)] = (
+            frame,
+            detections,
         )
     if seen != set(path_to_frame):
         raise ValueError("detector output không phủ đủ shard")
+    return predictions, model
+
+
+def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
+    """Load verified predictions and derive QC suspicions from snapshot annotations."""
+    predictions, model = predict_frames(engine_input)
+    candidates = [
+        candidate
+        for frame, detections in predictions.values()
+        for candidate in _candidates_for_frame(engine_input, frame, detections, model=model)
+    ]
     return EngineOutput(
         idempotency_key=engine_input.idempotency_key,
         engine=engine_input.engine,
