@@ -14,6 +14,7 @@ from orchestration.evaluation_read import (
     evaluation_reason_code,
     evaluation_review_required,
     evaluation_status,
+    latest_evaluations,
 )
 from orchestration.models import Evaluation, VlmEvidence
 from review.models import FrameReview, Issue, Lease
@@ -21,18 +22,6 @@ from review.models import FrameReview, Issue, Lease
 _DECIDED_STATES = frozenset(
     {Issue.State.CONFIRMED, Issue.State.REJECTED, Issue.State.RESOLVED, Issue.State.ESCALATED}
 )
-
-
-def _latest_evaluations(candidate_ids: list[int]) -> dict[int, Evaluation]:
-    latest: dict[int, Evaluation] = {}
-    rows = (
-        Evaluation.objects.filter(candidate_id__in=candidate_ids)
-        .select_related("vlm_unit__evidence")
-        .order_by("candidate_id", "generation")
-    )
-    for evaluation in rows:
-        latest[evaluation.candidate_id] = evaluation  # generation tăng dần: bản cuối thắng
-    return latest
 
 
 def _evidence_refs(evidence: VlmEvidence | None) -> dict[str, Any] | None:
@@ -89,7 +78,7 @@ def _ai_entry(issue: Issue, evaluation: Evaluation) -> dict[str, Any]:
 def ai_evidence(issues: list[Issue]) -> list[dict[str, Any]]:
     """Đề xuất AI mới nhất của từng issue có candidate; issue thủ công không có mục."""
     candidate_ids = [issue.candidate_id for issue in issues if issue.candidate_id]
-    evaluations = _latest_evaluations(candidate_ids)
+    evaluations = latest_evaluations(candidate_ids)
     return [
         _ai_entry(issue, evaluations[issue.candidate_id])
         for issue in issues

@@ -13,7 +13,7 @@ import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
 import { ACTIVE_CALIBRATIONS, PERF_SAMPLE_METRICS, PERF_BENCHMARK_STREAM } from '@/lib/calibration/sample-data';
 import {
-  createEvaluation, getEffectivenessReport, getEvaluation, newIdempotencyKey, percent, sourceReasonLabel,
+  createEvaluation, getEffectivenessReport, getEvaluation, listEvaluations, listReferences, newIdempotencyKey, percent, sourceReasonLabel,
   type Evaluation, type MetricValue,
 } from '@/lib/reports/api';
 
@@ -52,10 +52,36 @@ function metricText(m: MetricValue | undefined): { value: string; tone: string }
   return { value: percent(m.value) ?? '—', tone: '' };
 }
 
+/** Danh sách KPI evaluation và reference đã khoá của Dataset đang chọn (GET /api/evaluations/, /api/references/). */
+function useScopeOptions() {
+  const { session, datasetId } = useAuth();
+  const canList = hasDatasetPermission(session, datasetId, (role) => ['qa_lead', 'super_admin', 'product_owner'].includes(role));
+  const enabled = !!session && datasetId !== null && canList;
+  const evaluations = useQuery({
+    queryKey: ['kpi-evaluations', session?.user.id, datasetId],
+    queryFn: ({ signal }) => listEvaluations(datasetId!, signal), enabled, retry: false,
+  });
+  const references = useQuery({
+    queryKey: ['kpi-references', session?.user.id, datasetId],
+    queryFn: ({ signal }) => listReferences(datasetId!, signal), enabled, retry: false,
+  });
+  return { enabled, datasetId, evaluations, references };
+}
+
 export function PerformanceHeader() {
   const id = useEvaluationId();
   const evaluation = useEvaluation(id);
   const ev = evaluation.data;
+  const router = useRouter();
+  const pathname = usePathname();
+  const { enabled, datasetId, evaluations, references } = useScopeOptions();
+  // undefined: theo reference của evaluation đang xem; null: mọi reference.
+  const [referenceFilter, setReferenceFilter] = useState<number | null | undefined>(undefined);
+  const reference = referenceFilter === undefined ? ev?.reference_id ?? null : referenceFilter;
+  const rows = (evaluations.data?.results ?? []).filter((row) => reference === null || row.reference_id === reference);
+  const show = (next: number) => router.replace(`${pathname}?evaluation=${next}`);
+  const placeholder = (query: { isPending: boolean; isError: boolean }, empty: string) =>
+    !enabled ? (datasetId === null ? 'Chưa chọn Dataset' : 'Không có quyền xem') : query.isPending ? 'Đang tải…' : query.isError ? 'Không tải được' : empty;
   return (
     <div className="lx-head">
       <div className="lx-head__text">
@@ -63,12 +89,24 @@ export function PerformanceHeader() {
         <p className="lx-lead">Đánh giá chất lượng của chính quy trình kiểm tra: mức thống nhất của reviewer, độ chính xác của candidate và lỗi còn sót. Luôn ghi kèm cỡ mẫu và phương pháp.</p>
       </div>
       <div className="lx-actions">
-        {/* Phạm vi và reference do evaluation đang xem quyết định; contract chưa có API liệt kê evaluation/reference. */}
-        <select className="lx-select lx-select--inline" aria-label="Phạm vi đánh giá" disabled value="">
-          <option value="">{ev ? `Phạm vi: Quality Control Run #QC-${ev.run_id}` : 'Phạm vi: chưa chọn evaluation'}</option>
+        <select className="lx-select lx-select--inline" aria-label="Phạm vi đánh giá" value={id ?? ''}
+          disabled={!evaluations.isSuccess} title={evaluations.isError ? errorMessage(evaluations.error) : undefined}
+          onChange={(event) => { if (event.target.value) show(Number(event.target.value)); }}>
+          <option value="">{evaluations.isSuccess ? (rows.length ? 'Phạm vi: chọn evaluation' : 'Chưa có evaluation') : `Phạm vi: ${placeholder(evaluations, '')}`}</option>
+          {id !== null && ev && !rows.some((row) => row.id === id) && <option value={id}>Quality Control Run #QC-{ev.run_id} · Evaluation #{id}</option>}
+          {rows.map((row) => <option key={row.id} value={row.id}>Quality Control Run #QC-{row.run_id} · Evaluation #{row.id} · {formatDateTime(row.created_at)}</option>)}
         </select>
-        <select className="lx-select lx-select--inline" aria-label="Benchmark" disabled value="">
-          <option value="">{ev ? `Reference #${ev.reference_id}` : 'Reference: chưa chọn'}</option>
+        <select className="lx-select lx-select--inline" aria-label="Benchmark" value={reference ?? ''}
+          disabled={!references.isSuccess} title={references.isError ? errorMessage(references.error) : undefined}
+          onChange={(event) => {
+            const next = event.target.value ? Number(event.target.value) : null;
+            setReferenceFilter(next);
+            const first = evaluations.data?.results.find((row) => next === null || row.reference_id === next);
+            if (first && first.id !== id) show(first.id);
+          }}>
+          <option value="">{references.isSuccess ? 'Mọi reference đã khoá' : `Reference: ${placeholder(references, '')}`}</option>
+          {reference !== null && !references.data?.results.some((row) => row.id === reference) && <option value={reference}>Reference #{reference}</option>}
+          {(references.data?.results ?? []).map((row) => <option key={row.id} value={row.id}>Reference #{row.id} · Snapshot #{row.snapshot_id} · {row.mapping_version}</option>)}
         </select>
       </div>
     </div>
@@ -82,6 +120,7 @@ function EvaluationSource({ current }: { current: number | null }) {
   const [lookup, setLookup] = useState(current ? String(current) : '');
   const [runId, setRunId] = useState('');
   const [referenceId, setReferenceId] = useState('');
+  const { references, evaluations } = useScopeOptions();
   const [scoreVersion, setScoreVersion] = useState('');
   const [key, setKey] = useState(newIdempotencyKey);
   const [busy, setBusy] = useState(false);
@@ -102,6 +141,7 @@ function EvaluationSource({ current }: { current: number | null }) {
         score_version: scoreVersion.trim(), parameters: {} }, key);
       setKey(newIdempotencyKey());
       setLookup(String(ev.id));
+      void evaluations.refetch();
       show(ev.id);
     } catch (err) { setError(errorMessage(err)); }
     finally { setBusy(false); }
@@ -127,7 +167,11 @@ function EvaluationSource({ current }: { current: number | null }) {
               </div>
               <div className="lx-field">
                 <label className="lx-label" htmlFor="evaluation-reference">Reference đã khoá</label>
-                <input id="evaluation-reference" className="lx-input" inputMode="numeric" value={referenceId} onChange={(e) => setReferenceId(e.target.value.replace(/\D/g, ''))} />
+                <select id="evaluation-reference" className="lx-select" value={referenceId} disabled={!references.isSuccess}
+                  title={references.isError ? errorMessage(references.error) : undefined} onChange={(e) => setReferenceId(e.target.value)}>
+                  <option value="">{references.isPending ? 'Đang tải…' : references.isError ? 'Không tải được' : references.data?.results.length ? 'Chọn reference' : 'Chưa có reference đã khoá'}</option>
+                  {(references.data?.results ?? []).map((row) => <option key={row.id} value={row.id}>Reference #{row.id} · Snapshot #{row.snapshot_id} · {row.mapping_version}</option>)}
+                </select>
               </div>
             </div>
             <div className="lx-field">

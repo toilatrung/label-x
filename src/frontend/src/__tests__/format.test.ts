@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
+import { formatCount, formatDateTime, formatRelativeTime, shortRevision, snapshotCode } from '@/lib/format';
 
 describe('shared display formats (design: 12,500 · 2026-10-04 06:50 · a91f3c · SNP-014)', () => {
   it('separates thousands and shows an empty value as a dash', () => {
@@ -28,5 +28,15 @@ describe('shared display formats (design: 12,500 · 2026-10-04 06:50 · a91f3c �
     expect(snapshotCode(14)).toBe('SNP-014');
     expect(snapshotCode(7)).toBe('SNP-007');
     expect(snapshotCode(2100)).toBe('SNP-2100');
+  });
+});
+
+describe('formatRelativeTime', () => {
+  const now = Date.parse('2026-10-14T10:00:00Z');
+  it('rounds down to minutes and hours, then falls back to the date', () => {
+    expect(formatRelativeTime(now - 20_000, now)).toBe('vừa xong');
+    expect(formatRelativeTime(now - 5 * 60_000, now)).toBe('5 phút trước');
+    expect(formatRelativeTime(now - 125 * 60_000, now)).toBe('2 giờ trước');
+    expect(formatRelativeTime(now - 2 * 86_400_000, now)).not.toMatch(/trước$/);
   });
 });

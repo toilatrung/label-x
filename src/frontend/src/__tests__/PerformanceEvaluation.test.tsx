@@ -49,6 +49,12 @@ async function setup(username: string, search: string, options: { reportFailsOnc
     }
     if (path === '/api/runs/107/') return Response.json(run107);
     if (path === '/api/evaluations/' && request.method === 'POST') return Response.json({ ...evaluation, id: 9 }, { status: 202 });
+    // B-6: danh sách KPI evaluation và reference đã khoá của Dataset đang chọn.
+    if (path === '/api/evaluations/') return Response.json({ next: null, previous: null, results: [
+      { ...evaluation, id: 8, run_id: 108, reference_id: 4, created_at: '2026-10-13T00:00:00Z' }, evaluation] });
+    if (path === '/api/references/') return Response.json({ next: null, previous: null, results: [
+      { id: 4, snapshot_id: 3, gt_checksum: 'b'.repeat(64), mapping_version: 'map-v2', status: 'locked', created_by: 2 },
+      { id: 2, snapshot_id: 3, gt_checksum: 'a'.repeat(64), mapping_version: 'map-v1', status: 'locked', created_by: 2 }] });
     throw new Error(`Unexpected API path: ${path}`);
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -85,6 +91,7 @@ describe('Performance Evaluation on KPI evaluation + effectiveness report', () =
     expect(screen.getByText('Chọn evaluation để xem kết quả theo luồng lấy mẫu.')).toBeTruthy();
     expect(screen.queryByText('92.5%')).toBeNull();
     fireEvent.change(await screen.findByLabelText('Quality Control Run'), { target: { value: '107' } });
+    await waitFor(() => expect((screen.getByLabelText('Reference đã khoá') as HTMLSelectElement).options).toHaveLength(3));
     fireEvent.change(screen.getByLabelText('Reference đã khoá'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Score version'), { target: { value: 'score_v0' } });
     fireEvent.click(screen.getByRole('button', { name: 'Chạy đánh giá' }));
@@ -92,6 +99,33 @@ describe('Performance Evaluation on KPI evaluation + effectiveness report', () =
     const post = calls.find((r) => r.method === 'POST' && new URL(r.url).pathname === '/api/evaluations/')!;
     expect(post.headers.get('Idempotency-Key')).toBeTruthy();
     expect(await post.clone().json()).toEqual({ snapshot_id: 3, run_id: 107, reference_id: 2, score_version: 'score_v0', parameters: {} });
+  });
+
+  it('lists the dataset evaluations and locked references in the scope selects (B-6)', async () => {
+    const { calls } = await setup('qalead', 'evaluation=5');
+    const scope = await screen.findByLabelText('Phạm vi đánh giá') as HTMLSelectElement;
+    await waitFor(() => expect(scope.disabled).toBe(false));
+    const list = calls.find((r) => new URL(r.url).pathname === '/api/evaluations/' && r.method === 'GET')!;
+    expect(new URL(list.url).searchParams.get('dataset_id')).toBeTruthy();
+    const references = calls.find((r) => new URL(r.url).pathname === '/api/references/')!;
+    expect(new URL(references.url).searchParams.get('status')).toBe('locked');
+    // Reference của evaluation đang xem lọc danh sách phạm vi.
+    const benchmark = screen.getByLabelText('Benchmark') as HTMLSelectElement;
+    await waitFor(() => expect(benchmark.value).toBe('2'));
+    expect([...scope.options].map((o) => o.value)).toEqual(['', '5']);
+    fireEvent.change(benchmark, { target: { value: '4' } });
+    expect(replace).toHaveBeenCalledWith('/calibration/performance?evaluation=8');
+    fireEvent.change(benchmark, { target: { value: '' } });
+    await waitFor(() => expect([...scope.options].map((o) => o.value)).toEqual(['', '8', '5']));
+    fireEvent.change(scope, { target: { value: '8' } });
+    expect(replace).toHaveBeenLastCalledWith('/calibration/performance?evaluation=8');
+  });
+
+  it('picks the reference for a new evaluation from the locked list', async () => {
+    await setup('qalead', '');
+    const select = await screen.findByLabelText('Reference đã khoá') as HTMLSelectElement;
+    await waitFor(() => expect(select.options).toHaveLength(3));
+    expect(select.options[1].textContent).toBe('Reference #4 · Snapshot #3 · map-v2');
   });
 
   it('hides evaluation creation from reviewers', async () => {

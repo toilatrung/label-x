@@ -97,7 +97,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Affected Records</strong>: <code>docs/04-api/openapi.yaml, src/frontend/src/components/snapshots/SnapshotSample.tsx, src/frontend/src/components/snapshots/SnapshotForm.tsx, src/frontend/src/lib/mock/snapshots.ts, src/frontend/src/app/analysis/page.tsx, src/frontend/src/lib/snapshots/queries.ts, src/frontend/src/components/overview/QualitySummary.tsx, src/frontend/src/components/overview/QualityControlHome.tsx, src/frontend/src/components/execution/CandidateEvidenceList.tsx, src/frontend/src/components/calibration/PerformanceView.tsx, src/backend/snapshots/summary_views.py, src/backend/runs/summary_views.py, src/backend/runs/kpi_views.py, src/backend/orchestration/evaluation_views.py</code></li>
 <li><strong>Issues</strong>: <code>none</code></li>
-<li><strong>Decisions</strong>: <code>DEC-001</code>, <a href="../decisions/DEC-022.html">DEC-022</a> (PO chốt C0–C6 cho phần A, 2026-10-14)</li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>, <a href="../decisions/DEC-022.html">DEC-022</a> (PO chốt C0–C6 cho phần A, 2026-10-14), <a href="../decisions/DEC-023.html">DEC-023</a> (PO chốt Q1–Q6 cho phần B, 2026-10-14)</li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>cần CR nếu PO chọn hướng (b) ở B-1 hoặc thêm metric mới ở B-5</code></li>
 </ul>
@@ -128,7 +128,18 @@ ul.dir{columns:2;font-size:14px}
 <li>Khi worker VLM dừng: sau 5 phút hiện "Chưa có kết quả"; bật lại worker, bấm "Kiểm tra lại" thấy kết quả.</li>
 </ol>
 <p>409 stale_revision không tái hiện được qua UI vì revision của run gắn với Snapshot đã khoá; chỉ kiểm bằng test tự động.</p>
-<p>Phần A chưa resolved cho tới khi tester ghi bằng chứng các bước trên. Phần B chưa làm.</p>
+<p>Phần A chưa resolved cho tới khi tester ghi bằng chứng các bước trên. Phần B: xem bảng tiến độ bên dưới.</p>
+<h3 id="part-b-progress">Tiến độ phần B (theo <a href="../decisions/DEC-023.html">DEC-023</a>)</h3>
+<table><thead><tr><th>#</th><th>Trạng thái</th><th>Đã làm</th><th>Kiểm tra tự động</th></tr></thead><tbody>
+<tr><td>B-1</td><td>Đóng</td><td>Hướng (a) theo DEC-022, PR #354; không có việc backend.</td><td>—</td></tr>
+<tr><td>B-2</td><td>PR 1</td><td>Contract <code>CvatTask.jobs[].stage</code> (runtime đã trả từ MBE-06); form tạo Snapshot hiện Gán nhãn / Kiểm tra / Nghiệm thu, vắng thì "—".</td><td><code>SnapshotDesign.test.tsx</code></td></tr>
+<tr><td>B-3</td><td>PR 2</td><td>Chưa làm.</td><td>—</td></tr>
+<tr><td>B-4</td><td>PR 1</td><td><code>GET /api/candidates/{id}/evaluations/</code> và <code>Candidate.latest_evaluation</code>; History có cột "Đánh giá AI" (reviewer/qa_lead/qc_admin/super_admin), hiện lần đánh giá mới nhất khi tải lại trang.</td><td><code>test_evaluation_api.py</code>, <code>AiReEvaluate.test.tsx</code></td></tr>
+<tr><td>B-5</td><td>PR 2</td><td>Chưa làm; cần CR.</td><td>—</td></tr>
+<tr><td>B-6</td><td>PR 1</td><td><code>GET /api/evaluations/</code>, <code>GET /api/references/</code>; Performance mở khoá ô "Phạm vi đánh giá" và "Benchmark", form chạy đánh giá chọn reference đã khoá từ danh sách.</td><td><code>test_kpi_api.py</code>, <code>PerformanceEvaluation.test.tsx</code></td></tr>
+<tr><td>B-7</td><td>PR 1</td><td>Chỉ FE: "Đồng bộ CVAT x phút trước" theo lần đọc Dataset từ CVAT thành công gần nhất.</td><td><code>HomeQualitySummary.test.tsx</code>, <code>format.test.ts</code></td></tr>
+</tbody></table>
+<p>Tester kiểm thêm khi VLM có model: cột "Đánh giá AI" ở History (Execution History) hiện lần đánh giá mới nhất sau khi tải lại trang và đánh giá lại được như ở Review workspace.</p>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[ ] The blocking condition no longer prevents affected work.</li>

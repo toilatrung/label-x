@@ -232,3 +232,52 @@ def test_waiver_approver_cannot_be_requester_and_rejection(world, qa):
     assert rejected.status_code == 200 and rejected.data["status"] == "rejected"
     gate = client(qa["a"]).get(f"/api/runs/{run_id}/gate/")
     assert {c["name"]: c for c in gate.data["conditions"]}["coverage"]["status"] != "waived"
+
+
+# ---------------------------------------------------------------- BLOCKER-034 B-6: GET danh sách
+
+
+def _get(user, url):
+    return client(user).get(url)
+
+
+@pytest.mark.django_db
+def test_reference_list_scoped_by_dataset_filtered_by_status_newest_first(world, qa):
+    draft = _create_reference(world, qa["a"], "ref-l1").data["id"]
+    locked = _locked_reference_from(
+        world, qa, _create_reference(world, qa["a"], "ref-l2").data["id"]
+    )
+    page = _get(qa["a"], "/api/references/?dataset_id=42")
+    assert page.status_code == 200, page.data
+    assert [row["id"] for row in page.data["results"]] == [locked, draft]
+    assert page.data["next"] is None
+    only_locked = _get(qa["a"], "/api/references/?dataset_id=42&status=locked")
+    assert [row["id"] for row in only_locked.data["results"]] == [locked]
+    assert _get(qa["a"], "/api/references/?dataset_id=42&status=x").status_code == 400
+    assert _get(qa["a"], "/api/references/").status_code == 400
+    assert _get(qa["a"], "/api/references/?dataset_id=abc").status_code == 400
+    # Dataset ngoài phạm vi và vai trò không đọc KPI đều bị chặn ở API.
+    assert _get(qa["a"], "/api/references/?dataset_id=43").status_code == 403
+    assert _get(world["reviewer"], "/api/references/?dataset_id=42").status_code == 403
+    po = _user("po", Role.PRODUCT_OWNER)
+    assert _get(po, "/api/references/?dataset_id=42").status_code == 200
+
+
+@pytest.mark.django_db
+def test_evaluation_list_scoped_by_dataset_and_run(world, qa):
+    ref_id = _locked_reference(world, qa)
+    first = _evaluate(world, qa["a"], ref_id, key="ev-l1")
+    second = _evaluate(world, qa["a"], ref_id, key="ev-l2", score_version="score-v1")
+    assert first.status_code == 202 and second.status_code == 202
+    page = _get(qa["a"], "/api/evaluations/?dataset_id=42")
+    assert page.status_code == 200, page.data
+    assert [row["id"] for row in page.data["results"]] == [second.data["id"], first.data["id"]]
+    assert page.data["results"][0]["reference_id"] == ref_id
+    by_run = _get(qa["a"], f"/api/evaluations/?dataset_id=42&run_id={world['run'].pk}")
+    assert len(by_run.data["results"]) == 2
+    other_run = _get(qa["a"], "/api/evaluations/?dataset_id=42&run_id=999999")
+    assert other_run.status_code == 200 and other_run.data["results"] == []
+    assert _get(qa["a"], "/api/evaluations/?dataset_id=42&run_id=0").status_code == 400
+    assert _get(qa["a"], "/api/evaluations/?dataset_id=43").status_code == 403
+    assert _get(world["reviewer"], "/api/evaluations/?dataset_id=42").status_code == 403
+    assert _get(qa["a"], "/api/evaluations/?dataset_id=42&cursor=bad").status_code == 400

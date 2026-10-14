@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AiReEvaluate, POLL_INTERVAL_MS, POLL_TIMEOUT_MS } from '@/components/review/AiReEvaluate';
 import { ReviewEvidenceTable } from '@/components/review/ReviewEvidenceTable';
+import { CandidateEvidenceList, type Candidate } from '@/components/execution/CandidateEvidenceList';
 import type { AiEvidence } from '@/lib/review/workspace-api';
 
 const evaluation = (status: string, extra: Record<string, unknown> = {}) => ({
@@ -135,6 +136,35 @@ describe('ReviewEvidenceTable', () => {
     await submit();
     await waitFor(() => expect(requests.some(r => new URL(r.url).pathname === '/api/candidates/501/evaluations/')).toBe(true));
     const sent = requests.find(r => new URL(r.url).pathname === '/api/candidates/501/evaluations/')!;
+    expect((await sent.json()).expected_revision).toBe('rev-1');
+  });
+});
+
+describe('Đánh giá lại ở History (B-4)', () => {
+  const candidate = {
+    id: 501, engine: 'geometry', engine_version: '1.0.0', family: 'E1', severity: null,
+    frame: { cvat_task_id: 12, frame_number: 105 },
+    anchor: { kind: 'annotation', policy_version: '1.0.0', rule_id: null, objects: [] },
+    evidence: { engine: 'geometry' },
+    latest_evaluation: { id: 3001, generation: 2, status: 'running' },
+  } as unknown as Candidate;
+
+  it('adds the AI column only with a run revision and shows the latest evaluation after reload', async () => {
+    poll = () => Response.json(evaluation('completed', { vlm: { state: 'checked', engine_status: 'checked', source: 'qwen', attempts: 1, class_name: 'car', conclusion: 'uncertain' } }));
+    const { rerender } = wrap(<CandidateEvidenceList candidates={[candidate]} />);
+    expect(screen.queryByRole('columnheader', { name: 'Đánh giá AI' })).toBeNull();
+    rerender(<QueryClientProvider client={new QueryClient()}><CandidateEvidenceList candidates={[candidate]} reEvaluateRevision="rev-1" /></QueryClientProvider>);
+    expect(screen.getByRole('columnheader', { name: 'Đánh giá AI' })).toBeDefined();
+    const panel = await screen.findByLabelText('Kết quả đánh giá lại');
+    expect(await within(panel).findByText('car')).toBeDefined();
+    expect(within(panel).getByText('Lần đánh giá #2')).toBeDefined();
+    expect(requests.some(r => new URL(r.url).pathname === '/api/candidate-evaluations/3001/')).toBe(true);
+    await submit();
+    const sent = await waitFor(() => {
+      const found = requests.find(r => new URL(r.url).pathname === '/api/candidates/501/evaluations/');
+      expect(found).toBeDefined();
+      return found!;
+    });
     expect((await sent.json()).expected_revision).toBe('rev-1');
   });
 });

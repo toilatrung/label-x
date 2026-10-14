@@ -31,17 +31,23 @@ interface Props {
   expectedRevision: string;
 }
 
+interface AiReEvaluateProps extends Props {
+  /** Lần đánh giá mới nhất từ Candidate.latest_evaluation (B-4): hiện trạng thái ngay khi tải lại trang. */
+  latestEvaluationId?: number | null;
+}
+
 /** Nút "Đánh giá lại bằng AI" (POST /api/candidates/{id}/evaluations/) và theo dõi kết quả (GET /api/candidate-evaluations/{id}/). */
-export function AiReEvaluate({ candidateId, expectedRevision }: Props) {
+export function AiReEvaluate({ candidateId, expectedRevision, latestEvaluationId = null }: AiReEvaluateProps) {
   const [open, setOpen] = React.useState(false);
   const [accepted, setAccepted] = React.useState<CandidateEvaluation | null>(null);
   const [pollStart, setPollStart] = React.useState(0);
   const [timedOut, setTimedOut] = React.useState(false);
 
+  const trackedId = accepted?.id ?? latestEvaluationId;
   const evaluation = useQuery({
-    queryKey: ['candidate-evaluation', accepted?.id, pollStart],
-    enabled: accepted !== null && !timedOut,
-    queryFn: ({ signal }) => getCandidateEvaluation(accepted!.id, signal),
+    queryKey: ['candidate-evaluation', trackedId, pollStart],
+    enabled: trackedId !== null && !timedOut,
+    queryFn: ({ signal }) => getCandidateEvaluation(trackedId!, signal),
     initialData: pollStart === 0 ? accepted ?? undefined : undefined,
     initialDataUpdatedAt: 0,
     refetchInterval: query => TERMINAL_EVALUATION_STATUSES.includes(query.state.data?.status ?? '') ? false : POLL_INTERVAL_MS,
@@ -51,17 +57,17 @@ export function AiReEvaluate({ candidateId, expectedRevision }: Props) {
   const finished = TERMINAL_EVALUATION_STATUSES.includes(current?.status ?? '');
 
   React.useEffect(() => {
-    if (!accepted || finished || timedOut) return;
+    if (trackedId === null || finished || timedOut) return;
     const timer = window.setTimeout(() => setTimedOut(true), POLL_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
-  }, [accepted, finished, timedOut, pollStart]);
+  }, [trackedId, finished, timedOut, pollStart]);
 
   const checkAgain = () => { setTimedOut(false); setPollStart(Date.now()); };
   const status = current ? STATUS[current.status] : undefined;
 
   return <div className="lx-stack lx-gap-1">
     <div><button type="button" className="lx-btn lx-btn--sm" onClick={() => setOpen(true)}
-      disabled={!!accepted && !finished && !timedOut}>Đánh giá lại bằng AI</button></div>
+      disabled={!!current && !finished && !timedOut}>Đánh giá lại bằng AI</button></div>
     {current && <div className="lx-stack lx-gap-1" aria-live="polite" aria-label="Kết quả đánh giá lại">
       {timedOut && !finished ? <div className="lx-row lx-gap-2 lx-items-center">
         <span className="lx-subtle">Chưa có kết quả</span>

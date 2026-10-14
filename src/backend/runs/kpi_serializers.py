@@ -63,6 +63,18 @@ class KpiEvaluationSerializer(serializers.Serializer[Any]):
     created_at = serializers.DateTimeField()
 
 
+class PaginatedReferenceListSerializer(serializers.Serializer[Any]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = ReferenceSerializer(many=True)
+
+
+class PaginatedKpiEvaluationListSerializer(serializers.Serializer[Any]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = KpiEvaluationSerializer(many=True)
+
+
 class GateConditionSerializer(serializers.Serializer[Any]):
     name: Any = serializers.CharField(help_text=" | ".join(CONDITIONS))
     status: Any = serializers.CharField(help_text="passed | failed | not_checked | waived")

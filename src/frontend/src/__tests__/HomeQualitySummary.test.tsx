@@ -257,13 +257,14 @@ describe('Overview: Quality Control Home và Quality Summary dùng dữ liệu t
       expect(rows[2].getAttribute('aria-selected')).toBeNull();
     });
 
-    it('không gắn guideline/taxonomy version thành tag version Dataset; caption đồng bộ không bịa', async () => {
+    it('không gắn guideline/taxonomy version thành tag version Dataset; caption đồng bộ lấy từ lần đọc CVAT gần nhất', async () => {
       const { authApi } = setupMockEnv();
       await authApi.signIn('admin');
       renderWithProviders(<QualityControlHome />);
       const row = (await screen.findByText('labelx-dev')).closest('tr')!;
       expect(row.querySelector('.lx-tag')).toBeNull();
-      expect(screen.getByText('Đồng bộ CVAT —')).toBeDefined();
+      // Mốc đồng bộ = lần đọc Dataset từ CVAT thành công gần nhất (B-7), không phải số minh họa của thiết kế.
+      expect(screen.getByText('Đồng bộ CVAT vừa xong')).toBeDefined();
       expect(screen.queryByText('Đồng bộ CVAT 2 phút trước')).toBeNull();
       expect(screen.getByText('Quality Control Run gần nhất')).toBeDefined();
     });

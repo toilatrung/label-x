@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { components } from '@/lib/api/contract';
+import { AiReEvaluate } from '@/components/review/AiReEvaluate';
 
 export type Candidate = components['schemas']['Candidate'];
 
@@ -11,6 +12,11 @@ export interface CandidateEvidenceListProps {
   dedupCount?: number | null;
   isLoading?: boolean;
   error?: string | null;
+  /**
+   * Có giá trị khi người xem được đánh giá lại (reviewer, QA Lead, QC Admin, Super Admin): revision
+   * Snapshot của run, gửi làm expected_revision. Thêm cột "Đánh giá AI" (BLOCKER-034 B-4).
+   */
+  reEvaluateRevision?: string | null;
 }
 
 export function CandidateEvidenceList({
@@ -19,6 +25,7 @@ export function CandidateEvidenceList({
   dedupCount,
   isLoading = false,
   error = null,
+  reEvaluateRevision = null,
 }: CandidateEvidenceListProps) {
   const hasDedup = dedupCount !== undefined && dedupCount !== null;
   const hasRaw = rawCount !== undefined && rawCount !== null;
@@ -85,6 +92,7 @@ export function CandidateEvidenceList({
                   <th style={{ width: '120px' }}>Neo (Anchor)</th>
                   <th>Evidence (Bằng chứng)</th>
                   <th style={{ width: '90px' }}>Mức độ</th>
+                  {reEvaluateRevision && <th style={{ width: '220px' }}>Đánh giá AI</th>}
                 </tr>
               </thead>
               <tbody>
@@ -177,6 +185,14 @@ export function CandidateEvidenceList({
                           <span className="lx-subtle">—</span>
                         )}
                       </td>
+                      {reEvaluateRevision && (
+                        <td>
+                          {cand.id !== undefined ? (
+                            <AiReEvaluate key={cand.id} candidateId={cand.id} expectedRevision={reEvaluateRevision}
+                              latestEvaluationId={cand.latest_evaluation?.id ?? null} />
+                          ) : <span className="lx-subtle">—</span>}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
