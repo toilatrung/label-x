@@ -412,6 +412,15 @@ def create_qc_run(
     engine_versions_map, work_units_data, engine_results_data = generate_shards_for_snapshot(
         snapshot, config_version, model_artifact
     )
+    from runs.gpu_worker import WorkerUnavailable, prepare
+    from runs.models import RunGpuWorker
+
+    worker_config = None
+    if "detector" in engine_versions_map and model_artifact is not None:
+        try:
+            worker_config = prepare(model_artifact)
+        except WorkerUnavailable as exc:
+            raise BusinessRuleUnmetError(str(exc)) from None
 
     try:
         with transaction.atomic():
@@ -433,6 +442,8 @@ def create_qc_run(
             )
 
             # Bulk create WorkUnits
+            if "detector" in engine_versions_map:
+                RunGpuWorker.objects.create(run=run, config=worker_config)
             work_unit_objs = [WorkUnit(run=run, **wu) for wu in work_units_data]
             WorkUnit.objects.bulk_create(work_unit_objs)
 

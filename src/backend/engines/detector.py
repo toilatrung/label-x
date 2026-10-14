@@ -149,7 +149,20 @@ def _required_setting(name: str) -> str:
 def _run_worker(input_dir: Path, engine_input: EngineInput) -> dict[str, Any]:
     """Host Celery sends image bytes, never host paths, to the warm GPU container."""
     params = engine_input.config.params
-    model = registered_model(engine_input.run_id)
+    from runs.gpu_worker import WorkerUnavailable, config_for_run, probe, request_worker
+    from runs.models import QCRun
+
+    remote = config_for_run(engine_input.run_id)
+    if remote is None:
+        model = registered_model(engine_input.run_id)
+    else:
+        run = QCRun.objects.select_related("model_artifact").get(pk=engine_input.run_id)
+        if run.model_artifact is None:
+            raise DetectorProvenanceError("detector run thiếu ModelArtifact")
+        readiness = probe(remote, run.model_artifact)
+        if readiness["state"] != "ready":
+            raise WorkerUnavailable("GPU Worker chưa sẵn sàng cho shard detector.")
+        model = readiness["model"]
     images = []
     for path in sorted(input_dir.iterdir()):
         raw = path.read_bytes()
@@ -160,19 +173,20 @@ def _run_worker(input_dir: Path, engine_input: EngineInput) -> dict[str, Any]:
                 "image_base64": base64.b64encode(raw).decode("ascii"),
             }
         )
-    payload = worker_request(
-        "POST",
-        "/infer",
-        {
-            "model_sha256": model["sha256"],
-            "images": images,
-            "batch_size": int(params.get("batch_size", 1)),
-            "score_threshold": float(params.get("score_threshold", 0.05)),
-        },
+    body = {
+        "model_sha256": model["sha256"],
+        "images": images,
+        "batch_size": int(params.get("batch_size", 1)),
+        "score_threshold": float(params.get("score_threshold", 0.05)),
+    }
+    payload = (
+        request_worker(remote, "/infer", body)
+        if remote is not None
+        else worker_request("POST", "/infer", body)
     )
     if payload.get("schema_version") != "labelx.detector.predictions.v1":
         raise ValueError("detector worker prediction schema mismatch")
-    verify_artifact(payload.get("model"), artifact_for_run(engine_input.run_id))
+    verified_run_model(payload, engine_input.run_id)
     return payload
 
 
@@ -226,6 +240,18 @@ def artifact_for_run(run_id: int) -> Mapping[str, Any] | None:
         )
         .first()
     )
+
+
+def verified_run_model(payload: dict[str, Any], run_id: int) -> dict[str, Any]:
+    from runs.gpu_worker import config_for_run, verify_remote
+    from runs.models import QCRun
+
+    if config_for_run(run_id) is not None:
+        run = QCRun.objects.select_related("model_artifact").get(pk=run_id)
+        if run.model_artifact is None:
+            raise DetectorProvenanceError("detector run thiếu artifact")
+        return verify_remote(payload, run.model_artifact)
+    return verify_artifact(payload.get("model"), artifact_for_run(run_id))
 
 
 def registered_model(run_id: int) -> dict[str, Any]:
@@ -460,23 +486,14 @@ def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
             suffix = Path(frame.file_name).suffix.lower() or ".jpg"
             name = f"{key[0]}-{key[1]}{suffix}"
             with storage.open(frame.media_storage_key, "rb") as source:
-                (input_dir / name).write_bytes(source.read())
+                raw = source.read()
+            if hashlib.sha256(raw).hexdigest() != frame.media_sha256:
+                raise ValueError("detector media không khớp snapshot đã khoá")
+            (input_dir / name).write_bytes(raw)
             path_to_frame[name] = frame
         payload = _run_worker(input_dir, engine_input)
 
-    from runs.models import QCRun
-
-    artifact = (
-        QCRun.objects.filter(pk=engine_input.run_id)
-        .values(
-            "model_artifact__checksum",
-            "model_artifact__version",
-            "model_artifact__class_mapping_version",
-            "model_artifact__class_mapping",
-        )
-        .first()
-    )
-    model = verify_artifact(payload.get("model"), artifact)
+    model = verified_run_model(payload, engine_input.run_id)
 
     images = payload.get("images")
     if not isinstance(images, list):

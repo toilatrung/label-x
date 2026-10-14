@@ -298,6 +298,9 @@ DETECTOR_MANIFEST_PATH = env(
 )
 DETECTOR_DEVICE = env("DETECTOR_DEVICE", default="cuda:0")
 DETECTOR_TIMEOUT_SECONDS = env.int("DETECTOR_TIMEOUT_SECONDS", default=1800)
+# Exact Tailscale HTTPS hostnames approved by Operations; empty fails closed for UI configs.
+GPU_WORKER_ALLOWED_HOSTS = env.list("GPU_WORKER_ALLOWED_HOSTS", default=[])
+GPU_WORKER_CREDENTIALS = env.json("GPU_WORKER_CREDENTIALS", default={})
 CELERY_BEAT_SCHEDULE = {
     "orchestration-redispatch-pending": {
         "task": "orchestration.redispatch_pending",

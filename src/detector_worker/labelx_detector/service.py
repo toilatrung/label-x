@@ -9,7 +9,8 @@ import io
 import json
 import os
 import tempfile
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,7 @@ class WarmDetector:
             "sha256": self.manifest.sha256,
             "version": self.manifest.version,
             "class_mapping_version": self.manifest.mapping_version,
+            "classes": list(self.manifest.classes),
         }
 
     def predict(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -85,7 +87,7 @@ class WarmDetector:
                         raise ValueError("image too large")
                     opened.verify()
                 (inputs / name).write_bytes(raw)
-            return run_batch(
+            result = run_batch(
                 input_directory=inputs,
                 output=root / "predictions.json",
                 checkpoint=self.checkpoint,
@@ -96,6 +98,8 @@ class WarmDetector:
                 score_threshold=float(threshold),
                 backend=self.backend,
             )
+            result["artifact_verified"] = True
+            return result
 
 
 def validate_token(token: str) -> None:
@@ -105,6 +109,7 @@ def validate_token(token: str) -> None:
 
 def make_handler(worker: WarmDetector, token: str) -> type[BaseHTTPRequestHandler]:
     validate_token(token)
+    inference_lock = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
         def setup(self) -> None:
@@ -130,7 +135,15 @@ def make_handler(worker: WarmDetector, token: str) -> type[BaseHTTPRequestHandle
             if not self.authorized():
                 self.reply(401, {"error": "unauthorized"})
             elif self.path == "/health":
-                self.reply(200, {"status": "ready", "model": worker.model()})
+                self.reply(
+                    200,
+                    {
+                        "status": "ready",
+                        "model": worker.model(),
+                        "artifact_verified": True,
+                        "device": worker.device,
+                    },
+                )
             else:
                 self.reply(404, {"error": "not_found"})
 
@@ -149,7 +162,13 @@ def make_handler(worker: WarmDetector, token: str) -> type[BaseHTTPRequestHandle
                 payload = json.loads(self.rfile.read(length))
                 if not isinstance(payload, dict):
                     raise ValueError("object required")
-                result = worker.predict(payload)
+                if not inference_lock.acquire(blocking=False):
+                    self.reply(503, {"error": "worker_busy"})
+                    return
+                try:
+                    result = worker.predict(payload)
+                finally:
+                    inference_lock.release()
             except (ValueError, OSError, KeyError):
                 self.reply(422, {"error": "invalid_batch"})
                 return
@@ -172,7 +191,7 @@ def main() -> None:
         os.environ.get("DETECTOR_DEVICE", "cuda:0"),
     )
     # Container port is published only on host loopback by Compose; no public/plaintext remote API.
-    server = HTTPServer(("0.0.0.0", 8501), make_handler(worker, token))  # noqa: S104
+    server = ThreadingHTTPServer(("0.0.0.0", 8501), make_handler(worker, token))  # noqa: S104
     print("Detector ready; verified artifact; serialized GPU requests", flush=True)
     server.serve_forever()
 

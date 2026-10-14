@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import IntegrityError, transaction
 
 from engines.detector import verify_artifact, worker_request
+from runs.gpu_worker import probe, selected
 from runs.models import ModelArtifact
 
 
@@ -24,8 +25,9 @@ class Command(BaseCommand):
         try:
             manifest = json.loads(Path(settings.DETECTOR_MANIFEST_PATH).read_text(encoding="utf-8"))
             model, mapping = manifest["model"], manifest["class_mapping"]
-            health = worker_request("GET", "/health")
-            if health.get("status") != "ready":
+            remote = selected()
+            health = worker_request("GET", "/health") if remote is None else probe(remote)
+            if (health.get("status") if remote is None else health.get("state")) != "ready":
                 raise ValueError("worker not ready")
             expected = {
                 "model_artifact__checksum": model["sha256"],
@@ -33,7 +35,8 @@ class Command(BaseCommand):
                 "model_artifact__class_mapping_version": mapping["version"],
                 "model_artifact__class_mapping": {"classes": mapping["classes"]},
             }
-            verify_artifact(health.get("model"), expected)
+            if remote is None:
+                verify_artifact(health.get("model"), expected)
             if options["register"]:
                 with transaction.atomic():
                     artifact, _ = ModelArtifact.objects.get_or_create(

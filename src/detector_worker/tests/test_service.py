@@ -5,7 +5,7 @@ import json
 import threading
 import urllib.error
 import urllib.request
-from http.server import HTTPServer
+from http.server import ThreadingHTTPServer
 from unittest.mock import Mock
 
 import pytest
@@ -23,10 +23,11 @@ def test_bad_token_rejected(token):
 @pytest.fixture
 def server():
     worker = Mock()
+    worker.device = "cuda:0"
     worker.model.return_value = {"sha256": "a" * 64}
     worker.predict.return_value = {"images": []}
     token = "fixture-only-" + "x" * 32
-    http = HTTPServer(("127.0.0.1", 0), make_handler(worker, token))
+    http = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(worker, token))
     thread = threading.Thread(target=http.serve_forever, daemon=True)
     thread.start()
     yield "http://127.0.0.1:" + str(http.server_port), worker, token
@@ -63,6 +64,27 @@ def test_batch_endpoint_and_redacted_errors(server):
     assert request(server, "/infer", b"{}", size=MAX_REQUEST + 1)[0] == 413
     server[1].predict.side_effect = RuntimeError("do not leak paths/credentials")
     assert request(server, "/infer", b"{}")[1] == {"error": "inference_unavailable"}
+
+
+def test_health_responds_while_gpu_busy_and_second_inference_is_rejected(server):
+    entered, release = threading.Event(), threading.Event()
+
+    def busy(_):
+        entered.set()
+        release.wait(timeout=5)
+        return {"images": []}
+
+    server[1].predict.side_effect = busy
+    first = threading.Thread(target=lambda: request(server, "/infer", b"{}"), daemon=True)
+    first.start()
+    try:
+        assert entered.wait(timeout=2)
+        assert request(server, "/health")[0] == 200
+        assert request(server, "/infer", b"{}") == (503, {"error": "worker_busy"})
+        assert server[1].predict.call_count == 1
+    finally:
+        release.set()
+        first.join(timeout=5)
 
 
 def payload():

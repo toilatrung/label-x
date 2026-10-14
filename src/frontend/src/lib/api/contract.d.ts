@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+    "/api/gpu-worker/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đọc cấu hình GPU Worker và các credential reference được phép (admin toàn hệ thống). */
+        get: operations["gpu_worker_config_retrieve"];
+        /** Tạo revision mới; revision=0 cho lần đầu, revision cũ trả 409. Không tự probe. */
+        put: operations["gpu_worker_config_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gpu-worker/probe/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kiểm tra revision đang chọn. HTTP 200 không đồng nghĩa ready; phải đọc state. */
+        post: operations["gpu_worker_probe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf/": {
         parameters: {
             query?: never;
@@ -1627,6 +1662,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        WorkerConfig: {
+            revision: number;
+            name: string;
+            /** @description HTTPS host trong Tailscale và exact allowlist của server. */
+            url: string;
+            credential_ref: string;
+            enabled: boolean;
+            timeout_seconds: number;
+        };
+        WorkerEnvelope: {
+            config: components["schemas"]["WorkerConfig"] | null;
+            credential_refs: string[];
+            allowed_hosts: string[];
+        };
+        WorkerProbeRequest: {
+            revision: number;
+        };
+        WorkerModel: {
+            sha256: string;
+            version: string;
+            class_mapping_version: string;
+            verified: boolean;
+        };
+        WorkerProbe: {
+            revision: number;
+            /** @enum {string} */
+            state: "ready" | "unavailable" | "disabled";
+            message: string;
+            /** Format: date-time */
+            checked_at: string;
+            latency_ms: number | null;
+            device: string | null;
+            model: components["schemas"]["WorkerModel"] | null;
+        };
         /** @enum {string} */
         ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "POLICY_NOT_CONFIGURED" | "POLICY_VERSION_MISMATCH";
         /**
@@ -3452,6 +3521,81 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    gpu_worker_config_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cấu hình hiện tại; config null nếu chưa cấu hình. Không chứa token. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerEnvelope"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    gpu_worker_config_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkerConfig"];
+            };
+        };
+        responses: {
+            /** @description Revision đã lưu và audit. Run đang chạy giữ revision cũ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerEnvelope"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    gpu_worker_probe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkerProbeRequest"];
+            };
+        };
+        responses: {
+            /** @description Trạng thái quan sát tại checked_at; không đảm bảo worker luôn online. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerProbe"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     auth_csrf: {
         parameters: {
             query?: never;

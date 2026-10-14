@@ -54,6 +54,55 @@ tags:
     description: Hiệu chỉnh reviewer và model (MBE-04)
 
 paths:
+  /api/gpu-worker/config/:
+    get:
+      operationId: gpu_worker_config_retrieve
+      tags: [gpu-worker]
+      summary: Đọc cấu hình GPU Worker và các credential reference được phép (admin toàn hệ thống).
+      responses:
+        "200":
+          description: Cấu hình hiện tại; config null nếu chưa cấu hình. Không chứa token.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkerEnvelope" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    put:
+      operationId: gpu_worker_config_update
+      tags: [gpu-worker]
+      summary: Tạo revision mới; revision=0 cho lần đầu, revision cũ trả 409. Không tự probe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkerConfig" }
+      responses:
+        "200":
+          description: Revision đã lưu và audit. Run đang chạy giữ revision cũ.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkerEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/gpu-worker/probe/:
+    post:
+      operationId: gpu_worker_probe
+      tags: [gpu-worker]
+      summary: Kiểm tra revision đang chọn. HTTP 200 không đồng nghĩa ready; phải đọc state.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkerProbeRequest" }
+      responses:
+        "200":
+          description: Trạng thái quan sát tại checked_at; không đảm bảo worker luôn online.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkerProbe" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:
@@ -2161,6 +2210,53 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
 
   schemas:
+    WorkerConfig:
+      type: object
+      additionalProperties: false
+      required: [revision, name, url, credential_ref, enabled, timeout_seconds]
+      properties:
+        revision: { type: integer, minimum: 0 }
+        name: { type: string, minLength: 1, maxLength: 128 }
+        url: { type: string, minLength: 1, maxLength: 255, description: HTTPS host trong Tailscale và exact allowlist của server. }
+        credential_ref: { type: string, minLength: 1, maxLength: 64 }
+        enabled: { type: boolean }
+        timeout_seconds: { type: integer, minimum: 10, maximum: 1800 }
+    WorkerEnvelope:
+      type: object
+      required: [config, credential_refs, allowed_hosts]
+      properties:
+        config:
+          allOf: [{ $ref: "#/components/schemas/WorkerConfig" }]
+          nullable: true
+        credential_refs: { type: array, items: { type: string } }
+        allowed_hosts: { type: array, items: { type: string } }
+    WorkerProbeRequest:
+      type: object
+      additionalProperties: false
+      required: [revision]
+      properties:
+        revision: { type: integer, minimum: 1 }
+    WorkerModel:
+      type: object
+      required: [sha256, version, class_mapping_version, verified]
+      properties:
+        sha256: { type: string }
+        version: { type: string }
+        class_mapping_version: { type: string }
+        verified: { type: boolean }
+    WorkerProbe:
+      type: object
+      required: [revision, state, message, checked_at, latency_ms, device, model]
+      properties:
+        revision: { type: integer }
+        state: { type: string, enum: [ready, unavailable, disabled] }
+        message: { type: string }
+        checked_at: { type: string, format: date-time }
+        latency_ms: { type: integer, nullable: true }
+        device: { type: string, nullable: true }
+        model:
+          allOf: [{ $ref: "#/components/schemas/WorkerModel" }]
+          nullable: true
     # ------------------------------------------------------------ lỗi chung
     ErrorCode:
       type: string

@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
+import { GpuWorkerPanel } from './GpuWorkerPanel';
 
-type TabKey = 'models' | 'guideline';
+type TabKey = 'models' | 'guideline' | 'worker';
 
 const TABS = [
   { key: 'models' as const, label: 'Mô hình' },
@@ -26,7 +27,7 @@ const GUIDELINES = [
 ];
 
 /**
- * Thẻ hai tab của ModelsGuidelines theo thiết kế. Dữ liệu minh họa; chưa có API.
+ * ModelsGuidelines: hai tab cũ giữ nguyên; tab GPU Worker dùng API thật cho admin toàn hệ thống.
  * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
  * GET /api/guidelines/versions/ (hiệu lực guideline, taxonomy và Dataset áp dụng).
  */
@@ -34,13 +35,16 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
   /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Phiên bản guideline, ngoài thẻ hai tab của thiết kế. */
   guidelineExtra?: React.ReactNode;
 } = {}) {
-  const { hasPermission } = useAuth();
+  const { hasPermission, session } = useAuth();
+  const canManageWorker = session?.roles.some(grant => grant.dataset_id === null &&
+    (grant.role === 'super_admin' || grant.role === 'qc_admin')) ?? false;
   const canWrite = hasPermission(canAccessConfiguration);
   const [tab, setTab] = useState<TabKey>('models');
   return (
     <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
-      <ConfigTabs tabs={TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
+      <ConfigTabs tabs={canManageWorker ? [...TABS, { key: 'worker' as const, label: 'GPU Worker' }] : TABS} current={tab} onPick={setTab} label="Mô hình và phiên bản guideline" />
+      {tab === 'worker' && canManageWorker && <GpuWorkerPanel />}
       {tab === 'models' && (
         <>
           <div className="lx-scroll">

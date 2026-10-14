@@ -27,7 +27,7 @@
 
 <section class="lx-card">
 <div class="lx-tabs" role="tablist" style="padding: 0 var(--space-3)">
-<sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
 <button class="{{t.cls}}" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}</button>
 </sc-for>
 </div>
@@ -59,6 +59,25 @@
 </div>
 </sc-if>
 
+<sc-if value="{{isWorker}}" hint-placeholder-val="{{false}}">
+<div class="lx-card__body lx-stack">
+<p class="lx-muted">Kết nối máy GPU qua HTTPS trong Tailscale. Cấu hình mới chỉ áp dụng cho run mới.</p>
+<form class="lx-stack" aria-label="Cấu hình GPU Worker">
+<div class="lx-scroll"><table class="lx-table"><thead><tr><th>Thông số</th><th>Giá trị</th></tr></thead><tbody>
+<tr><td><label for="worker-name">Tên worker</label></td><td><input id="worker-name" class="lx-input" required maxlength="128"></td></tr>
+<tr><td><label for="worker-url">Địa chỉ HTTPS Tailscale</label></td><td><input id="worker-url" class="lx-input" type="url" required placeholder="https://gpu-worker.tailnet.ts.net"><small class="lx-hint">Chỉ chấp nhận hostname được quản trị server cho phép.</small></td></tr>
+<tr><td><label for="worker-credential">Credential trên server</label></td><td><select id="worker-credential" class="lx-select"><option value="">Chọn credential</option></select><small class="lx-hint">Không nhập hoặc hiển thị token trên giao diện.</small></td></tr>
+<tr><td><label for="worker-timeout">Thời gian chờ inference (giây)</label></td><td><input id="worker-timeout" class="lx-input" type="number" min="10" max="1800" value="120" required></td></tr>
+<tr><td><label for="worker-enabled">Sử dụng cho run mới</label></td><td><input id="worker-enabled" type="checkbox" checked></td></tr>
+</tbody></table></div>
+<div class="lx-actions"><button class="lx-btn lx-btn--primary" type="button">Lưu cấu hình</button><button class="lx-btn" type="button">Kiểm tra kết nối</button><button class="lx-btn" type="button">Tải lại</button></div>
+</form>
+<p class="lx-hint">Lưu trước khi kiểm tra kết nối. Chưa kiểm tra không đồng nghĩa worker sẵn sàng.</p>
+<div class="lx-scroll"><table class="lx-table" aria-label="Trạng thái GPU Worker"><thead><tr><th>Trạng thái</th><th>Thiết bị</th><th>Model</th><th>Checksum</th><th>Kiểm tra lúc</th></tr></thead><tbody><tr><td><span class="lx-badge">Chưa kiểm tra</span></td><td>—</td><td>—</td><td class="lx-mono">—</td><td>—</td></tr></tbody></table></div>
+<p class="lx-hint">Trạng thái tải/lỗi/quyền: hiển thị thông báo thật; không thay bằng dữ liệu mẫu. Kết quả probe: Sẵn sàng / Không sẵn sàng / Đã tắt; luôn có thời điểm kiểm tra. Người không có quyền admin toàn hệ thống không thấy biểu mẫu.</p>
+</div>
+</sc-if>
+
 </section>
 
 </main>
@@ -69,8 +88,8 @@ class Component extends DCLogic {
   renderVals() {
     const cur = (this.state && this.state.tab) || 'models';
     return {
-      isModels: cur === 'models', isGuideline: cur === 'guideline',
-      tabs: [['models','Mô hình'],['guideline','Phiên bản guideline']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
+      isModels: cur === 'models', isGuideline: cur === 'guideline', isWorker: cur === 'worker',
+      tabs: [['models','Mô hình'],['guideline','Phiên bản guideline'],['worker','GPU Worker']].map(([k, label]) => ({ label, cls: 'lx-tab' + (cur === k ? ' is-active' : ''), pick: () => this.setState({ tab: k }) }))
     };
   }
 }

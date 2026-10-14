@@ -84,6 +84,7 @@ def test_timeout_is_redacted(http_worker):
     assert "secret" not in str(error.value)
 
 
+@pytest.mark.django_db
 def test_host_bytes_not_host_paths_sent_after_artifact_verification(
     artifact_files,
     tmp_path,
