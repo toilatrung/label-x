@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth/auth-context';
 import { hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ReportRunPicker, useSelectedRunId } from '@/components/reports/ReportRunPicker';
+import { useRunGate, useRunReport } from '@/lib/reports/queries';
 import {
-  createWaiver, decideWaiver, GATE_CONDITION_LABELS, getGate, newIdempotencyKey, percent, sourceReasonLabel,
-  WAIVABLE_CONDITIONS, type GateCondition, type GateConditionName, type GateResult, type Waiver,
+  approveRelease, createWaiver, decideWaiver, GATE_CONDITION_LABELS, newIdempotencyKey, percent, sourceReasonLabel,
+  WAIVABLE_CONDITIONS, type GateCondition, type GateConditionName, type GateResult, type Release, type Waiver,
 } from '@/lib/reports/api';
 
 const STATUS_BADGE: Record<GateCondition['status'], { tone: string; label: string }> = {
@@ -38,16 +38,6 @@ function badgeClass(tone: string) {
   return `lx-badge${tone ? ` lx-badge--${tone}` : ''}`;
 }
 
-function useGate(runId: number | null) {
-  const { session } = useAuth();
-  return useQuery({
-    queryKey: ['report-gate', session?.user.id, runId],
-    queryFn: ({ signal }) => getGate(runId!, signal),
-    enabled: runId !== null && !!session,
-    retry: false,
-  });
-}
-
 function ResultCell({ c }: { c: GateCondition }) {
   if (c.observed === null || c.observed === undefined) return <span className="lx-subtle">Chưa đủ dữ liệu</span>;
   const strong = c.status === 'failed' ? 'is-bad lx-strong' : 'lx-strong';
@@ -68,7 +58,7 @@ function ActionCell({ c }: { c: GateCondition }) {
 
 export function QualityGateHeader() {
   const runId = useSelectedRunId();
-  const gate = useGate(runId);
+  const gate = useRunGate(runId);
   const badge = gate.data ? GATE_BADGE[gate.data.status] : null;
   return (
     <div className="lx-head">
@@ -203,10 +193,72 @@ function WaiverDecisionForm({ runId }: { runId: number }) {
   );
 }
 
+function ReleaseApproveForm({ runId, gate }: { runId: number; gate: GateResult | undefined }) {
+  const { session } = useAuth();
+  const client = useQueryClient();
+  const report = useRunReport(runId);
+  const releaseId = report.data?.release_id ?? null;
+  const canApprove = session?.roles.some((r) => r.role === 'product_owner' || r.role === 'super_admin') ?? false;
+  const [note, setNote] = useState('');
+  const [key, setKey] = useState(newIdempotencyKey);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [approved, setApproved] = useState<Release | null>(null);
+  const ready = releaseId !== null && canApprove && !busy;
+
+  async function approve() {
+    if (!ready || releaseId === null) return;
+    setBusy(true); setError(null); setApproved(null);
+    try {
+      const release = await approveRelease(releaseId, note.trim(), key);
+      setApproved(release); setNote(''); setKey(newIdempotencyKey());
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['run-report', session?.user.id, runId] }),
+        client.invalidateQueries({ queryKey: ['releases', session?.user.id] }),
+        client.invalidateQueries({ queryKey: ['report-gate', session?.user.id, runId] }),
+      ]);
+    } catch (err) { setError(errorMessage(err)); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <>
+      {report.isLoading && <span className="lx-hint">Đang tải release của run…</span>}
+      {report.isError && (
+        <span className="lx-hint" role="alert">
+          {errorMessage(report.error)} <button type="button" className="lx-btn lx-btn--sm" onClick={() => void report.refetch()}>Thử lại</button>
+        </span>
+      )}
+      {releaseId !== null && (
+        <div className="lx-field">
+          <label className="lx-label" htmlFor="release-note">Ghi chú phê duyệt release <span className="lx-mono">#{releaseId}</span></label>
+          <textarea id="release-note" className="lx-textarea" value={note} disabled={!canApprove} onChange={(e) => setNote(e.target.value)} />
+        </div>
+      )}
+      <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled={!ready} onClick={() => void approve()}>
+        {busy ? 'Đang gửi…' : 'Phê duyệt phát hành'}
+      </button>
+      {report.data && releaseId === null && (
+        <span className="lx-hint">Server chưa có release chờ duyệt cho run này. Contract chưa có endpoint tạo release, nên chưa thể phê duyệt từ đây.</span>
+      )}
+      {releaseId !== null && !canApprove && <span className="lx-hint">Chỉ Product Owner hoặc Super Admin được phê duyệt phát hành.</span>}
+      {releaseId !== null && gate && gate.status !== 'passed' && (
+        <span className="lx-hint">Server sẽ từ chối nếu gate chưa đạt và không có waiver đã duyệt.</span>
+      )}
+      {error && <p role="alert" className="lx-callout lx-callout--compact lx-m-0">{error}</p>}
+      {approved && (
+        <p className="lx-callout lx-callout--info lx-callout--compact lx-m-0" aria-live="polite">
+          Server đã ghi phê duyệt release <span className="lx-mono">#{approved.id}</span> ({approved.version_tag}).
+        </p>
+      )}
+    </>
+  );
+}
+
 export function QualityGateBody() {
   const { session, datasetId } = useAuth();
   const runId = useSelectedRunId();
-  const gate = useGate(runId);
+  const gate = useRunGate(runId);
   const data = gate.data;
   const count = (s: GateCondition['status']) => data?.conditions.filter((c) => c.status === s).length ?? 0;
   const summary = data
@@ -266,14 +318,14 @@ export function QualityGateBody() {
       <aside className="lx-card lx-side" aria-label="Phê duyệt phát hành">
         <div className="lx-card__head"><h2 className="lx-h2">Phê duyệt phát hành</h2></div>
         <div className="lx-card__body lx-stack">
-          <NotConnectedNotice detail="Phê duyệt phát hành cần POST /api/releases/{id}/approve/" />
           <p className="lx-muted lx-m-0 lx-text-13">
             {data && data.status === 'passed' && 'Mọi điều kiện đã đạt. Hệ thống không tự quyết định phát hành.'}
             {data && data.status !== 'passed' && `Chưa thể phát hành vì còn ${blocking} điều kiện chưa đạt hoặc chưa kiểm tra. Hệ thống không tự quyết định phát hành.`}
             {!data && 'Hệ thống không tự quyết định phát hành.'}
           </p>
-          {/* TODO(backend): POST /api/releases/{id}/approve/ (MBE-03) */}
-          <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled>Phê duyệt phát hành</button>
+          {runId !== null
+            ? <ReleaseApproveForm key={`approve-${runId}`} runId={runId} gate={data} />
+            : <button type="button" className="lx-btn lx-btn--primary lx-btn--block" disabled>Phê duyệt phát hành</button>}
           {runId !== null && data && <WaiverRequestForm key={runId} runId={runId} gate={data} canRequest={canRequest} />}
           {runId !== null && data && canDecide && <WaiverDecisionForm key={`decide-${runId}`} runId={runId} />}
         </div>

@@ -10,7 +10,7 @@ const header = (
   <div className="lx-head">
     <div className="lx-head__text">
       <h1 className="lx-h1">Release History</h1>
-      <p className="lx-lead">Lịch sử các lần phát hành của Road Vision Urban. Mỗi lần phát hành có manifest ghi lại đầy đủ snapshot, phiên bản, quyết định và người phê duyệt.</p>
+      <p className="lx-lead">Lịch sử các lần phát hành. Mỗi lần phát hành có manifest ghi lại đầy đủ snapshot, phiên bản, quyết định và người phê duyệt.</p>
     </div>
   </div>
 );

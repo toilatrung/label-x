@@ -12,6 +12,13 @@ export type Evaluation = components['schemas']['Evaluation'];
 export type EvaluationCreate = components['schemas']['EvaluationCreate'];
 export type EffectivenessReport = components['schemas']['EffectivenessReport'];
 export type MetricValue = components['schemas']['MetricValue'];
+// MBE-03: báo cáo chất lượng của run, export, release và manifest.
+export type RunReport = components['schemas']['RunReport'];
+export type ReportExport = components['schemas']['ReportExport'];
+export type ReportExportFormat = components['schemas']['ReportExportFormat'];
+export type LedgerEntry = components['schemas']['LedgerEntry'];
+export type Release = components['schemas']['Release'];
+export type ReleaseManifest = components['schemas']['ReleaseManifest'];
 
 /** Contract: chỉ coverage và agreement được waiver trong pilot (WaiverCreate). */
 export const WAIVABLE_CONDITIONS: readonly GateConditionName[] = ['coverage', 'agreement'];
@@ -44,6 +51,33 @@ export async function createWaiver(body: WaiverCreate, key: string) {
 export async function decideWaiver(id: number, body: WaiverDecision, key: string) {
   await csrf();
   return unwrap(await apiClient.POST('/api/waivers/{id}/approve/', { body, params: { path: { id }, header: { 'Idempotency-Key': key } } }));
+}
+
+export async function getRunReport(runId: number, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/runs/{id}/report/', { params: { path: { id: runId } }, signal, cache: 'no-store' }));
+}
+
+/** Idempotent theo (run, format): server trả lại export đã có cho cùng run/format. */
+export async function createReportExport(runId: number, format: ReportExportFormat, key: string) {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/runs/{id}/report/export/', {
+    body: { format }, params: { path: { id: runId }, header: { 'Idempotency-Key': key } },
+  }));
+}
+
+export async function listReleases(cursor: string | null, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/releases/', { params: { query: cursor ? { cursor } : {} }, signal, cache: 'no-store' }));
+}
+
+export async function getReleaseManifest(id: number, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/releases/{id}/manifest/', { params: { path: { id } }, signal, cache: 'no-store' }));
+}
+
+export async function approveRelease(id: number, note: string, key: string) {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/releases/{id}/approve/', {
+    body: note ? { note } : {}, params: { path: { id }, header: { 'Idempotency-Key': key } },
+  }));
 }
 
 export async function createEvaluation(body: EvaluationCreate, key: string) {
@@ -86,4 +120,49 @@ export function sourceReasonLabel(reason: string | null | undefined): string {
 export function percent(value: number | null | undefined, digits = 1): string | null {
   if (value === null || value === undefined || Number.isNaN(value)) return null;
   return `${(value * 100).toFixed(digits)}%`;
+}
+
+export const EXPORT_FORMATS: ReadonlyArray<{ key: ReportExportFormat; label: string; note: string }> = [
+  { key: 'pdf', label: 'PDF', note: 'Bản đọc, kèm biểu đồ' },
+  { key: 'csv', label: 'CSV', note: 'Bảng số liệu' },
+  { key: 'json', label: 'JSON', note: 'Gói báo cáo kèm manifest' },
+];
+
+export const EXPORT_STATUS_LABELS: Record<ReportExport['status'], string> = {
+  queued: 'Đang xếp hàng',
+  running: 'Đang tạo',
+  completed: 'Sẵn sàng',
+  failed: 'Lỗi',
+};
+
+/** IssueFamily (contract): E1 thiếu box, E2 sai lớp, E3 trùng box, structural cảnh báo cấu trúc. */
+export const ISSUE_FAMILY_LABELS: Record<string, string> = {
+  E1: 'Thiếu object',
+  E2: 'Sai nhãn',
+  E3: 'Trùng / chồng lấn',
+  structural: 'Cảnh báo cấu trúc',
+};
+
+/** Trạng thái issue đã xác nhận nhưng chưa đóng (state-machines §3). */
+export const OPEN_CONFIRMED_STATES = ['confirmed', 'fix_pending', 'recheck_pending', 'reopened'] as const;
+
+/** Coverage của run = completed / eligible cộng trên các engine bắt buộc (LedgerEntry); null khi eligible = 0. */
+export function requiredCoverage(entries: readonly LedgerEntry[]): number | null {
+  const required = entries.filter((e) => e.required !== false);
+  const eligible = required.reduce((sum, e) => sum + e.eligible, 0);
+  return eligible ? required.reduce((sum, e) => sum + e.completed, 0) / eligible : null;
+}
+
+export function formatDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+export function formatDateTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
 }
