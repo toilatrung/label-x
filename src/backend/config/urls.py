@@ -16,6 +16,7 @@ from review.adjudication_views import (
 )
 from review.gap_views import GuidelineGapCollectionView
 from runs.gpu_worker_views import WorkerConfigView, WorkerProbeView
+from runs.ground_truth_views import GroundTruthPreviewView, GroundTruthView
 from runs.kpi_views import (
     KpiEvaluationCreateView,
     KpiEvaluationDetailView,
@@ -36,9 +37,9 @@ from runs.views import (
 from vlm.settings_views import VlmSettingsView
 
 urlpatterns = [
+    path("api/configuration/vlm/", VlmSettingsView.as_view(), name="vlm-settings"),
     path("api/gpu-worker/config/", WorkerConfigView.as_view(), name="gpu-worker-config"),
     path("api/gpu-worker/probe/", WorkerProbeView.as_view(), name="gpu-worker-probe"),
-    path("api/configuration/vlm/", VlmSettingsView.as_view(), name="vlm-settings"),
     path("admin/", admin.site.urls),
     path("internal/metrics/", MetricsView.as_view(), name="internal-metrics"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
@@ -66,6 +67,12 @@ urlpatterns = [
         "api/decision-cases/<int:pk>/",
         DecisionCaseDetailView.as_view(),
         name="decision-cases-detail",
+    ),
+    path("api/ground-truth/", GroundTruthView.as_view(), name="ground-truth"),
+    path(
+        "api/ground-truth/<int:pk>/preview/",
+        GroundTruthPreviewView.as_view(),
+        name="ground-truth-preview",
     ),
     path("api/references/", ReferenceCreateView.as_view(), name="references-create"),
     path("api/references/<int:pk>/lock/", ReferenceLockView.as_view(), name="references-lock"),

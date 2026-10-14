@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
-import { GpuWorkerPanel } from './GpuWorkerPanel';
 import { VlmSettingsModal } from './VlmSettingsModal';
 import { getVlmSettings, type VlmSettings } from '@/lib/configuration/vlm-api';
 import { errorMessage } from '@/lib/api/errors';
+import { GpuWorkerPanel } from './GpuWorkerPanel';
 
 type TabKey = 'models' | 'guideline' | 'worker';
 
@@ -24,8 +24,7 @@ const MODELS = [
 ];
 
 /**
- * Bảng Detector/Classifier còn minh họa; Guideline và cấu hình VLM dùng API thật.
- * Tab GPU Worker dùng API thật, chỉ dành cho admin toàn hệ thống.
+ * ModelsGuidelines: hai tab cũ (Mô hình, Guideline); tab GPU Worker dùng API thật cho admin toàn hệ thống.
  * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
  */
 export function ModelsGuidelinesCard({ guidelineExtra }: {

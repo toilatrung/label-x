@@ -77,12 +77,13 @@ it('hides worker administration from dataset-scoped users', async () => {
   await screen.findByText('0.85');
   expect(screen.queryByRole('tab', { name: 'GPU Worker' })).toBeNull();
   expect(get.mock.calls.some(([path]) => path.startsWith('/api/gpu-worker/'))).toBe(false);
+  expect(get).not.toHaveBeenCalledWith('/api/gpu-worker/config/', expect.anything());
 });
 
 it('global admin opens the worker tab', async () => {
   render(<ModelsGuidelinesCard />);
   fireEvent.click(screen.getByRole('tab', { name: 'GPU Worker' }));
-  await waitFor(() => expect(get).toHaveBeenCalled());
+  await waitFor(() => expect(get).toHaveBeenCalledWith('/api/gpu-worker/config/', expect.anything()));
   await screen.findByDisplayValue('Máy GPU');
   fireEvent.click(screen.getByRole('tab', { name: 'Mô hình' }));
   await screen.findByText('0.85');
