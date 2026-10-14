@@ -19,7 +19,7 @@ function JobRow({ job, drift }: { job: Snapshot['jobs'][number]; drift: boolean 
     <td>{job.assignee_user_id === null ? 'Chưa gán' : `User #${job.assignee_user_id}`}</td>
     <td className="lx-mono lx-wrap-any">{job.job_hash || 'Chưa có'}</td>
     <td>{jobUrl ? <a href={jobUrl} target="_blank" rel="noopener noreferrer">Mở Job CVAT</a> : 'Liên kết không hợp lệ'}</td>
-    <td>{job.frames.length > 0 ? <div className="lx-row">
+    <td className="lx-td--control">{job.frames.length > 0 ? <div className="lx-frame-pick">
       <select className="lx-select" aria-label={`Frame Job ${job.cvat_job_id}`} value={safeIndex}
         onChange={event => setFrameIndex(Number(event.target.value))}>
         {job.frames.map((item, index) => <option key={item.frame_index} value={index}>
@@ -56,7 +56,7 @@ export function SnapshotDetail({ item }: { item: Snapshot }) {
       {item.status === 'failed' && <div className="lx-callout" role="alert">
         {item.failure_reason === 'drift_detected' ? 'Annotation đã đổi trong lúc export; Snapshot không được khóa.' :
           'Snapshot thất bại khi export.'}</div>}
-      <div className="lx-scroll"><table className="lx-table"><caption>Job trong Snapshot</caption>
+      <div className="lx-scroll"><table className="lx-table lx-table--controls"><caption>Job trong Snapshot</caption>
         <thead><tr><th>Job</th><th>Task</th><th>Người thực hiện</th><th>Hash</th><th>CVAT</th><th>Frame</th></tr></thead>
         <tbody>{item.jobs.map(job => <JobRow key={`${item.id}:${job.cvat_job_id}`} job={job} drift={item.drift_jobs.includes(job.cvat_job_id)} />)}</tbody>
       </table></div>
