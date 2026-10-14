@@ -4,6 +4,7 @@ from typing import Any
 
 from rest_framework import serializers
 
+from calibration.serializers import MetricValueSerializer
 from reports.models import ReportExport
 from runs.serializers import LedgerEntrySerializer
 
@@ -82,17 +83,6 @@ class RunReportSerializer(serializers.Serializer[Any]):
     engine_coverage = LedgerEntrySerializer(many=True)
     release_id = serializers.IntegerField(allow_null=True, required=False)
     exports = ReportExportSerializer(many=True)
-
-
-class MetricValueSerializer(serializers.Serializer[Any]):
-    status = serializers.ChoiceField(choices=["computed", "not_checked", "insufficient_sample"])
-    value = serializers.FloatField(allow_null=True)
-    sample_size = serializers.IntegerField(min_value=0)
-    denominator = serializers.IntegerField(min_value=0)
-    method = serializers.CharField()
-    confidence_interval = serializers.ListField(
-        child=serializers.FloatField(), allow_null=True, required=False, min_length=2, max_length=2
-    )
 
 
 class EffectivenessReportSerializer(serializers.Serializer[Any]):
