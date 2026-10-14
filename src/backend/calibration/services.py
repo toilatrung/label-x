@@ -459,7 +459,10 @@ def create_calibration_assignment(
 
 
 def get_performance_entries(
-    *, dataset_id: int | None = None, run_id: int | None = None
+    *,
+    dataset_id: int | None = None,
+    run_id: int | None = None,
+    allowed_dataset_ids: set[int] | None = None,
 ) -> list[dict[str, Any]]:
     """Tổng hợp hiệu năng từ các evaluation; chỉ evaluation đã completed.
 
@@ -478,6 +481,8 @@ def get_performance_entries(
         eval_qs = eval_qs.filter(run_id=run_id)
     if dataset_id is not None:
         eval_qs = eval_qs.filter(run__dataset_id=dataset_id)
+    elif allowed_dataset_ids is not None:
+        eval_qs = eval_qs.filter(run__dataset_id__in=allowed_dataset_ids)
 
     results: list[dict[str, Any]] = []
     for ev in eval_qs:
@@ -514,19 +519,37 @@ def get_performance_entries(
     return results
 
 
-def get_calibration_reviewers(*, dataset_id: int | None = None) -> list[dict[str, Any]]:
+def get_calibration_reviewers(
+    *,
+    dataset_id: int | None = None,
+    allowed_dataset_ids: set[int] | None = None,
+) -> list[dict[str, Any]]:
     """Danh sách reviewer và độ hiệu chỉnh (ghi nhận và liệt kê; null khi chưa đủ dữ liệu)."""
-    # Reviewer users: có role REVIEWER hoặc đã từng review frame
-    reviewer_role_qs = RoleAssignment.objects.filter(role=Role.REVIEWER)
+    # Reviewer users: có role REVIEWER/ANNOTATOR, đã review frame,
+    # hoặc có calibration assignment.
+    reviewer_role_qs = RoleAssignment.objects.filter(role__in=[Role.REVIEWER, Role.ANNOTATOR])
     if dataset_id is not None:
         reviewer_role_qs = reviewer_role_qs.filter(dataset_id=dataset_id)
+    elif allowed_dataset_ids is not None:
+        reviewer_role_qs = reviewer_role_qs.filter(dataset_id__in=allowed_dataset_ids)
 
     reviewer_user_ids = set(reviewer_role_qs.values_list("user_id", flat=True))
 
     frame_rev_qs = FrameReview.objects.filter(previous_reviewer__isnull=False)
     if dataset_id is not None:
         frame_rev_qs = frame_rev_qs.filter(run__dataset_id=dataset_id)
+    elif allowed_dataset_ids is not None:
+        frame_rev_qs = frame_rev_qs.filter(run__dataset_id__in=allowed_dataset_ids)
     reviewer_user_ids.update(frame_rev_qs.values_list("previous_reviewer_id", flat=True))
+
+    assignment_targets = CalibrationAssignment.objects.filter(target_kind=TargetKind.REVIEWER)
+    if dataset_id is not None:
+        assignment_targets = assignment_targets.filter(audit_sample__run__dataset_id=dataset_id)
+    elif allowed_dataset_ids is not None:
+        assignment_targets = assignment_targets.filter(
+            audit_sample__run__dataset_id__in=allowed_dataset_ids
+        )
+    reviewer_user_ids.update(assignment_targets.values_list("target_id", flat=True))
 
     users = list(UserModel.objects.filter(pk__in=reviewer_user_ids).order_by("username"))
 
@@ -537,6 +560,8 @@ def get_calibration_reviewers(*, dataset_id: int | None = None) -> list[dict[str
         )
         if dataset_id is not None:
             reviewed_count = reviewed_count.filter(run__dataset_id=dataset_id)
+        elif allowed_dataset_ids is not None:
+            reviewed_count = reviewed_count.filter(run__dataset_id__in=allowed_dataset_ids)
         frames_done = reviewed_count.count()
 
         assignments_qs = CalibrationAssignment.objects.filter(

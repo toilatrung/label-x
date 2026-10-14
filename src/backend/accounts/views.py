@@ -234,6 +234,18 @@ ROLE_MATRIX = [
         },
     },
     {
+        "function": "Reports",
+        "roles": {
+            "annotator": "limited",
+            "reviewer": "view",
+            "qa_lead": "view",
+            "qc_admin": "view",
+            "super_admin": "view",
+            "product_owner": "view",
+            "data_model_owner": "view",
+        },
+    },
+    {
         "function": "Configuration",
         "roles": {
             "annotator": "none",

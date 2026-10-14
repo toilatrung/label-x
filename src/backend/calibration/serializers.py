@@ -109,7 +109,7 @@ class MetricValueSerializer(serializers.Serializer[object]):
     denominator = serializers.IntegerField(min_value=0, required=True)
     method = serializers.CharField(required=True)
     confidence_interval = serializers.ListField(
-        child=serializers.FloatField(), required=False, allow_null=True
+        child=serializers.FloatField(), required=False, allow_null=True, min_length=2, max_length=2
     )
 
 

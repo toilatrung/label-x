@@ -13,7 +13,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Role
-from accounts.permissions import HasRoleAndDatasetScope
+from accounts.permissions import (
+    HasRoleAndDatasetScope,
+    get_user_scoped_datasets,
+    is_annotator_only,
+    record_rejection_audit,
+)
 from calibration.models import AuditSample, Benchmark
 from calibration.serializers import (
     AuditSampleCreateSerializer,
@@ -126,14 +131,44 @@ class AuditSampleListCreateView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
-        qs = AuditSample.objects.all().select_related("run", "created_by")
+        user = cast(User, request.user)
+        scoped_ids = get_user_scoped_datasets(user, allowed_roles=self.allowed_roles)
+
         run_id_param = request.query_params.get("run_id")
         if run_id_param:
             if not run_id_param.isdigit():
                 raise ApiError(
                     status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "run_id phải là số nguyên."
                 )
-            qs = qs.filter(run_id=int(run_id_param))
+            target_run_id = int(run_id_param)
+            run_obj = QCRun.objects.filter(pk=target_run_id).first()
+            if run_obj is None:
+                raise ApiError(
+                    status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Run {target_run_id} không tồn tại."
+                )
+            if scoped_ids is not None and run_obj.dataset_id not in scoped_ids:
+                record_rejection_audit(
+                    request=request,
+                    code="OUT_OF_SCOPE",
+                    object_type=self.object_type,
+                    object_id=str(run_obj.dataset_id),
+                    action=self.action_name,
+                    message=(
+                        f"Tài nguyên dataset {run_obj.dataset_id} nằm ngoài phạm vi được phân công."
+                    ),
+                )
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    f"Tài nguyên dataset {run_obj.dataset_id} nằm ngoài phạm vi được phân công.",
+                )
+            qs = AuditSample.objects.filter(run_id=target_run_id).select_related(
+                "run", "created_by"
+            )
+        else:
+            qs = AuditSample.objects.all().select_related("run", "created_by")
+            if scoped_ids is not None:
+                qs = qs.filter(run__dataset_id__in=scoped_ids)
 
         stream_param = request.query_params.get("stream")
         if stream_param:
@@ -224,14 +259,37 @@ class BenchmarkListCreateView(APIView):
         responses={200: BenchmarkSerializer(many=True), 400: ErrorSerializer, 403: ErrorSerializer},
     )
     def get(self, request: Request) -> Response:
-        qs = Benchmark.objects.all().select_related("snapshot", "created_by")
+        user = cast(User, request.user)
+        scoped_ids = get_user_scoped_datasets(user, allowed_roles=self.allowed_roles)
+
         dataset_id_param = request.query_params.get("dataset_id")
         if dataset_id_param:
             if not dataset_id_param.isdigit():
                 raise ApiError(
                     status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "dataset_id phải là số nguyên."
                 )
-            qs = qs.filter(dataset_id=int(dataset_id_param))
+            target_ds_id = int(dataset_id_param)
+            if scoped_ids is not None and target_ds_id not in scoped_ids:
+                record_rejection_audit(
+                    request=request,
+                    code="OUT_OF_SCOPE",
+                    object_type=self.object_type,
+                    object_id=str(target_ds_id),
+                    action=self.action_name,
+                    message=f"Tài nguyên dataset {target_ds_id} nằm ngoài phạm vi được phân công.",
+                )
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    f"Tài nguyên dataset {target_ds_id} nằm ngoài phạm vi được phân công.",
+                )
+            qs = Benchmark.objects.filter(dataset_id=target_ds_id).select_related(
+                "snapshot", "created_by"
+            )
+        else:
+            qs = Benchmark.objects.all().select_related("snapshot", "created_by")
+            if scoped_ids is not None:
+                qs = qs.filter(dataset_id__in=scoped_ids)
 
         paginator = CalibrationCursorPagination()
         page = paginator.paginate_queryset(qs, request, view=self)
@@ -353,6 +411,9 @@ class EvaluationPerformanceView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
+        user = cast(User, request.user)
+        scoped_ids = get_user_scoped_datasets(user, allowed_roles=self.allowed_roles)
+
         dataset_id_param = request.query_params.get("dataset_id")
         run_id_param = request.query_params.get("run_id")
 
@@ -363,6 +424,20 @@ class EvaluationPerformanceView(APIView):
                     status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "dataset_id phải là số nguyên."
                 )
             dataset_id = int(dataset_id_param)
+            if scoped_ids is not None and dataset_id not in scoped_ids:
+                record_rejection_audit(
+                    request=request,
+                    code="OUT_OF_SCOPE",
+                    object_type=self.object_type,
+                    object_id=str(dataset_id),
+                    action=self.action_name,
+                    message=f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+                )
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+                )
 
         run_id: int | None = None
         if run_id_param:
@@ -371,8 +446,33 @@ class EvaluationPerformanceView(APIView):
                     status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "run_id phải là số nguyên."
                 )
             run_id = int(run_id_param)
+            run_obj = QCRun.objects.filter(pk=run_id).first()
+            if run_obj is None:
+                raise ApiError(
+                    status.HTTP_404_NOT_FOUND, "NOT_FOUND", f"Run {run_id} không tồn tại."
+                )
+            if scoped_ids is not None and run_obj.dataset_id not in scoped_ids:
+                record_rejection_audit(
+                    request=request,
+                    code="OUT_OF_SCOPE",
+                    object_type=self.object_type,
+                    object_id=str(run_obj.dataset_id),
+                    action=self.action_name,
+                    message=(
+                        f"Tài nguyên dataset {run_obj.dataset_id} nằm ngoài phạm vi được phân công."
+                    ),
+                )
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    f"Tài nguyên dataset {run_obj.dataset_id} nằm ngoài phạm vi được phân công.",
+                )
 
-        entries = get_performance_entries(dataset_id=dataset_id, run_id=run_id)
+        entries = get_performance_entries(
+            dataset_id=dataset_id,
+            run_id=run_id,
+            allowed_dataset_ids=scoped_ids,
+        )
         paginator = InMemoryCursorPagination(page_size=50)
         paginated = paginator.paginate(entries, request)
         serializer = PerformanceEntrySerializer(paginated["results"], many=True)
@@ -389,7 +489,14 @@ class CalibrationReviewersListView(APIView):
     """GET /api/calibration/reviewers/."""
 
     permission_classes = [HasRoleAndDatasetScope]
-    allowed_roles = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN, Role.DATA_MODEL_OWNER)
+    allowed_roles = (
+        Role.ANNOTATOR,
+        Role.REVIEWER,
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.DATA_MODEL_OWNER,
+    )
     action_name = "calibration.reviewers_list"
     object_type = "calibration_reviewer"
     requires_dataset = False
@@ -409,6 +516,9 @@ class CalibrationReviewersListView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
+        user = cast(User, request.user)
+        scoped_ids = get_user_scoped_datasets(user, allowed_roles=self.allowed_roles)
+
         dataset_id_param = request.query_params.get("dataset_id")
         dataset_id: int | None = None
         if dataset_id_param:
@@ -417,8 +527,30 @@ class CalibrationReviewersListView(APIView):
                     status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "dataset_id phải là số nguyên."
                 )
             dataset_id = int(dataset_id_param)
+            if scoped_ids is not None and dataset_id not in scoped_ids:
+                record_rejection_audit(
+                    request=request,
+                    code="OUT_OF_SCOPE",
+                    object_type=self.object_type,
+                    object_id=str(dataset_id),
+                    action=self.action_name,
+                    message=f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+                )
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "OUT_OF_SCOPE",
+                    f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+                )
 
-        reviewers = get_calibration_reviewers(dataset_id=dataset_id)
+        reviewers = get_calibration_reviewers(
+            dataset_id=dataset_id,
+            allowed_dataset_ids=scoped_ids,
+        )
+
+        # Annotator chỉ thấy phần tham gia của chính mình
+        if is_annotator_only(user, dataset_id=dataset_id):
+            reviewers = [r for r in reviewers if r.get("user_id") == user.pk]
+
         paginator = InMemoryCursorPagination(page_size=50)
         paginated = paginator.paginate(reviewers, request)
         serializer = CalibrationReviewerSerializer(paginated["results"], many=True)
