@@ -1,22 +1,15 @@
 // Dữ liệu minh họa lấy từ docs/design/screens/{PerformanceEvaluation,Benchmark,AuditSampling,Calibration}.dc.html.
-// TODO(backend): thay bằng API khi có endpoint (chưa có trong contract): GET /api/evaluation/performance/, GET /api/benchmarks/, POST /api/benchmarks/, POST /api/benchmarks/import-cvat/,
+// TODO(backend): thay bằng API khi có endpoint (chưa có trong contract): GET /api/benchmarks/, POST /api/benchmarks/, POST /api/benchmarks/import-cvat/,
 // GET /api/audit-samples/ (random | risk), POST /api/audit-samples/, GET /api/calibration/reviewers/, GET /api/calibration/models/, POST /api/calibration/assignments/.
 
-export const PERF_SCOPES = ['Phạm vi: Quality Control Run #QC-091', 'Toàn dataset'] as const;
-export const PERF_BENCHMARKS = ['Benchmark v1.2', 'Benchmark v1.1'] as const;
+// Performance Evaluation: G-3 (thống nhất reviewer), G-4 (lỗi còn sót) và luồng ngẫu nhiên/rủi ro đã nối API (GET /api/evaluations/{id}/, GET /api/reports/{id}/).
+// Phần dưới đây chưa có trong contract nên giữ minh họa kèm NotConnectedNotice.
+export const PERF_SAMPLE_METRICS = {
+  precision: { label: 'Độ chính xác của candidate', value: '87.5%', note: 'Candidate được xác nhận là lỗi thật' },
+  coverage: { label: 'Benchmark coverage', value: '76.0%', note: 'Phần dataset có Ground Truth', progress: 76 },
+} as const;
 
-export const PERF_METRICS = [
-  { key: 'agreement', label: 'Mức thống nhất của reviewer', value: '94.1%', note: 'So với adjudicator trên 135 case chuẩn', tone: '', progress: null },
-  { key: 'precision', label: 'Độ chính xác của candidate', value: '87.5%', note: 'Candidate được xác nhận là lỗi thật', tone: '', progress: null },
-  { key: 'missed', label: 'Tỷ lệ lỗi còn sót', value: '4.0%', note: 'Từ 100 frame kiểm tra ngẫu nhiên', tone: 'is-warn', progress: null },
-  { key: 'coverage', label: 'Benchmark coverage', value: '76.0%', note: 'Phần dataset có Ground Truth', tone: 'is-warn', progress: 76 },
-] as const;
-
-export const SAMPLING_STREAMS = [
-  { name: 'Kiểm tra ngẫu nhiên', n: '100', errors: '4', rate: '4.0%', use: 'Ước lượng chất lượng toàn dataset' },
-  { name: 'Lấy mẫu theo rủi ro', n: '100', errors: '35', rate: '35.0%', use: 'Tìm lỗi · không suy ra tỷ lệ chung' },
-  { name: 'Benchmark', n: '200', errors: '24', rate: '12.0%', use: 'Đo reviewer và mô hình' },
-] as const;
+export const PERF_BENCHMARK_STREAM = { name: 'Benchmark', n: '200', errors: '24', rate: '12.0%', use: 'Đo reviewer và mô hình' } as const;
 
 export const ACTIVE_CALIBRATIONS: ReadonlyArray<{ name: string; progress?: { label: string; pct: number }; sub?: string }> = [
   { name: 'Reviewer Bình Hồ', progress: { label: '40 / 45', pct: 89 } },

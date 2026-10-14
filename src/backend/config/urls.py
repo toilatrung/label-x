@@ -44,6 +44,7 @@ urlpatterns = [
     path("api/datasets/", include("snapshots.dataset_urls")),
     path("api/runs/<int:pk>/gate/", RunGateView.as_view(), name="runs-gate"),
     path("api/runs/", include("runs.urls")),
+    path("api/releases/", include("releases.urls")),
     path("api/candidates/", include("orchestration.candidate_urls")),
     path("api/candidate-evaluations/", include("orchestration.evaluation_urls")),
     path("api/queues/", include("review.queue_urls")),

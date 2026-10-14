@@ -503,7 +503,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       api.fetchSpy.mockImplementation(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-        if (url.pathname === '/api/frames/500/issues/') return Response.json(baseFrameIssues);
+        if (url.pathname === '/api/frames/500/workspace/') return Response.json(baseFrameIssues);
         if (url.pathname.startsWith('/api/snapshots/')) {
           snapshotEndpointHit = true;
           return Response.json({}, { status: 403 });
@@ -539,7 +539,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       api.fetchSpy.mockImplementation(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-        if (url.pathname === '/api/frames/500/issues/') return Response.json(baseFrameIssues);
+        if (url.pathname === '/api/frames/500/workspace/') return Response.json(baseFrameIssues);
         if (url.pathname === '/api/runs/10/') {
           return Response.json({ id: 10, snapshot_id: 42 });
         }
@@ -590,7 +590,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       api.fetchSpy.mockImplementation(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-        if (url.pathname === '/api/frames/500/issues/') {
+        if (url.pathname === '/api/frames/500/workspace/') {
           // Returns frame with run_id 99 instead of expected 10
           return Response.json({
             ...baseFrameIssues,
@@ -917,7 +917,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       api.fetchSpy.mockImplementation(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-        if (url.pathname === '/api/frames/500/issues/') return Response.json(baseFrameIssues);
+        if (url.pathname === '/api/frames/500/workspace/') return Response.json(baseFrameIssues);
         if (url.pathname === '/api/frames/500/complete/') {
           return completePromise;
         }
@@ -1182,7 +1182,7 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       api.fetchSpy.mockImplementation(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-        if (url.pathname === '/api/frames/500/issues/') {
+        if (url.pathname === '/api/frames/500/workspace/') {
           frameIssuesFetchCount++;
           return Response.json(baseFrameIssues);
         }

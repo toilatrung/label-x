@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "orchestration.apps.OrchestrationConfig",
     "review.apps.ReviewConfig",
     "effort.apps.EffortConfig",
+    "reports.apps.ReportsConfig",
+    "releases.apps.ReleasesConfig",
     "calibration.apps.CalibrationConfig",
 ]
 
@@ -166,6 +168,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.CursorPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # `format` is an explicit business query parameter on report endpoints, not a DRF renderer
+    # override. Leaving the default enabled turns `?format=pdf` into a 404 before the view runs.
+    "URL_FORMAT_OVERRIDE": None,
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
     # Each current-revision read costs 8+N CVAT requests (N = frames); throttle per user.
     # Counters live in Django's default cache (per-process LocMemCache unless CACHES is set).
@@ -183,6 +188,7 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
+        "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
         "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
         "ModelKindEnum": "runs.models.ModelKind",
         "RunRankingSourceEnum": ["risk", "random_audit"],

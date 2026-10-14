@@ -86,7 +86,7 @@ async function renderWorkspace(
       return defaultFetch(request);
     }
 
-    if (url.pathname === '/api/frames/428/issues/') {
+    if (url.pathname === '/api/frames/428/workspace/') {
       return Response.json(frameIssuesResponse.body, { status: frameIssuesResponse.status });
     }
 
@@ -388,11 +388,11 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
 
-      if (url.pathname === '/api/frames/428/issues/') {
+      if (url.pathname === '/api/frames/428/workspace/') {
         await stalePromise;
         return Response.json(baseFrameIssues);
       }
-      if (url.pathname === '/api/frames/429/issues/') {
+      if (url.pathname === '/api/frames/429/workspace/') {
         return Response.json({
           ...baseFrameIssues,
           frame: { ...baseFrameIssues.frame, id: 429 },
@@ -439,7 +439,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     api.fetchSpy.mockImplementation(async (request) => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-      if (url.pathname === '/api/frames/428/issues/') return Response.json(baseFrameIssues);
+      if (url.pathname === '/api/frames/428/workspace/') return Response.json(baseFrameIssues);
       return Response.json({}, { status: 404 });
     });
 
@@ -487,7 +487,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     api.fetchSpy.mockImplementation(async (request) => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
-      if (url.pathname === '/api/frames/428/issues/') return Response.json(issuesData);
+      if (url.pathname === '/api/frames/428/workspace/') return Response.json(issuesData);
 
       if (url.pathname === '/api/issues/101/decide/' || url.pathname === '/api/issues/101/decisions/') {
         return Response.json({
@@ -558,7 +558,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
 
-      if (url.pathname === '/api/frames/428/issues/') {
+      if (url.pathname === '/api/frames/428/workspace/') {
         frameLoadCount++;
         return Response.json(issuesData);
       }
@@ -602,5 +602,141 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
 
     // Selected issue must remain QC-00102, not reset to QC-00101!
     expect(screen.getByText('QC-00102')).toBeInTheDocument();
+  });
+});
+
+describe('ReviewWorkspace nối API MBE-01/MBE-02 (workspace, evidence AI, case tương tự)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const workspacePayload = {
+    ...baseFrameIssues,
+    snapshot_revision: 'b3bc71e8cdab2dad88d04a224e45cf119051ca9923a9af9d7135007d5622576a',
+    lease: null,
+    queue: null,
+    undecided_issue_count: 1,
+    ai_evidence: [
+      {
+        issue_id: 101,
+        candidate_id: 9,
+        evaluation_id: 55,
+        generation: 1,
+        evaluation_source: 'auto',
+        status: 'completed',
+        source: 'qwen',
+        reason_code: 'LABEL_MISMATCH',
+        reasons: ['class_disagreement'],
+        review_required: true,
+        suggestion: { status: 'completed', class_name: 'truck', rationale: 'Thùng hàng rời phía sau cabin.' },
+        evidence_refs: null,
+        snapshot_revision: 'b3bc71e8',
+        poll_url: '/api/candidate-evaluations/55/',
+      },
+      // Mục của issue khác và mục sai shape phải bị bỏ qua.
+      { issue_id: 999, status: 'failed', source: 'qwen' },
+      { issue_id: 101 },
+    ],
+  };
+
+  async function renderWired(
+    similar: (attempt: number) => Response,
+    props: Partial<React.ComponentProps<typeof ReviewWorkspace>> = {}
+  ) {
+    const api = installMockAuthApi();
+    await api.signIn('reviewer');
+    const defaultFetch = api.fetchSpy.getMockImplementation()!;
+    const paths: string[] = [];
+    let similarAttempt = 0;
+    api.fetchSpy.mockImplementation(async (request) => {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith('/api/auth/')) return defaultFetch(request);
+      paths.push(url.pathname);
+      if (url.pathname === '/api/frames/428/workspace/') return Response.json(workspacePayload);
+      if (url.pathname === '/api/issues/101/similar-cases/') {
+        similarAttempt += 1;
+        return similar(similarAttempt);
+      }
+      if (url.pathname === '/api/decision-cases/') return Response.json({ next: null, previous: null, results: [] });
+      return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ReviewWorkspace frameId={428} initialLease={activeLease} anchorPolicyVersion="anchor-v1" {...props} />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    return { paths };
+  }
+
+  const caseResponse = () =>
+    Response.json({
+      next: null,
+      previous: null,
+      results: [
+        {
+          case: {
+            id: 21,
+            issue_id: 7,
+            outcome: 'confirm',
+            actor_user_id: 2,
+            rule_id: 'VEH-03',
+            correct_label: 'truck',
+            reason: 'Xe bán tải thùng hở',
+            case_version: 'v1',
+            created_at: '2026-10-11T02:00:00Z',
+          },
+          similarity: 0.82,
+        },
+      ],
+    });
+
+  it('đọc frame từ GET /api/frames/{id}/workspace/ thay vì /issues/ và hiện evidence AI của issue', async () => {
+    const { paths } = await renderWired(caseResponse);
+    await screen.findByText('QC-00101');
+
+    expect(paths).toContain('/api/frames/428/workspace/');
+    expect(paths).not.toContain('/api/frames/428/issues/');
+
+    expect(screen.getAllByText('Mô hình thị giác – ngôn ngữ (VLM)').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Thùng hàng rời phía sau cabin.')).toBeInTheDocument();
+    expect(screen.getByText('Cần người review')).toBeInTheDocument();
+    expect(screen.getByText('LABEL_MISMATCH')).toBeInTheDocument();
+  });
+
+  it('dùng snapshot_revision do server cấp khi caller không truyền revision', async () => {
+    await renderWired(caseResponse, { snapshotRevision: null });
+    await screen.findByText('QC-00101');
+
+    expect(screen.queryByText(/Chưa có revision của Snapshot đã xác thực/)).toBeNull();
+    expect(screen.getByText('b3bc71e')).toBeInTheDocument();
+  });
+
+  it('hiện case tương tự từ GET /api/issues/{id}/similar-cases/, không còn case minh họa', async () => {
+    await renderWired(caseResponse);
+    expect(await screen.findByText('Case tương tự đã phân xử (1)')).toBeInTheDocument();
+    expect(screen.getByText('CASE-021')).toBeInTheDocument();
+    expect(screen.getByText(/Xe bán tải thùng hở/)).toBeInTheDocument();
+    expect(screen.getByText(/độ giống 0\.82/)).toBeInTheDocument();
+    expect(screen.queryByText(/CASE-034/)).toBeNull();
+  });
+
+  it('hiện trạng thái rỗng khi không có case tương tự', async () => {
+    await renderWired(() => Response.json({ next: null, previous: null, results: [] }));
+    expect(await screen.findByText('Case tương tự đã phân xử (0)')).toBeInTheDocument();
+    expect(screen.getByText(/Chưa có case đã phân xử/)).toBeInTheDocument();
+  });
+
+  it('báo lỗi case tương tự và cho Thử lại', async () => {
+    await renderWired((attempt) =>
+      attempt === 1
+        ? Response.json({ code: 'INTERNAL_ERROR', message: 'Lỗi máy chủ' }, { status: 500 })
+        : caseResponse()
+    );
+    expect(await screen.findByText('Case tương tự đã phân xử (lỗi)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+    expect(await screen.findByText('Case tương tự đã phân xử (1)')).toBeInTheDocument();
   });
 });
