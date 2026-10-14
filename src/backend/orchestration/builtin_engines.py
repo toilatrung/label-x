@@ -11,6 +11,7 @@ from engines.duplicate_overlap import (
     run_duplicate_overlap_engine,
 )
 from engines.interface import EngineInput, EngineOutput, FrameKey
+from engines.metric import METRIC_DESCRIPTOR, run_metric_engine
 from orchestration.registry import EngineRegistry
 from snapshots.models import SnapshotFrame
 
@@ -60,6 +61,7 @@ def register_builtin_engines(target: EngineRegistry) -> None:
     for descriptor, runner in (
         (DUPLICATE_OVERLAP_DESCRIPTOR, run_duplicate),
         (DETECTOR_DESCRIPTOR, run_detector_engine),
+        (METRIC_DESCRIPTOR, run_metric_engine),
     ):
         if (descriptor.name, descriptor.version) not in registered:
             target.register(descriptor, runner)
