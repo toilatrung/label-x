@@ -109,6 +109,139 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "409": { $ref: "#/components/responses/Conflict" }
+  /api/guidelines/preview/:
+    post:
+      operationId: guidelines_preview
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelinePreview'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/datasets/{id}/guideline/:
+    get:
+      operationId: datasets_guideline_retrieve
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin, reviewer]
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      operationId: datasets_guideline_update
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/guidelines/import/:
+    post:
+      operationId: guidelines_import
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineImportResult'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:
@@ -2299,6 +2432,157 @@ components:
         model:
           allOf: [{ $ref: "#/components/schemas/WorkerModel" }]
           nullable: true
+    GuidelineTaxonomyLabel:
+      type: object
+      properties:
+        name:
+          type: string
+        required_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyAttribute'
+      required:
+      - name
+    GuidelineTaxonomyDefinition:
+      type: object
+      properties:
+        version:
+          type: string
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyLabel'
+      required:
+      - labels
+      - version
+    GuidelineTaxonomyAttribute:
+      type: object
+      properties:
+        name:
+          type: string
+        rule_id:
+          type: string
+        allowed_values:
+          type: array
+          items:
+            type: string
+      required:
+      - name
+      - rule_id
+    GuidelinePreviewRule:
+      type: object
+      properties:
+        rule_id:
+          type: string
+        section:
+          type: string
+      required:
+      - rule_id
+      - section
+    GuidelinePreview:
+      type: object
+      properties:
+        version:
+          type: string
+        name:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelinePreviewRule'
+        taxonomy:
+          allOf:
+          - $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+          nullable: true
+      required:
+      - name
+      - rules
+      - taxonomy
+      - version
+    GuidelineFile:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+      required:
+      - content
+    SnapshotScope:
+      type: object
+      properties:
+        cvat_task_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        cvat_job_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+    DatasetGuidelineUpdate:
+      type: object
+      properties:
+        guideline_version:
+          type: string
+          maxLength: 32
+        expected_revision:
+          type: integer
+          minimum: 0
+      required:
+      - expected_revision
+      - guideline_version
+    DatasetGuideline:
+      type: object
+      properties:
+        dataset_id:
+          type: integer
+        guideline_version:
+          type: string
+          nullable: true
+        guideline_checksum:
+          type: string
+          nullable: true
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        revision:
+          type: integer
+      required:
+      - dataset_id
+      - guideline_checksum
+      - guideline_version
+      - revision
+      - taxonomy_ready
+      - taxonomy_version
+    GuidelineImportResult:
+      type: object
+      properties:
+        version:
+          type: string
+        checksum:
+          type: string
+        taxonomy:
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+        skipped:
+          type: boolean
+      required:
+      - checksum
+      - skipped
+      - taxonomy
+      - version
+    GuidelineImport:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+        taxonomy:
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+      required:
+      - content
     # ------------------------------------------------------------ lỗi chung
     ErrorCode:
       type: string
@@ -2465,20 +2749,25 @@ components:
       enum: [pending, exporting, locked, failed]
     SnapshotCreate:
       type: object
-      required: [dataset_id, scope]
       properties:
-        dataset_id: { type: integer }
+        dataset_id:
+          type: integer
+          minimum: 1
         scope:
-          type: object
-          description: Rỗng cả hai danh sách nghĩa là toàn dataset
-          properties:
-            cvat_task_ids:
-              type: array
-              items: { type: integer }
-            cvat_job_ids:
-              type: array
-              items: { type: integer }
-        note: { type: string }
+          $ref: '#/components/schemas/SnapshotScope'
+        guideline_version:
+          type: string
+          maxLength: 32
+        expected_guideline_version:
+          type: string
+          maxLength: 32
+        note:
+          type: string
+          default: ''
+          maxLength: 1000
+      required:
+      - dataset_id
+      - scope
     SnapshotAccepted:
       type: object
       required: [id, status]
@@ -4193,13 +4482,32 @@ components:
         version: { type: string }
     GuidelineVersionEntry:
       type: object
-      required: [version, is_current, rule_count]
       properties:
-        version: { type: string }
-        is_current: { type: boolean }
-        rule_count: { type: integer }
-        effective_from: { type: string, format: date-time, nullable: true }
-        effective_to: { type: string, format: date-time, nullable: true }
+        version:
+          type: string
+        is_current:
+          type: boolean
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        rule_count:
+          type: integer
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - is_current
+      - rule_count
+      - taxonomy_ready
+      - taxonomy_version
+      - version
     PaginatedGuidelineVersionEntryList:
       type: object
       required: [results]

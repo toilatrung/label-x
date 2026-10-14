@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth/auth-context';
+import { getDatasetGuideline, listGuidelineVersions } from '@/lib/guidelines/config-api';
+import { cursorFrom } from '@/lib/execution/api';
 import { ApiRequestError } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import { postSnapshot, type CvatTask, type SnapshotCreate } from '@/lib/snapshots/api';
@@ -12,6 +16,21 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   onRequestLockChange?: (locked: boolean) => void;
 }) {
   const router = useRouter();
+  const { session } = useAuth();
+  const guideline = useQuery({ queryKey: ['dataset-guideline', session?.user.id, datasetId],
+    queryFn: ({ signal }) => getDatasetGuideline(datasetId, signal), retry: false });
+  const versions = useInfiniteQuery({ queryKey: ['snapshot-guideline-versions', session?.user.id],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) => listGuidelineVersions(pageParam, signal),
+    getNextPageParam: page => cursorFrom(page.next) ?? undefined,
+    retry: false, enabled: canCreate });
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = versions;
+  React.useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const available = versions.data?.pages.flatMap(page => page.results).filter(item => item.taxonomy_ready) ?? [];
+  const [guidelineOverride, setGuidelineOverride] = React.useState('');
+  const effectiveGuideline = guidelineOverride || (guideline.data?.taxonomy_ready ? guideline.data.guideline_version : null);
   const queryClient = useQueryClient();
   const [all, setAll] = React.useState(true);
   const [taskIds, setTaskIds] = React.useState<Set<number>>(new Set());
@@ -25,7 +44,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   const jobCount = tasks.reduce((count, task) => count + task.jobs.length, 0);
   const selectedCount = tasks.reduce((count, task) => count +
     (taskIds.has(task.cvat_task_id) ? task.jobs.length : task.jobs.filter(job => jobIds.has(job.cvat_job_id)).length), 0);
-  const canSubmit = canCreate && jobCount > 0 && (all || selectedCount > 0) && !busy && !pending;
+  const canSubmit = !!effectiveGuideline && canCreate && jobCount > 0 && (all || selectedCount > 0) && !busy && !pending;
   const isSelected = (task: CvatTask, job: CvatTask['jobs'][number]) =>
     all || taskIds.has(task.cvat_task_id) || jobIds.has(job.cvat_job_id);
   const selectedJobs = tasks.flatMap(task => task.jobs.filter(job => isSelected(task, job)).map(job => ({ task, job })));
@@ -34,7 +53,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
     ? jobs.reduce((sum, job) => sum + (job.frame_count ?? 0), 0) : null;
   const frameText = (value: number | null) => value === null ? '—' : value.toLocaleString('en-US');
   const selectedFrames = knownFrames(selectedJobs.map(({ job }) => job));
-  const reset = () => { setAll(true); setTaskIds(new Set()); setJobIds(new Set()); setNote(''); setFailure(null); };
+  const reset = () => { setAll(true); setTaskIds(new Set()); setJobIds(new Set()); setNote(''); setGuidelineOverride(''); setFailure(null); };
 
   React.useEffect(() => {
     if (!pending) return;
@@ -89,11 +108,29 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
     event.preventDefault();
     if (!canSubmit) return;
     const body: SnapshotCreate = { dataset_id: datasetId,
+      ...(guidelineOverride ? { guideline_version: guidelineOverride }
+        : { expected_guideline_version: guideline.data!.guideline_version! }),
       scope: { cvat_task_ids: all ? [] : [...taskIds].sort((a, b) => a - b),
         cvat_job_ids: all ? [] : [...jobIds].sort((a, b) => a - b) },
       ...(note.trim() ? { note: note.trim() } : {}) };
     void send({ body, key: crypto.randomUUID() });
   }}>
+    <section className="lx-card lx-card__body" aria-label="Guideline áp dụng cho Snapshot">
+      {guideline.isPending && <p role="status">Đang tải Guideline của Dataset…</p>}
+      {guideline.isError && <p role="alert">{errorMessage(guideline.error)}</p>}
+      {versions.isError && <p role="alert">Không tải được danh sách Guideline. {errorMessage(versions.error)}</p>}
+      {guideline.data?.taxonomy_ready && <p>Guideline mặc định của Dataset: <strong>{guideline.data.guideline_version}</strong> · Taxonomy: {guideline.data.taxonomy_version}. Phiên bản này được lưu cùng Snapshot.</p>}
+      <div className="lx-field">
+        <label className="lx-label" htmlFor="snapshot-guideline">Guideline cho Snapshot này</label>
+        <select id="snapshot-guideline" className="lx-select" value={guidelineOverride} disabled={!canCreate || busy || !!pending}
+          onChange={event => setGuidelineOverride(event.target.value)}>
+          <option value="">{guideline.data?.taxonomy_ready ? `Dùng mặc định Dataset · ${guideline.data.guideline_version}` : 'Chọn Guideline cho Snapshot'}</option>
+          {available.map(item => <option key={item.version} value={item.version}>{item.version} · {item.taxonomy_version}</option>)}
+        </select>
+        <p className="lx-hint">Lựa chọn này chỉ áp dụng cho Snapshot mới, không đổi mặc định của Dataset. Guideline và taxonomy được đóng băng khi Snapshot được tạo.</p>
+      </div>
+      {guideline.data && !guideline.data.taxonomy_ready && !guidelineOverride && <p role="alert">Dataset chưa có Guideline với taxonomy. Chọn Guideline cho Snapshot này hoặc <Link className="lx-link" href="/configuration/guidelines">cấu hình mặc định cho Dataset</Link>.</p>}
+    </section>
     {!canCreate && <p className="lx-callout lx-callout--info">Bạn có quyền xem. Chỉ QA Lead hoặc Super Admin được tạo Snapshot.</p>}
     <fieldset className="lx-field lx-fieldset" disabled={!canCreate || busy || !!pending}>
       <legend className="lx-label">Phạm vi kiểm tra</legend>

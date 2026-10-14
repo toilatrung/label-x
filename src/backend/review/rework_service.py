@@ -324,6 +324,8 @@ def _build_recheck_artifacts(
     job = frame.snapshot_frame.snapshot_job
     snapshot = create_snapshot_from_cvat(
         dataset_id=frame.run.dataset_id,
+        guideline_version=frame.run.snapshot.guideline_version,
+        legacy_reference="guideline_context" not in frame.run.snapshot.provenance,
         scope=SnapshotScope(cvat_job_ids=(job.cvat_job_id,)),
         note=f"T-040 rework {rework.pk} submission {claimed_revision}",
         created_by=actor,
@@ -381,7 +383,12 @@ def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
     frame = rework.issue.frame_review
     job_id = frame.snapshot_frame.snapshot_job.cvat_job_id
     try:
-        revision = compute_job_revision(dataset_id=frame.run.dataset_id, cvat_job_id=job_id)
+        revision = compute_job_revision(
+            dataset_id=frame.run.dataset_id,
+            cvat_job_id=job_id,
+            guideline_version=frame.run.snapshot.guideline_version,
+            legacy_reference="guideline_context" not in frame.run.snapshot.provenance,
+        )
     except (
         httpx.HTTPError,
         SnapshotSourceError,
