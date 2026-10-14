@@ -122,7 +122,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>make check</td><td>Chưa xanh trọn lệnh</td><td>Lần đầu dừng do thiếu eslint; đã khắc phục và chạy riêng lint/typecheck/test FE pass. Lượt toàn backend cuối đã pass sau khi đặt đúng CORS. Các check chạy riêng đều pass; người dùng yêu cầu không chạy lại toàn lệnh make check và mở PR ngày 2026-10-14.</td></tr>
 </tbody></table>
 <ul>
-<li><strong>Implemented State</strong>: code triển khai xong phạm vi engine; người dùng yêu cầu commit/push và mở PR vào develop ngày 2026-10-14; không chạy lại make check theo yêu cầu này; review độc lập còn chờ.</li>
+<li><strong>Implemented State</strong>: code triển khai xong phạm vi engine; đã commit 8ab6c707270cccde6f2fdf91c7a063dc53f8f2e6, push fix/metric-engine và mở <a href="https://github.com/toilatrung/label-x/pull/349">PR #349 vào develop</a> ngày 2026-10-14; không chạy lại make check theo yêu cầu người dùng; review độc lập còn chờ.</li>
 <li><strong>Known Gaps</strong>: Test settings đã chạy lại với CORS_ALLOWED_ORIGINS theo cấu hình dev: 4 passed trong 0.50s. Không sửa source CORS ngoài phạm vi metric. Run #2 đã kiểm chứng checkpoint/GT thật; chưa khôi phục run 112 cũ. Migration metric/reference đã áp DB dev để chạy smoke; code task chưa triển khai vào server/worker chính. Migration toàn bộ dev còn lỗi ai_model đã tồn tại, như bản ghi bên dưới.</li>
 <li><strong>Active Dependencies</strong>: reference GT locked; model artifact và checkpoint/manifest/config detector hợp lệ.</li>
 <li><strong>Active Blockers</strong>: không tuyên bố BLOCKER-033 resolved; các mục khác ngoài metric chưa xử lý.</li>
