@@ -11,14 +11,18 @@ import {
   adjudicateIssue,
   cursorFrom,
   getEscalations,
+  makeIdempotencyKey,
+  type Adjudication,
   type AdjudicationInput,
-  type DecisionCase,
   type EscalationIssue,
+  type GuidelineGap,
 } from '@/lib/escalations/api';
 import { DecisionCaseLookup } from './DecisionCaseLookup';
 import { AdjudicationEmptyDetail } from './AdjudicationEmptyDetail';
+import { GuidelineGapModal } from './GuidelineGapModal';
 
 type Outcome = AdjudicationInput['outcome'];
+type AfterAdjudication = AdjudicationInput['after_adjudication'];
 
 const OUTCOMES: { value: Outcome; label: string; note: string }[] = [
   { value: 'confirm', label: 'Xác nhận lỗi', note: 'Issue chuyển sang confirmed.' },
@@ -44,11 +48,6 @@ const STATE_LABELS: Record<string, string> = { escalated: 'Đã chuyển cấp',
 const severityLabel = (severity: string) => SEVERITY_LABELS[severity] ?? severity;
 const originLabel = (origin: string) => ORIGIN_LABELS[origin] ?? origin;
 const stateLabel = (state: string) => STATE_LABELS[state] ?? state;
-
-function makeRequestKey(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
-  return `t039-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 function formatValue(value: string | number | null | undefined): string {
   return value === null || value === undefined || value === '' ? '—' : String(value);
@@ -190,7 +189,10 @@ export function EscalationsWorkspace() {
   const [reason, setReason] = useState('');
   const [overrideReason, setOverrideReason] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [savedCase, setSavedCase] = useState<DecisionCase | null>(null);
+  const [afterAdjudication, setAfterAdjudication] = useState<AfterAdjudication>('none');
+  const [savedCase, setSavedCase] = useState<Adjudication | null>(null);
+  const [gapOpen, setGapOpen] = useState(false);
+  const [createdGap, setCreatedGap] = useState<GuidelineGap | null>(null);
   const requestRef = useRef<{ body: string; key: string } | null>(null);
   const cursor = cursors.at(-1) ?? null;
 
@@ -229,6 +231,7 @@ export function EscalationsWorkspace() {
       setFormError(null);
       void queryClient.invalidateQueries({ queryKey: ['escalations'] });
       void queryClient.invalidateQueries({ queryKey: ['decision-cases'] });
+      if (decisionCase.rework_id) void queryClient.invalidateQueries({ queryKey: ['rework'] });
       if (variables.body.outcome !== 'guideline_gap') setSelectedId(null);
     },
   });
@@ -240,8 +243,10 @@ export function EscalationsWorkspace() {
     setCorrectLabel('');
     setReason('');
     setOverrideReason('');
+    setAfterAdjudication('none');
     setFormError(null);
     setSavedCase(null);
+    setCreatedGap(null);
     mutation.reset();
     requestRef.current = null;
   };
@@ -284,10 +289,12 @@ export function EscalationsWorkspace() {
       reason: cleanReason,
       ...(correctLabel.trim() ? { correct_label: correctLabel.trim() } : {}),
       ...(cleanOverride ? { override_reason: cleanOverride } : {}),
+      // request_rework chỉ hợp lệ với outcome confirm (contract MBE-02).
+      after_adjudication: outcome === 'confirm' ? afterAdjudication : 'none',
     };
     const fingerprint = JSON.stringify(body);
     if (!requestRef.current || requestRef.current.body !== fingerprint) {
-      requestRef.current = { body: fingerprint, key: makeRequestKey() };
+      requestRef.current = { body: fingerprint, key: makeIdempotencyKey() };
     }
     setFormError(null);
     mutation.mutate({ issueId: selected.id, body, key: requestRef.current.key });
@@ -412,6 +419,19 @@ export function EscalationsWorkspace() {
               <div className="lx-callout__text">
                 <strong>Đã lưu Decision Case #{savedCase.id}</strong> · Issue #{savedCase.issue_id} ·{' '}
                 <span className="lx-mono">{savedCase.case_version}</span>
+                {savedCase.rework_id ? (
+                  <> · <Link className="lx-link" href="/review/rework">Đã tạo yêu cầu sửa #{savedCase.rework_id}</Link></>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {createdGap && (
+            <div className="lx-callout lx-callout--info" role="status">
+              <div className="lx-callout__text">
+                <strong>Đã tạo Guideline Gap GAP-{String(createdGap.id).padStart(3, '0')}</strong>
+                {createdGap.issue_id ? <> · Issue {issueCode(createdGap.issue_id)}</> : null} · Quy tắc{' '}
+                <span className="lx-mono">{createdGap.rule_id}</span>
               </div>
             </div>
           )}
@@ -484,10 +504,22 @@ export function EscalationsWorkspace() {
                     </div>
                     <div className="lx-field">
                       <label className="lx-label" htmlFor="adjudication-after">Sau khi phân xử</label>
-                      <select id="adjudication-after" className="lx-select" disabled value="record" onChange={() => undefined}>
-                        <option value="rework">Tạo yêu cầu sửa cho annotator</option>
-                        <option value="record">Chỉ ghi nhận quyết định</option>
+                      <select
+                        id="adjudication-after"
+                        className="lx-select"
+                        disabled={outcome !== 'confirm'}
+                        value={outcome === 'confirm' ? afterAdjudication : 'none'}
+                        onChange={(event) => setAfterAdjudication(event.target.value as AfterAdjudication)}
+                        aria-describedby="adjudication-after-hint"
+                      >
+                        <option value="request_rework">Tạo yêu cầu sửa cho annotator</option>
+                        <option value="none">Chỉ ghi nhận quyết định</option>
                       </select>
+                      <span id="adjudication-after-hint" className="lx-hint">
+                        {outcome === 'confirm'
+                          ? 'Yêu cầu sửa giao cho annotator của job, kèm deep link sang CVAT.'
+                          : 'Chỉ áp dụng khi xác nhận lỗi.'}
+                      </span>
                     </div>
                   </div>
                   <div className="lx-field">
@@ -523,7 +555,7 @@ export function EscalationsWorkspace() {
                     </div>
                   )}
                   <div className="lx-actions lx-actions--end">
-                    <button className="lx-btn" type="button" onClick={() => setOutcome('guideline_gap')}>Tạo Guideline Gap</button>
+                    <button className="lx-btn" type="button" onClick={() => { setCreatedGap(null); setGapOpen(true); }}>Tạo Guideline Gap</button>
                     <button
                       className="lx-btn lx-btn--primary"
                       type="submit"
@@ -541,6 +573,18 @@ export function EscalationsWorkspace() {
       </div>
 
       <DecisionCaseLookup initialIssueId={selected?.id ?? savedCase?.issue_id} />
+      {gapOpen && selected && (
+        <GuidelineGapModal
+          issueId={selected.id}
+          initialRule={ruleId.trim()}
+          onClose={() => setGapOpen(false)}
+          onCreated={(gap) => {
+            setGapOpen(false);
+            setCreatedGap(gap);
+            void queryClient.invalidateQueries({ queryKey: ['guideline-gaps'] });
+          }}
+        />
+      )}
     </div>
   );
 }

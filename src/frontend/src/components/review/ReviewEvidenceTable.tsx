@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { components } from '@/lib/api/contract';
+import type { AiEvidence } from '@/lib/review/workspace-api';
 
 type Evidence = components['schemas']['Evidence'];
 type EngineRunStatus = components['schemas']['EngineRunStatus'];
@@ -10,6 +11,50 @@ export interface ReviewEvidenceTableProps {
   evidenceList: Evidence[];
   engineStatuses?: EngineRunStatus[];
   currentAnnotationClass?: string;
+  /** Evidence AI (classifier/Qwen) của issue từ GET /api/frames/{id}/workspace/ (MBE-01). */
+  aiEvidence?: AiEvidence[];
+}
+
+const AI_SOURCE_LABELS: Record<string, string> = {
+  qwen: 'Mô hình thị giác – ngôn ngữ (VLM)',
+  classifier: 'Bộ phân loại (classifier)',
+};
+
+const AI_STATUS: Record<string, { label: string; tone: string; note?: string }> = {
+  pending: { label: 'Đang chờ', tone: '', note: 'chưa có kết quả' },
+  running: { label: 'Đang chạy', tone: 'lx-badge--info', note: 'chưa có kết quả' },
+  failed: { label: 'Failed', tone: 'lx-badge--danger', note: 'chưa có kết quả' },
+  cancelled: { label: 'Đã huỷ', tone: 'lx-badge--warning', note: 'chưa có kết quả' },
+};
+
+function AiEvidenceCell({ item }: { item: AiEvidence }) {
+  const status = AI_STATUS[item.status];
+  const suggestion = item.suggestion;
+  return (
+    <div className="lx-stack lx-gap-1">
+      <div className="lx-row lx-gap-2 lx-items-center">
+        {status ? (
+          <>
+            <span className={`lx-badge ${status.tone}`.trim()}>{status.label}</span>
+            {status.note && <span className="lx-subtle">{status.note}</span>}
+          </>
+        ) : suggestion?.class_name ? (
+          <b>{suggestion.class_name}</b>
+        ) : (
+          <span className="lx-subtle">
+            {item.source === 'classifier' ? 'đủ tin cậy, không cần mô hình thị giác – ngôn ngữ' : 'không có đề xuất nhãn'}
+          </span>
+        )}
+        {item.review_required && <span className="lx-badge lx-badge--warning">Cần người review</span>}
+      </div>
+      {suggestion?.rationale && <div className="lx-subtle lx-text-11">{suggestion.rationale}</div>}
+      {item.reason_code && (
+        <div className="lx-subtle lx-text-11">
+          Lý do: <span className="lx-mono">{item.reason_code}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const ENGINE_LABELS: Record<string, string> = {
@@ -25,6 +70,7 @@ export function ReviewEvidenceTable({
   evidenceList,
   engineStatuses = [],
   currentAnnotationClass,
+  aiEvidence = [],
 }: ReviewEvidenceTableProps) {
   return (
     <div className="lx-stack lx-gap-2">
@@ -96,6 +142,15 @@ export function ReviewEvidenceTable({
             );
           })}
 
+          {aiEvidence.map((item) => (
+            <tr key={`ai-${item.evaluation_id}`}>
+              <td className="lx-muted lx-w-130">{AI_SOURCE_LABELS[item.source] ?? item.source}</td>
+              <td>
+                <AiEvidenceCell item={item} />
+              </td>
+            </tr>
+          ))}
+
           {/* Engine failed or not_checked rows */}
           {engineStatuses.map((eng, idx) => {
             if (eng.status === 'checked') return null;
@@ -130,7 +185,7 @@ export function ReviewEvidenceTable({
             );
           })}
 
-          {evidenceList.length === 0 && engineStatuses.length === 0 && (
+          {evidenceList.length === 0 && engineStatuses.length === 0 && aiEvidence.length === 0 && (
             <tr>
               <td colSpan={2} className="lx-muted lx-state--center-sm">
                 Không có bằng chứng tự động cho issue này.

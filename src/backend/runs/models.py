@@ -87,6 +87,37 @@ class ModelArtifact(dj_models.Model):
         return f"{self.name}:{self.version} ({self.checksum[:8]})"
 
 
+class ModelKind(dj_models.TextChoices):
+    VLM = "vlm", "vlm"
+    DETECTOR = "detector", "detector"
+    EMBEDDING = "embedding", "embedding"
+    OTHER = "other", "other"
+
+
+class AIModel(dj_models.Model):
+    """Model registry theo contract MBE-05 (FR-ENG-01, FR-SEC-05)."""
+
+    name = dj_models.CharField(max_length=128)
+    kind = dj_models.CharField(max_length=32, choices=ModelKind.choices, default=ModelKind.OTHER)
+    version = dj_models.CharField(max_length=64)
+    enabled = dj_models.BooleanField(default=True)
+    revision = dj_models.PositiveIntegerField(default=1)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+    updated_at = dj_models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ai_model"
+        ordering = ["-id"]
+        constraints = [
+            dj_models.UniqueConstraint(
+                fields=["name", "version"], name="ai_model_unique_name_version"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name}:{self.version} ({self.kind}, rev={self.revision})"
+
+
 class QCRun(dj_models.Model):
     """Aggregate root for a QC inspection run (FR-ENG-01, FR-AGG-02, state-machines §2)."""
 
@@ -334,3 +365,119 @@ class RunRankingEntry(dj_models.Model):
 
     def __str__(self) -> str:
         return f"RunRankingEntry (ranking={self.ranking_id}, rank={self.rank})"
+
+
+class Reference(dj_models.Model):
+    """Phiên reference/GT của một snapshot (MBE-01, FR-EVL-01/04).
+
+    Chỉ lưu metadata + checksum của GT đầu vào; nội dung GT không được lưu ở đây.
+    """
+
+    class Status(dj_models.TextChoices):
+        DRAFT = "draft", "Draft"
+        LOCKED = "locked", "Locked"
+
+    snapshot = dj_models.ForeignKey(
+        "snapshots.Snapshot", on_delete=dj_models.PROTECT, related_name="references"
+    )
+    gt_source = dj_models.CharField(max_length=255)
+    gt_checksum = dj_models.CharField(max_length=64)
+    mapping_version = dj_models.CharField(max_length=128)
+    matching_threshold = dj_models.FloatField(default=0.5)
+    minimum_area = dj_models.FloatField(default=0.0)
+    algorithm_version = dj_models.CharField(max_length=64, blank=True, default="")
+    status = dj_models.CharField(max_length=8, choices=Status.choices, default=Status.DRAFT)
+    created_by = dj_models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=dj_models.PROTECT, related_name="+"
+    )
+    locked_by = dj_models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=dj_models.PROTECT,
+        related_name="+",
+    )
+    locked_at = dj_models.DateTimeField(null=True, blank=True)
+    idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, unique=True)  # noqa: DJ001
+    request_sha256 = dj_models.CharField(max_length=64, blank=True)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "runs_reference"
+
+    def __str__(self) -> str:
+        return f"Reference {self.pk} [{self.status}] (snapshot={self.snapshot_id})"
+
+
+class KpiEvaluation(dj_models.Model):
+    """Lượt đánh giá KPI trên reference đã khoá (FR-EVL-13/14); khác orchestration.Evaluation."""
+
+    class Status(dj_models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+        INSUFFICIENT_SAMPLE = "insufficient_sample", "Insufficient sample"
+
+    status = dj_models.CharField(max_length=24, choices=Status.choices)
+    snapshot = dj_models.ForeignKey(
+        "snapshots.Snapshot", on_delete=dj_models.PROTECT, related_name="+"
+    )
+    run = dj_models.ForeignKey(QCRun, on_delete=dj_models.PROTECT, related_name="kpi_evaluations")
+    reference = dj_models.ForeignKey(Reference, on_delete=dj_models.PROTECT, related_name="+")
+    score_version = dj_models.CharField(max_length=64)
+    experiment_id = dj_models.BigIntegerField(null=True, blank=True)
+    parameters = dj_models.JSONField(default=dict)
+    metrics = dj_models.JSONField(null=True, blank=True)
+    leakage_check = dj_models.CharField(max_length=16, default="not_checked")
+    created_by = dj_models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=dj_models.PROTECT, related_name="+"
+    )
+    idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, unique=True)  # noqa: DJ001
+    request_sha256 = dj_models.CharField(max_length=64, blank=True)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "runs_kpi_evaluation"
+
+    def __str__(self) -> str:
+        return f"KpiEvaluation {self.pk} [{self.status}] (run={self.run_id})"
+
+
+class Waiver(dj_models.Model):
+    """Waiver một điều kiện gate; chỉ hiệu lực sau duyệt và trước hạn (FR-GTE-03)."""
+
+    class Status(dj_models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    run = dj_models.ForeignKey(QCRun, on_delete=dj_models.PROTECT, related_name="waivers")
+    condition = dj_models.CharField(max_length=32)
+    reason = dj_models.TextField()
+    evidence = dj_models.TextField()
+    expires_at = dj_models.DateTimeField()
+    requested_by = dj_models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=dj_models.PROTECT, related_name="+"
+    )
+    approved_by = dj_models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=dj_models.PROTECT,
+        related_name="+",
+    )
+    decision_reason = dj_models.TextField(blank=True, default="")
+    decided_at = dj_models.DateTimeField(null=True, blank=True)
+    status = dj_models.CharField(max_length=8, choices=Status.choices, default=Status.PENDING)
+    idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, unique=True)  # noqa: DJ001
+    request_sha256 = dj_models.CharField(max_length=64, blank=True)
+    decision_key = dj_models.CharField(max_length=128, blank=True, default="")
+    decision_sha256 = dj_models.CharField(max_length=64, blank=True, default="")
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "runs_waiver"
+
+    def __str__(self) -> str:
+        return f"Waiver {self.pk} {self.condition} [{self.status}] (run={self.run_id})"

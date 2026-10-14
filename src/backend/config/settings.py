@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "effort.apps.EffortConfig",
     "reports.apps.ReportsConfig",
     "releases.apps.ReleasesConfig",
+    "calibration.apps.CalibrationConfig",
 ]
 
 MIDDLEWARE = [
@@ -92,6 +93,7 @@ REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=900)
 REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
     "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=300
 )
+REWORK_DEFAULT_DUE_HOURS = env.int("REWORK_DEFAULT_DUE_HOURS", default=72)
 # JSON object overriding the whole idle policy, e.g. {"source": "...", "decision_status": "...",
 # "t_idle_seconds": 120, "version": "..."}.
 EFFORT_IDLE_POLICY = env.json(
@@ -187,9 +189,13 @@ SPECTACULAR_SETTINGS = {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
         "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
+        "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
+        "ModelKindEnum": "runs.models.ModelKind",
+        "RunRankingSourceEnum": ["risk", "random_audit"],
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],
         "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
+        "QueueEnum": ["risk", "random"],
         "PersistedIssueDecisionActionEnum": [
             "confirm",
             "reject",

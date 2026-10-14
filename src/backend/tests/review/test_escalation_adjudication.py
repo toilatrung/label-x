@@ -12,7 +12,14 @@ from django.utils import timezone
 from accounts.models import CvatIdentity, EmployeeIdentity, Role, RoleAssignment
 from audit.models import AuditEvent
 from guideline.models import GuidelineRule, GuidelineVersion
-from review.models import DecisionCase, FrameReview, Issue, ReviewDecision
+from review.models import (
+    DecisionCase,
+    FrameReview,
+    GuidelineGap,
+    Issue,
+    ReviewDecision,
+    ReworkRequest,
+)
 from tests.review.test_queue_lease import client
 
 pytest_plugins = ["tests.review.test_queue_lease"]
@@ -293,6 +300,115 @@ def test_valid_adjudication_guideline_gap(adj_world):
 
     issue.refresh_from_db()
     assert issue.state == Issue.State.ESCALATED
+    gap = GuidelineGap.objects.get(issue=issue, rule_id="RULE-01")
+    assert gap.status == GuidelineGap.Status.OPEN
+    assert gap.guideline_version == "guide"
+
+
+def test_adjudication_request_rework_creates_model_and_replays(adj_world, settings):
+    qa_lead = adj_world["qa_lead"]
+    issue = adj_world["issue"]
+    issue.severity = Issue.Severity.MEDIUM
+    issue.save(update_fields=["severity"])
+    settings.CVAT_BASE_URL = "http://cvat.test"
+    settings.REWORK_DEFAULT_DUE_HOURS = 72
+    key = str(uuid4())
+    body = {
+        "outcome": "confirm",
+        "rule_id": "RULE-01",
+        "reason": "Sửa annotation theo kết luận phân xử",
+        "after_adjudication": "request_rework",
+    }
+
+    first = client(qa_lead).post(
+        f"/api/issues/{issue.pk}/adjudications/",
+        body,
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    )
+    assert first.status_code == 201, first.data
+    assert first.data["rework_id"] is not None
+    rework = ReworkRequest.objects.get(pk=first.data["rework_id"])
+    assert rework.issue_id == issue.pk
+    assert rework.annotator_id == adj_world["author"].pk
+    assert rework.cvat_deep_link.endswith("/tasks/200/jobs/100?frame=0")
+    issue.refresh_from_db()
+    assert issue.state == Issue.State.FIX_PENDING
+
+    replay = client(qa_lead).post(
+        f"/api/issues/{issue.pk}/adjudications/",
+        body,
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    )
+    assert replay.status_code == 201
+    assert replay.data["id"] == first.data["id"]
+    assert replay.data["rework_id"] == rework.pk
+    assert DecisionCase.objects.filter(issue=issue).count() == 1
+    assert ReworkRequest.objects.filter(issue=issue).count() == 1
+
+
+def test_request_rework_requires_confirm_without_partial_write(adj_world):
+    issue = adj_world["issue"]
+    response = client(adj_world["qa_lead"]).post(
+        f"/api/issues/{issue.pk}/adjudications/",
+        {
+            "outcome": "reject",
+            "rule_id": "RULE-01",
+            "reason": "Không phải lỗi",
+            "after_adjudication": "request_rework",
+        },
+        format="json",
+    )
+    assert response.status_code == 422
+    assert not DecisionCase.objects.filter(issue=issue).exists()
+    issue.refresh_from_db()
+    assert issue.state == Issue.State.ESCALATED
+
+
+def test_guideline_gap_collection_and_similar_cases(adj_world):
+    issue = adj_world["issue"]
+    created = client(adj_world["qa_lead"]).post(
+        "/api/guideline-gaps/",
+        {"rule_id": "RULE-01", "description": "Thiếu ví dụ cho trường hợp biên"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert created.status_code == 201, created.data
+    assert created.data["issue_id"] is None
+    duplicate = client(adj_world["qa_lead"]).post(
+        "/api/guideline-gaps/",
+        {"rule_id": "RULE-01", "description": "Báo trùng gap đang mở"},
+        format="json",
+    )
+    assert duplicate.status_code == 409
+    listed = client(adj_world["reviewer"]).get(
+        "/api/guideline-gaps/", {"status": "open", "rule_id": "RULE-01"}
+    )
+    assert listed.status_code == 200
+    assert [row["id"] for row in listed.data["results"]] == [created.data["id"]]
+
+    prior_issue = Issue.objects.create(
+        frame_review=issue.frame_review,
+        family=issue.family,
+        origin=Issue.Origin.REVIEWER,
+        state=Issue.State.CONFIRMED,
+        anchor=issue.anchor,
+        rule_ids=["RULE-01"],
+        created_by=adj_world["reviewer"],
+    )
+    prior_case = DecisionCase.objects.create(
+        issue=prior_issue,
+        case_version="v1",
+        outcome=DecisionCase.Outcome.CONFIRM,
+        rule_id="RULE-01",
+        reason="Case tương tự",
+        actor=adj_world["qa_lead"],
+    )
+    similar = client(adj_world["reviewer"]).get(f"/api/issues/{issue.pk}/similar-cases/")
+    assert similar.status_code == 200, similar.data
+    assert similar.data["results"][0]["case"]["id"] == prior_case.pk
+    assert similar.data["results"][0]["similarity"] == 1.0
 
 
 def test_unsupported_outcome_rejected(adj_world):

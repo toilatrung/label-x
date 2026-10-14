@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rà soát nối FE ↔ BE toàn bộ API — dữ liệu thật và chức năng — LabelX</title>
+<meta name="labelx:id" content="FE-BE-WIRING-2026-10-13">
+<meta name="labelx:title" content="Rà soát nối FE ↔ BE toàn bộ API — dữ liệu thật và chức năng">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="frontend">
+<meta name="labelx:tags" content="[qa, frontend, backend, api, wiring, m-be-mvp]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+
+.sev{display:inline-block;padding:0 6px;font-size:11.5px;font-weight:600;border:1px solid var(--border)}
+.sev-chan{background:#fbe4e6;color:#9b1c25;border-color:#f1b8bd}.sev-cao{background:var(--warn-soft);color:var(--warn)}
+.sev-tb{background:var(--neutral-soft);color:var(--muted)}.sev-thap{background:var(--surface);color:var(--subtle)}
+.ok{color:#1c6b3a;font-weight:600}.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.kpi div{border:1px solid var(--border);background:var(--sunken);padding:8px 10px}.kpi b{display:block;font-size:22px}
+.kpi span{font-size:12px;color:var(--subtle)}
+@media (max-width:700px){.kpi{grid-template-columns:repeat(2,1fr)}article{padding:8px 16px 20px}}
+</style></head>
+
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / qa / FE-BE-WIRING-2026-10-13</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>FE-BE-WIRING-2026-10-13</span><b>title</b><span>Rà soát nối FE ↔ BE toàn bộ API — dữ liệu thật và chức năng</span><b>type</b><span>report</span><b>domain</b><span>testing</span><b>module</b><span>frontend</span><b>tags</b><span>[qa, frontend, backend, api, wiring, m-be-mvp]</span><b>priority</b><span>1</span></div>
+<h1 id="fe-be-wiring-2026-10-13">Rà soát nối FE ↔ BE toàn bộ API — dữ liệu thật và chức năng</h1>
+<blockquote>Kết luận: <strong>no-go</strong>. Backend đủ 88/88 operation của contract và luồng Quality Analysis chạy thật đầu cuối, nhưng FE còn <strong>46</strong> lỗi mở (3 chặn, 14 cao, 17 trung bình, 12 thấp). Nguyên nhân chính người dùng thấy "dữ liệu mockup": (1) trang chủ và nhiều màn lấy fixture của <code>/swagger</code>/sample-data; (2) nhánh chạy thiếu backend MBE-03…06, không có Celery worker và token CVAT — ba điểm môi trường này đã được xử lý trong phiên.</blockquote>
+<div class="kpi"><div><b>88/88</b><span>operation contract có route runtime (sau merge)</span></div>
+<div><b>46</b><span>lỗi mở sau khi gộp trùng</span></div>
+<div><b>24</b><span>lỗi FE (phiên điều phối sửa)</span></div>
+<div><b>17 + 16</b><span>lỗi BE · mục cần PO quyết</span></div></div>
+<div class="toc"><strong>Mục lục</strong><ul>
+<li><a href="#usage-purpose">Usage Purpose</a> · <a href="#record-metadata">Record Metadata</a> · <a href="#test-scope">Test Scope</a> · <a href="#related-files">Related Files</a></li>
+<li><a href="#command-evidence">Command Evidence</a> · <a href="#test-results">Test Results</a> · <a href="#result-summary">Result Summary</a> · <a href="#defects-and-risks">Defects and Risks</a></li>
+<li><a href="#defect-detail">Chi tiết lỗi theo làn</a> · <a href="#po-decisions">Cần PO quyết</a> · <a href="#fix-plan">Kế hoạch sửa đề xuất</a></li>
+<li><a href="#acceptance-criteria">Acceptance Criteria</a> · <a href="#release-recommendation">Release Recommendation</a> · <a href="#completion-criteria">Completion Criteria</a></li></ul></div>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi lại đợt rà soát độc lập việc nối FE ↔ BE cho <strong>toàn bộ</strong> API trong <code>docs/04-api/openapi.yaml</code> (không riêng M-BE-MVP): FE có nhận dữ liệu thật không, chức năng ghi có gọi đúng server không, còn dữ liệu giả ở đâu. Theo yêu cầu người dùng, đợt này <strong>chỉ tìm và báo cáo</strong>; các phiên rà không sửa, không commit.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>FE-BE-WIRING-2026-10-13</code></li>
+<li><strong>Title</strong>: <code>Rà soát nối FE ↔ BE toàn bộ API — dữ liệu thật và chức năng</code></li>
+<li><strong>Owner</strong>: <code>label-x-56 (phiên điều phối, Claude Code)</code></li>
+<li><strong>Tester</strong>: <code>william-trinh-6e (làn A), william-trinh-d8 (làn B), william-trinh-70 (làn C), label-x-56 (làn D)</code></li>
+<li><strong>Status</strong>: <code>failed</code></li>
+<li><strong>Task ID</strong>: <code>M-BE-MVP / FE wiring (chưa có task id riêng)</code></li>
+<li><strong>Review Decision</strong>: <code>not-applicable — rà soát toàn luồng trước review độc lập; không thay thế review</code></li>
+<li><strong>Test Date</strong>: <code>2026-10-13</code></li>
+<li><strong>Environment ID</strong>: <code>dev-local: FE Next 16 :3000 (proxy /api) + Django :8000 + Celery worker từ worktree /mnt/h/label-x-fewire (nhánh feat/FE-wire-mbe01-mbe02 = integration/m-be-mvp + MBE-03 + 5 commit FE); Postgres/Redis/SeaweedFS labelx-dev; CVAT v2.77 :8080; tài khoản fe_api_audit</code></li>
+</ul>
+
+<h2 id="test-scope">Test Scope</h2>
+<ul>
+<li><strong>Features or Requirements</strong>: <code>88 operation / 15 tag của contract; 22 route FE (/, /analysis/*, /review/*, /escalations, /reports/*, /calibration/*, /configuration/*, /login, /swagger)</code></li>
+<li><strong>Included Test Levels</strong>: <code>integration | contract | end-to-end | manual</code> — gọi thật qua proxy :3000, đối chiếu response với contract và với trường FE đọc, đọc code FE/BE.</li>
+<li><strong>Behavior Checks</strong>: <code>dữ liệu thật vs fixture; trạng thái tải/rỗng/lỗi + Thử lại; chức năng ghi gọi đúng endpoint/body; RBAC FE vs x-labelx-roles</code></li>
+<li><strong>Edge Cases</strong>: <code>404/409/422/403 nghiệp vụ, lease hết hạn, SoD (cùng người tạo/duyệt), phân trang cursor, run Partial</code></li>
+<li><strong>Regression Checklist</strong>: <code>npm run typecheck, lint, vitest (444/444 trước đợt rà); manage.py check, makemigrations --check</code></li>
+<li><strong>Excluded Checks</strong>: <code>trình duyệt thật (máy thiếu libnspr4 để chạy Chromium headless) — UI kết luận từ code; luồng cần tài khoản thứ hai (duyệt waiver, khoá reference, phân xử thành công); Detector GPU và Qwen VLM thật (chưa có model/config)</code></li>
+</ul>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Test Plan or Strategy</strong>: <code>brief rà soát gửi các phiên (phân 4 làn A/B/C/D, định dạng lỗi thống nhất)</code></li>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/MBE-01-@toilatrung.html</code></li>
+<li><strong>Review Report</strong>: <code>none</code></li>
+<li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code></li>
+<li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Issues or Risks</strong>: <code>BLOCKER-011 (run gốc là final), BLOCKER-021 (Model Orchestrator / metric), CR-117 (bỏ classifier), CR-118 (M-BE-MVP)</code></li>
+<li><strong>Build or Commit</strong>: <code>feat/FE-wire-mbe01-mbe02 @ e50c96c (merge origin/integration/m-be-mvp fc3061a + MBE-03 eeb60f3)</code></li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>python probe (httpx) GET 18 endpoint MBE-03…06 qua :3000</code></td><td><code>passed</code></td><td>17×200; <code>runs/107/tasks-quality</code> 502 (D-09)</td></tr>
+<tr><td><code>e2e: POST /api/snapshots/ → POST /api/runs/ (config 37) → Celery</code></td><td><code>passed</code></td><td>snapshot 49 locked (1 job/1 frame từ CVAT), run 112 partial: duplicate, geometry checked 1/1; schema no_reference; detector/vlm no_model; metric failed (A-01, A-03, A-04)</td></tr>
+<tr><td><code>manage.py spectacular --validate --fail-on-warn</code></td><td><code>failed</code></td><td>5 warning trùng tên component/enum (D-05)</td></tr>
+<tr><td><code>manage.py check; makemigrations --check</code></td><td><code>passed</code></td><td>0 issue; No changes detected</td></tr>
+<tr><td><code>so catalog /swagger (78 mục) với schema runtime</code></td><td><code>failed</code></td><td>33/33 mục 'mock' đã có runtime; 10 operation thiếu (D-01)</td></tr>
+<tr><td><code>npm run typecheck && lint && vitest (trước đợt rà)</code></td><td><code>passed</code></td><td>42 file, 444 test</td></tr>
+</tbody></table>
+
+<h2 id="test-results">Test Results</h2>
+<table><thead><tr><th>Check ID</th><th>Test Level</th><th>Result</th><th>Evidence</th><th>Defect ID</th></tr></thead><tbody>
+<tr><td><code>CHECK-A</code></td><td><code>integration</code></td><td><code>failed</code></td><td>Làn A — 39 operation (datasets, snapshots, config-versions, runs, candidates, gate, waivers, references, evaluations)</td><td><code>A-01…A-15</code></td></tr>
+<tr><td><code>CHECK-B</code></td><td><code>integration</code></td><td><code>failed</code></td><td>Làn B — 24 operation (review, rework, effort-events)</td><td><code>B-01…B-09</code></td></tr>
+<tr><td><code>CHECK-C</code></td><td><code>integration</code></td><td><code>failed</code></td><td>Làn C — 19 operation (auth, guidelines, models, calibration, audit, ops)</td><td><code>C-01…C-12</code></td></tr>
+<tr><td><code>CHECK-D</code></td><td><code>contract</code></td><td><code>failed</code></td><td>Làn D — reports, releases (6), Overview, /swagger, route mock Next, môi trường</td><td><code>D-01…D-11</code></td></tr>
+<tr><td><code>CHECK-E2E</code></td><td><code>end-to-end</code></td><td><code>passed</code></td><td>CVAT → Snapshot → Run → Celery engine → ledger/candidates/gate/report qua FE proxy</td><td><code>none</code></td></tr>
+</tbody></table>
+
+<h2 id="result-summary">Result Summary</h2>
+<ul>
+<li><strong>Total</strong>: <code>5</code></li>
+<li><strong>Passed</strong>: <code>1</code></li>
+<li><strong>Failed</strong>: <code>4</code></li>
+<li><strong>Blocked</strong>: <code>0</code></li>
+<li><strong>Skipped</strong>: <code>0</code></li>
+</ul>
+<p>Lỗi: 52 mục ghi nhận, 46 mục còn mở sau khi loại mục đã xử lý môi trường (D-08, D-14, C-12, A-05) và mục trùng/ghi nhận (A-15 → D-10, D-07).</p>
+
+<h2 id="defects-and-risks">Defects and Risks</h2>
+<ul>
+<li><strong>Open Defects</strong>: <code>A-01, A-02, A-03, A-04, A-06, A-07, A-08, A-09, A-10, A-11, A-12, A-13, A-14, B-01, B-02, B-03, B-04, B-05, B-06, B-07, B-08, B-09, C-01, C-02, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, D-01, D-02, D-03, D-04, D-05, D-06, D-09, D-10, D-11, D-12, D-13, D-16, D-15</code></li>
+<li><strong>Residual Risks</strong>: <code>D-11 (thay đổi FE chưa commit ở /mnt/h/label-x-fe326-328 không rõ chủ, trùng phạm vi); D-05 (CI contract sẽ đỏ khi gộp MBE-03 với integration); dữ liệu thử "[FE wiring test]" trên DB dev</code></li>
+<li><strong>Blocking Conditions</strong>: <code>A-02 (gate không bao giờ đạt), D-02 (trang chủ dữ liệu giả), D-05 (sinh OpenAPI lỗi)</code></li>
+</ul>
+
+<h2 id="defect-detail">Chi tiết lỗi theo làn</h2>
+<h3 id="lane-d">Làn D — reports/releases, Overview, /swagger, môi trường (label-x-56)</h3>
+<table><thead><tr><th>ID</th><th>Màn / vùng</th><th>Hiện tượng</th><th>Loại</th><th>Nguyên nhân gốc</th><th>Đề xuất sửa</th><th>Ai sửa</th><th>Mức độ</th><th>Trạng thái</th></tr></thead><tbody>
+<tr><td><code>D-01</code></td><td>/swagger (API Explorer)</td><td>Catalog viết tay, không gọi backend; endpoint &#x27;mock&#x27; được gắn nhãn &quot;Product API&quot; với cùng badge xanh như endpoint thật. Sau merge, cả 33 endpoint còn gắn &#x27;mock&#x27; đều đã có runtime; 10 operation của contract (MBE-06…) không có trong catalog.</td><td>dữ-liệu-giả</td><td>FE: lib/api-explorer/* là fixture tĩnh, ApiExplorer.tsx:36 luôn dùng class connected</td><td>Sinh catalog từ /api/schema/ (runtime) hoặc openapi.yaml; bỏ nhãn &quot;Product API&quot;; hiển thị rõ &quot;ví dụ&quot; vs &quot;đã nối&quot;; thêm 10 operation thiếu</td><td>FE (điều phối)</td><td><span class="sev sev-cao">cao</span></td><td>mở</td></tr>
+<tr><td><code>D-02</code></td><td>Trang chủ / Overview</td><td>Bảng dataset và Quality Summary lấy response mẫu của catalog API Explorer (api-explorer-data.ts, home-data.ts) hiển thị như thật: 92.4%, 124/50/18, QC-091…</td><td>dữ-liệu-giả</td><td>FE dùng fixture /swagger làm nguồn dữ liệu</td><td>Nối datasets/summary, runs/{id}/metrics|engines|review-volume|tasks-quality|candidate-categories, gate, queues, rework, escalations</td><td>FE (điều phối)</td><td><span class="sev sev-chan">chặn</span></td><td>đã sửa, chờ commit (46/46 test); còn NotConnectedNotice 4 cột Theo Task</td></tr>
+<tr><td><code>D-03</code></td><td>/reports (Quality Report), /reports/releases</td><td>Toàn trang minh họa (Road Vision Urban, 12,500 frame…) vì nhánh chạy chưa có MBE-03; sau merge runs/{id}/report, export, releases trả 200</td><td>môi-trường → chưa-nối</td><td>Nhánh FE-wire thiếu MBE-03 (đã merge trong phiên)</td><td>Đã nối runs/{id}/report, report/export, releases, manifest, approve (15/15 test, chưa commit); còn 3 vùng NotConnectedNotice: cặp nhãn nhầm, theo lớp, nguyên nhân gốc — RunReport không có dữ liệu</td><td>FE (điều phối)</td><td><span class="sev sev-cao">cao</span></td><td>đã sửa, chờ commit</td></tr>
+<tr><td><code>D-04</code></td><td>GET /api/reports/{id}/</td><td>Route đăng ký 2 lần: reports.urls (MBE-03, EffectivenessReport) đứng trước runs.kpi_views.ReportView (MBE-01, KpiEvaluation) nên view MBE-01 không bao giờ chạy; /calibration/performance đọc report theo id KPI evaluation sẽ 404</td><td>lỗi-backend</td><td>Hai PR cùng hiện thực một operation trên hai model khác nhau</td><td>BE thống nhất một nguồn (EffectivenessReport hay KpiEvaluation), xoá route thừa, cập nhật FE PerformanceView</td><td>BE MBE-01 + MBE-03, PO quyết</td><td><span class="sev sev-cao">cao</span></td><td>mở</td></tr>
+<tr><td><code>D-05</code></td><td>Sinh OpenAPI runtime (CI)</td><td>manage.py spectacular --validate --fail-on-warn lỗi: 3 component trùng tên khác định nghĩa (RunMetrics, MetricValue, GateResult) và 2 cảnh báo enum (ConditionEnum, Name04eEnum) khi gộp MBE-01/03/04/06</td><td>lệch-contract</td><td>BE: serializer trùng tên giữa reports/, runs/summary_serializers, runs/kpi_serializers, calibration/</td><td>Đổi tên serializer hoặc dùng chung; thêm ENUM_NAME_OVERRIDES</td><td>BE MBE-03/06/01/04</td><td><span class="sev sev-chan">chặn</span></td><td>mở</td></tr>
+<tr><td><code>D-06</code></td><td>src/app/api/** (22 route mock của Next)</td><td>Route mock (MOCK_RUNS, MOCK_DATASETS…) chỉ chạy khi NEXT_PUBLIC_AUTH_MODE=mock; shape đã lệch contract (workflow-permissions có &#x27;roles&#x27;, thiếu &#x27;user_roles&#x27;)</td><td>dữ-liệu-giả</td><td>FE giữ fixture từ giai đoạn chưa có BE</td><td>PO quyết bỏ chế độ mock; nếu giữ thì đồng bộ shape theo contract</td><td>FE, PO quyết</td><td><span class="sev sev-thap">thấp</span></td><td>mở</td></tr>
+<tr><td><code>D-07</code></td><td>GET /internal/metrics/</td><td>Proxy Next chỉ chuyển /api/*; không màn FE nào dùng</td><td>không-dùng</td><td>Thiết kế ops</td><td>Không cần FE; API Explorer ghi rõ endpoint nội bộ</td><td>—</td><td><span class="sev sev-thap">thấp</span></td><td>ghi nhận</td></tr>
+<tr><td><code>D-08</code></td><td>Môi trường dev</td><td>Ban đầu: không có Celery worker (run không chạy engine), CVAT_SERVICE_TOKEN rỗng ở mọi worktree (datasets 502), nhánh FE-wire thiếu MBE-03/04/05/06 (12+10 operation 404)</td><td>môi-trường</td><td>Thiếu dịch vụ/cấu hình</td><td>Đã bật worker, đặt token (worktree fewire), merge integration/m-be-mvp, migrate 5 migration, restart BE</td><td>điều phối</td><td><span class="sev sev-chan">chặn</span></td><td>đã xử lý</td></tr>
+<tr><td><code>D-09</code></td><td>GET /api/runs/{id}/tasks-quality/</td><td>Run 107 trả 502 BUSINESS_RULE_UNMET &quot;CVAT không còn task của snapshot&quot; — snapshot cũ không còn task trên CVAT hiện tại</td><td>môi-trường / lỗi-backend</td><td>Endpoint đọc live CVAT thay vì dữ liệu đã khoá trong snapshot</td><td>BE cân nhắc tính từ snapshot đã khoá; FE hiện lỗi + Thử lại</td><td>BE MBE-06</td><td><span class="sev sev-tb">trung bình</span></td><td>mở</td></tr>
+<tr><td><code>D-10</code></td><td>Dữ liệu dev</td><td>Role trỏ dataset 42 không tồn tại; run 1 thuộc dataset 42; snapshot run 1 dùng guideline &#x27;bdd100k-guideline-v1&#x27; không có trong DB; dataset 42 không có annotator</td><td>môi-trường</td><td>Fixture cũ</td><td>Dọn role/tạo dataset 42, nạp guideline, gán annotator — hoặc dùng dataset 1 làm dữ liệu kiểm thử chuẩn</td><td>điều phối / PO</td><td><span class="sev sev-tb">trung bình</span></td><td>mở</td></tr>
+<tr><td><code>D-11</code></td><td>/mnt/h/label-x-fe326-328</td><td>Thay đổi FE chưa commit (calibration, configuration, lib/overview/api.ts) từ phiên đã tắt, sửa lần cuối 20:04–20:06; trùng phạm vi với agent Overview và lỗi C-03…C-07</td><td>môi-trường (điều phối)</td><td>Hai luồng nối FE song song không phân làn</td><td>Xác định chủ sở hữu; gộp hoặc bỏ trước khi nối calibration/configuration</td><td>PO / điều phối</td><td><span class="sev sev-cao">cao</span></td><td>mở</td></tr>
+<tr><td><code>D-12</code></td><td>/reports/gate — Phê duyệt phát hành</td><td>Nút đã nối POST /api/releases/{id}/approve/ nhưng luôn khoá: contract/BE không có endpoint tạo release nên RunReport.release_id luôn null</td><td>lệch-contract</td><td>Thiếu POST /api/releases/ (hoặc tác vụ tạo release từ gate passed)</td><td>Bổ sung cách tạo release trong contract + BE</td><td>BE MBE-03, PO quyết</td><td><span class="sev sev-cao">cao</span></td><td>mở</td></tr>
+<tr><td><code>D-13</code></td><td>POST /api/runs/{id}/report/export/</td><td>Export #1 (run 107, json) kẹt &#x27;queued&#x27; vĩnh viễn; mọi lần xuất lại cùng run+format trả về đúng bản ghi kẹt (idempotent) nên người dùng không bao giờ tải được</td><td>lỗi-backend</td><td>Task bị worker cũ nhận rồi bỏ; không có cơ chế redispatch/timeout cho ReportExport</td><td>Redispatch export queued quá hạn (giống orchestration.redispatch_pending) hoặc cho phép tạo lại khi queued quá N phút</td><td>BE MBE-03</td><td><span class="sev sev-tb">trung bình</span></td><td>mở</td></tr>
+<tr><td><code>D-14</code></td><td>Môi trường dev — Celery</td><td>4 worker cùng tên nghe chung Redis (DuplicateNodenameWarning); worker code cũ nuốt task mới. Nguyên nhân: pkill -f tự giết shell gọi lệnh nên worker cũ không dừng</td><td>môi-trường</td><td>Quy trình restart dev</td><td>Đặt -n riêng cho mỗi worktree; dừng worker theo PID; ghi vào hướng dẫn dev</td><td>điều phối</td><td><span class="sev sev-tb">trung bình</span></td><td>đã xử lý</td></tr>
+<tr><td><code>D-16</code></td><td>Overview — các endpoint MBE-06/02</td><td>candidates: raw_count luôn null, dedup_count không đổi theo bộ lọc; queues/{name} trả 404 với run chưa sinh hàng đợi; DatasetSummary thiếu cvat_project_id; tasks-quality thiếu coverage/candidate/gate theo task; review-volume chỉ có chuỗi theo ngày</td><td>lệch-contract</td><td>Shape read-model chưa đủ cho thiết kế Overview</td><td>Bổ sung trường; queues trả 200 counts=0 cho run chưa có hàng đợi</td><td>BE MBE-06/02</td><td><span class="sev sev-thap">thấp</span></td><td>mở</td></tr>
+<tr><td><code>D-15</code></td><td>GET /api/runs/{id}/report/ — metrics.issues_by_family</td><td>Đếm mọi issue (kể cả chưa xác nhận) trong khi thiết kế ghi &quot;Lỗi đã xác nhận theo loại&quot;; RunReport.gate là gate của release nên null khi chưa có release</td><td>lệch-contract</td><td>Ngữ nghĩa trường chưa khớp thiết kế</td><td>Thêm confirmed_by_family hoặc đổi nhãn; FE tạm ghi chú và đọc /gate/</td><td>BE MBE-03, PO</td><td><span class="sev sev-thap">thấp</span></td><td>mở</td></tr>
+</tbody></table>
+<h3 id="lane-a">Làn A — MBE-01 pipeline AI + Quality Analysis (william-trinh-6e, 39 operation)</h3>
+<table><thead><tr><th>ID</th><th>Màn / vùng</th><th>Hiện tượng</th><th>Loại</th><th>Nguyên nhân gốc</th><th>Đề xuất sửa</th><th>Ai sửa</th><th>Mức độ</th></tr></thead><tbody>
+<tr><td><code>A-01</code></td><td>/analysis/history, /analysis/config</td><td>Bật Metric thì run luôn Partial; shard metric failed &quot;engine metric@1.0.0 chưa đăng ký&quot;; retry lỗi lại</td><td>lỗi-backend</td><td>runs/services.py:63 có descriptor metric nhưng orchestration không đăng ký runner</td><td>Đăng ký runner metric, hoặc not_checked + không tạo WorkUnit, publish trả 422; FE ghi chú công tắc Metric</td><td>BE MBE-01 (+FE form)</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>A-02</code></td><td>/reports/gate</td><td>Mọi run đều gate failed/Blocked với source_reason=no_valid_final, kể cả run gốc completed không rework</td><td>lỗi-backend</td><td>finalization_service.py:293-318 chỉ chọn is_final=True; kpi.py:147,174 ép failed — trái BLOCKER-011</td><td>Coi run gốc hoàn tất không rework là selected_final, hoặc PO xác nhận và sửa contract is_final</td><td>BE MBE-01, PO xác nhận</td><td><span class="sev sev-chan">chặn</span></td></tr>
+<tr><td><code>A-03</code></td><td>/analysis/config, history, gate</td><td>Schema luôn not_checked no_reference (coverage 0.662/0.667); nhập taxonomy tay thì failed vì version phải bằng hash nhãn CVAT</td><td>nối-sai + lỗi-backend</td><td>FE không gửi params engine; BE đòi taxonomy nhúng trong config</td><td>BE tự dựng taxonomy từ nhãn CVAT đã khoá của snapshot; hoặc FE editor + 422 khi publish</td><td>PO quyết → BE MBE-01, FE</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>A-04</code></td><td>/review/workspace (evidence AI)</td><td>ai_evidence luôn []; candidate.vlm.state=no_model; đánh giá lại trả 422</td><td>lỗi-backend + môi-trường</td><td>vlm_stage.py:182-194 bỏ qua khi thiếu models.vlm/taxonomy; không config nào có models.vlm</td><td>BE tạo Evaluation gen 1 kèm reason_code; tạo config thử có models.vlm hợp lệ</td><td>BE MBE-01, điều phối</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>A-05</code></td><td>Trang chủ, /analysis, /configuration, /calibration/performance</td><td>10 operation 404 trên nhánh chạy</td><td>môi-trường</td><td>Nhánh FE-wire chưa merge MBE-04/05/06</td><td>Đã merge integration/m-be-mvp — FE còn phải nối</td><td>điều phối</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>A-06</code></td><td>/review/workspace; contract</td><td>FE tự khai type AiEvidence vì contract trên nhánh cũ chưa có WorkspaceAiEvidence</td><td>môi-trường + lệch-contract</td><td>Nhánh merge MBE-01 ở mốc cũ</td><td>Contract đã sinh lại sau merge — đổi sang components[&#x27;schemas&#x27;][&#x27;WorkspaceAiEvidence&#x27;]</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-07</code></td><td>/analysis — Tạo snapshot</td><td>Annotation revision và seed hiện số giả a91f3c/7be204/20261004, không nhãn mẫu</td><td>dữ-liệu-giả</td><td>SnapshotSample.tsx:12-24 dùng mock; seed là trường của Run</td><td>Nối GET /api/datasets/{id}/revisions/ (đã 200); bỏ ô seed khỏi form Snapshot</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-08</code></td><td>/reports/gate — ReportRunPicker</td><td>Chỉ 50 run mới nhất; 26 run cũ không chọn được</td><td>chức-năng-không-chạy</td><td>ReportRunPicker.tsx:26 không phân trang</td><td>Dùng useDatasetRuns hoặc nút Tải thêm</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-09</code></td><td>/reports/gate — waiver</td><td>Waiver cho run Partial được nhận (201) nhưng không bao giờ có hiệu lực</td><td>nối-sai + lỗi-backend</td><td>kpi.py:164-167 chỉ áp khi run Completed</td><td>BE trả 422 khi nguồn chưa Completed; FE ẩn/giải thích form</td><td>BE MBE-01 + FE</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-10</code></td><td>/analysis/history</td><td>Cột Coverage luôn &quot;—&quot;</td><td>chưa-nối</td><td>page.tsx:91 hard-code</td><td>Lấy từ operational_source/ledger hoặc runs/{id}/metrics</td><td>FE (điều phối)</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>A-11</code></td><td>/calibration/performance</td><td>Không tạo/khoá reference từ UI; ô metric còn mẫu</td><td>chưa-nối</td><td>FE chưa nối references, evaluation/performance; contract không có GET danh sách reference</td><td>Thêm form reference + khoá; nối evaluation/performance (đã 200); PO cân nhắc GET /api/references/</td><td>FE, PO</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-12</code></td><td>/analysis/history, /review/workspace</td><td>Không hiển thị candidate.vlm, không có nút đánh giá lại AI, không poll candidate-evaluations</td><td>chưa-nối</td><td>CandidateEvidenceList.tsx:92-175 bỏ qua vlm</td><td>Thêm panel VLM, POST candidates/{id}/evaluations + poll</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>A-13</code></td><td>/analysis/config — Lấy mẫu</td><td>100/100 frame cố định, disabled, không nhãn mẫu</td><td>dữ-liệu-giả</td><td>Contract ConfigVersionCreate thiếu sampling_policy (xem C-10)</td><td>Gắn nhãn mẫu/ẩn; nối sampling_policy sau C-10</td><td>FE, PO</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>A-14</code></td><td>POST /api/evaluations/</td><td>&quot;Reference chưa được khoá&quot; trả 409 thay vì 422 như các BUSINESS_RULE_UNMET khác</td><td>lệch-contract</td><td>kpi_views.py:343</td><td>Đổi sang 422</td><td>BE MBE-01</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>A-15</code></td><td>DatasetPicker</td><td>Role dataset 42 không tồn tại</td><td>môi-trường</td><td>Gộp vào D-10</td><td>Xem D-10</td><td>điều phối</td><td><span class="sev sev-thap">thấp</span></td></tr>
+</tbody></table><h3 id="lane-b">Làn B — MBE-02 review / rework / escalation (william-trinh-d8, 24 operation)</h3>
+<table><thead><tr><th>ID</th><th>Màn / vùng</th><th>Hiện tượng</th><th>Loại</th><th>Nguyên nhân gốc</th><th>Đề xuất sửa</th><th>Ai sửa</th><th>Mức độ</th></tr></thead><tbody>
+<tr><td><code>B-01</code></td><td>/review/workspace — Tạo issue thủ công</td><td>Nút luôn khoá: frame có issue engine báo policy &quot;1.0.0&quot;, frame chưa có issue báo không lấy được phiên bản</td><td>nối-sai</td><td>ReviewWorkspace.tsx:57-108 suy policy neo thủ công từ issue engine; BE luôn ghi anchor-v1 cho neo thủ công (đã gọi thật 201)</td><td>Neo thủ công luôn gửi &#x27;anchor-v1&#x27; hoặc bỏ trường; chỉ khoá khi lease không hợp lệ</td><td>FE (điều phối)</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>B-02</code></td><td>/review — lease</td><td>Lease không tự gia hạn; sau 900 s lưu quyết định bị 409 LEASE_CONFLICT</td><td>chưa-nối</td><td>useLeaseManager không nhận renewThresholdSeconds; FE không đọc review-policy</td><td>Đọc GET /api/review-policy/ và gia hạn theo hoạt động người dùng</td><td>FE (điều phối)</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>B-03</code></td><td>/review — effort</td><td>Idle bị tính vào effort; FE hard-code &#x27;pending_po_approval&#x27; trong khi policy pilot idle=120 s đã duyệt</td><td>dữ-liệu-giả / chưa-nối</td><td>useEffortCollector.ts:24-26,135</td><td>Lấy idle_threshold_seconds và policy_version từ review-policy</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>B-04</code></td><td>/review/rework — Xác minh</td><td>Super Admin luôn 400 &quot;Super Admin cần override_reason&quot;; form không có ô override</td><td>nối-sai</td><td>ReworkTracking.tsx:173 không gửi override_reason</td><td>Thêm ô override_reason bắt buộc với super_admin như ReviewDecisionForm</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>B-05</code></td><td>/review — frame đang giữ</td><td>Nút &quot;Mở frame trên CVAT&quot; không bao giờ hiện</td><td>lệch-contract</td><td>review/services.py:159-184 _grant_payload thiếu cvat_deep_link, image_url</td><td>Dùng serialization.frame_summary</td><td>BE MBE-02</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>B-06</code></td><td>/escalations — Adjudication</td><td>Link &quot;Mở trong Review Workspace&quot; không có frame_id → trang trống</td><td>nối-sai / lệch-contract</td><td>Schema Issue không có frame_id/run_id; FE link tĩnh EscalationsWorkspace.tsx:446</td><td>Thêm frame_id, run_id vào Issue; FE dựng link</td><td>BE MBE-02 → FE</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>B-07</code></td><td>/escalations, /review/rework</td><td>Decision Cases và Rework chỉ lấy trang đầu; nút mũi tên chỉ đổi tab</td><td>chức-năng-không-chạy</td><td>lib/escalations/api.ts:86-96; ReworkTracking.tsx:201; EscalationsDesign.tsx:166</td><td>Phân trang cursor; truyền issue_id khi chuyển tab</td><td>FE (điều phối)</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>B-08</code></td><td>/escalations — gap gắn issue; /review/rework</td><td>Gap/adjudication run 1 trả 422 (guideline version lệch); rework 403 (dataset 42 không có annotator); modal lấy rule của version mới nhất thay vì version của issue</td><td>môi-trường + nối-sai</td><td>Fixture run 1; GuidelineGapModal.tsx:52</td><td>Dọn dữ liệu (D-10); modal lấy rule theo guideline_version của frame</td><td>PO/điều phối + FE</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>B-09</code></td><td>GET /api/frames/{id}/workspace/</td><td>review_state=in_review khi lease đã hết hạn, trong khi ranking/queue trả unreviewed</td><td>lỗi-backend</td><td>serialization.py:99 dùng state lưu, runs/views.py:584-629 dùng state hiệu lực</td><td>Dùng chung logic effective state</td><td>BE MBE-02</td><td><span class="sev sev-thap">thấp</span></td></tr>
+</tbody></table><h3 id="lane-c">Làn C — MBE-05 configuration + auth + guideline + calibration/audit + ops (william-trinh-70, 19 operation)</h3>
+<table><thead><tr><th>ID</th><th>Màn / vùng</th><th>Hiện tượng</th><th>Loại</th><th>Nguyên nhân gốc</th><th>Đề xuất sửa</th><th>Ai sửa</th><th>Mức độ</th></tr></thead><tbody>
+<tr><td><code>C-01</code></td><td>/configuration/rules-thresholds</td><td>Luôn hiện &quot;Cấu hình hiện tại v7&quot; / &quot;Lưu thành v8&quot; (config publish mới nhất là id 50 &quot;test&quot;)</td><td>dữ-liệu-giả</td><td>page.tsx:84,86 chuỗi cứng</td><td>Lấy từ config đang publish; nút &quot;Lưu thành phiên bản mới&quot;</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>C-02</code></td><td>/configuration/rules-thresholds, /guidelines</td><td>Nút Lưu, Chỉnh quy tắc, Chỉnh mô hình bấm không phản hồi</td><td>chức-năng-không-chạy</td><td>RulesPolicyCard.tsx:46 bỏ prop; ModelsGuidelinesCard onBlocked no-op</td><td>Nối POST /api/config-versions/ (+Idempotency-Key); khi chưa nối thì hiện cảnh báo</td><td>FE (điều phối)</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>C-03</code></td><td>/configuration/rules-thresholds — 3 tab</td><td>Quy tắc S-001/G-009…, coverage 95%, 0.8% là mẫu</td><td>dữ-liệu-giả + chưa-nối</td><td>RulesPolicyCard.tsx:20-34; ConfigRule chỉ có rule_id, name, enabled, parameters</td><td>Nối GET /api/config-versions/{id}/rules/ (đã 200); PO quyết thêm group/severity/threshold</td><td>FE + PO</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>C-04</code></td><td>/configuration/guidelines — Mô hình</td><td>3 mô hình giả (Classifier đã bỏ theo CR-117)</td><td>dữ-liệu-giả + chưa-nối</td><td>ModelsGuidelinesCard.tsx:16-20</td><td>Nối GET/PATCH /api/models/ (đã 200, expected_revision, 409/422)</td><td>FE + PO</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>C-05</code></td><td>/configuration/guidelines — Phiên bản guideline</td><td>v1.1/v1.2/v1.3 giả mâu thuẫn với rule lookup thật (v1)</td><td>dữ-liệu-giả + chưa-nối</td><td>ModelsGuidelinesCard.tsx:22-26</td><td>Nối GET /api/guidelines/versions/ (đã 200)</td><td>FE + PO</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>C-06</code></td><td>/configuration — Quy tắc quy trình</td><td>Công tắc luôn disabled</td><td>chưa-nối</td><td>page.tsx:82,89</td><td>Nối PATCH workflow-permissions/rules/{rule} (expected_revision, reason, locked)</td><td>FE (điều phối)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>C-07</code></td><td>/calibration/benchmark, audit-sampling, calibration</td><td>Toàn bộ dữ liệu mẫu, nút ghi bị chặn; comment sai &quot;chưa có trong contract&quot;</td><td>dữ-liệu-giả + chưa-nối</td><td>Đều đã 200 sau merge #338; phần nối dở ở /mnt/h/label-x-fe326-328 (D-11)</td><td>Hoàn thiện nối, xoá sample-data</td><td>FE (chủ fe326-328 hoặc điều phối)</td><td><span class="sev sev-cao">cao</span></td></tr>
+<tr><td><code>C-08</code></td><td>Menu Calibration &amp; Audit</td><td>Annotator/reviewer thấy menu nhưng 403; PO/DMO được BE cho đọc nhưng không thấy menu</td><td>nối-sai (RBAC)</td><td>roles.ts:67-69 vs x-labelx-roles vs ROLE_MATRIX tự mâu thuẫn</td><td>PO chốt một nguồn quyền; đồng bộ FE + ROLE_MATRIX</td><td>PO → BE + FE</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>C-09</code></td><td>/configuration/guidelines, rules-thresholds</td><td>Reviewer vào được nhưng sẽ 403; DMO không vào được</td><td>nối-sai (RBAC)</td><td>Guard theo màn chứ không theo thẻ</td><td>Guard từng thẻ theo quyền endpoint</td><td>FE (+PO)</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>C-10</code></td><td>POST /api/config-versions/</td><td>Contract thiếu rules, release_thresholds, sampling_policy mà BE #333 đã nhận</td><td>lệch-contract</td><td>MBE-00 chưa cập nhật theo MBE-05</td><td>Bổ sung 3 trường vào ConfigVersionCreate, sinh lại contract.d.ts</td><td>BE MBE-05</td><td><span class="sev sev-tb">trung bình</span></td></tr>
+<tr><td><code>C-11</code></td><td>/api/schema/ — MBE-04</td><td>4 list endpoint khai 200 là mảng trần, runtime trả phân trang</td><td>lệch-contract</td><td>calibration/views.py extend_schema(many=True)</td><td>Khai Paginated*List serializer</td><td>BE MBE-04</td><td><span class="sev sev-thap">thấp</span></td></tr>
+<tr><td><code>C-12</code></td><td>Môi trường :8000</td><td>12 operation MBE-04/05 404</td><td>môi-trường</td><td>Nhánh chạy thiếu #333/#338/#339</td><td>Đã merge integration/m-be-mvp, migrate, restart</td><td>điều phối</td><td><span class="sev sev-chan">chặn</span></td></tr>
+</tbody></table><h2 id="po-decisions">Cần PO quyết</h2>
+<table><thead><tr><th>Lỗi</th><th>Câu hỏi</th></tr></thead><tbody><tr><td><code>A-02</code></td><td>Run gốc hoàn tất không rework có là final không (BLOCKER-011)? Hiện gate luôn failed.</td></tr><tr><td><code>A-03</code></td><td>Taxonomy cho engine Schema: BE tự dựng từ nhãn CVAT của snapshot, hay nhúng trong config (cần editor FE)?</td></tr><tr><td><code>D-04</code></td><td>GET /api/reports/{id}/ đọc EffectivenessReport (MBE-03) hay KpiEvaluation (MBE-01)?</td></tr><tr><td><code>C-03/C-04/C-05</code></td><td>Có bổ sung trường thiết kế cần (group/severity/threshold của rule; vai trò/ánh xạ/ngưỡng của model; taxonomy/dataset của guideline version) vào contract không?</td></tr><tr><td><code>C-08/C-09</code></td><td>Nguồn quyền chuẩn cho Calibration &amp; Audit và Configuration (ROLE_MATRIX vs x-labelx-roles); DMO có vào Configuration không?</td></tr><tr><td><code>A-11</code></td><td>Có thêm GET /api/references/ để chọn reference trên UI không?</td></tr><tr><td><code>D-06</code></td><td>Bỏ hẳn chế độ mock (NEXT_PUBLIC_AUTH_MODE=mock và 22 route src/app/api/**) không?</td></tr><tr><td><code>D-10/B-08</code></td><td>Chuẩn hoá dữ liệu dev: dataset 42, guideline bdd100k-guideline-v1, annotator — hay chọn dataset 1 làm bộ kiểm thử chuẩn?</td></tr><tr><td><code>D-11</code></td><td>Ai giữ thay đổi chưa commit ở /mnt/h/label-x-fe326-328 (calibration/configuration/overview)? Gộp hay bỏ?</td></tr></tbody></table>
+<h2 id="fix-plan">Kế hoạch sửa đề xuất (chưa thực hiện)</h2>
+<ol>
+<li><strong>Đợt 0 — PO quyết</strong> các mục ở bảng trên (đặc biệt A-02, A-03, D-04, D-11) vì chúng đổi hướng sửa của BE và FE.</li>
+<li><strong>Đợt 1 — BE (chặn/cao)</strong>: D-05 trùng tên schema; D-04 route trùng; A-02 gate; A-01 engine metric; A-03/A-04 taxonomy và evidence AI; C-10 contract ConfigVersionCreate. Chủ: làn MBE-01/03/04/05/06.</li>
+<li><strong>Đợt 2 — FE dữ liệu thật</strong> (phiên điều phối): hoàn tất D-02 (Overview) và D-03 (Quality Report/Release, đang sửa); A-07, C-01, C-03…C-07 sau khi xử lý D-11; D-01 sinh catalog /swagger từ schema.</li>
+<li><strong>Đợt 3 — FE chức năng</strong>: B-01 issue thủ công, B-02 auto-renew lease, B-03 effort policy, B-04 override verify, A-08/B-07 phân trang, A-09 waiver, A-11/A-12 reference và VLM, C-02/C-06 nút ghi cấu hình, C-08/C-09 RBAC.</li>
+<li><strong>Đợt 4 — BE nhỏ</strong>: B-05, B-06, B-09, A-14, C-11, D-09.</li>
+<li><strong>Môi trường</strong>: D-10 dữ liệu dev; tạo config thử có models.vlm hợp lệ để kiểm evidence AI đầu cuối; tài khoản thứ hai để kiểm luồng SoD.</li>
+</ol>
+<p>Những gì đã làm trong phiên (không thuộc "chỉ rà"): merge cục bộ MBE-01/02/03 và <code>origin/integration/m-be-mvp</code> vào nhánh FE-wire (giải 4 xung đột hợp nhất ở <code>config/urls.py</code>, <code>config/settings.py</code>, <code>runs/urls.py</code>), migrate 5 migration lên DB dev, bật Celery worker, đặt token CVAT cho worktree; 5 commit FE đã nối Snapshot, Review queue, Escalations, Quality Gate/Performance, Review workspace; agent đã nối xong Quality Report/Release (D-03) và Overview (D-02) — cả hai chưa commit. Export CSV #2 của run 107 chạy đầu cuối: completed sau ~10 s, tải về 200.</p>
+<p>Dữ liệu thử còn trên DB dev (ghi chú "[FE wiring test]"): user <code>fe_api_audit</code>, <code>fe_api_audit_author</code>; snapshot 49, run 112; guideline gap 1–2; waiver 1–2; reference 1–2; report export 1 (kẹt) và 2; lease 1–4, quyết định 1–3, issue thủ công 3, frame 1 run 1 đã complete; 1 effort event.</p>
+
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[ ] Review report records <code>APPROVED</code> before QA starts. — không áp dụng: đây là rà soát toàn luồng trước review.</li>
+<li>[x] Every required check has a result and evidence.</li>
+<li>[x] Result totals reconcile with the results table.</li>
+<li>[x] Failed checks map to issue records. — map tới ID lỗi trong báo cáo này; chưa tạo issue record riêng.</li>
+<li>[x] Skipped checks include an explicit approved reason. — xem Excluded Checks.</li>
+<li>[x] Behavior, edge cases, regression checklist, and manual verification are recorded when applicable.</li>
+</ul>
+
+<h2 id="release-recommendation">Release Recommendation</h2>
+<ul>
+<li><strong>Recommendation</strong>: <code>no-go</code></li>
+<li><strong>Conditions</strong>: <code>none</code></li>
+<li><strong>Rationale</strong>: <code>Còn 3 lỗi chặn (A-02 gate, D-02 Overview giả, D-05 sinh OpenAPI) và 14 lỗi cao; nhiều màn vẫn hiển thị dữ liệu giả như thật.</code></li>
+<li><strong>Authorized By</strong>: <code>PO (@toilatrung / @DucHa180104)</code></li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Required tests are executed or formally waived.</li>
+<li>[x] Defects, blockers, and residual risks are linked.</li>
+<li>[x] Release recommendation matches recorded results.</li>
+</ul>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not start QA before independent review is <code>APPROVED</code>.</li>
+<li>Do not mark status <code>passed</code> with unresolved required failures.</li>
+<li>Do not omit, relabel, or discard failed results.</li>
+<li>Do not count unexecuted checks as passed.</li>
+<li>Do not replace independent review with QA.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not expose secrets or production personal data in evidence.</li>
+</ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/qa/FE-BE-WIRING-2026-10-13.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Use exact enum values and non-negative integer totals.</li>
+</ul>
+</article></main></body></html>

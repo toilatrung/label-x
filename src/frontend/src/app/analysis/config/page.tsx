@@ -12,8 +12,9 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
-import { createConfig, createRun, cursorFrom, listConfigs, listSnapshots, publishConfig, type ConfigVersion, type ConfigVersionCreate, type RunCreate } from '@/lib/execution/api';
-import { ENGINES_META, EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
+import { createRun, cursorFrom, listConfigs, listSnapshots, type ConfigVersion, type RunCreate } from '@/lib/execution/api';
+import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
+import { ConfigVersionModal } from '@/components/execution/ConfigVersionModal';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 
 const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm'] as const;
@@ -33,14 +34,7 @@ function ConfigContent() {
   const [pending, setPending] = useState<{ body: RunCreate; key: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [configName, setConfigName] = useState('');
-  const [enabledEngines, setEnabledEngines] = useState<string[]>(['schema', 'geometry', 'duplicate']);
-  const [thresholdsText, setThresholdsText] = useState('{}');
-  const [modelsText, setModelsText] = useState('{}');
-  const [configPending, setConfigPending] = useState<{ body: ConfigVersionCreate; key: string } | null>(null);
-  const [draftId, setDraftId] = useState<number | null>(null);
-  const [configBusy, setConfigBusy] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
+  const [configOpen, setConfigOpen] = useState(false);
   const snapshots = useQuery({ queryKey: ['analysis-snapshots', session?.user.id, datasetId, snapshotCursor], queryFn: ({ signal }) => listSnapshots(datasetId!, snapshotCursor, signal), enabled: datasetId !== null, retry: false });
   const configs = useQuery({ queryKey: ['analysis-configs', session?.user.id, configCursor], queryFn: ({ signal }) => listConfigs(configCursor, signal), enabled: !!session, retry: false });
   const locked = snapshots.data?.results.filter((s) => s.status === 'locked') ?? [];
@@ -76,50 +70,15 @@ function ConfigContent() {
     } finally { setSubmitting(false); }
   }
 
-  async function saveConfig(event: React.FormEvent) {
-    event.preventDefault();
-    if (!canConfigure || configBusy || !configName.trim() || enabledEngines.length === 0) return;
-    let thresholds: Record<string, unknown>;
-    let models: Record<string, unknown>;
-    try {
-      thresholds = JSON.parse(thresholdsText);
-      models = JSON.parse(modelsText);
-      if (!thresholds || typeof thresholds !== 'object' || Array.isArray(thresholds) || !models || typeof models !== 'object' || Array.isArray(models)) throw new Error();
-    } catch { setConfigError('Ngưỡng và model phải là đối tượng JSON hợp lệ.'); return; }
-    const body: ConfigVersionCreate = { name: configName.trim(), engines: Object.fromEntries(ENGINES.map((engine) => [engine, { enabled: enabledEngines.includes(engine) }])), thresholds, models };
-    const request = configPending && JSON.stringify(configPending.body) === JSON.stringify(body) ? configPending : { body, key: crypto.randomUUID() };
-    setConfigPending(request);
-    setConfigBusy(true); setConfigError(null);
-    try {
-      const draft = await createConfig(request.body, request.key);
-      setDraftId(draft.id);
-      const published = draft.status === 'published' ? draft : await publishConfig(draft.id);
-      setDraftId(null);
-      setConfigPending(null);
-      setConfigCursor(null);
-      await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
-      setConfigId(published.id);
-      setSelectedConfigRecord(published);
-    } catch (err) {
-      setConfigError(errorMessage(err));
-    } finally { setConfigBusy(false); }
+  async function onConfigPublished(published: ConfigVersion) {
+    setConfigCursor(null);
+    await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
+    setConfigId(published.id);
+    setSelectedConfigRecord(published);
+    setPending(null);
   }
 
-  async function retryPublish() {
-    if (!draftId || configBusy) return;
-    setConfigBusy(true); setConfigError(null);
-    try {
-      const replay = configPending ? await createConfig(configPending.body, configPending.key) : null;
-      const published = replay?.status === 'published' ? replay : await publishConfig(draftId);
-      setDraftId(null); setConfigPending(null); setConfigCursor(null);
-      await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
-      setConfigId(published.id);
-      setSelectedConfigRecord(published);
-    } catch (err) { setConfigError(errorMessage(err)); }
-    finally { setConfigBusy(false); }
-  }
-
-  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div></div>}>
+  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div>{canConfigure && <button type="button" className="lx-btn lx-btn--primary" onClick={() => setConfigOpen(true)}>Tạo phiên bản cấu hình</button>}</div>}>
     <form onSubmit={submit} className="lx-cols">
       <div className="lx-main lx-stack">
         <div className="lx-execution-config">
@@ -180,26 +139,7 @@ function ConfigContent() {
         </div>
       </aside>
     </form>
-    {canConfigure && <section className="lx-card" aria-label="Tạo phiên bản cấu hình">
-      <header className="lx-card__head"><h2 className="lx-h2">Tạo phiên bản cấu hình</h2><span className="lx-hint">Phiên bản đã phát hành không chỉnh sửa trực tiếp</span></header>
-      <form onSubmit={saveConfig} className="lx-card__body lx-stack">
-        <p className="lx-muted lx-text-13">Phiên bản mới được phát hành để Quality Assurance Lead chọn khi chạy phân tích.</p>
-        <div className="lx-field"><label className="lx-label" htmlFor="config-name">Tên cấu hình</label><input className="lx-input" id="config-name" value={configName} maxLength={128} onChange={(e) => { setConfigName(e.target.value); setConfigPending(null); }} required /></div>
-        <fieldset className="lx-field lx-fieldset">
-          <legend className="lx-label">Engine cần chạy</legend>
-          <div className="lx-card lx-card--inner"><table className="lx-table"><tbody>{ENGINES_META.map((meta) => <tr key={meta.key}>
-            <td className="lx-th--check"><label className="lx-switch"><input type="checkbox" aria-label={meta.name} checked={enabledEngines.includes(meta.key)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, meta.key] : current.filter((item) => item !== meta.key)); setConfigPending(null); }} /><span /></label></td>
-            <td><div className="lx-cell__main">{meta.name}</div><div className="lx-cell__sub">{meta.sub}</div></td>
-          </tr>)}</tbody></table></div>
-        </fieldset>
-        <div className="lx-field"><label className="lx-label" htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea className="lx-textarea" id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); setConfigPending(null); }} /></div>
-        <div className="lx-field"><label className="lx-label" htmlFor="config-models">Mô hình tham chiếu (JSON)</label><textarea className="lx-textarea" id="config-models" rows={3} value={modelsText} onChange={(e) => { setModelsText(e.target.value); setConfigPending(null); }} /></div>
-        {configError && <p role="alert" className="lx-callout">{configError}</p>}
-        {draftId && <div className="lx-callout lx-callout--warning">Phiên bản v{draftId} đã được tạo nhưng chưa xác nhận phát hành. <button type="button" className="lx-btn" disabled={configBusy} onClick={retryPublish}>Thử phát hành lại</button></div>}
-        {enabledEngines.length === 0 && <p role="alert" className="lx-callout lx-callout--warning">Cần bật ít nhất một engine.</p>}
-        <div className="lx-actions lx-actions--end"><button type="submit" className="lx-btn lx-btn--primary" disabled={configBusy || !configName.trim() || enabledEngines.length === 0}>{configBusy ? 'Đang lưu…' : 'Tạo và phát hành'}</button></div>
-      </form>
-    </section>}
+    {configOpen && <ConfigVersionModal onClose={() => setConfigOpen(false)} onPublished={onConfigPublished} />}
   </AppShell>;
 }
 

@@ -219,6 +219,17 @@ describe('ReviewQueues Frontend (T-034)', () => {
         });
       }
 
+      if (path === '/api/queues/risk/' || path === '/api/queues/random/') {
+        const name = path.split('/')[3];
+        const total = name === 'risk' ? 588 : 59;
+        return Response.json({
+          name,
+          run_id: Number(url.searchParams.get('run_id')),
+          total,
+          counts: { unreviewed: total - 3, in_review: 1, incomplete: 2, reviewed: 0, awaiting_followup: 0, completed: 0 },
+        });
+      }
+
       if (path === '/api/queues/risk/next/' || path === '/api/queues/random/next/') {
         return Response.json(mockLeaseGrant);
       }
@@ -256,11 +267,12 @@ describe('ReviewQueues Frontend (T-034)', () => {
 
       // Check frame key contains both task and frame number
       expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
-      expect(screen.getByText('#1')).toBeDefined();
-      expect(screen.getByText('0.850')).toBeDefined();
+      const row = screen.getByText('Task #10 • Frame #100').closest('article')!;
+      expect(row.querySelector('.lx-review-rank')?.textContent).toBe('1');
+      expect(screen.getByText('Điểm 0.850')).toBeDefined();
       expect(screen.getByText('Nền: 0.100')).toBeDefined();
-      expect(screen.getByText('E1: 2')).toBeDefined();
-      expect(screen.getByText('E2: 1')).toBeDefined();
+      expect(screen.getByText('Thiếu nhãn (E1): 2')).toBeDefined();
+      expect(screen.getByText('Sai lớp (E2): 1')).toBeDefined();
     });
 
     it('switches to random queue tab independently and fetches random queue data', async () => {
@@ -320,7 +332,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
 
       await screen.findByText('Task #10 • Frame #100');
 
-      const familySelect = screen.getByLabelText(/Lọc theo nhóm lỗi/i);
+      const familySelect = screen.getByLabelText('Loại cảnh báo');
       fireEvent.change(familySelect, { target: { value: 'E1' } });
 
       await waitFor(() => {
@@ -834,9 +846,22 @@ describe('ReviewQueues Frontend (T-034)', () => {
         return null;
       });
 
-      expect(
-        await screen.findByText(/Không có frame nào khớp với điều kiện lọc/i)
-      ).toBeDefined();
+      expect(await screen.findByText('Hàng đợi risk chưa có frame nào.')).toBeDefined();
+      expect(screen.queryByRole('button', { name: 'Đặt lại bộ lọc' })).toBeNull();
+    });
+
+    it('offers filter reset when filtered ranking results are empty', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/runs/12/ranking/') && new URL(req.url).searchParams.get('family')) {
+          return Response.json({ next: null, previous: null, results: [] });
+        }
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+      fireEvent.change(screen.getByLabelText('Loại cảnh báo'), { target: { value: 'E3' } });
+      expect(await screen.findByText(/Không có frame nào khớp với điều kiện lọc/i)).toBeDefined();
+      fireEvent.click(screen.getByRole('button', { name: 'Đặt lại bộ lọc' }));
+      expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
     });
 
     it('shows error callout and retry button deterministically when ranking fetch fails with 500', async () => {
@@ -869,6 +894,177 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(retryBtn);
 
       expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
+    });
+  });
+
+  // --- MBE-02: tìm kiếm, mức ưu tiên, ảnh thu nhỏ, số đếm hàng đợi, nhận đúng frame ---
+  describe('MBE-02: Search, priority, thumbnails, queue counts & claim by frame', () => {
+    const futureGrant: LeaseGrant = {
+      ...mockLeaseGrant,
+      lease: { ...mockLeaseGrant.lease, expires_at: '2099-01-01T00:00:00Z' },
+    };
+
+    function rankingWith(results: RankedFrame[]) {
+      return Response.json({ next: null, previous: null, results });
+    }
+
+    it('shows queue totals from GET /api/queues/{name}/ on tabs, head, state filter and pager', async () => {
+      const { calls } = await renderReviewPage('reviewer');
+      await screen.findByText('Task #10 • Frame #100');
+
+      const riskTab = screen.getByRole('tab', { name: /Hàng đợi rủi ro/i });
+      const randomTab = screen.getByRole('tab', { name: /Kiểm định ngẫu nhiên/i });
+      await waitFor(() => {
+        expect(riskTab.textContent).toContain('588');
+        expect(randomTab.textContent).toContain('59');
+      });
+      expect(screen.getByText('588 ảnh trong hàng đợi')).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Đang dở (2)' })).toBeDefined();
+      expect(screen.getByText('1–1 / 588')).toBeDefined();
+
+      const summaryCall = calls.find((c) => new URL(c.url).pathname === '/api/queues/risk/');
+      expect(new URL(summaryCall!.url).searchParams.get('run_id')).toBe('12');
+    });
+
+    it('sends q (debounced) and priority to the ranking API and resets both', async () => {
+      const { calls } = await renderReviewPage('reviewer');
+      await screen.findByText('Task #10 • Frame #100');
+
+      fireEvent.change(screen.getByLabelText('Tìm ảnh theo mã task hoặc số frame'), { target: { value: ' 100 ' } });
+      await waitFor(() => {
+        const call = calls.find((c) => c.url.includes('/ranking/') && new URL(c.url).searchParams.get('q') === '100');
+        expect(call).toBeDefined();
+      });
+
+      fireEvent.change(screen.getByLabelText('Mức ưu tiên'), { target: { value: 'high' } });
+      await waitFor(() => {
+        const call = calls.find(
+          (c) =>
+            c.url.includes('/ranking/') &&
+            new URL(c.url).searchParams.get('priority') === 'high' &&
+            new URL(c.url).searchParams.get('q') === '100'
+        );
+        expect(call).toBeDefined();
+        expect(new URL(call!.url).searchParams.get('cursor')).toBeNull();
+      });
+
+      const before = calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }));
+      await waitFor(() => {
+        const call = calls
+          .slice(before)
+          .find((c) => c.url.includes('/ranking/') && !new URL(c.url).searchParams.has('priority'));
+        expect(call).toBeDefined();
+        expect(new URL(call!.url).searchParams.get('q')).toBeNull();
+      });
+      expect((screen.getByLabelText('Tìm ảnh theo mã task hoặc số frame') as HTMLInputElement).value).toBe('');
+    });
+
+    it('renders thumbnail_url and priority badge, with a placeholder when thumbnail is missing', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/runs/12/ranking/')) {
+          return rankingWith([
+            { ...mockRiskFrame1, priority: 'high', thumbnail_url: 'http://minio.local/thumb/340.jpg?sig=1' },
+            { ...mockRiskFrame2, rank: 2, priority: 'medium', thumbnail_url: null },
+          ]);
+        }
+        return null;
+      });
+
+      const img = (await screen.findByAltText('Ảnh thu nhỏ Task #10 • Frame #100')) as HTMLImageElement;
+      expect(img.getAttribute('src')).toBe('http://minio.local/thumb/340.jpg?sig=1');
+      expect(screen.getByRole('img', { name: 'Không có ảnh thu nhỏ cho Task #20 • Frame #100' })).toBeDefined();
+      expect(screen.getByText('Ưu tiên cao')).toBeDefined();
+      expect(screen.getByText('Ưu tiên trung bình')).toBeDefined();
+
+      // Ảnh lỗi tải thì về ô trống, không vỡ hàng
+      fireEvent.error(img);
+      expect(await screen.findByRole('img', { name: 'Không có ảnh thu nhỏ cho Task #10 • Frame #100' })).toBeDefined();
+    });
+
+    it('claims the exact frame from its row (frame_id) and opens the workspace', async () => {
+      const { calls } = await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/queues/risk/next/')) return Response.json(futureGrant);
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' }));
+
+      expect(
+        await screen.findByRole('region', { name: /Không gian kiểm tra Review Workspace/i })
+      ).toBeDefined();
+      const claimCall = calls.find((c) => c.url.includes('/api/queues/risk/next/'));
+      expect(await claimCall!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
+    });
+
+    it('explains when the server returns the lease already held instead of the chosen frame', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/runs/12/ranking/')) {
+          return rankingWith([mockRiskFrame1, { ...mockRiskFrame2, lease_holder_user_id: null }]);
+        }
+        if (req.url.includes('/api/queues/risk/next/')) return Response.json({ ...futureGrant, resumed: true });
+        return null;
+      });
+      await screen.findByText('Task #20 • Frame #100');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #20 • Frame #100' }));
+
+      expect(await screen.findByText(/Bạn đang giữ Task #10 • Frame #100 \(Frame ID 340\)/)).toBeDefined();
+      expect(screen.getByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeDefined();
+      expect(screen.queryByRole('region', { name: /Không gian kiểm tra Review Workspace/i })).toBeNull();
+    });
+
+    it('shows 409 LEASE_CONFLICT when the chosen frame cannot be claimed', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/queues/risk/next/')) {
+          return Response.json(
+            { code: 'LEASE_CONFLICT', message: 'Frame đang được người khác giữ.', request_id: 'r-409' },
+            { status: 409 }
+          );
+        }
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' }));
+
+      expect(await screen.findByText('LEASE_CONFLICT')).toBeDefined();
+      expect(screen.getByRole('button', { name: /Tải lại từ server/i })).toBeDefined();
+    });
+
+    it('disables the row action when another reviewer holds the frame', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/runs/12/ranking/')) {
+          return rankingWith([{ ...mockRiskFrame1, lease_holder_user_id: 77 }]);
+        }
+        return null;
+      });
+      const btn = await screen.findByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' });
+      expect((btn as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('shows a real empty state (no sample frames) before a run is chosen', async () => {
+      searchParamsState.current = '';
+      const { calls } = await renderReviewPage('reviewer');
+      expect(await screen.findByText(/Chưa có hàng đợi để hiển thị/)).toBeDefined();
+      expect(screen.queryByText('Ảnh 001')).toBeNull();
+      expect(screen.queryAllByRole('article')).toHaveLength(0);
+      expect(calls.filter((c) => c.url.includes('/queues/') || c.url.includes('/ranking/'))).toHaveLength(0);
+    });
+
+    it('offers retry for queue counts without blocking the list', async () => {
+      let attempt = 0;
+      await renderReviewPage('reviewer', async (req) => {
+        if (new URL(req.url).pathname === '/api/queues/risk/') {
+          attempt++;
+          if (attempt === 1) return Response.json({ code: 'INTERNAL_ERROR', message: 'lỗi' }, { status: 500 });
+        }
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+      fireEvent.click(await screen.findByRole('button', { name: 'Tải lại số đếm hàng đợi' }));
+      expect(await screen.findByText('588 ảnh trong hàng đợi')).toBeDefined();
     });
   });
 });

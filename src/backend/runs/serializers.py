@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from django.core.files.storage import storages
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
 
 from orchestration.models import CandidateRecord
@@ -13,7 +14,14 @@ from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
 from runs.config_guard import validate_config_safety
-from runs.models import ConfigVersion, ModelArtifact, QCRun, RunRankingEntry, WorkUnit
+from runs.models import (
+    AIModel,
+    ConfigVersion,
+    ModelArtifact,
+    QCRun,
+    RunRankingEntry,
+    WorkUnit,
+)
 from runs.routing_config import validate_routing_thresholds
 from runs.vlm_read import build_vlm_view, run_vlm_engine_state
 from vlm.config import validate_vlm_config
@@ -165,11 +173,67 @@ class ConfigVersionSerializer(serializers.ModelSerializer[Any]):
         read_only_fields = fields
 
 
+@extend_schema_serializer(component_name="Model")
+class ModelSerializer(serializers.ModelSerializer[AIModel]):
+    class Meta:
+        model = AIModel
+        fields = [
+            "id",
+            "name",
+            "kind",
+            "version",
+            "enabled",
+            "revision",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "revision", "updated_at"]
+
+
+class ModelPatchSerializer(serializers.Serializer[Any]):
+    expected_revision = serializers.IntegerField(required=True)
+    enabled = serializers.BooleanField(required=False)
+    version = serializers.CharField(required=False, max_length=64)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if "enabled" not in attrs and "version" not in attrs:
+            raise serializers.ValidationError(
+                "Cần cung cấp ít nhất một trường 'enabled' hoặc 'version'."
+            )
+        return attrs
+
+
+@extend_schema_serializer(component_name="PaginatedModelList")
+class PaginatedModelListSerializer(serializers.Serializer[Any]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = ModelSerializer(many=True)
+
+
+@extend_schema_serializer(component_name="ConfigRule")
+class ConfigRuleSerializer(serializers.Serializer[Any]):
+    rule_id = serializers.CharField()
+    name = serializers.CharField()
+    enabled = serializers.BooleanField()
+    parameters = serializers.DictField(required=False, default=dict)
+
+
+@extend_schema_serializer(component_name="ConfigVersionRules")
+class ConfigVersionRulesSerializer(serializers.Serializer[Any]):
+    config_version_id = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=["draft", "published"])
+    rules = ConfigRuleSerializer(many=True)
+    release_thresholds = serializers.DictField()
+    sampling_policy = serializers.DictField()
+
+
 class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
     name = serializers.CharField(max_length=128)
     engines = serializers.DictField()
     thresholds = serializers.DictField(required=False, default=dict)
     models = serializers.DictField(required=False, default=dict)
+    rules = serializers.ListField(child=serializers.DictField(), required=False, default=list)
+    release_thresholds = serializers.DictField(required=False, default=dict)
+    sampling_policy = serializers.DictField(required=False, default=dict)
 
     def validate_engines(self, value: dict[str, Any]) -> dict[str, Any]:
         allowed = {
@@ -392,6 +456,8 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     lease_holder_user_id = serializers.SerializerMethodField()
     issue_counts = IssueCountsField(read_only=True)
     explanation = ExplanationField(read_only=True)
+    priority = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = RunRankingEntry
@@ -409,6 +475,8 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
             "issue_counts",
             "explanation",
             "lease_holder_user_id",
+            "priority",
+            "thumbnail_url",
         ]
         read_only_fields = fields
 
@@ -439,6 +507,28 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         holder = getattr(obj, "active_lease_holder_id", None)
         return int(holder) if holder is not None else None
 
+    @extend_schema_field(serializers.ChoiceField(choices=["high", "medium", "low"]))
+    def get_priority(self, obj: RunRankingEntry) -> str:
+        total = max(int(self.context.get("ranking_total", 0)), 1)
+        if obj.rank <= (total + 2) // 3:
+            return "high"
+        if obj.rank <= (total * 2 + 2) // 3:
+            return "medium"
+        return "low"
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_thumbnail_url(self, obj: RunRankingEntry) -> str | None:
+        key = obj.snapshot_frame.media_storage_key
+        return storages["snapshots"].url(key) if key else None
+
+
+@extend_schema_serializer(component_name="RankedFrame")
+class RankedFrameResponseSerializer(RankedFrameSerializer):
+    """Describe optional contract additions without marking method fields required."""
+
+    priority: Any = serializers.ChoiceField(choices=["high", "medium", "low"], required=False)
+    thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
+
 
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     next = serializers.CharField(allow_null=True)
@@ -446,4 +536,19 @@ class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     source: Any = serializers.ChoiceField(choices=["risk", "random_audit"])
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
-    results = RankedFrameSerializer(many=True)
+    results = RankedFrameResponseSerializer(many=True)
+
+
+class RunLineageNodeSerializer(serializers.Serializer[Any]):
+    run_id = serializers.IntegerField()
+    kind = serializers.ChoiceField(choices=["original", "rework_verification", "final"])
+    snapshot_id = serializers.IntegerField()
+    rework_id = serializers.IntegerField(allow_null=True)
+    created_at = serializers.DateTimeField()
+
+
+class RunLineageSerializer(serializers.Serializer[Any]):
+    run_id = serializers.IntegerField()
+    origin_run_id = serializers.IntegerField(allow_null=True)
+    final_run_id = serializers.IntegerField(allow_null=True)
+    chain = RunLineageNodeSerializer(many=True)

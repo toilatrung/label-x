@@ -1,6 +1,6 @@
 """Contract endpoints for queue claim and lease renewal."""
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,9 +14,10 @@ from review.api_serializers import (
     LeaseGrantSerializer,
     LeaseSerializer,
     QueueNextRequestSerializer,
+    QueueSummarySerializer,
 )
 from review.models import Lease
-from review.services import claim_next, renew
+from review.services import claim_next, queue_summary, renew
 from runs.models import QCRun
 
 
@@ -53,12 +54,63 @@ class QueueNextView(APIView):
     def post(self, request: Request, name: str) -> Response:
         if name not in {"risk", "random"}:
             raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Queue không hợp lệ.")
-        result = claim_next(request=request, run_id=int(request.data["run_id"]), queue=name)
+        frame_id = request.data.get("frame_id")
+        if isinstance(frame_id, bool) or (
+            frame_id is not None and (not str(frame_id).isdigit() or int(frame_id) <= 0)
+        ):
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "frame_id phải là số nguyên dương.",
+            )
+        result = claim_next(
+            request=request,
+            run_id=int(request.data["run_id"]),
+            queue=name,
+            frame_id=int(frame_id) if frame_id is not None else None,
+        )
         return (
             Response(result, status=status.HTTP_200_OK)
             if result
             else Response(status=status.HTTP_204_NO_CONTENT)
         )
+
+
+class QueueSummaryView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
+    action_name = "queues.retrieve"
+    object_type = "run"
+    requires_dataset = True
+
+    def _run_id(self, request: Request) -> int:
+        raw = request.query_params.get("run_id")
+        if isinstance(raw, bool) or raw is None or not str(raw).isdigit() or int(raw) <= 0:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "run_id phải là số nguyên dương."
+            )
+        return int(raw)
+
+    def get_dataset_id(self, request: Request) -> int | None:
+        return (
+            QCRun.objects.filter(pk=self._run_id(request))
+            .values_list("dataset_id", flat=True)
+            .first()
+        )
+
+    @extend_schema(
+        operation_id="queues_retrieve",
+        parameters=[OpenApiParameter("run_id", int, required=True)],
+        responses={
+            200: QueueSummarySerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["review"],
+    )
+    def get(self, request: Request, name: str) -> Response:
+        return Response(queue_summary(run_id=self._run_id(request), queue=name))
 
 
 class LeaseRenewView(APIView):

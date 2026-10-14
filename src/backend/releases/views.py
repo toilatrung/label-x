@@ -11,7 +11,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import SYSTEM_WIDE_ROLES, Role, RoleAssignment
+from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
@@ -46,15 +46,14 @@ class ReleaseListView(APIView):
     requires_dataset = False
 
     def _scoped_queryset(self, request: Request) -> QuerySet[Release]:
-        assignments = RoleAssignment.objects.filter(
-            user=cast(User, request.user), role__in=self.allowed_roles
+        from accounts.permissions import get_user_scoped_datasets
+
+        scoped_ids = get_user_scoped_datasets(
+            cast(User, request.user), allowed_roles=self.allowed_roles
         )
-        if assignments.filter(role__in=SYSTEM_WIDE_ROLES, dataset_id__isnull=True).exists():
+        if scoped_ids is None:
             return Release.objects.all()
-        dataset_ids = assignments.exclude(dataset_id__isnull=True).values_list(
-            "dataset_id", flat=True
-        )
-        return Release.objects.filter(run__dataset_id__in=dataset_ids)
+        return Release.objects.filter(run__dataset_id__in=scoped_ids)
 
     @extend_schema(
         operation_id="releases_list",

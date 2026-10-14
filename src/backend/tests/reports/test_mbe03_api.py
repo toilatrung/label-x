@@ -209,6 +209,10 @@ def test_report_export_worker_materializes_json_csv_and_pdf(
             assert captured[-1][1] == "application/json"
 
 
+@pytest.mark.skip(
+    reason="D-04: GET /api/reports/{id}/ giữ bản MBE-01 (id = KPI evaluation); "
+    "route EffectivenessReport của MBE-03 đã gỡ, chờ PO chốt có tách endpoint không"
+)
 def test_effectiveness_report_json_pdf_csv_and_404(world: dict[str, object]) -> None:
     report = EffectivenessReport.objects.create(
         input_snapshot=world["snapshot"],

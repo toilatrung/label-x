@@ -7,10 +7,12 @@ import { useAuth } from '@/lib/auth/auth-context';
 import {
   getRunDetails,
   getRunRanking,
+  getQueueSummary,
   claimNextFrame,
   renewLease,
   cursorFrom,
 } from '@/lib/review/api';
+import type { RankingPriority } from '@/lib/review/api';
 import type {
   QueueName,
   IssueFamily,
@@ -22,9 +24,60 @@ import type {
 } from '@/lib/review/types';
 import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
-import { ReviewQueueSample } from './ReviewQueueSample';
 import { Icon } from '@/components/ui/Icon';
+import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
+
+/** Bộ lọc gửi lên GET /api/runs/{id}/ranking/: family/origin/review_state + q, priority (MBE-02). */
+type QueueFilters = ReviewQueueFilters & { q?: string; priority?: RankingPriority };
+
+const FAMILY_LABELS: Record<IssueFamily, string> = {
+  E1: 'Thiếu nhãn',
+  E2: 'Sai lớp',
+  E3: 'Nhãn trùng',
+  structural: 'Cấu trúc',
+};
+
+const PRIORITY_LABELS: Record<RankingPriority, string> = {
+  high: 'Cao',
+  medium: 'Trung bình',
+  low: 'Thấp',
+};
+
+const REVIEW_STATE_LABELS: Record<FrameReviewState, string> = {
+  unreviewed: 'Chưa review',
+  in_review: 'Đang review',
+  incomplete: 'Đang dở',
+  reviewed: 'Đã review',
+  awaiting_followup: 'Chờ theo dõi',
+  completed: 'Hoàn tất',
+};
+
+const SEARCH_DEBOUNCE_MS = 300;
+
+function frameTitle(frame: Pick<RankedFrame, 'frame_key'>) {
+  return `Task #${frame.frame_key.cvat_task_id} • Frame #${frame.frame_key.frame_number}`;
+}
+
+/** Ảnh thu nhỏ từ thumbnail_url (URL ký sẵn của kho ảnh); thiếu hoặc lỗi tải thì hiện ô trống. */
+function RankedFrameThumb({ frame }: { frame: RankedFrame }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const url = frame.thumbnail_url;
+  if (!url || failedUrl === url) {
+    return (
+      <span className="lx-review-thumb lx-review-thumb--empty" role="img" aria-label={`Không có ảnh thu nhỏ cho ${frameTitle(frame)}`}>
+        <Icon name="image" className="lx-review-icon" />
+      </span>
+    );
+  }
+  return (
+    <span className="lx-review-thumb">
+      {/* URL ký sẵn từ kho ảnh, đổi theo phiên: không qua tối ưu ảnh của next/image */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt={`Ảnh thu nhỏ ${frameTitle(frame)}`} width={203} height={92} loading="lazy" onError={() => setFailedUrl(url)} />
+    </span>
+  );
+}
 
 export interface ReviewQueuesProps {
   onWorkspaceStateChange?: (state: {
@@ -60,15 +113,28 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const [activeQueue, setActiveQueue] = useState<QueueName>('risk');
 
   // Server filters
-  const [filters, setFilters] = useState<ReviewQueueFilters>({});
+  const [filters, setFilters] = useState<QueueFilters>({});
 
   // Pagination cursor
   const [cursor, setCursor] = useState<string | null>(null);
+  // Ô tìm kiếm: giữ giá trị gõ, chỉ gửi q lên server sau SEARCH_DEBOUNCE_MS
+  const [searchInput, setSearchInput] = useState('');
+  useEffect(() => {
+    const value = searchInput.trim() || undefined;
+    const timer = setTimeout(() => {
+      setFilters((prev) => (prev.q === value ? prev : { ...prev, q: value }));
+      setCursor((prev) => (prev === null ? prev : null));
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
 
   // Active Lease Grant state (from claim or resume)
   const [activeGrant, setActiveGrant] = useState<LeaseGrant | null>(null);
   const [claimStatus204, setClaimStatus204] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<{ message: string; code?: string } | null>(null);
+  // Server trả lease đang giữ thay vì frame vừa chọn (mỗi reviewer giữ tối đa một lease)
+  const [claimNotice, setClaimNotice] = useState<string | null>(null);
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
   const [isLeaseConflict, setIsLeaseConflict] = useState<boolean>(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState<boolean>(false);
@@ -103,6 +169,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     setActiveGrant(null);
     setClaimStatus204(false);
     setClaimError(null);
+    setClaimNotice(null);
     setRenewMessage(null);
     setIsLeaseConflict(false);
     setCursor(null);
@@ -170,15 +237,20 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     setCursor(null);
   };
 
-  const handleFilterChange = (newFilters: Partial<ReviewQueueFilters>) => {
+  const handleFilterChange = (newFilters: Partial<QueueFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
     setCursor(null);
   };
 
   const handleResetFilters = () => {
     setFilters({});
+    setSearchInput('');
     setCursor(null);
   };
+
+  const hasFilters = Boolean(
+    filters.family || filters.origin || filters.review_state || filters.priority || filters.q || searchInput.trim()
+  );
 
   const handleRunSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,6 +281,14 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     enabled: Boolean(effectiveRunId && effectiveRunId > 0 && datasetId),
   });
 
+  const queueDataEnabled = Boolean(
+    datasetId &&
+      effectiveRunId &&
+      effectiveRunId > 0 &&
+      runQuery.isSuccess &&
+      session?.identity_mapping.status === 'mapped'
+  );
+
   // 2. Fetch Ranking data for active queue & filters.
   // Gated on runQuery.isSuccess: on 403/404 or load failure, ranking is NOT called.
   const rankingQuery = useQuery({
@@ -221,6 +301,8 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       filters.family,
       filters.origin,
       filters.review_state,
+      filters.q,
+      filters.priority,
       cursor,
     ],
     queryFn: ({ signal }) =>
@@ -229,33 +311,50 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         family: filters.family,
         origin: filters.origin,
         review_state: filters.review_state,
+        q: filters.q,
+        priority: filters.priority,
         cursor,
         signal,
       }),
-    enabled: Boolean(
-      datasetId &&
-        effectiveRunId &&
-        effectiveRunId > 0 &&
-        runQuery.isSuccess &&
-        session?.identity_mapping.status === 'mapped'
-    ),
+    enabled: queueDataEnabled,
   });
 
+  // 2b. Tổng và số đếm theo trạng thái của từng hàng đợi (GET /api/queues/{name}/, MBE-02)
+  const riskSummaryQuery = useQuery({
+    queryKey: ['review', 'summary', datasetId, effectiveRunId, 'risk'],
+    queryFn: ({ signal }) => getQueueSummary('risk', effectiveRunId!, signal),
+    enabled: queueDataEnabled,
+  });
+  const randomSummaryQuery = useQuery({
+    queryKey: ['review', 'summary', datasetId, effectiveRunId, 'random'],
+    queryFn: ({ signal }) => getQueueSummary('random', effectiveRunId!, signal),
+    enabled: queueDataEnabled,
+  });
+  const activeSummary = activeQueue === 'risk' ? riskSummaryQuery : randomSummaryQuery;
+
+  const invalidateQueueData = (targetDatasetId: number | null, targetRunId: number | null) => {
+    queryClient.invalidateQueries({ queryKey: ['review', 'ranking', targetDatasetId, targetRunId] });
+    queryClient.invalidateQueries({ queryKey: ['review', 'summary', targetDatasetId, targetRunId] });
+  };
+
   // 3. Mutation for Claim Next Frame
+  // Biến truyền vào: frame_id khi bấm "Bắt đầu kiểm tra" trên một ảnh; undefined = frame kế tiếp.
   const claimMutation = useMutation({
-    onMutate: () => {
+    onMutate: (frameId: number | undefined) => {
       setClaimStatus204(false);
       setClaimError(null);
+      setClaimNotice(null);
       setRenewMessage(null);
       setIsLeaseConflict(false);
       return {
         targetDatasetId: datasetId,
         targetRunId: effectiveRunId,
         targetUserId: currentUserId,
+        requestedFrameId: frameId,
       };
     },
-    mutationFn: async () => {
-      return claimNextFrame(activeQueue, effectiveRunId!);
+    mutationFn: async (frameId: number | undefined) => {
+      return claimNextFrame(activeQueue, effectiveRunId!, undefined, frameId);
     },
     onSuccess: (result, _variables, context) => {
       // Discard if context switched while mutation was pending
@@ -268,11 +367,30 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       }
       if (result.status === 204) {
         setClaimStatus204(true);
-      } else {
-        setActiveGrant(result.grant);
-        queryClient.invalidateQueries({
-          queryKey: ['review', 'ranking', context.targetDatasetId, context.targetRunId],
-        });
+        return;
+      }
+      const { grant } = result;
+      setActiveGrant(grant);
+      invalidateQueueData(context.targetDatasetId, context.targetRunId);
+      if (context.requestedFrameId === undefined) return;
+      if (grant.frame.id !== context.requestedFrameId) {
+        setClaimNotice(
+          `Bạn đang giữ ${frameTitle(grant.frame)} (Frame ID ${grant.frame.id}${
+            grant.frame.run_id !== context.targetRunId ? `, Run #${grant.frame.run_id}` : ''
+          }). Hoàn tất frame đó trước khi nhận frame khác.`
+        );
+        return;
+      }
+      // Nhận đúng frame đã chọn: mở thẳng màn kiểm tra như thiết kế (ReviewQueues → ReviewWorkspace)
+      const expiresAt = new Date(grant.lease.expires_at).getTime();
+      if (
+        grant.lease.holder_user_id === context.targetUserId &&
+        grant.lease.frame_id === grant.frame.id &&
+        grant.frame.run_id === context.targetRunId &&
+        Number.isFinite(expiresAt) &&
+        expiresAt > Date.now()
+      ) {
+        setIsWorkspaceOpen(true);
       }
     },
     onError: (err: unknown, _variables, context) => {
@@ -356,10 +474,11 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     setIsLeaseConflict(false);
     setActiveGrant(null);
     setClaimError(null);
+    setClaimNotice(null);
     setRenewMessage(null);
     setClaimStatus204(false);
     queryClient.invalidateQueries({ queryKey: ['review', 'run', datasetId, effectiveRunId] });
-    queryClient.invalidateQueries({ queryKey: ['review', 'ranking', datasetId, effectiveRunId] });
+    invalidateQueueData(datasetId, effectiveRunId);
   };
 
   const isMatchingHolder = Boolean(
@@ -448,6 +567,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             <div className="lx-callout__text">
               Không thể tải thông tin Run #{effectiveRunId}: {errorMessage(runQuery.error)}
             </div>
+            <button type="button" className="lx-btn lx-btn--sm" onClick={() => runQuery.refetch()}>
+              Thử lại
+            </button>
           </div>
         )}
       </div>
@@ -557,6 +679,13 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         </section>
       )}
 
+      {/* Server trả lease đang giữ thay vì frame vừa chọn */}
+      {claimNotice && (
+        <div role="status" className="lx-callout lx-callout--info" aria-label="Thông báo frame đang giữ">
+          <div className="lx-callout__text">{claimNotice}</div>
+        </div>
+      )}
+
       {/* Claim 204 Status Notification */}
       {claimStatus204 && (
         <div role="status" className="lx-callout lx-callout--info" aria-label="Thông báo hàng đợi hết frame">
@@ -660,124 +789,155 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               }
               setIsWorkspaceOpen(false);
               setActiveGrant(null);
-              queryClient.invalidateQueries({
-                queryKey: ['review', 'ranking', datasetId, effectiveRunId],
-              });
+              invalidateQueueData(datasetId, effectiveRunId);
             }}
           />
         </section>
       ) : (
         !datasetId || !effectiveRunId ? (
-          <ReviewQueueSample />
+          <section className="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
+            <div className="lx-card__head"><strong>Ảnh cần kiểm tra</strong></div>
+            <div className="lx-review-empty">
+              <p>Chưa có hàng đợi để hiển thị. Chọn Dataset và nhập mã Quality Control Run ở trên để tải ảnh cần kiểm tra.</p>
+            </div>
+          </section>
+        ) : runQuery.isPending ? (
+          <section className="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
+            <div className="lx-card__body lx-muted" role="status">Đang tải Run #{effectiveRunId}...</div>
+          </section>
         ) : runQuery.isSuccess && (
           <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
-          {/* Queue Selection Tabs */}
+          {/* Queue Selection Tabs: số đếm lấy từ GET /api/queues/{name}/ */}
           <div className="lx-tabs" role="tablist" aria-label="Các hàng đợi kiểm tra">
-            <button
-              type="button"
-              role="tab"
-              className={`lx-tab ${activeQueue === 'risk' ? 'is-active' : ''}`}
-              onClick={() => handleQueueChange('risk')}
-              aria-selected={activeQueue === 'risk'}
-            >
-              <span>Hàng đợi rủi ro (Risk Queue)</span>
-              {activeQueue === 'risk' && rankingQuery.data && (
-                <span className="lx-count">Trang hiện tại</span>
-              )}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              className={`lx-tab ${activeQueue === 'random' ? 'is-active' : ''}`}
-              onClick={() => handleQueueChange('random')}
-              aria-selected={activeQueue === 'random'}
-            >
-              <span>Kiểm định ngẫu nhiên (Random Audit)</span>
-              {activeQueue === 'random' && rankingQuery.data && (
-                <span className="lx-count">Trang hiện tại</span>
-              )}
-            </button>
+            {([
+              ['risk', 'Hàng đợi rủi ro (Risk Queue)', riskSummaryQuery],
+              ['random', 'Kiểm định ngẫu nhiên (Random Audit)', randomSummaryQuery],
+            ] as const).map(([queue, label, summary]) => (
+              <button
+                key={queue}
+                type="button"
+                role="tab"
+                className={`lx-tab ${activeQueue === queue ? 'is-active' : ''}`}
+                onClick={() => handleQueueChange(queue)}
+                aria-selected={activeQueue === queue}
+              >
+                <span>{label}</span>
+                {summary.isSuccess && <span className="lx-count lx-num">{summary.data.total}</span>}
+              </button>
+            ))}
           </div>
 
-          {/* Filters Bar & Claim Action */}
+          {/* Filters Bar */}
           <div className="lx-review-filters lx-review-filters--4">
-            {/* TODO(backend): tìm kiếm theo tên/mã ảnh và mức ưu tiên chưa có ở GET /api/runs/{id}/frames/ */}
             <label className="lx-field">Tìm kiếm
               <span className="lx-search">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
-                <input type="search" disabled placeholder="Tìm ảnh hoặc mã công việc" aria-label="Tìm ảnh hoặc mã công việc" />
+                <input
+                  type="search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Tìm theo mã task hoặc số frame"
+                  aria-label="Tìm ảnh theo mã task hoặc số frame"
+                />
               </span>
             </label>
-            <label className="lx-field">Nhóm lỗi
+            <label className="lx-field">Mức ưu tiên
               <select
-                id="filter-family"
-                aria-label="Lọc theo nhóm lỗi (family)"
+                className="lx-select"
+                value={filters.priority ?? ''}
+                onChange={(e) => handleFilterChange({ priority: (e.target.value as RankingPriority) || undefined })}
+              >
+                <option value="">Tất cả</option>
+                {(Object.keys(PRIORITY_LABELS) as RankingPriority[]).map((p) => (
+                  <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="lx-field">Loại cảnh báo
+              <select
                 className="lx-select"
                 value={filters.family ?? ''}
                 onChange={(e) => handleFilterChange({ family: (e.target.value as IssueFamily) || undefined })}
               >
-                <option value="">-- Nhóm lỗi (Family) --</option>
-                <option value="E1">E1 (Thiếu nhãn)</option>
-                <option value="E2">E2 (Sai lớp)</option>
-                <option value="E3">E3 (Trùng nhãn)</option>
-                <option value="structural">Cấu trúc (structural)</option>
+                <option value="">Tất cả</option>
+                {(Object.keys(FAMILY_LABELS) as IssueFamily[]).map((f) => (
+                  <option key={f} value={f}>{FAMILY_LABELS[f]} ({f})</option>
+                ))}
               </select>
             </label>
             <label className="lx-field">Nguồn
               <select
-                id="filter-origin"
-                aria-label="Lọc theo nguồn gốc (origin)"
                 className="lx-select"
                 value={filters.origin ?? ''}
                 onChange={(e) => handleFilterChange({ origin: (e.target.value as IssueOrigin) || undefined })}
               >
-                <option value="">-- Nguồn gốc (Origin) --</option>
+                <option value="">Tất cả</option>
                 <option value="engine">Máy (engine)</option>
                 <option value="reviewer">Reviewer</option>
               </select>
             </label>
             <label className="lx-field">Trạng thái
               <select
-                id="filter-review-state"
-                aria-label="Lọc theo trạng thái review"
                 className="lx-select"
                 value={filters.review_state ?? ''}
                 onChange={(e) => handleFilterChange({ review_state: (e.target.value as FrameReviewState) || undefined })}
               >
-                <option value="">-- Trạng thái review --</option>
-                <option value="unreviewed">Chưa review</option>
-                <option value="in_review">Đang review</option>
-                <option value="incomplete">Đang dở</option>
-                <option value="reviewed">Đã review</option>
-                <option value="awaiting_followup">Chờ theo dõi</option>
-                <option value="completed">Hoàn tất</option>
+                <option value="">Tất cả</option>
+                {(Object.keys(REVIEW_STATE_LABELS) as FrameReviewState[]).map((st) => (
+                  <option key={st} value={st}>
+                    {REVIEW_STATE_LABELS[st]}
+                    {activeSummary.isSuccess ? ` (${activeSummary.data.counts[st] ?? 0})` : ''}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
           <div className="lx-card__head">
-            <strong>Ảnh cần kiểm tra</strong>
+            <div className="lx-row">
+              <strong>Ảnh cần kiểm tra</strong>
+              {activeSummary.isSuccess && (
+                <span className="lx-hint" role="status">{activeSummary.data.total} ảnh trong hàng đợi</span>
+              )}
+              {activeSummary.isPending && <span className="lx-hint">Đang tải số đếm...</span>}
+              {activeSummary.isError && (
+                <span className="lx-hint">
+                  Không tải được số đếm hàng đợi.{' '}
+                  <button
+                    type="button"
+                    className="lx-btn lx-btn--ghost lx-btn--sm"
+                    onClick={() => activeSummary.refetch()}
+                    aria-label="Tải lại số đếm hàng đợi"
+                  >
+                    Thử lại
+                  </button>
+                </span>
+              )}
+            </div>
             <div className="lx-actions">
-              {(filters.family || filters.origin || filters.review_state) && (
+              {hasFilters && (
                 <button type="button" className="lx-btn lx-btn--ghost lx-btn--sm" onClick={handleResetFilters}>
                   Xóa bộ lọc
                 </button>
               )}
               <button
                 type="button"
-                className="lx-btn lx-btn--primary"
-                onClick={() => claimMutation.mutate()}
+                className="lx-btn"
+                onClick={() => claimMutation.mutate(undefined)}
                 disabled={claimMutation.isPending || !runQuery.isSuccess}
                 aria-label="Nhận frame kế tiếp từ hàng đợi"
               >
-                {claimMutation.isPending
+                {claimMutation.isPending && claimMutation.variables === undefined
                   ? 'Đang nhận frame...'
-                  : `Bắt đầu kiểm tra (${activeQueue === 'risk' ? 'Risk' : 'Random'})`}
+                  : `Nhận frame kế tiếp (${activeQueue === 'risk' ? 'Risk' : 'Random'})`}
               </button>
             </div>
           </div>
 
-          {/* Ranking Frames Table */}
-          {rankingQuery.isLoading && (
+          {/* TODO(backend): cảnh quay và thời gian chụp của ảnh (thiết kế ReviewQueues) chưa có ở GET /api/runs/{id}/ranking/ */}
+          <NotConnectedNotice detail="Cảnh quay và thời gian chụp của từng ảnh chưa có trong dữ liệu hàng đợi" />
+
+          {/* Ranking Frames List */}
+          {rankingQuery.isPending && (
             <div className="lx-card__body lx-muted" role="status">
               Đang tải danh sách frame trong hàng đợi {activeQueue}...
             </div>
@@ -805,9 +965,11 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               {rankingQuery.data.results.length === 0 ? (
                 <div className="lx-review-empty">
                   <p>
-                    Không có frame nào khớp với điều kiện lọc trong hàng đợi {activeQueue}.
+                    {hasFilters
+                      ? `Không có frame nào khớp với điều kiện lọc trong hàng đợi ${activeQueue}.`
+                      : `Hàng đợi ${activeQueue} chưa có frame nào.`}
                   </p>
-                  {(filters.family || filters.origin || filters.review_state) && (
+                  {hasFilters && (
                     <div>
                       <button
                         type="button"
@@ -821,45 +983,55 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                 </div>
               ) : (
                 <div className="lx-review-queue" role="list" aria-label="Danh sách frame xếp hạng">
-                  {rankingQuery.data.results.map((frame: RankedFrame) => (
+                  {rankingQuery.data.results.map((frame: RankedFrame) => {
+                    const title = frameTitle(frame);
+                    const heldByOther =
+                      frame.lease_holder_user_id !== null && frame.lease_holder_user_id !== currentUserId;
+                    const isClaimingThis = claimMutation.isPending && claimMutation.variables === frame.frame_id;
+                    return (
                     <article
                       key={`${frame.frame_key.cvat_task_id}-${frame.frame_key.frame_number}`}
                       className="lx-review-row"
                       role="listitem"
                     >
-                      <span className="lx-review-rank"><strong>#{frame.rank}</strong></span>
-                      {/* TODO(backend): ảnh thu nhỏ của frame chưa có ở API ranking */}
-                      <span className="lx-review-thumb lx-review-thumb--empty" aria-hidden="true"><Icon name="image" className="lx-review-icon" /></span>
+                      <span className="lx-review-rank">{frame.rank}</span>
+                      <RankedFrameThumb frame={frame} />
                       <div className="lx-review-info">
                         <div className="lx-review-title">
-                          <h2 className="lx-h2">
-                            Task #{frame.frame_key.cvat_task_id} • Frame #{frame.frame_key.frame_number}
-                          </h2>
+                          <h2 className="lx-h2">{title}</h2>
                           {frame.issue_counts && Object.keys(frame.issue_counts).length > 0 ? (
                             Object.entries(frame.issue_counts).map(([fam, count]) => (
                               <span key={fam} className="lx-review-badge">
-                                <Icon name="alert" className="lx-review-icon" />{fam}: {count}
+                                <Icon name="alert" className="lx-review-icon" />
+                                {FAMILY_LABELS[fam as IssueFamily] ?? fam} ({fam}): {count}
                               </span>
                             ))
                           ) : (
                             <span className="lx-subtle">0 issue</span>
                           )}
-                          <span className={`lx-review-badge${frame.source === 'risk' ? ' lx-review-badge--danger' : ''}`}>
-                            {frame.source}
-                          </span>
+                          {frame.priority && (
+                            <span className={`lx-review-badge${frame.priority === 'high' ? ' lx-review-badge--danger' : ''}`}>
+                              {frame.priority !== 'low' && (
+                                <Icon name={frame.priority === 'high' ? 'up' : 'equal'} className="lx-review-icon" />
+                              )}
+                              Ưu tiên {PRIORITY_LABELS[frame.priority].toLowerCase()}
+                            </span>
+                          )}
+                          <span className="lx-review-badge">{frame.source === 'risk' ? 'Rủi ro' : 'Ngẫu nhiên'}</span>
                           {frame.missing_evidence && (
                             <span className="lx-badge lx-badge--warning">Thiếu bằng chứng</span>
                           )}
                         </div>
                         <div className="lx-mono lx-subtle">Frame ID: {frame.frame_id}</div>
                         <div className="lx-review-meta">
-                          <span>{frame.score.toFixed(3)}</span>
+                          <span><Icon name="frame" className="lx-review-icon" />Frame {frame.frame_key.frame_number}</span>
+                          <span>Điểm {frame.score.toFixed(3)}</span>
                           <span className="lx-subtle">Nền: {frame.baseline_score.toFixed(3)}</span>
-                          <span className="lx-badge lx-badge--neutral">{frame.review_state}</span>
+                          <span className="lx-badge lx-badge--neutral">{REVIEW_STATE_LABELS[frame.review_state] ?? frame.review_state}</span>
                           {frame.lease_holder_user_id ? (
-                            <span className="lx-mono">User #{frame.lease_holder_user_id}</span>
+                            <span className="lx-mono">Đang giữ: User #{frame.lease_holder_user_id}</span>
                           ) : (
-                            <span className="lx-subtle">Chưa có</span>
+                            <span className="lx-subtle">Chưa có người giữ</span>
                           )}
                         </div>
                         {frame.explanation && (
@@ -869,18 +1041,37 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                           </details>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        className="lx-btn lx-btn--primary lx-review-start"
+                        aria-label={`Bắt đầu kiểm tra ${title}`}
+                        title={heldByOther ? `Frame đang được User #${frame.lease_holder_user_id} giữ` : undefined}
+                        disabled={claimMutation.isPending || heldByOther}
+                        onClick={() => claimMutation.mutate(frame.frame_id)}
+                      >
+                        {isClaimingThis ? 'Đang nhận...' : 'Bắt đầu kiểm tra'}
+                      </button>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
               {/* Server Cursor Pager */}
               <div className="lx-card__foot">
                 <span className="lx-hint">
-                  Hàng đợi {activeQueue === 'risk' ? 'Rủi ro' : 'Kiểm định ngẫu nhiên'} • Sắp xếp
-                  theo rank tăng dần
+                  {activeQueue === 'risk'
+                    ? 'Ưu tiên cao được hiển thị trước'
+                    : 'Kiểm định ngẫu nhiên • Sắp xếp theo rank tăng dần'}
                 </span>
                 <div className="lx-pager">
+                  {rankingQuery.data.results.length > 0 && (
+                    <span className="lx-hint lx-num">
+                      {hasFilters || !activeSummary.isSuccess
+                        ? `${rankingQuery.data.results.length} ảnh trên trang này`
+                        : `${rankingQuery.data.results[0].rank}–${rankingQuery.data.results[rankingQuery.data.results.length - 1].rank} / ${activeSummary.data.total}`}
+                    </span>
+                  )}
                   <button
                     type="button"
                     className="lx-btn lx-btn--sm"

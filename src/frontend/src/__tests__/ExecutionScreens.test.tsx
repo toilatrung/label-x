@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
@@ -106,6 +106,11 @@ async function setup(
 }
 
 describe('Execution screens on real API contract', () => {
+  beforeEach(() => {
+    HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+    HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
+  });
+
   it('shows coverage exclusion reason/version, shard error, and truthful statuses', async () => {
     const { calls } = await setup('qalead', <ExecutionHistoryPage />);
     expect(await screen.findByText(/not_applicable: 1/)).toBeDefined();
@@ -180,18 +185,23 @@ describe('Execution screens on real API contract', () => {
   it('creates and publishes a version through the real config endpoints', async () => {
     const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
     await screen.findByRole('option', { name: /Published config/ });
-    fireEvent.change(screen.getByLabelText('Tên cấu hình'), { target: { value: 'New config' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
     const create = calls.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/config-versions/');
     expect(create?.headers.get('Idempotency-Key')).toBeTruthy();
     expect(create && (await create.clone().json()).engines.duplicate.enabled).toBe(true);
+    // Phát hành xong thì đóng hộp thoại và chọn luôn phiên bản mới ở cột Sẵn sàng chạy.
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect((screen.getByLabelText('Phiên bản cấu hình') as HTMLSelectElement).value).toBe('8');
   });
 
   it('keeps a failed publish visible with its trace and retry action', async () => {
     await setup('qcadmin', <AnalysisConfigPage />, { publishFails: true });
     await screen.findByRole('option', { name: /Published config/ });
-    fireEvent.change(screen.getByLabelText('Tên cấu hình'), { target: { value: 'New config' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     expect(await screen.findByText(/Mã yêu cầu: cfg-publish-503/)).toBeDefined();
     expect(screen.getByText(/Phiên bản v8 đã được tạo nhưng chưa xác nhận phát hành/)).toBeDefined();
@@ -239,9 +249,11 @@ describe('Execution screens on real API contract', () => {
     expect(empty.closest('.lx-callout')?.className).toContain('lx-callout--neutral');
   });
 
-  it('shows the create-version form with one labelled switch per engine in its own row', async () => {
+  it('opens the create-version modal from a header button, with one labelled switch per engine in its own row', async () => {
     await setup('qcadmin', <AnalysisConfigPage />);
-    const form = within(await screen.findByRole('region', { name: 'Tạo phiên bản cấu hình' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    const form = within(screen.getByRole('dialog', { name: 'Tạo phiên bản cấu hình' }));
     for (const name of ['Schema / Taxonomy', 'Geometry', 'Duplicate / Overlap', 'Mô hình độc lập (Detector)', 'Mô hình thị giác – ngôn ngữ (VLM)', 'Metric']) {
       const toggle = form.getByRole('checkbox', { name });
       expect(toggle.closest('tr')?.textContent).toContain(name);

@@ -103,6 +103,11 @@
 .lx-muted { color: var(--ink-muted); } .lx-subtle { color: var(--ink-subtle); }
 .lx-stack { display: flex; flex-direction: column; gap: var(--space-4); }
 .lx-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* Bảng có ô chứa control cao 32px: căn mép trên, chữ (20px) lùi 6px để thẳng hàng với control. */
+.lx-table--controls td { vertical-align: top; padding-top: calc(var(--space-3) + 6px); }
+.lx-table--controls td.lx-td--control { padding-top: var(--space-3); }
+.lx-frame-pick { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 240px; }
+.lx-frame-pick .lx-select { width: 100%; }
 .lx-grid { display: grid; gap: var(--space-4); }
 .lx-grid--4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .lx-grid--3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }

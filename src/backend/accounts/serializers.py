@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from accounts.models import CvatIdentity, Role, RoleAssignment
@@ -61,11 +62,20 @@ def build_session(user: AbstractBaseUser | AnonymousUser) -> dict[str, Any]:
     }
 
 
+@extend_schema_serializer(component_name="WorkflowRule")
 class WorkflowRuleSerializer(serializers.Serializer[dict[str, Any]]):
     rule = serializers.CharField()
     name = serializers.CharField()
     description = serializers.CharField()
     enforced = serializers.BooleanField()
+    revision = serializers.IntegerField(required=False)
+    locked = serializers.BooleanField(required=False)
+
+
+class WorkflowRulePatchSerializer(serializers.Serializer[dict[str, Any]]):
+    enforced = serializers.BooleanField(required=True)
+    expected_revision = serializers.IntegerField(required=True)
+    reason = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class WorkflowPermissionsSerializer(serializers.Serializer[dict[str, Any]]):

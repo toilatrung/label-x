@@ -13,9 +13,14 @@ import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
 import { ReviewDecisionForm, ISSUE_STATE_LABELS } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
+import { ReviewSimilarCases } from './ReviewSimilarCases';
 import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup';
+import {
+  aiEvidenceForIssue,
+  fetchFrameWorkspace,
+  type FrameWorkspace,
+} from '@/lib/review/workspace-api';
 
-type FrameIssues = components['schemas']['FrameIssues'];
 type Issue = components['schemas']['Issue'];
 type Lease = components['schemas']['Lease'];
 type LeaseGrant = components['schemas']['LeaseGrant'];
@@ -124,7 +129,7 @@ export function ReviewWorkspace({
     ['qa_lead', 'qc_admin', 'super_admin'].includes(r.role)
   );
 
-  const [data, setData] = useState<FrameIssues | null>(null);
+  const [data, setData] = useState<FrameWorkspace | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [forbiddenCode, setForbiddenCode] = useState<string | null>(null);
@@ -315,7 +320,8 @@ export function ReviewWorkspace({
     }
   }, [frameId, currentUserId, runId, effectiveDatasetId, initialLease?.id]);
 
-  // Load FrameIssues asynchronously from API with cancellation and sequence guard
+  // Load the frame workspace (MBE-01: superset of FrameIssues + lease/queue/AI evidence)
+  // asynchronously from API with cancellation and sequence guard
   const loadFrame = useCallback((targetFrameId: number) => {
     if (abortCtrlRef.current) {
       abortCtrlRef.current.abort();
@@ -326,11 +332,7 @@ export function ReviewWorkspace({
     const opGen = generationRef.current;
     const reqUserId = contextRef.current.currentUserId;
 
-    apiClient
-      .GET('/api/frames/{id}/issues/', {
-        params: { path: { id: targetFrameId } },
-        signal: abortCtrl.signal,
-      })
+    fetchFrameWorkspace(targetFrameId, abortCtrl.signal)
       .then(({ data: frameData, error, response }) => {
         // Discard stale out-of-order response or changed context
         if (
@@ -415,7 +417,11 @@ export function ReviewWorkspace({
 
   // Snapshot revision resolution logic for eligible roles
   const boundRunId = runId ?? data?.frame.run_id ?? null;
-  const directRevision = snapshotRevision?.trim() || null;
+  // Precedence: verified revision handed over by the caller, then the locked snapshot revision
+  // issued by the server in the workspace payload, then run → snapshot lookup (eligible roles).
+  const serverRevision =
+    data && (runId == null || data.frame.run_id === runId) ? data.snapshot_revision?.trim() || null : null;
+  const directRevision = snapshotRevision?.trim() || serverRevision;
   const revContextKey = `${boundRunId}:${isEligibleRoleForSnapshot}:${directRevision || ''}:${effectiveDatasetId}`;
   const [prevRevContextKey, setPrevRevContextKey] = useState(revContextKey);
 
@@ -735,6 +741,11 @@ export function ReviewWorkspace({
         <div className="lx-callout lx-callout--info lx-callout--neutral" role="status">
           <span className="lx-callout__text lx-text-ink">
             <b>Chế độ chỉ xem:</b> Frame được mở trực tiếp, không đi từ hàng đợi Review Queues nên chưa có lease. Bạn xem được hình ảnh, annotation và bằng chứng nhưng không lưu quyết định hoặc hoàn tất frame.
+            {data.lease && currentUserId !== null && data.lease.holder_user_id === currentUserId
+              ? ' Máy chủ ghi nhận bạn đang giữ lease của frame này: nhận lại frame từ hàng đợi để tiếp tục review.'
+              : data.lease
+                ? ' Frame đang được một người review khác giữ.'
+                : ''}
           </span>
         </div>
       )}
@@ -1060,6 +1071,7 @@ export function ReviewWorkspace({
                   evidenceList={activeIssue.evidence || []}
                   engineStatuses={data.engines || []}
                   currentAnnotationClass={activeIssue.evidence?.[0]?.actual || undefined}
+                  aiEvidence={aiEvidenceForIssue(data.ai_evidence, activeIssue.id)}
                 />
 
                 <ReviewGuidelineLookup
@@ -1067,12 +1079,11 @@ export function ReviewWorkspace({
                   guidelineVersion={data.guideline_version}
                 />
 
-                {/* Similar Cases & Lineage Links */}
-                <details>
-                  <summary className="lx-ws__summary">
-                    Case tương tự đã phân xử ({activeIssue.links?.length || 3})
-                  </summary>
-                  {activeIssue.links && activeIssue.links.length > 0 ? (
+                <ReviewSimilarCases issueId={activeIssue.id} />
+
+                {activeIssue.links && activeIssue.links.length > 0 && (
+                  <details>
+                    <summary className="lx-ws__summary">Issue liên quan ({activeIssue.links.length})</summary>
                     <div className="lx-mt-2">
                       {activeIssue.links.map((link, idx) => (
                         <p key={`link-${idx}`} className="lx-muted lx-ws__note--tight">
@@ -1081,12 +1092,8 @@ export function ReviewWorkspace({
                         </p>
                       ))}
                     </div>
-                  ) : (
-                    <p className="lx-muted lx-ws__note--tight">
-                      CASE-021 · Xe bán tải thùng hở → <b>truck</b>. CASE-034 · Xe van → <b>car</b>. CASE-040 · Xe bán tải có nắp thùng → <b>truck</b>.
-                    </p>
-                  )}
-                </details>
+                  </details>
+                )}
 
                 <div className="lx-mt-3">
                   <DecisionCaseLookup initialIssueId={activeIssue.id} compact />

@@ -2,13 +2,36 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from calibration.views import (
+    AuditSampleListCreateView,
+    BenchmarkImportCvatView,
+    BenchmarkListCreateView,
+    EvaluationPerformanceView,
+)
 from orchestration.metrics_view import MetricsView
 from review.adjudication_views import (
     DecisionCaseDetailView,
     DecisionCaseListView,
     EscalationsListView,
 )
-from runs.views import ConfigVersionListView, ConfigVersionPublishView
+from review.gap_views import GuidelineGapCollectionView
+from runs.kpi_views import (
+    KpiEvaluationCreateView,
+    KpiEvaluationDetailView,
+    ReferenceCreateView,
+    ReferenceLockView,
+    ReportView,
+    RunGateView,
+    WaiverApproveView,
+    WaiverCreateView,
+)
+from runs.views import (
+    ConfigVersionListView,
+    ConfigVersionPublishView,
+    ConfigVersionRulesView,
+    ModelListView,
+    ModelUpdateView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -19,8 +42,8 @@ urlpatterns = [
     path("api/guidelines/", include("guideline.urls")),
     path("api/snapshots/", include("snapshots.urls")),
     path("api/datasets/", include("snapshots.dataset_urls")),
+    path("api/runs/<int:pk>/gate/", RunGateView.as_view(), name="runs-gate"),
     path("api/runs/", include("runs.urls")),
-    path("api/reports/", include("reports.urls")),
     path("api/releases/", include("releases.urls")),
     path("api/candidates/", include("orchestration.candidate_urls")),
     path("api/candidate-evaluations/", include("orchestration.evaluation_urls")),
@@ -32,16 +55,46 @@ urlpatterns = [
     path("api/effort-events/", include("effort.urls")),
     path("api/review-policy/", include("review.policy_urls")),
     path("api/escalations/", EscalationsListView.as_view(), name="escalations-list"),
+    path("api/guideline-gaps/", GuidelineGapCollectionView.as_view(), name="guideline-gaps"),
     path("api/decision-cases/", DecisionCaseListView.as_view(), name="decision-cases-list"),
     path(
         "api/decision-cases/<int:pk>/",
         DecisionCaseDetailView.as_view(),
         name="decision-cases-detail",
     ),
+    path("api/references/", ReferenceCreateView.as_view(), name="references-create"),
+    path("api/references/<int:pk>/lock/", ReferenceLockView.as_view(), name="references-lock"),
+    path("api/evaluations/", KpiEvaluationCreateView.as_view(), name="evaluations-create"),
+    path("api/evaluations/<int:pk>/", KpiEvaluationDetailView.as_view(), name="evaluations-detail"),
+    path("api/waivers/", WaiverCreateView.as_view(), name="waivers-create"),
+    path("api/waivers/<int:pk>/approve/", WaiverApproveView.as_view(), name="waivers-approve"),
+    path("api/reports/<int:pk>/", ReportView.as_view(), name="reports-retrieve"),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",
         ConfigVersionPublishView.as_view(),
         name="config-versions-publish",
     ),
+    path(
+        "api/config-versions/<int:pk>/rules/",
+        ConfigVersionRulesView.as_view(),
+        name="config-versions-rules",
+    ),
+    path("api/models/", ModelListView.as_view(), name="models-list"),
+    path("api/models/<int:pk>/", ModelUpdateView.as_view(), name="models-update"),
+    path(
+        "api/audit-samples/", AuditSampleListCreateView.as_view(), name="audit-samples-list-create"
+    ),
+    path(
+        "api/benchmarks/import-cvat/",
+        BenchmarkImportCvatView.as_view(),
+        name="benchmarks-import-cvat",
+    ),
+    path("api/benchmarks/", BenchmarkListCreateView.as_view(), name="benchmarks-list-create"),
+    path(
+        "api/evaluation/performance/",
+        EvaluationPerformanceView.as_view(),
+        name="evaluation-performance",
+    ),
+    path("api/calibration/", include("calibration.urls")),
 ]
