@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -59,7 +60,13 @@ def _optional_text(data: dict[str, Any], key: str, context: str) -> str:
     return value.strip()
 
 
-def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[dict[str, Any]]]:
+def _parse_guideline(
+    raw: bytes,
+    *,
+    manual_taxonomy: dict[str, Any] | None = None,
+    require_taxonomy: bool = False,
+    validate_classes: bool = True,
+) -> tuple[str, str, list[dict[str, str]], list[dict[str, Any]]]:
     """Parse YAML và trả về (version_tag, name, rules, mappings).
 
     Quy tắc kiểm tra (T-003, T-017):
@@ -104,7 +111,10 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
         known_rule_ids.add(rule_id)
         rules.append({"id": rule_id, "section": section, "content": content})
 
-    taxonomy = parse_taxonomy(raw, known_rule_ids)
+    taxonomy = parse_taxonomy(raw, known_rule_ids, manual_taxonomy)
+    if require_taxonomy and not taxonomy:
+        raise CommandError("Guideline không có taxonomy. Nhập taxonomy trước khi import.")
+    validate_classes = validate_classes or bool(taxonomy)
     taxonomy_name = "guideline" if taxonomy else "BDD100K"
     valid_classes = {label["name"] for label in taxonomy["labels"]} if taxonomy else BDD100K_CLASSES
 
@@ -125,11 +135,11 @@ def _parse_guideline(raw: bytes) -> tuple[str, str, list[dict[str, str]], list[d
             errors.append(f"{context} must contain at least one mapping selector.")
         if error_group not in VALID_ERROR_GROUPS:
             errors.append(f"{context}.error_group '{error_group}' is not a valid IssueFamily.")
-        if class_name and class_name not in valid_classes:
+        if validate_classes and class_name and class_name not in valid_classes:
             errors.append(
                 f"{context}.class_name '{class_name}' is outside {taxonomy_name} taxonomy."
             )
-        if paired_class and paired_class not in valid_classes:
+        if validate_classes and paired_class and paired_class not in valid_classes:
             errors.append(
                 f"{context}.paired_class '{paired_class}' is outside {taxonomy_name} taxonomy."
             )
@@ -173,8 +183,20 @@ def load_guideline(
     raw: bytes,
     actor_username: str,
     on_loaded: Callable[[GuidelineVersion, bool], None] | None = None,
+    *,
+    manual_taxonomy: dict[str, Any] | None = None,
+    require_taxonomy: bool = False,
 ) -> tuple[GuidelineVersion, bool]:
     checksum = hashlib.sha256(raw).hexdigest()
+    if manual_taxonomy is not None:
+        # Include both sources so changed manual policy cannot replay a file-only checksum.
+        effective = json.dumps(
+            {"file_sha256": checksum, "taxonomy": manual_taxonomy},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        checksum = hashlib.sha256(effective.encode("utf-8")).hexdigest()
     row_count = len(raw.splitlines())
     actor = get_user_model().objects.filter(username=actor_username).first()
 
@@ -220,15 +242,21 @@ def load_guideline(
 
     # Idempotency: cùng checksum → bỏ qua
     if GuidelineVersion.objects.filter(file_checksum=checksum).exists():
+        version = GuidelineVersion.objects.get(file_checksum=checksum)
+        if require_taxonomy and not version.taxonomy:
+            message = "Guideline đã import chưa có taxonomy. Nhập taxonomy để tạo phiên bản đầy đủ."
+            record(GuidelineLoadRecord.Result.REJECTED, [message])
+            raise CommandError(message)
         with transaction.atomic():
-            version = GuidelineVersion.objects.get(file_checksum=checksum)
             record(GuidelineLoadRecord.Result.SKIPPED, [])
             if on_loaded:
                 on_loaded(version, True)
         return version, True
 
     try:
-        version_tag, name, rules_data, mappings_data = _parse_guideline(raw)
+        version_tag, name, rules_data, mappings_data = _parse_guideline(
+            raw, manual_taxonomy=manual_taxonomy, require_taxonomy=require_taxonomy
+        )
     except GuidelineMappingValidationError as exc:
         record(GuidelineLoadRecord.Result.REJECTED, exc.errors)
         raise CommandError(str(exc)) from exc
@@ -253,7 +281,7 @@ def load_guideline(
                 version_tag=version_tag,
                 name=name,
                 file_checksum=checksum,
-                taxonomy=parse_taxonomy(raw, {r["id"] for r in rules_data}),
+                taxonomy=parse_taxonomy(raw, {r["id"] for r in rules_data}, manual_taxonomy),
             )
 
             rule_map: dict[str, GuidelineRule] = {}
@@ -286,3 +314,14 @@ def load_guideline(
         raise CommandError(f"Database error during load: {exc}") from exc
 
     return gv, False
+
+
+def preview_guideline(raw: bytes) -> dict[str, Any]:
+    version, name, rules, _ = _parse_guideline(raw, validate_classes=False)
+    taxonomy = parse_taxonomy(raw, {rule["id"] for rule in rules})
+    return {
+        "version": version,
+        "name": name,
+        "rules": [{"rule_id": rule["id"], "section": rule["section"]} for rule in rules],
+        "taxonomy": taxonomy or None,
+    }

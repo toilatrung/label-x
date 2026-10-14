@@ -7,7 +7,7 @@ import type { CvatTask } from '@/lib/snapshots/api';
 
 const { post, push } = vi.hoisted(() => ({ post: vi.fn(), push: vi.fn() }));
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ session: { user: { id: 1 } } }) }));
-vi.mock('@/lib/guidelines/config-api', () => ({ getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
+vi.mock('@/lib/guidelines/config-api', () => ({ listGuidelineVersions: vi.fn().mockResolvedValue({ results: [], next: null, previous: null }), getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 vi.mock('@/lib/snapshots/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/snapshots/api')>()), postSnapshot: post,

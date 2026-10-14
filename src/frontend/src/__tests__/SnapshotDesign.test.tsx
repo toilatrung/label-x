@@ -8,7 +8,7 @@ import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import * as api from '@/lib/snapshots/api';
 import * as exec from '@/lib/execution/api';
 
-vi.mock('@/lib/guidelines/config-api', () => ({ getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
+vi.mock('@/lib/guidelines/config-api', () => ({ listGuidelineVersions: vi.fn().mockResolvedValue({ results: [], next: null, previous: null }), getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),

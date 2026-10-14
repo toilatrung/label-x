@@ -106,6 +106,14 @@ ul.dir{columns:2;font-size:14px}
 <li>Engine Schema dùng taxonomy đã đóng băng của Snapshot. Config tiếp tục quản lý bật/tắt engine; không yêu cầu người dùng nhập lại taxonomy hoặc sửa DB như config 55. Không thay đổi Snapshot đã khoá hay âm thầm thay taxonomy khi import Guideline mới. Luồng revision/rework phải dùng cùng chính sách version để tránh sai lệch hash.</li>
 <li>Kiểm thử import taxonomy, mapping Dataset, Snapshot bất biến, lớp ngoài Guideline, thuộc tính thiếu/sai giá trị, ID CVAT thay đổi và Guideline mới không tác động Snapshot cũ. Nghiệm thu qua FE → API → Snapshot → Run Schema không cần ORM; liên kết bằng chứng trước khi đóng A-03.</li>
 </ol>
+<h4 id="a03-modal-snapshot-policy">Điều chỉnh theo PO: modal import và chọn riêng từng Snapshot (2026-10-14)</h4>
+<ul>
+<li>Tab <code>Phiên bản guideline</code> tại <code>/configuration/guidelines</code> dùng thư viện API thật, có nút <code>Thêm Guideline</code> mở modal; bỏ bảng Guideline minh họa.</li>
+<li><code>POST /api/guidelines/preview/</code> kiểm tra YAML trước khi ghi. Tệp có taxonomy: nhận diện và import cùng Guideline. Tệp thiếu taxonomy: modal yêu cầu nhập version, các lớp và thuộc tính bắt buộc/rule/giá trị hợp lệ; <code>POST /api/guidelines/import/</code> cũng chặn import thiếu taxonomy, không chỉ kiểm trên FE.</li>
+<li>Taxonomy nhập tay phải tham chiếu rule của chính Guideline. Checksum của phiên bản bao gồm cả tệp và taxonomy nhập tay để không replay nhầm khi đổi policy. Không ghi đè taxonomy có sẵn trong tệp hay sửa phiên bản đã import; CLI legacy vẫn dùng được cho tra cứu.</li>
+<li>Bước tạo Snapshot cho phép chọn <code>guideline_version</code> riêng cho Dataset đang nhập, kể cả Dataset chưa đặt mặc định. Mapping Dataset → Guideline chỉ là mặc định tùy chọn, không bắt buộc và không đổi khi chọn riêng cho Snapshot. Snapshot đã khóa giữ nguyên policy; scope Dataset và idempotency tiếp tục kiểm ở API.</li>
+<li>Import không tự áp dụng Guideline vào Dataset hay Snapshot. Kiểm thử điều chỉnh: 73 backend pass; 470 frontend pass (44 file) trên bản sao mã nguồn giống hệt ở ổ Linux; chạy FE trực tiếp trên <code>/mnt/h</code> có 2 worker startup timeout. Typecheck, mypy và lint pass. <a href="../../evidence/blocker033-guideline-modal-snapshot.json">Bằng chứng kiểm tra</a>; nghiệm thu CVAT thật vẫn riêng với fixture.</li>
+</ul>
 <p><strong>Trạng thái A-03</strong>: <code>open</code> — đã triển khai trên nhánh <code>fix/blocker-033-guideline-taxonomy</code>; chờ tích hợp và nghiệm thu CVAT thật. Không đóng toàn bộ BLOCKER-033.</p>
 <ul>
 <li><strong>Import</strong>: CLI và <code>POST /api/guidelines/import/</code> dùng chung importer, lưu taxonomy cùng Guideline version/checksum; kiểm tên lớp trong mapping theo taxonomy; audit thành công cùng transaction và giữ load record bị từ chối. Guideline cũ vẫn tra cứu được nhưng chưa đủ taxonomy để tạo Snapshot mới.</li>

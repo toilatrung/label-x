@@ -1,3 +1,4 @@
+import type { components } from '@/lib/api/contract';
 import { apiClient, ApiRequestError } from '@/lib/api/client';
 function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (result.error || result.data === undefined || !result.response.ok) throw new ApiRequestError(result.response.status, result.error, result.response.headers);
@@ -7,9 +8,16 @@ async function csrf() {
   const result = await apiClient.GET('/api/auth/csrf/');
   if (!result.response.ok) throw new ApiRequestError(result.response.status, result.error, result.response.headers);
 }
-export async function importGuideline(content: string) {
+export type TaxonomyDefinition = components["schemas"]["GuidelineTaxonomyDefinition"];
+
+export async function previewGuideline(content: string) {
   await csrf();
-  return unwrap(await apiClient.POST('/api/guidelines/import/', { body: { content } }));
+  return unwrap(await apiClient.POST("/api/guidelines/preview/", { body: { content } }));
+}
+
+export async function importGuideline(content: string, taxonomy?: TaxonomyDefinition) {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/guidelines/import/', { body: { content, ...(taxonomy ? { taxonomy } : {}) } }));
 }
 export async function getDatasetGuideline(id: number, signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/datasets/{id}/guideline/', { params: { path: { id } }, signal }));

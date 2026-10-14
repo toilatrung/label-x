@@ -19,19 +19,12 @@ const MODELS = [
   { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: 'v0.9', mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Thử nghiệm', badge: 'lx-badge lx-badge--warning' },
 ];
 
-const GUIDELINES = [
-  { name: 'Guideline v1.2', taxonomy: 'v3', datasets: 'Road Vision Urban v1.3 – v1.4', effective: '2026-08-20', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
-  { name: 'Guideline v1.3', taxonomy: 'v3', datasets: 'Chưa áp dụng', effective: 'Chờ phê duyệt', status: 'Chờ phê duyệt', badge: 'lx-badge lx-badge--warning' },
-  { name: 'Guideline v1.1', taxonomy: 'v2', datasets: 'Road Vision Urban v1.1 – v1.2', effective: '2026-06-01', status: 'Đã thay thế', badge: 'lx-badge' },
-];
-
 /**
- * Thẻ hai tab của ModelsGuidelines theo thiết kế. Dữ liệu minh họa; chưa có API.
+ * Hai tab cấu hình: bảng Detector/Classifier còn minh họa; Guideline dùng API thật.
  * TODO(backend): GET /api/models/ (bảng Mô hình), PATCH /api/models/{id}/ (chỉnh mô hình),
- * GET /api/guidelines/versions/ (hiệu lực guideline, taxonomy và Dataset áp dụng).
  */
 export function ModelsGuidelinesCard({ guidelineExtra }: {
-  /** Nội dung dữ liệu thật (API) chỉ hiện ở tab Phiên bản guideline, ngoài thẻ hai tab của thiết kế. */
+  /** Thư viện Guideline và tra cứu rule ở tab Phiên bản guideline. */
   guidelineExtra?: React.ReactNode;
 } = {}) {
   const { hasPermission } = useAuth();
@@ -67,24 +60,6 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
         </>
       )}
 
-      {tab === 'guideline' && (
-        <div className="lx-scroll">
-          <table className="lx-table lx-table--min-680">
-            <thead><tr><th>Guideline</th><th>Taxonomy</th><th>Áp dụng cho Dataset</th><th>Hiệu lực từ</th><th>Trạng thái</th></tr></thead>
-            <tbody>
-              {GUIDELINES.map(guideline => (
-                <tr key={guideline.name}>
-                  <td className="lx-cell__main">{guideline.name}</td>
-                  <td className="lx-muted">{guideline.taxonomy}</td>
-                  <td className="lx-muted">{guideline.datasets}</td>
-                  <td className="lx-muted">{guideline.effective}</td>
-                  <td><span className={guideline.badge}>{guideline.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </section>
     {tab === 'guideline' && guidelineExtra}
     </>

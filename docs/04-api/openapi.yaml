@@ -54,6 +54,44 @@ tags:
     description: Hiệu chỉnh reviewer và model (MBE-04)
 
 paths:
+  /api/guidelines/preview/:
+    post:
+      operationId: guidelines_preview
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelinePreview'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
   /api/datasets/{id}/guideline/:
     get:
       operationId: datasets_guideline_retrieve
@@ -2280,6 +2318,81 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
 
   schemas:
+    GuidelineTaxonomyLabel:
+      type: object
+      properties:
+        name:
+          type: string
+        required_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyAttribute'
+      required:
+      - name
+    GuidelineTaxonomyDefinition:
+      type: object
+      properties:
+        version:
+          type: string
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyLabel'
+      required:
+      - labels
+      - version
+    GuidelineTaxonomyAttribute:
+      type: object
+      properties:
+        name:
+          type: string
+        rule_id:
+          type: string
+        allowed_values:
+          type: array
+          items:
+            type: string
+      required:
+      - name
+      - rule_id
+    GuidelinePreviewRule:
+      type: object
+      properties:
+        rule_id:
+          type: string
+        section:
+          type: string
+      required:
+      - rule_id
+      - section
+    GuidelinePreview:
+      type: object
+      properties:
+        version:
+          type: string
+        name:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelinePreviewRule'
+        taxonomy:
+          allOf:
+          - $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+          nullable: true
+      required:
+      - name
+      - rules
+      - taxonomy
+      - version
+    GuidelineFile:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+      required:
+      - content
     SnapshotScope:
       type: object
       properties:
@@ -2338,8 +2451,7 @@ components:
         checksum:
           type: string
         taxonomy:
-          type: object
-          additionalProperties: {}
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
         skipped:
           type: boolean
       required:
@@ -2353,6 +2465,8 @@ components:
         content:
           type: string
           maxLength: 1000000
+        taxonomy:
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
       required:
       - content
     # ------------------------------------------------------------ lỗi chung
@@ -2527,6 +2641,9 @@ components:
           minimum: 1
         scope:
           $ref: '#/components/schemas/SnapshotScope'
+        guideline_version:
+          type: string
+          maxLength: 32
         expected_guideline_version:
           type: string
           maxLength: 32

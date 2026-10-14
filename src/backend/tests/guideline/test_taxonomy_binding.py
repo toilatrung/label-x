@@ -301,3 +301,147 @@ def test_rejected_api_import_retains_load_record():
     response = client.post("/api/guidelines/import/", {"content": "invalid: true"}, format="json")
     assert response.status_code == 400
     assert GuidelineLoadRecord.objects.get().result == "rejected"
+
+
+def test_preview_embedded_taxonomy_never_imports():
+    from guideline.models import GuidelineLoadRecord
+
+    user = owner()
+    client = APIClient()
+    client.force_authenticate(user)
+    response = client.post(
+        "/api/guidelines/preview/", {"content": yaml.safe_dump(policy())}, format="json"
+    )
+    assert response.status_code == 200, response.data
+    assert response.data["taxonomy"]["labels"][0]["name"] == "car"
+    assert not GuidelineVersion.objects.exists()
+    assert not GuidelineLoadRecord.objects.exists()
+
+
+def test_plain_guideline_requires_manual_taxonomy_and_replays_complete_policy():
+    from audit.models import AuditEvent
+
+    user = owner()
+    client = APIClient()
+    client.force_authenticate(user)
+    data = policy()
+    manual = data.pop("taxonomy")
+    data["mappings"][0]["class_name"] = "custom-class"
+    manual["labels"][0]["name"] = "custom-class"
+    raw = yaml.safe_dump(data)
+    preview = client.post("/api/guidelines/preview/", {"content": raw}, format="json")
+    assert preview.status_code == 200 and preview.data["taxonomy"] is None
+    assert (
+        client.post("/api/guidelines/import/", {"content": raw}, format="json").status_code == 400
+    )
+    assert not GuidelineVersion.objects.exists()
+    body = {"content": raw, "taxonomy": manual}
+    imported_response = client.post("/api/guidelines/import/", body, format="json")
+    assert imported_response.status_code == 200, imported_response.data
+    assert imported_response.data["taxonomy"]["labels"][0]["name"] == "custom-class"
+    assert client.post("/api/guidelines/import/", body, format="json").data["skipped"]
+    assert GuidelineVersion.objects.count() == 1
+    assert AuditEvent.objects.filter(action="guideline.import").count() == 2
+    manual["labels"][0]["required_attributes"][0]["allowed_values"] = ["parked"]
+    changed = client.post("/api/guidelines/import/", body, format="json")
+    assert changed.status_code == 400
+    assert GuidelineVersion.objects.get().taxonomy["labels"][0]["required_attributes"][0][
+        "allowed_values"
+    ] == ["moving", "parked"]
+
+
+def test_embedded_taxonomy_cannot_be_overridden_by_manual_input():
+    user = owner()
+    client = APIClient()
+    client.force_authenticate(user)
+    data = policy()
+    response = client.post(
+        "/api/guidelines/import/",
+        {"content": yaml.safe_dump(data), "taxonomy": data["taxonomy"]},
+        format="json",
+    )
+    assert response.status_code == 400
+    assert not GuidelineVersion.objects.exists()
+
+
+def test_snapshot_api_selects_own_guideline_without_setting_dataset_default(monkeypatch):
+    from snapshots.models import Snapshot
+
+    admin = owner()
+    imported(admin, "v1")
+    imported(admin, "v2")
+    qa = owner("qa_lead", 42)
+    client = APIClient()
+    client.force_authenticate(qa)
+    monkeypatch.setattr("snapshots.orchestration.CvatReadClient", lambda *_args, **_kwargs: Cvat())
+    monkeypatch.setattr(
+        "snapshots.orchestration.ObjectStorage.from_django_settings", lambda *_args: FakeStorage()
+    )
+    body = {"dataset_id": 42, "scope": {"cvat_job_ids": [17]}, "guideline_version": "v2"}
+    response = client.post(
+        "/api/snapshots/", body, format="json", HTTP_IDEMPOTENCY_KEY="selected-policy"
+    )
+    assert response.status_code == 202, response.data
+    frozen = Snapshot.objects.get(pk=response.data["id"])
+    assert frozen.guideline_version == "v2"
+    assert frozen.provenance["guideline_context"]["guideline_version"] == "v2"
+    assert not DatasetGuideline.objects.exists()
+    assert (
+        client.post(
+            "/api/snapshots/", body, format="json", HTTP_IDEMPOTENCY_KEY="selected-policy"
+        ).data["id"]
+        == frozen.pk
+    )
+    body["guideline_version"] = "v1"
+    assert (
+        client.post(
+            "/api/snapshots/", body, format="json", HTTP_IDEMPOTENCY_KEY="selected-policy"
+        ).status_code
+        == 409
+    )
+    body["dataset_id"] = 99
+    assert (
+        client.post(
+            "/api/snapshots/", body, format="json", HTTP_IDEMPOTENCY_KEY="out-of-scope"
+        ).status_code
+        == 403
+    )
+
+
+@pytest.mark.parametrize("empty_taxonomy", [None, {}])
+def test_preview_empty_taxonomy_requests_manual_definition(empty_taxonomy):
+    user = owner()
+    client = APIClient()
+    client.force_authenticate(user)
+    data = policy()
+    data["taxonomy"] = empty_taxonomy
+    response = client.post(
+        "/api/guidelines/preview/", {"content": yaml.safe_dump(data)}, format="json"
+    )
+    assert response.status_code == 200 and response.data["taxonomy"] is None
+
+
+def test_snapshot_override_keeps_an_existing_dataset_default(monkeypatch):
+    from snapshots.models import Snapshot
+
+    admin = owner()
+    v1 = imported(admin, "v1")
+    imported(admin, "v2")
+    binding = DatasetGuideline.objects.create(dataset_id=42, guideline=v1, updated_by=admin)
+    qa = owner("qa_lead", 42)
+    client = APIClient()
+    client.force_authenticate(qa)
+    monkeypatch.setattr("snapshots.orchestration.CvatReadClient", lambda *_args, **_kwargs: Cvat())
+    monkeypatch.setattr(
+        "snapshots.orchestration.ObjectStorage.from_django_settings", lambda *_args: FakeStorage()
+    )
+    response = client.post(
+        "/api/snapshots/",
+        {"dataset_id": 42, "scope": {"cvat_job_ids": [17]}, "guideline_version": "v2"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="override-default",
+    )
+    assert response.status_code == 202, response.data
+    assert Snapshot.objects.get(pk=response.data["id"]).guideline_version == "v2"
+    binding.refresh_from_db()
+    assert binding.guideline_id == v1.pk and binding.revision == 1

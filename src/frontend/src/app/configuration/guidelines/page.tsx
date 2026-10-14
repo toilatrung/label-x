@@ -17,8 +17,7 @@ export default function GuidelinesPage() {
           <h1 className="lx-h1">Models và Guidelines</h1>
           <p className="lx-lead">Cấu hình các mô hình dùng để kiểm tra độc lập và ánh xạ phiên bản guideline với taxonomy. Quality Control chỉ quản lý phiên bản, nội dung guideline được soạn ở nơi khác.</p>
         </div></div>
-        <GuidelineTaxonomyConfig />
-        <ModelsGuidelinesCard guidelineExtra={<GuidelineRuleLookup />} />
+        <ModelsGuidelinesCard guidelineExtra={<><GuidelineTaxonomyConfig /><GuidelineRuleLookup /></>} />
       </div>
     </AppShell>
   </AuthGuard>;

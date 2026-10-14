@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/guidelines/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["guidelines_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/{id}/guideline/": {
         parameters: {
             query?: never;
@@ -1659,6 +1675,32 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        GuidelineTaxonomyLabel: {
+            name: string;
+            required_attributes?: components["schemas"]["GuidelineTaxonomyAttribute"][];
+        };
+        GuidelineTaxonomyDefinition: {
+            version: string;
+            labels: components["schemas"]["GuidelineTaxonomyLabel"][];
+        };
+        GuidelineTaxonomyAttribute: {
+            name: string;
+            rule_id: string;
+            allowed_values?: string[];
+        };
+        GuidelinePreviewRule: {
+            rule_id: string;
+            section: string;
+        };
+        GuidelinePreview: {
+            version: string;
+            name: string;
+            rules: components["schemas"]["GuidelinePreviewRule"][];
+            taxonomy: components["schemas"]["GuidelineTaxonomyDefinition"] | null;
+        };
+        GuidelineFile: {
+            content: string;
+        };
         SnapshotScope: {
             cvat_task_ids?: number[];
             cvat_job_ids?: number[];
@@ -1678,13 +1720,12 @@ export interface components {
         GuidelineImportResult: {
             version: string;
             checksum: string;
-            taxonomy: {
-                [key: string]: unknown;
-            };
+            taxonomy: components["schemas"]["GuidelineTaxonomyDefinition"];
             skipped: boolean;
         };
         GuidelineImport: {
             content: string;
+            taxonomy?: components["schemas"]["GuidelineTaxonomyDefinition"];
         };
         /** @enum {string} */
         ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "POLICY_NOT_CONFIGURED" | "POLICY_VERSION_MISMATCH";
@@ -1797,6 +1838,7 @@ export interface components {
         SnapshotCreate: {
             dataset_id: number;
             scope: components["schemas"]["SnapshotScope"];
+            guideline_version?: string;
             expected_guideline_version?: string;
             /** @default  */
             note?: string;
@@ -3511,6 +3553,47 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    guidelines_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidelineFile"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuidelineFile"];
+                "multipart/form-data": components["schemas"]["GuidelineFile"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuidelinePreview"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     datasets_guideline_retrieve: {
         parameters: {
             query?: never;

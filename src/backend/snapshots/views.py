@@ -106,6 +106,7 @@ class SnapshotCollectionView(APIView):
         try:
             snapshot = create_snapshot_from_cvat(
                 dataset_id=data["dataset_id"],
+                guideline_version=data.get("guideline_version"),
                 expected_guideline_version=data.get("expected_guideline_version"),
                 scope=SnapshotScope(
                     cvat_task_ids=tuple(raw_scope.get("cvat_task_ids", [])),

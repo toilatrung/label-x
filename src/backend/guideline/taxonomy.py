@@ -17,7 +17,9 @@ def _text(value: Any, field: str) -> str:
     return value.strip()
 
 
-def parse_taxonomy(raw: bytes, rule_ids: set[str]) -> dict[str, Any]:
+def parse_taxonomy(
+    raw: bytes, rule_ids: set[str], manual_taxonomy: dict[str, Any] | None = None
+) -> dict[str, Any]:
     try:
         data = yaml.safe_load(raw.decode("utf-8"))
     except (yaml.YAMLError, UnicodeDecodeError) as exc:
@@ -27,9 +29,12 @@ def parse_taxonomy(raw: bytes, rule_ids: set[str]) -> dict[str, Any]:
     data = data.get("guideline", data)
     if not isinstance(data, dict):
         raise CommandError("guideline must be a mapping")
-    if "taxonomy" not in data:
-        return {}  # Legacy guidelines remain usable for lookup, never for schema reference.
-    taxonomy = data["taxonomy"]
+    has_embedded = data.get("taxonomy") not in (None, {})
+    if has_embedded and manual_taxonomy is not None:
+        raise CommandError("Guideline đã có taxonomy; không được thay bằng taxonomy nhập tay.")
+    if not has_embedded and manual_taxonomy is None:
+        return {}  # Legacy CLI imports remain available for lookup.
+    taxonomy = data["taxonomy"] if has_embedded else manual_taxonomy
     if not isinstance(taxonomy, dict):
         raise CommandError("taxonomy must be an object")
     version = _text(taxonomy.get("version"), "taxonomy.version")
@@ -102,7 +107,7 @@ def bind_taxonomy(
     else:
         selected = GuidelineVersion.objects.filter(version_tag=guideline_version).first()
         if selected is None:
-            raise GuidelineBindingError("Guideline của Snapshot gốc không còn tồn tại.")
+            raise GuidelineBindingError("Guideline đã chọn không tồn tại.")
         guideline = selected
     if not guideline.taxonomy:
         raise GuidelineBindingError(

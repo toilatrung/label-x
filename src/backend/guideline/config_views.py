@@ -19,20 +19,56 @@ from accounts.models import Role
 from accounts.permissions import HasRoleAndDatasetScope, append_action_audit
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
-from guideline.importing import load_guideline
+from guideline.importing import load_guideline, preview_guideline
 from guideline.models import DatasetGuideline, GuidelineVersion
 from guideline.taxonomy import GuidelineBindingError, bind_taxonomy
 from snapshots.dataset_views import _client
 
 
-class GuidelineImportSerializer(serializers.Serializer[Any]):
+class GuidelineTaxonomyAttributeSerializer(serializers.Serializer[Any]):
+    name = serializers.CharField()
+    rule_id = serializers.CharField()
+    allowed_values = serializers.ListField(
+        child=serializers.CharField(trim_whitespace=False), required=False, default=list
+    )
+
+
+class GuidelineTaxonomyLabelSerializer(serializers.Serializer[Any]):
+    name = serializers.CharField()
+    required_attributes = GuidelineTaxonomyAttributeSerializer(
+        many=True, required=False, default=list
+    )
+
+
+class GuidelineTaxonomyDefinitionSerializer(serializers.Serializer[Any]):
+    version = serializers.CharField()
+    labels = GuidelineTaxonomyLabelSerializer(many=True, allow_empty=False)
+
+
+class GuidelineFileSerializer(serializers.Serializer[Any]):
     content = serializers.CharField(max_length=1_000_000, trim_whitespace=False)
+
+
+class GuidelinePreviewRuleSerializer(serializers.Serializer[Any]):
+    rule_id = serializers.CharField()
+    section = serializers.CharField()
+
+
+class GuidelinePreviewSerializer(serializers.Serializer[Any]):
+    version = serializers.CharField()
+    name = serializers.CharField()
+    rules = GuidelinePreviewRuleSerializer(many=True)
+    taxonomy = GuidelineTaxonomyDefinitionSerializer(allow_null=True)
+
+
+class GuidelineImportSerializer(GuidelineFileSerializer):
+    taxonomy = GuidelineTaxonomyDefinitionSerializer(required=False)
 
 
 class GuidelineImportResultSerializer(serializers.Serializer[Any]):
     version = serializers.CharField()
     checksum = serializers.CharField()
-    taxonomy = serializers.DictField()
+    taxonomy = GuidelineTaxonomyDefinitionSerializer()
     skipped = serializers.BooleanField()
 
 
@@ -102,6 +138,9 @@ class GuidelineImportView(APIView):
             version, skipped = load_guideline(
                 serializer.validated_data["content"].encode("utf-8"),
                 cast(User, request.user).username,
+                on_loaded=audit_import,
+                manual_taxonomy=serializer.validated_data.get("taxonomy"),
+                require_taxonomy=True,
             )
         except CommandError as exc:
             raise ApiError(400, "VALIDATION_ERROR", str(exc)) from exc
@@ -202,3 +241,26 @@ class DatasetGuidelineView(APIView):
                 409, "INVALID_TRANSITION", "Mapping đã thay đổi. Tải lại để tiếp tục."
             ) from exc
         return Response(after)
+
+
+class GuidelinePreviewView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.QC_ADMIN, Role.SUPER_ADMIN)
+    action_name = "guidelines.preview"
+    object_type = "guideline"
+    requires_dataset = False
+
+    @extend_schema(
+        operation_id="guidelines_preview",
+        request=GuidelineFileSerializer,
+        responses={200: GuidelinePreviewSerializer, 400: ErrorSerializer, 403: ErrorSerializer},
+        tags=["guidelines"],
+    )
+    def post(self, request: Request) -> Response:
+        serializer = GuidelineFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            preview = preview_guideline(serializer.validated_data["content"].encode("utf-8"))
+        except CommandError as exc:
+            raise ApiError(400, "VALIDATION_ERROR", str(exc)) from exc
+        return Response(preview)
