@@ -19,6 +19,7 @@ export function GpuWorkerPanel() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const dirty = !saved?.config || JSON.stringify(saved.config) !== JSON.stringify(form);
+  const detectorReady = result?.state === 'ready' && result.model?.verified === true;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -58,6 +59,7 @@ export function GpuWorkerPanel() {
 
   return <div className="lx-card__body lx-stack" aria-busy={busy}>
     <p className="lx-muted">Kết nối máy GPU qua HTTPS trong Tailscale. Cấu hình mới chỉ áp dụng cho run mới.</p>
+    <p className="lx-hint">Detector tự nạp model khi GPU Worker khởi động. Kiểm tra kết nối để xác minh CUDA, model và checksum; thao tác này không nạp lại model. Trình duyệt chỉ gọi server Label-X, không gọi trực tiếp máy GPU.</p>
     {busy && <p role="status">Đang xử lý…</p>}
     {error && <div className="lx-notice lx-notice--warning" role="alert">{error}</div>}
     {notice && <p role="status">{notice}</p>}
@@ -72,14 +74,16 @@ export function GpuWorkerPanel() {
             <tr><td><label htmlFor="worker-timeout">Thời gian chờ inference (giây)</label></td><td><input id="worker-timeout" className="lx-input" type="number" min={10} max={1800} value={form.timeout_seconds} required onChange={e => change('timeout_seconds', Number(e.target.value))} /></td></tr>
             <tr><td><label htmlFor="worker-enabled">Sử dụng cho run mới</label></td><td><input id="worker-enabled" type="checkbox" checked={form.enabled} onChange={e => change('enabled', e.target.checked)} /></td></tr>
           </tbody></table></div>
-          <div className="lx-actions"><button className="lx-btn lx-btn--primary" type="submit" disabled={!dirty || !saved.credential_refs.length}>Lưu cấu hình</button><button className="lx-btn" type="button" disabled={dirty || !form.revision} onClick={() => void act('probe')}>Kiểm tra kết nối</button><button className="lx-btn" type="button" onClick={() => void act('reload')}>Tải lại</button></div>
+          <div className="lx-actions"><button className="lx-btn lx-btn--primary" type="submit" disabled={!dirty || !saved.credential_refs.length}>Lưu cấu hình</button><button className="lx-btn" type="button" disabled={dirty || !form.revision} onClick={() => void act('probe')}>Kiểm tra kết nối</button><button className="lx-btn" type="button" onClick={() => void act('reload')}>Tải lại cấu hình</button></div>
         </fieldset>
       </form>
       <p className="lx-hint">Lưu trước khi kiểm tra kết nối. Chưa kiểm tra không đồng nghĩa worker sẵn sàng.</p>
-      <div className="lx-scroll"><table className="lx-table" aria-label="Trạng thái GPU Worker"><thead><tr><th>Trạng thái</th><th>Thiết bị</th><th>Model</th><th>Checksum</th><th>Kiểm tra lúc</th></tr></thead><tbody><tr>
+      <div className="lx-scroll"><table className="lx-table" aria-label="Trạng thái GPU Worker"><thead><tr><th>Trạng thái</th><th>Detector</th><th>Thiết bị</th><th>Model</th><th>Ánh xạ lớp</th><th>Checksum</th><th>Kiểm tra lúc</th></tr></thead><tbody><tr>
         <td><span className={`lx-badge${result?.state === 'ready' ? ' lx-badge--success' : result?.state === 'unavailable' ? ' lx-badge--warning' : ''}`}>{result ? STATES[result.state] : 'Chưa kiểm tra'}</span></td>
-        <td>{result?.device ?? '—'}</td><td>{result?.model?.version ?? '—'}</td><td className="lx-mono">{result?.model?.sha256 ?? '—'}</td><td>{result ? new Date(result.checked_at).toLocaleString('vi-VN') : '—'}</td>
+        <td>{detectorReady ? 'Đã nạp và xác minh' : result?.state === 'disabled' ? 'Không sử dụng' : 'Chưa xác minh'}</td>
+        <td>{result?.device ?? '—'}</td><td>{result?.model?.version ?? '—'}</td><td>{result?.model?.class_mapping_version ?? '—'}</td><td className="lx-mono">{result?.model?.sha256 ?? '—'}</td><td>{result ? new Date(result.checked_at).toLocaleString('vi-VN') : '—'}</td>
       </tr></tbody></table></div>
+      <p className="lx-hint">Detector chỉ hiện Đã nạp và xác minh khi kết quả kiểm tra là Sẵn sàng và có model đã xác minh. Không sẵn sàng không đủ để kết luận đang tải hay nạp model thất bại. Kết quả là tại thời điểm kiểm tra, không phải giám sát liên tục.</p>
       {result && <p role="status">{result.message}</p>}
     </>}
     {!saved && !busy && <button type="button" className="lx-btn" onClick={() => void act('reload')}>Thử lại</button>}

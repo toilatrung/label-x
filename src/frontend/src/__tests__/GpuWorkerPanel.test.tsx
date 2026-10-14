@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { GpuWorkerPanel } from '@/components/configuration/GpuWorkerPanel';
 import { ModelsGuidelinesCard } from '@/components/configuration/ModelsGuidelinesCard';
 
@@ -80,4 +80,59 @@ it('global admin opens the worker tab', async () => {
   fireEvent.click(screen.getByRole('tab', { name: 'GPU Worker' }));
   await waitFor(() => expect(get).toHaveBeenCalled());
   await screen.findByDisplayValue('Máy GPU');
+});
+
+it('shows verified loaded detector only after a ready probe and clears it when host changes', async () => {
+  post.mockResolvedValue(reply({ revision: 1, state: 'ready', message: 'GPU Worker sẵn sàng.',
+    checked_at: '2026-10-14T00:00:00Z', device: 'cuda:0', latency_ms: 5,
+    model: { version: 'detector-v1', sha256: 'a'.repeat(64), class_mapping_version: 'bdd100k-det-10-v1',
+      verified: true } }));
+  render(<GpuWorkerPanel />);
+  await screen.findByDisplayValue('Máy GPU');
+  const table = within(screen.getByRole('table', { name: 'Trạng thái GPU Worker' }));
+  expect(table.getByText('Chưa xác minh')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }));
+  await table.findByText('Đã nạp và xác minh');
+  expect(table.getByText('cuda:0')).toBeTruthy();
+  expect(table.getByText('detector-v1')).toBeTruthy();
+  expect(table.getByText('bdd100k-det-10-v1')).toBeTruthy();
+  fireEvent.change(screen.getByLabelText('Địa chỉ HTTPS Tailscale'), { target: { value: 'https://new.tailnet.ts.net' } });
+  expect(table.queryByText('Đã nạp và xác minh')).toBeNull();
+  expect(table.getByText('Chưa xác minh')).toBeTruthy();
+});
+
+it('does not claim model load failure when the worker is unreachable', async () => {
+  post.mockResolvedValue(reply({ revision: 1, state: 'unavailable', message: 'Chưa sẵn sàng.',
+    checked_at: '2026-10-14T00:00:00Z', device: null, model: null, latency_ms: 5 }));
+  render(<GpuWorkerPanel />);
+  await screen.findByDisplayValue('Máy GPU');
+  fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }));
+  await screen.findByText('Không sẵn sàng');
+  const table = within(screen.getByRole('table', { name: 'Trạng thái GPU Worker' }));
+  expect(table.getByText('Chưa xác minh')).toBeTruthy();
+  expect(table.queryByText('Đã nạp và xác minh')).toBeNull();
+});
+
+it('reloads configuration without triggering a model load or probe', async () => {
+  render(<GpuWorkerPanel />);
+  await screen.findByDisplayValue('Máy GPU');
+  fireEvent.click(screen.getByRole('button', { name: 'Tải lại cấu hình' }));
+  await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+  expect(post).not.toHaveBeenCalled();
+  expect(put).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['ready', { verified: false, version: 'unverified', sha256: 'a'.repeat(64), class_mapping_version: 'v1' }, 'Chưa xác minh'],
+  ['disabled', null, 'Không sử dụng'],
+])('does not claim a loaded detector for %s without verified model', async (state, model, label) => {
+  post.mockResolvedValue(reply({ revision: 1, state, model, device: null, latency_ms: 5,
+    message: 'Trạng thái kiểm tra.', checked_at: '2026-10-14T00:00:00Z' }));
+  render(<GpuWorkerPanel />);
+  await screen.findByDisplayValue('Máy GPU');
+  fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }));
+  await screen.findByText('Trạng thái kiểm tra.');
+  const table = within(screen.getByRole('table', { name: 'Trạng thái GPU Worker' }));
+  expect(table.getByText(label as string)).toBeTruthy();
+  expect(table.queryByText('Đã nạp và xác minh')).toBeNull();
 });

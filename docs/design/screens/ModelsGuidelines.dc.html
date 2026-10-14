@@ -62,6 +62,7 @@
 <sc-if value="{{isWorker}}" hint-placeholder-val="{{false}}">
 <div class="lx-card__body lx-stack">
 <p class="lx-muted">Kết nối máy GPU qua HTTPS trong Tailscale. Cấu hình mới chỉ áp dụng cho run mới.</p>
+<p class="lx-hint">Detector tự nạp model khi GPU Worker khởi động. Kiểm tra kết nối để xác minh CUDA, model và checksum; thao tác này không nạp lại model. Trình duyệt chỉ gọi server Label-X, không gọi trực tiếp máy GPU.</p>
 <form class="lx-stack" aria-label="Cấu hình GPU Worker">
 <div class="lx-scroll"><table class="lx-table"><thead><tr><th>Thông số</th><th>Giá trị</th></tr></thead><tbody>
 <tr><td><label for="worker-name">Tên worker</label></td><td><input id="worker-name" class="lx-input" required maxlength="128"></td></tr>
@@ -70,10 +71,11 @@
 <tr><td><label for="worker-timeout">Thời gian chờ inference (giây)</label></td><td><input id="worker-timeout" class="lx-input" type="number" min="10" max="1800" value="120" required></td></tr>
 <tr><td><label for="worker-enabled">Sử dụng cho run mới</label></td><td><input id="worker-enabled" type="checkbox" checked></td></tr>
 </tbody></table></div>
-<div class="lx-actions"><button class="lx-btn lx-btn--primary" type="button">Lưu cấu hình</button><button class="lx-btn" type="button">Kiểm tra kết nối</button><button class="lx-btn" type="button">Tải lại</button></div>
+<div class="lx-actions"><button class="lx-btn lx-btn--primary" type="button">Lưu cấu hình</button><button class="lx-btn" type="button">Kiểm tra kết nối</button><button class="lx-btn" type="button">Tải lại cấu hình</button></div>
 </form>
 <p class="lx-hint">Lưu trước khi kiểm tra kết nối. Chưa kiểm tra không đồng nghĩa worker sẵn sàng.</p>
-<div class="lx-scroll"><table class="lx-table" aria-label="Trạng thái GPU Worker"><thead><tr><th>Trạng thái</th><th>Thiết bị</th><th>Model</th><th>Checksum</th><th>Kiểm tra lúc</th></tr></thead><tbody><tr><td><span class="lx-badge">Chưa kiểm tra</span></td><td>—</td><td>—</td><td class="lx-mono">—</td><td>—</td></tr></tbody></table></div>
+<div class="lx-scroll"><table class="lx-table" aria-label="Trạng thái GPU Worker"><thead><tr><th>Trạng thái</th><th>Detector</th><th>Thiết bị</th><th>Model</th><th>Ánh xạ lớp</th><th>Checksum</th><th>Kiểm tra lúc</th></tr></thead><tbody><tr><td><span class="lx-badge">Chưa kiểm tra</span></td><td>Chưa xác minh</td><td>—</td><td>—</td><td>—</td><td class="lx-mono">—</td><td>—</td></tr></tbody></table></div>
+<p class="lx-hint">Detector chỉ hiện Đã nạp và xác minh khi kết quả kiểm tra là Sẵn sàng và có model đã xác minh. Không sẵn sàng không đủ để kết luận đang tải hay nạp model thất bại. Kết quả là tại thời điểm kiểm tra, không phải giám sát liên tục.</p>
 <p class="lx-hint">Trạng thái tải/lỗi/quyền: hiển thị thông báo thật; không thay bằng dữ liệu mẫu. Kết quả probe: Sẵn sàng / Không sẵn sàng / Đã tắt; luôn có thời điểm kiểm tra. Người không có quyền admin toàn hệ thống không thấy biểu mẫu.</p>
 </div>
 </sc-if>
