@@ -29,7 +29,7 @@ from reports.services import (
     render_report,
 )
 from reports.tasks import enqueue_report_export
-from runs.models import QCRun
+from runs.models import KpiEvaluation, QCRun
 
 _READ_ROLES = tuple(Role.values)
 _EXPORT_ROLES = (
@@ -134,9 +134,16 @@ class EffectivenessReportDetailView(APIView):
     requires_dataset = True
 
     def get_dataset_id(self, _request: Request) -> int | None:
-        return (
+        persisted_dataset_id = (
             EffectivenessReport.objects.filter(pk=self.kwargs["pk"])
             .values_list("input_snapshot__dataset_id", flat=True)
+            .first()
+        )
+        if persisted_dataset_id is not None:
+            return persisted_dataset_id
+        return (
+            KpiEvaluation.objects.filter(pk=self.kwargs["pk"])
+            .values_list("run__dataset_id", flat=True)
             .first()
         )
 
@@ -154,7 +161,29 @@ class EffectivenessReportDetailView(APIView):
     def get(self, request: Request, pk: int) -> Response | HttpResponse:
         report = EffectivenessReport.objects.select_related("input_snapshot").filter(pk=pk).first()
         if report is None:
-            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Báo cáo không tồn tại.")
+            from runs.kpi_views import ReportView as KpiReportView
+
+            dataset_id = (
+                KpiEvaluation.objects.filter(pk=pk)
+                .values_list("run__dataset_id", flat=True)
+                .first()
+            )
+            if dataset_id is None:
+                raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Báo cáo không tồn tại.")
+            export_format = request.query_params.get("format", "json")
+            annotator_only = is_annotator_only(cast(User, request.user), dataset_id=dataset_id)
+            if annotator_only and export_format != ReportExport.Format.JSON:
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    "FORBIDDEN",
+                    "Annotator không có quyền xuất báo cáo ở định dạng này.",
+                )
+            response = KpiReportView().get(request, pk)
+            if annotator_only and isinstance(response, Response):
+                response.data["risk_queue"] = {}
+                response.data["random_queue"] = {}
+                response.data["engine_coverage"] = []
+            return response
         export_format = request.query_params.get("format", "json")
         if export_format not in ReportExport.Format.values:
             raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Format không hợp lệ.")

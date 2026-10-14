@@ -20,7 +20,6 @@ from runs.kpi_views import (
     KpiEvaluationDetailView,
     ReferenceCreateView,
     ReferenceLockView,
-    ReportView,
     RunGateView,
     WaiverApproveView,
     WaiverCreateView,
@@ -69,7 +68,6 @@ urlpatterns = [
     path("api/evaluations/<int:pk>/", KpiEvaluationDetailView.as_view(), name="evaluations-detail"),
     path("api/waivers/", WaiverCreateView.as_view(), name="waivers-create"),
     path("api/waivers/<int:pk>/approve/", WaiverApproveView.as_view(), name="waivers-approve"),
-    path("api/reports/<int:pk>/", ReportView.as_view(), name="reports-retrieve"),
     path("api/config-versions/", ConfigVersionListView.as_view(), name="config-versions-list"),
     path(
         "api/config-versions/<int:pk>/publish/",

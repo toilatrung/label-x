@@ -39,7 +39,7 @@ class ReportExportSerializer(serializers.Serializer[Any]):
         return data
 
 
-class RunMetricsSerializer(serializers.Serializer[Any]):
+class RunReportMetricsSerializer(serializers.Serializer[Any]):
     run_id = serializers.IntegerField()
     status = serializers.ChoiceField(
         choices=["queued", "running", "completed", "partial", "failed", "cancelled"]
@@ -52,9 +52,9 @@ class RunMetricsSerializer(serializers.Serializer[Any]):
     reviewed_ratio = serializers.FloatField(allow_null=True, required=False)
 
 
-class GateConditionSerializer(serializers.Serializer[Any]):
-    name = serializers.ChoiceField(
-        choices=["coverage", "open_critical_issues", "rework_verified", "residual", "agreement"]
+class RunReportGateConditionSerializer(serializers.Serializer[Any]):
+    name = serializers.CharField(
+        help_text="coverage | open_critical_issues | rework_verified | residual | agreement"
     )
     status = serializers.ChoiceField(choices=["passed", "failed", "not_checked", "waived"])
     observed = serializers.FloatField(allow_null=True)
@@ -63,12 +63,12 @@ class GateConditionSerializer(serializers.Serializer[Any]):
     reason = serializers.CharField(allow_null=True, required=False)
 
 
-class GateResultSerializer(serializers.Serializer[Any]):
+class RunReportGateResultSerializer(serializers.Serializer[Any]):
     run_id = serializers.IntegerField()
     source_run_id = serializers.IntegerField()
     source_reason = serializers.CharField()
     status = serializers.ChoiceField(choices=["passed", "failed", "not_checked"])
-    conditions = GateConditionSerializer(many=True)
+    conditions = RunReportGateConditionSerializer(many=True)
 
 
 class RunReportSerializer(serializers.Serializer[Any]):
@@ -78,8 +78,8 @@ class RunReportSerializer(serializers.Serializer[Any]):
     source_reason = serializers.CharField()
     score_version = serializers.CharField(allow_null=True, required=False)
     generated_at = serializers.DateTimeField()
-    metrics = RunMetricsSerializer()
-    gate = GateResultSerializer(allow_null=True, required=False)
+    metrics = RunReportMetricsSerializer()
+    gate = RunReportGateResultSerializer(allow_null=True, required=False)
     engine_coverage = LedgerEntrySerializer(many=True)
     release_id = serializers.IntegerField(allow_null=True, required=False)
     exports = ReportExportSerializer(many=True)
