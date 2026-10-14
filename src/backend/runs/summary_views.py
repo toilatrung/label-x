@@ -1,7 +1,8 @@
 """MBE-06 run statistics endpoints, guarded by authoritative dataset scope."""
 
-from typing import Any
+from typing import Any, cast
 
+from django.contrib.auth.models import User
 from django.db.models import Count
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.request import Request
@@ -133,7 +134,7 @@ class RunTasksQualityView(SummaryReadView):
         if not task_ids:
             return paginator.get_paginated_response([])
         # One CVAT list operation, not get_task per row. Paginated upstream by the adapter.
-        with read_cvat(_client) as cvat:
+        with read_cvat(lambda: _client(cast(User, request.user))) as cvat:
             source = cvat.list_tasks(project_id=run.dataset_id)
         if any(
             _positive(_related_id(row, "project"), "task.project_id") != run.dataset_id

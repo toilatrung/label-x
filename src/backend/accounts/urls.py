@@ -1,5 +1,6 @@
 from django.urls import path
 
+from accounts.profile_views import ProfileView
 from accounts.views import (
     CsrfView,
     LoginView,
@@ -10,6 +11,7 @@ from accounts.views import (
 )
 
 urlpatterns = [
+    path("profile/", ProfileView.as_view(), name="auth-profile"),
     path("csrf/", CsrfView.as_view(), name="auth-csrf"),
     path("login/", LoginView.as_view(), name="auth-login"),
     path("logout/", LogoutView.as_view(), name="auth-logout"),

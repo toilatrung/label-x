@@ -96,7 +96,7 @@ class DatasetRevisionsView(ScopedSummaryView):
         paginator = SummaryPagination()
         paginator.decode_cursor(request)
         # Dataset identity lives in CVAT; an existing dataset without revisions is [] not 404.
-        with read_cvat(_client) as cvat:
+        with read_cvat(lambda: _client(cast(User, request.user))) as cvat:
             project = cvat.get_project(id)
             if _positive(project.get("id"), "project.id") != id:
                 raise ApiError(502, "BUSINESS_RULE_UNMET", "CVAT trả sai Dataset.")
@@ -159,7 +159,7 @@ class DatasetSummaryView(ScopedSummaryView):
             a.role in SYSTEM_WIDE_ROLES and a.dataset_id is None for a in assignments
         )
         scoped_ids = {a.dataset_id for a in assignments if a.dataset_id is not None}
-        with read_cvat(_client) as cvat:
+        with read_cvat(lambda: _client(cast(User, request.user))) as cvat:
             projects = cvat.list_projects()
         visible: dict[int, str] = {}
         for project in projects:

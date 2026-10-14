@@ -206,7 +206,7 @@ class DatasetGuidelineView(APIView):
         guideline = GuidelineVersion.objects.filter(version_tag=data["guideline_version"]).first()
         if guideline is None or not guideline.taxonomy:
             raise ApiError(400, "VALIDATION_ERROR", "Chọn Guideline đã import taxonomy.")
-        client = _client()
+        client = _client(cast(User, request.user))
         try:
             client.get_project(id)
             bind_taxonomy(

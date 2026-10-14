@@ -203,6 +203,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/profile/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trạng thái token CVAT trong Hồ sơ của tài khoản hiện tại */
+        get: operations["auth_profile_retrieve"];
+        put?: never;
+        post?: never;
+        /** Xóa token CVAT đã lưu trong Hồ sơ của tài khoản hiện tại */
+        delete: operations["auth_profile_token_delete"];
+        options?: never;
+        head?: never;
+        /** Lưu token CVAT riêng của tài khoản hiện tại */
+        patch: operations["auth_profile_update"];
+        trace?: never;
+    };
     "/api/auth/workflow-permissions/": {
         parameters: {
             query?: never;
@@ -3291,6 +3310,14 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Model"][];
         };
+        Profile: {
+            cvat_token_configured: boolean;
+            /** @description Token riêng đã lưu trong Hồ sơ và có thể xóa */
+            cvat_token_saved: boolean;
+        };
+        ProfileUpdate: {
+            cvat_service_token: string;
+        };
         VlmSettings: {
             revision: number;
             base_url: string;
@@ -4080,6 +4107,74 @@ export interface operations {
                     "application/json": components["schemas"]["Session"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    auth_profile_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trạng thái token; không trả giá trị token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    auth_profile_token_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa token riêng; giữ cấu hình token mặc định của máy chủ nếu có */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    auth_profile_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Token được mã hóa và lưu; không trả giá trị token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
         };
     };

@@ -243,3 +243,14 @@ def ensure_default_workflow_rules() -> list[WorkflowRule]:
         )
         rules.append(obj)
     return rules
+
+
+class CvatProfile(models.Model):
+    """Personal CVAT credential; plaintext is never stored or serialized."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    encrypted_token = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"CVAT profile for user {self.user_id}"

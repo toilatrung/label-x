@@ -56,6 +56,9 @@ def imported(user, version="v1"):
 
 
 class Cvat(FakeCvatClient):
+    def __init__(self, user=None):
+        super().__init__()
+
     def list_labels(self, *, project_id):
         return [
             {

@@ -12,6 +12,9 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 
 class FakeCvat:
+    def __init__(self, user=None):
+        pass
+
     def __enter__(self):
         return self
 

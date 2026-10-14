@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 
 from accounts.models import CvatIdentity
 from cvat_adapter.client import CvatReadClient
+from cvat_adapter.credentials import service_token
 from cvat_adapter.hashing import canonicalize_job_annotations
 from guideline.taxonomy import GuidelineBindingError, bind_taxonomy
 from snapshots.models import Snapshot
@@ -317,6 +318,7 @@ def compute_job_revision(
     client: CvatReadClient | None = None,
     guideline_version: str | None = None,
     legacy_reference: bool = False,
+    user: User | None = None,
 ) -> str:
     """Revision a one-job re-check snapshot would get now; reads CVAT only, writes nothing.
 
@@ -326,7 +328,7 @@ def compute_job_revision(
     """
 
     owns_client = client is None
-    cvat = client or CvatReadClient(settings.CVAT_BASE_URL, settings.CVAT_SERVICE_TOKEN)
+    cvat = client or CvatReadClient(settings.CVAT_BASE_URL, service_token(user))
     try:
         selected = _selected_jobs(
             cvat, dataset_id=dataset_id, scope=SnapshotScope(cvat_job_ids=(cvat_job_id,))
@@ -392,7 +394,7 @@ def create_snapshot_from_cvat(
         return existing
 
     owns_client = client is None
-    cvat = client or CvatReadClient(settings.CVAT_BASE_URL, settings.CVAT_SERVICE_TOKEN)
+    cvat = client or CvatReadClient(settings.CVAT_BASE_URL, service_token(created_by))
     media_storage = storage or ObjectStorage.from_django_settings("snapshots")
     try:
         selected = _selected_jobs(cvat, dataset_id=dataset_id, scope=scope)

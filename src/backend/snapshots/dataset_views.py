@@ -25,6 +25,7 @@ from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from cvat_adapter.client import CvatReadClient
+from cvat_adapter.credentials import service_token
 
 
 def _error(description: str) -> OpenApiResponse:
@@ -82,8 +83,8 @@ def _related_id(data: Mapping[str, object], name: str) -> object:
     return relation.get("id") if isinstance(relation, Mapping) else None
 
 
-def _client() -> CvatReadClient:
-    return CvatReadClient(settings.CVAT_BASE_URL, settings.CVAT_SERVICE_TOKEN)
+def _client(user: User | None = None) -> CvatReadClient:
+    return CvatReadClient(settings.CVAT_BASE_URL, service_token(user))
 
 
 class DatasetListView(APIView):
@@ -128,7 +129,7 @@ class DatasetListView(APIView):
         )
         scoped_ids = {item.dataset_id for item in assignments if item.dataset_id is not None}
         try:
-            with _client() as cvat:
+            with _client(cast(User, request.user)) as cvat:
                 projects: list[dict[str, object]] = []
                 if global_access:
                     projects = cvat.list_projects()
@@ -200,13 +201,13 @@ class DatasetTasksView(APIView):
         tags=["datasets"],
     )
     def get(
-        self, _request: Request, id: int | None = None, dataset_id: int | None = None
+        self, request: Request, id: int | None = None, dataset_id: int | None = None
     ) -> Response:
         target_id = id if id is not None else dataset_id
         if target_id is None:
             raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Thiếu ID Dataset.")
         try:
-            with _client() as cvat:
+            with _client(cast(User, request.user)) as cvat:
                 try:
                     cvat.get_project(target_id)
                 except httpx.HTTPStatusError as exc:

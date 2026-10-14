@@ -377,7 +377,7 @@ def _known_revisions(rework: ReworkRequest) -> set[str]:
     return {rework.original_revision, *rework.rechecks.values_list("revision", flat=True)}
 
 
-def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
+def read_current_revision(rework: ReworkRequest, user: User | None = None) -> dict[str, object]:
     """Revision `submitted` would claim right now. Reads CVAT only; persists nothing."""
 
     frame = rework.issue.frame_review
@@ -386,6 +386,7 @@ def read_current_revision(rework: ReworkRequest) -> dict[str, object]:
         revision = compute_job_revision(
             dataset_id=frame.run.dataset_id,
             cvat_job_id=job_id,
+            user=user,
             guideline_version=frame.run.snapshot.guideline_version,
             legacy_reference="guideline_context" not in frame.run.snapshot.provenance,
         )

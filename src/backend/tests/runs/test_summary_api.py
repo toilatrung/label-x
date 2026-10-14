@@ -42,6 +42,9 @@ def validate_response(contract, schema_name, response):
 
 
 class Cvat:
+    def __init__(self, user=None):
+        pass
+
     projects = [{"id": 42, "name": "Urban"}, {"id": 99, "name": "Private"}]
     tasks = [{"id": 9, "name": "Day", "project_id": 42}]
 
