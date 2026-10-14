@@ -8,6 +8,7 @@ export type Run = components['schemas']['Run'];
 export type LedgerEntry = components['schemas']['LedgerEntry'];
 export type RunShard = components['schemas']['RunShard'];
 export type RunCreate = components['schemas']['RunCreate'];
+export type GroundTruth = NonNullable<components['schemas']['GroundTruthUpload']>;
 export type Candidate = components['schemas']['Candidate'];
 export type PaginatedCandidateList = components['schemas']['PaginatedCandidateList'];
 
@@ -58,6 +59,36 @@ async function csrf() {
 export async function createRun(body: RunCreate, key: string) {
   await csrf();
   return unwrap(await apiClient.POST('/api/runs/', { body, params: { header: { 'Idempotency-Key': key } } }));
+}
+
+export async function currentGroundTruth(datasetId: number, signal?: AbortSignal): Promise<GroundTruth | null> {
+  const result = await apiClient.GET('/api/ground-truth/', { params: { query: { dataset_id: datasetId } }, signal });
+  if (result.error || !result.response.ok) throw new ApiRequestError(result.response.status, result.error, result.response.headers);
+  return result.data ?? null;
+}
+
+export async function uploadGroundTruth(snapshotId: number, file: File, mappingVersion: string, key: string) {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/ground-truth/', {
+    params: { header: { 'Idempotency-Key': key } },
+    body: { snapshot_id: snapshotId, file: file as unknown as string, mapping_version: mappingVersion },
+    bodySerializer(body) {
+      const form = new FormData();
+      form.set('snapshot_id', String(body.snapshot_id));
+      form.set('mapping_version', body.mapping_version);
+      form.set('file', file, file.name);
+      return form;
+    },
+  }));
+}
+
+export async function lockGroundTruth(referenceId: number) {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/references/{id}/lock/', { params: { path: { id: referenceId } } }));
+}
+
+export async function previewGroundTruth(referenceId: number) {
+  return unwrap(await apiClient.GET('/api/ground-truth/{id}/preview/', { params: { path: { id: referenceId } } }));
 }
 
 export async function createConfig(body: ConfigVersionCreate, key: string) {

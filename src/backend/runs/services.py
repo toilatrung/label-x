@@ -330,6 +330,7 @@ def create_qc_run(
     idempotency_key: str | None = None,
     is_final: bool = False,
     origin_run_id: int | None = None,
+    metric_reference_id: int | None = None,
 ) -> tuple[QCRun, bool]:
     """Create a QC Run with deterministic sharding and dual idempotency guards.
 
@@ -341,6 +342,8 @@ def create_qc_run(
         "config_version_id": config_version_id,
         "seed": seed,
     }
+    if metric_reference_id is not None:
+        request_dict["metric_reference_id"] = metric_reference_id
     req_sha256 = canonical_request_hash(request_dict)
 
     clean_key = (idempotency_key or "").strip()
@@ -408,10 +411,27 @@ def create_qc_run(
 
     try:
         with transaction.atomic():
+            from runs.ground_truth import bind_upload
+
+            metric_cfg = (
+                config_version.engines or (config_version.payload or {}).get("engines", {})
+            ).get("metric", {})
+            metric_enabled = (
+                "metric" in engine_versions_map
+                and isinstance(metric_cfg, dict)
+                and metric_cfg.get("enabled", True)
+            )
+            if metric_reference_id is not None and not metric_enabled:
+                raise BusinessRuleUnmetError("Cần bật Metric trước khi chọn Ground Truth.")
+            try:
+                reference = bind_upload(snapshot, metric_reference_id) if metric_enabled else None
+            except ValueError as exc:
+                raise BusinessRuleUnmetError(str(exc)) from exc
             run = QCRun.objects.create(
                 snapshot=snapshot,
                 config_version=config_version,
                 model_artifact=model_artifact,
+                metric_reference=reference,
                 seed=seed,
                 engine_versions=engine_versions_map,
                 status=QCRun.Status.QUEUED,

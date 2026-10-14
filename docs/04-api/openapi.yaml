@@ -54,6 +54,74 @@ tags:
     description: Hiệu chỉnh reviewer và model (MBE-04)
 
 paths:
+  /api/ground-truth/{id}/preview/:
+    get:
+      operationId: ground_truth_preview
+      summary: Xem annotation Ground Truth trước khi duyệt
+      tags: [Evaluation]
+      x-labelx-trace: [FR-EVL-01, FR-SEC-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Annotation đã kiểm tra checksum, trong phạm vi Dataset
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reference_id, frames]
+                properties:
+                  reference_id: { type: integer }
+                  frames: { type: array, items: { type: object, additionalProperties: true } }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/Gone" }
+  /api/ground-truth/:
+    get:
+      operationId: ground_truth_current
+      tags: [Evaluation]
+      summary: Ground Truth hiện hành của Dataset
+      x-labelx-trace: [FR-EVL-01, FR-SEC-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - { name: dataset_id, in: query, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Metadata Ground Truth hoặc null nếu chưa upload
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GroundTruthUpload" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: ground_truth_upload
+      tags: [Evaluation]
+      summary: Upload Ground Truth lưu tạm cho Metric
+      description: File JSON labelx.metric.gt.v1, tối đa 20 MiB. QA Lead khác người upload khóa reference trước khi chạy. File tự xóa sau khi mọi run dùng nó đã hoàn tất và Metric checked; metadata và checksum được giữ lại. Chạy lại cần upload lại.
+      x-labelx-trace: [FR-EVL-01, FR-EVL-04, FR-SEC-05]
+      x-labelx-roles: [qa_lead, super_admin]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, maxLength: 128 } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [snapshot_id, file, mapping_version]
+              properties:
+                snapshot_id: { type: integer, minimum: 1 }
+                file: { type: string, format: binary }
+                mapping_version: { type: string, maxLength: 128 }
+                matching_threshold: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+                minimum_area: { type: number, minimum: 0, default: 0 }
+      responses:
+        "201":
+          description: Ground Truth đã upload, chờ duyệt
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GroundTruthUpload" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:
@@ -2148,6 +2216,11 @@ components:
       schema: { type: string }
 
   responses:
+    Gone:
+      description: File Ground Truth đã được xóa sau lần chạy thành công; cần upload lại.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     TooManyRequests:
       description: Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds)
       headers:
@@ -2476,6 +2549,7 @@ components:
         snapshot_id: { type: integer }
         config_version_id: { type: integer }
         seed: { type: integer }
+        metric_reference_id: { type: integer, minimum: 1, description: Reference của Ground Truth upload đã khóa; được gắn cố định với run. }
     ModelArtifact:
       type: object
       required: [name, version, checksum]
@@ -3410,6 +3484,18 @@ components:
         matching_threshold: { type: number, minimum: 0, maximum: 1 }
         minimum_area: { type: number, minimum: 0 }
         algorithm_version: { type: string }
+    GroundTruthUpload:
+      type: object
+      nullable: true
+      required: [reference, dataset_id, filename, frame_count, box_count, deleted_at, is_current]
+      properties:
+        reference: { $ref: "#/components/schemas/Reference" }
+        dataset_id: { type: integer }
+        filename: { type: string }
+        frame_count: { type: integer }
+        box_count: { type: integer }
+        deleted_at: { type: string, format: date-time, nullable: true }
+        is_current: { type: boolean }
     Reference:
       type: object
       required: [id, snapshot_id, gt_checksum, mapping_version, status, created_by]
