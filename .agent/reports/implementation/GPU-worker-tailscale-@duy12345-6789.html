@@ -9,7 +9,7 @@
 <style>body{max-width:1100px;margin:32px auto;padding:0 20px;font:15px/1.6 system-ui;color:#1a1d23}h1{font-size:25px}h2{font-size:20px;border-bottom:1px solid #ddd;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th,pre{background:#f3f4f6}pre{padding:16px;overflow:auto}code{overflow-wrap:anywhere}.note{border-left:4px solid #8a5300;background:#fdf2d8;padding:12px}a{color:#1d5ea8}</style>
 </head><body><main><article>
 <h1>GPU Worker qua Tailscale</h1>
-<p class="note">Đã triển khai local để manual test. Chưa push thay đổi mới, chưa tạo PR mới, PR #345 cũ vẫn Draft. Kết nối hai máy/Tailscale thật và clean image build chưa được xác minh. Phần <code>/scripts/worker</code> để cuối, chờ PR scripts cập nhật.</p>
+<p class="note">Đã merge PR #346 vào develop local và nhánh triển khai; đã hoàn thiện <code>/scripts/worker</code> sau bước merge. Chưa push thay đổi mới, chưa tạo PR mới, PR #345 cũ vẫn Draft. Kết nối hai máy/Tailscale thật và clean image build chưa được xác minh, chờ manual test.</p>
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Báo cáo theo cấu trúc <code>.agent/templates/implementation-report-template.html</code>; tiếp nối yêu cầu BLOCKER-033 mục 1. Người dùng đã duyệt hướng triển khai trong chat và yêu cầu autotest nhẹ, tự manual test sau. Không thay thế review/approval của PO.</p>
 <h2 id="record-metadata">Record Metadata</h2><ul>
@@ -22,8 +22,8 @@
 <li><strong>Epic ID</strong>: <code>M-BE-MVP</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-14</code></li></ul>
 <h2 id="scope">Scope</h2>
-<ul><li><strong>Implemented</strong>: <code>Backend Tailscale HTTPS; cấu hình revision; preflight; run binding; worker readiness; tab cấu hình; OpenAPI/type FE; test nhỏ</code></li>
-<li><strong>Not Implemented</strong>: <code>/scripts/worker (chờ PR scripts); cấu hình tailnet thật; public Internet exposure; load balancing; tự sửa run/config đã publish</code></li></ul>
+<ul><li><strong>Implemented</strong>: <code>Backend Tailscale HTTPS; cấu hình revision; preflight; run binding; worker readiness; tab cấu hình; OpenAPI/type FE; script GPU host độc lập PowerShell/Bash/Python; test nhỏ</code></li>
+<li><strong>Not Implemented</strong>: <code>cấu hình tailnet thật; public Internet exposure; load balancing; tự sửa run/config đã publish</code></li></ul>
 <p><strong>Luồng:</strong> server Label-X → HTTPS trong Tailscale → Tailscale Serve → worker localhost:8501 → Faster R-CNN. Checkpoint chỉ cần ở máy GPU; server giữ manifest và ModelArtifact. Chỉ mode legacy ENV còn kiểm checkpoint trên host để tương thích bản local trước.</p>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
@@ -36,18 +36,22 @@
 <tr><td><code>docs/04-api/openapi.yaml; contract.d.ts</code></td><td>Contract và type mới đồng bộ. Migration mới chỉ được apply trong DB test, chưa apply DB demo.</td><td>BLOCKER-033.1</td></tr>
 </tbody></table>
 <h2 id="related-files">Related Files</h2><ul>
+<li><strong>Worker guide</strong>: <a href="../../../scripts/worker/README.md">scripts/worker/README.md</a> — chạy từ máy GPU, không cần backend .env, Django, Node hay database.</li>
 <li><strong>Task Records</strong>: <a href="../../governance/blockers/BLOCKER-033.html">BLOCKER-033</a></li>
 <li><strong>Context Packages</strong>: <code>CLAUDE.md, AGENT.html, labelx-design và labelx-design-fidelity</code></li>
 <li><strong>Task Board</strong>: <code>.agent/execution/task-board.html</code> (không sửa canonical)</li>
 <li><strong>Current Context</strong>: <code>.agent/execution/current-context.html</code> (không sửa canonical)</li>
 <li><strong>Decisions</strong>: <code>Người dùng chốt Tailscale + HTTPS và duyệt triển khai trong chat</code></li>
 <li><strong>Change Requests</strong>: <code>Thiết kế/API mới cần PO review khi bàn giao; chưa tuyên bố có approval GitHub</code></li>
-<li><strong>Risks or Blockers</strong>: <code>PR scripts chưa sẵn sàng; runtime hai máy chưa kiểm; registry từng lỗi CA</code></li>
+<li><strong>Risks or Blockers</strong>: <code>runtime hai máy chưa kiểm; registry từng lỗi CA; máy hiện tại chặn chạy .ps1 bởi ExecutionPolicy (dùng Python trực tiếp, không hạ policy)</code></li>
 <li><strong>Review Request</strong>: <code>pending; người dùng manual test trước</code></li>
-<li><strong>Commits</strong>: <code>Nền local 1f1fd9b, develop 24835df; thay đổi Tailscale mới chưa commit/push</code></li></ul>
+<li><strong>Commits</strong>: <code>PR #346 merge e4e4a0848b9645a37307ab8ecd89a0bd38d7b6aa; develop local e4e4a08; remote-config d7b3906; merge nhánh triển khai 587a550; worker scripts 1066018. Các thay đổi triển khai mới chưa push.</code></li></ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
-<tr><td><code>pytest tests/runs/test_gpu_worker.py tests/engines/test_detector.py tests/engines/test_detector_runtime.py tests/test_contract_runtime_parity.py</code></td><td>passed</td><td>77 passed, 1 skipped, 15.27s. Skip GPU opt-in có chủ đích. DB test riêng, HTTP remote giả lập rõ ràng.</td></tr>
+<tr><td><code>pytest tests/runs/test_gpu_worker.py tests/engines/test_detector.py tests/engines/test_detector_runtime.py tests/test_contract_runtime_parity.py</code></td><td>passed</td><td>Chạy lại sau merge PR #346 và thêm script: 77 passed, 1 skipped, 26.85s. Skip GPU opt-in có chủ đích. DB test riêng, HTTP remote giả lập rõ ràng.</td></tr>
+<tr><td><code>python -m unittest discover -s scripts/worker/tests -v</code></td><td>passed</td><td>15 passed, 0.149s. Mock Docker/network; kiểm hash, token, isolated project, profile, stop không xóa volume, health contract và lệnh Tailscale chỉ in ra. Lần đầu bị sandbox Windows chặn thư mục tạm; chạy lại với quyền phù hợp thành công.</td></tr>
+<tr><td><code>ruff check scripts/worker; ruff format --check scripts/worker; bash -n scripts/worker/gpu-worker.sh; PowerShell Parser.ParseFile</code></td><td>passed</td><td>Bash launcher --help và Python --help chạy thành công. PowerShell kiểm cú pháp thành công; thực thi trực tiếp .ps1 bị ExecutionPolicy chặn, chưa tuyên bố runtime launcher PASS.</td></tr>
+<tr><td><code>docker compose ... config --quiet; worker.verify_checkpoint(checkpoint_thật)</code></td><td>passed</td><td>Compose schema kiểm với token giả, không start container; checkpoint host thật khớp SHA-256 manifest (read-only). Chưa chạy build/start từ script mới.</td></tr>
 <tr><td><code>vitest run src/__tests__/GpuWorkerPanel.test.tsx --maxWorkers=1</code></td><td>passed</td><td>6 passed; không báo ready khi probe 200/unavailable, không báo lưu thành công khi 409, không dùng dữ liệu mẫu khi 503, ẩn tab với quyền dataset.</td></tr>
 <tr><td><code>worker CPU pytest</code></td><td>passed</td><td>24 passed, 2.93s; có case health vẫn trả lời khi inference bận và request inference thứ hai bị chặn.</td></tr>
 </tbody></table>
@@ -69,7 +73,7 @@
 <li>Đảm bảo code backend/frontend đang chạy từ worktree <code>task-blocker033-detector</code>, không phải develop chưa có bản sửa.</li>
 <li>Trên server Label-X: cài dependencies theo README, chạy <code>uv run --frozen python manage.py migrate</code> trong src/backend để apply migration mới. Thao tác này chưa chạy vào DB demo trong phiên triển khai.</li>
 <li>Cấu hình server .env: <code>GPU_WORKER_ALLOWED_HOSTS</code> là danh sách hostname Tailscale chính xác, phân tách dấu phẩy; <code>GPU_WORKER_CREDENTIALS</code> là JSON map alias → token. Không gửi token vào chat/Git. Token phải >=32 ký tự ASCII không có khoảng trắng. Restart backend và Celery sau đổi env.</li>
-<li>Trên máy GPU: chạy module worker từ code mới với checkpoint + manifest + GPU đúng, token worker khớp token của alias ở server. Dùng Tailscale Serve chuyển HTTPS trong tailnet tới localhost:8501. Giới hạn grants/ACL chỉ cho server Label-X truy cập; không dùng Funnel. Chưa có script mới /scripts/worker — bước đóng gói script chờ PR scripts.</li>
+<li>Trên máy GPU, từ root worktree: <code>python scripts/worker/worker.py configure --checkpoint &lt;đường-dẫn-checkpoint&gt;</code>, tiếp theo <code>build</code>, <code>start</code>, <code>check</code>. Token sinh trong <code>.cache/gpu-worker/worker.env</code> ngoài Git; chuyển qua kênh secret để khớp alias server. Chạy <code>tailscale-command</code> để xem lệnh Serve, tự kiểm tra grants/ACL rồi bật HTTPS trong tailnet; không dùng Funnel. Chi tiết trong README worker. Script chỉ quản lý project <code>labelx-gpu-worker</code>, không đụng stack dev của PR #346. Nếu port bận, thêm <code>--port 8502</code> khi configure và dùng đúng port Serve.</li>
 <li>Đăng nhập admin toàn hệ thống → Configuration → Models và Guidelines → GPU Worker. Nhập tên/HTTPS URL, chọn alias, timeout; Lưu cấu hình rồi Kiểm tra kết nối. Mong đợi Sẵn sàng, CUDA, model/checksum và thời điểm kiểm tra thật.</li>
 <li>Đăng ký artifact bằng <code>uv run --frozen python manage.py check_detector --register</code> sau khi lưu worker remote. Lệnh verify manifest/worker, không cần checkpoint trên server; không overwrite artifact lệch. ConfigVersion mới phải bật detector và models trỏ đúng name/version đã đăng ký; không sửa config đã publish.</li>
 <li>Tạo run mới trên snapshot BDD100K locked. Kiểm tra detector checked, completed_units=eligible_units, failed_units=0; candidate có artifact_verified và checkpoint_sha256 đúng. Số candidate phụ thuộc ảnh/threshold, không dùng 48 của smoke cũ làm tiêu chí.</li>
@@ -84,8 +88,8 @@
 <h2 id="completion-criteria">Completion Criteria</h2><ul>
 <li>[x] Every reported change maps to an authorized task.</li><li>[x] Acceptance criteria results and evidence are linked.</li>
 <li>[x] Deviations and limitations are explicit.</li><li>[x] Build, lint, and test checks are recorded or explicitly marked not-run with rationale.</li>
-<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[ ] Git Nexus mappings are updated when commits exist (chưa có commit mới).</li>
-<li>[ ] Manual test hai máy và script /scripts/worker hoàn tất.</li></ul>
+<li>[ ] Reviewer handoff identifies an independent Reviewer Agent.</li><li>[ ] Git Nexus mappings are updated when commits exist (pending reviewer handoff; không sửa canonical PO).</li>
+<li>[x] Script /scripts/worker hoàn tất và autotest nhẹ PASS.</li><li>[ ] Manual test hai máy hoàn tất.</li></ul>
 <h2 id="forbidden-actions">Forbidden Actions</h2><p>Không tự approve/merge, không đánh dấu BLOCKER-033 resolved, không đưa secret vào Git/ConfigVersion, không dùng unit test để khẳng định kết nối Tailscale thật.</p>
 <h2 id="output-requirements">Output Requirements</h2><p>Report per-user theo CR-100. Bản thiết kế <code>docs/design/screens/ModelsGuidelines.dc.html</code> và OpenAPI là phần thay đổi cần review trước khi merge. Không tạo/push PR mới trong phiên này.</p>
 </article></main></body></html>
