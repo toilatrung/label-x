@@ -1,10 +1,8 @@
 'use client';
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { cursorFrom, getDatasets, getSnapshot, getSnapshots, getTasks } from './api';
-import { cursorFrom as runCursorFrom, listConfigs, listRuns, type Run } from '@/lib/execution/api';
-
-const MAX_RUN_PAGES = 20;
+import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
+import { cursorFrom, getDatasetRevisions, getDatasets, getSnapshot, getSnapshotRuns, getSnapshots, getTasks } from './api';
+import { listConfigs } from '@/lib/execution/api';
 
 export function useDatasets(userId?: number) {
   return useInfiniteQuery({
@@ -41,23 +39,32 @@ export function useSnapshotHistory(userId: number | undefined, datasetId: number
   });
 }
 
-/** Mọi Quality Control Run của Dataset (đọc hết các trang, tối đa 20 trang) để nối Snapshot với run. */
-export function useDatasetRuns(userId: number | undefined, datasetId: number | null, allowed: boolean) {
-  return useQuery({
-    queryKey: ['snapshot-dataset-runs', userId, datasetId],
-    enabled: userId !== undefined && datasetId !== null && allowed,
-    queryFn: async ({ signal }) => {
-      const runs: Run[] = [];
-      let cursor: string | null = null;
-      for (let page = 0; page < MAX_RUN_PAGES; page++) {
-        const reply = await listRuns(datasetId!, cursor, signal);
-        runs.push(...reply.results);
-        cursor = runCursorFrom(reply.next);
-        if (!cursor) break;
-      }
-      return runs;
-    },
+/** Quality Control Run mới nhất của Snapshot: phần tử đầu trang đầu (backend sắp id giảm dần); null khi chưa có run. */
+function latestRunQuery(userId: number | undefined, snapshotId: number | null, allowed: boolean) {
+  return {
+    queryKey: ['snapshot-latest-run', userId, snapshotId],
+    enabled: userId !== undefined && snapshotId !== null && allowed,
+    queryFn: async ({ signal }: { signal: AbortSignal }) => (await getSnapshotRuns(snapshotId!, undefined, signal)).results[0] ?? null,
     retry: false,
+  };
+}
+
+export function useLatestSnapshotRun(userId: number | undefined, snapshotId: number | null, allowed: boolean) {
+  return useQuery(latestRunQuery(userId, snapshotId, allowed));
+}
+
+/** Một lời gọi GET /api/snapshots/{id}/runs/ cho mỗi Snapshot đang hiện trên trang. */
+export function useLatestSnapshotRuns(userId: number | undefined, snapshotIds: number[], allowed: boolean) {
+  return useQueries({ queries: snapshotIds.map(id => latestRunQuery(userId, id, allowed)) });
+}
+
+export function useDatasetRevisions(userId: number | undefined, datasetId: number | null, allowed: boolean) {
+  return useInfiniteQuery({
+    queryKey: ['dataset-revisions', userId, datasetId],
+    enabled: userId !== undefined && datasetId !== null && allowed,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) => getDatasetRevisions(datasetId!, pageParam, signal),
+    getNextPageParam: page => page?.next ? cursorFrom(page.next) : undefined, retry: false,
   });
 }
 

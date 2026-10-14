@@ -104,6 +104,10 @@ class DashScopeClient:
         if mismatch is not None:
             # Key của nhà cung cấp này không được gửi tới host của nhà khác; nêu đúng nguyên nhân.
             raise VlmProviderError(VlmProviderFailure.AUTH, mismatch)
+        if cfg.connection_id is not None:
+            from vlm.connection import connection_api_key
+
+            return connection_api_key(cfg)
         api_key = os.environ.get(cfg.api_key_env, "")
         if not api_key:
             # Thiếu credential: lỗi xác thực cố định, không retry và không gọi mạng.

@@ -29,7 +29,7 @@ endif
         cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
         backend-install frontend-install migrate superuser \
         dev-backend dev-worker dev-beat dev-frontend up down refresh status \
-        check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
+        check contract lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
 
 help: ## Liệt kê lệnh
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -169,7 +169,10 @@ status: ## Trạng thái tiến trình dev và container hạ tầng
 
 # ---------------------------------------------------------------- quality
 
-check: lint typecheck test detector-lint detector-test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
+check: contract lint typecheck test detector-lint detector-test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
+
+contract: ## Kiểm tra OpenAPI, truy vết SRS, role và schema trước khi chạy bộ test lớn
+	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q --strict-markers -x tests/test_contract.py
 
 lint: ## Ruff + ESLint
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check . && "$(UV)" run --frozen ruff format --check .
@@ -182,7 +185,7 @@ typecheck: ## mypy + tsc
 	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit calibration effort engines guideline cvat_adapter orchestration ranking runs snapshots storage
 	cd "$(FRONTEND)" && npm run typecheck
 
-test: ## pytest (cần infra-up) + npm test
+test: contract ## Kiểm tra contract trước, rồi pytest (cần infra-up) + npm test
 	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q
 	cd "$(FRONTEND)" && npm test
 

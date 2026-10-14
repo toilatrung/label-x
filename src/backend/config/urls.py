@@ -33,10 +33,12 @@ from runs.views import (
     ModelListView,
     ModelUpdateView,
 )
+from vlm.settings_views import VlmSettingsView
 
 urlpatterns = [
     path("api/gpu-worker/config/", WorkerConfigView.as_view(), name="gpu-worker-config"),
     path("api/gpu-worker/probe/", WorkerProbeView.as_view(), name="gpu-worker-probe"),
+    path("api/configuration/vlm/", VlmSettingsView.as_view(), name="vlm-settings"),
     path("admin/", admin.site.urls),
     path("internal/metrics/", MetricsView.as_view(), name="internal-metrics"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

@@ -8,6 +8,8 @@ export type Snapshot = components['schemas']['Snapshot'];
 export type SnapshotPage = components['schemas']['PaginatedSnapshotList'];
 export type SnapshotCreate = components['schemas']['SnapshotCreate'];
 export type SnapshotAccepted = components['schemas']['SnapshotAccepted'];
+export type DatasetRevisionPage = components['schemas']['PaginatedDatasetRevisionList'];
+export type RunPage = components['schemas']['PaginatedRunList'];
 
 function requireData<T>(reply: { data?: T; error?: unknown; response: Response }): T {
   if (reply.error || !reply.response.ok || reply.data === undefined) {
@@ -38,6 +40,20 @@ export async function getSnapshots(datasetId: number, cursor?: string, signal?: 
 export async function getSnapshot(id: number, signal?: AbortSignal): Promise<Snapshot> {
   return requireData(await apiClient.GET('/api/snapshots/{id}/', {
     params: { path: { id } }, signal, cache: 'no-store',
+  }));
+}
+
+/** Revision đã khoá của Dataset (mới nhất trước); 502 khi CVAT lỗi. */
+export async function getDatasetRevisions(datasetId: number, cursor?: string, signal?: AbortSignal): Promise<DatasetRevisionPage> {
+  return requireData(await apiClient.GET('/api/datasets/{id}/revisions/', {
+    params: { path: { id: datasetId }, query: cursor ? { cursor } : {} }, signal, cache: 'no-store',
+  }));
+}
+
+/** Quality Control Run của một Snapshot, id giảm dần. */
+export async function getSnapshotRuns(snapshotId: number, cursor?: string, signal?: AbortSignal): Promise<RunPage> {
+  return requireData(await apiClient.GET('/api/snapshots/{id}/runs/', {
+    params: { path: { id: snapshotId }, query: cursor ? { cursor } : {} }, signal, cache: 'no-store',
   }));
 }
 

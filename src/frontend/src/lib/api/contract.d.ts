@@ -39,6 +39,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/guidelines/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["guidelines_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{id}/guideline/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["datasets_guideline_retrieve"];
+        put: operations["datasets_guideline_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guidelines/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["guidelines_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf/": {
         parameters: {
             query?: never;
@@ -1233,6 +1281,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/configuration/vlm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kết nối VLM trong Configuration */
+        get: operations["vlm_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Lưu kết nối VLM
+         * @description API key được mã hóa riêng. Bỏ api_key để giữ key nếu Base URL không đổi. Mỗi lần lưu tạo phiên bản kết nối mới; cấu hình QC mới bật VLM tự tham chiếu phiên bản hiện tại khi không cung cấp models.vlm.
+         */
+        patch: operations["vlm_settings_update"];
+        trace?: never;
+    };
     "/api/models/": {
         parameters: {
             query?: never;
@@ -1696,6 +1765,58 @@ export interface components {
             device: string | null;
             model: components["schemas"]["WorkerModel"] | null;
         };
+        GuidelineTaxonomyLabel: {
+            name: string;
+            required_attributes?: components["schemas"]["GuidelineTaxonomyAttribute"][];
+        };
+        GuidelineTaxonomyDefinition: {
+            version: string;
+            labels: components["schemas"]["GuidelineTaxonomyLabel"][];
+        };
+        GuidelineTaxonomyAttribute: {
+            name: string;
+            rule_id: string;
+            allowed_values?: string[];
+        };
+        GuidelinePreviewRule: {
+            rule_id: string;
+            section: string;
+        };
+        GuidelinePreview: {
+            version: string;
+            name: string;
+            rules: components["schemas"]["GuidelinePreviewRule"][];
+            taxonomy: components["schemas"]["GuidelineTaxonomyDefinition"] | null;
+        };
+        GuidelineFile: {
+            content: string;
+        };
+        SnapshotScope: {
+            cvat_task_ids?: number[];
+            cvat_job_ids?: number[];
+        };
+        DatasetGuidelineUpdate: {
+            guideline_version: string;
+            expected_revision: number;
+        };
+        DatasetGuideline: {
+            dataset_id: number;
+            guideline_version: string | null;
+            guideline_checksum: string | null;
+            taxonomy_version: string | null;
+            taxonomy_ready: boolean;
+            revision: number;
+        };
+        GuidelineImportResult: {
+            version: string;
+            checksum: string;
+            taxonomy: components["schemas"]["GuidelineTaxonomyDefinition"];
+            skipped: boolean;
+        };
+        GuidelineImport: {
+            content: string;
+            taxonomy?: components["schemas"]["GuidelineTaxonomyDefinition"];
+        };
         /** @enum {string} */
         ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "POLICY_NOT_CONFIGURED" | "POLICY_VERSION_MISMATCH";
         /**
@@ -1806,11 +1927,10 @@ export interface components {
         SnapshotStatus: "pending" | "exporting" | "locked" | "failed";
         SnapshotCreate: {
             dataset_id: number;
-            /** @description Rỗng cả hai danh sách nghĩa là toàn dataset */
-            scope: {
-                cvat_task_ids?: number[];
-                cvat_job_ids?: number[];
-            };
+            scope: components["schemas"]["SnapshotScope"];
+            guideline_version?: string;
+            expected_guideline_version?: string;
+            /** @default  */
             note?: string;
         };
         SnapshotAccepted: {
@@ -2907,7 +3027,7 @@ export interface components {
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu; worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp. Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại. provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
             models?: {
                 [key: string]: unknown;
             };
@@ -3121,6 +3241,24 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Model"][];
         };
+        VlmSettings: {
+            revision: number;
+            base_url: string;
+            /** @enum {string} */
+            model: "qwen3-vl-plus";
+            api_key_configured: boolean;
+            /** @description Ngưỡng score detector để gọi VLM khi score thấp hơn; không phải confidence của kết quả VLM. Cấu hình QC mới bật VLM kế thừa ngưỡng này nếu không truyền classification_routing.score_threshold. */
+            confidence_threshold: number;
+        };
+        VlmSettingsUpdate: {
+            expected_revision: number;
+            base_url: string;
+            /** @enum {string} */
+            model: "qwen3-vl-plus";
+            api_key?: string;
+            /** @description Bỏ qua để giữ ngưỡng đã lưu; mặc định ban đầu 0.85. */
+            confidence_threshold?: number;
+        };
         ModelPatch: {
             expected_revision: number;
             enabled?: boolean;
@@ -3129,6 +3267,8 @@ export interface components {
         GuidelineVersionEntry: {
             version: string;
             is_current: boolean;
+            taxonomy_version: string | null;
+            taxonomy_ready: boolean;
             rule_count: number;
             /** Format: date-time */
             effective_from?: string | null;
@@ -3318,7 +3458,8 @@ export interface components {
         };
         DatasetRevision: {
             revision: string;
-            snapshot_id?: number | null;
+            /** @description Snapshot locked mới nhất có revision này */
+            snapshot_id: number;
             frame_count: number;
             /** Format: date-time */
             created_at: string;
@@ -3594,6 +3735,120 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    guidelines_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidelineFile"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuidelineFile"];
+                "multipart/form-data": components["schemas"]["GuidelineFile"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuidelinePreview"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    datasets_guideline_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetGuideline"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    datasets_guideline_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetGuidelineUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["DatasetGuidelineUpdate"];
+                "multipart/form-data": components["schemas"]["DatasetGuidelineUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetGuideline"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    guidelines_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidelineImport"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuidelineImport"];
+                "multipart/form-data": components["schemas"]["GuidelineImport"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuidelineImportResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     auth_csrf: {
@@ -5432,6 +5687,54 @@ export interface operations {
             422: components["responses"]["Unprocessable"];
         };
     };
+    vlm_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cấu hình công khai; không trả API key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VlmSettings"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    vlm_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VlmSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Kết nối đã lưu; không trả API key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VlmSettings"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     models_list: {
         parameters: {
             query?: {
@@ -5921,6 +6224,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            502: components["responses"]["BadGateway"];
         };
     };
     runs_report: {

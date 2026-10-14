@@ -90,6 +90,7 @@ KNOWN_KEYS = frozenset(
         "max_attempts",
         "budget",
         "api_key_env",
+        "connection_id",
     }
 )
 
@@ -111,6 +112,7 @@ class VlmConfig:
     max_attempts: int
     budget: VlmBudget
     api_key_env: str = DEFAULT_API_KEY_ENV
+    connection_id: int | None = None
 
     @property
     def host(self) -> str:
@@ -233,6 +235,11 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
         mismatch = binding_error(provider, host, env_name)
         if mismatch and provider in ALLOWED_PROVIDERS and env_name in ALLOWED_API_KEY_ENVS:
             errors.append(mismatch)
+    connection_id = raw.get("connection_id")
+    if connection_id is not None and (
+        isinstance(connection_id, bool) or not isinstance(connection_id, int) or connection_id < 1
+    ):
+        errors.append("models.vlm.connection_id phải là số nguyên dương.")
     return errors
 
 
@@ -250,4 +257,5 @@ def parse_vlm_config(raw: Mapping[str, Any]) -> VlmConfig:
         max_attempts=int(raw["max_attempts"]),
         budget=VlmBudget(max_calls=int(raw["budget"]["max_calls"])),
         api_key_env=raw.get("api_key_env") or default_api_key_env(raw["base_url"]),
+        connection_id=raw.get("connection_id"),
     )

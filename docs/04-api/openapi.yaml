@@ -109,6 +109,139 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "409": { $ref: "#/components/responses/Conflict" }
+  /api/guidelines/preview/:
+    post:
+      operationId: guidelines_preview
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineFile'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelinePreview'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/datasets/{id}/guideline/:
+    get:
+      operationId: datasets_guideline_retrieve
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin, reviewer]
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      operationId: datasets_guideline_update
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/guidelines/import/:
+    post:
+      operationId: guidelines_import
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineImportResult'
+          description: ''
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:
@@ -1641,6 +1774,41 @@ paths:
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
   # ------------------------------------------------------------------ configuration (MBE-05)
+  /api/configuration/vlm/:
+    get:
+      operationId: vlm_settings_retrieve
+      tags: [config]
+      summary: Kết nối VLM trong Configuration
+      x-labelx-trace: [FR-ENG-01]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      responses:
+        "200":
+          description: Cấu hình công khai; không trả API key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VlmSettings" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    patch:
+      operationId: vlm_settings_update
+      tags: [config]
+      summary: Lưu kết nối VLM
+      x-labelx-trace: [FR-ENG-01, FR-SEC-05]
+      description: API key được mã hóa riêng. Bỏ api_key để giữ key nếu Base URL không đổi. Mỗi lần lưu tạo phiên bản kết nối mới; cấu hình QC mới bật VLM tự tham chiếu phiên bản hiện tại khi không cung cấp models.vlm.
+      x-labelx-roles: [qc_admin, super_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VlmSettingsUpdate" }
+      responses:
+        "200":
+          description: Kết nối đã lưu; không trả API key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VlmSettings" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /api/models/:
     get:
       operationId: models_list
@@ -2006,6 +2174,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "502": { $ref: "#/components/responses/BadGateway" }
   # ------------------------------------------------------------------ report, release, lineage (MBE-03, MBE-01)
   /api/runs/{id}/report/:
     get:
@@ -2263,6 +2432,157 @@ components:
         model:
           allOf: [{ $ref: "#/components/schemas/WorkerModel" }]
           nullable: true
+    GuidelineTaxonomyLabel:
+      type: object
+      properties:
+        name:
+          type: string
+        required_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyAttribute'
+      required:
+      - name
+    GuidelineTaxonomyDefinition:
+      type: object
+      properties:
+        version:
+          type: string
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelineTaxonomyLabel'
+      required:
+      - labels
+      - version
+    GuidelineTaxonomyAttribute:
+      type: object
+      properties:
+        name:
+          type: string
+        rule_id:
+          type: string
+        allowed_values:
+          type: array
+          items:
+            type: string
+      required:
+      - name
+      - rule_id
+    GuidelinePreviewRule:
+      type: object
+      properties:
+        rule_id:
+          type: string
+        section:
+          type: string
+      required:
+      - rule_id
+      - section
+    GuidelinePreview:
+      type: object
+      properties:
+        version:
+          type: string
+        name:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuidelinePreviewRule'
+        taxonomy:
+          allOf:
+          - $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+          nullable: true
+      required:
+      - name
+      - rules
+      - taxonomy
+      - version
+    GuidelineFile:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+      required:
+      - content
+    SnapshotScope:
+      type: object
+      properties:
+        cvat_task_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        cvat_job_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+    DatasetGuidelineUpdate:
+      type: object
+      properties:
+        guideline_version:
+          type: string
+          maxLength: 32
+        expected_revision:
+          type: integer
+          minimum: 0
+      required:
+      - expected_revision
+      - guideline_version
+    DatasetGuideline:
+      type: object
+      properties:
+        dataset_id:
+          type: integer
+        guideline_version:
+          type: string
+          nullable: true
+        guideline_checksum:
+          type: string
+          nullable: true
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        revision:
+          type: integer
+      required:
+      - dataset_id
+      - guideline_checksum
+      - guideline_version
+      - revision
+      - taxonomy_ready
+      - taxonomy_version
+    GuidelineImportResult:
+      type: object
+      properties:
+        version:
+          type: string
+        checksum:
+          type: string
+        taxonomy:
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+        skipped:
+          type: boolean
+      required:
+      - checksum
+      - skipped
+      - taxonomy
+      - version
+    GuidelineImport:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+        taxonomy:
+          $ref: '#/components/schemas/GuidelineTaxonomyDefinition'
+      required:
+      - content
     # ------------------------------------------------------------ lỗi chung
     ErrorCode:
       type: string
@@ -2429,20 +2749,25 @@ components:
       enum: [pending, exporting, locked, failed]
     SnapshotCreate:
       type: object
-      required: [dataset_id, scope]
       properties:
-        dataset_id: { type: integer }
+        dataset_id:
+          type: integer
+          minimum: 1
         scope:
-          type: object
-          description: Rỗng cả hai danh sách nghĩa là toàn dataset
-          properties:
-            cvat_task_ids:
-              type: array
-              items: { type: integer }
-            cvat_job_ids:
-              type: array
-              items: { type: integer }
-        note: { type: string }
+          $ref: '#/components/schemas/SnapshotScope'
+        guideline_version:
+          type: string
+          maxLength: 32
+        expected_guideline_version:
+          type: string
+          maxLength: 32
+        note:
+          type: string
+          default: ''
+          maxLength: 1000
+      required:
+      - dataset_id
+      - scope
     SnapshotAccepted:
       type: object
       required: [id, status]
@@ -3840,7 +4165,10 @@ components:
             timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000)
             và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host:
             DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định
-            theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible
+            theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu;
+            worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp.
+            Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại.
+            provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible
             chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là
             cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận
             chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret
@@ -4123,6 +4451,28 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/Model" }
+    VlmSettings:
+      type: object
+      required: [revision, base_url, model, api_key_configured, confidence_threshold]
+      properties:
+        revision: { type: integer, minimum: 0 }
+        base_url: { type: string }
+        model: { type: string, enum: [qwen3-vl-plus] }
+        api_key_configured: { type: boolean }
+        confidence_threshold:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Ngưỡng score detector để gọi VLM khi score thấp hơn; không phải confidence của kết quả VLM. Cấu hình QC mới bật VLM kế thừa ngưỡng này nếu không truyền classification_routing.score_threshold.
+    VlmSettingsUpdate:
+      type: object
+      required: [expected_revision, base_url, model]
+      properties:
+        expected_revision: { type: integer, minimum: 0 }
+        base_url: { type: string, maxLength: 512 }
+        model: { type: string, enum: [qwen3-vl-plus] }
+        api_key: { type: string, writeOnly: true, minLength: 1, maxLength: 4096 }
+        confidence_threshold: { type: number, minimum: 0, maximum: 1, description: Bỏ qua để giữ ngưỡng đã lưu; mặc định ban đầu 0.85. }
     ModelPatch:
       type: object
       required: [expected_revision]
@@ -4132,13 +4482,32 @@ components:
         version: { type: string }
     GuidelineVersionEntry:
       type: object
-      required: [version, is_current, rule_count]
       properties:
-        version: { type: string }
-        is_current: { type: boolean }
-        rule_count: { type: integer }
-        effective_from: { type: string, format: date-time, nullable: true }
-        effective_to: { type: string, format: date-time, nullable: true }
+        version:
+          type: string
+        is_current:
+          type: boolean
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        rule_count:
+          type: integer
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - is_current
+      - rule_count
+      - taxonomy_ready
+      - taxonomy_version
+      - version
     PaginatedGuidelineVersionEntryList:
       type: object
       required: [results]
@@ -4382,10 +4751,10 @@ components:
           items: { $ref: "#/components/schemas/DatasetSummary" }
     DatasetRevision:
       type: object
-      required: [revision, frame_count, created_at]
+      required: [revision, snapshot_id, frame_count, created_at]
       properties:
         revision: { type: string }
-        snapshot_id: { type: integer, nullable: true }
+        snapshot_id: { type: integer, description: Snapshot locked mới nhất có revision này }
         frame_count: { type: integer }
         created_at: { type: string, format: date-time }
     PaginatedDatasetRevisionList:

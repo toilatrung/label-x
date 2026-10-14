@@ -33,6 +33,7 @@ class GuidelineVersion(models.Model):
 
     version_tag = models.CharField(max_length=32, unique=True, help_text="Ví dụ: v1")
     name = models.CharField(max_length=200, help_text="Tên hiển thị cho phiên bản")
+    taxonomy = models.JSONField(default=dict, blank=True)
     loaded_at = models.DateTimeField(auto_now_add=True)
     file_checksum = models.CharField(
         max_length=64,
@@ -145,3 +146,16 @@ class GuidelineLoadRecord(models.Model):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise ValueError("GuidelineLoadRecord is append-only and cannot be deleted.")
+
+
+class DatasetGuideline(models.Model):
+    """Explicit current policy binding; snapshots retain their own frozen copy."""
+
+    dataset_id = models.PositiveBigIntegerField(unique=True)
+    guideline = models.ForeignKey(GuidelineVersion, on_delete=models.PROTECT)
+    revision = models.PositiveIntegerField(default=1)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"Dataset {self.dataset_id} → {self.guideline.version_tag}"

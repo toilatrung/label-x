@@ -13,8 +13,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { formatDateTime, shortRevision, snapshotCode } from '@/lib/format';
-import { useDatasetRuns, useDatasets, usePublishedConfigs, useSnapshot, useSnapshotHistory, useTasks } from '@/lib/snapshots/queries';
-import { latestRunBySnapshot } from '@/lib/snapshots/runs';
+import { useDatasetRevisions, useDatasets, useLatestSnapshotRun, usePublishedConfigs, useSnapshot, useSnapshotHistory, useTasks } from '@/lib/snapshots/queries';
 
 function SnapshotWorkspace() {
   const { session, isLoading, datasetId, setDatasetId } = useAuth();
@@ -38,9 +37,10 @@ function SnapshotWorkspace() {
     .flatMap(page => page.results)
     .find(item => item.dataset_id === datasetId && item.status === 'locked');
 
-  const datasetRuns = useDatasetRuns(userId, datasetId, canRead && !id);
+  const inUseRunQuery = useLatestSnapshotRun(userId, recentLocked?.id ?? null, canRead && !id);
+  const revisions = useDatasetRevisions(userId, datasetId, canRead && !!selectedDataset && !id);
   const publishedConfigs = usePublishedConfigs(userId, canRead && !id);
-  const inUseRun = recentLocked ? latestRunBySnapshot(datasetRuns.data ?? []).get(recentLocked.id) : undefined;
+  const inUseRun = inUseRunQuery.data ?? undefined;
   const inUseConfig = inUseRun ? publishedConfigs.data?.results.find(config => config.id === inUseRun.config_version_id) : undefined;
 
   const [paginationError, setPaginationError] = React.useState<string | null>(null);
@@ -148,7 +148,7 @@ function SnapshotWorkspace() {
         <FlowNav flow="analysis" currentStep={1} variant="tabs" inCard />
         <div className="lx-card__head"><h2 className="lx-h2">Tạo snapshot mới</h2></div>
         <div className="lx-card__body lx-stack">
-          <SnapshotRevisionFields dataset={
+          <SnapshotRevisionFields revisions={revisions} dataset={
             <div className="lx-field"><label className="lx-label" htmlFor="snapshot-dataset">Dataset / project CVAT</label>
               <select id="snapshot-dataset" className="lx-select" value={datasetId ?? ''} disabled={requestLocked}
                 onChange={event => setDatasetId(event.target.value ? Number(event.target.value) : null)}>
@@ -188,12 +188,12 @@ function SnapshotWorkspace() {
           <dt>Guideline</dt><dd>{recentLocked.guideline_version || '—'}</dd>
           <dt>Tạo bởi</dt><dd>User #{recentLocked.created_by} · {formatDateTime(recentLocked.created_at)}</dd>
         </dl>
-          {datasetRuns.isError ? <SnapshotInUseExtra error={errorMessage(datasetRuns.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
-            <dt>Mô hình độc lập</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
-            <dt>Cấu hình kiểm tra</dt><dd>{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
-            <dt>Seed lấy mẫu</dt><dd className="lx-mono">{datasetRuns.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>
+          {inUseRunQuery.isError ? <SnapshotInUseExtra error={errorMessage(inUseRunQuery.error)} /> : <dl className="lx-kv lx-stack--divider" aria-label="Quality Control Run mới nhất của Snapshot">
+            <dt>Mô hình độc lập</dt><dd>{inUseRunQuery.isPending ? 'Đang tải…' : inUseRun?.model_artifact ? `${inUseRun.model_artifact.name} ${inUseRun.model_artifact.version}` : '—'}</dd>
+            <dt>Cấu hình kiểm tra</dt><dd>{inUseRunQuery.isPending ? 'Đang tải…' : inUseRun ? (inUseConfig?.name ?? `Phiên bản #${inUseRun.config_version_id}`) : '—'}</dd>
+            <dt>Seed lấy mẫu</dt><dd className="lx-mono">{inUseRunQuery.isPending ? 'Đang tải…' : inUseRun ? inUseRun.seed : '—'}</dd>
           </dl>}
-          {datasetRuns.isSuccess && !inUseRun && <p className="lx-muted lx-text-13">Snapshot này chưa có Quality Control Run nên chưa có mô hình, cấu hình và seed.</p>}
+          {inUseRunQuery.isSuccess && !inUseRun && <p className="lx-muted lx-text-13">Snapshot này chưa có Quality Control Run nên chưa có mô hình, cấu hình và seed.</p>}
         </div> : isSearchingLocked && datasetId ? (
           <p className="lx-muted" role="status">Đang tải…</p>
         ) : (

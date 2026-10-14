@@ -117,6 +117,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: uv sync --frozen
+      - name: Contract preflight (before runtime tests)
+        run: uv run --frozen pytest -q --strict-markers -x tests/test_contract.py
       - name: Lint and types
         run: |
           uv run --frozen ruff check .
@@ -139,7 +141,7 @@ jobs:
       - name: Full pytest suite
         # Chạy MỌI test trong src/backend/tests để test mới của collaborator không bị bỏ sót;
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
-        run: uv run --frozen pytest -q --strict-markers
+        run: uv run --frozen pytest -q --strict-markers -x --durations=20
       - name: S3 integration (SeaweedFS, F-10)
         # Cùng image/cấu hình với infrastructure/docker-compose.dev.yml; services: không truyền được command nên dùng docker run.
         env:
