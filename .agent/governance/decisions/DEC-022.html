@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-022 — Nối API phần A BLOCKER-034 — LabelX</title>
+<meta name="labelx:id" content="dec-022">
+<meta name="labelx:title" content="DEC-022 — Chốt phương án nối 5 operation FE của BLOCKER-034 phần A">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, frontend, api-contract, snapshot, review-volume, candidate-evaluation]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-022</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-022</span><b>title</b><span>DEC-022 — Chốt phương án nối 5 operation FE của BLOCKER-034 phần A</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, frontend, api-contract, snapshot, review-volume, candidate-evaluation]</span><b>priority</b><span>2</span></div>
+<h1>DEC-022 — Chốt phương án nối 5 operation FE của BLOCKER-034 phần A</h1>
+<h2>Usage Purpose</h2><p>Ghi các lựa chọn PO đã chốt (C0–C6) trước khi FE nối 5 operation backend ở phần A của <a href="../blockers/BLOCKER-034.html">BLOCKER-034</a>.</p>
+<h2>Record Metadata</h2><ul>
+<li><strong>Decision ID</strong>: <code>DEC-022</code></li><li><strong>Title</strong>: <code>Chốt phương án nối 5 operation FE của BLOCKER-034 phần A</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Decision Makers</strong>: <code>PO @toilatrung trả lời trực tiếp trong phiên Claude 2026-10-14</code></li><li><strong>Status</strong>: <code>accepted</code></li><li><strong>Decision Type</strong>: <code>product</code></li><li><strong>Created Date</strong>: <code>2026-10-14</code></li><li><strong>Decision Date</strong>: <code>2026-10-14</code></li></ul>
+<h2>Context</h2><p>Khảo sát lại trên develop thấy: (1) API revisions chỉ liệt kê revision đã khoá, Snapshot mới luôn khoá revision hiện tại của CVAT; (2) màn danh sách Snapshot cũng dùng <code>useDatasetRuns</code>; (3) thiết kế Dashboard không có biểu đồ khối lượng review; (4) không màn thiết kế nào có nút đánh giá lại bằng AI; (5) Review workspace đã có <code>ai_evidence</code> (evaluation_id, poll_url) nên không cần B-4 ở đó; (6) contract revisions thiếu 502 và để <code>snapshot_id</code> nullable.</p>
+<h2>Decision Drivers</h2><ul><li>Mọi màn hình khớp 1:1 với <code>docs/design/screens</code>; thêm vùng mới thì sửa thiết kế trước.</li><li>Không đổi model backend khi chưa có change request.</li><li>Không hiện dữ liệu minh họa như dữ liệu thật.</li></ul>
+<h2>Options Considered</h2><table><thead><tr><th>Mục</th><th>Lựa chọn của PO</th><th>Phương án khác đã bỏ</th></tr></thead><tbody>
+<tr><td>C0 — task/người làm</td><td>Không tạo task riêng; làm trực tiếp trong phiên này</td><td>Tạo T-xxx cho từng đợt</td></tr>
+<tr><td>C1 — B-1 revision/seed</td><td>(a) Sửa thiết kế: revision chỉ để xem và mở Snapshot đã khoá; seed và cấu hình chọn khi tạo Quality Control Run</td><td>(b) Thêm trường vào SnapshotCreate (cần CR)</td></tr>
+<tr><td>C2 — cột Run ở danh sách Snapshot</td><td>(b) Gọi <code>GET /api/snapshots/{id}/runs/</code> cho từng dòng</td><td>(a) giữ <code>useDatasetRuns</code>; (c) BE thêm <code>latest_run_id</code></td></tr>
+<tr><td>C3 — biểu đồ khối lượng review</td><td>(a) Bổ sung biểu đồ vào <code>Dashboard.dc.html</code> rồi làm FE</td><td>Đặt ở Reports; hoãn</td></tr>
+<tr><td>C4 — vị trí nút đánh giá lại</td><td>(a) Bảng bằng chứng của Review workspace</td><td>History; cả hai (History chờ B-4)</td></tr>
+<tr><td>C5 — kiểm thử A-4 khi VLM chưa có model</td><td>(b) Chờ có model; ghi vào BLOCKER-034 để tester kiểm lần cuối</td><td>(a) merge chỉ với test giả lập và 422 trên dev</td></tr>
+<tr><td>C6 — giới hạn hỏi lại kết quả</td><td>Dừng sau 5 phút, hiện "Chưa có kết quả" và nút "Kiểm tra lại"</td><td>Hỏi lại không giới hạn</td></tr>
+</tbody></table>
+<h2>Decision Outcome</h2><ul><li><strong>Selected Option</strong>: <code>C1(a), C2(b), C3(a), C4(a), C5(b), C6 5 phút</code></li><li><strong>Rationale</strong>: <code>Chỉ đạo trực tiếp của PO; không đổi model backend</code></li><li><strong>Effective Date</strong>: <code>2026-10-14</code></li></ul>
+<p>Thiết kế đã sửa: <code>Snapshot.dc.html</code> (ô revision có dòng "Revision hiện tại của CVAT" và các revision đã khoá; ô seed đổi thành "Seed và cấu hình kiểm tra · Chọn khi tạo Quality Control Run"), <code>Dashboard.dc.html</code> (biểu đồ cột frame đã review theo ngày/tuần, lọc khoảng ngày; class <code>lx-vbars</code>, <code>lx-select--auto</code> thêm vào bundle.css và labelx.css), <code>ReviewWorkspace.dc.html</code> (nút "Đánh giá lại bằng AI" ở dòng mô hình thị giác – ngôn ngữ; hộp thoại dùng khung <code>lx-gap-dialog</code>).</p>
+<h2>Consequences</h2><ul><li><strong>Positive</strong>: <code>Màn Snapshot hết mock; Analysis không còn tải tới 20 trang run; có biểu đồ khối lượng review; đánh giá lại candidate từ UI</code></li><li><strong>Negative</strong>: <code>Danh sách Snapshot gọi thêm 1 request mỗi dòng; biểu đồ chỉ vẽ frames_reviewed, decisions nằm ở nhãn từng cột và dòng tổng; luồng completed của đánh giá lại chưa kiểm được trên dữ liệu thật</code></li><li><strong>Follow-up Work</strong>: <code>Tester kiểm lần cuối A-4/A-5 khi VLM có model (BLOCKER-033 mục 2); B-4 trước khi thêm nút ở History; cân nhắc latest_run_id nếu danh sách Snapshot chậm</code></li></ul>
+<h2>Related Files</h2><ul><li><strong>Affected Documents</strong>: <a href="../blockers/BLOCKER-034.html">BLOCKER-034</a>; <code>docs/04-api/openapi.yaml</code>; <code>docs/design/screens/Snapshot.dc.html</code>, <code>Dashboard.dc.html</code>, <code>ReviewWorkspace.dc.html</code>.</li><li><strong>Epics or Tasks</strong>: <code>BLOCKER-033 mục 7; M-BE-MVP (MBE-01, MBE-02, MBE-06)</code></li><li><strong>Change Requests</strong>: <code>none</code></li><li><strong>Risks</strong>: <code>N+1 request ở danh sách Snapshot; VLM chưa có model</code></li><li><strong>Supersedes</strong>: <code>none</code></li><li><strong>Superseded By</strong>: <code>none</code></li></ul>
+<h2>Completion Criteria</h2><ul><li>[x] Lựa chọn của PO được ghi.</li><li>[x] Thiết kế đã cập nhật theo C1, C3, C4.</li><li>[ ] Tester kiểm A-4/A-5 trên dev với VLM có model.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không thêm chọn revision cũ hoặc seed vào form tạo Snapshot khi chưa có CR.</li><li>Không đánh dấu BLOCKER-034 phần A resolved trước khi tester kiểm lần cuối A-4/A-5.</li></ul>
+<h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/decisions/DEC-022.html</code>; BLOCKER-034 trỏ về đây.</p></article></main></body></html>

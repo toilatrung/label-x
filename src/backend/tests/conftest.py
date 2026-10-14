@@ -4,6 +4,16 @@ from django.db.backends.signals import connection_created
 
 
 @pytest.fixture(autouse=True)
+def _fast_test_password_hashing(settings):
+    """Speed up test users; production settings and legacy hash verification stay intact."""
+    fast_hasher = "django.contrib.auth.hashers.MD5PasswordHasher"
+    settings.PASSWORD_HASHERS = [
+        fast_hasher,
+        *(hasher for hasher in settings.PASSWORD_HASHERS if hasher != fast_hasher),
+    ]
+
+
+@pytest.fixture(autouse=True)
 def _no_auto_dispatch(settings):
     """Test không có broker: tắt tự xếp shard vào Celery khi tạo run (T-025)."""
     settings.ORCHESTRATION_AUTO_DISPATCH = False

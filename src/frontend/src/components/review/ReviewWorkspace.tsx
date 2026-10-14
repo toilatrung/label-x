@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api/client';
 import { readErrorDetail, ApiRequestError } from '@/lib/api/errors';
 import type { components } from '@/lib/api/contract';
 import { useAuth } from '@/lib/auth/auth-context';
+import { hasDatasetPermission } from '@/lib/auth/roles';
 import { useLeaseManager } from './useLeaseManager';
 import { useEffortCollector } from './useEffortCollector';
 import { ReviewCanvas } from './ReviewCanvas';
@@ -125,6 +126,8 @@ export function ReviewWorkspace({
   const currentUserId = session?.user?.id ?? null;
   const userRoles = session?.roles ?? [];
   const isSuperAdmin = userRoles.some((r) => r.role === 'super_admin');
+  const canReEvaluate = hasDatasetPermission(session, effectiveDatasetId,
+    (role) => ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role));
   const isEligibleRoleForSnapshot = userRoles.some((r) =>
     ['qa_lead', 'qc_admin', 'super_admin'].includes(r.role)
   );
@@ -1072,6 +1075,7 @@ export function ReviewWorkspace({
                   engineStatuses={data.engines || []}
                   currentAnnotationClass={activeIssue.evidence?.[0]?.actual || undefined}
                   aiEvidence={aiEvidenceForIssue(data.ai_evidence, activeIssue.id)}
+                  canReEvaluate={canReEvaluate}
                 />
 
                 <ReviewGuidelineLookup

@@ -105,9 +105,10 @@ function setupMockEnv(options: {
     let m = path.match(/^\/api\/datasets\/(\d+)\/tasks\/$/);
     if (m) return Response.json(tasksByDataset[Number(m[1])] ?? []);
     if (path === '/api/datasets/summary/') return Response.json({ next: null, previous: null, results: summaries });
-    m = path.match(/^\/api\/runs\/(\d+)\/(gate|ledger|candidates|metrics|engines|tasks-quality|candidate-categories)?\/?$/);
+    m = path.match(/^\/api\/runs\/(\d+)\/(gate|ledger|candidates|metrics|engines|tasks-quality|candidate-categories|review-volume)?\/?$/);
     if (m) {
       const id = Number(m[1]);
+      if (m[2] === 'review-volume') return Response.json({ run_id: id, granularity: url.searchParams.get('granularity'), points: [] });
       if (m[2] === 'metrics') return Response.json({ ...metrics107, run_id: id });
       if (m[2] === 'engines') return Response.json({ ...engines107, run_id: id });
       if (m[2] === 'tasks-quality') return Response.json(tasksQuality107);

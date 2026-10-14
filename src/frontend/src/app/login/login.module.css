@@ -92,8 +92,7 @@
 
 .lx-login .lx-login__input:focus-visible {
   border-bottom-color: var(--login-ink);
-  outline: 2px solid var(--focus);
-  outline-offset: 4px;
+  outline: none;
 }
 
 .lx-login .lx-login__submit {

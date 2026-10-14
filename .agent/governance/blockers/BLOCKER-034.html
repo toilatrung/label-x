@@ -97,7 +97,7 @@ ul.dir{columns:2;font-size:14px}
 <ul>
 <li><strong>Affected Records</strong>: <code>docs/04-api/openapi.yaml, src/frontend/src/components/snapshots/SnapshotSample.tsx, src/frontend/src/components/snapshots/SnapshotForm.tsx, src/frontend/src/lib/mock/snapshots.ts, src/frontend/src/app/analysis/page.tsx, src/frontend/src/lib/snapshots/queries.ts, src/frontend/src/components/overview/QualitySummary.tsx, src/frontend/src/components/overview/QualityControlHome.tsx, src/frontend/src/components/execution/CandidateEvidenceList.tsx, src/frontend/src/components/calibration/PerformanceView.tsx, src/backend/snapshots/summary_views.py, src/backend/runs/summary_views.py, src/backend/runs/kpi_views.py, src/backend/orchestration/evaluation_views.py</code></li>
 <li><strong>Issues</strong>: <code>none</code></li>
-<li><strong>Decisions</strong>: <code>DEC-001</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code>, <a href="../decisions/DEC-022.html">DEC-022</a> (PO chốt C0–C6 cho phần A, 2026-10-14)</li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>cần CR nếu PO chọn hướng (b) ở B-1 hoặc thêm metric mới ở B-5</code></li>
 </ul>
@@ -109,6 +109,26 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Workaround</strong>: <code>Giữ dữ liệu minh họa kèm NotConnectedNotice và nhãn "Dữ liệu minh họa" cho tới khi mục tương ứng ở phần B xong</code></li>
 <li><strong>Verification Method</strong>: <code>grep src/frontend/src thấy lời gọi cho cả 5 operation phần A; lib/mock/snapshots.ts đã xoá; PerformanceView không còn PERF_SAMPLE_METRICS; test Vitest và pytest cho từng mục; kiểm trên dev chạy thật với dataset 1</code></li>
 </ul>
+<h3 id="part-a-progress">Tiến độ phần A (2026-10-14, nhánh <code>fix/blocker-034-fe-api-wiring</code>)</h3>
+<p>Theo <a href="../decisions/DEC-022.html">DEC-022</a>. B-1 đóng theo hướng (a): không đổi model, thiết kế đã sửa.</p>
+<table><thead><tr><th>#</th><th>Đã làm</th><th>Kiểm tra tự động</th><th>Còn lại</th></tr></thead><tbody>
+<tr><td>A-1</td><td>Contract revisions thêm 502, <code>snapshot_id</code> bắt buộc; ô "Annotation revision" lấy revision thật, dòng đầu là revision hiện tại của CVAT, chọn revision cũ thì hiện link tới Snapshot đã khoá; 502 hiện "Không đọc được revision từ CVAT" kèm Thử lại. Ô seed đổi thành "Seed và cấu hình kiểm tra · Chọn khi tạo Quality Control Run". Đã xoá <code>lib/mock/snapshots.ts</code>.</td><td><code>SnapshotDesign.test.tsx</code>, <code>snapshot-api.test.ts</code></td><td>Kiểm trên dev với dataset 1</td></tr>
+<tr><td>A-2</td><td>"Snapshot đang dùng" và cột Run ở Lịch sử snapshot gọi <code>GET /api/snapshots/{id}/runs/</code> (mỗi dòng một request, C2-b). Đã xoá <code>useDatasetRuns</code>, <code>latestRunBySnapshot</code>.</td><td><code>SnapshotDesign.test.tsx</code></td><td>Kiểm trên dev</td></tr>
+<tr><td>A-3</td><td>Biểu đồ cột frame đã review theo ngày/tuần, lọc Từ ngày/Đến ngày (mặc định 14 ngày theo giờ Asia/Ho_Chi_Minh), điền 0 cho kỳ trống; số quyết định ở nhãn từng cột và dòng tổng. Thiết kế <code>Dashboard.dc.html</code> đã bổ sung.</td><td><code>ReviewVolumeChart.test.tsx</code>, <code>HomeQualitySummary.test.tsx</code></td><td>Kiểm trên dev</td></tr>
+<tr><td>A-4</td><td>Nút "Đánh giá lại bằng AI" ở dòng AI của bảng Bằng chứng (Review workspace), chỉ cho reviewer/qa_lead/qc_admin/super_admin trong phạm vi Dataset; hộp thoại nhập lý do (≤ 500 ký tự), gửi <code>Idempotency-Key</code> (dùng lại khi gửi lại cùng lý do) và <code>expected_revision</code> = <code>snapshot_revision</code> của ai_evidence; báo riêng 409 stale_revision, 409 IDEMPOTENCY_KEY_REUSED, 422.</td><td><code>AiReEvaluate.test.tsx</code></td><td><b>Tester kiểm lần cuối</b> (C5-b)</td></tr>
+<tr><td>A-5</td><td>Hỏi lại <code>GET /api/candidate-evaluations/{id}/</code> mỗi 3 giây tới completed/failed/cancelled; sau 5 phút hiện "Chưa có kết quả" và nút "Kiểm tra lại" (C6).</td><td><code>AiReEvaluate.test.tsx</code></td><td><b>Tester kiểm lần cuối</b> (C5-b)</td></tr>
+</tbody></table>
+<p>5 operation đã có trong API Explorer (<code>connection: 'backend'</code>).</p>
+<h3 id="tester-final-check">Việc tester kiểm lần cuối (C5-b, chờ VLM có model theo BLOCKER-033 mục 2)</h3>
+<ol>
+<li>Mở Review workspace một frame có issue sinh từ candidate đã qua stage VLM; dòng "Mô hình thị giác – ngôn ngữ" hiện nút "Đánh giá lại bằng AI". Đăng nhập annotator thì không thấy nút.</li>
+<li>Gửi lý do; thấy "Lần đánh giá #n" với trạng thái Đang chờ/Đang chạy, rồi Hoàn tất kèm lớp đề xuất, kết luận, lời giải thích và "Cần người review" nếu có.</li>
+<li>Tải lại trang: dòng AI hiện lượt đánh giá mới nhất (generation tăng 1).</li>
+<li>Run tắt VLM hoặc thiếu taxonomy: thông báo 422 hiện trong hộp thoại.</li>
+<li>Khi worker VLM dừng: sau 5 phút hiện "Chưa có kết quả"; bật lại worker, bấm "Kiểm tra lại" thấy kết quả.</li>
+</ol>
+<p>409 stale_revision không tái hiện được qua UI vì revision của run gắn với Snapshot đã khoá; chỉ kiểm bằng test tự động.</p>
+<p>Phần A chưa resolved cho tới khi tester ghi bằng chứng các bước trên. Phần B chưa làm.</p>
 <h2 id="completion-criteria">Completion Criteria</h2>
 <ul>
 <li>[ ] The blocking condition no longer prevents affected work.</li>
