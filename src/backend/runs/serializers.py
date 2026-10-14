@@ -9,6 +9,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
 
+from orchestration.evaluation_read import evaluation_summary
 from orchestration.models import CandidateRecord
 from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
@@ -381,12 +382,23 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     created_at = serializers.DateTimeField(allow_null=True)
 
 
+class CandidateLatestEvaluationSerializer(serializers.Serializer[Any]):
+    """Lần đánh giá AI mới nhất của candidate (BLOCKER-034 B-4)."""
+
+    id = serializers.IntegerField()
+    generation = serializers.IntegerField()
+    status: Any = serializers.CharField(
+        help_text="pending | running | completed | failed | cancelled"
+    )
+
+
 class CandidateSerializer(serializers.ModelSerializer[Any]):
     """Schema for Candidate matching OpenAPI components.schemas.Candidate."""
 
     frame = serializers.SerializerMethodField()
     severity = serializers.SerializerMethodField()
     vlm = serializers.SerializerMethodField()
+    latest_evaluation = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateRecord
@@ -400,6 +412,7 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
             "anchor",
             "evidence",
             "vlm",
+            "latest_evaluation",
         ]
         read_only_fields = fields
 
@@ -419,6 +432,11 @@ class CandidateSerializer(serializers.ModelSerializer[Any]):
         if obj.run_id not in states:
             states[obj.run_id] = run_vlm_engine_state(obj.run_id)
         return build_vlm_view(units.get(obj.pk), states[obj.run_id])
+
+    @extend_schema_field(CandidateLatestEvaluationSerializer(allow_null=True))
+    def get_latest_evaluation(self, obj: CandidateRecord) -> dict[str, Any] | None:
+        # Context do view nạp một lần cho cả trang (latest_evaluations), không truy vấn từng dòng.
+        return evaluation_summary(self.context.get("latest_evaluations", {}).get(obj.pk))
 
 
 class PaginatedCandidateListSerializer(serializers.Serializer[Any]):

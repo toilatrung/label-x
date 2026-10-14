@@ -23,3 +23,12 @@ export function shortRevision(hash: string | null | undefined): string {
 export function snapshotCode(id: number): string {
   return `SNP-${String(id).padStart(3, '0')}`;
 }
+
+/** "vừa xong", "5 phút trước", "2 giờ trước"; quá 1 ngày thì ghi ngày giờ. */
+export function formatRelativeTime(at: number, now: number): string {
+  const minutes = Math.floor(Math.max(0, now - at) / 60_000);
+  if (minutes < 1) return 'vừa xong';
+  if (minutes < 60) return `${minutes} phút trước`;
+  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} giờ trước`;
+  return formatDateTime(new Date(at).toISOString());
+}

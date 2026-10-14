@@ -85,6 +85,18 @@ export async function createEvaluation(body: EvaluationCreate, key: string) {
   return unwrap(await apiClient.POST('/api/evaluations/', { body, params: { header: { 'Idempotency-Key': key } } }));
 }
 
+export type Reference = components['schemas']['Reference'];
+
+/** KPI evaluation của Dataset, mới nhất trước (BLOCKER-034 B-6); trang đầu 50 dòng đủ cho ô chọn phạm vi. */
+export async function listEvaluations(datasetId: number, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/evaluations/', { params: { query: { dataset_id: datasetId } }, signal }));
+}
+
+/** Reference của Dataset, mới nhất trước; mặc định chỉ lấy reference đã khoá vì chỉ chúng chạy được evaluation. */
+export async function listReferences(datasetId: number, signal?: AbortSignal, status: Reference['status'] = 'locked') {
+  return unwrap(await apiClient.GET('/api/references/', { params: { query: { dataset_id: datasetId, status } }, signal }));
+}
+
 export async function getEvaluation(id: number, signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/evaluations/{id}/', { params: { path: { id } }, signal }));
 }

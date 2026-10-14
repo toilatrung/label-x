@@ -146,7 +146,7 @@ describe('Annotation revision (GET /api/datasets/{id}/revisions/)', () => {
 describe('Snapshot create form scope', () => {
   const tasks = [{ cvat_task_id: 9, name: 'Day', jobs: [
     { cvat_job_id: 17, assignee_cvat_user_id: 3, frame_count: 12, updated_date: '2026-10-09T07:00:00Z' },
-    { cvat_job_id: 18, assignee_cvat_user_id: null, frame_count: 8, updated_date: '2026-10-09T07:00:00Z' }] }];
+    { cvat_job_id: 18, assignee_cvat_user_id: null, frame_count: 8, updated_date: '2026-10-09T07:00:00Z', stage: 'validation' as const }] }];
   const show = () => wrap(<SnapshotForm datasetId={42} tasks={tasks} canCreate />);
 
   it('counts the selected task, job and frame like the design hint', () => {
@@ -171,11 +171,13 @@ describe('Snapshot create form scope', () => {
     expect(screen.getByRole('checkbox', { name: 'Chọn Job 17' })).toBeDefined();
   });
 
-  it('shows the stage column placeholder next to the assignee', () => {
+  it('shows the CVAT job stage next to the assignee', () => {
     show();
     expect(screen.getByRole('columnheader', { name: 'Người thực hiện · Giai đoạn' })).toBeDefined();
     fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 17' }).closest('tr') as HTMLElement).getByText(/3 · —/)).toBeDefined();
+    // stage do CVAT trả (B-2); vắng thì giữ "—".
+    expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 18' }).closest('tr') as HTMLElement).getByText('Chưa gán · Kiểm tra')).toBeDefined();
   });
 
   it('selects the whole dataset by default, sends it, and cancel restores that default', async () => {

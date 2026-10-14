@@ -11,6 +11,9 @@ import { ApiRequestError } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import { postSnapshot, type CvatTask, type SnapshotCreate } from '@/lib/snapshots/api';
 
+/** Giai đoạn Job đọc trực tiếp từ CVAT (GET /api/datasets/{id}/tasks/). */
+const STAGE_LABELS: Record<string, string> = { annotation: 'Gán nhãn', validation: 'Kiểm tra', acceptance: 'Nghiệm thu' };
+
 export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange }: {
   datasetId: number; tasks: CvatTask[]; canCreate: boolean;
   onRequestLockChange?: (locked: boolean) => void;
@@ -151,7 +154,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
             disabled={all || taskIds.has(task.cvat_task_id)}
             checked={isSelected(task, job)}
             onChange={() => toggleJob(job.cvat_job_id)} /></td>
-            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'} · {/* TODO(backend): CvatJob chưa có giai đoạn */}—</td><td className="r">{frameText(job.frame_count ?? null)}</td></tr>)}
+            <td>Job {job.cvat_job_id}</td><td className="lx-muted">{job.assignee_cvat_user_id ?? 'Chưa gán'} · {job.stage ? STAGE_LABELS[job.stage] : '—'}</td><td className="r">{frameText(job.frame_count ?? null)}</td></tr>)}
         </React.Fragment>)}</tbody></table></div></div>
       <p className="lx-hint">Chọn cả Task, hoặc mở số Job của Task để chọn từng Job. {all ? `Toàn Dataset · ${tasks.length} task · ${jobCount} job · ${frameText(knownFrames(tasks.flatMap(task => task.jobs)))} frame.`
         : `Hiện chọn ${selectedTaskCount} task · ${selectedCount} job · ${frameText(selectedFrames)} frame.`}</p>

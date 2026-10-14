@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-023 — Phần B BLOCKER-034 — LabelX</title>
+<meta name="labelx:id" content="dec-023">
+<meta name="labelx:title" content="DEC-023 — Chốt phương án phần B của BLOCKER-034">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="decisions">
+<meta name="labelx:tags" content="[decision, backend, api-contract, task-quality, candidate-evaluation, performance]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / DEC-023</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>dec-023</span><b>title</b><span>DEC-023 — Chốt phương án phần B của BLOCKER-034</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>decisions</span><b>tags</b><span>[decision, backend, api-contract, task-quality, candidate-evaluation, performance]</span><b>priority</b><span>2</span></div>
+<h1>DEC-023 — Chốt phương án phần B của BLOCKER-034</h1>
+<h2>Usage Purpose</h2><p>Ghi các lựa chọn PO đã chốt (Q1–Q6) cho phần B của <a href="../blockers/BLOCKER-034.html">BLOCKER-034</a>: các API FE cần nhưng backend và contract chưa có.</p>
+<h2>Record Metadata</h2><ul>
+<li><strong>Decision ID</strong>: <code>DEC-023</code></li><li><strong>Title</strong>: <code>Chốt phương án phần B của BLOCKER-034</code></li><li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li><li><strong>Decision Makers</strong>: <code>PO @toilatrung trả lời "Chốt theo đề xuất" trong phiên Claude 2026-10-14</code></li><li><strong>Status</strong>: <code>accepted</code></li><li><strong>Decision Type</strong>: <code>product</code></li><li><strong>Created Date</strong>: <code>2026-10-14</code></li><li><strong>Decision Date</strong>: <code>2026-10-14</code></li></ul>
+<h2>Context</h2><p>Khảo sát trên develop (0d019f8): B-1 đã đóng theo DEC-022; B-2 backend đã trả <code>stage</code> nhưng contract chưa khai báo; B-7 không có bản sao CVAT nào để có "lần đồng bộ"; B-5 phải đi vào <code>KpiEvaluation.metrics</code> (màn Performance đọc <code>GET /api/evaluations/{id}/</code>), không phải <code>/api/evaluation/performance/</code> (mỗi dòng một candidate evaluation, metric luôn not_checked).</p>
+<h2>Decision Drivers</h2><ul><li>Không tạo số liệu không có thật.</li><li>Không đổi model khi đủ dữ liệu sẵn có.</li><li>Phạm vi Dataset và vai trò kiểm ở API.</li></ul>
+<h2>Options Considered</h2><table><thead><tr><th>Mục</th><th>Lựa chọn của PO</th><th>Phương án khác đã bỏ</th></tr></thead><tbody>
+<tr><td>B-1</td><td>Đóng theo DEC-022 (C1-a), không có việc backend</td><td>Thêm seed/revision vào SnapshotCreate</td></tr>
+<tr><td>B-2</td><td>Chỉ sửa contract: <code>CvatTask.jobs[].stage</code> (annotation | validation | acceptance | null); FE hiện ở form tạo Snapshot. Không lưu vào SnapshotJob</td><td>Migration lưu stage khi export</td></tr>
+<tr><td>B-3 / Q2</td><td><code>coverage</code> = unit completed / eligible của engine bắt buộc trong Task (LedgerUnit); <code>candidates</code> = CandidateRecord trong Task; <code>confirmed_issues</code> = Issue từ confirmed trở đi; <code>gate_status</code>: blocked nếu Task còn Issue critical chưa đóng, partial nếu coverage &lt; 100%, passed nếu không; không có waiver theo Task</td><td>Không có gate theo Task</td></tr>
+<tr><td>B-4</td><td><code>GET /api/candidates/{id}/evaluations/</code> (cursor, mới nhất trước, cùng vai trò với POST) và <code>Candidate.latest_evaluation {id, generation, status}</code>; FE thêm cột "Đánh giá AI" ở History</td><td>Dùng <code>vlm.evaluation_id</code> (null khi không có VLM)</td></tr>
+<tr><td>B-5 / Q3 / Q4</td><td>Thêm <code>P-1</code> (Precision = Issue từ candidate đã xác nhận / Issue từ candidate đã có quyết định xác nhận hoặc bác bỏ; tổng, kèm <code>by_engine</code>) và <code>C-1</code> (Benchmark coverage = frame Snapshot có trong Benchmark đã khoá mới nhất của Dataset / tổng frame Snapshot) vào <code>KpiEvaluation.metrics</code>; cần CR</td><td>(a) frame Benchmark có trong Snapshot / tổng frame Benchmark</td></tr>
+<tr><td>B-6</td><td><code>GET /api/evaluations/?dataset_id=&amp;run_id=</code>, <code>GET /api/references/?dataset_id=&amp;status=</code>; cursor, mới nhất trước; vai trò qa_lead, super_admin, product_owner; FE mở khoá ô chọn phạm vi và reference</td><td>—</td></tr>
+<tr><td>B-7 / Q6</td><td>Chỉ sửa FE: "Đồng bộ CVAT x phút trước" theo lần đọc Dataset từ CVAT thành công gần nhất</td><td>Thêm <code>last_synced_at</code> ở backend</td></tr>
+<tr><td>Q1</td><td>Mỗi PR làm cả BE lẫn FE</td><td>BE trước, FE sau</td></tr>
+<tr><td>Q5</td><td>Một CR cho B-5; B-3, B-4, B-6 là bổ sung contract trong phạm vi MBE, ghi tại đây</td><td>CR cho mọi mục</td></tr>
+</tbody></table>
+<h2>Decision Outcome</h2><ul><li><strong>Selected Option</strong>: <code>Theo đề xuất trong phiên, bảng trên</code></li><li><strong>Rationale</strong>: <code>Chỉ đạo trực tiếp của PO</code></li><li><strong>Effective Date</strong>: <code>2026-10-14</code></li></ul>
+<p>Thực hiện thành hai PR vào develop: PR 1 gồm B-2, B-4, B-6, B-7; PR 2 gồm B-3, B-5 (kèm CR cho B-5).</p>
+<h2>Consequences</h2><ul><li><strong>Positive</strong>: <code>Hết dữ liệu minh họa ở form Snapshot (giai đoạn Job), trang chủ (mốc đồng bộ), Performance (ô chọn), History (đánh giá lại); Tổng quan và Performance có số thật sau PR 2</code></li><li><strong>Negative</strong>: <code>Gate theo Task là khái niệm mới, chỉ để hiển thị, không thay Quality Gate của run; cột "Đánh giá AI" ở History chưa có trong ExecutionHistory.dc.html (bảng candidate ở History cũng chưa có trong thiết kế từ trước)</code></li><li><strong>Follow-up Work</strong>: <code>CR cho B-5; tester kiểm A-4/A-5 và cột History khi VLM có model</code></li></ul>
+<h2>Related Files</h2><ul><li><strong>Affected Documents</strong>: <a href="../blockers/BLOCKER-034.html">BLOCKER-034</a>, <a href="DEC-022.html">DEC-022</a>; <code>docs/04-api/openapi.yaml</code>.</li><li><strong>Epics or Tasks</strong>: <code>BLOCKER-033 mục 7; M-BE-MVP (MBE-01, MBE-02, MBE-06)</code></li><li><strong>Change Requests</strong>: <code>CR cho B-5 (PR 2)</code></li><li><strong>Risks</strong>: <code>Precision dễ hiểu nhầm khi ít quyết định: dưới ngưỡng mẫu trả insufficient_sample</code></li><li><strong>Supersedes</strong>: <code>none</code></li><li><strong>Superseded By</strong>: <code>none</code></li></ul>
+<h2>Completion Criteria</h2><ul><li>[x] Lựa chọn của PO được ghi.</li><li>[ ] PR 1 (B-2, B-4, B-6, B-7) merge.</li><li>[ ] PR 2 (B-3, B-5) và CR merge.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không thêm <code>last_synced_at</code> giả ở backend.</li><li>Không dùng gate theo Task thay cho Quality Gate của run khi quyết định release.</li></ul>
+<h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/decisions/DEC-023.html</code>; BLOCKER-034 trỏ về đây.</p></article></main></body></html>

@@ -35,6 +35,7 @@ from orchestration.evaluation_service import (
 from orchestration.models import CandidateRecord, Evaluation
 from runs.models import QCRun
 from runs.serializers import CandidateVlmSerializer
+from runs.summary_pagination import SummaryCursorPagination
 
 _ROLES = (Role.REVIEWER, Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
 
@@ -77,12 +78,25 @@ class CandidateEvaluationSerializer(serializers.Serializer[object]):
     poll_url = serializers.CharField()
 
 
+class PaginatedCandidateEvaluationListSerializer(serializers.Serializer[object]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = CandidateEvaluationSerializer(many=True)
+
+
+class _EvaluationPagination(SummaryCursorPagination):
+    pass
+
+
 class CandidateEvaluationCreateView(APIView):
     permission_classes = [HasRoleAndDatasetScope]
     allowed_roles = _ROLES
-    action_name = "candidates.evaluate"
     object_type = "candidate"
     requires_dataset = True
+
+    @property
+    def action_name(self) -> str:
+        return "candidates.evaluations" if self.request.method == "GET" else "candidates.evaluate"
 
     def get_dataset_id(self, _request: Request) -> int | None:
         return (
@@ -90,6 +104,24 @@ class CandidateEvaluationCreateView(APIView):
             .values_list("run__dataset_id", flat=True)
             .first()
         )
+
+    @extend_schema(
+        operation_id="candidates_evaluations",
+        parameters=[OpenApiParameter("cursor", str)],
+        responses={
+            200: PaginatedCandidateEvaluationListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        },
+        tags=["runs"],
+    )
+    def get(self, request: Request, pk: int) -> Response:
+        """Mọi lần đánh giá AI của candidate, mới nhất trước (BLOCKER-034 B-4)."""
+        rows = Evaluation.objects.filter(candidate_id=pk).select_related("vlm_unit__evidence")
+        paginator = _EvaluationPagination()
+        page = paginator.paginate_queryset(rows, request, view=self) or []
+        return paginator.get_paginated_response([evaluation_read(row) for row in page])
 
     @extend_schema(
         operation_id="candidates_evaluate",

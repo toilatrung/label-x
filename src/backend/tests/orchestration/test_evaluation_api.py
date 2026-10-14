@@ -242,3 +242,48 @@ def test_idempotency_race_creates_exactly_one_evaluation() -> None:
     assert len({r.data["id"] for r in results}) == 1
     assert Evaluation.objects.filter(candidate_id=cid, idempotency_key="race-1").count() == 1
     assert VlmUnit.objects.filter(candidate_id=cid, evaluation_generation=2).count() == 1
+
+
+# ------------------------------------------------ BLOCKER-034 B-4: đọc lại lần đánh giá
+
+
+def test_get_lists_every_evaluation_of_the_candidate_newest_first() -> None:
+    run, cid = _prepared()
+    api, rev = _api(run), _revision(run)
+    manual = _post(api, cid, "k-list", reason="r", expected_revision=rev)
+    page = api.get(f"/api/candidates/{cid}/evaluations/")
+    assert page.status_code == 200, page.content[:300]
+    assert [row["generation"] for row in page.data["results"]] == [2, 1]
+    assert page.data["results"][0]["id"] == manual.data["id"]
+    assert page.data["results"][0]["poll_url"] == manual.data["poll_url"]
+    assert page.data["next"] is None
+    assert api.get(f"/api/candidates/{cid}/evaluations/?cursor=bad").status_code == 400
+    assert api.get("/api/candidates/999999/evaluations/").status_code == 404
+
+
+def test_get_keeps_the_role_and_dataset_scope_of_post() -> None:
+    run, cid = _prepared()
+    annotator = _api(run, role=Role.ANNOTATOR, name="ann")
+    assert annotator.get(f"/api/candidates/{cid}/evaluations/").status_code == 403
+    outsider = User.objects.create_user("outsider")
+    RoleAssignment.objects.create(user=outsider, role=Role.REVIEWER, dataset_id=run.dataset_id + 1)
+    api = APIClient()
+    api.force_authenticate(outsider)
+    assert api.get(f"/api/candidates/{cid}/evaluations/").status_code == 403
+
+
+def test_candidate_list_carries_the_latest_evaluation() -> None:
+    run, cid = _prepared()
+    api = _api(run, role=Role.QA_LEAD, name="qa")
+    before = api.get(f"/api/runs/{run.pk}/candidates/")
+    assert before.status_code == 200, before.content[:300]
+    row = next(item for item in before.data["results"] if item["id"] == cid)
+    assert row["latest_evaluation"]["generation"] == 1
+    manual = _post(api, cid, "k-latest", reason="r", expected_revision=_revision(run))
+    after = api.get(f"/api/runs/{run.pk}/candidates/")
+    row = next(item for item in after.data["results"] if item["id"] == cid)
+    assert row["latest_evaluation"] == {
+        "id": manual.data["id"],
+        "generation": 2,
+        "status": "pending",
+    }

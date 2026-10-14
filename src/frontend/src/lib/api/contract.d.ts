@@ -495,7 +495,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Các lần đánh giá AI của candidate, mới nhất trước
+         * @description Tìm lại evaluation sau khi tải lại trang (BLOCKER-034 B-4). Cùng vai trò và phạm vi Dataset với POST.
+         */
+        get: operations["candidates_evaluations"];
         put?: never;
         /**
          * Yêu cầu đánh giá lại candidate (re-evaluate, M04C-02)
@@ -967,7 +971,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Danh sách reference của Dataset, mới nhất trước
+         * @description Dùng để chọn reference trên Performance Evaluation (BLOCKER-034 B-6). Phạm vi Dataset kiểm ở API.
+         */
+        get: operations["references_list"];
         put?: never;
         /**
          * Tạo phiên reference và nhập GT
@@ -1088,7 +1096,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Danh sách KPI evaluation của Dataset, mới nhất trước
+         * @description Dùng để chọn phạm vi trên Performance Evaluation (BLOCKER-034 B-6). Lọc thêm theo run_id; phạm vi Dataset kiểm ở API.
+         */
+        get: operations["evaluations_list"];
         put?: never;
         /**
          * Chạy đánh giá KPI trên reference đã khoá
@@ -1975,6 +1987,11 @@ export interface components {
                 frame_count?: number;
                 /** Format: date-time */
                 updated_date: string;
+                /**
+                 * @description Giai đoạn Job trong CVAT (đọc trực tiếp, không lưu vào Snapshot); vắng khi CVAT không trả.
+                 * @enum {string|null}
+                 */
+                stage?: "annotation" | "validation" | "acceptance" | null;
             }[];
         };
         /**
@@ -2240,6 +2257,13 @@ export interface components {
             /** @description ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/. */
             id?: number;
             vlm?: components["schemas"]["CandidateVlm"];
+            /** @description Lần đánh giá AI mới nhất (generation lớn nhất); null khi chưa có. Chỉ có ở GET /api/runs/{id}/candidates/ (BLOCKER-034 B-4). */
+            latest_evaluation?: {
+                id: number;
+                generation: number;
+                /** @description pending | running | completed | failed | cancelled */
+                status: string;
+            } | null;
         };
         /**
          * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
@@ -3130,6 +3154,21 @@ export interface components {
             next: string | null;
             previous: string | null;
             results: components["schemas"]["Issue"][];
+        };
+        PaginatedCandidateEvaluationList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["CandidateEvaluation"][];
+        };
+        PaginatedReferenceList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Reference"][];
+        };
+        PaginatedEvaluationList: {
+            next?: string | null;
+            previous?: string | null;
+            results: components["schemas"]["Evaluation"][];
         };
         PaginatedRunList: {
             next?: string | null;
@@ -4642,6 +4681,34 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    candidates_evaluations: {
+        parameters: {
+            query?: {
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang evaluation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCandidateEvaluationList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     candidates_evaluate: {
         parameters: {
             query?: never;
@@ -5305,6 +5372,33 @@ export interface operations {
             409: components["responses"]["Conflict"];
         };
     };
+    references_list: {
+        parameters: {
+            query: {
+                dataset_id: number;
+                status?: "draft" | "locked";
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang reference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedReferenceList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     references_create: {
         parameters: {
             query?: never;
@@ -5473,6 +5567,33 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    evaluations_list: {
+        parameters: {
+            query: {
+                dataset_id: number;
+                run_id?: number;
+                /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trang KPI evaluation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedEvaluationList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     evaluations_create: {

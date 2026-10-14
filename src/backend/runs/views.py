@@ -19,6 +19,7 @@ from accounts.permissions import HasRoleAndDatasetScope
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
+from orchestration.evaluation_read import latest_evaluations
 from orchestration.models import CandidateRecord
 from review import services as review_services
 from review.lineage import run_lineage
@@ -815,7 +816,10 @@ class RunCandidateListView(RunScopedReadView):
         serializer = CandidateSerializer(
             page,
             many=True,
-            context={"vlm_units": load_candidate_units(c.pk for c in page or [])},
+            context={
+                "vlm_units": load_candidate_units(c.pk for c in page or []),
+                "latest_evaluations": latest_evaluations([c.pk for c in page or []]),
+            },
         )
         response = paginator.get_paginated_response(serializer.data)
         response.data.update(raw_count=None, dedup_count=dedup_count)

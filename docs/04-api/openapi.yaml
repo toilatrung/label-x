@@ -788,6 +788,25 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /api/candidates/{id}/evaluations/:
+    get:
+      operationId: candidates_evaluations
+      tags: [runs]
+      summary: Các lần đánh giá AI của candidate, mới nhất trước
+      description: Tìm lại evaluation sau khi tải lại trang (BLOCKER-034 B-4). Cùng vai trò và phạm vi Dataset với POST.
+      x-labelx-trace: [FR-ENG-08]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang evaluation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedCandidateEvaluationList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
     post:
       operationId: candidates_evaluate
       tags: [runs]
@@ -1405,6 +1424,25 @@ paths:
         "409": { $ref: "#/components/responses/Conflict" }
 
   /api/references/:
+    get:
+      operationId: references_list
+      tags: [evaluation]
+      summary: Danh sách reference của Dataset, mới nhất trước
+      description: Dùng để chọn reference trên Performance Evaluation (BLOCKER-034 B-6). Phạm vi Dataset kiểm ở API.
+      x-labelx-trace: [UC-08, FR-EVL-01]
+      x-labelx-roles: [qa_lead, super_admin, product_owner]
+      parameters:
+        - { name: dataset_id, in: query, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, locked] } }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang reference
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedReferenceList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: references_create
       tags: [evaluation]
@@ -1542,6 +1580,25 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "409": { $ref: "#/components/responses/Conflict" }
   /api/evaluations/:
+    get:
+      operationId: evaluations_list
+      tags: [evaluation]
+      summary: Danh sách KPI evaluation của Dataset, mới nhất trước
+      description: Dùng để chọn phạm vi trên Performance Evaluation (BLOCKER-034 B-6). Lọc thêm theo run_id; phạm vi Dataset kiểm ở API.
+      x-labelx-trace: [UC-09, FR-EVL-13]
+      x-labelx-roles: [qa_lead, super_admin, product_owner]
+      parameters:
+        - { name: dataset_id, in: query, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: run_id, in: query, schema: { type: integer, minimum: 1 } }
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Trang KPI evaluation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedEvaluationList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: evaluations_create
       tags: [evaluation]
@@ -2862,6 +2919,11 @@ components:
               assignee_cvat_user_id: { type: integer, nullable: true }
               frame_count: { type: integer }
               updated_date: { type: string, format: date-time }
+              stage:
+                type: string
+                nullable: true
+                enum: [annotation, validation, acceptance, null]
+                description: Giai đoạn Job trong CVAT (đọc trực tiếp, không lưu vào Snapshot); vắng khi CVAT không trả.
 
     # ------------------------------------------------------------- snapshots
     SnapshotStatus:
@@ -3279,6 +3341,7 @@ components:
         evidence: [FR-ENG-08]
         id: [FR-AGG-01]
         vlm: [FR-ENG-10]
+        latest_evaluation: [FR-ENG-08]
       properties:
         engine: { $ref: "#/components/schemas/EngineName" }
         engine_version: { type: string }
@@ -3294,6 +3357,15 @@ components:
           description: ID ổn định của candidate trong run; chỉ có ở GET /api/runs/{id}/candidates/.
         vlm:
           $ref: "#/components/schemas/CandidateVlm"
+        latest_evaluation:
+          type: object
+          nullable: true
+          description: Lần đánh giá AI mới nhất (generation lớn nhất); null khi chưa có. Chỉ có ở GET /api/runs/{id}/candidates/ (BLOCKER-034 B-4).
+          required: [id, generation, status]
+          properties:
+            id: { type: integer }
+            generation: { type: integer }
+            status: { type: string, description: "pending | running | completed | failed | cancelled" }
     CandidateVlm:
       type: object
       example:
@@ -4340,6 +4412,33 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/Issue" }
+    PaginatedCandidateEvaluationList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/CandidateEvaluation" }
+    PaginatedReferenceList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Reference" }
+    PaginatedEvaluationList:
+      type: object
+      required: [results]
+      properties:
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Evaluation" }
     PaginatedRunList:
       type: object
       required: [results]

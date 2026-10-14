@@ -45,6 +45,30 @@ def evaluation_review_required(evaluation: Evaluation) -> bool:
     return bool(unit.status == VlmUnit.Status.COMPLETED and uncertain)
 
 
+def latest_evaluations(candidate_ids: list[int]) -> dict[int, Evaluation]:
+    """Evaluation mới nhất (generation lớn nhất) của từng candidate; candidate chưa có thì vắng."""
+    latest: dict[int, Evaluation] = {}
+    rows = (
+        Evaluation.objects.filter(candidate_id__in=candidate_ids)
+        .select_related("vlm_unit__evidence")
+        .order_by("candidate_id", "generation")
+    )
+    for evaluation in rows:
+        latest[evaluation.candidate_id] = evaluation  # generation tăng dần: bản cuối thắng
+    return latest
+
+
+def evaluation_summary(evaluation: Evaluation | None) -> dict[str, Any] | None:
+    """Tóm tắt cho danh sách candidate (BLOCKER-034 B-4): đủ để tìm lại và hỏi kết quả."""
+    if evaluation is None:
+        return None
+    return {
+        "id": evaluation.pk,
+        "generation": evaluation.generation,
+        "status": evaluation_status(evaluation),
+    }
+
+
 def evaluation_read(evaluation: Evaluation) -> dict[str, Any]:
     unit = evaluation.vlm_unit
     vlm = build_vlm_view(unit, "not_triggered") if unit is not None else None

@@ -13,6 +13,7 @@ import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { formatDateTime, snapshotCode } from '@/lib/format';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
+import { getSnapshot } from '@/lib/snapshots/api';
 import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
 
 function exclusionText(row: LedgerEntry) {
@@ -63,6 +64,10 @@ function HistoryContent() {
   const shards = useQuery({ queryKey: ['analysis-shards', session?.user.id, selectedId, shardCursor], queryFn: ({ signal }) => listShards(selectedId!, shardCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const candidates = useQuery({ queryKey: ['analysis-candidates', session?.user.id, selectedId, candidateCursor], queryFn: ({ signal }) => listCandidates(selectedId!, candidateCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const selected = detail.data;
+  // B-4: đánh giá lại candidate cần revision Snapshot của run (backend: revision_sha256, rỗng thì snapshot_id).
+  const canReEvaluate = hasDatasetPermission(session, datasetId, (role) => ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role));
+  const runSnapshot = useQuery({ queryKey: ['analysis-run-snapshot', session?.user.id, selected?.snapshot_id], queryFn: ({ signal }) => getSnapshot(selected!.snapshot_id, signal), enabled: !!selected && canReEvaluate, retry: false });
+  const reEvaluateRevision = canReEvaluate && runSnapshot.data ? (runSnapshot.data.revision_hash || String(runSnapshot.data.id)) : null;
   async function act(kind: 'cancel' | 'retry') {
     if (!selectedId || !canManage || acting) return;
     setActing(true); setActionError(null);
@@ -135,6 +140,7 @@ function HistoryContent() {
             dedupCount={candidates.data?.dedup_count}
             isLoading={candidates.isPending}
             error={candidates.isError ? errorMessage(candidates.error) : null}
+            reEvaluateRevision={reEvaluateRevision}
           />
           {candidates.data?.next && (
             <button

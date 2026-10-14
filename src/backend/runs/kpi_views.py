@@ -39,6 +39,8 @@ from runs.kpi_serializers import (
     GateResultSerializer,
     KpiEvaluationCreateSerializer,
     KpiEvaluationSerializer,
+    PaginatedKpiEvaluationListSerializer,
+    PaginatedReferenceListSerializer,
     ReferenceCreateSerializer,
     ReferenceSerializer,
     WaiverCreateSerializer,
@@ -46,6 +48,7 @@ from runs.kpi_serializers import (
     WaiverSerializer,
 )
 from runs.models import KpiEvaluation, QCRun, Reference, RunRanking, Waiver
+from runs.summary_pagination import SummaryCursorPagination
 from snapshots.models import Snapshot
 
 IDEMPOTENCY = OpenApiParameter("Idempotency-Key", str, OpenApiParameter.HEADER, True)
@@ -167,13 +170,82 @@ class _KpiView(APIView):
     requires_dataset = True
 
 
-class ReferenceCreateView(_KpiView):
-    allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
-    action_name = "references.create"
-    object_type = "reference"
+# GET danh sách (BLOCKER-034 B-6): cùng vai trò với API đọc chi tiết; POST giữ vai trò cũ.
+_LIST_ROLES = (Role.QA_LEAD, Role.SUPER_ADMIN, Role.PRODUCT_OWNER)
+_DATASET_QUERY = OpenApiParameter("dataset_id", int, required=True)
+_CURSOR_QUERY = OpenApiParameter("cursor", str)
+
+
+class _KpiListPagination(SummaryCursorPagination):
+    pass
+
+
+def _positive_query(request: Request, name: str, *, required: bool) -> int | None:
+    raw = request.query_params.get(name)
+    if raw is None or raw == "":
+        if required:
+            raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", f"Thiếu {name}.")
+        return None
+    if not raw.isascii() or not raw.isdigit() or len(raw) > 18 or int(raw) <= 0:
+        raise ApiError(
+            status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", f"{name} phải là số nguyên dương."
+        )
+    return int(raw)
+
+
+class _ListOrCreateView(_KpiView):
+    """GET đọc dataset_id từ query (bắt buộc); POST lấy Dataset từ body như trước."""
+
+    create_roles: tuple[Role, ...] = ()
+
+    @property
+    def allowed_roles(self) -> tuple[Role, ...]:
+        return _LIST_ROLES if self.request.method == "GET" else self.create_roles
 
     def get_dataset_id(self, request: Request) -> int | None:
+        if request.method == "GET":
+            return _positive_query(request, "dataset_id", required=True)
         return _body_dataset(request, Snapshot, "snapshot_id", "dataset_id")
+
+    def paginate(self, request: Request, queryset: Any, read: Any) -> Response:
+        paginator = _KpiListPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self) or []
+        return paginator.get_paginated_response([read(row) for row in page])
+
+
+class ReferenceCreateView(_ListOrCreateView):
+    create_roles = (Role.QA_LEAD, Role.SUPER_ADMIN)
+    object_type = "reference"
+
+    @property
+    def action_name(self) -> str:
+        return "references.list" if self.request.method == "GET" else "references.create"
+
+    @extend_schema(
+        operation_id="references_list",
+        parameters=[
+            _DATASET_QUERY,
+            OpenApiParameter("status", str, enum=[s.value for s in Reference.Status]),
+            _CURSOR_QUERY,
+        ],
+        responses={
+            200: PaginatedReferenceListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+        },
+        tags=["evaluation"],
+    )
+    def get(self, request: Request) -> Response:
+        dataset_id = cast(int, _positive_query(request, "dataset_id", required=True))
+        rows = Reference.objects.filter(snapshot__dataset_id=dataset_id)
+        wanted = request.query_params.get("status")
+        if wanted:
+            if wanted not in Reference.Status.values:
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "status không hợp lệ."
+                )
+            rows = rows.filter(status=wanted)
+        return self.paginate(request, rows, _reference_read)
 
     @extend_schema(
         operation_id="references_create",
@@ -295,13 +367,31 @@ class ReferenceLockView(_KpiView):
         return Response(_reference_read(ref))
 
 
-class KpiEvaluationCreateView(_KpiView):
-    allowed_roles = (Role.QA_LEAD, Role.SUPER_ADMIN, Role.PRODUCT_OWNER)
-    action_name = "evaluations.create"
+class KpiEvaluationCreateView(_ListOrCreateView):
+    create_roles = (Role.QA_LEAD, Role.SUPER_ADMIN, Role.PRODUCT_OWNER)
     object_type = "evaluation"
 
-    def get_dataset_id(self, request: Request) -> int | None:
-        return _body_dataset(request, Snapshot, "snapshot_id", "dataset_id")
+    @property
+    def action_name(self) -> str:
+        return "evaluations.list" if self.request.method == "GET" else "evaluations.create"
+
+    @extend_schema(
+        operation_id="evaluations_list",
+        parameters=[_DATASET_QUERY, OpenApiParameter("run_id", int), _CURSOR_QUERY],
+        responses={
+            200: PaginatedKpiEvaluationListSerializer,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+        },
+        tags=["evaluation"],
+    )
+    def get(self, request: Request) -> Response:
+        dataset_id = cast(int, _positive_query(request, "dataset_id", required=True))
+        rows = KpiEvaluation.objects.filter(run__dataset_id=dataset_id)
+        run_id = _positive_query(request, "run_id", required=False)
+        if run_id is not None:
+            rows = rows.filter(run_id=run_id)
+        return self.paginate(request, rows, _evaluation_read)
 
     @extend_schema(
         operation_id="evaluations_create",

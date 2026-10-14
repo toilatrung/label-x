@@ -7,6 +7,17 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { errorMessage } from '@/lib/api/errors';
 import { useQueryClient } from '@tanstack/react-query';
 import { DatasetHomeRow } from './DatasetHomeRow';
+import { formatRelativeTime } from '@/lib/format';
+
+/** Thời điểm hiện tại, cập nhật định kỳ để nhãn "x phút trước" không đứng yên. */
+function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(timer);
+  }, [intervalMs]);
+  return now;
+}
 
 interface QualityControlHomeProps {
   onDatasetSelect?: (dataset: Dataset) => void;
@@ -26,6 +37,9 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
   const [paginationError, setPaginationError] = useState<string | null>(null);
   const [initialError, setInitialError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Dataset đọc trực tiếp từ CVAT ở mỗi request (backend không lưu bản sao): mốc đồng bộ là lần đọc thành công gần nhất.
+  const [syncedAt, setSyncedAt] = useState<number | null>(null);
+  const now = useNow(30_000);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -69,6 +83,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         if (!isMountedRef.current || gen !== currentGen.current) return;
         setDatasets(page.results ?? []);
         setNextCursor(cursorFrom(page.next));
+        setSyncedAt(Date.now());
         setIsLoading(false);
       })
       .catch((err: unknown) => {
@@ -266,8 +281,7 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         </div>
         <div className="lx-actions">
           <span className="lx-hint">
-            {/* TODO(backend): thời điểm đồng bộ CVAT gần nhất chưa có trong API. */}
-            Đồng bộ CVAT —
+            Đồng bộ CVAT {syncedAt === null ? '—' : formatRelativeTime(syncedAt, now)}
           </span>
           <button type="button" className="lx-btn" onClick={handleSync}>
             Đồng bộ lại
