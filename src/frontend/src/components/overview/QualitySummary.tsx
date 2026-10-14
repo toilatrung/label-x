@@ -8,6 +8,7 @@ import { engineStatusLabel } from '@/lib/execution/api';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 import { formatCount, snapshotCode } from '@/lib/format';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
+import { ReviewVolumeChart } from './ReviewVolumeChart';
 import {
   FAMILY_LABELS,
   confirmedIssueCount,
@@ -315,6 +316,8 @@ export function QualitySummary({ currentDataset, selectedRun, selectedTaskScope,
             {escalations.isError ? <InlineError query={escalations} /> : <span className="lx-hint">Chờ phân xử tại Escalations</span>}
           </div>
           <div className="lx-row lx-row--between lx-row--border-top lx-pt-1"><span className="lx-muted">Đã xử lý</span><b className="lx-num">{metrics.isPending ? '…' : metrics.data ? formatCount(metrics.data.frames_reviewed) : '—'}</b></div>
+          {/* GET /api/runs/{id}/review-volume/ (MBE-06): frame đã review và quyết định theo ngày hoặc tuần. */}
+          <ReviewVolumeChart runId={runId} />
         </div>
       </section>
     </div>

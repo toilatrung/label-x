@@ -1986,6 +1986,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "502": { $ref: "#/components/responses/BadGateway" }
   # ------------------------------------------------------------------ report, release, lineage (MBE-03, MBE-01)
   /api/runs/{id}/report/:
     get:
@@ -4340,10 +4341,10 @@ components:
           items: { $ref: "#/components/schemas/DatasetSummary" }
     DatasetRevision:
       type: object
-      required: [revision, frame_count, created_at]
+      required: [revision, snapshot_id, frame_count, created_at]
       properties:
         revision: { type: string }
-        snapshot_id: { type: integer, nullable: true }
+        snapshot_id: { type: integer, description: Snapshot locked mới nhất có revision này }
         frame_count: { type: integer }
         created_at: { type: string, format: date-time }
     PaginatedDatasetRevisionList:

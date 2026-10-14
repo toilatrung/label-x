@@ -12,4 +12,8 @@ export const DATASETS_ENDPOINTS = [
     { id: 119, name: 'Urban night', coverage: 0.867, candidate_count: 208, confirmed_count: 69, gate: 'blocked', jobs: [{ id: 2273, assignee_id: 28, frame_count: 3000 }, { id: 2274, assignee_id: 29, frame_count: 3000 }] },
     { id: 120, name: 'Urban rain', coverage: 0.976, candidate_count: 111, confirmed_count: 36, gate: 'partial', jobs: [{ id: 2275, assignee_id: 30, frame_count: 2950 }, { id: 2276, assignee_id: 31, frame_count: 2950 }] },
   ] },
+  { id: 'datasets_revisions', method: 'GET', path: '/api/datasets/{id}/revisions/', group: 'Datasets', summary: 'Annotation revision đã khoá, mới nhất trước (502 khi CVAT lỗi)', connection: 'backend', responseStatus: 200, response: { next: null, previous: null, results: [
+    { revision: 'a91f3c2e…', snapshot_id: 14, frame_count: 12500, created_at: '2026-10-04T06:41:00Z' },
+    { revision: '7be204d1…', snapshot_id: 12, frame_count: 11800, created_at: '2026-10-02T17:10:00Z' },
+  ] } },
 ] satisfies ApiEndpoint[];

@@ -201,6 +201,13 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-bar__t { height: 8px; border-radius: var(--radius-full); background: var(--neutral-soft); overflow: hidden; }
 .lx-bar__t > i { display: block; height: 100%; background: var(--primary); }
 .lx-bar__n { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-muted); }
+/* Column chart (Khối lượng review): one series, one axis; bars anchor to the baseline, 4px data-ends, 2px gaps. */
+.lx-vbars { display: flex; align-items: flex-end; gap: 2px; height: 96px; border-bottom: 1px solid var(--border-strong); }
+.lx-vbars > i { flex: 1; min-width: 4px; background: var(--primary); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.lx-vbars > i:hover, .lx-vbars > i:focus-visible { background: var(--ink-muted); outline: none; }
+.lx-vbars > i.is-zero { min-height: 1px; background: var(--border); }
+.lx-vbars__axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-subtle); font-variant-numeric: tabular-nums; }
+.lx-select--auto { width: auto; }
 .lx-list { list-style: none; margin: 0; padding: 0; }
 .lx-list > li { padding: 12px var(--space-4); border-bottom: 1px solid var(--border); }
 .lx-list > li:last-child { border-bottom: 0; }

@@ -10,8 +10,7 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
 import { snapshotStatus, type Snapshot } from '@/lib/snapshots/api';
-import { useDatasetRuns, useDatasets, useSnapshotHistory } from '@/lib/snapshots/queries';
-import { latestRunBySnapshot } from '@/lib/snapshots/runs';
+import { useDatasets, useLatestSnapshotRuns, useSnapshotHistory } from '@/lib/snapshots/queries';
 
 const statusTone = (status: Snapshot['status']) => status === 'locked' ? 'success' : status === 'failed' ? 'danger' : 'info';
 const frameTotal = (item: Snapshot) => item.jobs.some(job => job.frames.length) ? item.jobs.reduce((sum, job) => sum + job.frames.length, 0) : null;
@@ -25,9 +24,8 @@ export default function SnapshotHistoryPage() {
   const items = datasets.data?.pages.flatMap(page => page.results) ?? [];
   const selectedDataset = items.find(item => item.id === datasetId);
   const history = useSnapshotHistory(session?.user.id, canRead ? datasetId : null);
-  const runs = useDatasetRuns(session?.user.id, datasetId, canRead);
-  const latestRuns = React.useMemo(() => latestRunBySnapshot(runs.data ?? []), [runs.data]);
   const snapshots = history.data?.pages.flatMap(page => page.results) ?? [];
+  const runs = useLatestSnapshotRuns(session?.user.id, snapshots.map(item => item.id), canRead);
   React.useEffect(() => { if (!isLoading && !session) router.replace('/login'); }, [isLoading, session, router]);
 
   if (isLoading || !session) return <p role="status">Đang tải phiên làm việc…</p>;
@@ -69,16 +67,17 @@ export default function SnapshotHistoryPage() {
       {!!snapshots.length && <div className="lx-scroll"><table className="lx-table lx-table--min-760"><thead><tr>
         <th>Snapshot</th><th>Dataset</th><th>Revision</th><th className="r">Frame</th><th>Quality Control Run</th><th>Trạng thái</th>
       </tr></thead><tbody>
-        {snapshots.map(item => <tr key={item.id}>
+        {snapshots.map((item, index) => { const run = runs[index]; return <tr key={item.id}>
           <td className="lx-mono"><Link href={`/analysis?snapshotId=${item.id}`}>{snapshotCode(item.id)}</Link></td>
           <td>{selectedDataset?.name ?? `Dataset #${item.dataset_id}`}</td>
           <td className="lx-mono" title={item.revision_hash ?? undefined}>{shortRevision(item.revision_hash)}</td>
           <td className="r">{formatCount(frameTotal(item))}</td>
-          <td className="lx-mono">{latestRuns.get(item.id)
-            ? <Link href={`/analysis/history?run=${latestRuns.get(item.id)!.id}`}>Run #{latestRuns.get(item.id)!.id}</Link>
-            : <span className="lx-subtle">{runs.isPending && canRead ? 'Đang tải…' : '—'}</span>}</td>
+          <td className="lx-mono">{run?.data
+            ? <Link href={`/analysis/history?run=${run.data.id}`}>Run #{run.data.id}</Link>
+            : run?.isError ? <span className="lx-subtle" title={errorMessage(run.error)}>Không tải được</span>
+            : <span className="lx-subtle">{run?.isPending && canRead ? 'Đang tải…' : '—'}</span>}</td>
           <td><span className={`lx-badge lx-badge--${statusTone(item.status)}`}>{snapshotStatus(item.status)}</span></td>
-        </tr>)}
+        </tr>; })}
       </tbody></table></div>}
       {history.hasNextPage && <div className="lx-card__foot"><button className="lx-btn" type="button"
         disabled={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>

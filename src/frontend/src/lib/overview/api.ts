@@ -19,6 +19,8 @@ export type RunMetrics = components['schemas']['RunMetrics'];
 export type RunEngineStat = components['schemas']['RunEngineStat'];
 export type TaskQuality = components['schemas']['TaskQuality'];
 export type CandidateCategories = components['schemas']['CandidateCategories'];
+export type ReviewVolume = components['schemas']['ReviewVolume'];
+export type ReviewVolumeQuery = { granularity: 'day' | 'week'; date_from: string; date_to: string };
 
 /** Giới hạn số trang cursor khi gom hết một danh sách nhỏ (dataset, task); tránh lặp vô hạn nếu server trả cursor lặp. */
 const MAX_PAGES = 20;
@@ -61,6 +63,10 @@ export async function getDatasetSummaries(signal?: AbortSignal): Promise<Dataset
 
 export async function getRunMetrics(runId: number, signal?: AbortSignal): Promise<RunMetrics> {
   return unwrap(await apiClient.GET('/api/runs/{id}/metrics/', { params: { path: { id: runId } }, signal }));
+}
+
+export async function getReviewVolume(runId: number, query: ReviewVolumeQuery, signal?: AbortSignal): Promise<ReviewVolume> {
+  return unwrap(await apiClient.GET('/api/runs/{id}/review-volume/', { params: { path: { id: runId }, query }, signal }));
 }
 
 export async function getRunEngines(runId: number, signal?: AbortSignal): Promise<RunEngineStat[]> {
@@ -126,6 +132,7 @@ export const overviewKeys = {
   queue: (name: 'risk' | 'random', runId: number) => ['overview', 'queue', name, runId] as const,
   escalations: (runId: number) => ['overview', 'escalations', runId] as const,
   rework: (datasetId: number) => ['overview', 'rework', datasetId] as const,
+  reviewVolume: (runId: number, query: ReviewVolumeQuery) => ['overview', 'review-volume', runId, query] as const,
 };
 
 const STALE = 30_000;
@@ -175,6 +182,14 @@ export function useRunMetrics(runId: number | null) {
     queryKey: overviewKeys.metrics(runId ?? 0),
     queryFn: ({ signal }) => getRunMetrics(runId as number, signal),
     enabled: runId !== null, staleTime: STALE,
+  });
+}
+
+export function useReviewVolume(runId: number | null, query: ReviewVolumeQuery) {
+  return useQuery({
+    queryKey: overviewKeys.reviewVolume(runId ?? 0, query),
+    queryFn: ({ signal }) => getReviewVolume(runId as number, query, signal),
+    enabled: runId !== null && query.date_from <= query.date_to, staleTime: STALE,
   });
 }
 
