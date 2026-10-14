@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
-import { VlmSettingsCard } from './VlmSettingsCard';
+import { VlmSettingsModal } from './VlmSettingsModal';
 
 type TabKey = 'models' | 'guideline';
 
@@ -17,6 +17,7 @@ const TABS = [
 const MODELS = [
   { name: 'Detector', role: 'Phát hiện object độc lập', version: 'v2.3', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.60', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
   { name: 'Classifier', role: 'Kiểm tra lại nhãn của object', version: 'v1.8', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.70', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
+  { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: 'qwen3-vl-plus', mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Theo cấu hình QC', badge: 'lx-badge', kind: 'vlm' },
 ];
 
 const GUIDELINES = [
@@ -36,7 +37,9 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
 } = {}) {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(canAccessConfiguration);
+  const canConfigureVlm = hasPermission(role => ['qc_admin', 'super_admin'].includes(role));
   const [tab, setTab] = useState<TabKey>('models');
+  const [editingVlm, setEditingVlm] = useState(false);
   return (
     <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
@@ -57,7 +60,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
                     <td className="lx-muted">{model.mapping}</td>
                     <td className={model.confidence ? 'r' : 'r lx-subtle'}>{model.confidence ?? '—'}</td>
                     <td><span className={model.badge}>{model.status}</span></td>
-                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={!canWrite} onBlocked={() => undefined} /></td>
+                    <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={model.kind === 'vlm' ? !canConfigureVlm : !canWrite} onBlocked={() => { if (model.kind === 'vlm') setEditingVlm(true); }} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -86,7 +89,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
         </div>
       )}
     </section>
-    {tab === 'models' && hasPermission(role => ['qa_lead', 'qc_admin', 'super_admin'].includes(role)) && <VlmSettingsCard />}
+    {editingVlm && <VlmSettingsModal onClose={() => setEditingVlm(false)} />}
     {tab === 'guideline' && guidelineExtra}
     </>
   );
