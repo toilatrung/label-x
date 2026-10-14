@@ -110,6 +110,10 @@ class WorkerAdminView(APIView):
 class WorkerConfigView(WorkerAdminView):
     @extend_schema(
         operation_id="gpu_worker_config_retrieve",
+        extensions={
+            "x-labelx-trace": ["FR-ENG-01", "FR-ENG-05", "FR-SEC-01"],
+            "x-labelx-roles": ["super_admin", "qc_admin"],
+        },
         responses={200: WorkerEnvelopeSerializer, 403: ErrorSerializer},
         tags=["gpu-worker"],
     )
@@ -118,6 +122,10 @@ class WorkerConfigView(WorkerAdminView):
 
     @extend_schema(
         operation_id="gpu_worker_config_update",
+        extensions={
+            "x-labelx-trace": ["FR-ENG-01", "FR-ENG-05", "FR-SEC-01", "FR-SEC-05"],
+            "x-labelx-roles": ["super_admin", "qc_admin"],
+        },
         request=WorkerConfigSerializer,
         responses={
             200: WorkerEnvelopeSerializer,
@@ -158,6 +166,10 @@ class WorkerConfigView(WorkerAdminView):
 class WorkerProbeView(WorkerAdminView):
     @extend_schema(
         operation_id="gpu_worker_probe",
+        extensions={
+            "x-labelx-trace": ["FR-ENG-05", "FR-SEC-01"],
+            "x-labelx-roles": ["super_admin", "qc_admin"],
+        },
         request=WorkerProbeRequestSerializer,
         responses={
             200: WorkerProbeSerializer,

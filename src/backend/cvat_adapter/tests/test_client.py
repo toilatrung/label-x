@@ -101,13 +101,16 @@ def test_frame_download_and_deep_links_are_read_only() -> None:
 
 
 def test_only_adapter_constructs_httpx_client_in_backend() -> None:
+    # Each external service owns a named adapter. Do not allow arbitrary client.py files:
+    # GPU inference POST is not a CVAT operation and must not relax CVAT's read-only hook.
+    adapters = {"cvat_adapter/client.py", "vlm/client.py", "engines/worker_adapter/client.py"}
     backend = Path(__file__).resolve().parents[2]
     offenders = []
     for path in backend.rglob("*.py"):
         relative = path.relative_to(backend)
         if (
             "tests" in relative.parts
-            or path.name == "client.py"
+            or relative.as_posix() in adapters
             or any(part.startswith(".") for part in relative.parts)
         ):
             continue

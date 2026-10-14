@@ -215,6 +215,22 @@ def test_every_operation_declares_known_roles(spec):
         assert set(declared) <= roles, f"{path}: vai trò lạ {set(declared) - roles}"
 
 
+@pytest.mark.parametrize(
+    ("path", "method"),
+    [
+        ("/api/gpu-worker/config/", "get"),
+        ("/api/gpu-worker/config/", "put"),
+        ("/api/gpu-worker/probe/", "post"),
+    ],
+)
+def test_worker_trace_and_roles_match_runtime_schema(spec, path, method):
+    documented = spec["paths"][path][method]
+    runtime = SchemaGenerator().get_schema(request=None, public=True)["paths"][path][method]
+    for extension in ("x-labelx-trace", "x-labelx-roles"):
+        assert runtime[extension] == documented[extension]
+    assert set(documented["x-labelx-roles"]) == {"super_admin", "qc_admin"}
+
+
 def test_operation_ids_are_unique(spec):
     ids = [op["operationId"] for _, _, op in operations(spec)]
     assert len(ids) == len(set(ids))

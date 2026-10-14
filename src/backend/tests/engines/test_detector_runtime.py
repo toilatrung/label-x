@@ -21,7 +21,7 @@ def http_worker(settings, monkeypatch):
     settings.DETECTOR_WORKER_URL = "http://127.0.0.1:8501"
     settings.DETECTOR_SERVICE_TOKEN = "test-only-token-" + "x" * 32
     factory = MagicMock()
-    monkeypatch.setattr("engines.detector.httpx.Client", factory)
+    monkeypatch.setattr("engines.worker_adapter.client.httpx.Client", factory)
     return factory, factory.return_value.__enter__.return_value
 
 

@@ -14,6 +14,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from engines.detector import BDD100K_DETECTOR_CLASSES, MANIFEST_SCHEMA_VERSION
+from engines.worker_adapter.client import request_json
 from runs.models import GpuWorkerConfig, GpuWorkerSelection, ModelArtifact, RunGpuWorker
 
 SHA256 = re.compile(r"[a-f0-9]{64}")
@@ -63,17 +64,15 @@ def request_worker(
     token = credential(config.credential_ref)
     timeout = 5 if path == "/health" else config.timeout_seconds
     try:
-        with httpx.Client(timeout=timeout, follow_redirects=False, trust_env=False) as client:
-            response = client.request(
-                "GET" if body is None else "POST",
-                url + path,
-                headers={"Authorization": "Bearer " + token},
-                json=body,
-            )
-            if response.status_code in (401, 403):
-                raise WorkerUnavailable("GPU Worker từ chối xác thực.")
-            response.raise_for_status()
-            result = response.json()
+        result = request_json(
+            "GET" if body is None else "POST", url + path, token=token, timeout=timeout, body=body
+        )
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code in (401, 403):
+            raise WorkerUnavailable("GPU Worker từ chối xác thực.") from None
+        raise WorkerUnavailable(
+            "Không kết nối được GPU Worker hoặc response không hợp lệ."
+        ) from None
     except (httpx.HTTPError, ValueError):
         raise WorkerUnavailable(
             "Không kết nối được GPU Worker hoặc response không hợp lệ."

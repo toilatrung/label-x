@@ -193,7 +193,7 @@ def test_transport_has_no_proxy_redirect_and_bounded_timeout(config, monkeypatch
     client.request.return_value = httpx.Response(
         503, text="private detail", request=httpx.Request("GET", "https://" + HOST)
     )
-    monkeypatch.setattr("runs.gpu_worker.httpx.Client", factory)
+    monkeypatch.setattr("engines.worker_adapter.client.httpx.Client", factory)
     with pytest.raises(WorkerUnavailable) as error:
         request_worker(config, "/health")
     assert "private detail" not in str(error.value)

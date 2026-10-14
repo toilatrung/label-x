@@ -57,6 +57,8 @@ paths:
   /api/gpu-worker/config/:
     get:
       operationId: gpu_worker_config_retrieve
+      x-labelx-trace: [FR-ENG-01, FR-ENG-05, FR-SEC-01]
+      x-labelx-roles: [super_admin, qc_admin]
       tags: [gpu-worker]
       summary: Đọc cấu hình GPU Worker và các credential reference được phép (admin toàn hệ thống).
       responses:
@@ -68,6 +70,8 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
     put:
       operationId: gpu_worker_config_update
+      x-labelx-trace: [FR-ENG-01, FR-ENG-05, FR-SEC-01, FR-SEC-05]
+      x-labelx-roles: [super_admin, qc_admin]
       tags: [gpu-worker]
       summary: Tạo revision mới; revision=0 cho lần đầu, revision cũ trả 409. Không tự probe.
       requestBody:
@@ -87,6 +91,8 @@ paths:
   /api/gpu-worker/probe/:
     post:
       operationId: gpu_worker_probe
+      x-labelx-trace: [FR-ENG-05, FR-SEC-01]
+      x-labelx-roles: [super_admin, qc_admin]
       tags: [gpu-worker]
       summary: Kiểm tra revision đang chọn. HTTP 200 không đồng nghĩa ready; phải đọc state.
       requestBody:

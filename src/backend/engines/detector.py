@@ -30,6 +30,7 @@ from engines.interface import (
     ObjectRef,
 )
 from engines.matching import BoundingBox, match_one_to_one
+from engines.worker_adapter.client import request_json
 from snapshots.models import SnapshotFrame
 
 DETECTOR_ENGINE_NAME = "detector"
@@ -209,17 +210,13 @@ def worker_request(method: str, path: str, body: dict[str, Any] | None = None) -
     if len(token) < 32 or not token.isascii() or any(c.isspace() for c in token):
         raise ValueError("detector service token must be at least 32 ASCII characters")
     try:
-        with httpx.Client(
-            timeout=settings.DETECTOR_TIMEOUT_SECONDS, follow_redirects=False, trust_env=False
-        ) as client:
-            response = client.request(
-                method,
-                url.rstrip("/") + path,
-                json=body,
-                headers={"Authorization": "Bearer " + token},
-            )
-            response.raise_for_status()
-            result = response.json()
+        result = request_json(
+            method,
+            url.rstrip("/") + path,
+            token=token,
+            timeout=settings.DETECTOR_TIMEOUT_SECONDS,
+            body=body,
+        )
     except (httpx.HTTPError, ValueError):
         raise RuntimeError("detector worker unavailable or invalid response") from None
     if not isinstance(result, dict):
