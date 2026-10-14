@@ -20,7 +20,10 @@ function reply(data: unknown, status = 200) { return { data: status === 200 ? da
   error: status === 200 ? undefined : data, response: new Response(null, { status }) }; }
 beforeEach(() => {
   vi.clearAllMocks(); auth.session.roles = [{ role: 'super_admin', dataset_id: null }];
-  get.mockResolvedValue(reply(envelope));
+  get.mockImplementation((path: string) => Promise.resolve(reply(path === '/api/configuration/vlm/'
+    ? { revision: 1, base_url: 'https://api.example.test/v1', model: 'qwen3-vl-plus',
+      api_key_configured: true, confidence_threshold: 0.85 }
+    : envelope)));
 });
 afterEach(cleanup);
 
@@ -71,7 +74,9 @@ it('a stale save does not report success', async () => {
 it('hides worker administration from dataset-scoped users', async () => {
   auth.session.roles = [{ role: 'qc_admin', dataset_id: 1 }];
   render(<ModelsGuidelinesCard />);
+  await screen.findByText('0.85');
   expect(screen.queryByRole('tab', { name: 'GPU Worker' })).toBeNull();
+  expect(get.mock.calls.some(([path]) => path.startsWith('/api/gpu-worker/'))).toBe(false);
   expect(get).not.toHaveBeenCalledWith('/api/gpu-worker/config/', expect.anything());
 });
 
@@ -80,6 +85,10 @@ it('global admin opens the worker tab', async () => {
   fireEvent.click(screen.getByRole('tab', { name: 'GPU Worker' }));
   await waitFor(() => expect(get).toHaveBeenCalledWith('/api/gpu-worker/config/', expect.anything()));
   await screen.findByDisplayValue('Máy GPU');
+  fireEvent.click(screen.getByRole('tab', { name: 'Mô hình' }));
+  await screen.findByText('0.85');
+  expect(get.mock.calls.some(([path]) => path === '/api/configuration/vlm/')).toBe(true);
+  expect(get.mock.calls.some(([path]) => path === '/api/gpu-worker/config/')).toBe(true);
 });
 
 it('shows verified loaded detector only after a ready probe and clears it when host changes', async () => {
