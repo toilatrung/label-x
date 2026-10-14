@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-034 — LabelX</title>
+<meta name="labelx:id" content="blocker-034">
+<meta name="labelx:title" content="FE–BE: 5 operation backend đã có nhưng FE chưa gọi, và các API FE cần nhưng backend chưa có (Snapshot, Tổng quan, Performance, Candidate)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, frontend, backend, api-contract, snapshot, performance, candidate-evaluation]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-034</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>blocker-034</span><b>title</b><span>FE–BE: 5 operation backend đã có nhưng FE chưa gọi, và các API FE cần nhưng backend chưa có (Snapshot, Tổng quan, Performance, Candidate)</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, frontend, backend, api-contract, snapshot, performance, candidate-evaluation]</span><b>priority</b><span>2</span></div>
+<h1 id="blocker-034">FE–BE: 5 operation backend đã có nhưng FE chưa gọi, và các API FE cần nhưng backend chưa có (Snapshot, Tổng quan, Performance, Candidate)</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Gom các khoảng trống API giữa FE và BE quanh các màn Snapshot, Tổng quan, Performance và Candidate. Phần A là việc của FE: backend đã có 5 operation nhưng FE chưa gọi. Phần B là việc của BE: FE cần dữ liệu nhưng backend và contract chưa có. Hai phần liên quan với nhau: cùng màn hình, và nhiều mục ở phần A chỉ làm trọn được khi mục tương ứng ở phần B xong (cột "Liên kết"). Blocker này tách từ mục 7 của <a href="BLOCKER-033.html">BLOCKER-033</a> và mở rộng sang phía BE.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Blocker ID</strong>: <code>BLOCKER-034</code></li>
+<li><strong>Title</strong>: <code>FE–BE: 5 operation backend đã có nhưng FE chưa gọi, và các API FE cần nhưng backend chưa có (Snapshot, Tổng quan, Performance, Candidate)</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung (PO)</code></li>
+<li><strong>Reporter</strong>: <code>phiên Claude (khảo sát nối API FE–BE, 2026-10-14)</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Blocker Type</strong>: <code>dependency</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Target Resolution Date</strong>: <code>— (PO chốt)</code></li>
+</ul>
+<h2 id="blocking-condition">Blocking Condition</h2>
+<p>Khảo sát mã nguồn trên <code>develop</code> (commit <code>24835df</code>), chưa chạy dữ liệu thật. Đã đối chiếu route trong <code>src/backend/**/urls.py</code>, <code>docs/04-api/openapi.yaml</code> và lời gọi trong <code>src/frontend/src</code> (không tính <code>lib/api/contract.d.ts</code> sinh tự động).</p>
+
+<h3 id="phan-a-frontend">Phần A — Frontend: nối 5 operation backend đã có</h3>
+<p>Cả 5 operation đều có route, khớp contract (trừ ghi chú ở A-1), và không file nào trong <code>src/frontend/src</code> gọi chúng.</p>
+<table><thead><tr><th>#</th><th>Operation</th><th>Hiện trạng FE</th><th>Việc cần làm</th><th>Liên kết</th><th>Mức</th></tr></thead><tbody>
+<tr><td>A-1</td><td><code>GET /api/datasets/{id}/revisions/</code> (<code>datasets_revisions</code>; <code>snapshots/summary_views.py:76</code>)</td><td><code>components/snapshots/SnapshotSample.tsx</code>: ô "Annotation revision" bị khoá, lấy từ <code>lib/mock/snapshots.ts</code>.</td><td>Hiện danh sách revision thật (<code>revision</code>, <code>snapshot_id</code>, <code>frame_count</code>, <code>created_at</code>; phân trang cursor). Khi CVAT lỗi (backend trả 502) thì hiện lỗi trong trang. Contract cần bổ sung response 502 và đánh dấu <code>snapshot_id</code> là bắt buộc, không null (backend luôn trả int).</td><td>B-1</td><td>Trung bình</td></tr>
+<tr><td>A-2</td><td><code>GET /api/snapshots/{id}/runs/</code> (<code>snapshots_runs</code>; <code>snapshots/summary_views.py:42</code>)</td><td><code>app/analysis/page.tsx</code>: lấy "QC Run đang dùng" bằng cách tải mọi run của Dataset (<code>useDatasetRuns</code>, tối đa 20 trang) rồi lọc bằng <code>latestRunBySnapshot</code>.</td><td>Gọi thẳng operation này cho từng Snapshot. Bỏ <code>useDatasetRuns</code> và <code>latestRunBySnapshot</code> nếu không còn chỗ dùng. Xoá <code>lib/mock/snapshots.ts</code> khi A-1 và B-1 xong.</td><td>B-1</td><td>Trung bình</td></tr>
+<tr><td>A-3</td><td><code>GET /api/runs/{id}/review-volume/</code> (<code>runs_review_volume</code>; <code>runs/summary_views.py:78</code>)</td><td><code>components/overview/QualitySummary.tsx</code>, thẻ "Khối lượng review": chỉ có tiến độ hàng đợi và tổng <code>frames_reviewed</code>, không có chuỗi thời gian.</td><td>Thêm biểu đồ cột <code>frames_reviewed</code> và <code>decisions</code> theo <code>granularity=day|week</code>, lọc được theo <code>date_from</code> và <code>date_to</code>.</td><td>B-3</td><td>Thấp</td></tr>
+<tr><td>A-4</td><td><code>POST /api/candidates/{id}/evaluations/</code> (<code>candidates_evaluate</code>; <code>orchestration/evaluation_views.py:93</code>)</td><td>Chưa có thao tác đánh giá lại candidate. Candidate hiện ở <code>components/execution/CandidateEvidenceList.tsx</code> (History) và bảng bằng chứng của Review workspace.</td><td>Thêm nút "Đánh giá lại bằng AI": modal nhập <code>reason</code>, gửi kèm header <code>Idempotency-Key</code> và <code>expected_revision</code> (lấy từ <code>revision_hash</code> của Snapshot), nhận 202. Xử lý lỗi 409 (<code>stale_revision</code>, <code>IDEMPOTENCY_KEY_REUSED</code>) và 422 (VLM tắt, thiếu taxonomy, run đã huỷ). Chỉ hiện nút cho reviewer, qa_lead, qc_admin, super_admin.</td><td>B-4; BLOCKER-033 mục 2 (VLM chưa có model)</td><td>Trung bình</td></tr>
+<tr><td>A-5</td><td><code>GET /api/candidate-evaluations/{id}/</code> (<code>candidate_evaluations_read</code>; <code>orchestration/evaluation_views.py:157</code>)</td><td>Không gọi.</td><td>Sau A-4, hỏi lại <code>poll_url</code> mỗi 3 giây đến khi <code>status</code> là <code>completed</code>, <code>failed</code> hoặc <code>cancelled</code>, rồi hiện kết quả (<code>vlm</code>, <code>reasons</code>, <code>review_required</code>).</td><td>B-4</td><td>Trung bình</td></tr>
+</tbody></table>
+<p>Áp dụng cho cả phần A: thêm 5 operation vào API Explorer (<code>lib/api-explorer/features/*.ts</code>, <code>connection: 'backend'</code>); viết test Vitest giả lập fetch theo mẫu <code>src/__tests__/snapshot-api.test.ts</code>; gỡ <code>NotConnectedNotice</code> ở vùng đã nối.</p>
+
+<h3 id="phan-b-backend">Phần B — Backend: API FE cần nhưng chưa có</h3>
+<p>Mỗi mục ở đây cần mở rộng contract trước (<code>docs/04-api/openapi.yaml</code>, sinh lại <code>contract.d.ts</code>). Nếu đổi phạm vi thì cần change request.</p>
+<table><thead><tr><th>#</th><th>Nhu cầu của FE</th><th>Bằng chứng</th><th>Việc cần làm</th><th>Liên kết</th><th>Mức</th></tr></thead><tbody>
+<tr><td>B-1</td><td>Form tạo Snapshot theo thiết kế có seed lấy mẫu, cấu hình kiểm tra và chọn revision</td><td><code>SnapshotCreate</code> chỉ có <code>dataset_id</code>, <code>scope</code>, <code>note</code>. <code>seed</code> và <code>config_version_id</code> nằm ở <code>RunCreate</code>. Snapshot luôn xuất revision hiện tại của CVAT, nên chọn revision cũ là không thực hiện được. TODO ở <code>lib/mock/snapshots.ts:4-5</code>.</td><td>PO chốt một trong hai hướng: (a) sửa thiết kế: revision chỉ để xem lịch sử, còn seed và cấu hình chọn ở bước tạo Run; hoặc (b) BE thêm trường vào <code>SnapshotCreate</code> và <code>Snapshot</code>. Đề xuất (a) vì không đổi model.</td><td>A-1, A-2</td><td>Trung bình</td></tr>
+<tr><td>B-2</td><td>Giai đoạn (stage) của Job CVAT trong bảng Job của Snapshot</td><td><code>SnapshotForm.tsx:117</code> có <code>TODO(backend): CvatJob chưa có giai đoạn</code>. <code>Snapshot.jobs[]</code> không có <code>stage</code>, model <code>snapshots</code> cũng không có.</td><td>Lưu <code>stage</code> và <code>state</code> của Job khi export (adapter CVAT chỉ đọc), trả trong <code>Snapshot.jobs[]</code>.</td><td>A-2</td><td>Thấp</td></tr>
+<tr><td>B-3</td><td>Chất lượng theo Task trên Tổng quan: coverage, số candidate, lỗi đã xác nhận, gate</td><td><code>QualitySummary.tsx:198</code> có TODO. <code>TaskQuality</code> (<code>GET /api/runs/{id}/tasks-quality/</code>) chỉ có <code>frames</code>, <code>issues</code>, <code>issue_rate</code>, <code>reviewed_ratio</code>.</td><td>Thêm <code>coverage</code>, <code>candidates</code>, <code>confirmed_issues</code>, <code>gate_status</code> vào <code>TaskQuality</code>.</td><td>A-3 (cùng màn Tổng quan)</td><td>Trung bình</td></tr>
+<tr><td>B-4</td><td>Xem lại các lần đánh giá AI của một candidate sau khi tải lại trang</td><td><code>/api/candidates/{id}/evaluations/</code> chỉ có POST (<code>evaluation_views.py:108</code>). Schema <code>Candidate</code> không có id hoặc trạng thái evaluation mới nhất, nên mất <code>poll_url</code> là không tìm lại được.</td><td>Thêm <code>GET /api/candidates/{id}/evaluations/</code> (danh sách, mới nhất trước), hoặc trường <code>latest_evaluation</code> (<code>id</code>, <code>status</code>) trong <code>Candidate</code> của <code>GET /api/runs/{id}/candidates/</code>.</td><td>A-4, A-5</td><td>Trung bình</td></tr>
+<tr><td>B-5</td><td>Độ chính xác (Precision) của candidate và Benchmark coverage trên Performance</td><td><code>PerformanceView.tsx:202-219</code> hiện <code>PERF_SAMPLE_METRICS</code> (dữ liệu minh họa) kèm <code>NotConnectedNotice</code>. <code>PerformanceEntry.metrics</code> và <code>EffectivenessReport</code> chưa có hai chỉ số này. Candidate evaluation (A-4) không tính Precision.</td><td>Định nghĩa công thức (đề xuất: Precision = candidate được xác nhận thành Issue / candidate đã review, theo engine; coverage = frame Benchmark có trong Snapshot / tổng frame Benchmark), rồi thêm vào <code>metrics</code> của <code>/api/evaluation/performance/</code> với <code>status</code> và <code>sample_size</code> như các metric khác.</td><td>A-4 (cùng nguồn candidate)</td><td>Cao</td></tr>
+<tr><td>B-6</td><td>Liệt kê KPI evaluation và reference để chọn phạm vi trên Performance</td><td><code>PerformanceView.tsx:66</code> ghi "contract chưa có API liệt kê evaluation/reference". <code>/api/evaluations/</code> và <code>/api/references/</code> chỉ có POST (<code>runs/kpi_views.py:170, 298</code>).</td><td>Thêm <code>GET /api/evaluations/?run_id=&amp;dataset_id=</code> và <code>GET /api/references/?dataset_id=</code>, phân trang cursor, kiểm phạm vi Dataset ở API.</td><td>B-5</td><td>Trung bình</td></tr>
+<tr><td>B-7</td><td>Thời điểm đồng bộ CVAT gần nhất trên trang chủ</td><td><code>QualityControlHome.tsx:269</code> có TODO; backend không có trường nào lưu lần đồng bộ cuối.</td><td>Thêm <code>last_synced_at</code> vào <code>/api/datasets/summary/</code> (lấy <code>created_at</code> của Snapshot locked mới nhất, hoặc lần poll drift gần nhất).</td><td>A-1 (cùng nguồn CVAT)</td><td>Thấp</td></tr>
+</tbody></table>
+<blockquote>Không thuộc blocker này: các màn Calibration, Benchmark, Audit sampling, Models &amp; Guidelines, Rules &amp; Thresholds đã có API (MBE-04/05/07) nhưng FE còn dùng dữ liệu mẫu. Những mục đó do BLOCKER-033 mục 6 theo dõi.</blockquote>
+
+<h2 id="impact">Impact</h2>
+<ul>
+<li><strong>Blocked Epics or Tasks</strong>: <code>BLOCKER-033 mục 7; M-BE-MVP (MBE-01, MBE-02, MBE-06)</code></li>
+<li><strong>Blocked Deliverables</strong>: <code>Màn Snapshot không còn mock; biểu đồ khối lượng review; đánh giá lại candidate bằng AI; Precision và Benchmark coverage thật trên Performance</code></li>
+<li><strong>Schedule or Quality Impact</strong>: <code>Màn Snapshot và Performance vẫn hiện dữ liệu minh họa; Analysis tải tới 20 trang run chỉ để tìm run đang dùng; candidate không thể đánh giá lại từ UI</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Records</strong>: <code>docs/04-api/openapi.yaml, src/frontend/src/components/snapshots/SnapshotSample.tsx, src/frontend/src/components/snapshots/SnapshotForm.tsx, src/frontend/src/lib/mock/snapshots.ts, src/frontend/src/app/analysis/page.tsx, src/frontend/src/lib/snapshots/queries.ts, src/frontend/src/components/overview/QualitySummary.tsx, src/frontend/src/components/overview/QualityControlHome.tsx, src/frontend/src/components/execution/CandidateEvidenceList.tsx, src/frontend/src/components/calibration/PerformanceView.tsx, src/backend/snapshots/summary_views.py, src/backend/runs/summary_views.py, src/backend/runs/kpi_views.py, src/backend/orchestration/evaluation_views.py</code></li>
+<li><strong>Issues</strong>: <code>none</code></li>
+<li><strong>Decisions</strong>: <code>DEC-001</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>cần CR nếu PO chọn hướng (b) ở B-1 hoặc thêm metric mới ở B-5</code></li>
+</ul>
+<h2 id="resolution-plan">Resolution Plan</h2>
+<ul>
+<li><strong>Required Action</strong>: <code>Mỗi đợt một PR, nhánh từ develop. Đợt 1 (FE): A-1, A-2 và sửa contract revisions; PO chốt B-1 trước khi xoá mock. Đợt 2 (FE): A-3. Đợt 3 (BE): B-4, rồi FE làm A-4 và A-5. Đợt 4 (BE): B-6, B-5, rồi FE nối Performance. B-2, B-3, B-7 làm xen khi có người.</code></li>
+<li><strong>Responsible Owner</strong>: <code>@toilatrung (PO) phân công FE và BE</code></li>
+<li><strong>Dependency or Approval</strong>: <code>PO chốt B-1 (hướng a hoặc b) và công thức B-5; A-4 chỉ chạy được khi VLM có model (BLOCKER-033 mục 2)</code></li>
+<li><strong>Workaround</strong>: <code>Giữ dữ liệu minh họa kèm NotConnectedNotice và nhãn "Dữ liệu minh họa" cho tới khi mục tương ứng ở phần B xong</code></li>
+<li><strong>Verification Method</strong>: <code>grep src/frontend/src thấy lời gọi cho cả 5 operation phần A; lib/mock/snapshots.ts đã xoá; PerformanceView không còn PERF_SAMPLE_METRICS; test Vitest và pytest cho từng mục; kiểm trên dev chạy thật với dataset 1</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
+<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not mark status <code>resolved</code> based only on a proposed action.</li>
+<li>Do not continue blocked work through an unauthorized workaround.</li>
+<li>Do not omit affected epic or task links.</li>
+<li>Do not fabricate resolution evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/blockers/BLOCKER-034.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>
