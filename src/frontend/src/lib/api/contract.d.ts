@@ -3576,22 +3576,8 @@ export interface operations {
                     "application/json": components["schemas"]["GuidelinePreview"];
                 };
             };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     datasets_guideline_retrieve: {
@@ -3613,14 +3599,7 @@ export interface operations {
                     "application/json": components["schemas"]["DatasetGuideline"];
                 };
             };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            403: components["responses"]["Forbidden"];
         };
     };
     datasets_guideline_update: {
@@ -3648,30 +3627,9 @@ export interface operations {
                     "application/json": components["schemas"]["DatasetGuideline"];
                 };
             };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
             502: {
                 headers: {
                     [name: string]: unknown;
@@ -3705,22 +3663,8 @@ export interface operations {
                     "application/json": components["schemas"]["GuidelineImportResult"];
                 };
             };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     auth_csrf: {

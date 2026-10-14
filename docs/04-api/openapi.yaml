@@ -57,6 +57,8 @@ paths:
   /api/guidelines/preview/:
     post:
       operationId: guidelines_preview
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
       tags:
       - guidelines
       requestBody:
@@ -81,20 +83,14 @@ paths:
                 $ref: '#/components/schemas/GuidelinePreview'
           description: ''
         '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/BadRequest'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/Forbidden'
   /api/datasets/{id}/guideline/:
     get:
       operationId: datasets_guideline_retrieve
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin, reviewer]
       parameters:
       - in: path
         name: id
@@ -113,13 +109,11 @@ paths:
                 $ref: '#/components/schemas/DatasetGuideline'
           description: ''
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/Forbidden'
     put:
       operationId: datasets_guideline_update
+      x-labelx-trace: [FR-SNP-03, FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
       parameters:
       - in: path
         name: id
@@ -150,23 +144,11 @@ paths:
                 $ref: '#/components/schemas/DatasetGuideline'
           description: ''
         '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/BadRequest'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/Forbidden'
         '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/Conflict'
         '502':
           content:
             application/json:
@@ -176,6 +158,8 @@ paths:
   /api/guidelines/import/:
     post:
       operationId: guidelines_import
+      x-labelx-trace: [FR-GDL-02]
+      x-labelx-roles: [qc_admin, super_admin]
       tags:
       - guidelines
       requestBody:
@@ -200,17 +184,9 @@ paths:
                 $ref: '#/components/schemas/GuidelineImportResult'
           description: ''
         '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/BadRequest'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
+          $ref: '#/components/responses/Forbidden'
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:

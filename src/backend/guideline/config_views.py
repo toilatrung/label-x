@@ -108,6 +108,7 @@ class GuidelineImportView(APIView):
 
     @extend_schema(
         operation_id="guidelines_import",
+        extensions={"x-labelx-trace": ["FR-GDL-02"], "x-labelx-roles": ["qc_admin", "super_admin"]},
         request=GuidelineImportSerializer,
         responses={
             200: GuidelineImportResultSerializer,
@@ -171,6 +172,10 @@ class DatasetGuidelineView(APIView):
 
     @extend_schema(
         operation_id="datasets_guideline_retrieve",
+        extensions={
+            "x-labelx-trace": ["FR-SNP-03", "FR-GDL-02"],
+            "x-labelx-roles": ["qa_lead", "qc_admin", "super_admin", "reviewer"],
+        },
         responses={200: DatasetGuidelineSerializer, 403: ErrorSerializer},
         tags=["datasets"],
     )
@@ -180,6 +185,10 @@ class DatasetGuidelineView(APIView):
 
     @extend_schema(
         operation_id="datasets_guideline_update",
+        extensions={
+            "x-labelx-trace": ["FR-SNP-03", "FR-GDL-02"],
+            "x-labelx-roles": ["qc_admin", "super_admin"],
+        },
         request=DatasetGuidelineUpdateSerializer,
         responses={
             200: DatasetGuidelineSerializer,
@@ -252,6 +261,7 @@ class GuidelinePreviewView(APIView):
 
     @extend_schema(
         operation_id="guidelines_preview",
+        extensions={"x-labelx-trace": ["FR-GDL-02"], "x-labelx-roles": ["qc_admin", "super_admin"]},
         request=GuidelineFileSerializer,
         responses={200: GuidelinePreviewSerializer, 400: ErrorSerializer, 403: ErrorSerializer},
         tags=["guidelines"],
