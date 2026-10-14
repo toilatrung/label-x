@@ -8,10 +8,13 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth/auth-context';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import type { Run } from '@/lib/execution/api';
+import type { RunState } from '@/components/layout/ContextBar';
 import { QualityControlHome } from '@/components/overview/QualityControlHome';
 import { QualitySummary } from '@/components/overview/QualitySummary';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
-import { QUALITY_SUMMARY_API_EXPLORER } from '@/lib/overview/api-explorer-data';
+import { useLatestRun } from '@/lib/overview/api';
+import { runStatusLabel } from '@/lib/execution/api';
+import { snapshotCode } from '@/lib/format';
 
 type DatasetResolution =
   | { authUserId: number | null; requestedId: null; status: 'idle' }
@@ -243,27 +246,21 @@ function OverviewContent() {
     setRetryNonce((prev) => prev + 1);
   };
 
-  const summaryDataset = isSummary && !currentDataset && effectiveStatus !== 'revoked' ? {
-    id: QUALITY_SUMMARY_API_EXPLORER.dataset.id,
-    name: QUALITY_SUMMARY_API_EXPLORER.dataset.name,
-    cvat_project_id: QUALITY_SUMMARY_API_EXPLORER.dataset.cvatProjectId,
-    guideline_version: QUALITY_SUMMARY_API_EXPLORER.dataset.guidelineVersion,
-    taxonomy_version: 'v3',
-  } : currentDataset;
+  // Run hiển thị ở context bar: run đã chọn, nếu chưa chọn thì run mới nhất thật của Dataset (GET /api/runs/?dataset=).
+  const latestRun = useLatestRun(isSummary && currentDataset && !effectiveSelectedRun ? currentDataset.id : null);
+  const contextRun = effectiveSelectedRun ?? (isSummary && currentDataset ? latestRun.data ?? null : null);
+  const RUN_STATE: Partial<Record<Run['status'], RunState>> = {
+    completed: 'checked', partial: 'partial', running: 'running', queued: 'running', failed: 'failed',
+  };
 
-  // ContextBar props conforming strictly to restored ContextBarProps baseline
   const contextProps: React.ComponentProps<typeof ContextBar> = {
-    datasetName: summaryDataset?.name,
-    datasetIdOverride: effectiveStatus === 'revoked' ? null : (datasetId ?? (isSummary ? summaryDataset?.id : null)),
-    guidelineVersion: summaryDataset?.guideline_version ?? '—',
-    taxonomyVersion: summaryDataset?.taxonomy_version ?? '—',
-    activeRun: effectiveSelectedRun
-      ? `#${effectiveSelectedRun.id} · ${effectiveSelectedRun.status ? effectiveSelectedRun.status.toUpperCase() : '—'}`
-      : (isSummary ? `#QC-0${QUALITY_SUMMARY_API_EXPLORER.run.id}` : 'Chưa chọn'),
-    runState: effectiveSelectedRun ? undefined : (isSummary ? 'partial' : undefined),
-    snapshotName: effectiveSelectedRun?.snapshot_id
-      ? `#${effectiveSelectedRun.snapshot_id}`
-      : (isSummary ? `SNP-0${QUALITY_SUMMARY_API_EXPLORER.run.snapshotId}` : 'Chưa chọn'),
+    datasetName: currentDataset?.name,
+    datasetIdOverride: effectiveStatus === 'revoked' ? null : datasetId,
+    guidelineVersion: currentDataset?.guideline_version ?? '—',
+    taxonomyVersion: currentDataset?.taxonomy_version ?? '—',
+    activeRun: contextRun ? `#${contextRun.id} · ${runStatusLabel[contextRun.status] ?? contextRun.status}` : 'Chưa chọn',
+    runState: contextRun ? RUN_STATE[contextRun.status] : undefined,
+    snapshotName: contextRun ? snapshotCode(contextRun.snapshot_id) : 'Chưa chọn',
   };
 
   return (
