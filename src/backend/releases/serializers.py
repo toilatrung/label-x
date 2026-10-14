@@ -5,7 +5,7 @@ from typing import Any
 from rest_framework import serializers
 
 from releases.models import Release
-from reports.serializers import RunReportGateResultSerializer
+from reports.serializers import GateResultSerializer
 
 
 class ReleaseSerializer(serializers.Serializer[Any]):
@@ -47,5 +47,5 @@ class ReleaseManifestSerializer(serializers.Serializer[Any]):
     config_version_id = serializers.IntegerField()
     guideline_version = serializers.CharField(allow_null=True, required=False)
     score_version = serializers.CharField(allow_null=True, required=False)
-    gate = RunReportGateResultSerializer(allow_null=True, required=False)
+    gate = GateResultSerializer(allow_null=True, required=False)
     artifacts = ManifestArtifactSerializer(many=True)

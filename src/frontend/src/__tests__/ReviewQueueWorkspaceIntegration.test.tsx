@@ -166,7 +166,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
         return Response.json(mockGrant12);
       }
 
-      if (path === '/api/frames/340/issues/') {
+      if (path === '/api/frames/340/issues/' || path === '/api/frames/340/workspace/') {
         return Response.json(mockFrameIssues);
       }
 
@@ -321,7 +321,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
       if (url.pathname.startsWith('/api/auth/')) {
         return originalFetch(request);
       }
-      if (url.pathname === '/api/frames/340/issues/') {
+      if (url.pathname === '/api/frames/340/issues/' || url.pathname === '/api/frames/340/workspace/') {
         return Response.json(mockFrameIssues);
       }
       return Response.json({ detail: 'Not found' }, { status: 404 });

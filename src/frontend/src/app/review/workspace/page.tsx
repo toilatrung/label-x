@@ -8,7 +8,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { canAccessReview } from '@/lib/auth/roles';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ReviewWorkspace } from '@/components/review/ReviewWorkspace';
-import { ReviewWorkspaceSample } from '@/components/review/ReviewWorkspaceSample';
+import { ReviewWorkspaceEmpty } from '@/components/review/ReviewWorkspaceEmpty';
 
 function ReviewWorkspaceContent() {
   const searchParams = useSearchParams();
@@ -40,7 +40,7 @@ function ReviewWorkspaceContent() {
       </div>
       <div className="lx-actions">
         <span className="lx-hint">
-          {frameId ? `Frame #${frameId}` : 'Job 2272 · validation'} · {session?.user?.display_name || 'Reviewer'}
+          {frameId ? `Frame #${frameId} · ` : ''}{session?.user?.display_name || 'Reviewer'}
         </span>
         <Link href="/review" className="lx-btn">
           Về hàng đợi
@@ -57,7 +57,7 @@ function ReviewWorkspaceContent() {
           initialLease={initialLease}
         />
       ) : (
-        <ReviewWorkspaceSample />
+        <ReviewWorkspaceEmpty />
       )}
     </AppShell>
   );

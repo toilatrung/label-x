@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { canAccessCalibration } from '@/lib/auth/roles';
@@ -9,9 +9,11 @@ import { PerformanceHeader, PerformanceBody } from '@/components/calibration/Per
 export default function PerformanceEvaluationPage() {
   return (
     <AuthGuard permissionCheck={canAccessCalibration} requiredPermissionName="Quyền Calibration & Audit">
-      <AppShell activeKey="calibration" showFlowNav={false} pageHeader={<PerformanceHeader />}>
-        <PerformanceBody />
-      </AppShell>
+      <Suspense fallback={<div>Đang tải Performance Evaluation…</div>}>
+        <AppShell activeKey="calibration" showFlowNav={false} pageHeader={<PerformanceHeader />}>
+          <PerformanceBody />
+        </AppShell>
+      </Suspense>
     </AuthGuard>
   );
 }

@@ -47,9 +47,9 @@ INSTALLED_APPS = [
     "orchestration.apps.OrchestrationConfig",
     "review.apps.ReviewConfig",
     "effort.apps.EffortConfig",
-    "calibration.apps.CalibrationConfig",
     "reports.apps.ReportsConfig",
     "releases.apps.ReleasesConfig",
+    "calibration.apps.CalibrationConfig",
 ]
 
 MIDDLEWARE = [
@@ -188,10 +188,10 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
         "RunStatusEnum": "runs.models.QCRun.Status",
+        "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
         "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
         "ModelKindEnum": "runs.models.ModelKind",
         "RunRankingSourceEnum": ["risk", "random_audit"],
-        "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
         "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
         "ReworkVerificationOutcomeEnum": ["pass", "fail"],
         "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { getDatasets, cursorFrom, type Dataset } from '@/lib/snapshots/api';
 import { useAuth } from '@/lib/auth/auth-context';
 import { errorMessage } from '@/lib/api/errors';
-import { HOME_DATASETS, type HomeDatasetRow } from '@/lib/overview/home-data';
+import { useQueryClient } from '@tanstack/react-query';
+import { DatasetHomeRow } from './DatasetHomeRow';
 
 interface QualityControlHomeProps {
   onDatasetSelect?: (dataset: Dataset) => void;
@@ -13,6 +14,7 @@ interface QualityControlHomeProps {
 
 export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, datasetId, setDatasetId, isLoading: isAuthLoading } = useAuth();
   const currentUserId = user?.id ?? null;
 
@@ -218,37 +220,16 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     });
   }, [datasets, searchQuery]);
 
-  const filteredProductDatasets = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return HOME_DATASETS;
-    return HOME_DATASETS.filter((d) => {
-      const matchName = d.name.toLowerCase().includes(q);
-      const matchVersion = d.version ? d.version.toLowerCase().includes(q) : false;
-      const matchProject = d.cvatProjectId ? `cvat project #${d.cvatProjectId}`.toLowerCase().includes(q) : false;
-      return matchName || matchVersion || matchProject;
-    });
-  }, [searchQuery]);
-
   const handleSelectDataset = (ds: Dataset) => {
     setDatasetId(ds.id);
     onDatasetSelect?.(ds);
   };
 
-  const handleSelectAndOpenSummary = (ds: Dataset) => {
+  /** Nút hành động cuối dòng: chưa có run → tạo snapshot đầu tiên; có run → Quality Summary. */
+  const handleOpenDataset = (ds: Dataset, href: string) => {
     setDatasetId(ds.id);
     onDatasetSelect?.(ds);
-    router.push('/?view=summary');
-  };
-
-  const selectProductDataset = (row: HomeDatasetRow) => {
-    const dataset: Dataset = {
-      id: row.id,
-      name: row.name,
-      cvat_project_id: row.cvatProjectId ?? 0,
-    };
-    setDatasetId(dataset.id);
-    onDatasetSelect?.(dataset);
-    router.push(row.actionHref);
+    router.push(href);
   };
 
   const handleRetryInitial = () => {
@@ -264,16 +245,14 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const handleSync = handleRetryInitial;
-
-  // F-5: Helper to render non-empty version tag, never rendering an empty "—" chip
-  const renderVersionTag = (version?: string | null) => {
-    if (!version || version.trim() === '' || version.trim() === '—') return null;
-    return <span className="lx-tag">{version}</span>;
+  const handleSync = () => {
+    // Làm mới cả danh sách lẫn số liệu từng dòng (task, run, gate).
+    void queryClient.invalidateQueries({ queryKey: ['overview'] });
+    handleRetryInitial();
   };
 
   const isRealDataActive = datasets.length > 0;
-  const showProductFallback = !isRealDataActive;
+  const isEmpty = !isLoading && !initialError && datasets.length === 0;
 
   return (
     <>
@@ -287,7 +266,8 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
         </div>
         <div className="lx-actions">
           <span className="lx-hint">
-            {isRealDataActive ? 'Đồng bộ CVAT —' : 'Đồng bộ CVAT 2 phút trước'}
+            {/* TODO(backend): thời điểm đồng bộ CVAT gần nhất chưa có trong API. */}
+            Đồng bộ CVAT —
           </span>
           <button type="button" className="lx-btn" onClick={handleSync}>
             Đồng bộ lại
@@ -313,26 +293,21 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
             />
           </label>
           <span className="lx-hint">
-            {isRealDataActive ? (
-              isScanningSearch
-                ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
-                : `${filteredDatasets.length} / ${datasets.length} dataset`
-            ) : (
-              `${filteredProductDatasets.length} / ${HOME_DATASETS.length} dataset`
-            )}
+            {isScanningSearch
+              ? `Đang tìm kiếm… (${filteredDatasets.length} / ${datasets.length} dataset)`
+              : `${filteredDatasets.length} / ${datasets.length} dataset`}
           </span>
         </div>
 
-        {/* Keep the initial API refresh localized; canonical product data remains available afterwards. */}
         {isLoading ? (
           <div className="lx-state--card-muted">
             Đang tải danh sách Dataset...
           </div>
         ) : null}
 
-        {initialError && !isLoading && !showProductFallback && (
+        {initialError && !isLoading && (
           <div className="lx-state--card" role="alert">
-            <div className="lx-text-danger lx-mb-3">{initialError}</div>
+            <div className="lx-text-danger lx-mb-3">Không thể tải danh sách Dataset: {initialError}</div>
             <button type="button" className="lx-btn lx-btn--sm" onClick={handleRetryInitial}>Thử lại</button>
           </div>
         )}
@@ -383,164 +358,24 @@ export function QualityControlHome({ onDatasetSelect }: QualityControlHomeProps)
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDatasets.map((ds) => {
-                    const isSelected = ds.id === datasetId;
-                    const product = HOME_DATASETS.find(row => row.id === ds.id || row.name === ds.name);
-                    return (
-                      <tr
-                        key={ds.id}
-                        aria-selected={isSelected ? 'true' : undefined}
-                        onClick={() => handleSelectDataset(ds)}
-                        className="lx-tr--clickable"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                            e.preventDefault();
-                            handleSelectDataset(ds);
-                          }
-                        }}
-                      >
-                        <td>
-                          <div className="lx-cell__main">
-                            {ds.name}
-                            {isSelected && <span className="lx-hint"> · Đang chọn</span>}
-                          </div>
-                          <div className="lx-cell__sub">CVAT project #{ds.cvat_project_id}</div>
-                        </td>
-                        <td className="r">{product?.tasksJobs ?? '—'}</td>
-                        <td className="r">{product?.frames ?? '—'}</td>
-                        <td>
-                          {product?.qcRunStatus ? (
-                            <><span className="lx-mono">{product.qcRun}</span>{' '}
-                              <span className={`lx-badge${product.qcRunTone ? ` lx-badge--${product.qcRunTone}` : ''}`}>{product.qcRunStatus}</span>
-                              {product.qcRunTime && <div className="lx-cell__sub">{product.qcRunTime}</div>}
-                            </>
-                          ) : <span className="lx-subtle">{product?.qcRun ?? '—'}</span>}
-                        </td>
-                        <td className="r">{product?.coverage ?? '—'}</td>
-                        <td className="r">{product?.openIssues ?? '—'}</td>
-                        <td><span className={`lx-badge${product?.gateTone ? ` lx-badge--${product.gateTone}` : ''}`}>{product?.gate ?? '—'}</span></td>
-                        <td className="r">
-                          <button
-                            type="button"
-                            className="lx-iconbtn"
-                            data-tip="Tiếp tục làm việc với Dataset này"
-                            aria-label="Tiếp tục làm việc với Dataset này"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectAndOpenSummary(ds);
-                            }}
-                          >
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
-                              <path d="M3 8h10M9 4l4 4-4 4" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filteredDatasets.map((ds) => (
+                    <DatasetHomeRow
+                      key={ds.id}
+                      dataset={ds}
+                      isSelected={ds.id === datasetId}
+                      onSelect={handleSelectDataset}
+                      onOpen={handleOpenDataset}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
           )
         )}
 
-        {/* Canonical product data remains available when the live API has no rows. */}
-        {showProductFallback && !isLoading && (
-          <div className="lx-scroll">
-            <table className="lx-table lx-table--min-1040">
-              <thead>
-                <tr>
-                  <th>Dataset</th>
-                  <th className="r">Task / Job</th>
-                  <th className="r">Frame</th>
-                  <th>Quality Control Run gần nhất</th>
-                  <th className="r">Coverage</th>
-                  <th className="r">Issue đang mở</th>
-                  <th>Gate</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProductDatasets.map((ds) => {
-                  const isSelected = ds.id === datasetId;
-                  return (
-                    <tr
-                      key={ds.id}
-                      aria-selected={isSelected ? 'true' : undefined}
-                      className="lx-tr--clickable"
-                      tabIndex={0}
-                      onClick={() => selectProductDataset(ds)}
-                      onKeyDown={(e) => {
-                        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                          e.preventDefault();
-                          selectProductDataset(ds);
-                        }
-                      }}
-                    >
-                      <td>
-                        <div className="lx-cell__main">
-                          {ds.name} {renderVersionTag(ds.version)}
-                          {isSelected && <span className="lx-hint"> · Đang chọn</span>}
-                        </div>
-                        <div className="lx-cell__sub">
-                          {ds.subLabel || (ds.cvatProjectId ? `CVAT project #${ds.cvatProjectId}` : '')}
-                        </div>
-                      </td>
-                      <td className="r">{ds.tasksJobs}</td>
-                      <td className="r">{ds.frames}</td>
-                      <td>
-                        {ds.qcRunStatus ? (
-                          <>
-                            <span className="lx-mono">{ds.qcRun}</span>{' '}
-                            <span className={`lx-badge${ds.qcRunTone ? ` lx-badge--${ds.qcRunTone}` : ''}`}>
-                              {ds.qcRunStatus}
-                            </span>
-                            {ds.qcRunTime && <div className="lx-cell__sub">{ds.qcRunTime}</div>}
-                          </>
-                        ) : (
-                          <span className="lx-subtle">{ds.qcRun}</span>
-                        )}
-                      </td>
-                      <td className="r">{ds.coverage}</td>
-                      <td className="r">{ds.openIssues}</td>
-                      <td>
-                        <span className={`lx-badge${ds.gateTone ? ` lx-badge--${ds.gateTone}` : ''}`}>
-                          {ds.gate}
-                        </span>
-                      </td>
-                      <td className="r">
-                        <button
-                          type="button"
-                          className="lx-iconbtn"
-                          data-tip={ds.actionTip}
-                          aria-label={ds.actionTip}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            selectProductDataset(ds);
-                          }}
-                        >
-                          {ds.actionHref.includes('releases') ? (
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
-                              <circle cx="8" cy="8" r="5.5" />
-                              <path d="M8 5v3.5l2 1.5" />
-                            </svg>
-                          ) : ds.actionHref === '/analysis' ? (
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
-                              <path d="M8 3v10M3 8h10" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="lx-ico-16">
-                              <path d="M3 8h10M9 4l4 4-4 4" />
-                            </svg>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {isEmpty && (
+          <div className="lx-state--card-muted">
+            Chưa có Dataset nào trong phạm vi quyền của bạn. Dataset xuất hiện ở đây sau khi CVAT Project được đồng bộ.
           </div>
         )}
 

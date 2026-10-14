@@ -32,8 +32,7 @@ from rest_framework.test import APIClient
 from accounts.models import CvatIdentity, EmployeeIdentity, Role, RoleAssignment
 from calibration.models import AuditSample, AuditSampleStream, Benchmark
 from releases.models import Release
-from reports.models import EffectivenessReport
-from runs.models import ConfigVersion, EngineResult, QCRun
+from runs.models import ConfigVersion, EngineResult, KpiEvaluation, QCRun, Reference
 from snapshots.models import Snapshot, SnapshotFrame, SnapshotJob
 
 User = get_user_model()
@@ -249,13 +248,34 @@ def rbac_world() -> dict[str, Any]:
         },
     )
 
-    # Effectiveness reports in 42 and 99
-    report_42 = EffectivenessReport.objects.create(
-        input_snapshot=snap_42,
-        reference_id=benchmark_42.pk,
-        source_run=run_42,
-        source_reason="Scheduled run",
+    # KPI evaluation reports in 42 and 99
+    reference_42 = Reference.objects.create(
+        snapshot=snap_42,
+        gt_source="cvat://task/2042",
+        gt_checksum="a" * 64,
+        mapping_version="v1",
+        status=Reference.Status.LOCKED,
+        created_by=qa_lead_42,
+        locked_by=qa_lead_42,
+        locked_at=timezone.now(),
+    )
+    reference_99 = Reference.objects.create(
+        snapshot=snap_99,
+        gt_source="cvat://task/2099",
+        gt_checksum="b" * 64,
+        mapping_version="v1",
+        status=Reference.Status.LOCKED,
+        created_by=qa_lead_99,
+        locked_by=qa_lead_99,
+        locked_at=timezone.now(),
+    )
+    report_42 = KpiEvaluation.objects.create(
+        status=KpiEvaluation.Status.COMPLETED,
+        snapshot=snap_42,
+        run=run_42,
+        reference=reference_42,
         score_version="v1.0",
+        parameters={},
         metrics={
             "f1": {
                 "status": "computed",
@@ -266,37 +286,19 @@ def rbac_world() -> dict[str, Any]:
                 "confidence_interval": [0.91, 0.98],
             },
         },
-        risk_queue={"critical_count": 5},
-        random_queue={"sampled_count": 10},
-        engine_coverage=[
-            {
-                "engine": "geometry",
-                "status": "passed",
-                "required": True,
-                "unit": "frame",
-                "total": 1,
-                "eligible": 1,
-                "excluded": 0,
-                "applicability_version": "v1",
-                "completed": 1,
-                "failed": 0,
-                "pending": 0,
-                "not_checked": 0,
-                "not_checked_reasons": {},
-                "coverage": 1.0,
-            }
-        ],
+        leakage_check="passed",
+        created_by=qa_lead_42,
     )
-    report_99 = EffectivenessReport.objects.create(
-        input_snapshot=snap_99,
-        reference_id=benchmark_99.pk,
-        source_run=run_99,
-        source_reason="Scheduled run",
+    report_99 = KpiEvaluation.objects.create(
+        status=KpiEvaluation.Status.COMPLETED,
+        snapshot=snap_99,
+        run=run_99,
+        reference=reference_99,
         score_version="v1.0",
+        parameters={},
         metrics={},
-        risk_queue={},
-        random_queue={},
-        engine_coverage=[],
+        leakage_check="passed",
+        created_by=qa_lead_99,
     )
 
     return {

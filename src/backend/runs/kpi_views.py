@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import CvatIdentity, Role
-from accounts.permissions import HasRoleAndDatasetScope
+from accounts.permissions import HasRoleAndDatasetScope, is_annotator_only
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
@@ -634,13 +634,20 @@ class ReportView(_KpiView):
         fmt = request.query_params.get("format", "json")
         if fmt not in ("pdf", "csv", "json"):
             raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "format không hợp lệ.")
+        ev = KpiEvaluation.objects.select_related("run").get(pk=pk)
+        annotator_only = is_annotator_only(cast(User, request.user), dataset_id=ev.run.dataset_id)
+        if annotator_only and fmt != "json":
+            raise ApiError(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "Annotator không có quyền xuất báo cáo ở định dạng này.",
+            )
         if fmt == "pdf":
             raise ApiError(
                 status.HTTP_400_BAD_REQUEST,
                 "VALIDATION_ERROR",
                 "Xuất PDF chưa được hỗ trợ; dùng json hoặc csv.",
             )
-        ev = KpiEvaluation.objects.select_related("run").get(pk=pk)
         origin = origin_of(ev.run)
         source, reason, _attempts, _blockers = evaluate_operational_source(origin)
         report: dict[str, Any] = {
@@ -655,6 +662,10 @@ class ReportView(_KpiView):
             "random_queue": _queue_summary(origin, RunRanking.Source.RANDOM_AUDIT),
             "engine_coverage": ledger_entries(source),
         }
+        if annotator_only:
+            report["risk_queue"] = {}
+            report["random_queue"] = {}
+            report["engine_coverage"] = []
         if fmt == "csv":
             response = HttpResponse(content_type="text/csv")
             writer = csv.writer(response)

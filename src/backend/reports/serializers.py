@@ -6,7 +6,9 @@ from rest_framework import serializers
 
 from calibration.serializers import MetricValueSerializer
 from reports.models import ReportExport
+from runs.kpi_serializers import GateResultSerializer
 from runs.serializers import LedgerEntrySerializer
+from runs.summary_serializers import RunMetricsSerializer
 
 
 class ReportExportCreateSerializer(serializers.Serializer[Any]):
@@ -39,38 +41,6 @@ class ReportExportSerializer(serializers.Serializer[Any]):
         return data
 
 
-class RunReportMetricsSerializer(serializers.Serializer[Any]):
-    run_id = serializers.IntegerField()
-    status = serializers.ChoiceField(
-        choices=["queued", "running", "completed", "partial", "failed", "cancelled"]
-    )
-    frames_total = serializers.IntegerField()
-    frames_reviewed = serializers.IntegerField()
-    issues_total = serializers.IntegerField()
-    issues_by_family = serializers.DictField(child=serializers.IntegerField())
-    issues_by_state = serializers.DictField(child=serializers.IntegerField())
-    reviewed_ratio = serializers.FloatField(allow_null=True, required=False)
-
-
-class RunReportGateConditionSerializer(serializers.Serializer[Any]):
-    name = serializers.CharField(
-        help_text="coverage | open_critical_issues | rework_verified | residual | agreement"
-    )
-    status = serializers.ChoiceField(choices=["passed", "failed", "not_checked", "waived"])
-    observed = serializers.FloatField(allow_null=True)
-    threshold = serializers.FloatField()
-    waiver_id = serializers.IntegerField(allow_null=True, required=False)
-    reason = serializers.CharField(allow_null=True, required=False)
-
-
-class RunReportGateResultSerializer(serializers.Serializer[Any]):
-    run_id = serializers.IntegerField()
-    source_run_id = serializers.IntegerField()
-    source_reason = serializers.CharField()
-    status = serializers.ChoiceField(choices=["passed", "failed", "not_checked"])
-    conditions = RunReportGateConditionSerializer(many=True)
-
-
 class RunReportSerializer(serializers.Serializer[Any]):
     run_id = serializers.IntegerField()
     snapshot_id = serializers.IntegerField()
@@ -78,8 +48,8 @@ class RunReportSerializer(serializers.Serializer[Any]):
     source_reason = serializers.CharField()
     score_version = serializers.CharField(allow_null=True, required=False)
     generated_at = serializers.DateTimeField()
-    metrics = RunReportMetricsSerializer()
-    gate = RunReportGateResultSerializer(allow_null=True, required=False)
+    metrics = RunMetricsSerializer()
+    gate = GateResultSerializer(allow_null=True, required=False)
     engine_coverage = LedgerEntrySerializer(many=True)
     release_id = serializers.IntegerField(allow_null=True, required=False)
     exports = ReportExportSerializer(many=True)

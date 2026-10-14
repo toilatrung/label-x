@@ -88,17 +88,26 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(await side.findByText(/chưa có Quality Control Run nên chưa có mô hình/)).toBeDefined();
   });
 
-  it('shows the whole design with sample data and a blocked write when datasets cannot be loaded', async () => {
+  it('shows the dataset error with a retry instead of sample data, and keeps the real snapshot in use', async () => {
     vi.mocked(api.getDatasets).mockRejectedValue(new Error('down'));
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     wrap(<AnalysisPage />);
-    expect(await screen.findByText('SNP-014')).toBeDefined();
-    expect(screen.getByText('T-119 · Urban night')).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
-    expect(screen.queryByRole('status')).toBeNull();
-    expect(api.postSnapshot).not.toHaveBeenCalled();
-    expect(fetchSpy).not.toHaveBeenCalled();
-    fetchSpy.mockRestore();
+    const main = within(await screen.findByRole('region', { name: 'Tạo snapshot mới' }));
+    expect(await main.findByText(/Không kết nối được máy chủ/)).toBeDefined();
+    fireEvent.click(main.getByRole('button', { name: 'Thử lại' }));
+    await waitFor(() => expect(api.getDatasets).toHaveBeenCalledTimes(2));
+    const side = within(screen.getByRole('region', { name: 'Snapshot đang dùng' }));
+    expect(await side.findByText('abc')).toBeDefined();
+    expect(await side.findByText('detector v4.1')).toBeDefined();
+    for (const fake of ['SNP-014', 'T-119 · Urban night', 'Road Vision Urban · v1.4']) expect(screen.queryByText(fake)).toBeNull();
+  });
+
+  it('shows the snapshot history error instead of a sample snapshot in use', async () => {
+    vi.mocked(api.getSnapshots).mockRejectedValue(new Error('down'));
+    wrap(<AnalysisPage />);
+    const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
+    expect(await side.findByText(/Không kết nối được máy chủ/)).toBeDefined();
+    expect(side.getByRole('button', { name: 'Thử lại' })).toBeDefined();
+    expect(screen.queryByText('SNP-014')).toBeNull();
   });
 });
 
@@ -177,12 +186,22 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
     expect(row.queryByRole('link', { name: /Run #/ })).toBeNull();
   });
 
-  it('keeps the design table as labelled sample data when the history cannot be loaded', async () => {
+  it('shows the history error with a retry instead of sample rows', async () => {
     vi.mocked(api.getSnapshots).mockRejectedValue(new Error('down'));
     wrap(<SnapshotHistoryPage />);
-    expect(await screen.findByText('SNP-014')).toBeDefined();
-    expect(screen.getByText('#QC-091')).toBeDefined();
-    expect(screen.queryByRole('status')).toBeNull();
-    expect(screen.getByText('4 snapshot')).toBeDefined();
+    expect(await screen.findByText(/Không kết nối được máy chủ/)).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+    await waitFor(() => expect(api.getSnapshots).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('SNP-014')).toBeNull();
+    expect(screen.queryByText('#QC-091')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+
+  it('still lists real snapshots when only the dataset list fails', async () => {
+    vi.mocked(api.getDatasets).mockRejectedValue(new Error('down'));
+    wrap(<SnapshotHistoryPage />);
+    expect(await screen.findByText(/Không kết nối được máy chủ/)).toBeDefined();
+    expect(await screen.findByRole('link', { name: 'SNP-007' })).toBeDefined();
+    expect(screen.queryByText('Road Vision Urban · v1.4')).toBeNull();
   });
 });
