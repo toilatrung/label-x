@@ -20,7 +20,7 @@ const credentials = credentialsPath
       't046_unmapped_qa', 't046_self_qa', 't046_outscope_qa', 't046_alias_qa',
     ].map(username => [username, sharedPassword]));
 
-const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../src/frontend/evidence/t046');
+const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../../src/frontend/evidence/t046');
 const executablePath = process.env.LABELX_BROWSER_EXECUTABLE ||
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 

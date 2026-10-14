@@ -3,7 +3,7 @@
 
 Tạo project/task THỬ NGHIỆM riêng (không đụng dữ liệu learner của dataset chính) bằng token
 provisioner (chỉ công cụ dev). Đường sản phẩm (create_snapshot_from_cvat) chỉ dùng token đọc.
-Chạy: CVAT_PROVISIONER_TOKEN=... uv run --project src/backend python scripts/development/m02_drift_probe.py \
+Chạy: CVAT_PROVISIONER_TOKEN=... uv run --project src/backend python scripts/archive/m02/m02_drift_probe.py \
   --images DIR --manifest .cache/cvat/t019-learner-bdd100k.json
 """
 
@@ -16,7 +16,7 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src" / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src" / "backend"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 import django  # noqa: E402

@@ -28,7 +28,7 @@ endif
 .PHONY: db-runtime-role check-audit-grants help setup doctor tools env infra-up infra-down infra-logs infra-reset \
         cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
         backend-install frontend-install migrate superuser \
-        dev-backend dev-worker dev-beat dev-frontend \
+        dev-backend dev-worker dev-beat dev-frontend up down refresh status \
         check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
 
 help: ## Liệt kê lệnh
@@ -153,6 +153,19 @@ dev-beat: ## Chạy Celery beat (chưa có task/lịch polling CVAT)
 
 dev-frontend: ## Chạy Next.js ở :3000
 	cd "$(FRONTEND)" && npm run dev
+
+# Cả stack chạy nền (không CVAT); log/PID ở .cache/dev-stack/. Chi tiết: scripts/dev-stack.sh --help.
+up: ## Bật hạ tầng + migrate + API, worker, beat, Next ở nền (POLL=1: Next webpack + polling)
+	bash "$(ROOT)/scripts/dev-stack.sh" start $(if $(POLL),--poll)
+
+down: ## Dừng API, worker, beat, Next và tắt hạ tầng (giữ dữ liệu)
+	bash "$(ROOT)/scripts/dev-stack.sh" stop
+
+refresh: ## Nạp lại code sửa từ Windows: TARGET=fe (mặc định) | be | all
+	bash "$(ROOT)/scripts/dev-stack.sh" refresh $(or $(TARGET),fe)
+
+status: ## Trạng thái tiến trình dev và container hạ tầng
+	bash "$(ROOT)/scripts/dev-stack.sh" status
 
 # ---------------------------------------------------------------- quality
 

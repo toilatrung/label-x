@@ -69,9 +69,9 @@ jobs:
         run: |
           # HTML là định dạng tài liệu duy nhất (CR-103). Tài liệu tra cứu SRS sinh từ LaTeX;
           # sinh lại và so với bản đã commit.
-          python3 scripts/srs_tex2html.py
+          python3 scripts/srs/srs_tex2html.py
           uv run --no-project --python 3.12 --with markdown --with pymdown-extensions \
-            python scripts/srs_tex2docs.py
+            python scripts/srs/srs_tex2docs.py
           git diff --exit-code -- docs/01-business docs/00-project/glossary.html docs/00-project/stakeholders.html
 
   backend:

@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 EXPECTED_DATABASE = "labelx_t039_browser"
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 BACKEND = ROOT / "src" / "backend"
 sys.path.insert(0, str(BACKEND))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")

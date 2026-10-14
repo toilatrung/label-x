@@ -3,7 +3,7 @@
 
 Chỉ hỗ trợ tập con LaTeX dùng trong docs/label-x_system-requirement-specification.
 Hình TikZ được thay bằng sơ đồ Mermaid/SVG khai báo trong srs_figures.py.
-Chạy: python3 scripts/srs_tex2html.py
+Chạy: python3 scripts/srs/srs_tex2html.py
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "docs" / "label-x_system-requirement-specification"
 OUT = ROOT / "docs" / "01-business" / "labelX.html"
 sys.path.insert(0, str(Path(__file__).resolve().parent))

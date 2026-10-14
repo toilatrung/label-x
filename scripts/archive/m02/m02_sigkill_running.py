@@ -21,7 +21,7 @@ def wait_running_fast(rid: int, timeout: float = 120) -> bool:
 
     import psycopg
 
-    env = Path(__file__).resolve().parents[2] / "src" / "backend" / ".env"
+    env = Path(__file__).resolve().parents[3] / "src" / "backend" / ".env"
     url = next(
         line.split("=", 1)[1].strip()
         for line in env.read_text().splitlines()

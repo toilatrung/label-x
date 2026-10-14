@@ -2,13 +2,14 @@
 """Sinh tài liệu HTML tra cứu từ SRS LaTeX (docs/label-x_system-requirement-specification).
 
 Ghi: docs/01-business/{requirements,use-cases,domain-model}.html, docs/00-project/{glossary,stakeholders}.html.
-Chạy: uv run --no-project --with markdown --with pymdown-extensions python scripts/srs_tex2docs.py
+Chạy: uv run --no-project --with markdown --with pymdown-extensions python scripts/srs/srs_tex2docs.py
 Không sửa tay các file trên; sửa LaTeX rồi chạy lại (CR-103: HTML là định dạng tài liệu duy nhất).
 """
 import re, sys, json, os
 from pathlib import Path
-os.chdir(Path(__file__).resolve().parents[1])
+os.chdir(Path(__file__).resolve().parents[2])
 sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))  # kit_html.py
 from srs_tex2html import Converter, collect_labels, strip_comments, SRC, CHAPTER_FILES, find_group
 import kit_html
 
@@ -100,7 +101,7 @@ def table(head,rows):
         r=(r+['']*len(head))[:len(head)]
         o.append('| '+' | '.join(r)+' |')
     return '\n'.join(o)
-SRC_NOTE="Nguồn chuẩn: [labelX.html](labelX.html) (bản HTML) và `docs/label-x_system-requirement-specification/` (bản LaTeX), SRS M13 v1.2, 08/10/2026. Khi có khác biệt, bản LaTeX là gốc; HTML được sinh lại bằng `python3 scripts/srs_tex2html.py`."
+SRC_NOTE="Nguồn chuẩn: [labelX.html](labelX.html) (bản HTML) và `docs/label-x_system-requirement-specification/` (bản LaTeX), SRS M13 v1.2, 08/10/2026. Khi có khác biệt, bản LaTeX là gốc; HTML được sinh lại bằng `python3 scripts/srs/srs_tex2html.py`."
 FRT={'tab:fr-snp':'SNP — CVAT Adapter và Snapshot','tab:fr-eng':'ENG — Engine phân tích nghi vấn','tab:fr-agg':'AGG — Candidate, Issue và Coverage ledger','tab:fr-rnk':'RNK — Chấm điểm rủi ro và xếp hạng','tab:fr-rev':'REV — Hàng đợi và Review Workspace','tab:fr-esc':'ESC — Chuyển cấp và phân xử','tab:fr-rwk':'RWK — Rework và kiểm lại','tab:fr-gdl':'GDL — Tra cứu guideline','tab:fr-evl':'EVL — Reference, đo lường và effort','tab:fr-rpt':'RPT — Báo cáo hiệu quả','tab:fr-sec':'SEC — Phân quyền và kiểm toán','tab:fr-gte':'GTE — Quality Gate tối thiểu'}
 # requirements
 o=[fm('business-requirements','Yêu cầu nghiệp vụ và hệ thống — SRS M13','business','requirements',['requirements','functional','non-functional','kpi','m13'],1)]

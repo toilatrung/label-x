@@ -15,7 +15,7 @@ const credentials = credentialsPath
       't039_qalead', 't039_superadmin', 't039_reviewer', 't039_annotator',
       't039_unmapped_qa', 't039_self_qa', 't039_outscope_qa', 't039_alias_qa',
     ].map(username => [username, sharedPassword]));
-const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../src/frontend/evidence/t039');
+const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../../src/frontend/evidence/t039');
 const executablePath = process.env.LABELX_BROWSER_EXECUTABLE;
 assert(executablePath, 'LABELX_BROWSER_EXECUTABLE is required');
 fs.mkdirSync(output, { recursive: true });
