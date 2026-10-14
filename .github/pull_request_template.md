@@ -15,7 +15,7 @@
 - [ ] `make check` pass cục bộ (lint, typecheck, test, validate-kit)
 - [ ] Đã thêm/cập nhật test cho hành vi mới (`src/backend/tests/`)
 - [ ] Tài liệu trong `docs/`, `.agent/` viết bằng HTML có `<meta name="labelx:*">` (CR-103); `make validate-kit` pass
-- [ ] Sửa SRS LaTeX thì đã chạy `scripts/srs_tex2html.py` và `scripts/srs_tex2docs.py`
+- [ ] Sửa SRS LaTeX thì đã chạy `scripts/srs/srs_tex2html.py` và `scripts/srs/srs_tex2docs.py`
 - [ ] Không commit secret (`.env`, `.env.local`, token CVAT)
 
 ## Duyệt (CR-102)

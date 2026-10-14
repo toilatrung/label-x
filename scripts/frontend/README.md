@@ -43,7 +43,3 @@ scripts/frontend/screenshot.sh --role admin --start /analysis /reports
 - Playwright `1.56.1` được cài vào `~/.cache/labelx-frontend-scripts` (ngoài repo, không sửa `package.json`).
   Nếu Chromium thiếu `libnspr4`, `libnss3`, `libasound2`, script tự tải `.deb` bằng `apt-get download`, giải nén vào cache và dùng `LD_LIBRARY_PATH`; không cần root.
 - `src/frontend/evidence/shots/` đã được gitignore.
-
-## Tương thích
-
-`scripts/dev-fe.sh` (nếu có trên máy bạn) vẫn chạy như cũ; `scripts/frontend/dev.sh` là bản thay thế đầy đủ hơn.

@@ -92,6 +92,8 @@ ul.dir{columns:2;font-size:14px}
 make dev-backend    # http://localhost:8000/api/docs/
 make dev-worker     # Celery worker
 make dev-frontend   # http://localhost:3000
+make up             # cả stack chạy nền, không CVAT: http://127.0.0.1:3000 (make down để dừng)
+make refresh        # nạp lại FE sau khi sửa code từ Windows; TARGET=be|all cho backend/worker
 make superuser      # tạo tài khoản Django admin
 make check          # lint + typecheck + test + validate-kit (cần infra-up)</code></pre>
 <p><code>make setup</code> chạy lại an toàn: <code>make env</code> không ghi đè <code>src/backend/.env</code> và <code>src/frontend/.env.local</code> nếu đã có.</p>
@@ -211,6 +213,26 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 <td></td>
 <td><code>dev-frontend</code></td>
 <td><code>npm run dev</code> (Next.js :3000)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>up</code></td>
+<td><code>scripts/dev-stack.sh start</code> — bật hạ tầng, <code>uv sync</code>/<code>npm ci</code> khi lock đổi, migrate khi thiếu, rồi chạy API (127.0.0.1:8000), worker, beat, Next (127.0.0.1:3000) ở nền; log ở <code>.cache/dev-stack/</code>. <code>POLL=1</code>: Next chạy webpack + polling để tự reload khi sửa code trên <code>/mnt</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>down</code></td>
+<td><code>scripts/dev-stack.sh stop</code> — dừng các tiến trình trên và <code>docker compose down</code> (giữ volume)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>refresh</code></td>
+<td><code>scripts/dev-stack.sh refresh</code> — WSL không nhận sự kiện file từ Windows trên <code>/mnt</code>: <code>TARGET=fe</code> (mặc định) xoá cache <code>.next</code> và chạy lại Next; <code>be</code> chạy lại API, worker, beat; <code>all</code> cả hai</td>
+</tr>
+<tr>
+<td></td>
+<td><code>status</code></td>
+<td><code>scripts/dev-stack.sh status</code></td>
 </tr>
 <tr>
 <td>Chất lượng</td>

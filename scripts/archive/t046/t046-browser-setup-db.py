@@ -13,7 +13,7 @@ EXPECTED_DB = "labelx_t046_browser"
 
 print(f"=== TARGET TEST DATABASE: {EXPECTED_DB} ===")
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 BACKEND = ROOT / "src" / "backend"
 
 admin_conn = psycopg.connect("postgres://labelx:labelx@localhost:5432/postgres", autocommit=True)
