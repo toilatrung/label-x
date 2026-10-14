@@ -9,7 +9,7 @@ Theo CR-101 và OpenAPI contract (docs/04-api/openapi.yaml):
 
 from __future__ import annotations
 
-from django.db.models import Q
+from django.db.models import Count, Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.pagination import CursorPagination
@@ -17,6 +17,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.models import Role
+from accounts.permissions import HasRoleAndDatasetScope
 from guideline.models import (
     GuidelineRule,
     GuidelineVersion,
@@ -28,6 +30,7 @@ from guideline.serializers import (
     ErrorResponseSerializer,
     GuidelineRuleSerializer,
     PaginatedGuidelineRuleListSerializer,
+    PaginatedGuidelineVersionEntryListSerializer,
     PaginatedRuleMappingListSerializer,
     RuleMappingSerializer,
 )
@@ -228,3 +231,62 @@ class GuidelineMappingListView(GuidelineAPIView):
         paginator = GuidelineCursorPagination()
         page = paginator.paginate_queryset(mappings, request, view=self)
         return paginator.get_paginated_response(RuleMappingSerializer(page, many=True).data)
+
+
+class GuidelineVersionCursorPagination(CursorPagination):
+    page_size = 50
+    ordering = "-id"
+
+
+class GuidelineVersionsListView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (
+        Role.ANNOTATOR,
+        Role.REVIEWER,
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.PRODUCT_OWNER,
+        Role.DATA_MODEL_OWNER,
+    )
+    action_name = "guidelines.versions_list"
+    object_type = "guideline"
+    requires_dataset = False
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="guidelines_versions_list",
+        parameters=[
+            OpenApiParameter("cursor", str, required=False),
+        ],
+        responses={
+            200: PaginatedGuidelineVersionEntryListSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+        },
+        tags=["guidelines"],
+        summary="Danh sách guideline version và hiệu lực",
+    )
+    def get(self, request: Request) -> Response:
+        queryset = GuidelineVersion.objects.annotate(rule_count=Count("rules")).order_by(
+            "-loaded_at", "-id"
+        )
+        latest = get_latest_guideline_version()
+
+        paginator = GuidelineVersionCursorPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        items = page if page is not None else []
+
+        results = []
+        for gv in items:
+            is_current = latest is not None and gv.pk == latest.pk
+            results.append(
+                {
+                    "version": gv.version_tag,
+                    "is_current": is_current,
+                    "rule_count": gv.rule_count,
+                    "effective_from": gv.loaded_at,
+                    "effective_to": None,
+                }
+            )
+        return paginator.get_paginated_response(results)

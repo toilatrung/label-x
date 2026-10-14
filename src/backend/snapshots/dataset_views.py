@@ -51,6 +51,9 @@ class CvatJobSerializer(serializers.Serializer[dict[str, Any]]):
     assignee_cvat_user_id = serializers.IntegerField(allow_null=True)
     frame_count = serializers.IntegerField(required=False)
     updated_date = serializers.DateTimeField()
+    stage = serializers.ChoiceField(
+        choices=["annotation", "validation", "acceptance"], allow_null=True, required=False
+    )
 
 
 class CvatTaskSerializer(serializers.Serializer[dict[str, Any]]):
@@ -246,6 +249,16 @@ class DatasetTasksView(APIView):
                         }
                         if isinstance(frame_count, int) and frame_count >= 0:
                             row["frame_count"] = frame_count
+                        if "stage" in job:
+                            stage = job["stage"]
+                            if stage is not None and (
+                                not isinstance(stage, str)
+                                or stage not in ("annotation", "validation", "acceptance")
+                            ):
+                                raise ApiError(
+                                    502, "BUSINESS_RULE_UNMET", "CVAT trả stage Job không hợp lệ."
+                                )
+                            row["stage"] = stage
                         jobs.append(row)
                     output.append(
                         {
