@@ -3543,6 +3543,17 @@ export interface components {
             issues: number;
             issue_rate?: number | null;
             reviewed_ratio?: number | null;
+            /** @description Unit completed / eligible của các engine bắt buộc trong Task (không tính VLM); null khi Task chưa có unit eligible (BLOCKER-034 B-3). */
+            coverage?: number | null;
+            /** @description Số candidate của run trong Task */
+            candidates?: number;
+            /** @description Issue ở trạng thái confirmed, fix_pending, recheck_pending, resolved hoặc reopened */
+            confirmed_issues?: number;
+            /**
+             * @description Chỉ để hiển thị, không thay Quality Gate của run. blocked khi còn Issue critical chưa đóng; partial khi coverage < 100%; null khi coverage null (DEC-023).
+             * @enum {string|null}
+             */
+            gate_status?: "passed" | "partial" | "blocked" | null;
         };
         PaginatedTaskQualityList: {
             next?: string | null;

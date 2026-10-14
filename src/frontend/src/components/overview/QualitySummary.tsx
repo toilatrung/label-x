@@ -7,7 +7,6 @@ import type { Run } from '@/lib/execution/api';
 import { engineStatusLabel } from '@/lib/execution/api';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 import { formatCount, snapshotCode } from '@/lib/format';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ReviewVolumeChart } from './ReviewVolumeChart';
 import {
   FAMILY_LABELS,
@@ -30,9 +29,16 @@ import {
   useRunMetrics,
   useTasksQuality,
   type LedgerEntry,
+  type TaskQuality,
   type RunEngineStat,
   type Tone,
 } from '@/lib/overview/api';
+
+const TASK_GATE: Record<NonNullable<TaskQuality['gate_status']>, { tone: string; label: string }> = {
+  passed: { tone: 'lx-badge--success', label: 'Đạt' },
+  partial: { tone: 'lx-badge--warning', label: 'Partial' },
+  blocked: { tone: 'lx-badge--danger', label: 'Blocked' },
+};
 
 interface QualitySummaryProps {
   currentDataset?: Dataset | null;
@@ -179,14 +185,17 @@ export function QualitySummary({ currentDataset, selectedRun, selectedTaskScope,
 
   const jobRangeOf = (jobIds: number[]) => jobIds.length === 0 ? 'Chưa có Job'
     : jobIds.length === 1 ? `Job ${jobIds[0]}` : `Job ${Math.min(...jobIds)} – ${Math.max(...jobIds)}`;
-  const taskRow = (key: number, scope: string, sub: string, jobs: string, frames: number) => {
+  // B-3: gate theo Task chỉ để hiển thị, không thay Quality Gate của run (DEC-023).
+  const taskRow = (key: number, scope: string, sub: string, jobs: string, frames: number, quality?: TaskQuality) => {
     const selected = selectedTaskScope === scope;
     return <tr key={key} tabIndex={0} aria-selected={selected} className={`lx-tr--clickable${selected ? ' is-selected' : ''}`} onClick={() => onTaskScopeChange?.(scope)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onTaskScopeChange?.(scope); } }}>
       <td><div className="lx-cell__main">{scope}</div><div className="lx-cell__sub">{sub}</div></td>
       <td className="r">{jobs}</td>
       <td className="r">{formatCount(frames)}</td>
-      <td className="r lx-subtle">—</td><td className="r lx-subtle">—</td><td className="r lx-subtle">—</td>
-      <td><span className="lx-subtle">—</span></td>
+      <td className={`r${quality?.coverage === null || quality?.coverage === undefined ? ' lx-subtle' : ''}`}>{quality ? percentText(quality.coverage) : '—'}</td>
+      <td className={`r${quality ? '' : ' lx-subtle'}`}>{quality?.candidates !== undefined ? formatCount(quality.candidates) : '—'}</td>
+      <td className={`r${quality ? '' : ' lx-subtle'}`}>{quality?.confirmed_issues !== undefined ? formatCount(quality.confirmed_issues) : '—'}</td>
+      <td>{quality?.gate_status ? <span className={`lx-badge ${TASK_GATE[quality.gate_status].tone}`}>{TASK_GATE[quality.gate_status].label}</span> : <span className="lx-subtle">—</span>}</td>
     </tr>;
   };
   const taskHead = <thead><tr><th>Task</th><th className="r">Job</th><th className="r">Frame</th><th className="r">Coverage</th><th className="r">Candidate</th><th className="r">Đã xác nhận</th><th>Gate</th></tr></thead>;
@@ -196,8 +205,6 @@ export function QualitySummary({ currentDataset, selectedRun, selectedTaskScope,
   const taskSection = (
     <section className="lx-card lx-main">
       <div className="lx-card__head"><h2 className="lx-h2">Theo Task</h2><span className="lx-hint">Chọn một dòng để đặt Phạm vi cho toàn module</span></div>
-      {/* TODO(backend): coverage, candidate, lỗi đã xác nhận và gate theo Task — TaskQuality (MBE-06) chưa có các trường này. */}
-      {run && <div className="lx-card__body"><NotConnectedNotice detail="Coverage, Candidate, Đã xác nhận và Gate theo Task chưa có trong API tasks-quality" /></div>}
       {run ? (
         tasksQuality.isPending ? <div className="lx-state--card-muted">Đang tải chất lượng theo Task…</div>
           : tasksQuality.isError ? <QueryError query={tasksQuality} label="Không tải được chất lượng theo Task" />
@@ -206,7 +213,7 @@ export function QualitySummary({ currentDataset, selectedRun, selectedTaskScope,
                 {tasksQuality.data.map(task => {
                   const jobs = jobsByTask.get(task.cvat_task_id);
                   const sub = [jobs ? jobRangeOf(jobs.map(job => job.cvat_job_id)) : null, `${formatCount(task.issues)} issue`, `đã review ${percentText(task.reviewed_ratio)}`].filter(Boolean).join(' · ');
-                  return taskRow(task.cvat_task_id, `T-${task.cvat_task_id} · ${task.name}`, sub, jobs ? String(jobs.length) : '—', task.frames);
+                  return taskRow(task.cvat_task_id, `T-${task.cvat_task_id} · ${task.name}`, sub, jobs ? String(jobs.length) : '—', task.frames, task);
                 })}
               </tbody></table></div>
       ) : tasks.isPending ? <div className="lx-state--card-muted">Đang tải danh sách Task từ CVAT…</div>

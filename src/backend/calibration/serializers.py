@@ -111,6 +111,10 @@ class MetricValueSerializer(serializers.Serializer[object]):
     confidence_interval = serializers.ListField(
         child=serializers.FloatField(), required=False, allow_null=True, min_length=2, max_length=2
     )
+    details = serializers.DictField(
+        required=False,
+        help_text="Chi tiết theo metric, ví dụ by_engine của P-1, benchmark_id của C-1",
+    )
 
 
 class PerformanceEntrySerializer(serializers.Serializer[object]):

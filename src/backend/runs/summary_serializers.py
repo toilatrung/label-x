@@ -73,6 +73,10 @@ class TaskQualitySerializer(serializers.Serializer[Any]):
     issues = serializers.IntegerField()
     issue_rate = serializers.FloatField(allow_null=True)
     reviewed_ratio = serializers.FloatField(allow_null=True)
+    coverage = serializers.FloatField(allow_null=True)
+    candidates = serializers.IntegerField()
+    confirmed_issues = serializers.IntegerField()
+    gate_status = serializers.ChoiceField(choices=["passed", "partial", "blocked"], allow_null=True)
 
 
 class PaginatedTaskQualityListSerializer(serializers.Serializer[Any]):

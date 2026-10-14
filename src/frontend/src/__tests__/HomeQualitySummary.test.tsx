@@ -59,7 +59,8 @@ const engines107 = { run_id: 107, engines: [
   { engine: 'duplicate', status: 'checked', units_total: 588, units_failed: 0, candidates: 163, duration_ms: 75 },
   { engine: 'schema', status: 'not_checked', units_total: 0, units_failed: 0, candidates: 0, duration_ms: null },
 ] };
-const tasksQuality107 = { next: null, previous: null, results: [{ cvat_task_id: 4, name: 'cavat_test', frames: 588, issues: 12, issue_rate: 0.02, reviewed_ratio: 0.012 }] };
+const tasksQuality107 = { next: null, previous: null, results: [{ cvat_task_id: 4, name: 'cavat_test', frames: 588, issues: 12, issue_rate: 0.02, reviewed_ratio: 0.012,
+  coverage: 0.662, candidates: 161, confirmed_issues: 5, gate_status: 'partial' }] };
 const categories107 = { run_id: 107, total: 163, categories: [{ family: 'E3', count: 150, share: 0.92 }, { family: 'E2', count: 13, share: 0.08 }] };
 
 const gateFailed = {
@@ -355,6 +356,8 @@ describe('Overview: Quality Control Home và Quality Summary dùng dữ liệu t
       expect(cells[1].textContent).toBe('2');
       expect(cells[2].textContent).toBe('588');
       await waitFor(() => expect(within(taskRow).getByText('Job 4 – 9 · 12 issue · đã review 1.2%')).toBeDefined());
+      // B-3: coverage, candidate, lỗi đã xác nhận và gate theo Task từ tasks-quality.
+      expect([...cells].slice(3).map((cell) => cell.textContent)).toEqual(['66.2%', '161', '5', 'Partial']);
 
       // Candidate theo loại lỗi từ candidate-categories.
       const categoryCard = screen.getByText('Candidate theo loại lỗi').closest('section')!;
@@ -362,8 +365,8 @@ describe('Overview: Quality Control Home và Quality Summary dùng dữ liệu t
       expect(within(categoryCard).getByText('150')).toBeDefined();
       expect(within(categoryCard).getByText('Sai nhãn')).toBeDefined();
 
-      // Chỉ còn một vùng chưa có API (cột theo Task), cảnh báo đúng nguyên văn.
-      expect(screen.getAllByText(/Chức năng vẫn chưa được kết nối với server/)).toHaveLength(1);
+      // Mọi vùng của Quality Summary đã có API: không còn cảnh báo chưa kết nối.
+      expect(screen.queryByText(/Chức năng vẫn chưa được kết nối với server/)).toBeNull();
       expect(document.body.textContent).not.toMatch(FORBIDDEN_SAMPLE_TEXT);
       expect(screen.queryByText('124')).toBeNull();
       expect(screen.queryByText('Dữ liệu minh họa')).toBeNull();
