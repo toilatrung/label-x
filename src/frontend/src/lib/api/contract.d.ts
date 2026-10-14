@@ -2046,6 +2046,8 @@ export interface components {
             locked_at?: string | null;
         };
         SnapshotFrame: {
+            /** @description ID SnapshotFrame dùng khi chọn frame tạo Benchmark; khác frame_index của CVAT. */
+            id?: number;
             frame_index: number;
             file_name: string;
             width: number;
