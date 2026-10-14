@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import ReviewPage from '@/app/review/page';
@@ -325,6 +325,33 @@ describe('ReviewQueues Frontend (T-034)', () => {
       // Click previous to return
       fireEvent.click(prevBtn);
       expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
+    });
+
+    it('keeps page two when the initial search debounce window expires', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      try {
+        const { calls } = await renderReviewPage('reviewer');
+        const advance = async (milliseconds: number) => {
+          for (let elapsed = 0; elapsed < milliseconds; elapsed += 10) {
+            await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+          }
+        };
+        await advance(100);
+        expect(screen.getByText('Task #10 • Frame #100')).toBeDefined();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Trang tiếp' }));
+        await advance(100);
+        expect(screen.getByText('Task #20 • Frame #100')).toBeDefined();
+
+        await advance(400);
+        expect(screen.getByText('Task #20 • Frame #100')).toBeDefined();
+        expect(screen.queryByText('Task #10 • Frame #100')).toBeNull();
+        const rankingCalls = calls.filter((req) => req.url.includes('/ranking/'));
+        expect(rankingCalls.map((req) => new URL(req.url).searchParams.get('cursor')))
+          .toEqual([null, 'cur_p2']);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('resets cursor when changing filters', async () => {

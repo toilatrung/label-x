@@ -283,6 +283,8 @@ class GuidelineVersionsListView(APIView):
             results.append(
                 {
                     "version": gv.version_tag,
+                    "taxonomy_version": gv.taxonomy.get("version"),
+                    "taxonomy_ready": bool(gv.taxonomy),
                     "is_current": is_current,
                     "rule_count": gv.rule_count,
                     "effective_from": gv.loaded_at,

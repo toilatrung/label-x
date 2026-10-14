@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -14,7 +14,7 @@ from django.db import IntegrityError, transaction
 from accounts.models import CvatIdentity
 from cvat_adapter.client import CvatReadClient
 from cvat_adapter.hashing import canonicalize_job_annotations
-from guideline.models import get_latest_guideline_version
+from guideline.taxonomy import GuidelineBindingError, bind_taxonomy
 from snapshots.models import Snapshot
 from snapshots.normalization import (
     SCHEMA_VERSION,
@@ -211,9 +211,17 @@ def _taxonomy_version(client: CvatReadClient, dataset_id: int) -> str:
     return f"cvat-labels:{sha256_json(labels)}"
 
 
-def _guideline_version() -> str:
-    version = get_latest_guideline_version()
-    return version.version_tag if version is not None else "unversioned"
+def _guideline_context(
+    client: CvatReadClient, dataset_id: int, guideline_version: str | None = None
+) -> dict[str, Any]:
+    try:
+        return bind_taxonomy(
+            dataset_id,
+            client.list_labels(project_id=dataset_id),
+            guideline_version=guideline_version,
+        )
+    except GuidelineBindingError as exc:
+        raise SnapshotSourceError(str(exc)) from exc
 
 
 def _failed_drift_snapshot(
@@ -303,7 +311,12 @@ class _HashOnlyStorage:
 
 
 def compute_job_revision(
-    *, dataset_id: int, cvat_job_id: int, client: CvatReadClient | None = None
+    *,
+    dataset_id: int,
+    cvat_job_id: int,
+    client: CvatReadClient | None = None,
+    guideline_version: str | None = None,
+    legacy_reference: bool = False,
 ) -> str:
     """Revision a one-job re-check snapshot would get now; reads CVAT only, writes nothing.
 
@@ -318,8 +331,15 @@ def compute_job_revision(
         selected = _selected_jobs(
             cvat, dataset_id=dataset_id, scope=SnapshotScope(cvat_job_ids=(cvat_job_id,))
         )
-        taxonomy_version = _taxonomy_version(cvat, dataset_id)
-        guideline_version = _guideline_version()
+        if legacy_reference:
+            if not guideline_version:
+                raise SnapshotSourceError("Legacy rework requires its original Guideline version.")
+            context = None
+            taxonomy_version = _taxonomy_version(cvat, dataset_id)
+        else:
+            context = _guideline_context(cvat, dataset_id, guideline_version)
+            taxonomy_version = context["taxonomy"]["version"]
+            guideline_version = context["guideline_version"]
         export, _ = _read_job_export(
             cvat,
             _HashOnlyStorage(),
@@ -347,6 +367,9 @@ def create_snapshot_from_cvat(
     idempotency_key: str,
     client: CvatReadClient | None = None,
     storage: SnapshotStorage | None = None,
+    guideline_version: str | None = None,
+    expected_guideline_version: str | None = None,
+    legacy_reference: bool = False,
 ) -> Snapshot:
     """Export one deterministic snapshot and lock it only after a second source read."""
 
@@ -355,6 +378,12 @@ def create_snapshot_from_cvat(
         "scope": scope.payload(),
         "note": note,
     }
+    if legacy_reference:
+        request_payload["legacy_reference"] = True
+    if guideline_version is not None:
+        request_payload["guideline_version"] = guideline_version
+    if expected_guideline_version is not None:
+        request_payload["expected_guideline_version"] = expected_guideline_version
     request_sha256 = sha256_json(request_payload)
     existing = Snapshot.objects.filter(idempotency_key=idempotency_key).first()
     if existing is not None:
@@ -367,8 +396,22 @@ def create_snapshot_from_cvat(
     media_storage = storage or ObjectStorage.from_django_settings("snapshots")
     try:
         selected = _selected_jobs(cvat, dataset_id=dataset_id, scope=scope)
-        taxonomy_version = _taxonomy_version(cvat, dataset_id)
-        guideline_version = _guideline_version()
+        if legacy_reference:
+            if not guideline_version:
+                raise SnapshotSourceError("Legacy rework requires its original Guideline version.")
+            context = None
+            taxonomy_version = _taxonomy_version(cvat, dataset_id)
+        else:
+            context = _guideline_context(cvat, dataset_id, guideline_version)
+            taxonomy_version = context["taxonomy"]["version"]
+            guideline_version = context["guideline_version"]
+        if (
+            expected_guideline_version is not None
+            and guideline_version != expected_guideline_version
+        ):
+            raise SnapshotSourceError(
+                "Guideline của Dataset đã thay đổi. Tải lại trước khi tạo Snapshot."
+            )
         exports: list[JobExport] = []
         initial_revisions: dict[int, SourceRevision] = {}
         for selected_job in selected:
@@ -389,6 +432,15 @@ def create_snapshot_from_cvat(
             "scope": scope.payload(),
             "note": note,
         }
+        if context is not None:
+            provenance["guideline_context"] = context
+        changed = (
+            _taxonomy_version(cvat, dataset_id) != taxonomy_version
+            if legacy_reference
+            else _guideline_context(cvat, dataset_id, guideline_version) != context
+        )
+        if changed:
+            raise SnapshotSourceError("Taxonomy CVAT đã thay đổi trong lúc tạo Snapshot. Thử lại.")
         if drift_jobs:
             return _failed_drift_snapshot(
                 dataset_id=dataset_id,

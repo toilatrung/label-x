@@ -119,9 +119,13 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const [cursor, setCursor] = useState<string | null>(null);
   // Ô tìm kiếm: giữ giá trị gõ, chỉ gửi q lên server sau SEARCH_DEBOUNCE_MS
   const [searchInput, setSearchInput] = useState('');
+  const appliedSearchRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     const value = searchInput.trim() || undefined;
+    // Initial mount must not reset a cursor selected before the debounce expires.
+    if (value === appliedSearchRef.current) return;
     const timer = setTimeout(() => {
+      appliedSearchRef.current = value;
       setFilters((prev) => (prev.q === value ? prev : { ...prev, q: value }));
       setCursor((prev) => (prev === null ? prev : null));
     }, SEARCH_DEBOUNCE_MS);
@@ -243,6 +247,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   };
 
   const handleResetFilters = () => {
+    appliedSearchRef.current = undefined;
     setFilters({});
     setSearchInput('');
     setCursor(null);

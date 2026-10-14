@@ -137,6 +137,9 @@ def _taxonomy_for_run(run: QCRun) -> tuple[TaxonomyLabel, ...] | None:
     engines = cfg.engines or (cfg.payload or {}).get("engines", {})
     schema = engines.get("schema") if isinstance(engines, dict) else None
     params = schema.get("params") if isinstance(schema, dict) else None
+    context = run.snapshot.provenance.get("guideline_context")
+    if isinstance(context, dict):
+        params = {"taxonomy": context.get("taxonomy")}
     if not isinstance(params, dict):
         return None
     try:
