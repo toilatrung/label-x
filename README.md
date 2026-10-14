@@ -36,7 +36,7 @@ make help           # mọi lệnh
 | `src/backend/` | Django 5.2 + DRF (modular monolith), Celery, Python 3.12 / uv |
 | `src/frontend/` | Next.js 16 + React 19 + TypeScript, Design System LabelX |
 | `infrastructure/` | Docker Compose dev: PostgreSQL 17, Redis 7, SeaweedFS (S3) |
-| `scripts/` | `init-develop-environment.ps1`/`.sh` bootstrap, `.mk` target Make, `validate-framework.py` của kit |
+| `scripts/` | Bootstrap và target Make, CI, script dev/CVAT, sinh SRS, `validate-framework.py` của kit — xem `scripts/README.md` |
 | `docs/` | Tài liệu theo agentic-sdlc-kit; SRS LaTeX ở `docs/label-x_system-requirement-specification/` |
 | `.agent/` | Planning, execution, governance, reports theo [agentic-sdlc-kit](https://github.com/toilatrung/agentic-sdlc-kit) — xem `AGENT.html` |
 | `docs/design/` | Design System và 25 màn hình (nguồn chuẩn H) |

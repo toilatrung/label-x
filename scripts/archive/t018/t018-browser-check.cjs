@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require(process.env.LABELX_PLAYWRIGHT_MODULE || 'playwright');
 const credentials = JSON.parse(fs.readFileSync(process.env.LABELX_BROWSER_CREDENTIALS, 'utf8'));
-const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../docs/design/evidence/T-018');
+const output = process.env.LABELX_EVIDENCE_DIR || path.resolve(__dirname, '../../../docs/design/evidence/T-018');
 fs.mkdirSync(output, { recursive: true });
 if (process.env.LABELX_BROWSER_LIBS) process.env.LD_LIBRARY_PATH = process.env.LABELX_BROWSER_LIBS;
 (async () => {

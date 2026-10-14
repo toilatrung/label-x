@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from m02_e2e import Api, collect  # noqa: E402
 
-BACKEND = Path(__file__).resolve().parents[2] / "src" / "backend"
+BACKEND = Path(__file__).resolve().parents[3] / "src" / "backend"
 
 
 def manage(*args: str) -> str:
