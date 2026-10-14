@@ -54,6 +54,125 @@ tags:
     description: Hiệu chỉnh reviewer và model (MBE-04)
 
 paths:
+  /api/datasets/{id}/guideline/:
+    get:
+      operationId: datasets_guideline_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    put:
+      operationId: datasets_guideline_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - datasets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DatasetGuidelineUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGuideline'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/guidelines/import/:
+    post:
+      operationId: guidelines_import
+      tags:
+      - guidelines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuidelineImport'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineImportResult'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
   # ------------------------------------------------------------------ auth
   /api/auth/csrf/:
     get:
@@ -2161,6 +2280,81 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
 
   schemas:
+    SnapshotScope:
+      type: object
+      properties:
+        cvat_task_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        cvat_job_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+    DatasetGuidelineUpdate:
+      type: object
+      properties:
+        guideline_version:
+          type: string
+          maxLength: 32
+        expected_revision:
+          type: integer
+          minimum: 0
+      required:
+      - expected_revision
+      - guideline_version
+    DatasetGuideline:
+      type: object
+      properties:
+        dataset_id:
+          type: integer
+        guideline_version:
+          type: string
+          nullable: true
+        guideline_checksum:
+          type: string
+          nullable: true
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        revision:
+          type: integer
+      required:
+      - dataset_id
+      - guideline_checksum
+      - guideline_version
+      - revision
+      - taxonomy_ready
+      - taxonomy_version
+    GuidelineImportResult:
+      type: object
+      properties:
+        version:
+          type: string
+        checksum:
+          type: string
+        taxonomy:
+          type: object
+          additionalProperties: {}
+        skipped:
+          type: boolean
+      required:
+      - checksum
+      - skipped
+      - taxonomy
+      - version
+    GuidelineImport:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000000
+      required:
+      - content
     # ------------------------------------------------------------ lỗi chung
     ErrorCode:
       type: string
@@ -2327,20 +2521,22 @@ components:
       enum: [pending, exporting, locked, failed]
     SnapshotCreate:
       type: object
-      required: [dataset_id, scope]
       properties:
-        dataset_id: { type: integer }
+        dataset_id:
+          type: integer
+          minimum: 1
         scope:
-          type: object
-          description: Rỗng cả hai danh sách nghĩa là toàn dataset
-          properties:
-            cvat_task_ids:
-              type: array
-              items: { type: integer }
-            cvat_job_ids:
-              type: array
-              items: { type: integer }
-        note: { type: string }
+          $ref: '#/components/schemas/SnapshotScope'
+        expected_guideline_version:
+          type: string
+          maxLength: 32
+        note:
+          type: string
+          default: ''
+          maxLength: 1000
+      required:
+      - dataset_id
+      - scope
     SnapshotAccepted:
       type: object
       required: [id, status]
@@ -4030,13 +4226,32 @@ components:
         version: { type: string }
     GuidelineVersionEntry:
       type: object
-      required: [version, is_current, rule_count]
       properties:
-        version: { type: string }
-        is_current: { type: boolean }
-        rule_count: { type: integer }
-        effective_from: { type: string, format: date-time, nullable: true }
-        effective_to: { type: string, format: date-time, nullable: true }
+        version:
+          type: string
+        is_current:
+          type: boolean
+        taxonomy_version:
+          type: string
+          nullable: true
+        taxonomy_ready:
+          type: boolean
+        rule_count:
+          type: integer
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - is_current
+      - rule_count
+      - taxonomy_ready
+      - taxonomy_version
+      - version
     PaginatedGuidelineVersionEntryList:
       type: object
       required: [results]

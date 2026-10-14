@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/datasets/{id}/guideline/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["datasets_guideline_retrieve"];
+        put: operations["datasets_guideline_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guidelines/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["guidelines_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf/": {
         parameters: {
             query?: never;
@@ -1627,6 +1659,33 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SnapshotScope: {
+            cvat_task_ids?: number[];
+            cvat_job_ids?: number[];
+        };
+        DatasetGuidelineUpdate: {
+            guideline_version: string;
+            expected_revision: number;
+        };
+        DatasetGuideline: {
+            dataset_id: number;
+            guideline_version: string | null;
+            guideline_checksum: string | null;
+            taxonomy_version: string | null;
+            taxonomy_ready: boolean;
+            revision: number;
+        };
+        GuidelineImportResult: {
+            version: string;
+            checksum: string;
+            taxonomy: {
+                [key: string]: unknown;
+            };
+            skipped: boolean;
+        };
+        GuidelineImport: {
+            content: string;
+        };
         /** @enum {string} */
         ErrorCode: "VALIDATION_ERROR" | "INVALID_CREDENTIALS" | "NOT_AUTHENTICATED" | "FORBIDDEN" | "OUT_OF_SCOPE" | "SELF_REVIEW_FORBIDDEN" | "SAME_REQUESTER_APPROVER" | "IDENTITY_MAPPING_MISSING" | "NOT_FOUND" | "LEASE_CONFLICT" | "INVALID_TRANSITION" | "REVISION_UNCHANGED" | "IDEMPOTENCY_KEY_REUSED" | "SCOPE_BUSY" | "ISSUE_EXISTS" | "BUSINESS_RULE_UNMET" | "INSUFFICIENT_SAMPLE" | "POLICY_NOT_CONFIGURED" | "POLICY_VERSION_MISMATCH";
         /**
@@ -1737,11 +1796,9 @@ export interface components {
         SnapshotStatus: "pending" | "exporting" | "locked" | "failed";
         SnapshotCreate: {
             dataset_id: number;
-            /** @description Rỗng cả hai danh sách nghĩa là toàn dataset */
-            scope: {
-                cvat_task_ids?: number[];
-                cvat_job_ids?: number[];
-            };
+            scope: components["schemas"]["SnapshotScope"];
+            expected_guideline_version?: string;
+            /** @default  */
             note?: string;
         };
         SnapshotAccepted: {
@@ -3060,6 +3117,8 @@ export interface components {
         GuidelineVersionEntry: {
             version: string;
             is_current: boolean;
+            taxonomy_version: string | null;
+            taxonomy_ready: boolean;
             rule_count: number;
             /** Format: date-time */
             effective_from?: string | null;
@@ -3452,6 +3511,135 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    datasets_guideline_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetGuideline"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    datasets_guideline_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetGuidelineUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["DatasetGuidelineUpdate"];
+                "multipart/form-data": components["schemas"]["DatasetGuidelineUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetGuideline"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    guidelines_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidelineImport"];
+                "application/x-www-form-urlencoded": components["schemas"]["GuidelineImport"];
+                "multipart/form-data": components["schemas"]["GuidelineImport"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuidelineImportResult"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     auth_csrf: {
         parameters: {
             query?: never;

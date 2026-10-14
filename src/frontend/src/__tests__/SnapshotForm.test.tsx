@@ -6,6 +6,8 @@ import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import type { CvatTask } from '@/lib/snapshots/api';
 
 const { post, push } = vi.hoisted(() => ({ post: vi.fn(), push: vi.fn() }));
+vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ session: { user: { id: 1 } } }) }));
+vi.mock('@/lib/guidelines/config-api', () => ({ getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 vi.mock('@/lib/snapshots/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/snapshots/api')>()), postSnapshot: post,
@@ -36,9 +38,10 @@ describe('Snapshot create form', () => {
     screen.getAllByRole('button', { name: /\d+ Job/ }).forEach(button => fireEvent.click(button));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 22' }));
     fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: '  QA pass  ' } });
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
-    expect(post.mock.calls[0][0]).toEqual({ dataset_id: 42,
+    expect(post.mock.calls[0][0]).toEqual({ dataset_id: 42, expected_guideline_version: 'v1',
       scope: { cvat_task_ids: [9], cvat_job_ids: [22] }, note: 'QA pass' });
     expect(typeof post.mock.calls[0][1]).toBe('string');
     await waitFor(() => expect(push).toHaveBeenCalledWith('/analysis?snapshotId=101'));
@@ -55,6 +58,7 @@ describe('Snapshot create form', () => {
     show();
     fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     expect(await screen.findByRole('button', { name: 'Gửi lại cùng yêu cầu' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Gửi lại cùng yêu cầu' }));

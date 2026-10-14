@@ -8,6 +8,7 @@ import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import * as api from '@/lib/snapshots/api';
 import * as exec from '@/lib/execution/api';
 
+vi.mock('@/lib/guidelines/config-api', () => ({ getDatasetGuideline: vi.fn().mockResolvedValue({ guideline_version: 'v1', taxonomy_version: 'v1', taxonomy_ready: true }) }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
@@ -152,9 +153,10 @@ describe('Snapshot create form scope', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('button', { name: 'Huỷ' }));
     expect((screen.getByRole('checkbox', { name: 'Chọn tất cả' }) as HTMLInputElement).checked).toBe(true);
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
     await waitFor(() => expect(api.postSnapshot).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(api.postSnapshot).mock.calls[0][0]).toEqual({ dataset_id: 42, scope: { cvat_task_ids: [], cvat_job_ids: [] } });
+    expect(vi.mocked(api.postSnapshot).mock.calls[0][0]).toEqual({ dataset_id: 42, expected_guideline_version: 'v1', scope: { cvat_task_ids: [], cvat_job_ids: [] } });
   });
 });
 

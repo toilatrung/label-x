@@ -25,6 +25,9 @@ async function setup(username: string, handler: (url: URL) => Response, openGuid
   const passthrough = api.fetchSpy.getMockImplementation()!;
   api.fetchSpy.mockImplementation(async (request: Request) => {
     const url = new URL(request.url);
+    if (url.pathname === '/api/guidelines/versions/') return json({ next: null, previous: null, results: [] });
+    if (/^\/api\/datasets\/\d+\/guideline\/$/.test(url.pathname)) return json({ dataset_id: 1,
+      guideline_version: null, guideline_checksum: null, taxonomy_version: null, taxonomy_ready: false, revision: 0 });
     return url.pathname === RULES_PATH ? handler(url) : passthrough(request);
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

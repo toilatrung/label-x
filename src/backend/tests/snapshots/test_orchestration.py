@@ -249,3 +249,18 @@ def test_compute_job_revision_rejects_job_outside_dataset() -> None:
             cvat_job_id=17,
             client=FakeCvatClient(),  # type: ignore[arg-type]
         )
+
+
+@pytest.fixture(autouse=True)
+def dataset_guideline():
+    from guideline.models import DatasetGuideline, GuidelineVersion
+
+    version = GuidelineVersion.objects.create(
+        version_tag="v1",
+        name="Policy",
+        file_checksum="f" * 64,
+        taxonomy={"version": "v1", "labels": [{"name": "car", "required_attributes": []}]},
+    )
+    DatasetGuideline.objects.create(
+        dataset_id=42, guideline=version, updated_by=_actor("policy-owner")
+    )

@@ -44,7 +44,7 @@ class GuidelineLoadRecordAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
 class GuidelineVersionAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     list_display = ["version_tag", "name", "file_checksum", "loaded_at"]
     search_fields = ["version_tag", "name", "file_checksum"]
-    readonly_fields = ["version_tag", "name", "file_checksum", "loaded_at"]
+    readonly_fields = ["version_tag", "name", "file_checksum", "taxonomy", "loaded_at"]
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False

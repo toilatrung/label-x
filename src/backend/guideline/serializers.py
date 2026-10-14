@@ -66,6 +66,8 @@ class PaginatedRuleMappingListSerializer(serializers.Serializer[dict[str, Any]])
 class GuidelineVersionEntrySerializer(serializers.Serializer[dict[str, Any]]):
     version = serializers.CharField()
     is_current = serializers.BooleanField()
+    taxonomy_version = serializers.CharField(allow_null=True)
+    taxonomy_ready = serializers.BooleanField()
     rule_count = serializers.IntegerField()
     effective_from = serializers.DateTimeField(allow_null=True, required=False)
     effective_to = serializers.DateTimeField(allow_null=True, required=False)

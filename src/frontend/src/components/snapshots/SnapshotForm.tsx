@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth/auth-context';
+import { getDatasetGuideline } from '@/lib/guidelines/config-api';
 import { ApiRequestError } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import { postSnapshot, type CvatTask, type SnapshotCreate } from '@/lib/snapshots/api';
@@ -12,6 +15,9 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   onRequestLockChange?: (locked: boolean) => void;
 }) {
   const router = useRouter();
+  const { session } = useAuth();
+  const guideline = useQuery({ queryKey: ['dataset-guideline', session?.user.id, datasetId],
+    queryFn: ({ signal }) => getDatasetGuideline(datasetId, signal), retry: false });
   const queryClient = useQueryClient();
   const [all, setAll] = React.useState(true);
   const [taskIds, setTaskIds] = React.useState<Set<number>>(new Set());
@@ -25,7 +31,7 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   const jobCount = tasks.reduce((count, task) => count + task.jobs.length, 0);
   const selectedCount = tasks.reduce((count, task) => count +
     (taskIds.has(task.cvat_task_id) ? task.jobs.length : task.jobs.filter(job => jobIds.has(job.cvat_job_id)).length), 0);
-  const canSubmit = canCreate && jobCount > 0 && (all || selectedCount > 0) && !busy && !pending;
+  const canSubmit = guideline.data?.taxonomy_ready && canCreate && jobCount > 0 && (all || selectedCount > 0) && !busy && !pending;
   const isSelected = (task: CvatTask, job: CvatTask['jobs'][number]) =>
     all || taskIds.has(task.cvat_task_id) || jobIds.has(job.cvat_job_id);
   const selectedJobs = tasks.flatMap(task => task.jobs.filter(job => isSelected(task, job)).map(job => ({ task, job })));
@@ -89,11 +95,18 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
     event.preventDefault();
     if (!canSubmit) return;
     const body: SnapshotCreate = { dataset_id: datasetId,
+      expected_guideline_version: guideline.data!.guideline_version!,
       scope: { cvat_task_ids: all ? [] : [...taskIds].sort((a, b) => a - b),
         cvat_job_ids: all ? [] : [...jobIds].sort((a, b) => a - b) },
       ...(note.trim() ? { note: note.trim() } : {}) };
     void send({ body, key: crypto.randomUUID() });
   }}>
+    <section className="lx-card lx-card__body" aria-label="Guideline áp dụng cho Snapshot">
+      {guideline.isPending && <p role="status">Đang tải Guideline của Dataset…</p>}
+      {guideline.isError && <p role="alert">{errorMessage(guideline.error)}</p>}
+      {guideline.data?.taxonomy_ready && <p>Guideline: <strong>{guideline.data.guideline_version}</strong> · Taxonomy: {guideline.data.taxonomy_version}. Phiên bản này được lưu cùng Snapshot.</p>}
+      {guideline.data && !guideline.data.taxonomy_ready && <p role="alert">Dataset chưa có Guideline với taxonomy. <Link className="lx-link" href="/configuration/guidelines">Cấu hình Guideline</Link> trước khi tạo Snapshot.</p>}
+    </section>
     {!canCreate && <p className="lx-callout lx-callout--info">Bạn có quyền xem. Chỉ QA Lead hoặc Super Admin được tạo Snapshot.</p>}
     <fieldset className="lx-field lx-fieldset" disabled={!canCreate || busy || !!pending}>
       <legend className="lx-label">Phạm vi kiểm tra</legend>

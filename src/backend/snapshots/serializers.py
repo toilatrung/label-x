@@ -37,6 +37,7 @@ class SnapshotScopeSerializer(serializers.Serializer[dict[str, Any]]):
 class SnapshotCreateSerializer(serializers.Serializer[dict[str, Any]]):
     dataset_id = serializers.IntegerField(min_value=1)
     scope = SnapshotScopeSerializer()
+    expected_guideline_version = serializers.CharField(required=False, max_length=32)
     note = serializers.CharField(required=False, allow_blank=True, max_length=1000, default="")
 
 
