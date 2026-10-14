@@ -1591,6 +1591,7 @@ paths:
       operationId: vlm_settings_retrieve
       tags: [config]
       summary: Kết nối VLM trong Configuration
+      x-labelx-trace: [FR-ENG-01]
       x-labelx-roles: [qa_lead, qc_admin, super_admin]
       responses:
         "200":
@@ -1603,6 +1604,7 @@ paths:
       operationId: vlm_settings_update
       tags: [config]
       summary: Lưu kết nối VLM
+      x-labelx-trace: [FR-ENG-01, FR-SEC-05]
       description: API key được mã hóa riêng. Bỏ api_key để giữ key nếu Base URL không đổi. Mỗi lần lưu tạo phiên bản kết nối mới; cấu hình QC mới bật VLM tự tham chiếu phiên bản hiện tại khi không cung cấp models.vlm.
       x-labelx-roles: [qc_admin, super_admin]
       requestBody:
