@@ -62,6 +62,8 @@ def build_engine_input(work_unit: WorkUnit) -> EngineInput:
     engines = cfg.engines or (cfg.payload or {}).get("engines", {})
     raw = engines.get(engine, {}) if isinstance(engines, dict) else {}
     params = raw.get("params", {}) if isinstance(raw, dict) else {}
+    if engine == "metric" and run.metric_reference_id:
+        params = {**params, "reference_id": run.metric_reference_id}
     version = run.engine_versions[engine]
     units = shard_units(work_unit)
     if not units and _FRAMES.match(work_unit.shard_key):
@@ -303,6 +305,9 @@ def redispatch_pending(
     """
     if older_than_seconds is None:
         older_than_seconds = getattr(settings, "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", 300)
+    from runs.ground_truth import cleanup_finished_uploads
+
+    cleanup_finished_uploads()
     if running_stale_seconds is None:
         running_stale_seconds = getattr(settings, "ORCHESTRATION_RUNNING_STALE_SECONDS", 1800)
     cutoff = timezone.now() - timedelta(seconds=older_than_seconds)

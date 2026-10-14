@@ -4,6 +4,44 @@
  */
 
 export interface paths {
+    "/api/ground-truth/{id}/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xem annotation Ground Truth trước khi duyệt */
+        get: operations["ground_truth_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ground-truth/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ground Truth hiện hành của Dataset */
+        get: operations["ground_truth_current"];
+        put?: never;
+        /**
+         * Upload Ground Truth lưu tạm cho Metric
+         * @description File JSON labelx.metric.gt.v1, tối đa 20 MiB. QA Lead khác người upload khóa reference trước khi chạy. File tự xóa sau khi mọi run dùng nó đã hoàn tất và Metric checked; metadata và checksum được giữ lại. Chạy lại cần upload lại.
+         */
+        post: operations["ground_truth_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/guidelines/preview/": {
         parameters: {
             query?: never;
@@ -1938,6 +1976,8 @@ export interface components {
             snapshot_id: number;
             config_version_id: number;
             seed: number;
+            /** @description Reference của Ground Truth upload đã khóa; được gắn cố định với run. */
+            metric_reference_id?: number;
         };
         ModelArtifact: {
             name: string;
@@ -2656,6 +2696,16 @@ export interface components {
             minimum_area?: number;
             algorithm_version?: string;
         };
+        GroundTruthUpload: {
+            reference: components["schemas"]["Reference"];
+            dataset_id: number;
+            filename: string;
+            frame_count: number;
+            box_count: number;
+            /** Format: date-time */
+            deleted_at: string | null;
+            is_current: boolean;
+        } | null;
         Reference: {
             id: number;
             snapshot_id: number;
@@ -3494,6 +3544,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description File Ground Truth đã được xóa sau lần chạy thành công; cần upload lại. */
+        Gone: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Vượt giới hạn tần suất theo người dùng (BUSINESS_RULE_UNMET; header Retry-After, details.retry_after_seconds) */
         TooManyRequests: {
             headers: {
@@ -3593,6 +3652,95 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    ground_truth_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Annotation đã kiểm tra checksum, trong phạm vi Dataset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        reference_id: number;
+                        frames: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            410: components["responses"]["Gone"];
+        };
+    };
+    ground_truth_current: {
+        parameters: {
+            query: {
+                dataset_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metadata Ground Truth hoặc null nếu chưa upload */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroundTruthUpload"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ground_truth_upload: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    snapshot_id: number;
+                    /** Format: binary */
+                    file: string;
+                    mapping_version: string;
+                    /** @default 0.5 */
+                    matching_threshold?: number;
+                    /** @default 0 */
+                    minimum_area?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Ground Truth đã upload, chờ duyệt */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroundTruthUpload"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     guidelines_preview: {
         parameters: {
             query?: never;

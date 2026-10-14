@@ -186,6 +186,13 @@ class QCRun(dj_models.Model):
         related_name="qc_runs",
     )
     seed = dj_models.BigIntegerField(default=42)
+    metric_reference = dj_models.ForeignKey(
+        "Reference",
+        null=True,
+        blank=True,
+        on_delete=dj_models.PROTECT,
+        related_name="metric_runs",
+    )
     engine_versions = dj_models.JSONField(default=dict)
     status = dj_models.CharField(
         max_length=16,
@@ -446,6 +453,33 @@ class Reference(dj_models.Model):
 
     def __str__(self) -> str:
         return f"Reference {self.pk} [{self.status}] (snapshot={self.snapshot_id})"
+
+
+class GroundTruthUpload(dj_models.Model):
+    """Temporary file; retain provenance after successful runs remove its contents."""
+
+    reference = dj_models.OneToOneField(
+        Reference, on_delete=dj_models.PROTECT, related_name="upload"
+    )
+    dataset_id = dj_models.PositiveBigIntegerField(db_index=True)
+    filename = dj_models.CharField(max_length=255)
+    frame_count = dj_models.PositiveIntegerField()
+    box_count = dj_models.PositiveIntegerField()
+    is_current = dj_models.BooleanField(default=True)
+    deleted_at = dj_models.DateTimeField(null=True, blank=True)
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            dj_models.UniqueConstraint(
+                fields=["dataset_id"],
+                condition=dj_models.Q(is_current=True),
+                name="one_current_ground_truth_per_dataset",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"GroundTruthUpload {self.pk} (dataset={self.dataset_id})"
 
 
 class KpiEvaluation(dj_models.Model):
