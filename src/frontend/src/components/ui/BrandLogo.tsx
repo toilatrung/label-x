@@ -4,7 +4,7 @@ import Image from 'next/image';
 export function BrandLogo() {
   return (
     <span className="lx-brand-logo">
-      <Image src="/labelx-logo.png" alt="LabelX" width={160} height={160} priority unoptimized />
+      <Image src="/label-logo.png" alt="LabelX" width={160} height={160} priority unoptimized />
     </span>
   );
 }
