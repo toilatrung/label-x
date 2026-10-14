@@ -5,7 +5,9 @@ from typing import Any
 from rest_framework import serializers
 
 from reports.models import ReportExport
+from runs.kpi_serializers import GateResultSerializer
 from runs.serializers import LedgerEntrySerializer
+from runs.summary_serializers import RunMetricsSerializer
 
 
 class ReportExportCreateSerializer(serializers.Serializer[Any]):
@@ -36,38 +38,6 @@ class ReportExportSerializer(serializers.Serializer[Any]):
         data = super().to_representation(instance)
         data["download_url"] = self._download_url(instance)
         return data
-
-
-class RunMetricsSerializer(serializers.Serializer[Any]):
-    run_id = serializers.IntegerField()
-    status = serializers.ChoiceField(
-        choices=["queued", "running", "completed", "partial", "failed", "cancelled"]
-    )
-    frames_total = serializers.IntegerField()
-    frames_reviewed = serializers.IntegerField()
-    issues_total = serializers.IntegerField()
-    issues_by_family = serializers.DictField(child=serializers.IntegerField())
-    issues_by_state = serializers.DictField(child=serializers.IntegerField())
-    reviewed_ratio = serializers.FloatField(allow_null=True, required=False)
-
-
-class GateConditionSerializer(serializers.Serializer[Any]):
-    name = serializers.ChoiceField(
-        choices=["coverage", "open_critical_issues", "rework_verified", "residual", "agreement"]
-    )
-    status = serializers.ChoiceField(choices=["passed", "failed", "not_checked", "waived"])
-    observed = serializers.FloatField(allow_null=True)
-    threshold = serializers.FloatField()
-    waiver_id = serializers.IntegerField(allow_null=True, required=False)
-    reason = serializers.CharField(allow_null=True, required=False)
-
-
-class GateResultSerializer(serializers.Serializer[Any]):
-    run_id = serializers.IntegerField()
-    source_run_id = serializers.IntegerField()
-    source_reason = serializers.CharField()
-    status = serializers.ChoiceField(choices=["passed", "failed", "not_checked"])
-    conditions = GateConditionSerializer(many=True)
 
 
 class RunReportSerializer(serializers.Serializer[Any]):
