@@ -3079,6 +3079,8 @@ export interface components {
             /** @enum {string} */
             model: "qwen3-vl-plus";
             api_key_configured: boolean;
+            /** @description Ngưỡng score detector để gọi VLM khi score thấp hơn; không phải confidence của kết quả VLM. Cấu hình QC mới bật VLM kế thừa ngưỡng này nếu không truyền classification_routing.score_threshold. */
+            confidence_threshold: number;
         };
         VlmSettingsUpdate: {
             expected_revision: number;
@@ -3086,6 +3088,8 @@ export interface components {
             /** @enum {string} */
             model: "qwen3-vl-plus";
             api_key?: string;
+            /** @description Bỏ qua để giữ ngưỡng đã lưu; mặc định ban đầu 0.85. */
+            confidence_threshold?: number;
         };
         ModelPatch: {
             expected_revision: number;

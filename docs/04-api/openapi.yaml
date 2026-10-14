@@ -4059,12 +4059,17 @@ components:
           items: { $ref: "#/components/schemas/Model" }
     VlmSettings:
       type: object
-      required: [revision, base_url, model, api_key_configured]
+      required: [revision, base_url, model, api_key_configured, confidence_threshold]
       properties:
         revision: { type: integer, minimum: 0 }
         base_url: { type: string }
         model: { type: string, enum: [qwen3-vl-plus] }
         api_key_configured: { type: boolean }
+        confidence_threshold:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Ngưỡng score detector để gọi VLM khi score thấp hơn; không phải confidence của kết quả VLM. Cấu hình QC mới bật VLM kế thừa ngưỡng này nếu không truyền classification_routing.score_threshold.
     VlmSettingsUpdate:
       type: object
       required: [expected_revision, base_url, model]
@@ -4073,6 +4078,7 @@ components:
         base_url: { type: string, maxLength: 512 }
         model: { type: string, enum: [qwen3-vl-plus] }
         api_key: { type: string, writeOnly: true, minLength: 1, maxLength: 4096 }
+        confidence_threshold: { type: number, minimum: 0, maximum: 1, description: Bỏ qua để giữ ngưỡng đã lưu; mặc định ban đầu 0.85. }
     ModelPatch:
       type: object
       required: [expected_revision]

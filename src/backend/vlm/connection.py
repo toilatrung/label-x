@@ -32,11 +32,16 @@ def credential_cipher() -> MultiFernet:
     )
 
 
-def current_config() -> dict[str, Any] | None:
+def current_connection() -> VlmConnection | None:
     pointer = VlmConfiguration.objects.select_related("connection").filter(pk=1).first()
-    if pointer is None or pointer.connection is None:
+    return pointer.connection if pointer else None
+
+
+def current_config() -> dict[str, Any] | None:
+    connection = current_connection()
+    if connection is None:
         return None
-    return {**pointer.connection.config, "connection_id": pointer.connection_id}
+    return {**connection.config, "connection_id": connection.pk}
 
 
 def connection_api_key(config: VlmConfig) -> str:

@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
 import { VlmSettingsModal } from './VlmSettingsModal';
+import { getVlmSettings, type VlmSettings } from '@/lib/configuration/vlm-api';
+import { errorMessage } from '@/lib/api/errors';
 
 type TabKey = 'models' | 'guideline';
 
@@ -38,8 +40,25 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(canAccessConfiguration);
   const canConfigureVlm = hasPermission(role => ['qc_admin', 'super_admin'].includes(role));
+  const canReadVlm = hasPermission(role => ['qa_lead', 'qc_admin', 'super_admin'].includes(role));
   const [tab, setTab] = useState<TabKey>('models');
   const [editingVlm, setEditingVlm] = useState(false);
+  const [vlmSettings, setVlmSettings] = useState<VlmSettings | null>(null);
+  const [vlmError, setVlmError] = useState<string | null>(null);
+
+  function acceptVlm(value: VlmSettings) {
+    setVlmSettings(current => current && current.revision > value.revision ? current : value);
+    setVlmError(null);
+  }
+
+  useEffect(() => {
+    if (tab !== 'models' || !canReadVlm) return;
+    const controller = new AbortController();
+    getVlmSettings(controller.signal).then(value => {
+      if (!controller.signal.aborted) acceptVlm(value);
+    }).catch(error => { if (!controller.signal.aborted) setVlmError(errorMessage(error)); });
+    return () => controller.abort();
+  }, [canReadVlm, tab]);
   return (
     <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
@@ -58,14 +77,15 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
                     <td className="lx-muted">{model.role}</td>
                     <td className="lx-mono">{model.version}</td>
                     <td className="lx-muted">{model.mapping}</td>
-                    <td className={model.confidence ? 'r' : 'r lx-subtle'}>{model.confidence ?? '—'}</td>
-                    <td><span className={model.badge}>{model.status}</span></td>
+                    <td className={model.confidence || (model.kind === 'vlm' && vlmSettings) ? 'r' : 'r lx-subtle'} title={model.kind === 'vlm' ? 'Ngưỡng điểm detector để gọi VLM' : undefined}>{model.kind === 'vlm' ? vlmSettings?.confidence_threshold?.toFixed(2) ?? '—' : model.confidence ?? '—'}</td>
+                    <td><span className={model.badge}>{model.kind === 'vlm' && vlmSettings ? vlmSettings.api_key_configured ? 'Đã cấu hình' : 'Chưa cấu hình' : model.status}</span></td>
                     <td className="r"><EditIconButton label="Chỉnh mô hình" disabled={model.kind === 'vlm' ? !canConfigureVlm : !canWrite} onBlocked={() => { if (model.kind === 'vlm') setEditingVlm(true); }} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {vlmError && <p role="alert" className="lx-gap__notice">Không tải được cấu hình VLM: {vlmError}</p>}
           <div className="lx-card__foot"><span>Mô hình chưa được xác minh không tự động biến candidate thành lỗi đã xác nhận.</span></div>
         </>
       )}
@@ -89,7 +109,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
         </div>
       )}
     </section>
-    {editingVlm && <VlmSettingsModal onClose={() => setEditingVlm(false)} />}
+    {editingVlm && <VlmSettingsModal onClose={() => setEditingVlm(false)} onSaved={acceptVlm} />}
     {tab === 'guideline' && guidelineExtra}
     </>
   );

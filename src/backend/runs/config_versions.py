@@ -66,13 +66,29 @@ def create_config_version(
     try:
         with transaction.atomic():
             # Resolve the shared connection once; published configurations keep this version.
-            if engines.get("vlm", {}).get("enabled") and "vlm" not in models:
-                from vlm.connection import current_config
+            if engines.get("vlm", {}).get("enabled"):
+                from vlm.connection import current_connection
 
-                shared = current_config()
+                shared = current_connection()
                 if shared is not None:
-                    models = {**models, "vlm": shared}
-                    payload = {**payload, "models": models}
+                    if "vlm" not in models:
+                        models = {
+                            **models,
+                            "vlm": {
+                                **shared.config,
+                                "connection_id": shared.pk,
+                            },
+                        }
+                    routing = effective_thresholds.get("classification_routing", {})
+                    if isinstance(routing, dict) and "score_threshold" not in routing:
+                        effective_thresholds = {
+                            **effective_thresholds,
+                            "classification_routing": {
+                                **routing,
+                                "score_threshold": shared.confidence_threshold,
+                            },
+                        }
+                    payload = {**payload, "models": models, "thresholds": effective_thresholds}
             config = ConfigVersion.objects.create(
                 name=name,
                 engines=engines,

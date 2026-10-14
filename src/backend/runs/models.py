@@ -68,10 +68,18 @@ class VlmConnection(dj_models.Model):
 
     config = dj_models.JSONField(default=dict)
     encrypted_api_key = dj_models.TextField()
+    confidence_threshold = dj_models.FloatField(default=0.85)
     created_at = dj_models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "vlm_connection"
+        constraints = [
+            dj_models.CheckConstraint(
+                condition=dj_models.Q(confidence_threshold__gte=0)
+                & dj_models.Q(confidence_threshold__lte=1),
+                name="vlm_connection_confidence_range",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"VLM connection {self.pk}"

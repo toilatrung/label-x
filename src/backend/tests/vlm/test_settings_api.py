@@ -204,3 +204,63 @@ def test_credential_decryption_supports_django_key_rotation(settings):
     settings.SECRET_KEY_FALLBACKS = []
     with pytest.raises(VlmProviderError):
         connection_api_key(config)
+
+
+@pytest.mark.parametrize("value", [-0.1, 1.1, True, False, "NaN", "Infinity"])
+def test_invalid_confidence_threshold_is_rejected(value):
+    response = save(actor(), confidence_threshold=value)
+    assert response.status_code == 400
+    assert not VlmConnection.objects.exists()
+
+
+def test_threshold_is_frozen_in_qc_config_and_affects_routing():
+    from orchestration.routing_policy import RoutingInput, RoutingPolicy, route
+
+    client = actor()
+    first = save(client, confidence_threshold=0.60)
+    assert first.status_code == 200
+    assert client.get(URL).data["confidence_threshold"] == 0.60
+    body = {"name": "threshold", "engines": {"vlm": {"enabled": True}}}
+    created = client.post(
+        "/api/config-versions/", body, format="json", HTTP_IDEMPOTENCY_KEY="threshold"
+    )
+    assert created.status_code == 201, created.data
+    threshold = created.data["thresholds"]["classification_routing"]
+    assert threshold["score_threshold"] == 0.60
+    policy = RoutingPolicy.from_config(threshold)
+    candidate = RoutingInput(
+        score=0.70,
+        source_available=True,
+        source_trusted=True,
+        predicted_class_id=1,
+        annotated_class_id=1,
+        crop_valid=True,
+    )
+    assert not route(policy, candidate).call_qwen
+    assert route(RoutingPolicy(score_threshold=0.85), candidate).call_qwen
+    changed = save(client, first.data["revision"], confidence_threshold=0.90)
+    assert changed.status_code == 200
+    replay = client.post(
+        "/api/config-versions/", body, format="json", HTTP_IDEMPOTENCY_KEY="threshold"
+    )
+    assert replay.data["thresholds"] == created.data["thresholds"]
+    # Explicit run thresholds retain precedence; a supplied margin stays untouched.
+    explicit = {
+        **body,
+        "thresholds": {
+            "classification_routing": {
+                "score_threshold": 0.30,
+                "margin_threshold": 0.10,
+            }
+        },
+    }
+    response = client.post(
+        "/api/config-versions/", explicit, format="json", HTTP_IDEMPOTENCY_KEY="explicit-threshold"
+    )
+    assert response.data["thresholds"] == explicit["thresholds"]
+
+
+def test_omitting_threshold_on_save_preserves_previous_value():
+    client = actor()
+    revision = save(client, confidence_threshold=0.40).data["revision"]
+    assert save(client, revision).data["confidence_threshold"] == 0.40

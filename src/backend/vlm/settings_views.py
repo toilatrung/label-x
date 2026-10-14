@@ -1,5 +1,6 @@
 """Configuration/guidelines VLM connection API; never serializes credentials."""
 
+import math
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -16,6 +17,7 @@ from accounts.permissions import HasRoleAndDatasetScope
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
+from orchestration.routing_policy import DEFAULT_SCORE_THRESHOLD
 from runs.models import VlmConfiguration, VlmConnection
 from vlm.config import (
     ALLOWED_MODELS,
@@ -31,6 +33,7 @@ class VlmSettingsSerializer(serializers.Serializer[dict[str, Any]]):
     base_url = serializers.CharField()
     model = serializers.CharField()
     api_key_configured = serializers.BooleanField()
+    confidence_threshold = serializers.FloatField()
 
 
 class VlmSettingsUpdateSerializer(serializers.Serializer[dict[str, Any]]):
@@ -38,6 +41,14 @@ class VlmSettingsUpdateSerializer(serializers.Serializer[dict[str, Any]]):
     base_url = serializers.CharField(max_length=512)
     model = serializers.ChoiceField(choices=sorted(ALLOWED_MODELS))
     api_key = serializers.CharField(write_only=True, required=False, max_length=4096)
+    confidence_threshold = serializers.FloatField(required=False, min_value=0, max_value=1)
+
+    def validate_confidence_threshold(self, value: float) -> float:
+        if isinstance(self.initial_data.get("confidence_threshold"), bool) or not math.isfinite(
+            value
+        ):
+            raise serializers.ValidationError("Ngưỡng tin cậy phải là số trong [0, 1].")
+        return value
 
     def validate_api_key(self, value: str) -> str:
         if not value.isascii() or any(c.isspace() or ord(c) < 33 or ord(c) == 127 for c in value):
@@ -51,6 +62,9 @@ def public_settings(connection: VlmConnection | None) -> dict[str, Any]:
         "base_url": connection.config["base_url"] if connection else "https://api.shopaikey.com/v1",
         "model": connection.config["model"] if connection else "qwen3-vl-plus",
         "api_key_configured": bool(connection and connection.encrypted_api_key),
+        "confidence_threshold": (
+            connection.confidence_threshold if connection else DEFAULT_SCORE_THRESHOLD
+        ),
     }
 
 
@@ -130,7 +144,14 @@ class VlmSettingsView(APIView):
                 encrypted = previous.encrypted_api_key
             else:
                 raise ApiError(400, "VALIDATION_ERROR", "Nhập API key khi tạo hoặc đổi Base URL.")
-            connection = VlmConnection.objects.create(config=config, encrypted_api_key=encrypted)
+            connection = VlmConnection.objects.create(
+                config=config,
+                encrypted_api_key=encrypted,
+                confidence_threshold=data.get(
+                    "confidence_threshold",
+                    previous.confidence_threshold if previous else DEFAULT_SCORE_THRESHOLD,
+                ),
+            )
             pointer.connection = connection
             pointer.save(update_fields=["connection"])
             append_audit_event(

@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({ get: vi.fn(), save: vi.fn(), role: 'qc_admin' 
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ hasPermission: (check: (role: string) => boolean) => check(mocks.role) }) }));
 vi.mock('@/lib/configuration/vlm-api', () => ({ getVlmSettings: mocks.get, saveVlmSettings: mocks.save }));
 
-const settings = { revision: 7, base_url: 'https://api.shopaikey.com/v1', model: 'qwen3-vl-plus' as const, api_key_configured: true };
+const settings = { revision: 7, base_url: 'https://api.shopaikey.com/v1', model: 'qwen3-vl-plus' as const, api_key_configured: true, confidence_threshold: 0.85 };
 
 beforeEach(() => {
   mocks.role = 'qc_admin'; mocks.get.mockReset().mockResolvedValue(settings); mocks.save.mockReset().mockResolvedValue({ ...settings, revision: 8 });
@@ -17,12 +17,36 @@ beforeEach(() => {
 });
 
 describe('VLM settings', () => {
+  it('saves the routing confidence threshold and updates the model row', async () => {
+    mocks.save.mockResolvedValue({ ...settings, revision: 8, confidence_threshold: 0.60 });
+    render(<ModelsGuidelinesCard />);
+    const row = screen.getByRole('row', { name: /Mô hình thị giác – ngôn ngữ/ });
+    expect(await within(row).findByText('0.85')).toBeInTheDocument();
+    fireEvent.click(within(row).getByRole('button', { name: 'Chỉnh mô hình' }));
+    fireEvent.change(await screen.findByLabelText('Ngưỡng tin cậy gọi VLM'), { target: { value: '0.60' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu cấu hình VLM' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ confidence_threshold: 0.60 })));
+    expect(await within(row).findByText('0.60')).toBeInTheDocument();
+  });
+
+  it('reload restores the saved threshold and discards unsaved key and endpoint', async () => {
+    render(<VlmSettingsModal onClose={vi.fn()} />);
+    fireEvent.change(await screen.findByLabelText('Ngưỡng tin cậy gọi VLM'), { target: { value: '0.50' } });
+    fireEvent.change(screen.getByLabelText('Base URL'), { target: { value: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' } });
+    fireEvent.change(screen.getByLabelText('API key'), { target: { value: 'discard-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tải lại' }));
+    expect((await screen.findByLabelText('Ngưỡng tin cậy gọi VLM') as HTMLInputElement).value).toBe('0.85');
+    expect((screen.getByLabelText('Base URL') as HTMLInputElement).value).toBe(settings.base_url);
+    expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('');
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
   it('keeps VLM in the model table and opens its settings only from edit', async () => {
     render(<ModelsGuidelinesCard />);
     const row = screen.getByRole('row', { name: /Mô hình thị giác – ngôn ngữ/ });
     expect(screen.queryByLabelText('API key')).toBeNull();
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(mocks.get).not.toHaveBeenCalled();
+    expect(mocks.get).toHaveBeenCalledTimes(1);
     fireEvent.click(within(row).getByRole('button', { name: 'Chỉnh mô hình' }));
     expect(screen.getByRole('dialog', { name: 'Chỉnh mô hình thị giác – ngôn ngữ' })).toBeInTheDocument();
     expect(await screen.findByLabelText('API key')).toBeInTheDocument();
@@ -46,7 +70,7 @@ describe('VLM settings', () => {
     mocks.role = 'qa_lead';
     render(<ModelsGuidelinesCard />);
     expect(within(screen.getByRole('row', { name: /Mô hình thị giác – ngôn ngữ/ })).getByRole('button', { name: 'Chỉnh mô hình' })).toBeDisabled();
-    expect(mocks.get).not.toHaveBeenCalled();
+    expect(mocks.get).toHaveBeenCalledTimes(1);
   });
 
   it('loads metadata and preserves the key when left blank', async () => {
@@ -55,7 +79,7 @@ describe('VLM settings', () => {
     expect((input as HTMLInputElement).value).toBe('');
     expect(input).toHaveAttribute('type', 'password');
     fireEvent.click(screen.getByRole('button', { name: 'Lưu cấu hình VLM' }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ expected_revision: 7, base_url: settings.base_url, model: settings.model }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ expected_revision: 7, base_url: settings.base_url, model: settings.model, confidence_threshold: 0.85 }));
     expect(await screen.findByText(/Đã lưu cấu hình VLM/)).toBeInTheDocument();
   });
 
