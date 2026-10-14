@@ -146,6 +146,15 @@
 .lx-label { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-muted); }
 .lx-hint { font-size: 12px; line-height: 16px; color: var(--ink-subtle); }
 .lx-input, .lx-select, .lx-textarea { width: 100%; box-sizing: border-box; height: 32px; padding: 0 var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); font: 400 14px/20px var(--font-sans); color: var(--ink); }
+/* Native file input stays focusable; the visible picker follows the form controls. */
+.lx-file-picker { position: relative; display: flex; align-items: center; gap: var(--space-3); width: 100%; min-width: 0; padding: var(--space-1); box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-sunken); }
+.lx-file-picker__input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.lx-file-picker__button { display: inline-flex; align-items: center; flex-shrink: 0; min-height: var(--control-height); padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--primary); color: var(--on-primary); font: 500 13px/20px var(--font-sans); white-space: nowrap; }
+.lx-file-picker__name { flex: 1; min-width: 0; padding-right: var(--space-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-muted); font: 400 13px/20px var(--font-sans); }
+.lx-file-picker:not([data-disabled="true"]):hover .lx-file-picker__button { background: var(--primary-hover); }
+.lx-file-picker:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lx-file-picker[data-disabled="true"] { opacity: .6; }
+.lx-file-picker__input:disabled { cursor: not-allowed; }
 .lx-input[readonly] { background: var(--surface-sunken); color: var(--ink-muted); }
 .lx-textarea { height: auto; min-height: 72px; padding: 8px var(--space-3); resize: vertical; }
 .lx-select--inline { width: auto; min-width: 150px; }

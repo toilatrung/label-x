@@ -17,6 +17,7 @@ export function GuidelineImportModal({ onClose, onImported }: {
   const fileInput = useRef<HTMLInputElement>(null);
   const readId = useRef(0);
   const [content, setContent] = useState('');
+  const [fileName, setFileName] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [taxonomyVersion, setTaxonomyVersion] = useState('');
   const [labels, setLabels] = useState<ManualLabel[]>([{ name: '', attributes: [] }]);
@@ -33,6 +34,7 @@ export function GuidelineImportModal({ onClose, onImported }: {
 
   async function chooseFile(file: File | undefined) {
     const id = ++readId.current;
+    setFileName(file?.name ?? '');
     setContent(''); setPreview(null); setError(null); setReading(false);
     setTaxonomyVersion(''); setLabels([{ name: '', attributes: [] }]);
     if (!file) return;
@@ -88,9 +90,13 @@ export function GuidelineImportModal({ onClose, onImported }: {
         <div className="lx-gap__fields">
           <div className="lx-field">
             <label className="lx-label" htmlFor="guideline-import-file">Tệp Guideline (YAML)</label>
-            <input ref={fileInput} id="guideline-import-file" type="file" accept=".yaml,.yml" disabled={busy}
-              onChange={event => void chooseFile(event.target.files?.[0])} />
-            <p className="lx-hint">Tệp tối đa 1 MB. Taxonomy có sẵn được import cùng Guideline; nếu chưa có, nhập bên dưới. Phiên bản đã import không được ghi đè.</p>
+            <div className="lx-file-picker" data-disabled={busy}>
+              <input ref={fileInput} className="lx-file-picker__input" id="guideline-import-file" type="file" accept=".yaml,.yml" disabled={busy}
+                aria-describedby="guideline-file-name guideline-file-hint" onChange={event => void chooseFile(event.target.files?.[0])} />
+              <span className="lx-file-picker__button" aria-hidden="true">Chọn tệp</span>
+              <span className="lx-file-picker__name" id="guideline-file-name" title={fileName || 'Chưa chọn tệp'}>{fileName || 'Chưa chọn tệp'}</span>
+            </div>
+            <p className="lx-hint" id="guideline-file-hint">Tệp tối đa 1 MB. Taxonomy có sẵn được import cùng Guideline; nếu chưa có, nhập bên dưới. Phiên bản đã import không được ghi đè.</p>
           </div>
           {reading && <p role="status">Đang kiểm tra Guideline…</p>}
           {preview && <p>{preview.name} · {preview.version} · {preview.rules.length} rule</p>}
