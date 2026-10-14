@@ -7,6 +7,7 @@ import SnapshotHistoryPage from '@/app/analysis/snapshots/page';
 import { SnapshotForm } from '@/components/snapshots/SnapshotForm';
 import * as api from '@/lib/snapshots/api';
 import * as exec from '@/lib/execution/api';
+import { ApiRequestError } from '@/lib/api/errors';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -24,11 +25,12 @@ vi.mock('@/lib/auth/auth-context', () => ({
 vi.mock('@/lib/snapshots/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/snapshots/api')>()),
   getDatasets: vi.fn(), getSnapshot: vi.fn(), getSnapshots: vi.fn(), getTasks: vi.fn(), postSnapshot: vi.fn(),
+  getSnapshotRuns: vi.fn(), getDatasetRevisions: vi.fn(),
 }));
 
 vi.mock('@/lib/execution/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/execution/api')>()),
-  listRuns: vi.fn(), listConfigs: vi.fn(),
+  listConfigs: vi.fn(),
 }));
 
 const client = () => new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
@@ -48,7 +50,10 @@ beforeEach(() => {
   vi.mocked(api.getDatasets).mockResolvedValue({ results: [dataset], next: null, previous: null });
   vi.mocked(api.getTasks).mockResolvedValue([]);
   vi.mocked(api.getSnapshots).mockResolvedValue({ results: [locked], next: null, previous: null });
-  vi.mocked(exec.listRuns).mockResolvedValue({ results: [run(5, 7, 20261008), run(9, 7, 77)], next: null, previous: null } as never);
+  // Backend trả run của Snapshot theo id giảm dần.
+  vi.mocked(api.getSnapshotRuns).mockResolvedValue({ results: [run(9, 7, 77), run(5, 7, 20261008)], next: null, previous: null } as never);
+  vi.mocked(api.getDatasetRevisions).mockResolvedValue({ results: [
+    { revision: 'sha256:abc', snapshot_id: 7, frame_count: 2, created_at: '2026-10-09T08:00:00Z' }], next: null, previous: null });
   vi.mocked(exec.listConfigs).mockResolvedValue({ results: [{ id: 8, name: 'cfg-2026.10.1', status: 'published' }], next: null, previous: null } as never);
 });
 
@@ -60,13 +65,15 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(screen.getByRole('heading', { name: 'Tạo snapshot mới' })).toBeDefined();
     expect(screen.getByRole('heading', { name: 'Snapshot đang dùng' })).toBeDefined();
     expect(screen.getByLabelText('Annotation revision')).toBeDefined();
-    expect(screen.getByLabelText('Mã hạt giống lấy mẫu (seed)')).toBeDefined();
-    expect((screen.getByLabelText('Annotation revision') as HTMLSelectElement).disabled).toBe(true);
+    // DEC-022: seed và cấu hình chọn khi tạo Quality Control Run, không thuộc Snapshot.
+    expect(screen.getByText('Chọn khi tạo Quality Control Run')).toBeDefined();
+    expect(screen.queryByLabelText('Mã hạt giống lấy mẫu (seed)')).toBeNull();
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
     expect(await side.findByText('abc')).toBeDefined();
     expect(side.getByText('Đã khoá')).toBeDefined();
     expect(side.getByText('Mô hình độc lập')).toBeDefined();
-    // Mô hình, cấu hình và seed lấy từ Quality Control Run mới nhất (id lớn nhất) của Snapshot.
+    // Mô hình, cấu hình và seed lấy từ Quality Control Run đầu tiên của GET /api/snapshots/{id}/runs/.
+    await waitFor(() => expect(api.getSnapshotRuns).toHaveBeenCalledWith(7, undefined, expect.anything()));
     expect(await side.findByText('detector v4.1')).toBeDefined();
     expect(side.getByText('cfg-2026.10.1')).toBeDefined();
     expect(side.getByText('77')).toBeDefined();
@@ -74,7 +81,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
   });
 
   it('shows the run API error without falling back to design values', async () => {
-    vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
+    vi.mocked(api.getSnapshotRuns).mockRejectedValue(new Error('down'));
     wrap(<AnalysisPage />);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
     expect(await side.findByText(/Không kết nối được máy chủ/)).toBeDefined();
@@ -82,7 +89,7 @@ describe('Snapshot (Snapshot.dc.html)', () => {
   });
 
   it('says so when the locked snapshot has no run yet', async () => {
-    vi.mocked(exec.listRuns).mockResolvedValue({ results: [], next: null, previous: null } as never);
+    vi.mocked(api.getSnapshotRuns).mockResolvedValue({ results: [], next: null, previous: null } as never);
     wrap(<AnalysisPage />);
     const side = within(await screen.findByRole('region', { name: 'Snapshot đang dùng' }));
     expect(await side.findByText(/chưa có Quality Control Run nên chưa có mô hình/)).toBeDefined();
@@ -108,6 +115,30 @@ describe('Snapshot (Snapshot.dc.html)', () => {
     expect(await side.findByText(/Không kết nối được máy chủ/)).toBeDefined();
     expect(side.getByRole('button', { name: 'Thử lại' })).toBeDefined();
     expect(screen.queryByText('SNP-014')).toBeNull();
+  });
+});
+
+describe('Annotation revision (GET /api/datasets/{id}/revisions/)', () => {
+  it('lists real locked revisions after the current CVAT revision and links the picked one to its snapshot', async () => {
+    wrap(<AnalysisPage />);
+    const select = await screen.findByLabelText('Annotation revision') as HTMLSelectElement;
+    await waitFor(() => expect(select.options).toHaveLength(2));
+    expect(select.options[0].textContent).toBe('Revision hiện tại của CVAT (tính khi tạo snapshot)');
+    expect(select.options[1].textContent).toMatch(/^abc · SNP-007 · /);
+    expect(screen.queryByText(/a91f3c|7be204/)).toBeNull();
+    fireEvent.change(select, { target: { value: '7' } });
+    const field = select.closest('.lx-field') as HTMLElement;
+    expect(within(field).getByRole('link', { name: 'SNP-007' }).getAttribute('href')).toBe('/analysis?snapshotId=7');
+  });
+
+  it('shows the CVAT error (502) inline with a retry', async () => {
+    vi.mocked(api.getDatasetRevisions).mockRejectedValue(new ApiRequestError(502,
+      { code: 'BUSINESS_RULE_UNMET', message: 'CVAT lỗi' }, new Headers({ 'X-Request-ID': 'req-1' })));
+    wrap(<AnalysisPage />);
+    const main = within(await screen.findByRole('region', { name: 'Tạo snapshot mới' }));
+    expect(await main.findByText(/Không đọc được revision từ CVAT\. Máy chủ gặp lỗi.*req-1/)).toBeDefined();
+    fireEvent.click(main.getByRole('button', { name: 'Thử lại' }));
+    await waitFor(() => expect(api.getDatasetRevisions).toHaveBeenCalledTimes(2));
   });
 });
 
@@ -179,10 +210,11 @@ describe('Snapshot history (SnapshotHistory.dc.html)', () => {
   });
 
   it('keeps the run column empty when the runs cannot be read', async () => {
-    vi.mocked(exec.listRuns).mockRejectedValue(new Error('down'));
+    vi.mocked(api.getSnapshotRuns).mockRejectedValue(new Error('down'));
     wrap(<SnapshotHistoryPage />);
     const row = within((await screen.findByRole('link', { name: 'SNP-007' })).closest('tr') as HTMLElement);
     expect(screen.queryByRole('status')).toBeNull();
+    expect(await row.findByText('Không tải được')).toBeDefined();
     expect(row.queryByRole('link', { name: /Run #/ })).toBeNull();
   });
 

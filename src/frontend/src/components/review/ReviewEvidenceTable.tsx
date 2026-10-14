@@ -3,6 +3,7 @@
 import React from 'react';
 import type { components } from '@/lib/api/contract';
 import type { AiEvidence } from '@/lib/review/workspace-api';
+import { AiReEvaluate } from './AiReEvaluate';
 
 type Evidence = components['schemas']['Evidence'];
 type EngineRunStatus = components['schemas']['EngineRunStatus'];
@@ -13,6 +14,8 @@ export interface ReviewEvidenceTableProps {
   currentAnnotationClass?: string;
   /** Evidence AI (classifier/Qwen) của issue từ GET /api/frames/{id}/workspace/ (MBE-01). */
   aiEvidence?: AiEvidence[];
+  /** Reviewer, QA Lead, QC Admin, Super Admin trong phạm vi Dataset được đánh giá lại candidate bằng AI. */
+  canReEvaluate?: boolean;
 }
 
 const AI_SOURCE_LABELS: Record<string, string> = {
@@ -71,6 +74,7 @@ export function ReviewEvidenceTable({
   engineStatuses = [],
   currentAnnotationClass,
   aiEvidence = [],
+  canReEvaluate = false,
 }: ReviewEvidenceTableProps) {
   return (
     <div className="lx-stack lx-gap-2">
@@ -147,6 +151,9 @@ export function ReviewEvidenceTable({
               <td className="lx-muted lx-w-130">{AI_SOURCE_LABELS[item.source] ?? item.source}</td>
               <td>
                 <AiEvidenceCell item={item} />
+                {canReEvaluate && item.snapshot_revision && (
+                  <AiReEvaluate key={item.candidate_id} candidateId={item.candidate_id} expectedRevision={item.snapshot_revision} />
+                )}
               </td>
             </tr>
           ))}

@@ -3249,7 +3249,8 @@ export interface components {
         };
         DatasetRevision: {
             revision: string;
-            snapshot_id?: number | null;
+            /** @description Snapshot locked mới nhất có revision này */
+            snapshot_id: number;
             frame_count: number;
             /** Format: date-time */
             created_at: string;
@@ -5777,6 +5778,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            502: components["responses"]["BadGateway"];
         };
     };
     runs_report: {

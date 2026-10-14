@@ -28,7 +28,7 @@ describe('API Explorer', () => {
 
   it('keeps a default response and adds state variants where the contract has a state machine', () => {
     const ids = new Set(API_ENDPOINTS.map(endpoint => endpoint.id));
-    expect(API_ENDPOINTS).toHaveLength(78);
+    expect(API_ENDPOINTS).toHaveLength(83);
     expect(ids.size).toBe(API_ENDPOINTS.length);
     expect(API_ENDPOINTS.every(endpoint => Object.hasOwn(endpoint, 'response'))).toBe(true);
     expect(API_ENDPOINTS.find(endpoint => endpoint.id === 'runs_list')?.responseExamples?.map(example => example.label))
