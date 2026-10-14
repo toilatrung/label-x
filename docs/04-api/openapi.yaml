@@ -1586,6 +1586,39 @@ paths:
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Unprocessable" }
   # ------------------------------------------------------------------ configuration (MBE-05)
+  /api/configuration/vlm/:
+    get:
+      operationId: vlm_settings_retrieve
+      tags: [config]
+      summary: Kết nối VLM trong Configuration
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      responses:
+        "200":
+          description: Cấu hình công khai; không trả API key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VlmSettings" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    patch:
+      operationId: vlm_settings_update
+      tags: [config]
+      summary: Lưu kết nối VLM
+      description: API key được mã hóa riêng. Bỏ api_key để giữ key nếu Base URL không đổi. Mỗi lần lưu tạo phiên bản kết nối mới; cấu hình QC mới bật VLM tự tham chiếu phiên bản hiện tại khi không cung cấp models.vlm.
+      x-labelx-roles: [qc_admin, super_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VlmSettingsUpdate" }
+      responses:
+        "200":
+          description: Kết nối đã lưu; không trả API key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VlmSettings" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /api/models/:
     get:
       operationId: models_list
@@ -3738,7 +3771,10 @@ components:
             timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000)
             và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host:
             DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định
-            theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible
+            theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu;
+            worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp.
+            Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại.
+            provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible
             chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là
             cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận
             chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret
@@ -4021,6 +4057,22 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/Model" }
+    VlmSettings:
+      type: object
+      required: [revision, base_url, model, api_key_configured]
+      properties:
+        revision: { type: integer, minimum: 0 }
+        base_url: { type: string }
+        model: { type: string, enum: [qwen3-vl-plus] }
+        api_key_configured: { type: boolean }
+    VlmSettingsUpdate:
+      type: object
+      required: [expected_revision, base_url, model]
+      properties:
+        expected_revision: { type: integer, minimum: 0 }
+        base_url: { type: string, maxLength: 512 }
+        model: { type: string, enum: [qwen3-vl-plus] }
+        api_key: { type: string, writeOnly: true, minLength: 1, maxLength: 4096 }
     ModelPatch:
       type: object
       required: [expected_revision]

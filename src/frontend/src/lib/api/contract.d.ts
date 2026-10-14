@@ -1198,6 +1198,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/configuration/vlm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kết nối VLM trong Configuration */
+        get: operations["vlm_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Lưu kết nối VLM
+         * @description API key được mã hóa riêng. Bỏ api_key để giữ key nếu Base URL không đổi. Mỗi lần lưu tạo phiên bản kết nối mới; cấu hình QC mới bật VLM tự tham chiếu phiên bản hiện tại khi không cung cấp models.vlm.
+         */
+        patch: operations["vlm_settings_update"];
+        trace?: never;
+    };
     "/api/models/": {
         parameters: {
             query?: never;
@@ -2838,7 +2859,7 @@ export interface components {
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu; worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp. Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại. provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
             models?: {
                 [key: string]: unknown;
             };
@@ -3051,6 +3072,20 @@ export interface components {
             next?: string | null;
             previous?: string | null;
             results: components["schemas"]["Model"][];
+        };
+        VlmSettings: {
+            revision: number;
+            base_url: string;
+            /** @enum {string} */
+            model: "qwen3-vl-plus";
+            api_key_configured: boolean;
+        };
+        VlmSettingsUpdate: {
+            expected_revision: number;
+            base_url: string;
+            /** @enum {string} */
+            model: "qwen3-vl-plus";
+            api_key?: string;
         };
         ModelPatch: {
             expected_revision: number;
@@ -5286,6 +5321,54 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    vlm_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cấu hình công khai; không trả API key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VlmSettings"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    vlm_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VlmSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Kết nối đã lưu; không trả API key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VlmSettings"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
         };
     };
     models_list: {

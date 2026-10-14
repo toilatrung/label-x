@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canAccessConfiguration } from '@/lib/auth/roles';
 import { ConfigTabs, EditIconButton } from './ConfigTabs';
+import { VlmSettingsCard } from './VlmSettingsCard';
 
 type TabKey = 'models' | 'guideline';
 
@@ -16,7 +17,6 @@ const TABS = [
 const MODELS = [
   { name: 'Detector', role: 'Phát hiện object độc lập', version: 'v2.3', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.60', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
   { name: 'Classifier', role: 'Kiểm tra lại nhãn của object', version: 'v1.8', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.70', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
-  { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: 'v0.9', mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Thử nghiệm', badge: 'lx-badge lx-badge--warning' },
 ];
 
 const GUIDELINES = [
@@ -86,6 +86,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
         </div>
       )}
     </section>
+    {tab === 'models' && hasPermission(role => ['qa_lead', 'qc_admin', 'super_admin'].includes(role)) && <VlmSettingsCard />}
     {tab === 'guideline' && guidelineExtra}
     </>
   );

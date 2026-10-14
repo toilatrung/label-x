@@ -63,6 +63,37 @@ class ConfigVersion(dj_models.Model):
         super().save(*args, **kwargs)
 
 
+class VlmConnection(dj_models.Model):
+    """Immutable connection version; credentials never enter QC config or API responses."""
+
+    config = dj_models.JSONField(default=dict)
+    encrypted_api_key = dj_models.TextField()
+    created_at = dj_models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "vlm_connection"
+
+    def __str__(self) -> str:
+        return f"VLM connection {self.pk}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk is not None and VlmConnection.objects.filter(pk=self.pk).exists():
+            raise ValidationError("Kết nối VLM đã lưu không được sửa trực tiếp.")
+        super().save(*args, **kwargs)
+
+
+class VlmConfiguration(dj_models.Model):
+    """Singleton pointer, locked when replacing the current connection."""
+
+    connection = dj_models.ForeignKey(VlmConnection, null=True, on_delete=dj_models.PROTECT)
+
+    class Meta:
+        db_table = "vlm_configuration"
+
+    def __str__(self) -> str:
+        return "VLM configuration"
+
+
 class ModelArtifact(dj_models.Model):
     """Registered AI model artifact with immutable checksum (FR-ENG-05, SRS §9.4)."""
 
