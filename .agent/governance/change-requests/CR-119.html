@@ -89,9 +89,10 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Rollback Method</strong>: revert commit đợt 2 qua PR thông thường; không xóa lịch sử evaluation hay sửa dữ liệu.</li></ul>
 <h2>Completion Criteria</h2><ul>
 <li>[ ] PO duyệt CR, gồm lệch ready/locked, trước khi baseline hóa/merge.</li>
-<li>[ ] make check và make validate-kit pass trên PR đợt 2.</li>
+<li>[x] make check và make validate-kit pass trên PR đợt 2.</li>
 <li>[ ] PR merge và PO kiểm tay hai ô Performance.</li>
 <li>[ ] Trạng thái cập nhật sau quyết định PO; không tự đánh dấu implemented.</li></ul>
 <h2>Forbidden Actions</h2><ul><li>Không tự duyệt CR hoặc merge khi quyết định còn pending.</li><li>Không đổi công thức DEC-023 hoặc thay Quality Gate của run bằng gate theo Task.</li><li>Không đóng BLOCKER-034 khi tester chưa kiểm A-4/A-5 với VLM có model.</li></ul>
+<p>Bằng chứng triển khai: <a href="https://github.com/toilatrung/label-x/pull/358">PR #358</a> (chờ duyệt, base develop).</p>
 <h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/change-requests/CR-119.html</code>; giữ CR proposed/Approval pending; PR dẫn tới CR và ghi rõ lệch ready/locked.</p>
 </article></main></body></html>
