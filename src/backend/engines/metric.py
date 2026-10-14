@@ -102,12 +102,19 @@ def _gt_frames(reference: Reference) -> dict[FrameKey, dict[str, Any]]:
         raw = source.read()
     if hashlib.sha256(raw).hexdigest() != reference.gt_checksum:
         raise ValueError("metric GT checksum mismatch")
+    return parse_gt_frames(raw, reference.snapshot_id, reference.mapping_version)
+
+
+def parse_gt_frames(
+    raw: bytes, snapshot_id: int, mapping_version: str
+) -> dict[FrameKey, dict[str, Any]]:
+    """Shared validation for uploads and runtime reads."""
     payload = json.loads(raw)
     if (
         not isinstance(payload, dict)
         or payload.get("schema_version") != "labelx.metric.gt.v1"
-        or payload.get("snapshot_id") != reference.snapshot_id
-        or payload.get("mapping_version") != reference.mapping_version
+        or payload.get("snapshot_id") != snapshot_id
+        or payload.get("mapping_version") != mapping_version
         or not isinstance(payload.get("frames"), list)
     ):
         raise ValueError("metric GT schema/snapshot/mapping mismatch")

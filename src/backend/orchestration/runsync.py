@@ -100,6 +100,11 @@ def refresh_run(run_id: int) -> None:
         # immutable ranking there would make the successful retry conflict.
         if run.status == QCRun.Status.COMPLETED:
             persist_terminal_run_rankings(run_id)
+            if run.metric_reference_id:
+                from runs.ground_truth import cleanup_upload_safely
+
+                reference_id = run.metric_reference_id
+                transaction.on_commit(lambda: cleanup_upload_safely(reference_id))
 
 
 def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:

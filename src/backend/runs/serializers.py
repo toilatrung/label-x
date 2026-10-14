@@ -32,6 +32,7 @@ class RunCreateSerializer(serializers.Serializer[Any]):
 
     snapshot_id = serializers.IntegerField(min_value=1)
     config_version_id = serializers.IntegerField(min_value=1)
+    metric_reference_id = serializers.IntegerField(min_value=1, required=False)
     seed = serializers.IntegerField()
 
 

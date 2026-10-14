@@ -16,6 +16,7 @@ from review.adjudication_views import (
 )
 from review.gap_views import GuidelineGapCollectionView
 from runs.gpu_worker_views import WorkerConfigView, WorkerProbeView
+from runs.ground_truth_views import GroundTruthPreviewView, GroundTruthView
 from runs.kpi_views import (
     KpiEvaluationCreateView,
     KpiEvaluationDetailView,
@@ -66,6 +67,12 @@ urlpatterns = [
         "api/decision-cases/<int:pk>/",
         DecisionCaseDetailView.as_view(),
         name="decision-cases-detail",
+    ),
+    path("api/ground-truth/", GroundTruthView.as_view(), name="ground-truth"),
+    path(
+        "api/ground-truth/<int:pk>/preview/",
+        GroundTruthPreviewView.as_view(),
+        name="ground-truth-preview",
     ),
     path("api/references/", ReferenceCreateView.as_view(), name="references-create"),
     path("api/references/<int:pk>/lock/", ReferenceLockView.as_view(), name="references-lock"),

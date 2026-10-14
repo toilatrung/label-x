@@ -554,6 +554,7 @@ class RunCollectionView(APIView):
                 snapshot_id=snapshot_id,
                 config_version_id=config_version_id,
                 seed=seed,
+                metric_reference_id=data.get("metric_reference_id"),
                 created_by=user,
                 idempotency_key=key,
             )

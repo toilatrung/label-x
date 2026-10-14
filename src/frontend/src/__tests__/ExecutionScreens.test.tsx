@@ -39,6 +39,7 @@ async function setup(
   api.fetchSpy.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
+    if (path === '/api/ground-truth/') return Response.json(null);
     calls.push(request);
     if (path === '/api/datasets/') return Response.json({ next: null, previous: null, results: [{ id: 1, name: 'Urban', cvat_project_id: 31 }, { id: 2, name: 'Highway', cvat_project_id: 32 }] });
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
@@ -267,6 +268,7 @@ describe('Execution screens on real API contract', () => {
     api.fetchSpy.mockImplementation(async (request) => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/auth/')) return original(request);
+      if (url.pathname === '/api/ground-truth/') return Response.json(null);
       if (url.pathname === '/api/snapshots/') return Response.json({ next: null, previous: null, results: [{ id: 4, dataset_id: 1, status: 'locked', revision_hash: 'abc123' }] });
       if (url.pathname === '/api/config-versions/') {
         const cursor = url.searchParams.get('cursor');
