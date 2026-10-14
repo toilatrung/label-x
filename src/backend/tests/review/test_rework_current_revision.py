@@ -44,7 +44,13 @@ def current(monkeypatch):
     seen: list[tuple[int, int]] = []
 
     def fake(
-        *, dataset_id, cvat_job_id, client=None, guideline_version=None, legacy_reference=False
+        *,
+        dataset_id,
+        cvat_job_id,
+        client=None,
+        guideline_version=None,
+        legacy_reference=False,
+        user=None,
     ):
         seen.append((dataset_id, cvat_job_id))
         return REVISION

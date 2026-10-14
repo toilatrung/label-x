@@ -374,6 +374,54 @@ paths:
               schema: { $ref: "#/components/schemas/Session" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /api/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      tags: [auth]
+      summary: Trạng thái token CVAT trong Hồ sơ của tài khoản hiện tại
+      x-labelx-trace: [FR-SEC-01, FR-SEC-02]
+      x-labelx-roles: [authenticated]
+      responses:
+        "200":
+          description: Trạng thái token; không trả giá trị token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    patch:
+      operationId: auth_profile_update
+      tags: [auth]
+      summary: Lưu token CVAT riêng của tài khoản hiện tại
+      x-labelx-trace: [FR-SEC-01, FR-SEC-05]
+      x-labelx-roles: [authenticated]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileUpdate" }
+      responses:
+        "200":
+          description: Token được mã hóa và lưu; không trả giá trị token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+    delete:
+      operationId: auth_profile_token_delete
+      tags: [auth]
+      summary: Xóa token CVAT đã lưu trong Hồ sơ của tài khoản hiện tại
+      x-labelx-trace: [FR-SEC-01, FR-SEC-05]
+      x-labelx-roles: [authenticated]
+      responses:
+        "200":
+          description: Đã xóa token riêng; giữ cấu hình token mặc định của máy chủ nếu có
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
   /api/auth/workflow-permissions/:
     get:
       operationId: auth_workflow_permissions
@@ -4537,6 +4585,18 @@ components:
         results:
           type: array
           items: { $ref: "#/components/schemas/Model" }
+    Profile:
+      type: object
+      required: [cvat_token_configured, cvat_token_saved]
+      properties:
+        cvat_token_configured: { type: boolean }
+        cvat_token_saved: { type: boolean, description: Token riêng đã lưu trong Hồ sơ và có thể xóa }
+    ProfileUpdate:
+      type: object
+      additionalProperties: false
+      required: [cvat_service_token]
+      properties:
+        cvat_service_token: { type: string, minLength: 1, maxLength: 4096, writeOnly: true }
     VlmSettings:
       type: object
       required: [revision, base_url, model, api_key_configured, confidence_threshold]

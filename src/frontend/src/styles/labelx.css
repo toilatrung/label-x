@@ -652,3 +652,16 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-gap__notice { margin-top: var(--space-4); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--warning-soft); font-size: 13px; }
 .lx-gap__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 @media (max-width:520px) { .lx-gap__head, .lx-gap__body { padding: var(--space-4); } }
+
+/* Profile credential status and inline removal action. */
+.lx-profile-token { position: relative; display: flex; align-items: center; }
+.lx-profile-token:has(.lx-profile-token__delete) .lx-input { padding-right: calc(var(--space-8) * 3); }
+.lx-profile-token__delete { position: absolute; right: var(--space-1); border: 0; border-left: 1px solid var(--border); background: transparent; color: var(--danger); padding: var(--space-1) var(--space-2); font: inherit; font-size: 12px; cursor: pointer; transition: background-color 160ms ease; }
+.lx-profile-token__delete:hover { background: var(--danger-soft); }
+.lx-profile-token__delete:disabled { cursor: wait; opacity: .55; }
+.lx-profile-status { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--ink-muted); background: var(--surface-sunken); transition: color 200ms ease, background-color 200ms ease; }
+.lx-profile-status__light { width: var(--space-2); height: var(--space-2); flex: none; border-radius: var(--radius-full); background: var(--ink-subtle); }
+.lx-profile-status.is-configured { color: var(--success); background: var(--success-soft); border-color: var(--success); }
+.lx-profile-status.is-configured .lx-profile-status__light { background: var(--success); box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--success) 12%, transparent); animation: lx-profile-light 2.4s ease-in-out infinite; }
+@keyframes lx-profile-light { 50% { box-shadow: 0 0 0 calc(var(--space-1) * 1.5) color-mix(in srgb, var(--success) 4%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .lx-profile-status.is-configured .lx-profile-status__light { animation: none; } .lx-profile-status, .lx-profile-token__delete { transition: none; } }

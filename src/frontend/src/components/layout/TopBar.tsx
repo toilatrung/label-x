@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { ROLE_LABELS, canAccessAnalysis, canAccessReview, canAccessEscalations, canAccessCalibration,
   canAccessReports, canAccessConfiguration, canAccessGuidelines } from '@/lib/auth/roles';
 import { Icon } from '@/components/ui/Icon';
+import { ProfileModal } from '@/components/layout/ProfileModal';
 import { BrandMark } from '@/components/ui/BrandMark';
 
 interface MenuItem { label: string; icon: string; href?: string; desc?: string; }
@@ -16,6 +17,8 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
   const { user, logout, hasPermission } = useAuth();
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const userButton = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const roleName = user?.role ? ROLE_LABELS[user.role] : 'Chưa có quyền trong phạm vi này';
@@ -95,14 +98,14 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
       </div>)}
     </nav>
     <div className="lx-userwrap">
-      <button className="lx-user lx-user--btn" type="button" aria-haspopup="menu" aria-expanded={openMenu === 'user'}
+      <button className="lx-user lx-user--btn" ref={userButton} type="button" aria-haspopup="menu" aria-expanded={openMenu === 'user'}
         aria-controls="nav-menu-user" onClick={event => toggle('user', event)} onKeyDown={event => triggerKey(event, 'user')}>
         <span className="lx-avatar" aria-hidden="true">{initials}</span>
         <span className="lx-user__meta"><span className="lx-user__name">{user?.fullName || 'Khách'}</span><span className="lx-user__role">{roleName}</span></span>
         <Icon name="chevron" />
       </button>
       {openMenu === 'user' && <div className="lx-menu lx-menu--user" id="nav-menu-user" role="menu" onKeyDown={menuKey}>
-        <button className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
+        <button className="lx-menu__item" type="button" role="menuitem" onClick={() => { closeAll(); setProfileOpen(true); }}>
           <Icon name="user" /><span className="lx-menu__t">Hồ sơ</span>
         </button>
         <button className="lx-menu__item" type="button" role="menuitem" disabled title="Chưa khả dụng">
@@ -113,5 +116,6 @@ export function TopBar({ activeKey }: { activeKey?: string }) {
         </button>
       </div>}
     </div>
+    {profileOpen && <ProfileModal onClose={() => { setProfileOpen(false); userButton.current?.focus(); }} />}
   </header>;
 }

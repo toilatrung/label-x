@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import cast
+
+from django.contrib.auth.models import User
 from django.db.models import Count, Q, QuerySet
 from django.http import HttpRequest, HttpResponse
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -203,7 +206,7 @@ class ReworkCurrentRevisionView(APIView):
         dataset_id = rework.issue.frame_review.run.dataset_id
         if rework.annotator_id != request.user.pk and not _sees_all(request.user.pk, dataset_id):
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Rework không tồn tại.")
-        return Response(read_current_revision(rework))
+        return Response(read_current_revision(rework, cast(User, request.user)))
 
 
 class ReworkCollectionView(APIView):
