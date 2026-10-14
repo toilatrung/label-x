@@ -317,8 +317,55 @@ def test_task_quality_uses_real_metadata_and_source_counts(world):
             "issues": 2,
             "issue_rate": 1.0,
             "reviewed_ratio": 0.5,
+            # Chưa có ledger: coverage null nên gate theo Task cũng null (không tự xem là đạt).
+            "coverage": None,
+            "candidates": 0,
+            "confirmed_issues": 1,
+            "gate_status": None,
         }
     ]
+
+
+def _ledger(world, engine, outcomes, *, task=9, reason=""):
+    for i, outcome in enumerate(outcomes):
+        LedgerUnit.objects.create(
+            run=world["run"],
+            engine=engine,
+            kind="frame",
+            cvat_task_id=task,
+            frame_number=i,
+            outcome=outcome,
+            not_checked_reason=reason if outcome == "not_checked" else "",
+        )
+
+
+def test_task_quality_coverage_candidates_and_gate_per_task(world):
+    """BLOCKER-034 B-3 (DEC-023): coverage của engine bắt buộc trong Task, gate chỉ để hiển thị."""
+    frame, _, issue = add_reviews(world)
+    candidate(world)
+    candidate(world, family="E2", index=2)
+    EngineResult.objects.create(run=world["run"], engine="geometry", status="partial")
+    EngineResult.objects.create(run=world["run"], engine="schema", status="checked", required=False)
+    _ledger(world, "geometry", ["completed", "failed", "not_checked"], reason="not_applicable")
+    _ledger(world, "schema", ["failed", "failed"])  # không bắt buộc: không vào coverage
+    _ledger(world, "geometry", ["completed"], task=77)  # Task khác
+    row = world["api"].get(run_url(world, "tasks-quality")).data["results"][0]
+    # not_applicable bị loại khỏi mẫu số: 1 completed / 2 eligible.
+    assert row["coverage"] == 0.5 and row["gate_status"] == "partial"
+    assert row["candidates"] == 2 and row["confirmed_issues"] == 1
+
+    LedgerUnit.objects.filter(run=world["run"], engine="geometry", outcome="failed").update(
+        outcome="completed"
+    )
+    row = world["api"].get(run_url(world, "tasks-quality")).data["results"][0]
+    assert row["coverage"] == 1.0 and row["gate_status"] == "passed"
+
+    Issue.objects.filter(pk=issue.pk).update(severity="critical")
+    row = world["api"].get(run_url(world, "tasks-quality")).data["results"][0]
+    assert row["gate_status"] == "blocked"
+    Issue.objects.filter(pk=issue.pk).update(state="resolved")
+    row = world["api"].get(run_url(world, "tasks-quality")).data["results"][0]
+    assert row["gate_status"] == "passed" and row["confirmed_issues"] == 1
 
 
 def test_dataset_summary_filters_scope_and_uses_latest_run_only(world):

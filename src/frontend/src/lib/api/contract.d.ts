@@ -3022,7 +3022,7 @@ export interface components {
             parameters: {
                 [key: string]: unknown;
             };
-            /** @description KPI-1, KPI-2, KPI-2b, G-1…G-4; thiếu mẫu dùng status=not_checked. */
+            /** @description KPI-1, KPI-2, KPI-2b, G-1…G-4, P-1 (Precision của candidate = Issue từ candidate đã xác nhận / đã có quyết định), C-1 (Benchmark coverage = frame Snapshot có trong Benchmark ready mới nhất / frame Snapshot); thiếu mẫu dùng status=not_checked hoặc insufficient_sample (CR-119). */
             metrics?: {
                 [key: string]: components["schemas"]["MetricValue"];
             } | null;
@@ -3040,6 +3040,10 @@ export interface components {
             denominator: number;
             method: string;
             confidence_interval?: number[] | null;
+            /** @description Chi tiết theo metric (CR-119): P-1 có by_engine {engine: {confirmed, decided, value}}; C-1 có benchmark_id (null khi chưa có Benchmark ready). */
+            details?: {
+                [key: string]: unknown;
+            };
         };
         /** @enum {string} */
         GateConditionName: "coverage" | "open_critical_issues" | "rework_verified" | "residual" | "agreement";
@@ -3543,6 +3547,17 @@ export interface components {
             issues: number;
             issue_rate?: number | null;
             reviewed_ratio?: number | null;
+            /** @description Unit completed / eligible của các engine bắt buộc trong Task (không tính VLM); null khi Task chưa có unit eligible (BLOCKER-034 B-3). */
+            coverage?: number | null;
+            /** @description Số candidate của run trong Task */
+            candidates?: number;
+            /** @description Issue ở trạng thái confirmed, fix_pending, recheck_pending, resolved hoặc reopened */
+            confirmed_issues?: number;
+            /**
+             * @description Chỉ để hiển thị, không thay Quality Gate của run. blocked khi còn Issue critical chưa đóng; partial khi coverage < 100%; null khi coverage null (DEC-023).
+             * @enum {string|null}
+             */
+            gate_status?: "passed" | "partial" | "blocked" | null;
         };
         PaginatedTaskQualityList: {
             next?: string | null;

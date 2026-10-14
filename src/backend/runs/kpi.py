@@ -195,6 +195,70 @@ def _metric(
     }
 
 
+# Issue sinh từ candidate đã có quyết định (BLOCKER-034 B-5, DEC-023): xác nhận hoặc bác bỏ.
+CONFIRMED_PATH = (
+    Issue.State.CONFIRMED,
+    Issue.State.FIX_PENDING,
+    Issue.State.RECHECK_PENDING,
+    Issue.State.RESOLVED,
+    Issue.State.REOPENED,
+)
+
+
+def candidate_precision(run_ids: list[int]) -> tuple[float | None, int, dict[str, Any]]:
+    """P-1 = Issue từ candidate đã xác nhận / Issue từ candidate đã có quyết định.
+
+    Escalated và chưa review không vào mẫu số. Trả (value, decided, by_engine).
+    """
+    rows = (
+        _issues(run_ids)
+        .filter(candidate__isnull=False, state__in=(*CONFIRMED_PATH, Issue.State.REJECTED))
+        .values_list("candidate__engine", "state")
+    )
+    totals: dict[str, list[int]] = {}
+    for engine, state in rows:
+        pair = totals.setdefault(str(engine), [0, 0])
+        pair[0] += int(state in CONFIRMED_PATH)
+        pair[1] += 1
+    confirmed = sum(p[0] for p in totals.values())
+    decided = sum(p[1] for p in totals.values())
+    by_engine = {
+        engine: {"confirmed": c, "decided": d, "value": c / d}
+        for engine, (c, d) in sorted(totals.items())
+    }
+    return (confirmed / decided if decided else None), decided, by_engine
+
+
+def benchmark_coverage(run: QCRun) -> tuple[float | None, int, int, int | None]:
+    """C-1 = frame của Snapshot có trong Benchmark ready mới nhất của Dataset / frame của Snapshot.
+
+    Frame so theo (cvat_task_id, frame_index) vì BenchmarkFrame trỏ tới frame của Snapshot khác.
+    Trả (value, khớp, tổng frame Snapshot, benchmark_id); không có Benchmark ready thì value None.
+    """
+    from calibration.models import Benchmark, BenchmarkFrame, BenchmarkStatus
+    from snapshots.models import SnapshotFrame
+
+    frames = set(
+        SnapshotFrame.objects.filter(snapshot_job__snapshot_id=run.snapshot_id).values_list(
+            "snapshot_job__cvat_task_id", "frame_index"
+        )
+    )
+    benchmark = (
+        Benchmark.objects.filter(dataset_id=run.dataset_id, status=BenchmarkStatus.READY)
+        .order_by("-id")
+        .first()
+    )
+    if benchmark is None:
+        return None, 0, len(frames), None
+    gt = set(
+        BenchmarkFrame.objects.filter(
+            benchmark=benchmark, snapshot_frame__isnull=False
+        ).values_list("snapshot_frame__snapshot_job__cvat_task_id", "snapshot_frame__frame_index")
+    )
+    matched = len(frames & gt)
+    return (matched / len(frames) if frames else None), matched, len(frames), benchmark.pk
+
+
 def compute_metrics(run: QCRun, *, e_min: int) -> tuple[dict[str, Any], int]:
     """Trả (metrics, cỡ mẫu = số frame đã review của run gốc)."""
     origin = origin_of(run)
@@ -217,6 +281,20 @@ def compute_metrics(run: QCRun, *, e_min: int) -> tuple[dict[str, Any], int]:
         for key in ("G-2", "G-3", "G-4"):
             metrics[key]["status"] = "insufficient_sample"
             metrics[key]["value"] = None
+    precision, decided, by_engine = candidate_precision(run_ids)
+    metrics["P-1"] = _metric(precision, decided, decided, "confirmed_over_decided_candidate_issues")
+    metrics["P-1"]["details"] = {"by_engine": by_engine}
+    if decided and decided < e_min:
+        metrics["P-1"]["status"] = "insufficient_sample"
+        metrics["P-1"]["value"] = None
+    coverage, matched, total, benchmark_id = benchmark_coverage(origin)
+    metrics["C-1"] = _metric(
+        coverage,
+        matched,
+        total,
+        "snapshot_frames_in_latest_ready_benchmark" if benchmark_id else "no_ready_benchmark",
+    )
+    metrics["C-1"]["details"] = {"benchmark_id": benchmark_id}
     return metrics, sample
 
 

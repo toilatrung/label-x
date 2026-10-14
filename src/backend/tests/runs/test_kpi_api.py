@@ -133,7 +133,9 @@ def test_evaluation_insufficient_sample_idempotent_and_no_fake_kpi(world, qa):
     assert first.data["status"] == "insufficient_sample"
     assert first.data["leakage_check"] == "not_checked"
     metrics = first.data["metrics"]
-    assert set(metrics) == {"KPI-1", "KPI-2", "KPI-2b", "G-1", "G-2", "G-3", "G-4"}
+    assert set(metrics) == {"KPI-1", "KPI-2", "KPI-2b", "G-1", "G-2", "G-3", "G-4", "P-1", "C-1"}
+    assert metrics["P-1"]["status"] == "not_checked"
+    assert metrics["C-1"]["status"] == "not_checked"
     assert all(metrics[k]["value"] is None for k in ("KPI-1", "KPI-2", "KPI-2b", "G-1"))
     assert metrics["KPI-2"]["status"] == "insufficient_sample"
     assert _evaluate(world, qa["a"], ref_id).data["id"] == first.data["id"]

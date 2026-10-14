@@ -4241,7 +4241,7 @@ components:
           type: object
           nullable: true
           additionalProperties: { $ref: "#/components/schemas/MetricValue" }
-          description: KPI-1, KPI-2, KPI-2b, G-1…G-4; thiếu mẫu dùng status=not_checked.
+          description: "KPI-1, KPI-2, KPI-2b, G-1…G-4, P-1 (Precision của candidate = Issue từ candidate đã xác nhận / đã có quyết định), C-1 (Benchmark coverage = frame Snapshot có trong Benchmark ready mới nhất / frame Snapshot); thiếu mẫu dùng status=not_checked hoặc insufficient_sample (CR-119)."
         leakage_check: { type: string, enum: [passed, failed, not_checked] }
         created_by: { type: integer }
         created_at: { type: string, format: date-time }
@@ -4260,6 +4260,10 @@ components:
           minItems: 2
           maxItems: 2
           items: { type: number }
+        details:
+          type: object
+          additionalProperties: true
+          description: "Chi tiết theo metric (CR-119): P-1 có by_engine {engine: {confirmed, decided, value}}; C-1 có benchmark_id (null khi chưa có Benchmark ready)."
 
     # ------------------------------------------------------------ gate/report
     GateConditionName:
@@ -4950,6 +4954,17 @@ components:
         issues: { type: integer }
         issue_rate: { type: number, nullable: true }
         reviewed_ratio: { type: number, nullable: true }
+        coverage:
+          type: number
+          nullable: true
+          description: Unit completed / eligible của các engine bắt buộc trong Task (không tính VLM); null khi Task chưa có unit eligible (BLOCKER-034 B-3).
+        candidates: { type: integer, description: Số candidate của run trong Task }
+        confirmed_issues: { type: integer, description: "Issue ở trạng thái confirmed, fix_pending, recheck_pending, resolved hoặc reopened" }
+        gate_status:
+          type: string
+          nullable: true
+          enum: [passed, partial, blocked, null]
+          description: Chỉ để hiển thị, không thay Quality Gate của run. blocked khi còn Issue critical chưa đóng; partial khi coverage < 100%; null khi coverage null (DEC-023).
     PaginatedTaskQualityList:
       type: object
       required: [results]

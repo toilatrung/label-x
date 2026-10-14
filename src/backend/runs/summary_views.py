@@ -23,6 +23,7 @@ from runs.summary_read import (
     review_volume,
     reviewed_for_run,
     run_metrics,
+    task_quality_extras,
 )
 from runs.summary_serializers import (
     CandidateCategoriesSerializer,
@@ -174,11 +175,13 @@ class RunTasksQualityView(SummaryReadView):
             .values("frame_review__snapshot_frame__snapshot_job__cvat_task_id")
             .annotate(n=Count("id"))
         }
+        extras = task_quality_extras(run, task_ids)
         rows: list[dict[str, Any]] = []
         for task_id in task_ids:
             total = totals.get(task_id, 0)
             rows.append(
                 {
+                    **extras[task_id],
                     "cvat_task_id": task_id,
                     "name": names[task_id],
                     "frames": total,

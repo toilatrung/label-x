@@ -20,6 +20,8 @@ const metric = (value: number | null, sample: number, method: string, status = v
 const metrics = {
   'KPI-1': metric(null, 40, 'gt_payload_not_stored'), 'KPI-2': metric(null, 40, 'gt_payload_not_stored'),
   'KPI-2b': metric(null, 40, 'gt_payload_not_stored'), 'G-1': metric(null, 40, 'gt_payload_not_stored'),
+  'P-1': metric(0.8, 35, 'confirmed_over_decided_candidate_issues'),
+  'C-1': { ...metric(0.5, 20, 'snapshot_frames_in_latest_ready_benchmark'), denominator: 40 },
   'G-2': metric(0, 40, 'open_critical_count'), 'G-3': metric(0.925, 40, 'reviewer_vs_adjudicator'), 'G-4': metric(0.06, 50, 'random_audit_residual'),
 };
 const evaluation = { id: 5, status: 'completed', snapshot_id: 3, run_id: 107, reference_id: 2, score_version: 'score_v0', experiment_id: null,
@@ -30,7 +32,7 @@ const report = { id: 5, input_snapshot_id: 3, reference_id: 2, source_run_id: 10
 const run107 = { id: 107, snapshot_id: 3, config_version_id: 2, seed: 1, status: 'completed', is_final: false, origin_run_id: null,
   score_version: 'score_v0', model_artifact: null, engines: [], created_by: 2, created_at: '2026-10-10T00:00:00Z', finished_at: '2026-10-10T00:10:00Z' };
 
-async function setup(username: string, search: string, options: { reportFailsOnce?: boolean } = {}) {
+async function setup(username: string, search: string, options: { reportFailsOnce?: boolean; metricOverrides?: Partial<typeof metrics> } = {}) {
   searchParamsState.current = search;
   replace.mockClear();
   const api = installMockAuthApi(); await api.signIn(username);
@@ -41,11 +43,11 @@ async function setup(username: string, search: string, options: { reportFailsOnc
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
     calls.push(request);
-    if (path === '/api/evaluations/5/') return Response.json(evaluation);
+    if (path === '/api/evaluations/5/') return Response.json({ ...evaluation, metrics: { ...metrics, ...options.metricOverrides } });
     if (path === '/api/reports/5/') {
       reportCalls += 1;
       if (options.reportFailsOnce && reportCalls === 1) return Response.json({ code: 'NOT_FOUND', message: 'x' }, { status: 404 });
-      return Response.json(report);
+      return Response.json({ ...report, metrics: { ...metrics, ...options.metricOverrides } });
     }
     if (path === '/api/runs/107/') return Response.json(run107);
     if (path === '/api/evaluations/' && request.method === 'POST') return Response.json({ ...evaluation, id: 9 }, { status: 202 });
@@ -81,9 +83,34 @@ describe('Performance Evaluation on KPI evaluation + effectiveness report', () =
   it('keeps regions without API as labelled sample data with the notice', async () => {
     await setup('qalead', 'evaluation=5');
     await screen.findByText('92.5%');
-    expect(screen.getByText('87.5%')).toBeTruthy();
-    expect(screen.getAllByText('Dữ liệu minh họa').length).toBe(4);
-    expect(screen.getAllByRole('status').filter((n) => n.textContent?.includes(NOT_CONNECTED_MESSAGE))).toHaveLength(3);
+    expect(screen.getByText('80.0%')).toBeTruthy();
+    expect(screen.getByText('50.0%')).toBeTruthy();
+    expect(screen.getByText(/Trên 35 Issue từ candidate đã có quyết định/)).toBeTruthy();
+    expect(screen.getByText(/20 \/ 40 frame Snapshot có trong Benchmark/)).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Benchmark coverage' }).getAttribute('aria-valuenow')).toBe('50');
+    expect(screen.getAllByText('Dữ liệu minh họa').length).toBe(2);
+    expect(screen.getAllByRole('status').filter((n) => n.textContent?.includes(NOT_CONNECTED_MESSAGE))).toHaveLength(2);
+  });
+
+  it('shows insufficient precision and missing benchmark without a fabricated progress bar', async () => {
+    await setup('qalead', 'evaluation=5', { metricOverrides: {
+      'P-1': metric(null, 2, 'confirmed_over_decided_candidate_issues', 'insufficient_sample'),
+      'C-1': { ...metric(null, 0, 'no_ready_benchmark'), denominator: 40 },
+    } });
+    expect(await screen.findByText('Chưa đủ mẫu')).toBeTruthy();
+    expect(screen.getByText('Not checked')).toBeTruthy();
+    expect(screen.getByText(/Trên 2 Issue từ candidate đã có quyết định/)).toBeTruthy();
+    expect(screen.getByText(/no_ready_benchmark/)).toBeTruthy();
+    expect(screen.queryByRole('progressbar', { name: 'Benchmark coverage' })).toBeNull();
+  });
+
+  it('shows zero computed coverage as a zero progress bar', async () => {
+    await setup('qalead', 'evaluation=5', { metricOverrides: {
+      'C-1': { ...metric(0, 0, 'snapshot_frames_in_latest_ready_benchmark'), denominator: 40 },
+    } });
+    const bar = await screen.findByRole('progressbar', { name: 'Benchmark coverage' });
+    expect(bar.getAttribute('aria-valuenow')).toBe('0');
+    expect(screen.getByText('0.0%')).toBeTruthy();
   });
 
   it('shows an empty state without an evaluation and creates one through POST /api/evaluations/', async () => {
