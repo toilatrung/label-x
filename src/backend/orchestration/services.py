@@ -275,7 +275,8 @@ def _apply_unit_results(engine_input: EngineInput, output: EngineOutput) -> None
         row.outcome = result.outcome
         row.not_checked_reason = getattr(result, "not_checked_reason", "")
         row.attempts = max(row.attempts, result.attempts)
-        row.save(update_fields=["outcome", "not_checked_reason", "attempts"])
+        row.details = getattr(result, "details", {})
+        row.save(update_fields=["outcome", "not_checked_reason", "attempts", "details"])
 
 
 def mark_shard_failed(engine_input: EngineInput, attempts: int) -> None:

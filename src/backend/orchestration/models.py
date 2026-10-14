@@ -78,6 +78,7 @@ class LedgerUnit(models.Model):
     outcome = models.CharField(max_length=16, default="pending")
     not_checked_reason = models.CharField(max_length=24, blank=True)
     attempts = models.PositiveIntegerField(default=0)
+    details = models.JSONField(default=dict)
 
     class Meta:
         constraints = [

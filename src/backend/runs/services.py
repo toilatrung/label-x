@@ -20,6 +20,7 @@ from engines.duplicate_overlap import (
 )
 from engines.geometry import GEOMETRY_DESCRIPTOR, GEOMETRY_ENGINE_NAME
 from engines.interface import EngineDescriptor, EngineStatus, NotCheckedReason
+from engines.metric import METRIC_DESCRIPTOR
 from engines.schema_taxonomy import SCHEMA_TAXONOMY_DESCRIPTOR, SCHEMA_TAXONOMY_ENGINE_NAME
 from orchestration.models import VlmUnit
 from runs.models import ConfigVersion, EngineResult, ModelArtifact, QCRun, WorkUnit
@@ -60,15 +61,7 @@ KNOWN_ENGINE_DESCRIPTORS: dict[str, EngineDescriptor] = {
     SCHEMA_TAXONOMY_ENGINE_NAME: SCHEMA_TAXONOMY_DESCRIPTOR,
     GEOMETRY_ENGINE_NAME: GEOMETRY_DESCRIPTOR,
     "detector": DETECTOR_DESCRIPTOR,
-    "metric": EngineDescriptor(
-        name="metric",
-        version="1.0.0",
-        unit="frame",
-        required=False,
-        needs_model=False,
-        needs_reference=False,
-        applicability_version="1.0.0",
-    ),
+    "metric": METRIC_DESCRIPTOR,
     "vlm": EngineDescriptor(
         name="vlm",
         version="1.0.0",
