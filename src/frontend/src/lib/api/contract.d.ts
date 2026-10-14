@@ -3022,7 +3022,7 @@ export interface components {
             parameters: {
                 [key: string]: unknown;
             };
-            /** @description KPI-1, KPI-2, KPI-2b, G-1…G-4; thiếu mẫu dùng status=not_checked. */
+            /** @description KPI-1, KPI-2, KPI-2b, G-1…G-4, P-1 (Precision của candidate = Issue từ candidate đã xác nhận / đã có quyết định), C-1 (Benchmark coverage = frame Snapshot có trong Benchmark ready mới nhất / frame Snapshot); thiếu mẫu dùng status=not_checked hoặc insufficient_sample (CR-119). */
             metrics?: {
                 [key: string]: components["schemas"]["MetricValue"];
             } | null;
@@ -3040,6 +3040,10 @@ export interface components {
             denominator: number;
             method: string;
             confidence_interval?: number[] | null;
+            /** @description Chi tiết theo metric (CR-119): P-1 có by_engine {engine: {confirmed, decided, value}}; C-1 có benchmark_id (null khi chưa có Benchmark ready). */
+            details?: {
+                [key: string]: unknown;
+            };
         };
         /** @enum {string} */
         GateConditionName: "coverage" | "open_critical_issues" | "rework_verified" | "residual" | "agreement";

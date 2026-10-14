@@ -5,12 +5,10 @@ import pytest
 from calibration.models import Benchmark, BenchmarkFrame, BenchmarkStatus
 from review.models import Issue
 from runs.kpi import benchmark_coverage, candidate_precision, compute_metrics
-from tests.runs.test_summary_api import (  # noqa: F401  (fixture world tái sử dụng)
-    add_reviews,
-    candidate,
-    snapshot,
-    world,
-)
+from snapshots.models import Snapshot
+from tests.runs.test_summary_api import add_reviews, candidate, snapshot
+
+pytest_plugins = ["tests.runs.test_summary_api"]
 
 pytestmark = pytest.mark.django_db
 
@@ -27,9 +25,9 @@ def test_precision_counts_only_decided_candidate_issues(world):
     geo2 = candidate(world, index=2)
     _issue(frame, geo, "confirmed")
     _issue(frame, geo2, "resolved")
-    _issue(other, geo, "rejected")
-    _issue(other, geo2, "escalated")  # chưa có quyết định
-    _issue(other, geo2, "pending_review")
+    _issue(other, candidate(world, index=3), "rejected")
+    _issue(other, candidate(world, index=4), "escalated")  # chưa có quyết định
+    _issue(other, candidate(world, index=5), "pending_review")
     value, decided, by_engine = candidate_precision([world["run"].pk])
     assert decided == 3 and value == pytest.approx(2 / 3)
     assert by_engine == {"geometry": {"confirmed": 2, "decided": 3, "value": pytest.approx(2 / 3)}}
@@ -79,3 +77,59 @@ def test_benchmark_coverage_matches_task_and_frame_of_latest_ready_benchmark(wor
     assert c1["status"] == "computed" and c1["value"] == 0.5
     assert (c1["sample_size"], c1["denominator"]) == (1, 2)
     assert c1["details"] == {"benchmark_id": newest.pk}
+
+
+def test_precision_includes_confirmed_lifecycle_and_separates_engines(world):
+    frame, other, _ = add_reviews(world)
+    states = ("confirmed", "fix_pending", "recheck_pending", "resolved", "reopened")
+    for index, state in enumerate(states, start=1):
+        _issue(frame, candidate(world, index=index), state)
+    rejected = candidate(world, index=6)
+    rejected.engine = "vlm"
+    rejected.save(update_fields=["engine"])
+    _issue(other, rejected, "rejected")
+    # Candidate chưa sinh Issue không phải quyết định review.
+    candidate(world, index=7)
+    value, count, engines = candidate_precision([world["run"].pk])
+    assert (value, count) == (5 / 6, 6)
+    assert engines == {
+        "geometry": {"confirmed": 5, "decided": 5, "value": 1.0},
+        "vlm": {"confirmed": 0, "decided": 1, "value": 0.0},
+    }
+    assert candidate_precision([]) == (None, 0, {})
+
+
+def test_coverage_scopes_dataset_task_and_deduplicates_overlapping_jobs(world):
+    overlapping = snapshot(world["user"], tasks=(9, 9), offset=800)
+    world["run"].snapshot = overlapping
+    world["run"].save(update_fields=["snapshot"])
+    frames = list(overlapping.jobs.first().frames.order_by("frame_index"))
+    bench = _benchmark(world, frames[:1])
+    # Một Dataset khác có Benchmark mới hơn cũng không được chọn.
+    foreign = _benchmark(world, frames)
+    foreign.dataset_id = 99
+    foreign.save(update_fields=["dataset_id"])
+    assert benchmark_coverage(world["run"]) == (0.5, 1, 2, bench.pk)
+    # Cùng frame_index nhưng khác Task không khớp.
+    wrong_task = snapshot(world["user"], tasks=(10,), offset=900)
+    newest = _benchmark(world, list(wrong_task.jobs.first().frames.all()))
+    assert benchmark_coverage(world["run"]) == (0.0, 0, 2, newest.pk)
+
+
+def test_empty_snapshot_coverage_does_not_divide_by_zero(world):
+    frame = world["snap"].jobs.first().frames.first()
+    bench = _benchmark(world, [frame])
+    empty = Snapshot.objects.create(
+        dataset_id=42,
+        created_by=world["user"],
+        taxonomy_version="t",
+        guideline_version="g",
+        schema_version="test",
+        status="pending",
+    )
+    world["run"].snapshot = empty
+    world["run"].save(update_fields=["snapshot"])
+    assert benchmark_coverage(world["run"]) == (None, 0, 0, bench.pk)
+    coverage = compute_metrics(world["run"], e_min=1)[0]["C-1"]
+    assert coverage["status"] == "not_checked"
+    assert coverage["value"] is None

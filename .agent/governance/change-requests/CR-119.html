@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-119 — Precision của candidate và Benchmark coverage — LabelX</title>
+<meta name="labelx:id" content="cr-119">
+<meta name="labelx:title" content="CR-119 — Precision của candidate và Benchmark coverage">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="metrics">
+<meta name="labelx:tags" content="[change-request, blocker-034, precision, benchmark, contract]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / cr-119</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>cr-119</span><b>title</b><span>CR-119 — Precision của candidate và Benchmark coverage</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[change-request, blocker-034, precision, benchmark, contract]</span><b>priority</b><span>2</span></div>
+<h1>CR-119 — Precision của candidate và Benchmark coverage</h1>
+<h2>Usage Purpose</h2><p>Ghi đề xuất mở rộng metric B-5 của BLOCKER-034 theo DEC-023. Code và contract được chuẩn bị trong PR đợt 2 để PO duyệt; CR vẫn chờ quyết định, chưa ghi nhận baseline đã được duyệt.</p>
+<h2>Record Metadata</h2><ul>
+<li><strong>Change Request ID</strong>: <code>CR-119</code></li>
+<li><strong>Title</strong>: Precision của candidate và Benchmark coverage</li>
+<li><strong>Owner</strong>: Product Owner (@toilatrung)</li>
+<li><strong>Proposer</strong>: Codex, tiếp nối CTX-BLOCKER-034-B</li>
+<li><strong>Status</strong>: <code>proposed</code></li>
+<li><strong>Change Type</strong>: <code>contract</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Decision Due Date</strong>: Chờ PO duyệt, không đặt hạn.</li></ul>
+<h2>Proposed Change</h2>
+<p>Trước: Performance hiển thị hai ô Precision và Benchmark coverage bằng dữ liệu minh họa. Sau: thêm <code>P-1</code> và <code>C-1</code> vào <code>KpiEvaluation.metrics</code> và báo cáo EffectivenessReport; FE đọc hai metric và bỏ badge minh họa/notice ở hai ô. Dòng Benchmark trong bảng luồng lấy mẫu vẫn minh họa.</p>
+<ul><li><strong>P-1</strong>: số Issue có candidate ở trạng thái <code>confirmed, fix_pending, recheck_pending, resolved, reopened</code> / số Issue có candidate ở các trạng thái trên hoặc <code>rejected</code>. Không tính escalated, pending_review hoặc Issue thủ công. Phạm vi run gốc và operational source theo cơ chế báo cáo hiện có. Không có quyết định: <code>not_checked</code>; có quyết định nhưng dưới <code>e_min</code>: <code>insufficient_sample</code>, value null. <code>sample_size</code> và <code>denominator</code> là số quyết định; method <code>confirmed_over_decided_candidate_issues</code>; <code>details.by_engine</code> lưu confirmed, decided, value từng engine để audit, kể cả khi tổng chưa đủ mẫu.</li>
+<li><strong>C-1</strong>: số frame logic của Snapshot run gốc có trong Benchmark mới nhất cùng Dataset / tổng frame logic của Snapshot. Đối chiếu bằng <code>(cvat_task_id, frame_index)</code>, loại trùng giữa Job; sample_size là số frame khớp, denominator là tổng frame Snapshot. Method <code>snapshot_frames_in_latest_ready_benchmark</code>; <code>details.benchmark_id</code> ghi nguồn. Không có Benchmark ready: <code>not_checked</code>, value null, method <code>no_ready_benchmark</code>, benchmark_id null. Snapshot rỗng: value null và không chia cho 0.</li>
+<li><strong>Lệch cần PO duyệt</strong>: DEC-023 nói Benchmark “đã khoá”, nhưng model chỉ có <code>pending, ready, failed</code>, không có trạng thái locked. PR dùng <code>ready</code> mới nhất (id lớn nhất) làm nguồn thay thế, chưa có bảo đảm bất biến như Reference locked. Không thêm trạng thái hoặc migration. Đây là đề xuất có ghi nhận rõ, chưa tự coi ready tương đương locked đã được PO duyệt.</li>
+<li><strong>Contract</strong>: thêm trường tùy chọn <code>MetricValue.details</code>, giữ các metric cũ và endpoint hiện có; client cũ bỏ qua trường/metric mới.</li></ul>
+<h2>Justification</h2><p>DEC-023 chốt công thức và yêu cầu một CR cho B-5. Dữ liệu Issue/CandidateRecord và BenchmarkFrame hiện có đủ để tính, FE cần số thật và cỡ mẫu để tránh hiểu sai Precision khi ít quyết định.</p>
+<h2>Impact Assessment</h2><ul>
+<li><strong>Affected Baselines</strong>: docs/04-api/openapi.yaml, schema MetricValue/Evaluation/EffectivenessReport.</li>
+<li><strong>Affected Epics or Tasks</strong>: BLOCKER-034 B-5; M-BE-MVP/MBE-01, MBE-04.</li>
+<li><strong>Schedule Impact</strong>: PR đợt 2, sau PR #357 đã merge; chờ PO duyệt CR và PR.</li>
+<li><strong>Cost or Resource Impact</strong>: đọc Issue và frame Benchmark khi tạo evaluation; không gọi VLM/GPU hoặc dịch vụ ngoài.</li>
+<li><strong>Security or Compliance Impact</strong>: giữ quyền Dataset/API hiện có, adapter CVAT chỉ đọc.</li>
+<li><strong>Compatibility or Migration Impact</strong>: mở rộng tương thích; không migration; evaluation cũ chưa có hai metric sẽ hiện “—”, không được tự tính lại.</li></ul>
+<h2>Related Files</h2><ul>
+<li><strong>Affected Documents</strong>: <code>docs/04-api/openapi.yaml</code>; <code>src/backend/runs/kpi.py</code>, <code>src/backend/calibration/serializers.py</code>, <code>src/frontend/src/components/calibration/PerformanceView.tsx</code>, contract.d.ts và test tương ứng.</li>
+<li><strong>Decisions</strong>: <a href="../decisions/DEC-023.html">DEC-023</a>.</li>
+<li><strong>Risks</strong>: ready không phải khóa bất biến; cỡ mẫu ít; Benchmark rỗng/thiếu nguồn.</li>
+<li><strong>Issues or Blockers</strong>: <a href="../blockers/BLOCKER-034.html">BLOCKER-034</a>; <a href="../../execution/CTX-BLOCKER-034-B.html">CTX-BLOCKER-034-B</a>.</li></ul>
+<h2>Approval</h2><ul>
+<li><strong>Decision</strong>: <code>pending</code></li>
+<li><strong>Approver</strong>: Chờ Product Owner.</li>
+<li><strong>Decision Date</strong>: Chưa có.</li>
+<li><strong>Conditions</strong>: PO duyệt việc dùng Benchmark ready thay “đã khoá” trước khi merge/baseline hóa B-5.</li>
+<li><strong>Rationale</strong>: Chưa có quyết định; DEC-023 chốt công thức, không tự duyệt lệch ready/locked.</li></ul>
+<h2>Implementation Plan</h2><ul>
+<li><strong>Responsible Owner</strong>: Codex chuẩn bị PR; PO duyệt.</li>
+<li><strong>Tasks</strong>: backend P-1/C-1, mở rộng contract, nối Performance, test các trạng thái và dữ liệu thiếu, cập nhật truy vết.</li>
+<li><strong>Validation Method</strong>: make contract, tests/runs, PerformanceEvaluation.test.tsx, HomeQualitySummary.test.tsx, make check và make validate-kit; PO kiểm tay sau duyệt.</li>
+<li><strong>Rollback Method</strong>: revert commit đợt 2 qua PR thông thường; không xóa lịch sử evaluation hay sửa dữ liệu.</li></ul>
+<h2>Completion Criteria</h2><ul>
+<li>[ ] PO duyệt CR, gồm lệch ready/locked, trước khi baseline hóa/merge.</li>
+<li>[ ] make check và make validate-kit pass trên PR đợt 2.</li>
+<li>[ ] PR merge và PO kiểm tay hai ô Performance.</li>
+<li>[ ] Trạng thái cập nhật sau quyết định PO; không tự đánh dấu implemented.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không tự duyệt CR hoặc merge khi quyết định còn pending.</li><li>Không đổi công thức DEC-023 hoặc thay Quality Gate của run bằng gate theo Task.</li><li>Không đóng BLOCKER-034 khi tester chưa kiểm A-4/A-5 với VLM có model.</li></ul>
+<h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/change-requests/CR-119.html</code>; giữ CR proposed/Approval pending; PR dẫn tới CR và ghi rõ lệch ready/locked.</p>
+</article></main></body></html>

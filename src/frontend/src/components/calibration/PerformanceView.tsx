@@ -11,7 +11,7 @@ import { formatDateTime } from '@/lib/format';
 import { getRun } from '@/lib/execution/api';
 import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { SampleDataBadge } from '@/components/ui/SampleDataBadge';
-import { ACTIVE_CALIBRATIONS, PERF_SAMPLE_METRICS, PERF_BENCHMARK_STREAM } from '@/lib/calibration/sample-data';
+import { ACTIVE_CALIBRATIONS, PERF_BENCHMARK_STREAM } from '@/lib/calibration/sample-data';
 import {
   createEvaluation, getEffectivenessReport, getEvaluation, listEvaluations, listReferences, newIdempotencyKey, percent, sourceReasonLabel,
   type Evaluation, type MetricValue,
@@ -204,6 +204,11 @@ export function PerformanceBody() {
   const metrics = rep?.metrics ?? ev?.metrics ?? undefined;
   const agreement = metrics?.['G-3'];
   const residual = metrics?.['G-4'];
+  const precision = metrics?.['P-1'];
+  const coverage = metrics?.['C-1'];
+  const p = metricText(precision);
+  const c = metricText(coverage);
+  const coverageProgress = coverage?.status === 'computed' && coverage.value != null ? Math.max(0, Math.min(100, coverage.value * 100)) : null;
   const a = metricText(agreement);
   const r = metricText(residual);
   const waitingNote = id === null ? 'Chọn evaluation để xem' : evaluation.isLoading ? 'Đang tải…' : '';
@@ -243,9 +248,9 @@ export function PerformanceBody() {
           <span className="lx-metric__n">{agreement ? `So với adjudicator trên ${agreement.sample_size} case · ${agreement.method}` : waitingNote}</span>
         </div>
         <div className="lx-metric">
-          <span className="lx-metric__k">{PERF_SAMPLE_METRICS.precision.label} <SampleDataBadge /></span>
-          <span className="lx-metric__v">{PERF_SAMPLE_METRICS.precision.value}</span>
-          <span className="lx-metric__n">{PERF_SAMPLE_METRICS.precision.note}</span>
+          <span className="lx-metric__k">Độ chính xác của candidate</span>
+          <span className={`lx-metric__v${p.tone ? ` ${p.tone}` : ''}`}>{p.value}</span>
+          <span className="lx-metric__n">{precision ? `Trên ${precision.sample_size} Issue từ candidate đã có quyết định · ${precision.method}` : waitingNote}</span>
         </div>
         <div className="lx-metric">
           <span className="lx-metric__k">Tỷ lệ lỗi còn sót</span>
@@ -253,14 +258,12 @@ export function PerformanceBody() {
           <span className="lx-metric__n">{residual ? `Từ ${residual.sample_size} frame kiểm tra ngẫu nhiên · ${residual.method}` : waitingNote}</span>
         </div>
         <div className="lx-metric">
-          <span className="lx-metric__k">{PERF_SAMPLE_METRICS.coverage.label} <SampleDataBadge /></span>
-          <span className="lx-metric__v is-warn">{PERF_SAMPLE_METRICS.coverage.value}</span>
-          <div className="lx-progress lx-progress--warn" role="img" aria-label={`${PERF_SAMPLE_METRICS.coverage.progress}%`}><i style={{ width: `${PERF_SAMPLE_METRICS.coverage.progress}%` }} /></div>
-          <span className="lx-metric__n">{PERF_SAMPLE_METRICS.coverage.note}</span>
+          <span className="lx-metric__k">Benchmark coverage</span>
+          <span className={`lx-metric__v${c.tone ? ` ${c.tone}` : ''}`}>{c.value}</span>
+          {coverageProgress !== null && <div className="lx-progress" role="progressbar" aria-label="Benchmark coverage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={coverageProgress}><i style={{ width: `${coverageProgress}%` }} /></div>}
+          <span className="lx-metric__n">{coverage ? `${coverage.sample_size} / ${coverage.denominator} frame Snapshot có trong Benchmark · ${coverage.method}` : waitingNote}</span>
         </div>
       </div>
-      {/* TODO(backend): độ chính xác của candidate và benchmark coverage chưa có trong EffectivenessReport/Evaluation.metrics. */}
-      <NotConnectedNotice detail="Độ chính xác của candidate và Benchmark coverage chưa có API; hai ô này là dữ liệu minh họa" />
 
       <div className="lx-cols">
         <section className="lx-card lx-main" aria-label="Kết quả theo luồng lấy mẫu">
