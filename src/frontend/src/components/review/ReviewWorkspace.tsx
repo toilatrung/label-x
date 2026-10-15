@@ -813,214 +813,252 @@ export function ReviewWorkspace({
 
       {/* Workspace Main Grid */}
       <div className="lx-ws lx-ws--reference">
-        {/* Stage Viewport */}
-        <section className="lx-stage" aria-label="Khung hình annotation từ CVAT">
-          {/* Stage Controls Bar */}
-          <div className="lx-stage__bar">
-            {/* Mode switch */}
-            <div className="lx-segment" role="group" aria-label="Chế độ review">
-              <button
-                type="button"
-                aria-pressed={reviewMode === 'issue'}
-                onClick={() => setReviewMode('issue')}
-              >
-                Issue Review
-              </button>
-              <button
-                type="button"
-                aria-pressed={reviewMode === 'frame'}
-                onClick={() => setReviewMode('frame')}
-              >
-                Frame Review
-              </button>
-            </div>
+        <div className="lx-ws__main">
+          {/* Stage Viewport */}
+          <section className="lx-stage" aria-label="Khung hình annotation từ CVAT">
+            {/* Stage Controls Bar */}
+            <div className="lx-stage__bar">
+              {/* Mode switch */}
+              <div className="lx-segment" role="group" aria-label="Chế độ review">
+                <button
+                  type="button"
+                  aria-pressed={reviewMode === 'issue'}
+                  onClick={() => setReviewMode('issue')}
+                >
+                  Issue Review
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={reviewMode === 'frame'}
+                  onClick={() => setReviewMode('frame')}
+                >
+                  Frame Review
+                </button>
+              </div>
 
-            {/* Frame metadata */}
-            <span>
-              Frame <b className="lx-num">{String(data.frame.frame_key.frame_number).padStart(5, '0')}</b> · Task #{data.frame.frame_key.cvat_task_id}{runId != null ? ` · Run #${runId}` : ''}
-            </span>
+              {/* Frame metadata */}
+              <span>
+                Frame <b className="lx-num">{String(data.frame.frame_key.frame_number).padStart(5, '0')}</b> · Task #{data.frame.frame_key.cvat_task_id}{runId != null ? ` · Run #${runId}` : ''}
+              </span>
 
-            {/* Lease countdown & manual renew while valid (follow-up-22) */}
-            {lease && !isExpired && !forcedLeaseInvalidated && (
-              <span className="lx-row lx-gap-2 lx-items-center">
-                <span className={`lx-subtle ${remainingSeconds < 60 ? 'lx-text-warning' : 'lx-stage__muted'}`}>
-                  · Lease: {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}
+              {/* Lease countdown & manual renew while valid (follow-up-22) */}
+              {lease && !isExpired && !forcedLeaseInvalidated && (
+                <span className="lx-row lx-gap-2 lx-items-center">
+                  <span className={`lx-subtle ${remainingSeconds < 60 ? 'lx-text-warning' : 'lx-stage__muted'}`}>
+                    · Lease: {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={renewLease}
+                    className="lx-btn lx-btn--ghost lx-btn--sm lx-btn--xs"
+                    title="Gia hạn lease thủ công trong khi vẫn còn hiệu lực"
+                  >
+                    Thử gia hạn lease
+                  </button>
+                </span>
+              )}
+
+              <span className="lx-grow" />
+
+              {/* Layer Checkboxes */}
+              <label className="lx-check">
+                <input
+                  type="checkbox"
+                  checked={showAnnotations}
+                  onChange={(e) => setShowAnnotations(e.target.checked)}
+                />
+                <span>Annotation hiện tại</span>
+              </label>
+              <label className="lx-check">
+                <input
+                  type="checkbox"
+                  checked={showPredictions}
+                  onChange={(e) => setShowPredictions(e.target.checked)}
+                />
+                <span>Đề xuất mô hình</span>
+              </label>
+
+              {/* Zoom controls */}
+              <div className="lx-row lx-gap-1">
+                <button
+                  type="button"
+                  className="lx-ghostbtn"
+                  onClick={() => setZoom((z) => Math.min(5, Number((z + 0.25).toFixed(2))))}
+                  title="Phóng to"
+                >
+                  +
+                </button>
+                <span className="lx-stage__zoom">
+                  {Math.round(zoom * 100)}%
                 </span>
                 <button
                   type="button"
-                  onClick={renewLease}
-                  className="lx-btn lx-btn--ghost lx-btn--sm lx-btn--xs"
-                  title="Gia hạn lease thủ công trong khi vẫn còn hiệu lực"
+                  className="lx-ghostbtn"
+                  onClick={() => setZoom((z) => Math.max(0.5, Number((z - 0.25).toFixed(2))))}
+                  title="Thu nhỏ"
                 >
-                  Thử gia hạn lease
+                  -
                 </button>
-              </span>
-            )}
+                <button
+                  type="button"
+                  className="lx-ghostbtn"
+                  onClick={() => {
+                    setZoom(1);
+                    setPan({ x: 0, y: 0 });
+                  }}
+                  title="Đặt lại zoom và vị trí"
+                >
+                  Reset
+                </button>
+              </div>
 
-            <span className="lx-grow" />
-
-            {/* Layer Checkboxes */}
-            <label className="lx-check">
-              <input
-                type="checkbox"
-                checked={showAnnotations}
-                onChange={(e) => setShowAnnotations(e.target.checked)}
-              />
-              <span>Annotation hiện tại</span>
-            </label>
-            <label className="lx-check">
-              <input
-                type="checkbox"
-                checked={showPredictions}
-                onChange={(e) => setShowPredictions(e.target.checked)}
-              />
-              <span>Đề xuất mô hình</span>
-            </label>
-
-            {/* Zoom controls */}
-            <div className="lx-row lx-gap-1">
-              <button
-                type="button"
-                className="lx-ghostbtn"
-                onClick={() => setZoom((z) => Math.min(5, Number((z + 0.25).toFixed(2))))}
-                title="Phóng to"
-              >
-                +
-              </button>
-              <span className="lx-stage__zoom">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                type="button"
-                className="lx-ghostbtn"
-                onClick={() => setZoom((z) => Math.max(0.5, Number((z - 0.25).toFixed(2))))}
-                title="Thu nhỏ"
-              >
-                -
-              </button>
-              <button
-                type="button"
-                className="lx-ghostbtn"
-                onClick={() => {
-                  setZoom(1);
-                  setPan({ x: 0, y: 0 });
-                }}
-                title="Đặt lại zoom và vị trí"
-              >
-                Reset
-              </button>
+              {/* CVAT Deep Link (read-only, genuine only) */}
+              {cvatDeepLink ? (
+                <a
+                  href={cvatDeepLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lx-ghostbtn lx-link--plain"
+                >
+                  Mở trong CVAT ↗
+                </a>
+              ) : (
+                <span className="lx-subtle lx-text-11">
+                  CVAT link chưa khả dụng
+                </span>
+              )}
             </div>
 
-            {/* CVAT Deep Link (read-only, genuine only) */}
-            {cvatDeepLink ? (
-              <a
-                href={cvatDeepLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lx-ghostbtn lx-link--plain"
+            {/* Interactive Canvas View */}
+            <div className="lx-stage__view lx-stage__view--flush">
+              <ReviewCanvas
+                frame={data.frame}
+                issues={issues}
+                snapshotAnnotations={data.annotations}
+                predictions={workspacePredictions(data)}
+                selectedIssueId={selectedIssueId}
+                onSelectIssue={(id) => setSelectedIssueId(id)}
+                reviewMode={reviewMode}
+                showAnnotations={showAnnotations}
+                showPredictions={showPredictions}
+                zoom={zoom}
+                pan={pan}
+                onZoomChange={setZoom}
+                onPanChange={setPan}
+                onSelectObjectForManualIssue={(obj) => {
+                  if (isMutationBlocked || !effectivePolicy) return;
+                  setSelectedObjectForManual(obj);
+                  setDrawnRegionForManual(null);
+                  setManualModalOpen(true);
+                }}
+                onCreateRegionManualIssue={(bbox) => {
+                  if (isMutationBlocked || !effectivePolicy) return;
+                  setSelectedObjectForManual(null);
+                  setDrawnRegionForManual(bbox);
+                  setManualModalOpen(true);
+                }}
+              />
+            </div>
+
+            {/* Stage Bottom Bar */}
+            <div className="lx-stage__bar lx-stage__bar--foot">
+              {/* Frame navigation (disabled per lease handoff contract) */}
+              <button
+                type="button"
+                className="lx-ghostbtn"
+                disabled
+                title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
               >
-                Mở trong CVAT ↗
-              </a>
-            ) : (
-              <span className="lx-subtle lx-text-11">
-                CVAT link chưa khả dụng
-              </span>
+                ‹ Frame trước
+              </button>
+              <button
+                type="button"
+                className="lx-ghostbtn"
+                disabled
+                title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
+              >
+                Frame sau ›
+              </button>
+
+              <span className="lx-subtle lx-ws__sep">|</span>
+
+              {/* In-frame issue navigation */}
+              <button
+                type="button"
+                className="lx-ghostbtn"
+                disabled={currentIssueIndex <= 0}
+                onClick={() => {
+                  if (currentIssueIndex > 0) setSelectedIssueId(issues[currentIssueIndex - 1].id);
+                }}
+                title="Chuyển đến issue trước trong cùng khung hình"
+              >
+                ‹ Issue trước
+              </button>
+              <button
+                type="button"
+                className="lx-ghostbtn"
+                disabled={currentIssueIndex >= issues.length - 1}
+                onClick={() => {
+                  if (currentIssueIndex < issues.length - 1) setSelectedIssueId(issues[currentIssueIndex + 1].id);
+                }}
+                title="Chuyển đến issue tiếp theo trong cùng khung hình"
+              >
+                Issue tiếp ›
+              </button>
+
+              <span className="lx-grow" />
+
+              {reviewMode === 'frame' ? (
+                <span>
+                  {effectivePolicy
+                    ? 'Nhấn vào đối tượng trên ảnh hoặc kéo vẽ vùng để tạo issue thủ công.'
+                    : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
+                </span>
+              ) : (
+                <span>Annotation CVAT · Xanh: đề xuất detector · Tím: đề xuất mô hình 2 (Qwen)</span>
+              )}
+            </div>
+          </section>
+
+          <section className="lx-ws__review" aria-label="Quyết định review frame">
+            {activeIssue && (
+              <ReviewDecisionForm
+                issue={activeIssue}
+                lease={lease}
+                currentUserId={currentUserId}
+                snapshotRevision={resolvedRevision}
+                revisionUnavailableReason={revisionUnavailableReason || revisionError}
+                revisionLoading={revisionLoading}
+                isLeaseExpired={isMutationBlocked}
+                isSuperAdmin={isSuperAdmin}
+                onDecisionSaved={handleDecisionSaved}
+                onLeaseConflict={handleLeaseConflict}
+                onNextIssue={() => {
+                  if (currentIssueIndex < issues.length - 1) setSelectedIssueId(issues[currentIssueIndex + 1].id);
+                }}
+                onPrevIssue={() => {
+                  if (currentIssueIndex > 0) setSelectedIssueId(issues[currentIssueIndex - 1].id);
+                }}
+                hasPrev={currentIssueIndex > 0}
+                hasNext={currentIssueIndex < issues.length - 1}
+              />
             )}
-          </div>
-
-          {/* Interactive Canvas View */}
-          <div className="lx-stage__view lx-stage__view--flush">
-            <ReviewCanvas
-              frame={data.frame}
-              issues={issues}
-              snapshotAnnotations={data.annotations}
-              predictions={workspacePredictions(data)}
-              selectedIssueId={selectedIssueId}
-              onSelectIssue={(id) => setSelectedIssueId(id)}
-              reviewMode={reviewMode}
-              showAnnotations={showAnnotations}
-              showPredictions={showPredictions}
-              zoom={zoom}
-              pan={pan}
-              onZoomChange={setZoom}
-              onPanChange={setPan}
-              onSelectObjectForManualIssue={(obj) => {
-                if (isMutationBlocked || !effectivePolicy) return;
-                setSelectedObjectForManual(obj);
-                setDrawnRegionForManual(null);
-                setManualModalOpen(true);
-              }}
-              onCreateRegionManualIssue={(bbox) => {
-                if (isMutationBlocked || !effectivePolicy) return;
-                setSelectedObjectForManual(null);
-                setDrawnRegionForManual(bbox);
-                setManualModalOpen(true);
-              }}
-            />
-          </div>
-
-          {/* Stage Bottom Bar */}
-          <div className="lx-stage__bar lx-stage__bar--foot">
-            {/* Frame navigation (disabled per lease handoff contract) */}
-            <button
-              type="button"
-              className="lx-ghostbtn"
-              disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
-            >
-              ‹ Frame trước
-            </button>
-            <button
-              type="button"
-              className="lx-ghostbtn"
-              disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
-            >
-              Frame sau ›
-            </button>
-
-            <span className="lx-subtle lx-ws__sep">|</span>
-
-            {/* In-frame issue navigation */}
-            <button
-              type="button"
-              className="lx-ghostbtn"
-              disabled={currentIssueIndex <= 0}
-              onClick={() => {
-                if (currentIssueIndex > 0) setSelectedIssueId(issues[currentIssueIndex - 1].id);
-              }}
-              title="Chuyển đến issue trước trong cùng khung hình"
-            >
-              ‹ Issue trước
-            </button>
-            <button
-              type="button"
-              className="lx-ghostbtn"
-              disabled={currentIssueIndex >= issues.length - 1}
-              onClick={() => {
-                if (currentIssueIndex < issues.length - 1) setSelectedIssueId(issues[currentIssueIndex + 1].id);
-              }}
-              title="Chuyển đến issue tiếp theo trong cùng khung hình"
-            >
-              Issue tiếp ›
-            </button>
-
-            <span className="lx-grow" />
-
-            {reviewMode === 'frame' ? (
-              <span>
-                {effectivePolicy
-                  ? 'Nhấn vào đối tượng trên ảnh hoặc kéo vẽ vùng để tạo issue thủ công.'
-                  : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
-              </span>
-            ) : (
-              <span>Annotation CVAT · Xanh: đề xuất detector · Tím: đề xuất mô hình 2 (Qwen)</span>
-            )}
-          </div>
-        </section>
+            {/* Complete Frame Action Footer */}
+            <div className="lx-ws__foot">
+              <button
+                type="button"
+                className="lx-btn lx-btn--primary lx-btn--fill"
+                disabled={isCompleting || isMutationBlocked}
+                onClick={handleCompleteFrame}
+              >
+                {isCompleting ? 'Đang hoàn tất...' : 'Hoàn tất review frame'}
+              </button>
+            </div>
+          </section>
+        </div>
 
         {/* Aside Panel */}
-        <aside className="lx-ws__panel" aria-label="Chi tiết issue và quyết định">
+        <aside className="lx-ws__panel" aria-label="Chi tiết issue">
           {activeIssue ? (
             <>
               {/* Issue Header Section */}
@@ -1119,28 +1157,6 @@ export function ReviewWorkspace({
                   <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
                 </div>
               </div>
-
-              {/* Decisions Section */}
-              <ReviewDecisionForm
-                issue={activeIssue}
-                lease={lease}
-                currentUserId={currentUserId}
-                snapshotRevision={resolvedRevision}
-                revisionUnavailableReason={revisionUnavailableReason || revisionError}
-                revisionLoading={revisionLoading}
-                isLeaseExpired={isMutationBlocked}
-                isSuperAdmin={isSuperAdmin}
-                onDecisionSaved={handleDecisionSaved}
-                onLeaseConflict={handleLeaseConflict}
-                onNextIssue={() => {
-                  if (currentIssueIndex < issues.length - 1) setSelectedIssueId(issues[currentIssueIndex + 1].id);
-                }}
-                onPrevIssue={() => {
-                  if (currentIssueIndex > 0) setSelectedIssueId(issues[currentIssueIndex - 1].id);
-                }}
-                hasPrev={currentIssueIndex > 0}
-                hasNext={currentIssueIndex < issues.length - 1}
-              />
             </>
           ) : (
             <div className="lx-ws__sec lx-state--center">
@@ -1163,18 +1179,6 @@ export function ReviewWorkspace({
               )}
             </div>
           )}
-
-          {/* Complete Frame Action Footer */}
-          <div className="lx-ws__foot">
-            <button
-              type="button"
-              className="lx-btn lx-btn--primary lx-btn--fill"
-              disabled={isCompleting || isMutationBlocked}
-              onClick={handleCompleteFrame}
-            >
-              {isCompleting ? 'Đang hoàn tất...' : 'Hoàn tất review frame'}
-            </button>
-          </div>
         </aside>
       </div>
 

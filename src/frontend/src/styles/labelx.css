@@ -460,6 +460,10 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 
 /* Workspace: original information and controls, reference presentation only. */
 .lx-ws--reference { display: grid; grid-template-columns: minmax(0,1fr) 420px; gap: var(--space-4); align-items: start; border: 0; background: transparent; overflow: visible; }
+.lx-ws__main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.lx-ws__main > .lx-stage { flex: none; }
+.lx-ws__review { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.lx-ws--reference .lx-ws__review .lx-choices { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); }
 .lx-ws--reference .lx-stage { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); }
 .lx-ws--reference .lx-stage__bar { padding: var(--space-3) var(--space-4); border-color: var(--border-strong); }
 .lx-ws--reference .lx-stage__view { padding: var(--space-6); }
