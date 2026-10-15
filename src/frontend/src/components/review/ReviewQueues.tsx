@@ -356,6 +356,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         targetRunId: effectiveRunId,
         targetUserId: currentUserId,
         requestedFrameId: frameId,
+        requestedFrameKey: rankingQuery.data?.results.find((frame) => frame.frame_id === frameId)?.frame_key,
       };
     },
     mutationFn: async (frameId: number | undefined) => {
@@ -378,7 +379,14 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       setActiveGrant(grant);
       invalidateQueueData(context.targetDatasetId, context.targetRunId);
       if (context.requestedFrameId === undefined) return;
-      if (grant.frame.id !== context.requestedFrameId) {
+      // Ranking frame_id identifies a SnapshotFrame; the grant identifies a FrameReview.
+      // Match the source image and run instead of comparing IDs from different tables.
+      if (
+        grant.frame.run_id !== context.targetRunId ||
+        !context.requestedFrameKey ||
+        grant.frame.frame_key.cvat_task_id !== context.requestedFrameKey.cvat_task_id ||
+        grant.frame.frame_key.frame_number !== context.requestedFrameKey.frame_number
+      ) {
         setClaimNotice(
           `Bạn đang giữ ${frameTitle(grant.frame)} (Frame ID ${grant.frame.id}${
             grant.frame.run_id !== context.targetRunId ? `, Run #${grant.frame.run_id}` : ''
@@ -412,7 +420,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           setIsLeaseConflict(true);
         }
         setClaimError({
-          message: err.message,
+          message: err.detail?.code === 'IDENTITY_MAPPING_MISSING'
+            ? 'Chưa đủ định danh CVAT đã xác minh của reviewer hoặc người gán nhãn. Kiểm tra người được giao job CVAT và liên kết định danh. Nếu snapshot thiếu người gán nhãn, cần tạo snapshot và run mới sau khi cập nhật.'
+            : err.message,
           code: err.detail?.code,
         });
       } else {
@@ -1056,6 +1066,11 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                       >
                         {isClaimingThis ? 'Đang nhận...' : 'Bắt đầu kiểm tra'}
                       </button>
+                      {claimError && claimMutation.variables === frame.frame_id && (
+                        <div role="alert" className="lx-callout" style={{ gridColumn: '1 / -1' }} aria-label={`Lỗi bắt đầu kiểm tra ${title}`}>
+                          {claimError.message}
+                        </div>
+                      )}
                     </article>
                     );
                   })}

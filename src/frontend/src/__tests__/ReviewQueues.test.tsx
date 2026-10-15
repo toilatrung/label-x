@@ -1025,6 +1025,28 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(await claimCall!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
     });
 
+    it('opens the selected snapshot frame when its review ID differs from the ranking ID', async () => {
+      const { calls } = await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/queues/risk/next/')) {
+          return Response.json({
+            ...futureGrant,
+            lease: { ...futureGrant.lease, frame_id: 9001 },
+            frame: { ...futureGrant.frame, id: 9001 },
+          });
+        }
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+      fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' }));
+
+      expect(await screen.findByRole('region', { name: /Không gian kiểm tra Review Workspace/i })).toBeDefined();
+      const claimCall = calls.find((c) => c.url.includes('/api/queues/risk/next/'));
+      expect(await claimCall!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
+      await waitFor(() => {
+        expect(calls.some((c) => c.url.includes('/api/frames/9001/workspace/'))).toBe(true);
+      });
+    });
+
     it('explains when the server returns the lease already held instead of the chosen frame', async () => {
       await renderReviewPage('reviewer', async (req) => {
         if (req.url.includes('/api/runs/12/ranking/')) {
@@ -1039,6 +1061,26 @@ describe('ReviewQueues Frontend (T-034)', () => {
 
       expect(await screen.findByText(/Bạn đang giữ Task #10 • Frame #100 \(Frame ID 340\)/)).toBeDefined();
       expect(screen.getByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeDefined();
+      expect(screen.queryByRole('region', { name: /Không gian kiểm tra Review Workspace/i })).toBeNull();
+    });
+
+    it('shows missing reviewer or author identity beside the selected frame after loading stops', async () => {
+      await renderReviewPage('reviewer', async (req) => {
+        if (req.url.includes('/api/queues/risk/next/')) {
+          return Response.json(
+            { code: 'IDENTITY_MAPPING_MISSING', message: 'Không thể review frame này.' },
+            { status: 403 }
+          );
+        }
+        return null;
+      });
+      await screen.findByText('Task #10 • Frame #100');
+      const button = screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' });
+      fireEvent.click(button);
+      const alert = await screen.findByRole('alert', { name: 'Lỗi bắt đầu kiểm tra Task #10 • Frame #100' });
+      expect(alert.textContent).toContain('reviewer hoặc người gán nhãn');
+      expect(alert.textContent).toContain('tạo snapshot và run mới');
+      expect(button).not.toBeDisabled();
       expect(screen.queryByRole('region', { name: /Không gian kiểm tra Review Workspace/i })).toBeNull();
     });
 
