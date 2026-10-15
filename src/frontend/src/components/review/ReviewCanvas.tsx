@@ -113,6 +113,7 @@ export function ReviewCanvas({
   onZoomChange,
   onPanChange,
 }: ReviewCanvasProps) {
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const panAnchorRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
@@ -257,17 +258,29 @@ export function ReviewCanvas({
     onCreateRegionManualIssue,
   ]);
 
-  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-    const newZoom = Math.min(5, Math.max(0.5, zoom * zoomFactor));
-    onZoomChange(Number(newZoom.toFixed(2)));
-  };
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    // React's delegated wheel listener is passive, so preventDefault there
+    // cannot stop the page from scrolling while the frame is zoomed.
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      if (event.deltaY === 0) return;
+      const zoomFactor = event.deltaY < 0 ? 1.15 : 0.85;
+      const newZoom = Math.min(5, Math.max(0.5, zoom * zoomFactor));
+      onZoomChange(Number(newZoom.toFixed(2)));
+    };
+
+    viewport.addEventListener('wheel', handleWheel, { passive: false });
+    return () => viewport.removeEventListener('wheel', handleWheel);
+  }, [zoom, onZoomChange]);
 
   const activeIssue = issues.find((i) => i.id === selectedIssueId) ?? issues[0] ?? null;
 
   return (
     <div
+      ref={viewportRef}
       style={{
         width: '100%',
         height: '100%',
@@ -294,7 +307,6 @@ export function ReviewCanvas({
           cursor: isPanning ? 'grabbing' : reviewMode === 'frame' ? 'crosshair' : 'default',
         }}
         onMouseDown={handleMouseDown}
-        onWheel={handleWheel}
       >
         <defs>
           <clipPath id="frameBounds">
