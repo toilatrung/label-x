@@ -982,6 +982,124 @@ describe('ReviewQueues Frontend (T-034)', () => {
       return Response.json({ next: null, previous: null, results });
     }
 
+    const selectableSecond = { ...mockRiskFrame2, lease_holder_user_id: null };
+    function navigationGrant(frame: RankedFrame): LeaseGrant {
+      return { ...futureGrant, frame: { ...futureGrant.frame, id: frame.frame_id + 10000, frame_key: frame.frame_key },
+        lease: { ...futureGrant.lease, id: frame.frame_id + 1000, frame_id: frame.frame_id + 10000 } };
+    }
+    function workspaceResponse(frame: RankedFrame) {
+      return Response.json({ frame: navigationGrant(frame).frame, guideline_version: 'g', snapshot_revision: 'rev',
+        anchor_policy_version: 'anchor-v1', engines: [], issues: [], annotations: [], predictions: [] });
+    }
+    async function navigationApi(request: Request): Promise<Response | null> {
+      const path = new URL(request.url).pathname;
+      if (path === '/api/runs/12/ranking/') return rankingWith([mockRiskFrame1, selectableSecond]);
+      if (path === '/api/queues/risk/next/') {
+        const payload = await request.clone().json();
+        return Response.json(navigationGrant(payload.frame_id === 341 ? selectableSecond : mockRiskFrame1));
+      }
+      if (path === '/api/frames/10340/workspace/') return workspaceResponse(mockRiskFrame1);
+      if (path === '/api/frames/10341/workspace/') return workspaceResponse(selectableSecond);
+      if (path === '/api/effort-events/') return Response.json({ accepted: 0, duplicates: 0 });
+      if (path.endsWith('/complete/')) return Response.json({ id: 10340, state: 'reviewed', confirmed: 0, rejected: 0, undecided: 0 });
+      return null;
+    }
+
+    it('opens selected frames and navigates both ways with the actual lease handoff', async () => {
+      const { calls } = await renderReviewPage('reviewer', navigationApi);
+      await screen.findByRole('checkbox', { name: 'Chọn Task #10 • Frame #100' });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+      expect(screen.getByText('Đã chọn 2 frame')).toBeDefined();
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      expect((screen.getByRole('button', { name: '‹ Frame trước' }) as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
+      await screen.findByText('Frame 2/2');
+      let claims = calls.filter(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claims[1].clone().json()).toEqual({ run_id: 12, frame_id: 341, previous_lease_id: 1340 });
+      fireEvent.click(screen.getByRole('button', { name: '‹ Frame trước' }));
+      await screen.findByText('Frame 1/2');
+      claims = calls.filter(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claims[2].clone().json()).toEqual({ run_id: 12, frame_id: 340, previous_lease_id: 1341 });
+    });
+
+    it('clears selection when changing queue and excludes frames held by other reviewers', async () => {
+      await renderReviewPage('reviewer', async request => {
+        if (request.url.includes('/api/runs/12/ranking/') && new URL(request.url).searchParams.get('queue') === 'risk') {
+          return rankingWith([mockRiskFrame1, { ...selectableSecond, lease_holder_user_id: 999 }]);
+        }
+        return null;
+      });
+      await screen.findByRole('checkbox', { name: 'Chọn Task #20 • Frame #100' });
+      expect((screen.getByRole('checkbox', { name: 'Chọn Task #20 • Frame #100' }) as HTMLInputElement).disabled).toBe(true);
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+      expect(screen.getByText('Đã chọn 1 frame')).toBeDefined();
+      fireEvent.click(screen.getByRole('tab', { name: /Kiểm định ngẫu nhiên/i }));
+      await screen.findByText('Task #10 • Frame #200');
+      expect(screen.getByText('Đã chọn 0 frame')).toBeDefined();
+    });
+
+    it('retains selections across queue pages and opens them in rank order', async () => {
+      const { calls } = await renderReviewPage('reviewer', async request => {
+        if (new URL(request.url).pathname === '/api/runs/12/ranking/') return null;
+        return navigationApi(request);
+      });
+      await screen.findByRole('checkbox', { name: 'Chọn Task #10 • Frame #100' });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task #10 • Frame #100' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Trang tiếp' }));
+      await screen.findByRole('checkbox', { name: 'Chọn Task #20 • Frame #100' });
+      // The default fixture's second page is held by this reviewer and remains selectable.
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task #20 • Frame #100' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      const claim = calls.find(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claim!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
+    });
+
+    it('keeps the current frame writable when the next frame cannot be acquired', async () => {
+      const { calls } = await renderReviewPage('reviewer', async request => {
+        if (request.url.includes('/api/queues/risk/next/') && (await request.clone().json()).previous_lease_id) {
+          return Response.json({ code: 'LEASE_CONFLICT', message: 'Frame đích đang được giữ' }, { status: 409 });
+        }
+        return navigationApi(request);
+      });
+      await screen.findByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
+      await screen.findByText(/Frame đích đang được giữ/);
+      expect(screen.getByText('Frame 1/2')).toBeDefined();
+      expect((screen.getByRole('button', { name: 'Hoàn tất review frame' }) as HTMLButtonElement).disabled).toBe(false);
+      expect(screen.queryByText(/Thao tác với lease cũ đã bị khóa/)).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Tải lại từ server' }));
+      await screen.findByRole('button', { name: 'Kiểm tra ảnh đã chọn' });
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      const claims = calls.filter(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claims.at(-1)!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
+    });
+
+    it('advances after completion and opens completed previous frames read-only without claiming them', async () => {
+      const { calls } = await renderReviewPage('reviewer', navigationApi);
+      await screen.findByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      fireEvent.click(screen.getByRole('button', { name: 'Hoàn tất review frame' }));
+      await screen.findByText('Frame 2/2');
+      const before = calls.filter(request => request.url.includes('/api/queues/risk/next/')).length;
+      fireEvent.click(screen.getByRole('button', { name: '‹ Frame trước' }));
+      await screen.findByText('Frame 1/2');
+      expect(calls.filter(request => request.url.includes('/api/queues/risk/next/')).length).toBe(before);
+      expect(screen.queryByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeNull();
+      expect((screen.getByRole('button', { name: 'Hoàn tất review frame' }) as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
+      await screen.findByText('Frame 2/2');
+      const claims = calls.filter(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claims.at(-1)!.clone().json()).toEqual({ run_id: 12, frame_id: 341, previous_lease_id: 1341 });
+    });
+
     it('shows queue totals from GET /api/queues/{name}/ on tabs, head, state filter and pager', async () => {
       const { calls } = await renderReviewPage('reviewer');
       await screen.findByText('Task #10 • Frame #100');

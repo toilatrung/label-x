@@ -102,13 +102,14 @@ export async function claimNextFrame(
   queueName: QueueName,
   runId: number,
   signal?: AbortSignal,
-  frameId?: number
+  frameId?: number,
+  previousLeaseId?: number
 ): Promise<ClaimNextFrameResponse> {
   await csrf();
   const result = await apiClient.POST('/api/queues/{name}/next/', {
     params: { path: { name: queueName } },
     // frame_id (MBE-02): nhận đúng frame này; không có thì nhận frame kế tiếp của hàng đợi.
-    body: frameId ? { run_id: runId, frame_id: frameId } : { run_id: runId },
+    body: { run_id: runId, ...(frameId ? { frame_id: frameId } : {}), ...(previousLeaseId ? { previous_lease_id: previousLeaseId } : {}) },
     signal,
   });
 

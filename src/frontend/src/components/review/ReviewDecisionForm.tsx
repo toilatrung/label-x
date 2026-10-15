@@ -35,6 +35,7 @@ export interface ReviewDecisionFormProps {
   isSuperAdmin?: boolean;
   onDecisionSaved: (updatedIssue: Issue, rawDecision?: components['schemas']['IssueDecision']) => void;
   onLeaseConflict?: (serverError?: unknown) => void;
+  onFormStateChange?: (dirty: boolean, busy: boolean) => void;
   onNextIssue?: () => void;
   onPrevIssue?: () => void;
   hasPrev?: boolean;
@@ -72,6 +73,7 @@ export function ReviewDecisionForm({
   isLeaseExpired,
   isSuperAdmin = false,
   onDecisionSaved,
+  onFormStateChange,
   onLeaseConflict,
   onNextIssue,
   onPrevIssue,
@@ -95,9 +97,19 @@ export function ReviewDecisionForm({
   const [savedReceipt, setSavedReceipt] = useState<components['schemas']['IssueDecision'] | null>(null);
   const [isRefreshingIssue, setIsRefreshingIssue] = useState<boolean>(false);
 
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    onFormStateChange?.(dirty, isSubmitting || isRefreshingIssue);
+  }, [dirty, isSubmitting, isRefreshingIssue, onFormStateChange]);
+  const notifyDecisionSaved = (...args: Parameters<ReviewDecisionFormProps['onDecisionSaved']>) => {
+    setDirty(false);
+    onDecisionSaved(...args);
+  };
+
   // Reset form inputs when active issue changes
   const [prevIssueId, setPrevIssueId] = useState(issue.id);
   if (issue.id !== prevIssueId) {
+    setDirty(false);
     setPrevIssueId(issue.id);
     setAction('confirm');
     setFamily(issue.family || 'E2');
@@ -363,7 +375,7 @@ export function ReviewDecisionForm({
 
           if (refreshedIssue && refreshedIssue.id === opIssueId) {
             setSavedReceipt(null);
-            onDecisionSaved(refreshedIssue, data);
+            notifyDecisionSaved(refreshedIssue, data);
             if (advanceOnSuccessRef.current) {
               advanceOnSuccessRef.current = false;
               if (hasNext && onNextIssue) {
@@ -375,7 +387,7 @@ export function ReviewDecisionForm({
             // Retain real POST receipt in state; preserve authoritative history unchanged.
             // Do NOT fabricate ReviewDecision (actor_role, new Date(), reference_match_status).
             // Deliver actual raw decision callback to collector even when GET fails.
-            onDecisionSaved(issue, data);
+            notifyDecisionSaved(issue, data);
             setFormError('Quyết định đã lưu thành công trên máy chủ, nhưng không thể làm mới dữ liệu issue từ máy chủ.');
           }
         } catch {
@@ -384,7 +396,7 @@ export function ReviewDecisionForm({
             // Retain real POST receipt in state; preserve authoritative history unchanged.
             // Do NOT fabricate ReviewDecision (actor_role, new Date(), reference_match_status).
             // Deliver actual raw decision callback to collector even when GET fails.
-            onDecisionSaved(issue, data);
+            notifyDecisionSaved(issue, data);
             setFormError('Quyết định đã lưu thành công trên máy chủ, nhưng gặp lỗi mạng khi làm mới dữ liệu issue.');
           }
         }
@@ -429,7 +441,7 @@ export function ReviewDecisionForm({
         const receipt = savedReceipt;
         setSavedReceipt(null);
         setSuccessMessage('Đã đồng bộ dữ liệu issue thành công từ máy chủ.');
-        onDecisionSaved(refreshedIssue, receipt);
+        notifyDecisionSaved(refreshedIssue, receipt);
       } else {
         const detail = readErrorDetail(getErr);
         setFormError(detail?.message || 'Không thể làm mới dữ liệu issue từ máy chủ.');
@@ -536,7 +548,7 @@ export function ReviewDecisionForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="lx-stack lx-gap-3">
+      <form onChangeCapture={() => setDirty(true)} onSubmit={handleSubmit} className="lx-stack lx-gap-3">
         {/* Choices radio group: 4 direct actions + 1 disabled rework placeholder */}
         <div className="lx-choices" role="radiogroup" aria-label="Loại quyết định">
           <label className="lx-choice">

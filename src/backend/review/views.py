@@ -63,11 +63,24 @@ class QueueNextView(APIView):
                 "VALIDATION_ERROR",
                 "frame_id phải là số nguyên dương.",
             )
+        previous_lease_id = request.data.get("previous_lease_id")
+        if previous_lease_id is not None and (
+            isinstance(previous_lease_id, bool)
+            or not str(previous_lease_id).isdigit()
+            or int(previous_lease_id) <= 0
+            or frame_id is None
+        ):
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "previous_lease_id phải là số nguyên dương và cần frame_id đích.",
+            )
         result = claim_next(
             request=request,
             run_id=int(request.data["run_id"]),
             queue=name,
             frame_id=int(frame_id) if frame_id is not None else None,
+            previous_lease_id=int(previous_lease_id) if previous_lease_id is not None else None,
         )
         return (
             Response(result, status=status.HTTP_200_OK)

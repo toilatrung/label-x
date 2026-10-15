@@ -54,6 +54,8 @@ const REVIEW_STATE_LABELS: Record<FrameReviewState, string> = {
   completed: 'Hoàn tất',
 };
 
+type FrameClaim = number | undefined | { frameId: number; previousLeaseId: number };
+const requestedFrameId = (request: FrameClaim) => typeof request === 'object' ? request.frameId : request;
 const SEARCH_DEBOUNCE_MS = 300;
 
 function frameTitle(frame: Pick<RankedFrame, 'frame_key'>) {
@@ -137,7 +139,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   // Active Lease Grant state (from claim or resume)
   const [activeGrant, setActiveGrant] = useState<LeaseGrant | null>(null);
   const [claimStatus204, setClaimStatus204] = useState<boolean>(false);
-  const [claimError, setClaimError] = useState<{ message: string; code?: string } | null>(null);
+  const [claimError, setClaimError] = useState<{ message: string; code?: string; handoff?: boolean } | null>(null);
   // Server trả lease đang giữ thay vì frame vừa chọn (mỗi reviewer giữ tối đa một lease)
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
@@ -211,6 +213,30 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   // Effective run ID: immediately null on dataset change until a run is chosen for the new dataset
   const effectiveRunId = isGenuineDatasetChange ? null : selectedRunId;
 
+  const selectionScope = `${datasetId}:${effectiveRunId}:${currentUserId}:${activeQueue}`;
+  const [selection, setSelection] = useState<{ scope: string; frames: RankedFrame[] }>({ scope: '', frames: [] });
+  const [inspection, setInspection] = useState<{ scope: string; frames: RankedFrame[] }>({ scope: '', frames: [] });
+  const [completedInspections, setCompletedInspections] = useState<Record<number, LeaseGrant>>({});
+  const heldLeaseRef = useRef<number | undefined>(undefined);
+  if (selection.scope !== selectionScope) {
+    setSelection({ scope: selectionScope, frames: [] });
+    setInspection({ scope: selectionScope, frames: [] });
+    setCompletedInspections({});
+  }
+  useEffect(() => { heldLeaseRef.current = undefined; }, [datasetId, effectiveRunId, currentUserId]);
+  const selectedFrames = selection.scope === selectionScope ? selection.frames : [];
+  const inspectionFrames = inspection.scope === selectionScope ? inspection.frames : [];
+  const isCompletedInspection = Object.values(completedInspections).some(grant => grant.frame.id === activeGrant?.frame.id);
+  const canSelectFrame = (frame: RankedFrame) =>
+    ['unreviewed', 'incomplete', 'in_review'].includes(frame.review_state) &&
+    (frame.lease_holder_user_id === null || frame.lease_holder_user_id === currentUserId);
+  const setFrameSelection = (frames: RankedFrame[]) => setSelection({ scope: selectionScope, frames });
+  const startInspection = (frames: RankedFrame[], firstId: number) => {
+    setCompletedInspections({});
+    setInspection({ scope: selectionScope, frames: [...frames].sort((a, b) => a.rank - b.rank) });
+    claimMutation.mutate(heldLeaseRef.current ? { frameId: firstId, previousLeaseId: heldLeaseRef.current } : firstId);
+  };
+
   // Safe side effect: clean up URL ?run parameter when dataset has changed or run is unselected
   useEffect(() => {
     if (selectedRunId === null && runParam) {
@@ -221,23 +247,27 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   }, [selectedRunId, runParam, router]);
 
   // Ref tracking latest context for mutation guards, updated during commit phase
-  const contextRef = useRef({ datasetId, activeRunId: effectiveRunId, currentUserId });
+  const contextRef = useRef({ datasetId, activeRunId: effectiveRunId, currentUserId, activeQueue });
   useEffect(() => {
-    contextRef.current = { datasetId, activeRunId: effectiveRunId, currentUserId };
-  }, [datasetId, effectiveRunId, currentUserId]);
+    contextRef.current = { datasetId, activeRunId: effectiveRunId, currentUserId, activeQueue };
+  }, [datasetId, effectiveRunId, currentUserId, activeQueue]);
 
   useEffect(() => {
     onWorkspaceStateChange?.({
       isOpen: isWorkspaceOpen && Boolean(activeGrant && effectiveRunId),
       frameId: activeGrant?.frame.id,
       runId: effectiveRunId,
-      leaseId: activeGrant?.lease.id,
+      leaseId: isCompletedInspection ? undefined : activeGrant?.lease.id,
       taskCvatId: activeGrant?.frame.frame_key.cvat_task_id,
     });
-  }, [isWorkspaceOpen, activeGrant, effectiveRunId, onWorkspaceStateChange]);
+  }, [isWorkspaceOpen, activeGrant, effectiveRunId, isCompletedInspection, onWorkspaceStateChange]);
 
   // Reset pagination cursor when queue or filters change
   const handleQueueChange = (queue: QueueName) => {
+    setIsWorkspaceOpen(false);
+    setActiveGrant(null);
+    setClaimError(null);
+    setClaimNotice(null);
     setActiveQueue(queue);
     setCursor(null);
   };
@@ -351,7 +381,8 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   // 3. Mutation for Claim Next Frame
   // Biến truyền vào: frame_id khi bấm "Bắt đầu kiểm tra" trên một ảnh; undefined = frame kế tiếp.
   const claimMutation = useMutation({
-    onMutate: (frameId: number | undefined) => {
+    onMutate: (request: FrameClaim) => {
+      const frameId = requestedFrameId(request);
       setClaimStatus204(false);
       setClaimError(null);
       setClaimNotice(null);
@@ -361,30 +392,38 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         targetDatasetId: datasetId,
         targetRunId: effectiveRunId,
         targetUserId: currentUserId,
+        targetQueue: activeQueue,
         requestedFrameId: frameId,
-        requestedFrameKey: rankingQuery.data?.results.find((frame) => frame.frame_id === frameId)?.frame_key,
+        requestedFrameKey: [...inspectionFrames, ...selectedFrames, ...(rankingQuery.data?.results ?? [])].find((frame) => frame.frame_id === frameId)?.frame_key,
       };
     },
-    mutationFn: async (frameId: number | undefined) => {
-      return claimNextFrame(activeQueue, effectiveRunId!, undefined, frameId);
+    mutationFn: async (request: FrameClaim) => {
+      return claimNextFrame(activeQueue, effectiveRunId!, undefined, requestedFrameId(request),
+        typeof request === 'object' ? request.previousLeaseId : undefined);
     },
     onSuccess: (result, _variables, context) => {
       // Discard if context switched while mutation was pending
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
         contextRef.current.datasetId !== context?.targetDatasetId ||
-        contextRef.current.currentUserId !== context?.targetUserId
+        contextRef.current.currentUserId !== context?.targetUserId ||
+        contextRef.current.activeQueue !== context?.targetQueue
       ) {
         return;
       }
       if (result.status === 204) {
+        heldLeaseRef.current = undefined;
         setClaimStatus204(true);
         return;
       }
       const { grant } = result;
+      heldLeaseRef.current = grant.lease.id;
       setActiveGrant(grant);
       invalidateQueueData(context.targetDatasetId, context.targetRunId);
-      if (context.requestedFrameId === undefined) return;
+      if (context.requestedFrameId === undefined) {
+        setInspection({ scope: selectionScope, frames: (rankingQuery.data?.results ?? []).filter(canSelectFrame) });
+        return;
+      }
       // Ranking frame_id identifies a SnapshotFrame; the grant identifies a FrameReview.
       // Match the source image and run instead of comparing IDs from different tables.
       if (
@@ -417,19 +456,23 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       if (
         contextRef.current.activeRunId !== context?.targetRunId ||
         contextRef.current.datasetId !== context?.targetDatasetId ||
-        contextRef.current.currentUserId !== context?.targetUserId
+        contextRef.current.currentUserId !== context?.targetUserId ||
+        contextRef.current.activeQueue !== context?.targetQueue
       ) {
         return;
       }
       if (err instanceof ApiRequestError) {
-        if (err.detail?.code === 'LEASE_CONFLICT' || err.status === 409) {
+        if ((err.detail?.code === 'LEASE_CONFLICT' || err.status === 409) && typeof _variables !== 'object') {
           setIsLeaseConflict(true);
         }
         setClaimError({
-          message: err.detail?.code === 'IDENTITY_MAPPING_MISSING'
+          message: typeof _variables === 'object' && err.status === 409
+            ? (err.detail?.message || 'Không chuyển được frame. Vui lòng tải lại hàng đợi.')
+            : err.detail?.code === 'IDENTITY_MAPPING_MISSING'
             ? 'Chưa đủ định danh CVAT đã xác minh của reviewer hoặc người gán nhãn. Kiểm tra người được giao job CVAT và liên kết định danh. Nếu snapshot thiếu người gán nhãn, cần tạo snapshot và run mới sau khi cập nhật.'
             : err.message,
           code: err.detail?.code,
+          handoff: typeof _variables === 'object',
         });
       } else {
         setClaimError({
@@ -491,6 +534,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   });
 
   const handleReloadServerState = () => {
+    heldLeaseRef.current = undefined;
     setIsWorkspaceOpen(false);
     setIsLeaseConflict(false);
     setActiveGrant(null);
@@ -517,13 +561,31 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const canOpenWorkspace = Boolean(
     activeGrant &&
       effectiveRunId &&
-      isMatchingHolder &&
+      (isCompletedInspection || (isMatchingHolder &&
       isFrameRunMatching &&
       isLeaseFrameMatching &&
       isLeaseExpiryFinite &&
       !isLeaseExpired &&
-      !isLeaseConflict
+      !isLeaseConflict))
   );
+
+  const inspectionIndex = activeGrant ? inspectionFrames.findIndex(frame =>
+    frame.frame_key.cvat_task_id === activeGrant.frame.frame_key.cvat_task_id &&
+    frame.frame_key.frame_number === activeGrant.frame.frame_key.frame_number) : -1;
+  const navigateInspection = (offset: number) => {
+    const target = inspectionFrames[inspectionIndex + offset];
+    if (!activeGrant || !target || claimMutation.isPending) return;
+    const completed = completedInspections[target.frame_id];
+    if (completed) {
+      setActiveGrant(completed);
+      return;
+    }
+    claimMutation.mutate(heldLeaseRef.current
+      ? { frameId: target.frame_id, previousLeaseId: heldLeaseRef.current }
+      : target.frame_id);
+  };
+  const visibleSelectable = (rankingQuery.data?.results ?? []).filter(canSelectFrame);
+  const allVisibleSelected = visibleSelectable.length > 0 && visibleSelectable.every(frame => selectedFrames.some(selected => selected.frame_id === frame.frame_id));
 
   const nextCursor = cursorFrom(rankingQuery.data?.next);
   const prevCursor = cursorFrom(rankingQuery.data?.previous);
@@ -604,7 +666,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       ))}
 
       {/* Claim / Active Lease Context Banner */}
-      {activeGrant && effectiveRunId && (
+      {activeGrant && effectiveRunId && !isCompletedInspection && (
         <section
           className={`lx-card ${isLeaseConflict ? 'lx-card--lease-conflict' : 'lx-card--lease'}`}
           aria-label="Khung ngữ cảnh kiểm tra hiện tại"
@@ -737,7 +799,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             {claimError.code === 'LEASE_CONFLICT' && (
               <div className="lx-mt-1">
                 <p className="lx-review-note">
-                  Quyền giữ frame đã hết hạn hoặc thuộc người khác (409 LEASE_CONFLICT). Thao tác với lease cũ đã bị khóa.
+                  {claimError.handoff
+                    ? 'Chưa chuyển frame. Frame hiện tại được giữ nguyên nếu quyền giữ còn hiệu lực; bạn có thể thử lại hoặc tải lại hàng đợi.'
+                    : 'Quyền giữ frame đã hết hạn hoặc thuộc người khác (409 LEASE_CONFLICT). Thao tác với lease cũ đã bị khóa.'}
                 </p>
                 <button
                   type="button"
@@ -768,14 +832,19 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                 Frame #{activeGrant.frame.id}
               </span>
               <span className="lx-mono lx-subtle">
-                Lease #{activeGrant.lease.id}
+                {isCompletedInspection ? 'Đã review · Chỉ xem' : `Lease #${activeGrant.lease.id}`}
               </span>
             </div>
           </div>
           <ReviewWorkspace
+            key={`${activeGrant.frame.id}:${activeGrant.lease.id}`}
+            onPreviousFrame={inspectionIndex > 0 ? () => navigateInspection(-1) : undefined}
+            onNextFrame={inspectionIndex >= 0 && inspectionIndex < inspectionFrames.length - 1 ? () => navigateInspection(1) : undefined}
+            framePosition={inspectionIndex >= 0 ? `${inspectionIndex + 1}/${inspectionFrames.length}` : undefined}
+            navigationPending={claimMutation.isPending}
             frameId={activeGrant.frame.id}
-            initialLease={activeGrant.lease}
-            grant={activeGrant}
+            initialLease={isCompletedInspection ? null : activeGrant.lease}
+            grant={isCompletedInspection ? null : activeGrant}
             runId={effectiveRunId}
             datasetId={datasetId}
             onBackToQueue={() => setIsWorkspaceOpen(false)}
@@ -812,13 +881,25 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               if (
                 contextRef.current.datasetId !== datasetId ||
                 contextRef.current.activeRunId !== effectiveRunId ||
-                contextRef.current.currentUserId !== currentUserId
+                contextRef.current.currentUserId !== currentUserId ||
+                contextRef.current.activeQueue !== activeQueue
               ) {
                 return;
               }
-              setIsWorkspaceOpen(false);
-              setActiveGrant(null);
+              heldLeaseRef.current = undefined;
+              if (inspectionIndex >= 0) {
+                const completedId = inspectionFrames[inspectionIndex].frame_id;
+                setCompletedInspections(previous => ({ ...previous, [completedId]: activeGrant }));
+                setFrameSelection(selectedFrames.filter(frame => frame.frame_id !== completedId));
+              }
               invalidateQueueData(datasetId, effectiveRunId);
+              const next = inspectionFrames[inspectionIndex + 1];
+              if (inspectionIndex >= 0 && next) {
+                claimMutation.mutate(next.frame_id);
+              } else {
+                setIsWorkspaceOpen(false);
+                setActiveGrant(null);
+              }
             }}
           />
         </section>
@@ -977,6 +1058,19 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             </div>
           </div>
 
+          {rankingQuery.isSuccess && rankingQuery.data.results.length > 0 && <div className="lx-card__body lx-row lx-gap-2">
+            <label><input type="checkbox" aria-label="Chọn tất cả frame có thể kiểm tra trên trang này"
+              checked={allVisibleSelected} disabled={!visibleSelectable.length || claimMutation.isPending}
+              onChange={() => setFrameSelection(allVisibleSelected
+                ? selectedFrames.filter(frame => !visibleSelectable.some(visible => visible.frame_id === frame.frame_id))
+                : [...selectedFrames, ...visibleSelectable.filter(frame => !selectedFrames.some(selected => selected.frame_id === frame.frame_id))])} /> Chọn tất cả trên trang</label>
+            <span aria-live="polite">Đã chọn {selectedFrames.length} frame</span>
+            <button type="button" className="lx-btn lx-btn--primary" disabled={!selectedFrames.length || claimMutation.isPending}
+              onClick={() => startInspection(selectedFrames, [...selectedFrames].sort((a, b) => a.rank - b.rank)[0].frame_id)}>Kiểm tra ảnh đã chọn</button>
+            <button type="button" className="lx-btn lx-btn--sm" disabled={!selectedFrames.length || claimMutation.isPending}
+              onClick={() => setFrameSelection([])}>Bỏ chọn tất cả</button>
+          </div>}
+
           {/* Ranking Frames List */}
           {rankingQuery.isPending && (
             <div className="lx-card__body lx-muted" role="status">
@@ -1039,6 +1133,10 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                       <RankedFrameThumb frame={frame} />
                       <div className="lx-review-info">
                         <div className="lx-review-title">
+                      <label className="lx-row lx-gap-1"><input type="checkbox" aria-label={`Chọn ${title}`}
+                        checked={selectedFrames.some(selected => selected.frame_id === frame.frame_id)}
+                        disabled={!canSelectFrame(frame) || claimMutation.isPending}
+                        onChange={event => setFrameSelection(event.target.checked ? [...selectedFrames, frame] : selectedFrames.filter(selected => selected.frame_id !== frame.frame_id))} /> Chọn</label>
                           <h2 className="lx-h2">{title}</h2>
                           {frame.issue_counts && Object.keys(frame.issue_counts).length > 0 ? (
                             Object.entries(frame.issue_counts).map(([fam, count]) => (
@@ -1088,7 +1186,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
                         aria-label={`Bắt đầu kiểm tra ${title}`}
                         title={heldByOther ? `Frame đang được User #${frame.lease_holder_user_id} giữ` : undefined}
                         disabled={claimMutation.isPending || heldByOther}
-                        onClick={() => claimMutation.mutate(frame.frame_id)}
+                        onClick={() => startInspection((rankingQuery.data?.results ?? []).filter(canSelectFrame), frame.frame_id)}
                       >
                         {isClaimingThis ? 'Đang nhận...' : 'Bắt đầu kiểm tra'}
                       </button>
