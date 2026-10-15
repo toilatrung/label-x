@@ -553,6 +553,12 @@ def retry_failed_qc_run(*, run_id: int, actor: User) -> QCRun:
                 f"(hiện tại: '{run.status}')."
             )
 
+        if run.rankings.exists():
+            raise BusinessRuleUnmetError(
+                "Run đã công bố hàng đợi Review. Tạo run mới để chạy lại engine lỗi; "
+                "kết quả đang review được giữ nguyên."
+            )
+
         failed_units = list(run.work_units.filter(status=WorkUnit.Status.FAILED))
         for unit in failed_units:
             unit.status = WorkUnit.Status.PENDING

@@ -13,7 +13,7 @@ const { push, replace, searchParamsState } = vi.hoisted(() => ({ push: vi.fn(), 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace }), usePathname: () => '/analysis/history', useSearchParams: () => new URLSearchParams(searchParamsState.current) }));
 
 const run = { id: 12, snapshot_id: 4, config_version_id: 7, seed: 42, status: 'partial', is_final: false, origin_run_id: null,
-  score_version: 'v1', model_artifact: null, engines: [{ engine: 'duplicate', status: 'partial', reason: null, failed_units: 1 },
+  score_version: 'score_v0', model_artifact: null, engines: [{ engine: 'duplicate', status: 'partial', reason: null, failed_units: 1 },
     { engine: 'geometry', status: 'not_checked', reason: 'disabled', failed_units: 0 }], created_by: 2, created_at: '2026-10-09T00:00:00Z', finished_at: null };
 const run13 = { id: 13, snapshot_id: 4, config_version_id: 7, seed: 99, status: 'completed', is_final: true, origin_run_id: null,
   score_version: 'v1', model_artifact: null, engines: [{ engine: 'duplicate', status: 'completed', reason: null, failed_units: 0 }],
@@ -133,12 +133,12 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
     expect(screen.queryByRole('link', { name: 'Chạy phân tích mới' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Chạy lại engine lỗi' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Tạo run mới để chạy lại engine lỗi' }).getAttribute('href')).toBe('/analysis/config');
     expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
     expect(screen.queryByText(/Không cộng Coverage giữa các engine/)).toBeNull();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Chạy lại engine lỗi' }));
-    await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(true));
+    expect(screen.getByRole('alert').textContent).toContain('gặp lỗi');
+    expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(false);
   });
 
   it('keeps QC admin read-only on the config screen', async () => {

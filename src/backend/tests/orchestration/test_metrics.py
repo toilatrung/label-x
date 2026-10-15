@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from django.contrib.auth.models import User
@@ -138,8 +139,10 @@ def test_success_flow_counts_duration_queue_and_zero_error(
 
 
 def test_failed_then_retry_failed_does_not_double_count(
-    inline_queue: None, monkeypatch: pytest.MonkeyPatch
+    inline_queue: None, monkeypatch: pytest.MonkeyPatch, settings: Any
 ) -> None:
+    # Legacy retry remains supported when the fail-fast policy is disabled.
+    settings.ORCHESTRATION_FAIL_FAST = False
     state = {"fail": True}
     monkeypatch.setattr(registry, "runner", lambda n, v: _runner(state))
     run = make_run(engine=ENGINE)
@@ -173,6 +176,26 @@ def test_failed_then_retry_failed_does_not_double_count(
     assert _value(text, f'labelx_shard_queue_wait_seconds_count{{engine="{ENGINE}"}}') == 1
     assert _value(text, 'labelx_runs{status="completed"}') == 1
     assert 'labelx_runs{status="partial"}' not in text
+
+
+def test_fail_fast_counts_stopped_shards_without_phantom_attempts(
+    inline_queue: None, monkeypatch: pytest.MonkeyPatch, settings: Any
+) -> None:
+    settings.ORCHESTRATION_FAIL_FAST = True
+    monkeypatch.setattr(registry, "runner", lambda n, v: _runner({"fail": True}))
+    run = make_run(engine=ENGINE)
+    dispatch_run(run.pk)
+    assert QCRun.objects.get(pk=run.pk).status == QCRun.Status.FAILED
+
+    text = _scrape()
+    assert _value(text, f'labelx_shard_units{{engine="{ENGINE}",status="failed"}}') == 2
+    assert _value(text, f'labelx_shard_retries_total{{engine="{ENGINE}"}}') == 0
+    assert _value(text, f'labelx_shard_error_ratio{{engine="{ENGINE}"}}') == 1
+    # Only the first shard ran; the skipped shard has no attempt or duration sample.
+    assert _value(text, f'labelx_shard_duration_seconds_count{{engine="{ENGINE}"}}') == 1
+    assert _value(text, f'labelx_shard_queue_wait_seconds_count{{engine="{ENGINE}"}}') == 1
+    assert _value(text, 'labelx_runs{status="failed"}') == 1
+    assert _scrape() == text  # scraping again does not increment any counter
 
 
 def test_histogram_buckets_sum_and_values() -> None:

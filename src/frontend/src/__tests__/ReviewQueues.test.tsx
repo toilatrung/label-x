@@ -257,6 +257,52 @@ describe('ReviewQueues Frontend (T-034)', () => {
   }
 
   // --- AC A1: Two independent queues, server filters, pagination, fields ---
+  it.each(['queued', 'running'] as const)('waits for a %s run before requesting rankings or queue counts', async (status) => {
+    const { calls } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/runs/12/') return Response.json({ ...mockRun12, status, finished_at: null });
+      return null;
+    });
+    expect(await screen.findByText(/Hàng đợi kiểm tra sẽ sẵn sàng sau khi run kết thúc/)).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Xem tiến độ phân tích' }).getAttribute('href')).toBe('/analysis/history?run=12');
+    expect(screen.queryByText(/Không tải được số đếm hàng đợi/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /Nhận frame kế tiếp từ hàng đợi/ })).toBeNull();
+    expect(calls.some(request => /\/ranking\/|\/api\/queues\//.test(new URL(request.url).pathname))).toBe(false);
+  });
+
+  it('explains a cancelled run without requesting nonexistent rankings', async () => {
+    const { calls } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/runs/12/') return Response.json({ ...mockRun12, status: 'cancelled', score_version: 'v1' });
+      return null;
+    });
+    expect(await screen.findByText(/chưa có kết quả để mở hàng đợi Review/)).toBeDefined();
+    expect(calls.some(request => /\/ranking\/|\/api\/queues\//.test(new URL(request.url).pathname))).toBe(false);
+  });
+
+  it('loads partial results and identifies the failed engine', async () => {
+    const { calls } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/runs/12/') return Response.json({ ...mockRun12, status: 'partial', engines: [{ engine: 'detector', status: 'failed', failed_units: 3 }] });
+      return null;
+    });
+    expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
+    expect(screen.getByRole('alert').textContent).toContain('Engine detector gặp lỗi (3 đơn vị)');
+    expect(calls.some(request => new URL(request.url).pathname === '/api/queues/risk/')).toBe(true);
+  });
+
+  it('loads rankings and queue counts when an in-progress run finishes', async () => {
+    let status: Run['status'] = 'running';
+    const { calls, queryClient } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/runs/12/') return Response.json({ ...mockRun12, status });
+      return null;
+    });
+    await screen.findByText(/Hàng đợi kiểm tra sẽ sẵn sàng sau khi run kết thúc/);
+    expect(calls.some(request => new URL(request.url).pathname.includes('/ranking/'))).toBe(false);
+    status = 'completed';
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['review', 'run'] }); });
+    expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
+    expect(calls.some(request => new URL(request.url).pathname === '/api/queues/risk/')).toBe(true);
+    expect(screen.queryByText(/Chức năng vẫn chưa được kết nối với server/)).toBeNull();
+  });
+
   describe('A1: Queues, Filters & Pagination', () => {
     it('renders risk queue frames with rank, score, issue counts, and composite frame key', async () => {
       await renderReviewPage('reviewer');

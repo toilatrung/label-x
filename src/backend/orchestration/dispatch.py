@@ -16,6 +16,8 @@ from django.db.models import Q
 from django.utils import timezone
 
 from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
+from orchestration.fail_fast import enabled as fail_fast_enabled
+from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import ShardCommit, VlmUnit
 from orchestration.retry import default_policy
 from orchestration.runsync import refresh_run
@@ -119,6 +121,7 @@ def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | N
         return None, "", "missing"
     with transaction.atomic():
         run = QCRun.objects.select_for_update().select_related("config_version").get(pk=run_id)
+        stop_failed_engines(run)
         unit = WorkUnit.objects.select_for_update().get(pk=work_unit_id)
         unit.run = run
         if (
@@ -208,7 +211,7 @@ def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) 
         return "stale"  # đã bị thu hồi: không ghi gì, không chốt, không retry
     except Exception as exc:
         permanent = isinstance(exc, _PERMANENT_ERRORS)
-        if permanent or policy.exhausted(self.request.retries):
+        if fail_fast_enabled() or permanent or policy.exhausted(self.request.retries):
             _settle(
                 unit,
                 token,
