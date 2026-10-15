@@ -58,6 +58,7 @@ def test_detail_checks_server_side_dataset_scope_and_returns_deep_links() -> Non
     assert response.status_code == 200
     assert response.data["revision_hash"] == snapshot.revision_sha256
     job = response.data["jobs"][0]
+    assert job["frames"][0]["id"] == snapshot.jobs.get().frames.get().pk
     assert job["cvat_url"] == "http://cvat.example.test/tasks/9/jobs/17"
     assert job["frames"][0]["cvat_url"].endswith("/tasks/9/jobs/17?frame=0")
 

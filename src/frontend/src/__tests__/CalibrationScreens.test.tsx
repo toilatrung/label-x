@@ -1,25 +1,12 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { BenchmarkBody, BenchmarkHeader } from '@/components/calibration/BenchmarkView';
 import { AuditSamplingBody, AuditSamplingHeader } from '@/components/calibration/AuditSamplingView';
 import { CalibrationBody, CalibrationHeader } from '@/components/calibration/CalibrationView';
 
 import { canAccessCalibration } from '@/lib/auth/roles';
 
 // Performance Evaluation đã nối API (MBE-01): kiểm thử ở PerformanceEvaluation.test.tsx.
-
-describe('Benchmark', () => {
-  it('lists three versions, marks v1.2 as locked and keeps write buttons without API', () => {
-    render(<><BenchmarkHeader /><BenchmarkBody /></>);
-    expect(screen.getAllByRole('row')).toHaveLength(4);
-    expect(screen.getByText('Benchmark đã khoá không thể sửa. Cần thay đổi thì tạo phiên bản mới.')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo benchmark' }));
-    expect(screen.queryByText(/thành công|đã tạo/i)).toBeNull();
-    expect(screen.queryByRole('status')).toBeNull();
-  });
-});
 
 describe('Audit Sampling', () => {
   it('switches between random and risk streams', () => {

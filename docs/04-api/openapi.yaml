@@ -3009,6 +3009,7 @@ components:
       type: object
       required: [frame_index, file_name, width, height, cvat_url]
       properties:
+        id: { type: integer, description: ID SnapshotFrame dùng khi chọn frame tạo Benchmark; khác frame_index của CVAT. }
         frame_index: { type: integer, minimum: 0 }
         file_name: { type: string }
         width: { type: integer, minimum: 1 }

@@ -47,7 +47,7 @@ class SnapshotFrameSerializer(serializers.ModelSerializer[SnapshotFrame]):
 
     class Meta:
         model = SnapshotFrame
-        fields = ["frame_index", "file_name", "width", "height", "cvat_url"]
+        fields = ["id", "frame_index", "file_name", "width", "height", "cvat_url"]
 
     def get_cvat_url(self, frame: SnapshotFrame) -> str:
         job = frame.snapshot_job
