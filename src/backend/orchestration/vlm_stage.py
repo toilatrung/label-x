@@ -13,8 +13,8 @@ Budget/retry:
 - VlmUnit unique theo khoá idempotency; tạo lại là no-op. Khoá chuẩn bị bằng `crop_identity`
   (danh tính crop tất định do CropProvider cung cấp), sha256 thật của crop nằm trong kết quả.
 
-VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication, và không làm fail run
-(engine `vlm` là không bắt buộc).
+VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication.
+Khi bật fail-fast, lỗi VLM dừng stage và run kết thúc với kết quả một phần.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ import hashlib
 import json
 import logging
 import uuid
+from dataclasses import replace
 from datetime import timedelta
 from typing import Any, Protocol
 
@@ -34,6 +35,8 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 
 from engines.registration import taxonomy_from_params
+from orchestration.fail_fast import enabled as fail_fast_enabled
+from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import (
     CandidateRecord,
     VlmAttempt,
@@ -308,6 +311,7 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
         return None, "", "missing"
     with transaction.atomic():
         run = QCRun.objects.select_for_update().get(pk=run_id)
+        stop_failed_engines(run)
         unit = VlmUnit.objects.select_for_update().get(pk=unit_id)
         run_active = run.status in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
         manual_after_end = not run_active and unit.evaluation_generation > EVALUATION_GENERATION
@@ -344,6 +348,16 @@ def _settle_unit(
     ok = result["status"] in (VlmStatus.CHECKED.value, VlmStatus.UNCERTAIN.value)
     with transaction.atomic():
         QCRun.objects.select_for_update().only("id").get(pk=unit.run_id)
+        if (
+            fail_fast_enabled()
+            and unit.evaluation_generation == 1
+            and VlmUnit.objects.filter(
+                run_id=unit.run_id, evaluation_generation=1, status=VlmUnit.Status.FAILED
+            )
+            .exclude(pk=unit.pk)
+            .exists()
+        ):
+            return False
         updated = VlmUnit.objects.filter(
             pk=unit.pk, status=VlmUnit.Status.RUNNING, lease_token=token
         ).update(
@@ -427,6 +441,8 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
+    if fail_fast_enabled():
+        config = replace(config, max_attempts=1)
     public = config.as_public_dict()
     if (config.model, config.prompt_version) != (unit.model, unit.prompt_version):
         # Config của run không còn khớp lúc unit được tạo: không gọi provider với model/prompt

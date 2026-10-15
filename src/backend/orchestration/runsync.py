@@ -8,6 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from engines.interface import EngineStatus, LedgerCounts, NotCheckedReason, public_status
+from orchestration.fail_fast import enabled as fail_fast_enabled
+from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import VlmBudget, VlmUnit
 from orchestration.services import ledger_counts
 from orchestration.vlm_stage import (
@@ -33,6 +35,7 @@ def refresh_run(run_id: int) -> None:
     """Tính lại EngineResult theo ledger (mẫu số theo frame); chốt trạng thái run khi hết shard."""
     with transaction.atomic():
         run = QCRun.objects.select_for_update().get(pk=run_id)
+        stop_failed_engines(run)
         units = list(run.work_units.all())
         units_open = any(u.status in _OPEN for u in units)
         if (
@@ -48,6 +51,11 @@ def refresh_run(run_id: int) -> None:
                 continue
             ledger = ledger_counts(run_id, result.engine)
             if ledger.total == 0:
+                if any(
+                    u.engine == result.engine and u.status == WorkUnit.Status.FAILED for u in units
+                ):
+                    result.status = EngineStatus.FAILED.value
+                    result.save(update_fields=["status"])
                 continue
             finished = not any(u.engine == result.engine and u.status in _OPEN for u in units)
             result.status = public_status(ledger, finished=finished).value
@@ -87,6 +95,10 @@ def refresh_run(run_id: int) -> None:
         ):
             return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
+        if fail_fast_enabled():
+            failed += VlmUnit.objects.filter(
+                run_id=run_id, evaluation_generation=1, status=VlmUnit.Status.FAILED
+            ).count()
         done = sum(u.status == WorkUnit.Status.COMPLETED for u in units)
         if failed == 0:
             run.status = QCRun.Status.COMPLETED
@@ -96,11 +108,12 @@ def refresh_run(run_id: int) -> None:
             run.status = QCRun.Status.PARTIAL
         run.finished_at = timezone.now()
         run.save(update_fields=["status", "finished_at"])
-        # Partial/failed runs can be retried and gain candidates, so publishing an
-        # immutable ranking there would make the successful retry conflict.
-        if run.status == QCRun.Status.COMPLETED:
+        # Fail-fast partial output is immutable once exposed to reviewers.
+        if run.status == QCRun.Status.COMPLETED or (
+            fail_fast_enabled() and run.status == QCRun.Status.PARTIAL
+        ):
             persist_terminal_run_rankings(run_id)
-            if run.metric_reference_id:
+            if run.status == QCRun.Status.COMPLETED and run.metric_reference_id:
                 from runs.ground_truth import cleanup_upload_safely
 
                 reference_id = run.metric_reference_id

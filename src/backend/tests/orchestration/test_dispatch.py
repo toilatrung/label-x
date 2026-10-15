@@ -19,6 +19,11 @@ pytestmark = pytest.mark.django_db(transaction=True)
 ENGINE = "duplicate_overlap"
 
 
+@pytest.fixture(autouse=True)
+def legacy_retry_policy(settings):
+    settings.ORCHESTRATION_FAIL_FAST = False
+
+
 @pytest.fixture
 def run_setup(db: None):
     return make_run(engine=ENGINE)

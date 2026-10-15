@@ -22,6 +22,12 @@ from tests.orchestration.helpers import make_run
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
+
+@pytest.fixture(autouse=True)
+def legacy_retry_policy(settings):
+    settings.ORCHESTRATION_FAIL_FAST = False
+
+
 ENGINE = "duplicate_overlap"
 SHAPES = [
     {"id": i, "type": "rectangle", "frame": 0, "label_id": 4, "points": [0, 0, 10, 10]}

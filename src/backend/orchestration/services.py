@@ -218,11 +218,20 @@ def commit_shard_output(
                 logger.info("shard commit skipped: run cancelled", extra={"qc_run_id": run_id})
                 return False
             if fence is not None:
+                from orchestration.fail_fast import enabled as fail_fast_enabled
+
                 unit_id, token = fence
                 owner = WorkUnit.objects.select_for_update().only("status", "lease_token")
                 unit = owner.get(pk=unit_id)
                 if unit.status != WorkUnit.Status.RUNNING or unit.lease_token != token:
                     raise StaleLeaseError(f"work_unit {unit_id} không còn thuộc lease này")
+                if (
+                    fail_fast_enabled()
+                    and WorkUnit.objects.filter(
+                        run_id=run_id, engine=engine_input.engine, status=WorkUnit.Status.FAILED
+                    ).exists()
+                ):
+                    raise StaleLeaseError("Engine đã dừng sau lỗi")
             shard = ShardCommit.objects.create(
                 idempotency_key=engine_input.idempotency_key,
                 run_id=run_id,

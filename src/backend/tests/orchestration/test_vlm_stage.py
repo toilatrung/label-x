@@ -44,6 +44,12 @@ from vlm.errors import VlmInvalidCropError
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
+
+@pytest.fixture(autouse=True)
+def legacy_retry_policy(settings):
+    settings.ORCHESTRATION_FAIL_FAST = False
+
+
 ENGINE = "duplicate_overlap"
 TAXONOMY = {
     "version": "t",

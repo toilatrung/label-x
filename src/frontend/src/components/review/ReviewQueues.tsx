@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -25,7 +26,6 @@ import type {
 import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
 import { Icon } from '@/components/ui/Icon';
-import { NotConnectedNotice } from '@/components/ui/NotConnectedNotice';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
 /** Bộ lọc gửi lên GET /api/runs/{id}/ranking/: family/origin/review_state + q, priority (MBE-02). */
@@ -284,18 +284,23 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     queryKey: ['review', 'run', datasetId, effectiveRunId],
     queryFn: ({ signal }) => getRunDetails(effectiveRunId!, signal),
     enabled: Boolean(effectiveRunId && effectiveRunId > 0 && datasetId),
+    refetchInterval: query => ['queued', 'running'].includes(query.state.data?.status ?? '') ? 5000 : false,
   });
 
+  const runInProgress = runQuery.data?.status === 'queued' || runQuery.data?.status === 'running';
+  const runWithoutRanking = runQuery.isSuccess && !runInProgress && runQuery.data.score_version !== 'score_v0';
   const queueDataEnabled = Boolean(
     datasetId &&
       effectiveRunId &&
       effectiveRunId > 0 &&
       runQuery.isSuccess &&
+      !runInProgress &&
+      !runWithoutRanking &&
       session?.identity_mapping.status === 'mapped'
   );
 
   // 2. Fetch Ranking data for active queue & filters.
-  // Gated on runQuery.isSuccess: on 403/404 or load failure, ranking is NOT called.
+  // Rankings are persisted when the run ends; do not request them while it is in progress.
   const rankingQuery = useQuery({
     queryKey: [
       'review',
@@ -589,6 +594,12 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         )}
       </div>
 
+      {runQuery.data?.engines.filter(engine => (engine.failed_units ?? 0) > 0 || engine.status === 'failed' || engine.status === 'partial').map(engine => (
+        <div key={engine.engine} role="alert" className="lx-callout lx-callout--warning">
+          Engine {engine.engine} gặp lỗi ({engine.failed_units ?? 0} đơn vị). Phần lỗi được bỏ qua; kết quả còn lại cần được review với dữ liệu chưa đầy đủ.
+        </div>
+      ))}
+
       {/* Claim / Active Lease Context Banner */}
       {activeGrant && effectiveRunId && (
         <section
@@ -820,6 +831,21 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           <section className="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
             <div className="lx-card__body lx-muted" role="status">Đang tải Run #{effectiveRunId}...</div>
           </section>
+        ) : runQuery.isSuccess && runInProgress ? (
+          <section className="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
+            <div className="lx-card__head"><strong>Ảnh cần kiểm tra</strong></div>
+            <div className="lx-card__body lx-stack" role="status">
+              <p>Run #{effectiveRunId} {runQuery.data.status === 'queued' ? 'đang chờ phân tích' : 'đang phân tích'}. Hàng đợi kiểm tra sẽ sẵn sàng sau khi run kết thúc.</p>
+              <p>Trang sẽ tự cập nhật. <Link href={`/analysis/history?run=${effectiveRunId}`}>Xem tiến độ phân tích</Link></p>
+            </div>
+          </section>
+        ) : runWithoutRanking ? (
+          <section className="lx-review-queue" aria-label="Danh sách ảnh cần kiểm tra">
+            <div className="lx-card__body lx-stack" role="status">
+              <p>Run #{effectiveRunId} chưa có kết quả để mở hàng đợi Review. Xem trạng thái từng engine để chạy lại hoặc tạo run mới.</p>
+              <Link href={`/analysis/history?run=${effectiveRunId}`}>Xem trạng thái từng engine</Link>
+            </div>
+          </section>
         ) : runQuery.isSuccess && (
           <section className="lx-card" aria-label="Hàng đợi kiểm duyệt">
           {/* Queue Selection Tabs: số đếm lấy từ GET /api/queues/{name}/ */}
@@ -947,9 +973,6 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
               </button>
             </div>
           </div>
-
-          {/* TODO(backend): cảnh quay và thời gian chụp của ảnh (thiết kế ReviewQueues) chưa có ở GET /api/runs/{id}/ranking/ */}
-          <NotConnectedNotice detail="Cảnh quay và thời gian chụp của từng ảnh chưa có trong dữ liệu hàng đợi" />
 
           {/* Ranking Frames List */}
           {rankingQuery.isPending && (

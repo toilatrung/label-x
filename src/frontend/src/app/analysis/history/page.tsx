@@ -64,6 +64,7 @@ function HistoryContent() {
   const shards = useQuery({ queryKey: ['analysis-shards', session?.user.id, selectedId, shardCursor], queryFn: ({ signal }) => listShards(selectedId!, shardCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const candidates = useQuery({ queryKey: ['analysis-candidates', session?.user.id, selectedId, candidateCursor], queryFn: ({ signal }) => listCandidates(selectedId!, candidateCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const selected = detail.data;
+  const reviewReady = selected?.score_version === 'score_v0' && ['completed', 'partial'].includes(selected.status);
   // B-4: đánh giá lại candidate cần revision Snapshot của run (backend: revision_sha256, rỗng thì snapshot_id).
   const canReEvaluate = hasDatasetPermission(session, datasetId, (role) => ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role));
   const runSnapshot = useQuery({ queryKey: ['analysis-run-snapshot', session?.user.id, selected?.snapshot_id], queryFn: ({ signal }) => getSnapshot(selected!.snapshot_id, signal), enabled: !!selected && canReEvaluate, retry: false });
@@ -104,11 +105,12 @@ function HistoryContent() {
         {detail.isLoading && <div className="lx-card__body">Đang tải chi tiết…</div>}
         {detail.isError && <div className="lx-card__body" role="alert">{errorMessage(detail.error)}</div>}
         {selected && <div className="lx-card__body lx-stack lx-stack--3">
+          {selected.engines.filter(engine => (engine.failed_units ?? 0) > 0 || engine.status === 'failed' || engine.status === 'partial').map(engine => <div key={engine.engine} role="alert" className="lx-callout lx-callout--warning">{engineName[engine.engine] ?? engine.engine} gặp lỗi: {engine.failed_units ?? 0} đơn vị không hoàn tất. Bỏ qua phần lỗi và giữ kết quả các engine khác.</div>)}
           {(ledger.data ?? []).map((row) => <div key={row.engine} className="lx-stack lx-stack--2"><div className="lx-row lx-row--between"><span>{engineName[row.engine] ?? row.engine}</span><span className={`lx-badge ${statusBadge(row.status)}`}>{engineStatusLabel[row.status]}</span></div>{row.coverage !== null && <div className={row.status === 'partial' ? 'lx-progress lx-progress--warn' : 'lx-progress'}><i style={{ width: `${Math.round(row.coverage * 100)}%` }} /></div>}{selected.engines.find((engine) => engine.engine === row.engine)?.reason && <span className="lx-hint">{selected.engines.find((engine) => engine.engine === row.engine)?.reason}</span>}</div>)}
           {ledger.isLoading && <span className="lx-muted">Đang tải Coverage theo engine…</span>}
           {ledger.isError && <span role="alert">{errorMessage(ledger.error)}</span>}
-          {candidates.data && <div className="lx-callout lx-callout--info"><span className="lx-callout__text">Candidate: {candidates.data.raw_count === null ? '' : `${candidates.data.raw_count} bản ghi thô → `}{candidates.data.dedup_count} sau khi gộp trùng, đã sẵn sàng cho Review Center.</span></div>}
-          <div className="lx-actions">{canManage && selected.status === 'partial' && <button className="lx-btn" type="button" disabled={acting} onClick={() => act('retry')}>Chạy lại engine lỗi</button>}<Link className="lx-btn lx-btn--primary" href="/review">Mở Review Queues →</Link></div>
+          {candidates.data && <div className="lx-callout lx-callout--info"><span className="lx-callout__text">Candidate: {candidates.data.raw_count === null ? '' : `${candidates.data.raw_count} bản ghi thô → `}{candidates.data.dedup_count} sau khi gộp trùng. {reviewReady ? 'Hàng đợi Review đã sẵn sàng.' : ['queued', 'running'].includes(selected.status) ? 'Hàng đợi Review sẽ sẵn sàng khi run kết thúc.' : 'Run chưa có hàng đợi Review. Tạo run mới để phân tích lại.'}</span></div>}
+          <div className="lx-actions">{canManage && selected.status === 'partial' && (reviewReady ? <Link className="lx-btn" href="/analysis/config">Tạo run mới để chạy lại engine lỗi</Link> : <button className="lx-btn" type="button" disabled={acting} onClick={() => act('retry')}>Chạy lại engine lỗi</button>)}<Link className="lx-btn lx-btn--primary" href={`/review?run=${selected.id}`}>Mở Review Queues →</Link></div>
           {actionError && <p role="alert" className="lx-callout">{actionError}</p>}
         </div>}
       </section>
