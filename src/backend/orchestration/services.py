@@ -235,6 +235,9 @@ def commit_shard_output(
                     raise StaleLeaseError(f"work_unit {unit_id} không còn thuộc lease này")
                 if (
                     fail_fast_enabled()
+                    and not WorkUnit.objects.filter(
+                        pk=unit_id, run__retry_engine=engine_input.engine
+                    ).exists()
                     and WorkUnit.objects.filter(
                         run_id=run_id, engine=engine_input.engine, status=WorkUnit.Status.FAILED
                     ).exists()

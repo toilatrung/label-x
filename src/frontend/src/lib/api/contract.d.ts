@@ -427,8 +427,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Chạy lại các đơn vị failed của run partial
-         * @description Idempotent theo work_unit.idempotency_key; không tạo candidate/issue trùng.
+         * Chạy lại đơn vị lỗi của một engine được chọn
+         * @description Gửi engine để chỉ chạy lại phần lỗi của engine đó trong run partial/failed/completed; giữ kết quả thành công, bằng chứng cũ và Review đã công bố. VLM tạo generation mới trong ngân sách còn lại. Bỏ engine giữ hành vi retry cũ cho client legacy.
          */
         post: operations["runs_retry_failed"];
         delete?: never;
@@ -4653,7 +4653,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    engine?: "schema" | "geometry" | "duplicate" | "detector" | "metric" | "vlm";
+                };
+            };
+        };
         responses: {
             /** @description Run quay lại running */
             202: {

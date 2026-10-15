@@ -185,6 +185,8 @@ def start_vlm_stage(run_id: int) -> int:
     )
 
     run = QCRun.objects.select_related("config_version", "snapshot").get(pk=run_id)
+    if run.retry_engine:
+        return 0  # A selected-engine retry must never start another engine/stage.
     if run.cancel_requested_at or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
         return 0
     raw = run_vlm_config(run)
@@ -251,7 +253,18 @@ def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
         run = QCRun.objects.select_for_update().get(pk=run_id)
         if run.cancel_requested_at:
             return 0
+        if run.retry_engine and run.retry_engine != VLM_ENGINE:
+            return 0
         qs = VlmUnit.objects.filter(run_id=run_id)
+        if run.retry_engine == VLM_ENGINE:
+            from django.db.models import Subquery
+
+            latest = (
+                VlmUnit.objects.filter(run_id=run_id, candidate_id=OuterRef("candidate_id"))
+                .order_by("-evaluation_generation")
+                .values("pk")[:1]
+            )
+            qs = qs.filter(pk=Subquery(latest), evaluation_generation__gt=1)
         if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
             qs = qs.filter(evaluation_generation__gt=EVALUATION_GENERATION)
         budget = VlmBudget.objects.filter(run_id=run_id).first()
@@ -353,6 +366,8 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
         run = QCRun.objects.select_for_update().get(pk=run_id)
         stop_failed_engines(run)
         unit = VlmUnit.objects.select_for_update().get(pk=unit_id)
+        if run.retry_engine and run.retry_engine != VLM_ENGINE:
+            return None, "", unit.status
         run_active = run.status in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
         manual_after_end = not run_active and unit.evaluation_generation > EVALUATION_GENERATION
         if (

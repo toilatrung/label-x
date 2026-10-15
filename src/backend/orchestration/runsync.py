@@ -46,6 +46,8 @@ def refresh_run(run_id: int) -> None:
             # Candidate đã sinh xong: khởi động/bổ sung stage VLM (idempotent, trong khoá run).
             start_vlm_stage(run_id)
         for result in run.engine_results.all():
+            if run.retry_engine and result.engine != run.retry_engine:
+                continue
             if result.engine == VLM_ENGINE:
                 _refresh_vlm_result(run_id, result)
                 continue
@@ -90,8 +92,10 @@ def refresh_run(run_id: int) -> None:
             return
         if run.cancel_requested_at or units_open:
             return
-        if VLM_ENGINE in (run.engine_versions or {}) and (
-            not vlm_stage_started(run_id) or vlm_units_open(run_id)
+        if (
+            (not run.retry_engine or run.retry_engine == VLM_ENGINE)
+            and VLM_ENGINE in (run.engine_versions or {})
+            and (not vlm_stage_started(run_id) or vlm_units_open(run_id))
         ):
             return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
@@ -100,6 +104,10 @@ def refresh_run(run_id: int) -> None:
                 run_id=run_id, evaluation_generation=1, status=VlmUnit.Status.FAILED
             ).count()
         done = sum(u.status == WorkUnit.Status.COMPLETED for u in units)
+        if run.retry_engine:
+            # Failed historical generations stay immutable; use current engine results.
+            failed = run.engine_results.filter(status__in=("failed", "partial")).count()
+            done = run.engine_results.filter(completed_units__gt=0).count()
         if failed == 0:
             run.status = QCRun.Status.COMPLETED
         elif done == 0:
@@ -153,6 +161,9 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
 
 def _persist_rankings_safely(run_id: int) -> None:
     try:
+        run = QCRun.objects.get(pk=run_id)
+        if run.retry_engine and run.rankings.exists():
+            return  # Preserve the published queue and existing review decisions.
         persist_terminal_run_rankings(run_id)
     except Exception:
         logger.exception("analysis finished but review ranking failed", extra={"qc_run_id": run_id})

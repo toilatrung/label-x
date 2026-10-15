@@ -15,7 +15,7 @@ import { formatDateTime, snapshotCode } from '@/lib/format';
 import { AnalysisProgress } from '@/components/execution/AnalysisProgress';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
 import { getSnapshot } from '@/lib/snapshots/api';
-import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry } from '@/lib/execution/api';
+import { cancelRun, cursorFrom, engineStatusLabel, getLedger, getRun, listCandidates, listRuns, listShards, retryRun, runStatusLabel, type LedgerEntry, type RetryEngine } from '@/lib/execution/api';
 
 function exclusionText(row: LedgerEntry) {
   return Object.entries(row.not_checked_reasons).filter(([reason, count]) => count > 0 && ['not_applicable', 'not_triggered'].includes(reason)).map(([reason, count]) => `${reason}: ${count}`).join(' · ');
@@ -70,11 +70,13 @@ function HistoryContent() {
   const canReEvaluate = hasDatasetPermission(session, datasetId, (role) => ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role));
   const runSnapshot = useQuery({ queryKey: ['analysis-run-snapshot', session?.user.id, selected?.snapshot_id], queryFn: ({ signal }) => getSnapshot(selected!.snapshot_id, signal), enabled: !!selected && canReEvaluate, retry: false });
   const reEvaluateRevision = canReEvaluate && runSnapshot.data ? (runSnapshot.data.revision_hash || String(runSnapshot.data.id)) : null;
-  async function act(kind: 'cancel' | 'retry') {
+  async function act(kind: 'cancel' | 'retry', engine?: RetryEngine) {
     if (!selectedId || !canManage || acting) return;
     setActing(true); setActionError(null);
     try {
-      if (kind === 'cancel') await cancelRun(selectedId); else await retryRun(selectedId);
+      if (kind === 'cancel') await cancelRun(selectedId);
+      else if (engine) await retryRun(selectedId, engine);
+      else return;
       await Promise.all([
         client.invalidateQueries({ queryKey: ['analysis-runs', session?.user.id] }),
         client.invalidateQueries({ queryKey: ['analysis-run', session?.user.id, selectedId] }),
@@ -111,7 +113,11 @@ function HistoryContent() {
           {ledger.isLoading && <span className="lx-muted">Đang tải Coverage theo engine…</span>}
           {ledger.isError && <span role="alert">{errorMessage(ledger.error)}</span>}
           {candidates.data && <div className="lx-callout lx-callout--info"><span className="lx-callout__text">Candidate: {candidates.data.raw_count === null ? '' : `${candidates.data.raw_count} bản ghi thô → `}{candidates.data.dedup_count} sau khi gộp trùng. {reviewReady ? 'Hàng đợi Review đã sẵn sàng.' : ['queued', 'running'].includes(selected.status) ? 'Hàng đợi Review sẽ sẵn sàng khi run kết thúc.' : 'Run chưa có hàng đợi Review. Tạo run mới để phân tích lại.'}</span></div>}
-          <div className="lx-actions">{canManage && selected.status === 'partial' && (reviewReady ? <Link className="lx-btn" href="/analysis/config">Tạo run mới để chạy lại engine lỗi</Link> : <button className="lx-btn" type="button" disabled={acting} onClick={() => act('retry')}>Chạy lại engine lỗi</button>)}<Link className="lx-btn lx-btn--primary" href={`/review?run=${selected.id}`}>Mở Review Queues →</Link></div>
+          <div className="lx-actions">
+            {canManage && !selected.is_final && ['partial', 'failed', 'completed'].includes(selected.status) && selected.engines.filter(engine => engine.status === 'failed' || engine.status === 'partial' || (engine.failed_units ?? 0) > 0).map(engine => <button key={engine.engine} className="lx-btn" type="button" disabled={acting} onClick={() => act('retry', engine.engine as RetryEngine)}>Chạy lại {engineName[engine.engine] ?? engine.engine}</button>)}
+            <Link className="lx-btn lx-btn--primary" href={`/review?run=${selected.id}`}>Mở Review Queues →</Link>
+          </div>
+          {selected.engines.some(engine => (engine.failed_units ?? 0) > 0 || ['partial', 'failed'].includes(engine.status)) && <p className="lx-hint">Chạy lại riêng phần lỗi của engine được chọn. Giữ kết quả thành công và hàng đợi Review đã công bố.</p>}
           {actionError && <p role="alert" className="lx-callout">{actionError}</p>}
         </div>}
       </section>

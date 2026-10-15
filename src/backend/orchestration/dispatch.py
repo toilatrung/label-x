@@ -34,7 +34,7 @@ from runs.models import QCRun, WorkUnit
 from snapshots.models import SnapshotFrame
 
 logger = logging.getLogger("labelx.orchestration")
-_FRAMES = re.compile(r"^job:(?P<job>\d+):frames:(?P<start>\d+)-(?P<end>\d+)$")
+_FRAMES = re.compile(r"^job:(?P<job>\d+):frames:(?P<start>\d+)-(?P<end>\d+)(?::retry:\d+)?$")
 
 
 def shard_units(work_unit: WorkUnit) -> tuple[EngineUnitRef, ...]:
@@ -124,6 +124,8 @@ def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | N
         stop_failed_engines(run)
         unit = WorkUnit.objects.select_for_update().get(pk=work_unit_id)
         unit.run = run
+        if run.retry_engine and unit.engine != run.retry_engine:
+            return None, "", unit.status
         if (
             run.cancel_requested_at
             or run.status not in _ACTIVE_RUN
@@ -260,6 +262,8 @@ def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
     if run.cancel_requested_at or run.status not in _ACTIVE_RUN:
         return 0
     pending_qs = run.work_units.filter(status=WorkUnit.Status.PENDING)
+    if run.retry_engine:
+        pending_qs = pending_qs.filter(engine=run.retry_engine)
     if stale_after is not None:
         cutoff = timezone.now() - timedelta(seconds=stale_after)
         pending_qs = pending_qs.filter(Q(dispatched_at__isnull=True) | Q(dispatched_at__lte=cutoff))

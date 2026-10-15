@@ -134,12 +134,22 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
     expect(screen.queryByRole('link', { name: 'Chạy phân tích mới' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Tạo run mới để chạy lại engine lỗi' }).getAttribute('href')).toBe('/analysis/config');
+    expect(screen.getByRole('button', { name: 'Chạy lại Duplicate / Overlap' })).toBeDefined();
     expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
     expect(screen.queryByText(/Không cộng Coverage giữa các engine/)).toBeNull();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
     expect(screen.getByRole('alert').textContent).toContain('gặp lỗi');
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(false);
+  });
+
+
+  it('retries only the selected failed engine in the selected QC run', async () => {
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy lại Duplicate / Overlap' }));
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toHaveLength(1));
+    const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;
+    expect(await request.clone().json()).toEqual({ engine: 'duplicate' });
+    expect(screen.queryByRole('button', { name: 'Chạy lại Geometry' })).toBeNull();
   });
 
   it('keeps QC admin read-only on the config screen', async () => {
@@ -161,7 +171,7 @@ describe('Execution screens on real API contract', () => {
     fireEvent.change(await screen.findByLabelText('Dataset'), { target: { value: '1' } });
 
     expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Chạy lại engine lỗi' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chạy lại/ })).toBeNull();
     expect(calls.some((request) => request.method === 'POST')).toBe(false);
   });
 

@@ -17,6 +17,8 @@ def stop_failed_engines(run: QCRun) -> None:
     """Caller holds the run lock. Revoke leases so late results cannot commit."""
     if not enabled() or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
         return
+    if run.retry_engine:
+        return  # An explicit retry settles each selected unit independently.
     failed = set(
         run.work_units.filter(status=WorkUnit.Status.FAILED).values_list("engine", flat=True)
     )
