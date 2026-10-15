@@ -469,6 +469,9 @@ def test_detector_unmatched_annotation_is_a_review_warning_not_a_duplicate_clust
         run_id=run.pk, candidates=[_candidate(), unmatched], audit_percent=Decimal("50")
     )
     assert {r.pk for r in rankings} == {r.pk for r in replay}
+
+
+@pytest.mark.django_db
 def test_priority_counts_ignore_selected_priority_and_cursor_but_honor_other_filters(
     snapshot,
     config,
