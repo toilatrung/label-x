@@ -226,6 +226,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   useEffect(() => { heldLeaseRef.current = undefined; }, [datasetId, effectiveRunId, currentUserId]);
   const selectedFrames = selection.scope === selectionScope ? selection.frames : [];
   const inspectionFrames = inspection.scope === selectionScope ? inspection.frames : [];
+  const isCompletedInspection = Object.values(completedInspections).some(grant => grant.frame.id === activeGrant?.frame.id);
   const canSelectFrame = (frame: RankedFrame) =>
     ['unreviewed', 'incomplete', 'in_review'].includes(frame.review_state) &&
     (frame.lease_holder_user_id === null || frame.lease_holder_user_id === currentUserId);
@@ -256,10 +257,10 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       isOpen: isWorkspaceOpen && Boolean(activeGrant && effectiveRunId),
       frameId: activeGrant?.frame.id,
       runId: effectiveRunId,
-      leaseId: activeGrant?.lease.id,
+      leaseId: isCompletedInspection ? undefined : activeGrant?.lease.id,
       taskCvatId: activeGrant?.frame.frame_key.cvat_task_id,
     });
-  }, [isWorkspaceOpen, activeGrant, effectiveRunId, onWorkspaceStateChange]);
+  }, [isWorkspaceOpen, activeGrant, effectiveRunId, isCompletedInspection, onWorkspaceStateChange]);
 
   // Reset pagination cursor when queue or filters change
   const handleQueueChange = (queue: QueueName) => {
@@ -554,7 +555,6 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const isLeaseFrameMatching = Boolean(
     activeGrant && activeGrant.lease.frame_id === activeGrant.frame.id
   );
-  const isCompletedInspection = Object.values(completedInspections).some(grant => grant.frame.id === activeGrant?.frame.id);
   const canOpenWorkspace = Boolean(
     activeGrant &&
       effectiveRunId &&
@@ -663,7 +663,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       ))}
 
       {/* Claim / Active Lease Context Banner */}
-      {activeGrant && effectiveRunId && (
+      {activeGrant && effectiveRunId && !isCompletedInspection && (
         <section
           className={`lx-card ${isLeaseConflict ? 'lx-card--lease-conflict' : 'lx-card--lease'}`}
           aria-label="Khung ngữ cảnh kiểm tra hiện tại"

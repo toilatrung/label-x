@@ -1085,6 +1085,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       fireEvent.click(screen.getByRole('button', { name: '‹ Frame trước' }));
       await screen.findByText('Frame 1/2');
       expect(calls.filter(request => request.url.includes('/api/queues/risk/next/')).length).toBe(before);
+      expect(screen.queryByText('Phiên kiểm tra đang giữ (Active Lease)')).toBeNull();
       expect((screen.getByRole('button', { name: 'Hoàn tất review frame' }) as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
       await screen.findByText('Frame 2/2');
