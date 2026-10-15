@@ -214,11 +214,11 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
         )
         raise ApiError(status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Ngoài phạm vi dataset.")
 
-    actor_role = Role.SUPER_ADMIN if is_sa and not is_qa else Role.QA_LEAD
+    actor_role = Role.SUPER_ADMIN if is_sa else Role.QA_LEAD
 
     # 2. Adjudicator identity verification check (fail-closed)
     adjudicator_identity = CvatIdentity.objects.select_related("employee").filter(user=user).first()
-    if (
+    if not is_sa and (
         adjudicator_identity is None
         or adjudicator_identity.employee is None
         or not adjudicator_identity.employee.is_verified
@@ -246,7 +246,9 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
         .last()
     )
 
-    if escalator_decision is not None:
+    if escalator_decision is not None and not is_sa:
+        # The non-admin identity guard above has already rejected a missing identity.
+        assert adjudicator_identity is not None
         escalator_user = escalator_decision.actor
         # 3a. Same account check
         if user.pk == escalator_user.pk:
@@ -356,12 +358,6 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
         correct_label = correct_label.strip() or None
 
     override_reason = str(body.get("override_reason", "")).strip()
-    if actor_role == Role.SUPER_ADMIN and not override_reason:
-        raise ApiError(
-            status.HTTP_400_BAD_REQUEST,
-            "VALIDATION_ERROR",
-            "Super Admin cần override_reason.",
-        )
 
     # 7. Compute next case_version (v1, v2...)
     version_count = DecisionCase.objects.filter(issue=issue).count()

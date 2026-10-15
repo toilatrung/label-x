@@ -48,6 +48,31 @@ const mockIssue: Issue = {
 };
 
 describe('ReviewCanvas (T-037 Canvas & Coordinate Transformation)', () => {
+  it('renders the full CVAT annotations separately from model-2 suggestions', () => {
+    const props = {
+      frame: mockFrame, issues: [], selectedIssueId: null, onSelectIssue: vi.fn(),
+      reviewMode: 'frame' as const, showAnnotations: true, showPredictions: true,
+      zoom: 1, pan: { x: 0, y: 0 }, onZoomChange: vi.fn(), onPanChange: vi.fn(),
+      snapshotAnnotations: [
+        { id: 'shape:7', label: 'car', source: { kind: 'shape', id: 7 },
+          bbox: { x1: 10, y1: 20, x2: 110, y2: 120 }, rotation: 30, color: '#abcdef', occluded: true },
+        { id: 'shape:8', label: 'hidden', outside: true, bbox: { x1: 1, y1: 2, x2: 3, y2: 4 } },
+      ],
+      predictions: [{ id: 'qwen-1', issueId: null, source: 'Qwen · mô hình 2', label: 'bus',
+        bbox: { x1: 10, y1: 20, x2: 110, y2: 120 } }],
+    };
+    const { container, rerender } = render(<ReviewCanvas {...props} />);
+    expect(screen.getByText('car · 7')).toBeDefined();
+    expect(screen.getByText('Qwen · mô hình 2: bus')).toBeDefined();
+    expect(screen.queryByText(/hidden/)).toBeNull();
+    const rectangle = container.querySelector('[data-annotation-id="shape:7"] rect')!;
+    expect(rectangle.getAttribute('transform')).toBe('rotate(30 60 70)');
+    expect(rectangle.getAttribute('stroke')).toBe('#abcdef');
+    expect(rectangle.getAttribute('stroke-dasharray')).toBe('6 4');
+    rerender(<ReviewCanvas {...props} showPredictions={false} />);
+    expect(screen.getByText('car · 7')).toBeDefined();
+    expect(screen.queryByText('Qwen · mô hình 2: bus')).toBeNull();
+  });
   describe('calculateLetterboxTransform', () => {
     it('accurately computes inverse coordinates with matching aspect ratio at 1x zoom and 0 pan', () => {
       // 960x540 viewBox inside 960x540 viewport (16:9 in 16:9)

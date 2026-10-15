@@ -290,11 +290,12 @@ describe('Escalations UI (T-039)', () => {
     expect(calls.some(request => new URL(request.url).pathname === '/api/decision-cases/12/')).toBe(true);
   });
 
-  it('requires an override reason for a global Super Admin', async () => {
+  it('lets a global Super Admin adjudicate with an optional administrative note', async () => {
     await renderPage('admin');
     await screen.findByText('QC-00042');
     fireEvent.click(screen.getByRole('button', { name: 'Mở phân xử' }));
-    expect(screen.getByLabelText('Lý do ghi đè *')).toBeDefined();
+    expect(screen.getByLabelText('Ghi chú quản trị (không bắt buộc)')).toBeDefined();
+    expect((screen.getByRole('button', { name: 'Lưu phân xử' }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('renders the three-column summary and limits Sau khi phân xử to confirm (MBE-02)', async () => {

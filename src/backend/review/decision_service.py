@@ -215,10 +215,6 @@ def write_decision(*, request: Request, issue_id: int) -> ReviewDecision:
             "INVALID_TRANSITION",
             "Revision không khớp snapshot đang review.",
         )
-    if role == Role.SUPER_ADMIN and not str(body.get("override_reason", "")).strip():
-        raise ApiError(
-            status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Super Admin cần override_reason."
-        )
     action, reason, rules = _validated_action(body, issue)
     target: str = {
         ReviewDecision.Action.CONFIRM.value: Issue.State.CONFIRMED.value,

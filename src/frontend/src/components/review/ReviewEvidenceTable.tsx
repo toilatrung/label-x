@@ -9,6 +9,7 @@ type Evidence = components['schemas']['Evidence'];
 type EngineRunStatus = components['schemas']['EngineRunStatus'];
 
 export interface ReviewEvidenceTableProps {
+  onEvaluationUpdated?: () => void;
   evidenceList: Evidence[];
   engineStatuses?: EngineRunStatus[];
   currentAnnotationClass?: string;
@@ -75,6 +76,7 @@ export function ReviewEvidenceTable({
   currentAnnotationClass,
   aiEvidence = [],
   canReEvaluate = false,
+  onEvaluationUpdated,
 }: ReviewEvidenceTableProps) {
   return (
     <div className="lx-stack lx-gap-2">
@@ -152,7 +154,8 @@ export function ReviewEvidenceTable({
               <td>
                 <AiEvidenceCell item={item} />
                 {canReEvaluate && item.snapshot_revision && (
-                  <AiReEvaluate key={item.candidate_id} candidateId={item.candidate_id} expectedRevision={item.snapshot_revision} />
+                  <AiReEvaluate key={item.candidate_id} candidateId={item.candidate_id} expectedRevision={item.snapshot_revision}
+                    onEvaluationUpdated={onEvaluationUpdated} />
                 )}
               </td>
             </tr>

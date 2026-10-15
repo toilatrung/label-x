@@ -2018,6 +2018,10 @@ export interface components {
             jobs: {
                 cvat_job_id: number;
                 assignee_cvat_user_id: number | null;
+                assignee_name?: string | null;
+                state?: string | null;
+                /** Format: uri */
+                cvat_url?: string;
                 frame_count?: number;
                 /** Format: date-time */
                 updated_date: string;
@@ -2705,6 +2709,10 @@ export interface components {
                 id: number;
             };
             label_id: number;
+            /** @description CVAT label name captured in the snapshot */
+            label?: string | null;
+            /** @description CVAT label color captured in the snapshot */
+            color?: string | null;
             bbox: {
                 x1: number;
                 y1: number;
@@ -3477,6 +3485,8 @@ export interface components {
             lease?: components["schemas"]["Lease"] | null;
             queue?: components["schemas"]["QueueName"] | null;
             undecided_issue_count?: number;
+            /** @description Server-supported policy for creating manual issues */
+            anchor_policy_version?: string;
             /** @description Đề xuất AI mới nhất cho từng issue có candidate (MBE-01); chỉ đọc, không phải quyết định review. */
             ai_evidence?: components["schemas"]["WorkspaceAiEvidence"][];
         };

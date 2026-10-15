@@ -345,7 +345,19 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
       expect(onLeaseConflict).not.toHaveBeenCalled();
     });
 
-    it('requires mandatory override_reason for Super Admin', async () => {
+    it('saves a Super Admin decision without requiring an administrative note', async () => {
+      const api = installMockAuthApi();
+      await api.signIn('admin');
+      const originalFetch = api.fetchSpy.getMockImplementation()!;
+      api.fetchSpy.mockImplementation(async request => {
+        const path = new URL(request.url).pathname;
+        if (path.startsWith('/api/auth/')) return originalFetch(request);
+        if (path === '/api/issues/201/decisions/') return Response.json(
+          { id: 99, issue_id: 201, action: 'confirm', revision: 'sha256:abc' }, { status: 201 });
+        if (path === '/api/issues/201/') return Response.json({ ...testIssueE2, state: 'confirmed' });
+        return Response.json({}, { status: 404 });
+      });
+      const onDecisionSaved = vi.fn();
       render(
         <ReviewDecisionForm
           issue={testIssueE2}
@@ -353,18 +365,15 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
           snapshotRevision="sha256:abc"
           isLeaseExpired={false}
           isSuperAdmin={true}
-          onDecisionSaved={vi.fn()}
+          onDecisionSaved={onDecisionSaved}
         />
       );
 
-      expect(screen.getByLabelText(/Lý do Super Admin can thiệp/i)).toBeInTheDocument();
+      expect((screen.getByLabelText('Ghi chú quản trị (không bắt buộc)') as HTMLInputElement).value).toBe('');
 
-      // Submit without entering override_reason
       fireEvent.click(screen.getByRole('button', { name: 'Lưu quyết định' }));
-
-      expect(
-        screen.getByText(/Super Admin bắt buộc phải nhập lý do can thiệp/i)
-      ).toBeInTheDocument();
+      await waitFor(() => expect(onDecisionSaved).toHaveBeenCalled());
+      expect(onDecisionSaved.mock.calls[0][0].state).toBe('confirmed');
     });
 
     it('preserves successful server save even if subsequent GET refresh fails', async () => {

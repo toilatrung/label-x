@@ -283,7 +283,7 @@ def test_identity_alias_scope_role_and_client_dataset_bypass(world):
         user=super_admin, cvat_user_id=706, employee=author_identity.employee
     )
     assert (
-        client(super_admin).post(next_url(), {"run_id": run_id}, format="json").status_code == 204
+        client(super_admin).post(next_url(), {"run_id": run_id}, format="json").status_code == 200
     )
 
 

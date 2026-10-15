@@ -219,9 +219,6 @@ export function ReviewDecisionForm({
       }
     }
 
-    if (isSuperAdmin && !overrideReason.trim()) {
-      return 'Super Admin bắt buộc phải nhập lý do can thiệp (override_reason).';
-    }
 
     return null;
   };
@@ -679,11 +676,11 @@ export function ReviewDecisionForm({
           />
         </div>
 
-        {/* Super Admin override: mandatory reason for Super Admin */}
+        {/* Optional administrative note, retained in the audit record. */}
         {isSuperAdmin && (
           <div className="lx-field lx-field--divider">
             <label className="lx-label" htmlFor="override-reason">
-              Lý do Super Admin can thiệp (Bắt buộc) <span className="lx-text-danger">*</span>
+              Ghi chú quản trị (không bắt buộc)
             </label>
             <input
               id="override-reason"
@@ -691,7 +688,7 @@ export function ReviewDecisionForm({
               className="lx-input"
               value={overrideReason}
               onChange={(e) => setOverrideReason(e.target.value)}
-              placeholder="Nhập lý do bắt buộc khi Super Admin can thiệp ghi đè..."
+              placeholder="Ghi chú cho nhật ký thao tác..."
               disabled={isDecisionBlocked}
             />
           </div>

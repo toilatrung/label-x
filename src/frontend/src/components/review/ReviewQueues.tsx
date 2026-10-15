@@ -25,6 +25,7 @@ import type {
 } from '@/lib/review/types';
 import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
+import { CvatJobsPanel } from './CvatJobsPanel';
 import { Icon } from '@/components/ui/Icon';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
@@ -296,7 +297,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       runQuery.isSuccess &&
       !runInProgress &&
       !runWithoutRanking &&
-      session?.identity_mapping.status === 'mapped'
+      (session?.identity_mapping.status === 'mapped' || session?.roles.some(r => r.role === 'super_admin' && r.dataset_id === null))
   );
 
   // 2. Fetch Ranking data for active queue & filters.
@@ -593,6 +594,8 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
           </div>
         )}
       </div>
+
+      <CvatJobsPanel />
 
       {runQuery.data?.engines.filter(engine => (engine.failed_units ?? 0) > 0 || engine.status === 'failed' || engine.status === 'partial').map(engine => (
         <div key={engine.engine} role="alert" className="lx-callout lx-callout--warning">

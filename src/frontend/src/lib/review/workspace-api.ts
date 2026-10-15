@@ -34,6 +34,64 @@ export interface AiEvidence {
 export type FrameWorkspace = components['schemas']['FrameWorkspace'] & {
   ai_evidence?: AiEvidence[];
 };
+
+type BBox = components['schemas']['BBox'];
+
+/** Detector output uses xyxy arrays; the review API also accepts named coordinates. */
+export function reviewBBox(value: unknown): BBox | null {
+  const coords = Array.isArray(value) ? value : value && typeof value === 'object'
+    ? ['x1', 'y1', 'x2', 'y2'].map(key => (value as Record<string, unknown>)[key]) : [];
+  if (coords.length !== 4 || !coords.every(v => typeof v === 'number' && Number.isFinite(v))) return null;
+  const [x1, y1, x2, y2] = coords as number[];
+  return x2 > x1 && y2 > y1 ? { x1, y1, x2, y2 } : null;
+}
+
+export interface WorkspacePrediction {
+  id: string;
+  issueId: number | null;
+  bbox: BBox;
+  label: string;
+  source: string;
+  confidence?: number;
+}
+
+export function workspacePredictions(data: FrameWorkspace): WorkspacePrediction[] {
+  const predictions: WorkspacePrediction[] = [];
+  for (const candidate of data.predictions ?? []) {
+    const issueId = data.ai_evidence?.find(e => e.candidate_id === candidate.candidate_id)?.issue_id ?? null;
+    const evidence = Array.isArray(candidate.evidence) ? candidate.evidence : [candidate.evidence];
+    evidence.forEach((raw: unknown, index: number) => {
+      if (!raw || typeof raw !== 'object') return;
+      const ev = raw as Record<string, unknown>;
+      const bbox = reviewBBox(ev.prediction_bbox);
+      if (!bbox) return;
+      predictions.push({ id: `candidate-${candidate.candidate_id}-${index}`, issueId, bbox,
+        label: String(ev.prediction_class ?? ev.class_name ?? 'object'), source: candidate.engine,
+        confidence: typeof ev.confidence === 'number' && Number.isFinite(ev.confidence) ? ev.confidence : undefined });
+    });
+  }
+  // Older workspace responses may only carry prediction evidence inside issues.
+  if (!data.predictions?.length) {
+    for (const issue of data.issues) {
+      issue.evidence?.forEach((ev, index) => {
+        const bbox = reviewBBox(ev.prediction_bbox);
+        if (bbox) predictions.push({ id: `issue-${issue.id}-${index}`, issueId: issue.id, bbox,
+          label: ev.prediction_class ?? 'object', source: ev.engine, confidence: ev.confidence ?? undefined });
+      });
+    }
+  }
+  for (const item of data.ai_evidence ?? []) {
+    if (item.source !== 'qwen' || item.status !== 'completed' || item.suggestion?.status !== 'checked'
+      || !item.suggestion.class_name) continue;
+    const issue = data.issues.find(i => i.id === item.issue_id);
+    const evidenceBox = issue?.evidence?.map(ev => reviewBBox(ev.prediction_bbox)).find(Boolean);
+    const bbox = evidenceBox ?? reviewBBox(issue?.anchor.bbox);
+    if (!bbox) continue;
+    predictions.push({ id: `qwen-${item.evaluation_id}`, issueId: item.issue_id, bbox,
+      label: item.suggestion.class_name, source: 'Qwen · mô hình 2' });
+  }
+  return predictions;
+}
 export type SimilarCase = components['schemas']['SimilarCase'];
 export type PaginatedSimilarCaseList = components['schemas']['PaginatedSimilarCaseList'];
 

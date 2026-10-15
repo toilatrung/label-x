@@ -153,28 +153,28 @@ describe('Snapshot create form scope', () => {
     show();
     expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
-    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
     expect(screen.getByText(/Hiện chọn 1 task · 1 job · 12 frame\./)).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     expect(screen.getByText(/Toàn Dataset · 1 task · 2 job · 20 frame\./)).toBeDefined();
   });
 
-  it('lists only Task rows by default and reveals Job rows on demand with thousands separators', () => {
+  it('shows CVAT Job rows by default and lets the user collapse each Task', () => {
     show();
-    expect(screen.queryByRole('checkbox', { name: 'Chọn Job 17' })).toBeNull();
+    expect(screen.getByRole('checkbox', { name: 'Chọn Job 17' })).toBeDefined();
     expect(screen.getByRole('checkbox', { name: 'Chọn Task 9' })).toBeDefined();
     const toggle = screen.getByRole('button', { name: /2 Job/ });
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('checkbox', { name: 'Chọn Job 17' })).toBeNull();
+    fireEvent.click(toggle);
     expect(screen.getByRole('checkbox', { name: 'Chọn Job 17' })).toBeDefined();
   });
 
   it('shows the CVAT job stage next to the assignee', () => {
     show();
     expect(screen.getByRole('columnheader', { name: 'Người thực hiện · Giai đoạn' })).toBeDefined();
-    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 17' }).closest('tr') as HTMLElement).getByText(/3 · —/)).toBeDefined();
     // stage do CVAT trả (B-2); vắng thì giữ "—".
     expect(within(screen.getByRole('checkbox', { name: 'Chọn Job 18' }).closest('tr') as HTMLElement).getByText('Chưa gán · Kiểm tra')).toBeDefined();

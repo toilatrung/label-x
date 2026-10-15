@@ -467,7 +467,7 @@ paths:
       summary: Cây task/job CVAT của dataset để chọn phạm vi snapshot
       description: Đọc qua adapter CVAT chỉ đọc (FR-SNP-01). Đường dẫn đề xuất (rest-api.html §4.2).
       x-labelx-trace: [UC-01, FR-SNP-01, FR-SNP-05]
-      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      x-labelx-roles: [reviewer, qa_lead, qc_admin, super_admin]
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
@@ -2955,6 +2955,9 @@ components:
             properties:
               cvat_job_id: { type: integer }
               assignee_cvat_user_id: { type: integer, nullable: true }
+              assignee_name: { type: string, nullable: true }
+              state: { type: string, nullable: true }
+              cvat_url: { type: string, format: uri }
               frame_count: { type: integer }
               updated_date: { type: string, format: date-time }
               stage:
@@ -3888,6 +3891,8 @@ components:
             kind: { type: string }
             id: { type: integer }
         label_id: { type: integer }
+        label: { type: string, nullable: true, description: "CVAT label name captured in the snapshot" }
+        color: { type: string, nullable: true, description: "CVAT label color captured in the snapshot" }
         bbox:
           type: object
           nullable: true
@@ -4858,6 +4863,7 @@ components:
               allOf: [{ $ref: "#/components/schemas/QueueName" }]
               nullable: true
             undecided_issue_count: { type: integer }
+            anchor_policy_version: { type: string, description: "Server-supported policy for creating manual issues" }
             ai_evidence:
               type: array
               description: Đề xuất AI mới nhất cho từng issue có candidate (MBE-01); chỉ đọc, không phải quyết định review.

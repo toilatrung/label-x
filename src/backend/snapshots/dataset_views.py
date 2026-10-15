@@ -24,7 +24,7 @@ from accounts.models import SYSTEM_WIDE_ROLES, Role, RoleAssignment
 from accounts.permissions import HasRoleAndDatasetScope
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
-from cvat_adapter.client import CvatReadClient
+from cvat_adapter.client import CvatReadClient, build_job_url
 from cvat_adapter.credentials import service_token
 
 
@@ -51,6 +51,9 @@ class CvatJobSerializer(serializers.Serializer[dict[str, Any]]):
     cvat_job_id = serializers.IntegerField()
     assignee_cvat_user_id = serializers.IntegerField(allow_null=True)
     frame_count = serializers.IntegerField(required=False)
+    assignee_name = serializers.CharField(allow_null=True, required=False)
+    state = serializers.CharField(allow_null=True, required=False)
+    cvat_url = serializers.URLField(required=False)
     updated_date = serializers.DateTimeField()
     stage = serializers.ChoiceField(
         choices=["annotation", "validation", "acceptance"], allow_null=True, required=False
@@ -171,7 +174,7 @@ class DatasetListView(APIView):
 
 class DatasetTasksView(APIView):
     permission_classes = [HasRoleAndDatasetScope]
-    allowed_roles = (Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.QC_ADMIN, Role.SUPER_ADMIN)
     action_name = "datasets.tasks"
     object_type = "dataset"
     requires_dataset = True
@@ -238,11 +241,17 @@ class DatasetTasksView(APIView):
                                 "Job nằm ngoài Task.",
                             )
                         assignee = job.get("assignee")
+                        assignee_name = (
+                            assignee.get("username") if isinstance(assignee, dict) else None
+                        )
                         if isinstance(assignee, dict):
                             assignee = assignee.get("id")
                         frame_count = job.get("frame_count")
                         row = {
                             "cvat_job_id": job_id,
+                            "assignee_name": assignee_name,
+                            "state": job.get("state"),
+                            "cvat_url": build_job_url(settings.CVAT_BASE_URL, task_id, job_id),
                             "assignee_cvat_user_id": _positive(assignee, "job.assignee")
                             if assignee is not None
                             else None,

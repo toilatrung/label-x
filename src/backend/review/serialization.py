@@ -21,6 +21,21 @@ from review.models import FrameReview, Issue, ReviewDecision
 from runs.models import EngineResult, RunRankingEntry
 
 
+def review_evidence(raw: Any) -> list[dict[str, Any]]:
+    """Adapt detector xyxy evidence to the review API without mutating engine output."""
+    rows = raw if isinstance(raw, list) else [raw]
+    result = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        item = dict(row)
+        bbox = item.get("prediction_bbox")
+        if isinstance(bbox, list) and len(bbox) == 4:
+            item["prediction_bbox"] = dict(zip(("x1", "y1", "x2", "y2"), bbox, strict=True))
+        result.append(item)
+    return result
+
+
 def decision_record(decision: ReviewDecision) -> dict[str, object]:
     return {
         "id": decision.pk,
@@ -73,7 +88,7 @@ def issue_response(issue: Issue) -> dict[str, object]:
         "q_i": issue.q_i,
         "severity": issue.severity,
         "rule_ids": issue.rule_ids,
-        "evidence": evidence,
+        "evidence": review_evidence(evidence),
         "links": issue.links,
         "review_decisions": [
             decision_record(decision)
@@ -156,6 +171,9 @@ def frame_engines(frame: FrameReview) -> list[dict[str, object]]:
 def frame_annotations(frame: FrameReview) -> list[dict[str, object]]:
     """Every annotation of the locked snapshot frame, with or without an engine candidate."""
     annotations: list[dict[str, object]] = []
+    context = frame.run.snapshot.provenance.get("guideline_context", {})
+    labels = context.get("annotation_labels") or context.get("taxonomy", {}).get("labels", [])
+    by_id = {label["label_id"]: label for label in labels}
     for shape in frame.snapshot_frame.shapes:
         points = shape.get("points") or []
         source = shape.get("source") or {}
@@ -164,6 +182,8 @@ def frame_annotations(frame: FrameReview) -> list[dict[str, object]]:
                 "id": f"{source.get('kind')}:{source.get('id')}",
                 "source": source,
                 "label_id": shape.get("label_id"),
+                "label": by_id.get(shape.get("label_id"), {}).get("name"),
+                "color": by_id.get(shape.get("label_id"), {}).get("color"),
                 "bbox": (
                     {"x1": points[0], "y1": points[1], "x2": points[2], "y2": points[3]}
                     if len(points) == 4

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from accounts.models import Role, RoleAssignment
+from cvat_adapter.client import build_job_url
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -77,6 +79,9 @@ def test_scoped_user_sees_only_assigned_project_and_can_select_jobs(monkeypatch)
             "jobs": [
                 {
                     "cvat_job_id": 17,
+                    "assignee_name": None,
+                    "state": None,
+                    "cvat_url": build_job_url(settings.CVAT_BASE_URL, 9, 17),
                     "assignee_cvat_user_id": 3,
                     "frame_count": 12,
                     "updated_date": "2026-10-09T07:05:45Z",

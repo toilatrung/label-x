@@ -454,30 +454,18 @@ def test_validation_missing_reason(adj_world):
     assert resp.data["code"] == "VALIDATION_ERROR"
 
 
-def test_super_admin_requires_override_reason(adj_world):
-    """Super Admin acting without override_reason is rejected 400 (FR-SEC-06)."""
+def test_super_admin_can_adjudicate_without_identity_or_override_reason(adj_world):
+    """A system-wide administrator can complete adjudication without extra role gates."""
     sa = adj_world["super_admin"]
     issue = adj_world["issue"]
+    CvatIdentity.objects.filter(user=sa).delete()
 
     resp = client(sa).post(
         f"/api/issues/{issue.pk}/adjudications/",
         {"outcome": "confirm", "rule_id": "RULE-01", "reason": "Admin decide"},
         format="json",
     )
-    assert resp.status_code == 400, resp.data
-    assert resp.data["code"] == "VALIDATION_ERROR"
-
-    resp_ok = client(sa).post(
-        f"/api/issues/{issue.pk}/adjudications/",
-        {
-            "outcome": "confirm",
-            "rule_id": "RULE-01",
-            "reason": "Admin decide",
-            "override_reason": "Urgent production review override",
-        },
-        format="json",
-    )
-    assert resp_ok.status_code == 201, resp_ok.data
+    assert resp.status_code == 201, resp.data
 
 
 def test_invalid_transition_from_non_escalated_rejected(adj_world):

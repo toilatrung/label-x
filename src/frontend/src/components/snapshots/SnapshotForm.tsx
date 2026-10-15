@@ -14,8 +14,9 @@ import { postSnapshot, type CvatTask, type SnapshotCreate } from '@/lib/snapshot
 /** Giai đoạn Job đọc trực tiếp từ CVAT (GET /api/datasets/{id}/tasks/). */
 const STAGE_LABELS: Record<string, string> = { annotation: 'Gán nhãn', validation: 'Kiểm tra', acceptance: 'Nghiệm thu' };
 
-export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange }: {
+export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange, initialJobId }: {
   datasetId: number; tasks: CvatTask[]; canCreate: boolean;
+  initialJobId?: number | null;
   onRequestLockChange?: (locked: boolean) => void;
 }) {
   const router = useRouter();
@@ -35,11 +36,12 @@ export function SnapshotForm({ datasetId, tasks, canCreate, onRequestLockChange 
   const [guidelineOverride, setGuidelineOverride] = React.useState('');
   const effectiveGuideline = guidelineOverride || (guideline.data?.taxonomy_ready ? guideline.data.guideline_version : null);
   const queryClient = useQueryClient();
-  const [all, setAll] = React.useState(true);
+  const presetJob = initialJobId && tasks.some(task => task.jobs.some(job => job.cvat_job_id === initialJobId)) ? initialJobId : null;
+  const [all, setAll] = React.useState(!presetJob);
   const [taskIds, setTaskIds] = React.useState<Set<number>>(new Set());
-  const [jobIds, setJobIds] = React.useState<Set<number>>(new Set());
+  const [jobIds, setJobIds] = React.useState<Set<number>>(() => new Set(presetJob ? [presetJob] : []));
   const [note, setNote] = React.useState('');
-  const [expanded, setExpanded] = React.useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = React.useState<Set<number>>(() => new Set(tasks.map(task => task.cvat_task_id)));
   const [pending, setPending] = React.useState<{ body: SnapshotCreate; key: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [failure, setFailure] = React.useState<string | null>(null);

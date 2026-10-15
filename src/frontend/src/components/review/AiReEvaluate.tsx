@@ -32,12 +32,13 @@ interface Props {
 }
 
 interface AiReEvaluateProps extends Props {
+  onEvaluationUpdated?: () => void;
   /** Lần đánh giá mới nhất từ Candidate.latest_evaluation (B-4): hiện trạng thái ngay khi tải lại trang. */
   latestEvaluationId?: number | null;
 }
 
 /** Nút "Đánh giá lại bằng AI" (POST /api/candidates/{id}/evaluations/) và theo dõi kết quả (GET /api/candidate-evaluations/{id}/). */
-export function AiReEvaluate({ candidateId, expectedRevision, latestEvaluationId = null }: AiReEvaluateProps) {
+export function AiReEvaluate({ candidateId, expectedRevision, latestEvaluationId = null, onEvaluationUpdated }: AiReEvaluateProps) {
   const [open, setOpen] = React.useState(false);
   const [accepted, setAccepted] = React.useState<CandidateEvaluation | null>(null);
   const [pollStart, setPollStart] = React.useState(0);
@@ -55,6 +56,10 @@ export function AiReEvaluate({ candidateId, expectedRevision, latestEvaluationId
   });
   const current = evaluation.data ?? accepted;
   const finished = TERMINAL_EVALUATION_STATUSES.includes(current?.status ?? '');
+
+  React.useEffect(() => {
+    if (current?.id) onEvaluationUpdated?.();
+  }, [current?.id, current?.status, onEvaluationUpdated]);
 
   React.useEffect(() => {
     if (trackedId === null || finished || timedOut) return;

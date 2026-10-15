@@ -19,6 +19,7 @@ import { DecisionCaseLookup } from '@/components/escalations/DecisionCaseLookup'
 import {
   aiEvidenceForIssue,
   fetchFrameWorkspace,
+  workspacePredictions,
   type FrameWorkspace,
 } from '@/lib/review/workspace-api';
 
@@ -386,7 +387,7 @@ export function ReviewWorkspace({
 
         setData(frameData);
         if (frameData.issues && frameData.issues.length > 0) {
-          setSelectedIssueId(frameData.issues[0].id);
+          setSelectedIssueId(previous => frameData.issues.some(i => i.id === previous) ? previous : frameData.issues[0].id);
         }
         setLoading(false);
       })
@@ -406,6 +407,8 @@ export function ReviewWorkspace({
       });
   }, [runId]);
 
+  const refreshFrame = useCallback(() => loadFrame(frameId), [loadFrame, frameId]);
+
   useEffect(() => {
     if (currentUserId === null) {
       return;
@@ -417,6 +420,13 @@ export function ReviewWorkspace({
       }
     };
   }, [frameId, currentUserId, loadFrame]);
+
+  // Refresh pending model-2 results without requiring the reviewer to reopen the frame.
+  useEffect(() => {
+    if (!data?.ai_evidence?.some(item => ['pending', 'running'].includes(item.status))) return;
+    const timer = window.setTimeout(() => loadFrame(frameId), 3000);
+    return () => window.clearTimeout(timer);
+  }, [data, frameId, loadFrame]);
 
   // Snapshot revision resolution logic for eligible roles
   const boundRunId = runId ?? data?.frame.run_id ?? null;
@@ -726,6 +736,9 @@ export function ReviewWorkspace({
   const issues = data.issues;
   const currentIssueIndex = issues.findIndex((i) => i.id === selectedIssueId);
   const activeIssue = currentIssueIndex >= 0 ? issues[currentIssueIndex] : issues[0] ?? null;
+  const activeAnnotation = data.annotations?.find(annotation => activeIssue?.anchor.objects.some(object =>
+    ['cvat_shape', 'shape', 'track'].includes(String(object.namespace)) && object.id === String(annotation.source.id)));
+  const currentAnnotationClass = activeAnnotation?.label || activeIssue?.evidence?.[0]?.actual || undefined;
   const totalIssues = issues.length;
 
   // Genuine approved CVAT link only; no localhost fallback
@@ -733,8 +746,8 @@ export function ReviewWorkspace({
 
   // Resolve anchor policy
   const { policy: effectivePolicy, error: policyError } = resolveAnchorPolicy(
-    anchorPolicyVersion,
-    issues
+    anchorPolicyVersion ?? data.anchor_policy_version,
+    data.anchor_policy_version ? issues.filter(issue => issue.origin === 'reviewer') : issues
   );
 
   return (
@@ -920,6 +933,8 @@ export function ReviewWorkspace({
             <ReviewCanvas
               frame={data.frame}
               issues={issues}
+              snapshotAnnotations={data.annotations}
+              predictions={workspacePredictions(data)}
               selectedIssueId={selectedIssueId}
               onSelectIssue={(id) => setSelectedIssueId(id)}
               reviewMode={reviewMode}
@@ -999,7 +1014,7 @@ export function ReviewWorkspace({
                   : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
               </span>
             ) : (
-              <span>Đường liền: vùng neo của Issue · Đường đứt: đề xuất của mô hình</span>
+              <span>Annotation CVAT · Xanh: đề xuất detector · Tím: đề xuất mô hình 2 (Qwen)</span>
             )}
           </div>
         </section>
@@ -1055,7 +1070,7 @@ export function ReviewWorkspace({
                     {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor.objects?.[0]?.id ?? 'N/A'}
                   </dd>
                   <dt>Annotation hiện tại</dt>
-                  <dd>{activeIssue.evidence?.[0]?.actual || 'Không có dữ liệu nhãn'}</dd>
+                  <dd>{currentAnnotationClass || 'Không có dữ liệu nhãn'}</dd>
                   <dt>Nguồn</dt>
                   <dd>
                     {activeIssue.origin === 'engine' ? 'Mô hình tự động' : 'Reviewer tạo thủ công'}
@@ -1073,9 +1088,10 @@ export function ReviewWorkspace({
                 <ReviewEvidenceTable
                   evidenceList={activeIssue.evidence || []}
                   engineStatuses={data.engines || []}
-                  currentAnnotationClass={activeIssue.evidence?.[0]?.actual || undefined}
+                  currentAnnotationClass={currentAnnotationClass}
                   aiEvidence={aiEvidenceForIssue(data.ai_evidence, activeIssue.id)}
                   canReEvaluate={canReEvaluate}
+                  onEvaluationUpdated={refreshFrame}
                 />
 
                 <ReviewGuidelineLookup
