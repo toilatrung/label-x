@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { FlowNav } from '@/components/layout/FlowNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -14,6 +14,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { createRun, cursorFrom, listConfigs, listSnapshots, type ConfigVersion, type RunCreate } from '@/lib/execution/api';
 import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
+import { ConfigVersionModal } from '@/components/execution/ConfigVersionModal';
 import { GroundTruthUpload } from '@/components/execution/GroundTruthUpload';
 import { currentGroundTruth } from '@/lib/execution/api';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
@@ -23,6 +24,9 @@ const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm']
 function ConfigContent() {
   const { session, datasetId } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const canConfigure = session?.roles.some(({ role }) => role === 'qc_admin' || role === 'super_admin') ?? false;
+  const [configOpen, setConfigOpen] = useState(false);
   const canCreate = hasDatasetPermission(session, datasetId, (role) => role === 'qa_lead' || role === 'super_admin');
   const [snapshotCursor, setSnapshotCursor] = useState<string | null>(null);
   const [configCursor, setConfigCursor] = useState<string | null>(null);
@@ -79,7 +83,15 @@ function ConfigContent() {
     } finally { setSubmitting(false); }
   }
 
-  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn phiên bản cấu hình đã phát hành để chạy cho Snapshot. Chỉnh Detector và tạo phiên bản tại Models &amp; Guidelines.</p></div><Link className="lx-btn" href="/configuration/guidelines">Models &amp; Guidelines</Link></div>}>
+  async function onConfigPublished(published: ConfigVersion) {
+    setConfigCursor(null);
+    await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
+    setConfigId(published.id);
+    setSelectedConfigRecord(published);
+    setPending(null);
+  }
+
+  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, model, ngưỡng và phiên bản cấu hình để chạy cho Snapshot.</p></div>{canConfigure && <button type="button" className="lx-btn lx-btn--primary" onClick={() => setConfigOpen(true)}>Tạo phiên bản cấu hình</button>}</div>}>
     <form onSubmit={submit} className="lx-cols">
       <div className="lx-main lx-stack">
         <div className="lx-execution-config">
@@ -123,7 +135,7 @@ function ConfigContent() {
           </select></div>
           {(snapshots.isError || configs.isError) && <div className="lx-callout" role="alert">{snapshots.isError ? errorMessage(snapshots.error) : errorMessage(configs.error)}</div>}
           {datasetId && snapshots.data && locked.length === 0 && <p className="lx-muted lx-text-13">Dataset này chưa có Snapshot đã khoá.</p>}
-          {configs.data?.results.length === 0 && <div className="lx-callout lx-callout--neutral" role="status">Chưa có phiên bản cấu hình đã phát hành. Quality Control Admin hoặc Super Admin cần chỉnh Detector tại Models &amp; Guidelines để tạo phiên bản trước khi chạy phân tích.</div>}
+          {configs.data?.results.length === 0 && <div className="lx-callout lx-callout--neutral" role="status">Chưa có phiên bản cấu hình đã phát hành. Quality Control Admin hoặc Super Admin cần tạo phiên bản cấu hình tại đây trước khi chạy phân tích.</div>}
           {(snapshots.data?.next || configs.data?.next) && <div className="lx-actions">{snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang Snapshot tiếp</button>}{configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang phiên bản tiếp</button>}</div>}
           <dl className="lx-kv">
             <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `${snapshotCode(selectedSnapshot.id)} · ${shortRevision(selectedSnapshot.revision_hash)}` : '—'}</dd>
@@ -135,7 +147,7 @@ function ConfigContent() {
           {canCreate && <GroundTruthUpload key={`${datasetId}-${snapshotId}`} datasetId={datasetId} snapshotId={snapshotId}
             userId={session!.user.id} enabled={canCreate} busy={submitting} />}
           {activeConfig && enabledEngineCount < ENGINES.length && <div className="lx-callout lx-callout--warning"><span className="lx-callout__text">{ENGINES.length - enabledEngineCount} engine đang tắt, nên kết quả sẽ ghi là Not checked.</span></div>}
-          {!detectorModelReady && <div className="lx-callout lx-callout--warning" role="alert">Phiên bản này bật Detector nhưng chưa chọn model. Chỉnh Detector tại <Link href="/configuration/guidelines">Models &amp; Guidelines</Link>, rồi chọn phiên bản mới để chạy.</div>}
+          {!detectorModelReady && <div className="lx-callout lx-callout--warning" role="alert">Phiên bản này bật Detector nhưng chưa chọn model. Tạo phiên bản cấu hình mới tại đây, chọn model đã đăng ký rồi phát hành để chạy.</div>}
           <ol className="lx-muted lx-text-13"><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>
           {!canCreate && <p className="lx-muted">Vai trò hiện tại chỉ được xem cấu hình và lịch sử; Quality Assurance Lead hoặc Super Admin mới được chạy phân tích.</p>}
           {submitError && <p role="alert" className="lx-callout">{submitError}</p>}
@@ -143,6 +155,7 @@ function ConfigContent() {
         </div>
       </aside>
     </form>
+    {configOpen && <ConfigVersionModal initialConfig={activeConfig} onClose={() => setConfigOpen(false)} onPublished={onConfigPublished} />}
   </AppShell>;
 }
 

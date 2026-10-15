@@ -1,4 +1,4 @@
-"""Detector editing selects registered artifacts and creates immutable QC versions."""
+"""Model registration stays separate from immutable analysis configurations."""
 
 import uuid
 
@@ -74,3 +74,74 @@ def test_catalog_permissions(role, expected):
 
 def test_catalog_requires_authentication():
     assert APIClient().get("/api/model-artifacts/").status_code == 403
+
+
+@pytest.mark.parametrize(
+    "role,dataset_id,expected",
+    [
+        (Role.QC_ADMIN, None, 200),
+        (Role.SUPER_ADMIN, None, 200),
+        (Role.QC_ADMIN, 1, 403),
+        (Role.QA_LEAD, 1, 403),
+        (Role.ANNOTATOR, 1, 403),
+    ],
+)
+def test_registration_permissions_and_no_config_mutation(monkeypatch, role, dataset_id, expected):
+    from audit.models import AuditEvent
+
+    user = User.objects.create_user(username="register-admin")
+    RoleAssignment.objects.create(user=user, role=role, dataset_id=dataset_id)
+    client = APIClient()
+    client.force_authenticate(user)
+    previous = ConfigVersion.objects.create(name="unchanged", status="published", models={})
+    invocations = []
+
+    def register(*args, **kwargs):
+        invocations.append((args, kwargs))
+        ModelArtifact.objects.get_or_create(
+            name="Verified Detector",
+            version="v1",
+            defaults={"checksum": "b" * 64, "class_mapping_version": "bdd-10"},
+        )
+
+    monkeypatch.setattr("runs.model_artifact_views.call_command", register)
+    response = client.post("/api/model-artifacts/register/")
+    assert response.status_code == expected
+    if expected == 200:
+        assert invocations[0][0] == ("check_detector",)
+        assert invocations[0][1]["register"] is True
+        assert response.json()[0]["name"] == "Verified Detector"
+        assert AuditEvent.objects.filter(action="model_artifacts.register").exists()
+        assert client.post("/api/model-artifacts/register/").status_code == 200
+        assert ModelArtifact.objects.count() == 1
+    else:
+        assert not invocations
+    previous.refresh_from_db()
+    assert previous.models == {}
+    assert ConfigVersion.objects.count() == 1
+
+
+def test_registration_failure_is_safe_and_rejects_client_model_data(monkeypatch):
+    from django.core.management.base import CommandError
+
+    user = User.objects.create_user(username="register-failure")
+    RoleAssignment.objects.create(user=user, role=Role.QC_ADMIN, dataset_id=None)
+    client = APIClient()
+    client.force_authenticate(user)
+
+    def fail(*args, **kwargs):
+        raise CommandError("private worker token or path")
+
+    monkeypatch.setattr("runs.model_artifact_views.call_command", fail)
+    response = client.post("/api/model-artifacts/register/")
+    assert response.status_code == 503
+    assert "private worker" not in response.content.decode()
+    assert not ModelArtifact.objects.exists()
+    assert not ConfigVersion.objects.exists()
+    assert (
+        client.post(
+            "/api/model-artifacts/register/", {"checksum": "spoofed"}, format="json"
+        ).status_code
+        == 400
+    )
+    assert APIClient().post("/api/model-artifacts/register/").status_code == 403

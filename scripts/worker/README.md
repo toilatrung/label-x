@@ -79,10 +79,11 @@ Restart backend và Celery sau đổi env; apply migration mới theo quy trình
 Admin toàn hệ thống → `/configuration/guidelines` → **GPU Worker** → nhập URL
 `https://gpu-host.your-tailnet.ts.net`, chọn alias `gpu-primary`, lưu rồi probe.
 Server kiểm tra online, CUDA, version, checksum và đủ 10 lớp trước run/shard.
-Đăng ký artifact bằng `manage.py check_detector --register` có chủ đích; sau đó
-vào **Models & Guidelines → Mô hình → chỉnh Detector**, chọn artifact đã đăng ký
-và lưu để tạo/phát hành ConfigVersion mới. Tại **Analysis**, chọn phiên bản vừa
-phát hành để chạy; không nhập cấu hình model ở Analysis. Checkpoint không cần
+Tại **Models & Guidelines → Mô hình → chỉnh Detector**, chọn model để xem
+thông tin hoặc dùng **Đăng ký model từ worker** để xác minh và đăng ký artifact.
+Lệnh `manage.py check_detector --register` vẫn hỗ trợ đăng ký từ server.
+Tại **Analysis Configuration**, tạo/phát hành ConfigVersion với engine, model
+và ngưỡng cần chạy, rồi chọn phiên bản đã phát hành để chạy. Checkpoint không cần
 nằm trên server. Run cũ giữ nguyên model/ConfigVersion đã ghim.
 
 Đổi máy GPU: cấu hình máy mới/token/allowlist, restart các process server rồi lưu
