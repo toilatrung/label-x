@@ -13,6 +13,7 @@
 # tự thấy thay đổi: dùng `refresh`, hoặc `start --poll` để chạy Next bằng webpack + polling (chậm hơn
 # nhưng tự reload). Django runserver tự reload (StatReloader); Celery không, `refresh be` chạy lại.
 # refresh cũng cài lại dependency khi package-lock.json / uv.lock đổi và chạy migrate khi cần.
+# Worker mặc định 2 process; xem scripts/development/runtime-memory.md để chỉnh giới hạn.
 # Log và PID ở .cache/dev-stack/. Cổng: API 127.0.0.1:8000, UI http://127.0.0.1:3000.
 set -euo pipefail
 
@@ -108,6 +109,21 @@ halt() {
   rm -f "$RUN_DIR/$name.pid"
 }
 
+# ---------------------------------------------------------------- giới hạn tài nguyên
+
+validate_runtime_settings() {
+  local setting value
+  for setting in LABELX_WORKER_CONCURRENCY LABELX_WORKER_MAX_TASKS_PER_CHILD LABELX_WORKER_MAX_MEMORY_KIB; do
+    case "$setting" in
+      LABELX_WORKER_CONCURRENCY) value="${LABELX_WORKER_CONCURRENCY-2}" ;;
+      LABELX_WORKER_MAX_TASKS_PER_CHILD) value="${LABELX_WORKER_MAX_TASKS_PER_CHILD-20}" ;;
+      LABELX_WORKER_MAX_MEMORY_KIB) value="${LABELX_WORKER_MAX_MEMORY_KIB-393216}" ;;
+    esac
+    [[ "$value" =~ ^[1-9][0-9]*$ ]] || die "$setting phải là số nguyên dương."
+  done
+  [[ "${LABELX_DJANGO_AUTORELOAD-1}" =~ ^[01]$ ]] || die "LABELX_DJANGO_AUTORELOAD chỉ nhận 0 hoặc 1."
+}
+
 # ---------------------------------------------------------------- dependency
 
 # uv sync không làm gì khi venv đã khớp uv.lock (dưới 1 giây).
@@ -147,6 +163,7 @@ start_infra() {
 }
 
 start_be() {
+  validate_runtime_settings
   # Nếu process tồn tại nhưng API không phản hồi → restart thay vì chờ rồi die
   if alive be; then
     if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$API_PORT/api/schema/"; then
@@ -158,8 +175,13 @@ start_be() {
     fi
   fi
   if port_busy "$API_PORT"; then die "Cổng $API_PORT đang bị tiến trình khác dùng."; fi
-  launch be     "$BACKEND" "$UV" run --frozen python manage.py runserver "127.0.0.1:$API_PORT"
-  launch worker "$BACKEND" "$UV" run --frozen celery -A config worker -l info
+  local reload_args=()
+  [ "${LABELX_DJANGO_AUTORELOAD-1}" = 0 ] && reload_args+=(--noreload)
+  launch be "$BACKEND" "$UV" run --frozen python manage.py runserver "127.0.0.1:$API_PORT" "${reload_args[@]}"
+  launch worker "$BACKEND" "$UV" run --frozen celery -A config worker -l info \
+    --concurrency "${LABELX_WORKER_CONCURRENCY-2}" \
+    --max-tasks-per-child "${LABELX_WORKER_MAX_TASKS_PER_CHILD-20}" \
+    --max-memory-per-child "${LABELX_WORKER_MAX_MEMORY_KIB-393216}"
   launch beat   "$BACKEND" "$UV" run --frozen celery -A config beat -l info
   wait_http "http://127.0.0.1:$API_PORT/api/schema/" 90 be \
     || die "API không lên — xem .cache/dev-stack/be.log"
@@ -194,6 +216,7 @@ stop_be() { halt beat; halt worker; halt be; }
 # ---------------------------------------------------------------- lệnh
 
 cmd_start() {
+  validate_runtime_settings
   local follow=0
   rm -f "$RUN_DIR/fe.poll"
   for arg in "$@"; do
@@ -254,6 +277,7 @@ cmd_restart() {
   local target="${1:-all}"
   case "$target" in fe|be|all) ;; *) die "restart nhận fe|be|all" ;; esac
   if [ "$target" != fe ]; then
+    validate_runtime_settings
     stop_be
     start_be
   fi
@@ -316,6 +340,7 @@ cmd_refresh() {
   fi
 
   if [ "$do_be" -eq 1 ]; then
+    validate_runtime_settings
     stop_be
     deps_backend
     migrate
@@ -366,16 +391,20 @@ cmd_logs() {
   exec tail -n 50 -F "${files[@]}"
 }
 
-mkdir -p "$RUN_DIR"
-cmd="${1:-}"
-[ $# -gt 0 ] && shift
-case "$cmd" in
-  start)   cmd_start "$@" ;;
-  stop)    cmd_stop "$@" ;;
-  restart) cmd_restart "$@" ;;
-  refresh) cmd_refresh "$@" ;;
-  status)  cmd_status ;;
-  logs)    cmd_logs "$@" ;;
-  -h|--help|help|"") usage ;;
-  *) usage >&2; exit 2 ;;
-esac
+main() {
+  mkdir -p "$RUN_DIR"
+  cmd="${1:-}"
+  [ $# -gt 0 ] && shift
+  case "$cmd" in
+    start)   cmd_start "$@" ;;
+    stop)    cmd_stop "$@" ;;
+    restart) cmd_restart "$@" ;;
+    refresh) cmd_refresh "$@" ;;
+    status)  cmd_status ;;
+    logs)    cmd_logs "$@" ;;
+    -h|--help|help|"") usage ;;
+    *) usage >&2; exit 2 ;;
+  esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi

@@ -146,7 +146,7 @@ dev-backend: ## Chạy Django API ở :8000
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py runserver 0.0.0.0:8000
 
 dev-worker: ## Chạy Celery worker
-	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -l info
+	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -l info --concurrency "$${LABELX_WORKER_CONCURRENCY-2}" --max-tasks-per-child "$${LABELX_WORKER_MAX_TASKS_PER_CHILD-20}" --max-memory-per-child "$${LABELX_WORKER_MAX_MEMORY_KIB-393216}"
 
 dev-beat: ## Chạy Celery beat (chưa có task/lịch polling CVAT)
 	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config beat -l info
