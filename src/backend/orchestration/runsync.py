@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils import timezone
@@ -98,6 +99,13 @@ def refresh_run(run_id: int) -> None:
             and VLM_ENGINE in (run.engine_versions or {})
             and (not vlm_stage_started(run_id) or vlm_units_open(run_id))
         ):
+            if run.retry_engine == VLM_ENGINE and getattr(
+                settings, "ORCHESTRATION_AUTO_DISPATCH", True
+            ):
+                from orchestration.vlm_stage import dispatch_vlm_units_safely
+
+                # Refill the retry window as each unit settles, without waiting for beat.
+                transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
             return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
         if fail_fast_enabled():

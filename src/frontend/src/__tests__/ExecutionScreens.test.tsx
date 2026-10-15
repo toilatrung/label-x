@@ -28,6 +28,7 @@ async function setup(
   page: React.ReactNode,
   options: {
     runStatus?: string;
+    ledgerScript?: unknown[];
     publishFails?: boolean;
     configsOverride?: unknown;
     configsFails?: boolean;
@@ -41,6 +42,7 @@ async function setup(
   const original = api.fetchSpy.getMockImplementation()!;
   const calls: Request[] = [];
   let createdConfig: Record<string, unknown> = {};
+  let ledgerReads = 0;
   api.fetchSpy.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
@@ -54,7 +56,7 @@ async function setup(
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
     if (path === '/api/runs/12/') return Response.json({ ...run, status: options.runStatus ?? run.status });
     if (path === '/api/runs/13/') return Response.json(run13);
-    if (path === '/api/runs/12/ledger/' || path === '/api/runs/13/ledger/') return Response.json(ledger);
+    if (path === '/api/runs/12/ledger/' || path === '/api/runs/13/ledger/') return Response.json(options.ledgerScript?.[Math.min(ledgerReads++, options.ledgerScript.length - 1)] ?? ledger);
     if (path === '/api/runs/12/shards/' || path === '/api/runs/13/shards/') return Response.json({ next: null, previous: null, results: [{ id: 5, engine: 'duplicate', shard_key: 'job:1', shard_index: 0, status: 'failed', attempt: 2, last_error: 'worker timeout' }] });
     if (path === '/api/runs/12/candidates/') {
       if (options.candidatesFails) return Response.json({ code: 'INTERNAL_ERROR', message: 'Lỗi nạp candidate' }, { status: 500 });
@@ -160,6 +162,15 @@ describe('Execution screens on real API contract', () => {
     const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;
     expect(await request.clone().json()).toEqual({ engine: 'duplicate' });
     expect(screen.queryByRole('button', { name: 'Chạy lại Geometry' })).toBeNull();
+  });
+
+  it('refreshes a stale pending ledger even after the run detail is terminal', async () => {
+    const pending = ledger.map(row => row.engine === 'duplicate' ? { ...row, completed: 1, failed: 0, pending: 1, status: 'running' } : row);
+    const finished = ledger.map(row => row.engine === 'duplicate' ? { ...row, completed: 2, failed: 0, pending: 0, status: 'checked' } : row);
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />, { ledgerScript: [pending, finished] });
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/ledger/').length).toBeGreaterThanOrEqual(2), { timeout: 6000 });
+    expect(await screen.findByText('Đã kết thúc · Kết quả một phần')).toBeDefined();
+    expect(screen.getByRole('progressbar', { name: 'Tổng tiến độ engine' }).getAttribute('aria-valuenow')).toBe('100');
   });
 
   it('keeps QC admin read-only on the config screen', async () => {

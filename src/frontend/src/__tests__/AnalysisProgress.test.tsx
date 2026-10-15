@@ -35,3 +35,15 @@ it('shows a cancelled run separately and makes progress-fetch errors visible', (
   expect(screen.getByText('Đã dừng phân tích')).toBeDefined();
   expect(screen.getByRole('alert').textContent).toContain('Không kết nối');
 });
+
+it('does not show all engines finished while the VLM ledger still has a pending unit', () => {
+  const run = { ...base, status: 'partial', engines: base.engines.map(engine => ({ ...engine, status: 'checked' })) } as Run;
+  const { rerender } = render(<AnalysisProgress run={run} ledger={[{ engine: 'vlm', total: 5, completed: 4, failed: 0, pending: 1, not_checked: 0 } as LedgerEntry]} />);
+  expect(screen.getByText('1/2 engine đã xử lý')).toBeDefined();
+  expect(screen.getByText('Đang xử lý: VLM')).toBeDefined();
+  expect(Number(screen.getByRole('progressbar').getAttribute('aria-valuenow'))).toBeLessThan(100);
+  rerender(<AnalysisProgress run={run} ledger={[{ engine: 'vlm', total: 5, completed: 5, failed: 0, pending: 0, not_checked: 0 } as LedgerEntry]} />);
+  expect(screen.getByText('2/2 engine đã xử lý')).toBeDefined();
+  expect(screen.getByText(/5 hoàn tất · 0 lỗi · 0/)).toBeDefined();
+  expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100');
+});

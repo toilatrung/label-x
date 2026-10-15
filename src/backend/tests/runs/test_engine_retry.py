@@ -296,3 +296,19 @@ def test_cancelled_qc_retries_selected_failed_shard_only(monkeypatch):
     units[1].refresh_from_db()
     assert units[0].status == "completed"
     assert units[1].status == "pending"
+
+
+def test_vlm_retry_refills_window_after_unit_finishes_without_waiting_for_beat(settings):
+    run, _ = failed_vlm_run()
+    retry_failed_engine(run_id=run.pk, engine="vlm", actor=run.created_by)
+    units = list(VlmUnit.objects.filter(run=run, evaluation_generation=2).order_by("pk"))
+    settings.VLM_DISPATCH_WINDOW = 1
+    settings.ORCHESTRATION_AUTO_DISPATCH = True
+    with patch("orchestration.vlm_stage.run_vlm_unit_task.delay") as delay:
+        assert dispatch_vlm_units(run.pk) == 1
+        assert [c.args[0] for c in delay.call_args_list] == [units[0].pk]
+        assert execute_vlm_unit(units[0].pk, client=FakeClient()) == "completed"
+        assert [c.args[0] for c in delay.call_args_list] == [u.pk for u in units]
+        # Duplicate delivery must not queue or charge the next unit twice.
+        assert execute_vlm_unit(units[0].pk, client=FakeClient()) == "completed"
+        assert delay.call_count == 2

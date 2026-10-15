@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -61,10 +61,18 @@ function HistoryContent() {
   const canManage = hasDatasetPermission(session, datasetId, (role) => role === 'qa_lead' || role === 'super_admin');
   const runs = useQuery({ queryKey: ['analysis-runs', session?.user.id, datasetId, runCursor], queryFn: ({ signal }) => listRuns(datasetId!, runCursor, signal), enabled: datasetId !== null, retry: false, refetchInterval: (q) => q.state.data?.results.some((r) => ['queued', 'running'].includes(r.status)) ? 3000 : false });
   const detail = useQuery({ queryKey: ['analysis-run', session?.user.id, selectedId], queryFn: ({ signal }) => getRun(selectedId!, signal), enabled: selectedId !== null && datasetId !== null, retry: false, refetchInterval: (q) => q.state.data && ['queued', 'running'].includes(q.state.data.status) ? 3000 : false });
-  const ledger = useQuery({ queryKey: ['analysis-ledger', session?.user.id, selectedId], queryFn: ({ signal }) => getLedger(selectedId!, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
+  const ledger = useQuery({ queryKey: ['analysis-ledger', session?.user.id, selectedId], queryFn: ({ signal }) => getLedger(selectedId!, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: (q) => (detail.data && ['queued', 'running'].includes(detail.data.status)) || (detail.data?.status !== 'cancelled' && q.state.data?.some(row => row.pending > 0)) ? 3000 : false });
   const shards = useQuery({ queryKey: ['analysis-shards', session?.user.id, selectedId, shardCursor], queryFn: ({ signal }) => listShards(selectedId!, shardCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const candidates = useQuery({ queryKey: ['analysis-candidates', session?.user.id, selectedId, candidateCursor], queryFn: ({ signal }) => listCandidates(selectedId!, candidateCursor, signal), enabled: !!detail.data && selectedId !== null, retry: false, refetchInterval: detail.data && ['queued', 'running'].includes(detail.data.status) ? 3000 : false });
   const selected = detail.data;
+  const selectedStatus = selected?.status;
+  useEffect(() => {
+    if (!selectedId || !selectedStatus || ['queued', 'running'].includes(selectedStatus)) return;
+    // The final detail response can arrive before the last ledger/candidate poll.
+    for (const prefix of ['analysis-ledger', 'analysis-shards', 'analysis-candidates']) {
+      void client.invalidateQueries({ queryKey: [prefix, session?.user.id, selectedId] }, { cancelRefetch: false });
+    }
+  }, [client, selectedId, session?.user.id, selectedStatus]);
   const reviewReady = selected?.score_version === 'score_v0' && ['completed', 'partial'].includes(selected.status);
   // B-4: đánh giá lại candidate cần revision Snapshot của run (backend: revision_sha256, rỗng thì snapshot_id).
   const canReEvaluate = hasDatasetPermission(session, datasetId, (role) => ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role));

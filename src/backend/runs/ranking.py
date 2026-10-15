@@ -76,6 +76,7 @@ def persist_run_rankings(
             candidate
             for candidate in candidate_values
             if candidate.get("family") in SCORABLE_FAMILIES
+            and not _is_unmatched_annotation(candidate)
         )
         warnings_by_frame = _warnings_by_frame(candidate_values)
 
@@ -357,15 +358,43 @@ def _warnings_by_frame(
 ) -> dict[str, tuple[Mapping[str, object], ...]]:
     warnings: dict[str, list[Mapping[str, object]]] = defaultdict(list)
     for candidate in candidates:
-        if candidate.get("family") != "structural":
+        unmatched = _is_unmatched_annotation(candidate)
+        if candidate.get("family") != "structural" and not unmatched:
             continue
         frame = candidate.get("frame")
         if not isinstance(frame, Mapping):
             continue
         task_id, frame_number = frame.get("cvat_task_id"), frame.get("frame_number")
         if isinstance(task_id, int) and isinstance(frame_number, int):
-            warnings[f"{task_id}:{frame_number}"].append(candidate)
+            warning = (
+                {**candidate, "ranking_warning": "unmatched_annotation_not_duplicate_cluster"}
+                if unmatched
+                else candidate
+            )
+            warnings[f"{task_id}:{frame_number}"].append(warning)
     return {key: tuple(value) for key, value in warnings.items()}
+
+
+def _is_unmatched_annotation(candidate: Mapping[str, object]) -> bool:
+    """Detector no-match evidence has no duplicate pair: retain it as a Review warning.
+
+    Do not invent a partner or alter the frozen score_v0 duplicate-cluster formula.
+    The original CandidateRecord and its evidence remain available to reviewers/VLM.
+    """
+    anchor = candidate.get("anchor")
+    evidence = candidate.get("evidence")
+    if not isinstance(anchor, Mapping) or not isinstance(evidence, Mapping):
+        return False
+    objects = anchor.get("objects")
+    return (
+        candidate.get("family") == "E3"
+        and candidate.get("engine") == "detector"
+        and anchor.get("kind") == "annotation_box"
+        and anchor.get("rule_id") == "faster-rcnn-unmatched-annotation"
+        and isinstance(objects, list)
+        and len(objects) == 1
+        and evidence.get("match_status") == "unmatched_annotation"
+    )
 
 
 def _frame_key_sort(frame_key: str) -> tuple[int, int]:
