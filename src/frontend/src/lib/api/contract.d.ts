@@ -3262,6 +3262,12 @@ export interface components {
             content_hash: string;
             /** @description SHA-256 của ordering đã lưu cho source */
             ranking_hash: string;
+            /** @description Số ảnh của toàn bộ queue theo mức ưu tiên, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor. */
+            priority_counts?: {
+                high: number;
+                medium: number;
+                low: number;
+            };
             results: components["schemas"]["RankedFrame"][];
         };
         PaginatedGuidelineRuleList: {

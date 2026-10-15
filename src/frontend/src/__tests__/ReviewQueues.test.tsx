@@ -1142,6 +1142,29 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(new URL(summaryCall!.url).searchParams.get('run_id')).toBe('12');
     });
 
+    it('shows counts for all priority buckets across the entire filtered queue', async () => {
+      const { calls } = await renderReviewPage('reviewer', async request => {
+        const url = new URL(request.url);
+        if (!url.pathname.endsWith('/ranking/')) return null;
+        return Response.json({ next: null, previous: null, source: 'risk',
+          content_hash: 'content', ranking_hash: 'ranking', results: [mockRiskFrame1],
+          priority_counts: url.searchParams.has('q')
+            ? { high: 2, medium: 1, low: 0 } : { high: 196, medium: 196, low: 196 },
+        });
+      });
+      expect(await screen.findByRole('option', { name: 'Tất cả (588 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Cao (196 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Trung bình (196 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Thấp (196 ảnh)' })).toBeDefined();
+      fireEvent.change(screen.getByLabelText('Mức ưu tiên'), { target: { value: 'high' } });
+      await waitFor(() => expect(calls.some(request => new URL(request.url).searchParams.get('priority') === 'high')).toBe(true));
+      expect(await screen.findByRole('option', { name: 'Trung bình (196 ảnh)' })).toBeDefined();
+      fireEvent.change(screen.getByLabelText('Tìm ảnh theo mã task hoặc số frame'), { target: { value: '100' } });
+      expect(await screen.findByRole('option', { name: 'Tất cả (3 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Cao (2 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Thấp (0 ảnh)' })).toBeDefined();
+    });
+
     it('sends q (debounced) and priority to the ranking API and resets both', async () => {
       const { calls } = await renderReviewPage('reviewer');
       await screen.findByText('Task #10 • Frame #100');

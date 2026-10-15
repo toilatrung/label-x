@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Case, CharField, Exists, F, OuterRef, Q, Subquery, Value, When
+from django.db.models import Case, CharField, Count, Exists, F, OuterRef, Q, Subquery, Value, When
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.pagination import CursorPagination
@@ -1033,6 +1033,13 @@ class RunRankingView(APIView):
             )
         first_cut = (ranking_total + 2) // 3
         second_cut = (ranking_total * 2 + 2) // 3
+        # Facets cover the entire filtered queue before applying the selected priority
+        # or cursor, so other priority choices remain useful when a bucket is selected.
+        priority_counts = entries.aggregate(
+            high=Count("pk", filter=Q(rank__lte=first_cut)),
+            medium=Count("pk", filter=Q(rank__gt=first_cut, rank__lte=second_cut)),
+            low=Count("pk", filter=Q(rank__gt=second_cut)),
+        )
         if priority == "high":
             entries = entries.filter(rank__lte=first_cut)
         elif priority == "medium":
@@ -1049,4 +1056,5 @@ class RunRankingView(APIView):
         response.data["source"] = ranking.source
         response.data["content_hash"] = ranking.content_hash
         response.data["ranking_hash"] = ranking.ranking_hash
+        response.data["priority_counts"] = priority_counts
         return response

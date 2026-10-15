@@ -378,6 +378,9 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
     enabled: queueDataEnabled,
   });
   const activeSummary = activeQueue === 'risk' ? riskSummaryQuery : randomSummaryQuery;
+  const priorityCounts = rankingQuery.data?.priority_counts;
+  const priorityTotal = priorityCounts
+    ? priorityCounts.high + priorityCounts.medium + priorityCounts.low : undefined;
 
   const invalidateQueueData = (targetDatasetId: number | null, targetRunId: number | null) => {
     queryClient.invalidateQueries({ queryKey: ['review', 'ranking', targetDatasetId, targetRunId] });
@@ -1000,9 +1003,9 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
                 value={filters.priority ?? ''}
                 onChange={(e) => handleFilterChange({ priority: (e.target.value as RankingPriority) || undefined })}
               >
-                <option value="">Tất cả</option>
+                <option value="">Tất cả{priorityTotal !== undefined ? ` (${priorityTotal} ảnh)` : ''}</option>
                 {(Object.keys(PRIORITY_LABELS) as RankingPriority[]).map((p) => (
-                  <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
+                  <option key={p} value={p}>{PRIORITY_LABELS[p]}{priorityCounts ? ` (${priorityCounts[p]} ảnh)` : ''}</option>
                 ))}
               </select>
             </label>

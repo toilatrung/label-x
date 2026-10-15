@@ -4560,6 +4560,14 @@ components:
         ranking_hash:
           type: string
           description: SHA-256 của ordering đã lưu cho source
+        priority_counts:
+          type: object
+          description: Số ảnh của toàn bộ queue theo mức ưu tiên, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor.
+          required: [high, medium, low]
+          properties:
+            high: { type: integer, minimum: 0 }
+            medium: { type: integer, minimum: 0 }
+            low: { type: integer, minimum: 0 }
         results:
           type: array
           items: { $ref: "#/components/schemas/RankedFrame" }
