@@ -342,7 +342,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
     });
 
     // Decision form actions are disabled in read-only mode
-    const confirmChoice = screen.getByLabelText(/Xác nhận lỗi/i);
+    const confirmChoice = screen.getByLabelText(/Xác nhận có lỗi/i);
     expect(confirmChoice).toBeDisabled();
   });
 

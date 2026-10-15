@@ -11,6 +11,7 @@ import { useLeaseManager } from './useLeaseManager';
 import { useEffortCollector } from './useEffortCollector';
 import { ReviewCanvas } from './ReviewCanvas';
 import { ReviewEvidenceTable } from './ReviewEvidenceTable';
+import { ReviewIssueAssessment, annotationForIssue, guidelineRuleForIssue, isUnmatchedAnnotation } from './ReviewIssueAssessment';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
 import { ReviewDecisionForm, ISSUE_STATE_LABELS } from './ReviewDecisionForm';
 import { ReviewManualIssueModal } from './ReviewManualIssueModal';
@@ -756,8 +757,9 @@ export function ReviewWorkspace({
   const issues = data.issues;
   const currentIssueIndex = issues.findIndex((i) => i.id === selectedIssueId);
   const activeIssue = currentIssueIndex >= 0 ? issues[currentIssueIndex] : issues[0] ?? null;
-  const activeAnnotation = data.annotations?.find(annotation => activeIssue?.anchor.objects.some(object =>
-    ['cvat_shape', 'shape', 'track'].includes(String(object.namespace)) && object.id === String(annotation.source.id)));
+  const activeAnnotation = activeIssue ? annotationForIssue(activeIssue, data.annotations) : undefined;
+  const comparisonAnnotation = activeIssue?.family === 'E3' && !isUnmatchedAnnotation(activeIssue)
+    ? annotationForIssue(activeIssue, data.annotations?.filter(annotation => annotation.id !== activeAnnotation?.id)) : undefined;
   const currentAnnotationClass = activeAnnotation?.label || activeIssue?.evidence?.[0]?.actual || undefined;
   const totalIssues = issues.length;
 
@@ -1117,16 +1119,16 @@ export function ReviewWorkspace({
                   {activeIssue.family === 'E1'
                     ? 'Nghi vấn: Thiếu bounding box (E1)'
                     : activeIssue.family === 'E2'
-                      ? `Nghi vấn sai nhãn (E2)${
-                          activeIssue.evidence?.[0]?.actual && activeIssue.evidence?.[0]?.prediction_class
-                            ? `: ${activeIssue.evidence[0].actual} hay ${activeIssue.evidence[0].prediction_class}`
-                            : ''
-                        }`
+                      ? 'Nghi vấn sai nhãn (E2)'
                       : activeIssue.family === 'E3'
-                        ? 'Nghi vấn: Trùng lặp bounding box (E3)'
-                        : `Cảnh báo cấu trúc: ${activeIssue.rule_ids?.[0] || 'structural'}`}
+                        ? (isUnmatchedAnnotation(activeIssue) ? 'Annotation chưa được detector đối chiếu' : 'Nghi vấn: Trùng lặp bounding box (E3)')
+                        : 'Cảnh báo cấu trúc annotation'}
                 </h2>
 
+                <ReviewIssueAssessment key={activeIssue.id} issue={activeIssue} frame={data.frame}
+                  annotation={activeAnnotation} comparisonAnnotation={comparisonAnnotation} currentAnnotationClass={currentAnnotationClass} />
+                <details>
+                  <summary>Chi tiết kỹ thuật cảnh báo</summary>
                 <dl className="lx-kv">
                   <dt>Frame · Object</dt>
                   <dd>
@@ -1143,7 +1145,10 @@ export function ReviewWorkspace({
                   </dd>
                   <dt>Loại neo</dt>
                   <dd>{activeIssue.anchor.kind}</dd>
+                  <dt>Mã quy tắc</dt>
+                  <dd>{activeIssue.rule_ids?.join(', ') || activeIssue.anchor.rule_id || 'Chưa liên kết'}</dd>
                 </dl>
+                </details>
               </div>
 
               {/* Evidence Section */}
@@ -1158,11 +1163,9 @@ export function ReviewWorkspace({
                 />
 
                 <ReviewGuidelineLookup
-                  ruleId={activeIssue.rule_ids?.[0] || activeIssue.anchor.rule_id}
+                  ruleId={guidelineRuleForIssue(activeIssue)}
                   guidelineVersion={data.guideline_version}
                 />
-
-                <ReviewSimilarCases issueId={activeIssue.id} />
 
                 {activeIssue.links && activeIssue.links.length > 0 && (
                   <details>
@@ -1178,9 +1181,16 @@ export function ReviewWorkspace({
                   </details>
                 )}
 
-                <div className="lx-mt-3">
-                  <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
-                </div>
+              </div>
+
+              <div className="lx-ws__sec">
+                <details>
+                  <summary>Tham khảo thêm và lịch sử liên quan</summary>
+                  <ReviewSimilarCases issueId={activeIssue.id} />
+                  <div className="lx-mt-3">
+                    <DecisionCaseLookup initialIssueId={activeIssue.id} compact />
+                  </div>
+                </details>
               </div>
 
             </>

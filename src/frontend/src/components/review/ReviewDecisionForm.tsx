@@ -468,6 +468,8 @@ export function ReviewDecisionForm({
         )}
       </div>
 
+      <p className="lx-subtle lx-text-12">Quyết định được ghi nhận trong LabelX; lưu quyết định không tự sửa annotation trên CVAT.</p>
+
       {revisionLoading && (
         <div className="lx-callout lx-callout--info lx-callout--compact lx-text-12" role="status">
           <span className="lx-callout__text">
@@ -560,7 +562,7 @@ export function ReviewDecisionForm({
               onChange={() => setAction('confirm')}
               disabled={isDecisionBlocked}
             />
-            <span>Xác nhận lỗi</span>
+            <span>Xác nhận có lỗi</span>
           </label>
           <label className="lx-choice">
             <input
@@ -571,7 +573,7 @@ export function ReviewDecisionForm({
               onChange={() => setAction('reject')}
               disabled={isDecisionBlocked}
             />
-            <span>Bác bỏ</span>
+            <span>Bác bỏ cảnh báo</span>
           </label>
           <label className="lx-choice">
             <input
@@ -582,7 +584,7 @@ export function ReviewDecisionForm({
               onChange={() => setAction('uncertain')}
               disabled={isDecisionBlocked}
             />
-            <span>Chưa chắc chắn</span>
+            <span>Cần kiểm tra thêm</span>
           </label>
           <label
             className="lx-choice lx-choice--disabled"

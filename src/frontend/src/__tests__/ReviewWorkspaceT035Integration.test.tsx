@@ -152,9 +152,9 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
         />
       );
 
-      expect(screen.getByLabelText('Xác nhận lỗi')).toBeInTheDocument();
-      expect(screen.getByLabelText('Bác bỏ')).toBeInTheDocument();
-      expect(screen.getByLabelText('Chưa chắc chắn')).toBeInTheDocument();
+      expect(screen.getByLabelText('Xác nhận có lỗi')).toBeInTheDocument();
+      expect(screen.getByLabelText('Bác bỏ cảnh báo')).toBeInTheDocument();
+      expect(screen.getByLabelText('Cần kiểm tra thêm')).toBeInTheDocument();
       expect(screen.getByLabelText('Chuyển cấp trên')).toBeInTheDocument();
 
       const reworkRadio = screen.getByLabelText(/Yêu cầu sửa/i);
@@ -1424,16 +1424,16 @@ describe('T-035 PR130 Interface Integration Tests (T-037 Preparation)', () => {
         />
       );
 
-      expect(screen.getByText('bicycle')).toBeInTheDocument();
+      expect(screen.getByText(/Mô hình phát hiện.*bicycle/)).toBeInTheDocument();
       expect(screen.getByText(/độ tin cậy 0.00/i)).toBeInTheDocument();
       expect(screen.getByText(/Intersection over Union \(IoU\) 0.00/i)).toBeInTheDocument();
       expect(screen.getByText(/Quy tắc: RULE-VEH-01/i)).toBeInTheDocument();
       expect(screen.getByText(/Prediction bbox: \[12, 34, 56, 78\]/i)).toBeInTheDocument();
       expect(screen.getByText(/Thực tế:/i)).toBeInTheDocument();
       expect(screen.getByText('bicycle_detected')).toBeInTheDocument();
-      expect(screen.getByText('Failed')).toBeInTheDocument();
+      expect(screen.getByText(/Phân tích thất bại/)).toBeInTheDocument();
       expect(screen.getByText(/3 đơn vị lỗi/i)).toBeInTheDocument();
-      expect(screen.getByText('Not checked')).toBeInTheDocument();
+      expect(screen.getByText(/Chưa phân tích/)).toBeInTheDocument();
       expect(screen.getByText('disabled')).toBeInTheDocument();
     });
   });

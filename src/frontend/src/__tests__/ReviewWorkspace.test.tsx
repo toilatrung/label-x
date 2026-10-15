@@ -489,7 +489,7 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     });
 
     // Form mutation should be blocked
-    const confirmChoice = screen.getByLabelText(/Xác nhận lỗi/i);
+    const confirmChoice = screen.getByLabelText(/Xác nhận có lỗi/i);
     expect(confirmChoice).toBeDisabled();
   });
 
@@ -655,7 +655,7 @@ describe('ReviewWorkspace nối API MBE-01/MBE-02 (workspace, evidence AI, case 
         reason_code: 'LABEL_MISMATCH',
         reasons: ['class_disagreement'],
         review_required: true,
-        suggestion: { status: 'completed', class_name: 'truck', rationale: 'Thùng hàng rời phía sau cabin.' },
+        suggestion: { status: 'checked', class_name: 'truck', rationale: 'Thùng hàng rời phía sau cabin.' },
         evidence_refs: null,
         snapshot_revision: 'b3bc71e8',
         poll_url: '/api/candidate-evaluations/55/',
@@ -729,8 +729,8 @@ describe('ReviewWorkspace nối API MBE-01/MBE-02 (workspace, evidence AI, case 
 
     expect(screen.getAllByText('Mô hình thị giác – ngôn ngữ (VLM)').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Thùng hàng rời phía sau cabin.')).toBeInTheDocument();
-    expect(screen.getByText('Cần người review')).toBeInTheDocument();
-    expect(screen.getByText('LABEL_MISMATCH')).toBeInTheDocument();
+    expect(screen.getByText('Cần reviewer quyết định')).toBeInTheDocument();
+    expect(screen.getByText(/LABEL_MISMATCH/)).toBeInTheDocument();
   });
 
   it('dùng snapshot_revision do server cấp khi caller không truyền revision', async () => {
