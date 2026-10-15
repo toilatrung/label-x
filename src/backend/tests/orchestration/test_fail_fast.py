@@ -4,7 +4,7 @@ import pytest
 
 from engines.interface import EngineOutput, EngineUnitResult
 from orchestration.dispatch import _claim, build_engine_input, prepare_work_unit, run_work_unit
-from orchestration.models import ShardCommit, VlmUnit
+from orchestration.models import ShardCommit, VlmAttempt, VlmBudget, VlmUnit
 from orchestration.registry import registry
 from orchestration.services import StaleLeaseError, commit_shard_output
 from orchestration.vlm_stage import _claim_unit, _settle_unit, execute_vlm_unit
@@ -13,6 +13,7 @@ from runs.services import BusinessRuleUnmetError, retry_failed_qc_run
 from tests.orchestration.helpers import make_run
 from tests.orchestration.test_vlm_stage import FakeClient, _make_run, _provider_error, _run_shards
 from tests.orchestration.test_vlm_stage import _env as _env
+from tests.vlm.test_contract import VALID
 from vlm.contract import VlmStatus
 
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -78,18 +79,37 @@ def test_first_error_stops_only_that_engine_and_publishes_partial(settings, monk
 
 def test_vlm_failure_stops_siblings_and_late_evidence(settings, monkeypatch):
     settings.ORCHESTRATION_FAIL_FAST = True
-    run = _make_run()
+    run = _make_run(vlm={**VALID, "max_attempts": 4})
     _run_shards(run)
     units = list(VlmUnit.objects.filter(run=run).order_by("pk"))
     late, token, _ = _claim_unit(units[1].pk)
-    client = FakeClient([_provider_error()] * 3)
+    client = FakeClient([_provider_error()] * 4)
     assert execute_vlm_unit(units[0].pk, client=client) == "failed"
-    assert client.calls == 1
+    assert client.calls == 4
+    assert VlmBudget.objects.get(run=run).used_calls == 4
+    assert VlmAttempt.objects.filter(unit=units[0]).count() == 4
     assert set(VlmUnit.objects.filter(run=run).values_list("status", flat=True)) == {"failed"}
     assert not _settle_unit(late, token, {"status": VlmStatus.CHECKED.value})
     assert execute_vlm_unit(units[2].pk, client=client) == "failed"
-    assert client.calls == 1
+    assert client.calls == 4
     run.refresh_from_db()
     assert run.status == QCRun.Status.PARTIAL
     assert run.engine_results.get(engine="vlm").failed_units == 3
     assert run.rankings.count() == len(RunRanking.Source.values)
+
+
+def test_vlm_transient_errors_recover_before_fail_fast_stops_siblings(settings):
+    settings.ORCHESTRATION_FAIL_FAST = True
+    run = _make_run(vlm={**VALID, "max_attempts": 4})
+    _run_shards(run)
+    units = list(VlmUnit.objects.filter(run=run).order_by("pk"))
+    client = FakeClient([_provider_error()] * 3)
+    assert execute_vlm_unit(units[0].pk, client=client) == "completed"
+    assert client.calls == 4
+    assert VlmBudget.objects.get(run=run).used_calls == 4
+    assert VlmAttempt.objects.filter(unit=units[0]).count() == 4
+    assert not VlmUnit.objects.filter(run=run, status="failed").exists()
+    assert VlmUnit.objects.filter(run=run, status="pending").count() == len(units) - 1
+    # Redelivery must not call the provider or charge the budget again.
+    assert execute_vlm_unit(units[0].pk, client=client) == "completed"
+    assert client.calls == 4

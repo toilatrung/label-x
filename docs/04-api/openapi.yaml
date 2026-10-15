@@ -703,13 +703,23 @@ paths:
     post:
       operationId: runs_retry_failed
       tags: [runs]
-      summary: Chạy lại các đơn vị failed của run partial
-      description: Idempotent theo work_unit.idempotency_key; không tạo candidate/issue trùng.
+      summary: Chạy lại đơn vị lỗi của một engine được chọn
+      description: Gửi engine để chỉ chạy lại phần lỗi của engine đó trong run partial/failed/completed/cancelled; giữ kết quả thành công, bằng chứng cũ và Review đã công bố. VLM tạo generation mới trong ngân sách còn lại. Run đã huỷ chỉ tiếp tục phần lỗi được chọn, không tiếp tục đơn vị đã huỷ. Bỏ engine giữ hành vi retry cũ cho client legacy.
       x-labelx-trace: [FR-AGG-02, FR-AGG-04, NFR-05]
       x-labelx-roles: [qa_lead, super_admin]
       x-labelx-transition: run.retry_failed
       parameters:
         - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                engine:
+                  type: string
+                  enum: [schema, geometry, duplicate, detector, metric, vlm]
       responses:
         "202":
           description: Run quay lại running

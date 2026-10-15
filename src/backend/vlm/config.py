@@ -78,7 +78,8 @@ def default_api_key_env(base_url: str) -> str:
 
 PROMPT_VERSIONS = frozenset({"vlm-prompt-v0"})
 
-MAX_ATTEMPTS_LIMIT = 3  # tối đa 3 attempts/lượt logic (M04A-03)
+DEFAULT_MAX_ATTEMPTS = 4  # Lần gọi đầu tiên + tối đa 3 lần retry.
+MAX_ATTEMPTS_LIMIT = DEFAULT_MAX_ATTEMPTS
 MAX_TIMEOUT_SECONDS = 120.0
 KNOWN_KEYS = frozenset(
     {

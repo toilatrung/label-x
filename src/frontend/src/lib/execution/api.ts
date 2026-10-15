@@ -120,9 +120,11 @@ export async function cancelRun(id: number) {
   return unwrap(await apiClient.POST('/api/runs/{id}/cancel/', { params: { path: { id } } }));
 }
 
-export async function retryRun(id: number) {
+export type RetryEngine = 'schema' | 'geometry' | 'duplicate' | 'detector' | 'metric' | 'vlm';
+
+export async function retryRun(id: number, engine: RetryEngine) {
   await csrf();
-  return unwrap(await apiClient.POST('/api/runs/{id}/retry-failed/', { params: { path: { id } } }));
+  return unwrap(await apiClient.POST('/api/runs/{id}/retry-failed/', { params: { path: { id } }, body: { engine } }));
 }
 
 export const runStatusLabel: Record<Run['status'], string> = {

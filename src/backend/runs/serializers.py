@@ -37,6 +37,14 @@ class RunCreateSerializer(serializers.Serializer[Any]):
     seed = serializers.IntegerField()
 
 
+class RunRetryFailedSerializer(serializers.Serializer[Any]):
+    engine = serializers.ChoiceField(
+        choices=("schema", "geometry", "duplicate", "detector", "metric", "vlm"),
+        required=False,
+        help_text="Chỉ chạy lại đơn vị lỗi của engine được chọn; giữ kết quả engine khác.",
+    )
+
+
 class ModelArtifactSerializer(serializers.ModelSerializer[Any]):
     """Schema for ModelArtifact."""
 

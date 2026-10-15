@@ -13,12 +13,13 @@ const ENGINE_DONE = new Set(['completed', 'checked', 'partial', 'failed', 'not_c
 export function AnalysisProgress({ run, ledger, error }: {
   run: Run; ledger?: LedgerEntry[]; error?: string | null;
 }) {
-  const ended = TERMINAL.has(run.status);
+  const hasPending = (engine: string) => run.status !== 'cancelled' && (ledger?.find(row => row.engine === engine)?.pending ?? 0) > 0;
+  const ended = TERMINAL.has(run.status) && !run.engines.some(engine => hasPending(engine.engine));
   const failed = run.engines.filter(engine => engine.status === 'failed' || engine.status === 'partial' || (engine.failed_units ?? 0) > 0);
-  const resolved = run.engines.filter(engine => ENGINE_DONE.has(engine.status));
-  const active = run.engines.filter(engine => !ENGINE_DONE.has(engine.status));
+  const resolved = run.engines.filter(engine => ENGINE_DONE.has(engine.status) && !hasPending(engine.engine));
+  const active = run.engines.filter(engine => !ENGINE_DONE.has(engine.status) || hasPending(engine.engine));
   const progress = run.engines.map(engine => {
-    if (ENGINE_DONE.has(engine.status)) return 1;
+    if (ENGINE_DONE.has(engine.status) && !hasPending(engine.engine)) return 1;
     const row = ledger?.find(item => item.engine === engine.engine);
     if (!row || row.total <= 0) return 0;
     return Math.min(1, (row.completed + row.failed + row.not_checked) / row.total);
@@ -27,10 +28,10 @@ export function AnalysisProgress({ run, ledger, error }: {
   const vlm = active.find(engine => engine.engine === 'vlm');
   const vlmRow = ledger?.find(row => row.engine === 'vlm');
   const preparation = !!vlm && (!vlmRow || vlmRow.total === 0) && active.every(engine => engine.engine === 'vlm');
-  const title = run.status === 'cancelled' ? 'Đã dừng phân tích'
-    : run.status === 'failed' ? 'Phân tích thất bại'
-      : run.status === 'partial' ? 'Đã kết thúc · Kết quả một phần'
-        : run.status === 'completed' ? 'Phân tích đã hoàn tất'
+  const title = ended && run.status === 'cancelled' ? 'Đã dừng phân tích'
+    : ended && run.status === 'failed' ? 'Phân tích thất bại'
+      : ended && run.status === 'partial' ? 'Đã kết thúc · Kết quả một phần'
+        : ended && run.status === 'completed' ? 'Phân tích đã hoàn tất'
           : run.status === 'queued' ? 'Đang chờ worker'
             : preparation ? 'Đang chuẩn bị VLM · Chưa xác nhận gọi model'
               : active.length ? `Đang xử lý: ${active.map(engine => NAMES[engine.engine] ?? engine.engine).join(', ')}`

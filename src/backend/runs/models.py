@@ -254,6 +254,9 @@ class QCRun(dj_models.Model):
     started_at = dj_models.DateTimeField(null=True, blank=True)
     finished_at = dj_models.DateTimeField(null=True, blank=True)
 
+    # Last explicitly selected engine retry; suppresses unrelated automatic stages.
+    retry_engine = dj_models.CharField(max_length=64, blank=True, default="")
+
     # HTTP request idempotency
     idempotency_key = dj_models.CharField(max_length=128, null=True, blank=True, db_index=True)  # noqa: DJ001
     request_sha256 = dj_models.CharField(max_length=64, blank=True)

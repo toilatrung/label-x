@@ -8,13 +8,13 @@ Budget/retry:
 - Budget của run là một dòng VlmBudget; mỗi attempt thực gửi provider tăng `used_calls` bằng một
   UPDATE có điều kiện (nguyên tử). VlmAttempt unique (unit, attempt_no) nên giao lại cùng attempt
   không bị tính lần hai.
-- Tối đa `max_attempts` (≤ 3) attempt cho mỗi lượt logic; retry/backoff nằm trong
+- Tối đa `max_attempts` (≤ 4: lần đầu + 3 retry) attempt cho mỗi lượt logic; retry/backoff nằm trong
   `vlm.runner.run_vlm_unit`, không dùng retry của Celery để mỗi attempt đều được đếm.
 - VlmUnit unique theo khoá idempotency; tạo lại là no-op. Khoá chuẩn bị bằng `crop_identity`
   (danh tính crop tất định do CropProvider cung cấp), sha256 thật của crop nằm trong kết quả.
 
 VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication.
-Khi bật fail-fast, lỗi VLM dừng stage và run kết thúc với kết quả một phần.
+Khi bật fail-fast, lỗi VLM sau khi hết retry dừng stage và run kết thúc với kết quả một phần.
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ import hashlib
 import json
 import logging
 import uuid
-from dataclasses import replace
 from datetime import timedelta
 from typing import Any, Protocol
 
@@ -186,6 +185,8 @@ def start_vlm_stage(run_id: int) -> int:
     )
 
     run = QCRun.objects.select_related("config_version", "snapshot").get(pk=run_id)
+    if run.retry_engine:
+        return 0  # A selected-engine retry must never start another engine/stage.
     if run.cancel_requested_at or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
         return 0
     raw = run_vlm_config(run)
@@ -252,7 +253,18 @@ def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
         run = QCRun.objects.select_for_update().get(pk=run_id)
         if run.cancel_requested_at:
             return 0
+        if run.retry_engine and run.retry_engine != VLM_ENGINE:
+            return 0
         qs = VlmUnit.objects.filter(run_id=run_id)
+        if run.retry_engine == VLM_ENGINE:
+            from django.db.models import Subquery
+
+            latest = (
+                VlmUnit.objects.filter(run_id=run_id, candidate_id=OuterRef("candidate_id"))
+                .order_by("-evaluation_generation")
+                .values("pk")[:1]
+            )
+            qs = qs.filter(pk=Subquery(latest), evaluation_generation__gt=1)
         if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
             qs = qs.filter(evaluation_generation__gt=EVALUATION_GENERATION)
         budget = VlmBudget.objects.filter(run_id=run_id).first()
@@ -354,6 +366,8 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
         run = QCRun.objects.select_for_update().get(pk=run_id)
         stop_failed_engines(run)
         unit = VlmUnit.objects.select_for_update().get(pk=unit_id)
+        if run.retry_engine and run.retry_engine != VLM_ENGINE:
+            return None, "", unit.status
         run_active = run.status in (QCRun.Status.QUEUED, QCRun.Status.RUNNING)
         manual_after_end = not run_active and unit.evaluation_generation > EVALUATION_GENERATION
         if (
@@ -492,8 +506,6 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
-    if fail_fast_enabled():
-        config = replace(config, max_attempts=1)
     public = config.as_public_dict()
     if (config.model, config.prompt_version) != (unit.model, unit.prompt_version):
         # Config của run không còn khớp lúc unit được tạo: không gọi provider với model/prompt

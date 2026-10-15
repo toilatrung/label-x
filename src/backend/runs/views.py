@@ -45,6 +45,7 @@ from runs.serializers import (
     RunCreateSerializer,
     RunDetailSerializer,
     RunLineageSerializer,
+    RunRetryFailedSerializer,
     RunSerializer,
     WorkUnitSerializer,
 )
@@ -712,7 +713,7 @@ class RunRetryFailedView(APIView):
 
     @extend_schema(
         operation_id="runs_retry_failed",
-        request=None,
+        request=RunRetryFailedSerializer,
         responses={
             202: RunSerializer,
             400: ErrorSerializer,
@@ -724,10 +725,21 @@ class RunRetryFailedView(APIView):
     )
     def post(self, request: Request, pk: int) -> Response:
         user = cast(User, request.user)
+        serializer = RunRetryFailedSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not QCRun.objects.filter(pk=pk).exists():
+            raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
         try:
-            run = retry_failed_qc_run(run_id=pk, actor=user)
+            if engine := serializer.validated_data.get("engine"):
+                from runs.engine_retry import retry_failed_engine
+
+                run = retry_failed_engine(run_id=pk, engine=engine, actor=user)
+            else:
+                run = retry_failed_qc_run(run_id=pk, actor=user)
         except InvalidTransitionError as exc:
             raise ApiError(status.HTTP_409_CONFLICT, "INVALID_TRANSITION", str(exc)) from exc
+        except BusinessRuleUnmetError as exc:
+            raise ApiError(status.HTTP_409_CONFLICT, "BUSINESS_RULE_UNMET", str(exc)) from exc
 
         return Response(RunSerializer(run).data, status=status.HTTP_202_ACCEPTED)
 

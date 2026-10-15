@@ -21,6 +21,7 @@ from orchestration.routing_policy import DEFAULT_SCORE_THRESHOLD
 from runs.models import VlmConfiguration, VlmConnection
 from vlm.config import (
     ALLOWED_MODELS,
+    DEFAULT_MAX_ATTEMPTS,
     HOST_PROVIDER,
     default_api_key_env,
     validate_vlm_config,
@@ -125,7 +126,7 @@ class VlmSettingsView(APIView):
             "api_key_env": default_api_key_env(base_url),
             "prompt_version": "vlm-prompt-v0",
             "timeout_seconds": 60,
-            "max_attempts": 3,
+            "max_attempts": DEFAULT_MAX_ATTEMPTS,
             "budget": {"max_calls": 200},
         }
         errors = validate_vlm_config(config)

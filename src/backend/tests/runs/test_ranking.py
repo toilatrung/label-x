@@ -430,3 +430,39 @@ def test_runtime_ranking_schema_matches_static_contract_types() -> None:
         "nullable": True,
         "readOnly": True,
     }
+
+
+@pytest.mark.django_db
+def test_detector_unmatched_annotation_is_a_review_warning_not_a_duplicate_cluster(
+    snapshot,
+    config,
+    qa_user,
+):
+    run = _run(snapshot, config, qa_user)
+    unmatched = {
+        **_candidate(),
+        "family": "E3",
+        "anchor": {
+            "kind": "annotation_box",
+            "objects": [{"namespace": "shape", "id": "10"}],
+            "policy_version": "detector-candidate-v1",
+            "rule_id": "faster-rcnn-unmatched-annotation",
+        },
+        "evidence": {"engine": "detector", "match_status": "unmatched_annotation"},
+    }
+    rankings = persist_run_rankings(
+        run_id=run.pk, candidates=[unmatched, _candidate()], audit_percent=Decimal("50")
+    )
+    assert {r.source for r in rankings} == set(RunRanking.Source.values)
+    entry = RunRankingEntry.objects.get(
+        ranking__run=run, ranking__source="risk", snapshot_frame__frame_index=0
+    )
+    assert entry.issue_counts == {"E1": 1}
+    warnings = entry.explanation["structural_warnings"]
+    assert warnings[0]["ranking_warning"] == "unmatched_annotation_not_duplicate_cluster"
+    assert warnings[0]["anchor"] == unmatched["anchor"]
+    assert "ranking_warning" not in unmatched  # Input/evidence is never rewritten.
+    replay = persist_run_rankings(
+        run_id=run.pk, candidates=[_candidate(), unmatched], audit_percent=Decimal("50")
+    )
+    assert {r.pk for r in rankings} == {r.pk for r in replay}

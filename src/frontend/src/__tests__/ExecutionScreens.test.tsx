@@ -27,6 +27,8 @@ async function setup(
   username: string,
   page: React.ReactNode,
   options: {
+    runStatus?: string;
+    ledgerScript?: unknown[];
     publishFails?: boolean;
     configsOverride?: unknown;
     configsFails?: boolean;
@@ -40,6 +42,7 @@ async function setup(
   const original = api.fetchSpy.getMockImplementation()!;
   const calls: Request[] = [];
   let createdConfig: Record<string, unknown> = {};
+  let ledgerReads = 0;
   api.fetchSpy.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
@@ -51,9 +54,9 @@ async function setup(
     calls.push(request);
     if (path === '/api/datasets/') return Response.json({ next: null, previous: null, results: [{ id: 1, name: 'Urban', cvat_project_id: 31 }, { id: 2, name: 'Highway', cvat_project_id: 32 }] });
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
-    if (path === '/api/runs/12/') return Response.json(run);
+    if (path === '/api/runs/12/') return Response.json({ ...run, status: options.runStatus ?? run.status });
     if (path === '/api/runs/13/') return Response.json(run13);
-    if (path === '/api/runs/12/ledger/' || path === '/api/runs/13/ledger/') return Response.json(ledger);
+    if (path === '/api/runs/12/ledger/' || path === '/api/runs/13/ledger/') return Response.json(options.ledgerScript?.[Math.min(ledgerReads++, options.ledgerScript.length - 1)] ?? ledger);
     if (path === '/api/runs/12/shards/' || path === '/api/runs/13/shards/') return Response.json({ next: null, previous: null, results: [{ id: 5, engine: 'duplicate', shard_key: 'job:1', shard_index: 0, status: 'failed', attempt: 2, last_error: 'worker timeout' }] });
     if (path === '/api/runs/12/candidates/') {
       if (options.candidatesFails) return Response.json({ code: 'INTERNAL_ERROR', message: 'Lỗi nạp candidate' }, { status: 500 });
@@ -134,12 +137,40 @@ describe('Execution screens on real API contract', () => {
     expect(screen.getByRole('columnheader', { name: 'Bắt đầu' })).toBeDefined();
     expect(screen.queryByRole('link', { name: 'Chạy phân tích mới' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Tạo run mới để chạy lại engine lỗi' }).getAttribute('href')).toBe('/analysis/config');
+    expect(screen.getByRole('button', { name: 'Chạy lại Duplicate / Overlap' })).toBeDefined();
     expect(screen.getAllByRole('cell').filter((cell) => cell.textContent === '—')).toHaveLength(2);
     expect(screen.queryByText(/Không cộng Coverage giữa các engine/)).toBeNull();
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/ledger/')).toBe(true);
     expect(screen.getByRole('alert').textContent).toContain('gặp lỗi');
     expect(calls.some((request) => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toBe(false);
+  });
+
+
+  it('retries only the selected failed engine in the selected QC run', async () => {
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy lại Duplicate / Overlap' }));
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toHaveLength(1));
+    const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;
+    expect(await request.clone().json()).toEqual({ engine: 'duplicate' });
+    expect(screen.queryByRole('button', { name: 'Chạy lại Geometry' })).toBeNull();
+  });
+
+  it('shows single-engine retry for a cancelled QC with failed engine units', async () => {
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />, { runStatus: 'cancelled' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy lại Duplicate / Overlap' }));
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toHaveLength(1));
+    const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;
+    expect(await request.clone().json()).toEqual({ engine: 'duplicate' });
+    expect(screen.queryByRole('button', { name: 'Chạy lại Geometry' })).toBeNull();
+  });
+
+  it('refreshes a stale pending ledger even after the run detail is terminal', async () => {
+    const pending = ledger.map(row => row.engine === 'duplicate' ? { ...row, completed: 1, failed: 0, pending: 1, status: 'running' } : row);
+    const finished = ledger.map(row => row.engine === 'duplicate' ? { ...row, completed: 2, failed: 0, pending: 0, status: 'checked' } : row);
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />, { ledgerScript: [pending, finished] });
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/ledger/').length).toBeGreaterThanOrEqual(2), { timeout: 6000 });
+    expect(await screen.findByText('Đã kết thúc · Kết quả một phần')).toBeDefined();
+    expect(screen.getByRole('progressbar', { name: 'Tổng tiến độ engine' }).getAttribute('aria-valuenow')).toBe('100');
   });
 
   it('keeps QC admin read-only on the config screen', async () => {
@@ -161,7 +192,7 @@ describe('Execution screens on real API contract', () => {
     fireEvent.change(await screen.findByLabelText('Dataset'), { target: { value: '1' } });
 
     expect(await screen.findByRole('link', { name: 'Mở Review Queues →' })).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Chạy lại engine lỗi' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chạy lại/ })).toBeNull();
     expect(calls.some((request) => request.method === 'POST')).toBe(false);
   });
 

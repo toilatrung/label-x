@@ -372,7 +372,6 @@ def test_dataset_endpoints_contract_and_error_codes(spec):
     [
         ("/api/config-versions/{id}/publish/", "post"),
         ("/api/runs/{id}/cancel/", "post"),
-        ("/api/runs/{id}/retry-failed/", "post"),
         ("/internal/metrics/", "get"),
     ],
 )

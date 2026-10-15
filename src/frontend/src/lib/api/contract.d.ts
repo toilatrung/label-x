@@ -427,8 +427,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Chạy lại các đơn vị failed của run partial
-         * @description Idempotent theo work_unit.idempotency_key; không tạo candidate/issue trùng.
+         * Chạy lại đơn vị lỗi của một engine được chọn
+         * @description Gửi engine để chỉ chạy lại phần lỗi của engine đó trong run partial/failed/completed/cancelled; giữ kết quả thành công, bằng chứng cũ và Review đã công bố. VLM tạo generation mới trong ngân sách còn lại. Run đã huỷ chỉ tiếp tục phần lỗi được chọn, không tiếp tục đơn vị đã huỷ. Bỏ engine giữ hành vi retry cũ cho client legacy.
          */
         post: operations["runs_retry_failed"];
         delete?: never;
@@ -2553,7 +2553,7 @@ export interface components {
             run_id: number;
             /** @description Nhận đúng frame này thay vì frame kế tiếp (MBE-02); không thuộc hàng đợi hoặc đã có lease khác trả 409 LEASE_CONFLICT */
             frame_id?: number;
-            /** @description Chuyển quyền giữ từ lease của reviewer trong cùng run sang frame_id; giữ quyết định đã lưu, trả frame dở về hàng đợi. Nếu không nhận được frame đích, giữ nguyên lease cũ. Cần frame_id; không truyền thì giữ hành vi nhận/resume hiện tại. */
+            /** @description Chuyển quyền giữ từ lease của reviewer trong cùng run sang frame_id; giữ quyết định đã lưu, trả frame dở về hàng đợi. Cho phép khác run nếu reviewer có quyền ở cả hai dataset. Nếu không nhận được frame đích, giữ nguyên lease cũ. Cần frame_id; không truyền thì giữ hành vi nhận/resume hiện tại. */
             previous_lease_id?: number;
         };
         Lease: {
@@ -4671,7 +4671,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    engine?: "schema" | "geometry" | "duplicate" | "detector" | "metric" | "vlm";
+                };
+            };
+        };
         responses: {
             /** @description Run quay lại running */
             202: {
