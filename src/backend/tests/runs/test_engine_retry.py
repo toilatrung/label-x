@@ -237,3 +237,62 @@ def test_retry_api_permission_scope_validation_and_selected_engine(monkeypatch):
     assert response.status_code == 202, response.data
     assert response.data["id"] == run.pk
     assert client.post(url, {"engine": "duplicate"}, format="json").status_code == 409
+
+
+def test_cancelled_qc_retries_only_failed_vlm_and_preserves_cancelled_units():
+    from django.utils import timezone
+
+    from audit.models import AuditEvent
+
+    run, units = failed_vlm_run()
+    cancelled_at = timezone.now()
+    VlmUnit.objects.filter(pk=units[2].pk).update(status="cancelled", finished_at=cancelled_at)
+    type(run).objects.filter(pk=run.pk).update(
+        status="cancelled", cancel_requested_at=cancelled_at, finished_at=cancelled_at
+    )
+    untouched = VlmUnit.objects.filter(pk__in=[units[0].pk, units[2].pk]).values().order_by("pk")
+    before = list(untouched)
+    retry_failed_engine(run_id=run.pk, engine="vlm", actor=run.created_by)
+    run.refresh_from_db()
+    assert run.status == "running" and run.cancel_requested_at is None
+    retry = VlmUnit.objects.get(run=run, evaluation_generation=2)
+    assert retry.candidate_id == units[1].candidate_id
+    assert list(untouched.all()) == before
+    event = AuditEvent.objects.filter(action="run.retry_failed", object_id=str(run.pk)).latest("id")
+    assert event.before["status"] == "cancelled"
+    assert event.before["cancel_requested_at"] == cancelled_at.isoformat()
+    with patch("orchestration.vlm_stage.run_vlm_unit_task.delay") as delay:
+        assert dispatch_vlm_units(run.pk) == 1
+        assert delay.call_args.args == (retry.pk,)
+    assert execute_vlm_unit(retry.pk, client=FakeClient()) == "completed"
+    run.refresh_from_db()
+    assert run.status == "partial"  # Work intentionally cancelled earlier is still unfinished.
+    assert list(untouched.all()) == before
+
+
+def test_cancelled_qc_retries_selected_failed_shard_only(monkeypatch):
+    from django.utils import timezone
+
+    run, units = failed_shard_run(monkeypatch)
+    cancelled = WorkUnit.objects.create(
+        run=run, engine="geometry", status="cancelled", shard_key="other", idempotency_key="other"
+    )
+    before = WorkUnit.objects.filter(pk=cancelled.pk).values().get()
+    type(run).objects.filter(pk=run.pk).update(
+        status="cancelled", cancel_requested_at=timezone.now()
+    )
+    client = APIClient()
+    client.force_authenticate(run.created_by)
+    RoleAssignment.objects.create(user=run.created_by, role=Role.QA_LEAD, dataset_id=1)
+    response = client.post(
+        f"/api/runs/{run.pk}/retry-failed/", {"engine": "duplicate"}, format="json"
+    )
+    assert response.status_code == 202, response.data
+    assert response.data["status"] == "running"
+    run.refresh_from_db()
+    assert run.cancel_requested_at is None
+    assert WorkUnit.objects.filter(pk=cancelled.pk).values().get() == before
+    units[0].refresh_from_db()
+    units[1].refresh_from_db()
+    assert units[0].status == "completed"
+    assert units[1].status == "pending"

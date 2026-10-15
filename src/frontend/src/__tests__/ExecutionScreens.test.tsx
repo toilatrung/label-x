@@ -27,6 +27,7 @@ async function setup(
   username: string,
   page: React.ReactNode,
   options: {
+    runStatus?: string;
     publishFails?: boolean;
     configsOverride?: unknown;
     configsFails?: boolean;
@@ -51,7 +52,7 @@ async function setup(
     calls.push(request);
     if (path === '/api/datasets/') return Response.json({ next: null, previous: null, results: [{ id: 1, name: 'Urban', cvat_project_id: 31 }, { id: 2, name: 'Highway', cvat_project_id: 32 }] });
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
-    if (path === '/api/runs/12/') return Response.json(run);
+    if (path === '/api/runs/12/') return Response.json({ ...run, status: options.runStatus ?? run.status });
     if (path === '/api/runs/13/') return Response.json(run13);
     if (path === '/api/runs/12/ledger/' || path === '/api/runs/13/ledger/') return Response.json(ledger);
     if (path === '/api/runs/12/shards/' || path === '/api/runs/13/shards/') return Response.json({ next: null, previous: null, results: [{ id: 5, engine: 'duplicate', shard_key: 'job:1', shard_index: 0, status: 'failed', attempt: 2, last_error: 'worker timeout' }] });
@@ -145,6 +146,15 @@ describe('Execution screens on real API contract', () => {
 
   it('retries only the selected failed engine in the selected QC run', async () => {
     const { calls } = await setup('qalead', <ExecutionHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy lại Duplicate / Overlap' }));
+    await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toHaveLength(1));
+    const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;
+    expect(await request.clone().json()).toEqual({ engine: 'duplicate' });
+    expect(screen.queryByRole('button', { name: 'Chạy lại Geometry' })).toBeNull();
+  });
+
+  it('shows single-engine retry for a cancelled QC with failed engine units', async () => {
+    const { calls } = await setup('qalead', <ExecutionHistoryPage />, { runStatus: 'cancelled' });
     fireEvent.click(await screen.findByRole('button', { name: 'Chạy lại Duplicate / Overlap' }));
     await waitFor(() => expect(calls.filter(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')).toHaveLength(1));
     const request = calls.find(request => new URL(request.url).pathname === '/api/runs/12/retry-failed/' && request.method === 'POST')!;

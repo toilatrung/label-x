@@ -428,7 +428,7 @@ export interface paths {
         put?: never;
         /**
          * Chạy lại đơn vị lỗi của một engine được chọn
-         * @description Gửi engine để chỉ chạy lại phần lỗi của engine đó trong run partial/failed/completed; giữ kết quả thành công, bằng chứng cũ và Review đã công bố. VLM tạo generation mới trong ngân sách còn lại. Bỏ engine giữ hành vi retry cũ cho client legacy.
+         * @description Gửi engine để chỉ chạy lại phần lỗi của engine đó trong run partial/failed/completed/cancelled; giữ kết quả thành công, bằng chứng cũ và Review đã công bố. VLM tạo generation mới trong ngân sách còn lại. Run đã huỷ chỉ tiếp tục phần lỗi được chọn, không tiếp tục đơn vị đã huỷ. Bỏ engine giữ hành vi retry cũ cho client legacy.
          */
         post: operations["runs_retry_failed"];
         delete?: never;

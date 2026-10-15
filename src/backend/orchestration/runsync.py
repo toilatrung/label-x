@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 
 from engines.interface import EngineStatus, NotCheckedReason, public_status
@@ -107,6 +108,17 @@ def refresh_run(run_id: int) -> None:
         if run.retry_engine:
             # Failed historical generations stay immutable; use current engine results.
             failed = run.engine_results.filter(status__in=("failed", "partial")).count()
+            latest_vlm = (
+                VlmUnit.objects.filter(run_id=run_id, candidate_id=OuterRef("candidate_id"))
+                .order_by("-evaluation_generation")
+                .values("pk")[:1]
+            )
+            cancelled = any(u.status == WorkUnit.Status.CANCELLED for u in units) or (
+                VlmUnit.objects.filter(
+                    run_id=run_id, pk=Subquery(latest_vlm), status=VlmUnit.Status.CANCELLED
+                ).exists()
+            )
+            failed += int(cancelled)  # A targeted retry does not finish previously cancelled work.
             done = run.engine_results.filter(completed_units__gt=0).count()
         if failed == 0:
             run.status = QCRun.Status.COMPLETED

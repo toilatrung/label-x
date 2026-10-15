@@ -24,10 +24,15 @@ def retry_failed_engine(*, run_id: int, engine: str, actor: User) -> QCRun:
         )
         if run is None:
             raise RunDomainError("Run không tồn tại.")
-        if run.status not in (QCRun.Status.PARTIAL, QCRun.Status.FAILED, QCRun.Status.COMPLETED):
+        if run.status not in (
+            QCRun.Status.PARTIAL,
+            QCRun.Status.FAILED,
+            QCRun.Status.COMPLETED,
+            QCRun.Status.CANCELLED,
+        ):
             raise InvalidTransitionError("Chờ run kết thúc trước khi chạy lại một engine lỗi.")
-        if run.cancel_requested_at or run.is_final:
-            raise BusinessRuleUnmetError("Không chạy lại engine của run đã huỷ hoặc run cuối.")
+        if run.is_final:
+            raise BusinessRuleUnmetError("Không chạy lại engine của run cuối tổng hợp.")
         if VlmUnit.objects.filter(run=run, status__in=("pending", "running")).exists():
             raise InvalidTransitionError("Run đang có tác vụ VLM chưa kết thúc; hãy chờ hoàn tất.")
         result = run.engine_results.filter(engine=engine).first()
@@ -42,10 +47,14 @@ def retry_failed_engine(*, run_id: int, engine: str, actor: User) -> QCRun:
         if requeued == 0:
             raise BusinessRuleUnmetError("Engine được chọn không có đơn vị lỗi để chạy lại.")
         old_status = run.status
+        old_cancel_requested_at = run.cancel_requested_at
         run.retry_engine = engine
         run.status = QCRun.Status.RUNNING
         run.finished_at = None
-        run.save(update_fields=["retry_engine", "status", "finished_at"])
+        # This explicit request authorizes only the failed selected units to resume.
+        # Cancelled units retain their status and leases; the original cancellation is audited.
+        run.cancel_requested_at = None
+        run.save(update_fields=["retry_engine", "status", "finished_at", "cancel_requested_at"])
         result.status = "running"
         result.failed_units = 0
         result.save(update_fields=["status", "failed_units"])
@@ -54,7 +63,12 @@ def retry_failed_engine(*, run_id: int, engine: str, actor: User) -> QCRun:
             action="run.retry_failed",
             object_type="run",
             object_id=run.pk,
-            before={"status": old_status},
+            before={
+                "status": old_status,
+                "cancel_requested_at": (
+                    old_cancel_requested_at.isoformat() if old_cancel_requested_at else None
+                ),
+            },
             after={"status": run.status, "engine": engine, "requeued_units": requeued},
             revision=str(run.pk),
         )
