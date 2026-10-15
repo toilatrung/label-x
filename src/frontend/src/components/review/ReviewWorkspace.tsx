@@ -44,6 +44,10 @@ export interface ReviewWorkspaceProps {
   runId?: number | null;
   datasetId?: number | null;
   onFrameCompleted?: () => void;
+  onPreviousFrame?: () => void;
+  onNextFrame?: () => void;
+  framePosition?: string;
+  navigationPending?: boolean;
   onBackToQueue?: () => void;
   onLeaseUpdated?: (lease: Lease) => void;
   onLeaseConflict?: () => void;
@@ -118,6 +122,10 @@ export function ReviewWorkspace({
   runId,
   datasetId,
   onFrameCompleted,
+  onPreviousFrame,
+  onNextFrame,
+  framePosition,
+  navigationPending = false,
   onBackToQueue,
   onLeaseUpdated,
   onLeaseConflict,
@@ -137,6 +145,18 @@ export function ReviewWorkspace({
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [forbiddenCode, setForbiddenCode] = useState<string | null>(null);
+
+  const [decisionDirty, setDecisionDirty] = useState(false);
+  const [decisionBusy, setDecisionBusy] = useState(false);
+  const handleDecisionStateChange = useCallback((dirty: boolean, busy: boolean) => {
+    setDecisionDirty(dirty);
+    setDecisionBusy(busy);
+  }, []);
+  const navigateFrame = (navigate?: () => void) => {
+    if (!navigate || navigationPending || decisionBusy) return;
+    if (decisionDirty && !window.confirm('Bạn có nội dung quyết định chưa lưu. Bỏ nội dung chưa lưu để chuyển frame?')) return;
+    navigate();
+  };
 
   // Active workspace state
   const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
@@ -176,7 +196,7 @@ export function ReviewWorkspace({
     });
 
   const isReadOnly = !initialLease;
-  const isMutationBlocked = isReadOnly || isExpired || forcedLeaseInvalidated || isCompleted;
+  const isMutationBlocked = navigationPending || isReadOnly || isExpired || forcedLeaseInvalidated || isCompleted;
 
   // Real T-036 Effort Collector lifecycle integration
   // Precedence: latest managed renewed lease takes precedence over stale grant prop
@@ -961,23 +981,27 @@ export function ReviewWorkspace({
 
           {/* Stage Bottom Bar */}
           <div className="lx-stage__bar lx-stage__bar--foot">
-            {/* Frame navigation (disabled per lease handoff contract) */}
+            {/* Frame navigation uses an atomic server lease handoff. */}
             <button
               type="button"
               className="lx-ghostbtn"
-              disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
+              disabled={!onPreviousFrame || navigationPending || decisionBusy || isCompleting || manualModalOpen}
+              onClick={() => navigateFrame(onPreviousFrame)}
+              title="Chuyển đến frame trước trong danh sách kiểm tra"
             >
               ‹ Frame trước
             </button>
             <button
               type="button"
               className="lx-ghostbtn"
-              disabled
-              title="Chuyển frame chỉ thực hiện qua hàng đợi Review Queues; không tự nhận frame kế tiếp."
+              disabled={!onNextFrame || navigationPending || decisionBusy || isCompleting || manualModalOpen}
+              onClick={() => navigateFrame(onNextFrame)}
+              title="Chuyển đến frame sau trong danh sách kiểm tra"
             >
               Frame sau ›
             </button>
+            {framePosition && <span className="lx-subtle" aria-live="polite">Frame {framePosition}</span>}
+            {navigationPending && <span role="status">Đang chuyển frame…</span>}
 
             <span className="lx-subtle lx-ws__sep">|</span>
 
@@ -1128,9 +1152,10 @@ export function ReviewWorkspace({
                 snapshotRevision={resolvedRevision}
                 revisionUnavailableReason={revisionUnavailableReason || revisionError}
                 revisionLoading={revisionLoading}
-                isLeaseExpired={isMutationBlocked}
+                isLeaseExpired={isMutationBlocked || navigationPending}
                 isSuperAdmin={isSuperAdmin}
                 onDecisionSaved={handleDecisionSaved}
+                onFormStateChange={handleDecisionStateChange}
                 onLeaseConflict={handleLeaseConflict}
                 onNextIssue={() => {
                   if (currentIssueIndex < issues.length - 1) setSelectedIssueId(issues[currentIssueIndex + 1].id);
@@ -1169,7 +1194,7 @@ export function ReviewWorkspace({
             <button
               type="button"
               className="lx-btn lx-btn--primary lx-btn--fill"
-              disabled={isCompleting || isMutationBlocked}
+              disabled={isCompleting || isMutationBlocked || navigationPending || decisionBusy}
               onClick={handleCompleteFrame}
             >
               {isCompleting ? 'Đang hoàn tất...' : 'Hoàn tất review frame'}
@@ -1188,7 +1213,7 @@ export function ReviewWorkspace({
           drawnRegion={drawnRegionForManual}
           frameWidth={data.frame.width ?? undefined}
           frameHeight={data.frame.height ?? undefined}
-          isLeaseExpired={isMutationBlocked}
+          isLeaseExpired={isMutationBlocked || navigationPending}
           onClose={() => setManualModalOpen(false)}
           onCreated={handleManualIssueCreated}
           onLeaseConflict={handleLeaseConflict}

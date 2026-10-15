@@ -58,6 +58,15 @@ class QueueNextRequestSerializer(serializers.Serializer[Any]):
     run_id = serializers.IntegerField(min_value=1)
     frame_id = serializers.IntegerField(min_value=1, required=False)
 
+    previous_lease_id = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        help_text=(
+            "Chuyển từ lease đang giữ sang frame_id trong cùng transaction; "
+            "lỗi giữ nguyên lease cũ."
+        ),
+    )
+
 
 class QueueSummarySerializer(serializers.Serializer[Any]):
     name = serializers.ChoiceField(choices=["risk", "random"])

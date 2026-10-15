@@ -2536,6 +2536,8 @@ export interface components {
             run_id: number;
             /** @description Nhận đúng frame này thay vì frame kế tiếp (MBE-02); không thuộc hàng đợi hoặc đã có lease khác trả 409 LEASE_CONFLICT */
             frame_id?: number;
+            /** @description Chuyển quyền giữ từ lease của reviewer trong cùng run sang frame_id; giữ quyết định đã lưu, trả frame dở về hàng đợi. Nếu không nhận được frame đích, giữ nguyên lease cũ. Cần frame_id; không truyền thì giữ hành vi nhận/resume hiện tại. */
+            previous_lease_id?: number;
         };
         Lease: {
             id: number;

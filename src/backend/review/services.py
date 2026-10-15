@@ -205,7 +205,12 @@ def _ranking_entry(run_id: int, frame_id: int, source: str) -> RunRankingEntry:
 
 @transaction.atomic
 def claim_next(
-    *, request: Request, run_id: int, queue: str, frame_id: int | None = None
+    *,
+    request: Request,
+    run_id: int,
+    queue: str,
+    frame_id: int | None = None,
+    previous_lease_id: int | None = None,
 ) -> dict[str, object] | None:
     if queue not in {"risk", "random"}:
         raise ApiError(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Queue không hợp lệ.")
@@ -228,6 +233,41 @@ def claim_next(
     if run is None:
         raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Run không tồn tại.")
     now = _now()
+    if previous_lease_id is not None:
+        previous = Lease.objects.select_related("frame_review").filter(pk=previous_lease_id).first()
+        if (
+            frame_id is None
+            or previous is None
+            or previous.holder_id != user_id
+            or previous.frame_review.run_id != run_id
+        ):
+            raise ApiError(
+                status.HTTP_409_CONFLICT, "LEASE_CONFLICT", "Không thể chuyển từ lease này."
+            )
+        if previous.closed_at is None and previous.expires_at <= now:
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "LEASE_CONFLICT",
+                "Lease hiện tại đã hết hạn; tải lại hàng đợi.",
+            )
+        if previous.closed_at is None and previous.frame_review.snapshot_frame_id != frame_id:
+            if not has_review_scope(user_id=user_id, dataset_id=run.dataset_id):
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Lease ngoài phạm vi hiện tại."
+                )
+            _deny_frame_ineligible(request, identity, previous.frame_review, "queues.next")
+            previous.closed_at = now
+            previous.save(update_fields=["closed_at"])
+            frame = previous.frame_review
+            if frame.state == FrameReview.State.IN_REVIEW:
+                saved = decision_source.has_persisted_decision(frame)
+                frame.state = (
+                    FrameReview.State.INCOMPLETE if saved else FrameReview.State.UNREVIEWED
+                )
+                frame.previous_reviewer_id = user_id if saved else None
+                frame.incomplete_since = now if saved else None
+                frame.save(update_fields=["state", "previous_reviewer", "incomplete_since"])
+                decision_source.reset_undecided_issues(frame)
     for lease in open_for_user:
         lease.refresh_from_db()
         if lease.closed_at is not None:
@@ -237,6 +277,15 @@ def claim_next(
         elif _close_if_frame_moved_on(lease, now):
             continue
         else:
+            if previous_lease_id is not None and (
+                lease.frame_review.run_id != run_id
+                or lease.frame_review.snapshot_frame_id != frame_id
+            ):
+                raise ApiError(
+                    status.HTTP_409_CONFLICT,
+                    "LEASE_CONFLICT",
+                    "Lease đã thay đổi; tải lại hàng đợi trước khi chuyển frame.",
+                )
             active_run = lease.frame_review.run
             if not has_review_scope(user_id=user_id, dataset_id=active_run.dataset_id):
                 raise ApiError(
@@ -346,6 +395,10 @@ def claim_next(
             )
             _deny_ineligible(request, identity, entry, "queues.next")
             return _grant_payload(existing, entry, resumed=True)
+        if previous_lease_id is not None:
+            raise ApiError(
+                status.HTTP_409_CONFLICT, "LEASE_CONFLICT", "Frame đích không còn khả dụng."
+            ) from None
         return None
     return _grant_payload(lease, entry, resumed=resumed)
 

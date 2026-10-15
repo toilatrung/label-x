@@ -139,6 +139,21 @@ describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
     vi.restoreAllMocks();
   });
 
+  it('asks before discarding an unsaved decision when navigating frames', async () => {
+    const next = vi.fn();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    await renderWorkspace({ onNextFrame: next });
+    await screen.findByText('QC-00101');
+    fireEvent.change(screen.getByLabelText(/^Lý do/), { target: { value: 'Nhận xét chưa lưu' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(next).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Frame sau ›' }));
+    expect(next).toHaveBeenCalledOnce();
+    confirm.mockRestore();
+  });
+
   it('reuses the T-039 Decision Case lookup for the active issue', async () => {
     const { api } = await renderWorkspace();
 
