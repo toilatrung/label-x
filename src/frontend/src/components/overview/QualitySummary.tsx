@@ -65,6 +65,7 @@ const ENGINE_LABELS: Record<string, string> = {
 };
 
 const NOT_CHECKED_REASONS: Record<string, string> = {
+  provider_unavailable: 'dịch vụ mô hình chưa sẵn sàng hoặc đã hết hạn chờ',
   no_reference: 'chưa có Ground Truth',
   no_model: 'chưa có mô hình',
   disabled: 'engine đang tắt',

@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.utils import timezone
 
-from orchestration.models import LedgerUnit, VlmUnit
+from orchestration.models import LedgerUnit
 from runs.models import QCRun, WorkUnit
 
 ENGINE_STOPPED_MESSAGE = "Engine đã dừng sau lỗi; bỏ qua phần còn lại."
@@ -22,6 +22,7 @@ def stop_failed_engines(run: QCRun) -> None:
     failed = set(
         run.work_units.filter(status=WorkUnit.Status.FAILED).values_list("engine", flat=True)
     )
+    failed.discard("detector")  # Independent shards keep their successful results.
     now = timezone.now()
     for engine in failed:
         run.work_units.filter(
@@ -35,17 +36,3 @@ def stop_failed_engines(run: QCRun) -> None:
         LedgerUnit.objects.filter(
             run_id=run.pk, engine=engine, outcome__in=("pending", "running", "retrying")
         ).update(outcome="failed", not_checked_reason="")
-    # Manual re-evaluations are separate generations and must remain independent.
-    if VlmUnit.objects.filter(
-        run_id=run.pk, evaluation_generation=1, status=VlmUnit.Status.FAILED
-    ).exists():
-        VlmUnit.objects.filter(
-            run_id=run.pk,
-            evaluation_generation=1,
-            status__in=(VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING),
-        ).update(
-            status=VlmUnit.Status.FAILED,
-            lease_token="",
-            finished_at=now,
-            reason_code="provider_error",
-        )

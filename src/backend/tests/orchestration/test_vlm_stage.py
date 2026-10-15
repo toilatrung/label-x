@@ -29,6 +29,7 @@ from orchestration.models import Evaluation, VlmAttempt, VlmBudget, VlmUnit
 from orchestration.registry import registry
 from orchestration.vlm_stage import (
     DbBudgetGate,
+    _claim_unit,
     compute_vlm_idempotency_key,
     execute_vlm_unit,
     start_vlm_stage,
@@ -149,6 +150,8 @@ def _make_run(
 
 @pytest.fixture(autouse=True)
 def _env(settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("vlm.runner.time.sleep", lambda delay: None)
+    settings.VLM_DISPATCH_WINDOW = 4
     settings.VLM_CROP_PROVIDER = "tests.orchestration.test_vlm_stage.FixtureCrops"
     settings.ORCHESTRATION_AUTO_DISPATCH = False
     monkeypatch.setenv("VLM_API_KEY", "sk-test-not-real")
@@ -209,7 +212,7 @@ def test_full_flow_completes_run_and_vlm_failure_does_not_fail_run() -> None:
     _run_shards(run)
     client = FakeClient()
     for unit in VlmUnit.objects.filter(run_id=run.pk):
-        assert execute_vlm_unit(unit.pk, client=client) == "completed"
+        assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     run.refresh_from_db()
     assert run.status == QCRun.Status.COMPLETED
     result = _vlm_result(run)
@@ -224,9 +227,9 @@ def test_redelivery_does_not_recall_provider_or_charge_budget() -> None:
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     for _ in range(3):
-        assert execute_vlm_unit(unit.pk, client=client) == "completed"
+        assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     assert client.calls == 1
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 1
     assert VlmAttempt.objects.filter(unit=unit).count() == 1
@@ -249,7 +252,7 @@ def test_retry_counts_each_real_attempt_once_max_three() -> None:
                 (json.dumps({"label": "1"}), "req-9"),
             ]
         )
-        assert execute_vlm_unit(unit.pk, client=client) == "completed"
+        assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     finally:
         runner_module.time.sleep = original  # type: ignore[assignment]
     assert client.calls == 3
@@ -273,6 +276,7 @@ def test_gate_numbers_attempts_after_existing_and_charges_each_real_send() -> No
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    unit, _, _ = _claim_unit(unit.pk)
     first = DbBudgetGate(unit)
     assert first.attempts_done == 0
     assert first.try_consume() and first.try_consume()
@@ -293,6 +297,7 @@ def test_worker_dies_after_send_then_reclaim_sends_again_and_is_charged() -> Non
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    unit, _, _ = _claim_unit(unit.pk)
     gate = DbBudgetGate(unit)
     assert gate.try_consume()  # đã gửi attempt 1 rồi worker chết: unit kẹt RUNNING
     VlmUnit.objects.filter(pk=unit.pk).update(
@@ -301,7 +306,7 @@ def test_worker_dies_after_send_then_reclaim_sends_again_and_is_charged() -> Non
     QCRun.objects.filter(pk=run.pk).update(created_at=timezone.now() - timedelta(hours=1))
     redispatch_pending(older_than_seconds=0, running_stale_seconds=60)
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     assert client.calls == 1  # provider bị gọi lần hai
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2  # và được tính budget
     unit.refresh_from_db()
@@ -312,6 +317,7 @@ def test_reclaim_never_exceeds_max_attempts_per_logical_turn() -> None:
     run = _make_run(vlm={**VALID, "max_attempts": 2})
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
+    unit, _, _ = _claim_unit(unit.pk)
     gate = DbBudgetGate(unit)
     assert gate.try_consume() and gate.try_consume()  # đã gửi 2/2 rồi chết
     VlmUnit.objects.filter(pk=unit.pk).update(
@@ -320,7 +326,7 @@ def test_reclaim_never_exceeds_max_attempts_per_logical_turn() -> None:
     QCRun.objects.filter(pk=run.pk).update(created_at=timezone.now() - timedelta(hours=1))
     redispatch_pending(older_than_seconds=0, running_stale_seconds=60)
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "failed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "failed"
     assert client.calls == 0
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 2
     unit.refresh_from_db()
@@ -339,7 +345,7 @@ def test_missing_api_key_costs_no_budget_and_makes_no_request(
         transport=httpx.MockTransport(lambda r: requests.append(r) or httpx.Response(500))
     )
     for u in VlmUnit.objects.filter(run_id=run.pk):
-        assert execute_vlm_unit(u.pk, client=client) == "failed"
+        assert execute_vlm_unit(u.pk, client=client, deferred=False) in ("failed", "skipped")
     assert requests == []
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 0
     assert VlmAttempt.objects.count() == 0
@@ -363,12 +369,12 @@ def test_candidate_selection_seam_and_created_count(monkeypatch: pytest.MonkeyPa
     assert VlmUnit.objects.filter(run_id=run.pk).count() == 1
 
 
-def test_budget_exhaustion_stops_provider_calls_and_keeps_run_alive() -> None:
+def test_budget_exhaustion_stops_provider_calls_and_finishes_partial() -> None:
     run = _make_run(vlm={**VALID, "budget": {"max_calls": 2}})
     _run_shards(run)
     client = FakeClient()
     outcomes = [
-        execute_vlm_unit(u.pk, client=client)
+        execute_vlm_unit(u.pk, client=client, deferred=False)
         for u in VlmUnit.objects.filter(run_id=run.pk).order_by("pk")
     ]
     assert outcomes == ["completed", "completed", "failed"]
@@ -377,7 +383,7 @@ def test_budget_exhaustion_stops_provider_calls_and_keeps_run_alive() -> None:
     failed = VlmUnit.objects.get(run_id=run.pk, status="failed")
     assert failed.reason_code == "budget_exhausted" and failed.attempts == 0
     run.refresh_from_db()
-    assert run.status == QCRun.Status.COMPLETED
+    assert run.status == QCRun.Status.PARTIAL
     result = _vlm_result(run)
     assert (result.status, result.completed_units, result.failed_units) == ("partial", 2, 1)
 
@@ -421,6 +427,7 @@ def test_budget_is_atomic_under_concurrency() -> None:
         finally:
             close_old_connections()
 
+    extra = [_claim_unit(u.pk)[0] for u in extra]
     threads = [threading.Thread(target=worker, args=(u,)) for u in extra]
     for t in threads:
         t.start()
@@ -475,7 +482,10 @@ def test_cancel_run_cancels_pending_vlm_units() -> None:
     }
     client = FakeClient()
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    assert execute_vlm_unit(unit.pk, client=client) == "cancelled" and client.calls == 0
+    assert (
+        execute_vlm_unit(unit.pk, client=client, deferred=False) == "cancelled"
+        and client.calls == 0
+    )
 
 
 def test_no_vlm_model_config_is_no_model_without_stage() -> None:
@@ -535,7 +545,7 @@ def test_invalid_crop_fails_unit_without_provider_call(settings: Any) -> None:
     _run_shards(run)
     client = FakeClient()
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    assert execute_vlm_unit(unit.pk, client=client) == "failed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "failed"
     unit.refresh_from_db()
     assert unit.reason_code == "invalid_crop" and client.calls == 0
     assert VlmBudget.objects.get(run_id=run.pk).used_calls == 0
@@ -547,7 +557,7 @@ def test_default_provider_without_crop_source_fails_visibly(settings: Any) -> No
     _run_shards(run)
     client = FakeClient()
     for u in VlmUnit.objects.filter(run_id=run.pk):
-        assert execute_vlm_unit(u.pk, client=client) == "failed"
+        assert execute_vlm_unit(u.pk, client=client, deferred=False) == "failed"
     assert client.calls == 0
     assert set(VlmUnit.objects.values_list("reason_code", flat=True)) == {"invalid_crop"}
 
@@ -563,7 +573,7 @@ def test_stale_running_vlm_unit_is_reclaimed_by_sweeper() -> None:
     redispatch_pending(older_than_seconds=0, running_stale_seconds=60)
     unit.refresh_from_db()
     assert unit.status == "pending" and unit.dispatched_at is not None
-    assert execute_vlm_unit(unit.pk, client=FakeClient()) == "completed"
+    assert execute_vlm_unit(unit.pk, client=FakeClient(), deferred=False) == "completed"
 
 
 def test_fresh_running_unit_is_not_run_twice() -> None:
@@ -574,7 +584,9 @@ def test_fresh_running_unit_is_not_run_twice() -> None:
         status="running", started_at=timezone.now(), lease_token="owner"
     )
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "running" and client.calls == 0
+    assert (
+        execute_vlm_unit(unit.pk, client=client, deferred=False) == "running" and client.calls == 0
+    )
 
 
 def test_uncertain_and_parse_failure_flow_through_real_client(monkeypatch: Any) -> None:
@@ -589,7 +601,7 @@ def test_uncertain_and_parse_failure_flow_through_real_client(monkeypatch: Any) 
         return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
 
     client = DashScopeClient(transport=httpx.MockTransport(handler))
-    assert [execute_vlm_unit(u.pk, client=client) for u in units] == [
+    assert [execute_vlm_unit(u.pk, client=client, deferred=False) for u in units] == [
         "completed",
         "failed",
         "completed",
@@ -606,6 +618,7 @@ def test_dispatch_window_does_not_requeue_every_pending_unit(settings, monkeypat
     from orchestration.vlm_stage import dispatch_vlm_units, run_vlm_unit_task
 
     settings.VLM_DISPATCH_WINDOW = 1
+    settings.ORCHESTRATION_AUTO_DISPATCH = True
     sent = []
     monkeypatch.setattr(run_vlm_unit_task, "delay", lambda pk: sent.append(pk))
     run = _make_run()
@@ -614,7 +627,7 @@ def test_dispatch_window_does_not_requeue_every_pending_unit(settings, monkeypat
     assert dispatch_vlm_units(run.pk) == 0
     assert dispatch_vlm_units(run.pk) == 0
     assert len(sent) == 1
-    assert execute_vlm_unit(sent[0], client=FakeClient()) == "completed"
+    assert execute_vlm_unit(sent[0], client=FakeClient(), deferred=False) == "completed"
     assert len(sent) == 2
     assert sent[0] != sent[1]
     assert dispatch_vlm_units(run.pk) == 0
@@ -651,9 +664,9 @@ def test_last_budgeted_call_closes_run_without_waiting_for_pending_messages() ->
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).order_by("pk").first()
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     run.refresh_from_db()
-    assert run.status == QCRun.Status.COMPLETED
+    assert run.status == QCRun.Status.PARTIAL
     assert not VlmUnit.objects.filter(run_id=run.pk, status__in=["pending", "running"]).exists()
     assert VlmUnit.objects.filter(run_id=run.pk, reason_code="budget_exhausted").count() == 2
     assert client.calls == 1

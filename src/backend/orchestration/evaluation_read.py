@@ -13,6 +13,7 @@ _UNIT_TO_STATUS: dict[str, str] = {
     VlmUnit.Status.COMPLETED: "completed",
     VlmUnit.Status.FAILED: "failed",
     VlmUnit.Status.CANCELLED: "cancelled",
+    VlmUnit.Status.SKIPPED: "completed",
 }
 
 
@@ -27,7 +28,11 @@ def evaluation_status(evaluation: Evaluation) -> str:
 def evaluation_reason_code(evaluation: Evaluation) -> str | None:
     """reason_code theo payload FE v0: lý do định tuyến; Qwen lỗi thì mã lỗi của Qwen."""
     unit = evaluation.vlm_unit
-    if unit is not None and unit.status == VlmUnit.Status.FAILED and unit.reason_code:
+    if (
+        unit is not None
+        and unit.status in (VlmUnit.Status.FAILED, VlmUnit.Status.SKIPPED)
+        and unit.reason_code
+    ):
         return str(unit.reason_code)
     return evaluation.primary_reason
 
@@ -39,7 +44,7 @@ def evaluation_review_required(evaluation: Evaluation) -> bool:
     unit = evaluation.vlm_unit
     if unit is None:
         return False
-    if unit.status == VlmUnit.Status.FAILED:
+    if unit.status in (VlmUnit.Status.FAILED, VlmUnit.Status.SKIPPED):
         return True
     uncertain = (unit.result or {}).get("status") == "uncertain"
     return bool(unit.status == VlmUnit.Status.COMPLETED and uncertain)

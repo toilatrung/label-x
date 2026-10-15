@@ -6,16 +6,17 @@ import logging
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Q, Subquery
 from django.utils import timezone
 
 from engines.interface import EngineStatus, NotCheckedReason, public_status
 from orchestration.fail_fast import enabled as fail_fast_enabled
 from orchestration.fail_fast import stop_failed_engines
-from orchestration.models import VlmBudget, VlmUnit
+from orchestration.models import LedgerUnit, VlmBudget, VlmUnit
 from orchestration.services import ledger_counts, vlm_ledger_counts
 from orchestration.vlm_stage import (
     VLM_ENGINE,
+    _expire_waiting,
     start_vlm_stage,
     vlm_stage_started,
     vlm_units_open,
@@ -38,6 +39,38 @@ def refresh_run(run_id: int) -> None:
     with transaction.atomic():
         run = QCRun.objects.select_for_update().get(pk=run_id)
         stop_failed_engines(run)
+        _expire_waiting(run_id)
+        expired = list(
+            run.work_units.filter(
+                engine="detector", status="pending", deadline_at__lte=timezone.now()
+            )
+        )
+        if expired:
+            from orchestration.dispatch import shard_units
+
+            for unit in expired:
+                unit.status = WorkUnit.Status.FAILED
+                unit.last_error = "Đã hết thời hạn chờ Detector."
+                unit.error_code = "deadline_exceeded"
+                unit.finished_at = timezone.now()
+                unit.lease_token = ""
+                unit.save(
+                    update_fields=[
+                        "status",
+                        "last_error",
+                        "error_code",
+                        "finished_at",
+                        "lease_token",
+                    ]
+                )
+                for ref in shard_units(unit):
+                    LedgerUnit.objects.filter(
+                        run=run,
+                        engine="detector",
+                        cvat_task_id=ref.frame.cvat_task_id,
+                        frame_number=ref.frame.frame_number,
+                        outcome__in=("pending", "running", "retrying"),
+                    ).update(outcome="failed")
         units = list(run.work_units.all())
         units_open = any(u.status in _OPEN for u in units)
         if (
@@ -108,14 +141,17 @@ def refresh_run(run_id: int) -> None:
                 transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
             return  # VLM chưa xong (hoặc chưa khởi động): run vẫn đang chạy
         failed = sum(u.status == WorkUnit.Status.FAILED for u in units)
-        if fail_fast_enabled():
-            failed += VlmUnit.objects.filter(
-                run_id=run_id, evaluation_generation=1, status=VlmUnit.Status.FAILED
-            ).count()
+        failed += VlmUnit.objects.filter(
+            run_id=run_id,
+            evaluation_generation=1,
+            status__in=(VlmUnit.Status.FAILED, VlmUnit.Status.SKIPPED),
+        ).count()
         done = sum(u.status == WorkUnit.Status.COMPLETED for u in units)
         if run.retry_engine:
             # Failed historical generations stay immutable; use current engine results.
-            failed = run.engine_results.filter(status__in=("failed", "partial")).count()
+            failed = run.engine_results.filter(
+                Q(status__in=("failed", "partial")) | Q(reason="provider_unavailable")
+            ).count()
             latest_vlm = (
                 VlmUnit.objects.filter(run_id=run_id, candidate_id=OuterRef("candidate_id"))
                 .order_by("-evaluation_generation")
@@ -166,7 +202,9 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
         result.eligible_units = ledger.eligible
         result.completed_units = completed
         result.failed_units = failed
-        result.not_checked_units = 0
+        result.not_checked_units = ledger.not_checked
+        if ledger.not_checked:
+            result.reason = NotCheckedReason.PROVIDER_UNAVAILABLE.value
     result.save(
         update_fields=[
             "status",

@@ -160,7 +160,7 @@ def _run_worker(input_dir: Path, engine_input: EngineInput) -> dict[str, Any]:
         run = QCRun.objects.select_related("model_artifact").get(pk=engine_input.run_id)
         if run.model_artifact is None:
             raise DetectorProvenanceError("detector run thiếu ModelArtifact")
-        readiness = probe(remote, run.model_artifact)
+        readiness = probe(remote, run.model_artifact, strict=True)
         if readiness["state"] != "ready":
             raise WorkerUnavailable("GPU Worker chưa sẵn sàng cho shard detector.")
         model = readiness["model"]

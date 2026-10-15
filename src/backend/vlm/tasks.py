@@ -41,6 +41,7 @@ def result_to_dict(result: VlmResult) -> dict[str, Any]:
         "rationale": result.rationale,
         "reason_code": result.reason_code.value if result.reason_code else None,
         "attempts": result.attempts,
+        "provider_failure": result.provider_failure,
         # Phòng thủ tại biên public/persistence: cả client thay thế trong test hay provider mới
         # cũng không thể đưa request ID đầy đủ vào task result hoặc VlmEvidence.
         "request_id": redact_request_id(result.request_id),

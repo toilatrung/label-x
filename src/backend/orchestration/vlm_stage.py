@@ -9,12 +9,12 @@ Budget/retry:
   UPDATE có điều kiện (nguyên tử). VlmAttempt unique (unit, attempt_no) nên giao lại cùng attempt
   không bị tính lần hai.
 - Tối đa `max_attempts` (≤ 4: lần đầu + 3 retry) attempt cho mỗi lượt logic; retry/backoff nằm trong
-  `vlm.runner.run_vlm_unit`, không dùng retry của Celery để mỗi attempt đều được đếm.
+  `vlm.runner.run_vlm_unit`; production hẹn task sau mỗi lỗi tạm thời và dùng DbBudgetGate.
 - VlmUnit unique theo khoá idempotency; tạo lại là no-op. Khoá chuẩn bị bằng `crop_identity`
   (danh tính crop tất định do CropProvider cung cấp), sha256 thật của crop nằm trong kết quả.
 
 VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication.
-Khi bật fail-fast, lỗi VLM sau khi hết retry dừng stage và run kết thúc với kết quả một phần.
+Lỗi VLM được giữ theo candidate. Retry được lưu và hẹn qua Celery; outage có hạn chờ rõ.
 """
 
 from __future__ import annotations
@@ -34,7 +34,6 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 
 from engines.registration import taxonomy_from_params
-from orchestration.fail_fast import enabled as fail_fast_enabled
 from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import (
     CandidateRecord,
@@ -43,6 +42,7 @@ from orchestration.models import (
     VlmEvidence,
     VlmUnit,
 )
+from orchestration.resources import EndpointLease, ResourceWaiting, retry_delay
 from runs.models import QCRun
 from vlm.client import DashScopeClient
 from vlm.config import VlmConfig, parse_vlm_config, validate_vlm_config
@@ -54,8 +54,8 @@ from vlm.contract import (
     VlmRequest,
     VlmStatus,
 )
-from vlm.errors import VlmError, VlmInvalidCropError, VlmReasonCode
-from vlm.runner import run_vlm_unit
+from vlm.errors import VlmDeferred, VlmError, VlmInvalidCropError, VlmReasonCode
+from vlm.runner import backoff_seconds, run_vlm_unit
 from vlm.tasks import result_to_dict
 
 logger = logging.getLogger("labelx.orchestration")
@@ -241,7 +241,10 @@ def start_vlm_stage(run_id: int) -> int:
             routed = route_candidates(run, batch, exhausted=budget_exhausted(run_id))
             created += create_auto_evaluations(run, routed, config, selected_ids=selected)
         logger.info("vlm stage prepared", extra={"qc_run_id": run_id, "vlm_units_created": created})
-    if VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists():
+    if (
+        getattr(settings, "ORCHESTRATION_AUTO_DISPATCH", True)
+        and VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists()
+    ):
         transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
     return created
 
@@ -276,20 +279,30 @@ def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
                 lease_token="",
             )
             return 0
-        window = max(1, int(getattr(settings, "VLM_DISPATCH_WINDOW", 4)))
+        wait_limit = timedelta(seconds=getattr(settings, "VLM_STAGE_TIMEOUT_SECONDS", 1800))
+        qs.filter(
+            status=VlmUnit.Status.PENDING, deadline_at__isnull=True, evaluation_generation=1
+        ).update(deadline_at=(budget.started_at if budget else timezone.now()) + wait_limit)
+        qs.filter(
+            status=VlmUnit.Status.PENDING, deadline_at__isnull=True, evaluation_generation__gt=1
+        ).update(deadline_at=timezone.now() + wait_limit)
+        _expire_waiting(run_id)
+        window = max(1, int(getattr(settings, "VLM_DISPATCH_WINDOW", 1)))
         pending = qs.filter(status=VlmUnit.Status.PENDING)
         eligible = Q(dispatched_at__isnull=True)
         if stale_after is not None:
             cutoff = timezone.now() - timedelta(seconds=stale_after)
             eligible |= Q(dispatched_at__lte=cutoff)
         inflight = (
-            qs.filter(status=VlmUnit.Status.RUNNING).count() + pending.exclude(eligible).count()
+            qs.filter(status=VlmUnit.Status.RUNNING).count()
+            + pending.filter(Q(retry_at__gt=timezone.now()) | ~eligible).count()
         )
         slots = max(0, window - inflight)
         if budget is not None:
             slots = min(slots, max(0, budget.max_calls - budget.used_calls - inflight))
         queued = 0
-        for unit in pending.filter(eligible).order_by("pk")[:slots]:
+        due = Q(retry_at__isnull=True) | Q(retry_at__lte=timezone.now())
+        for unit in pending.filter(eligible).filter(due).order_by("pk")[:slots]:
             previous = unit.dispatched_at
             VlmUnit.objects.filter(pk=unit.pk).update(dispatched_at=timezone.now())
             try:
@@ -318,6 +331,33 @@ def vlm_units_open(run_id: int) -> bool:
     return VlmUnit.objects.filter(run_id=run_id, status__in=_OPEN_STATUSES).exists()
 
 
+def _refresh_after_expiry(run_id: int) -> None:
+    from orchestration.runsync import refresh_run
+
+    refresh_run(run_id)
+
+
+def _expire_waiting(run_id: int) -> None:
+    """Bound provider outages, including candidates never claimed by a worker."""
+    now = timezone.now()
+    budget = VlmBudget.objects.filter(run_id=run_id).first()
+    overdue = Q(deadline_at__lte=now)
+    if (
+        budget
+        and budget.started_at
+        + timedelta(seconds=getattr(settings, "VLM_STAGE_TIMEOUT_SECONDS", 1800))
+        <= now
+    ):
+        overdue |= Q(evaluation_generation=1)
+    VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).filter(overdue).update(
+        status=VlmUnit.Status.SKIPPED,
+        reason_code="deadline_exceeded",
+        finished_at=now,
+        lease_token="",
+        retry_at=None,
+    )
+
+
 class DbBudgetGate:
     """Cổng budget nguyên tử theo DB cho một lượt logic (một VlmUnit).
 
@@ -329,6 +369,7 @@ class DbBudgetGate:
     """
 
     def __init__(self, unit: VlmUnit) -> None:
+        self._token = unit.lease_token
         self._unit_id = unit.pk
         self._run_id = unit.run_id
         last = VlmAttempt.objects.filter(unit_id=unit.pk).aggregate(last=Max("attempt_no"))["last"]
@@ -338,12 +379,22 @@ class DbBudgetGate:
     def try_consume(self) -> bool:
         self._attempt_no += 1
         with transaction.atomic():
+            run = QCRun.objects.select_for_update().get(pk=self._run_id)
+            if (
+                run.cancel_requested_at
+                or not VlmUnit.objects.filter(
+                    pk=self._unit_id,
+                    lease_token=self._token,
+                    status=VlmUnit.Status.RUNNING,
+                ).exists()
+            ):
+                return False
             _, created = VlmAttempt.objects.get_or_create(
                 unit_id=self._unit_id, attempt_no=self._attempt_no
             )
             if not created:
                 # Worker khác vừa ghi đúng attempt này (đã tính budget ở đó): không tính hai lần.
-                return True
+                return False
             charged = VlmBudget.objects.filter(
                 run_id=self._run_id, used_calls__lt=F("max_calls")
             ).update(used_calls=F("used_calls") + 1)
@@ -374,18 +425,39 @@ def _claim_unit(unit_id: int) -> tuple[VlmUnit | None, str, str]:
             run.cancel_requested_at
             or not (run_active or manual_after_end)
             or unit.status
-            in (VlmUnit.Status.COMPLETED, VlmUnit.Status.FAILED, VlmUnit.Status.CANCELLED)
+            in (
+                VlmUnit.Status.COMPLETED,
+                VlmUnit.Status.FAILED,
+                VlmUnit.Status.CANCELLED,
+                VlmUnit.Status.SKIPPED,
+            )
         ):
             return None, "", unit.status
         now = timezone.now()
+        if unit.retry_at and unit.retry_at > now:
+            return None, "", "waiting_retry"
+        if unit.deadline_at is None:
+            budget = VlmBudget.objects.filter(run_id=run_id).first()
+            origin = budget.started_at if budget and unit.evaluation_generation == 1 else now
+            unit.deadline_at = origin + timedelta(
+                seconds=getattr(settings, "VLM_STAGE_TIMEOUT_SECONDS", 1800)
+            )
+        if now >= unit.deadline_at:
+            unit.status = VlmUnit.Status.SKIPPED
+            unit.reason_code = "deadline_exceeded"
+            unit.finished_at = now
+            unit.save(update_fields=["status", "reason_code", "finished_at", "deadline_at"])
+            transaction.on_commit(lambda: _refresh_after_expiry(run_id))
+            return None, "", unit.status
         if unit.status == VlmUnit.Status.RUNNING and unit.started_at is not None:
             if unit.started_at > now - timedelta(seconds=_stale_seconds()):
                 return None, "", "running"  # delivery trùng: đã có owner đang chạy
         token = uuid.uuid4().hex
         unit.status = VlmUnit.Status.RUNNING
+        unit.retry_at = None
         unit.started_at = now
         unit.lease_token = token
-        unit.save(update_fields=["status", "started_at", "lease_token"])
+        unit.save(update_fields=["status", "started_at", "lease_token", "deadline_at", "retry_at"])
         return unit, token, VlmUnit.Status.RUNNING
 
 
@@ -403,16 +475,6 @@ def _settle_unit(
     ok = result["status"] in (VlmStatus.CHECKED.value, VlmStatus.UNCERTAIN.value)
     with transaction.atomic():
         QCRun.objects.select_for_update().only("id").get(pk=unit.run_id)
-        if (
-            fail_fast_enabled()
-            and unit.evaluation_generation == 1
-            and VlmUnit.objects.filter(
-                run_id=unit.run_id, evaluation_generation=1, status=VlmUnit.Status.FAILED
-            )
-            .exclude(pk=unit.pk)
-            .exists()
-        ):
-            return False
         updated = VlmUnit.objects.filter(
             pk=unit.pk, status=VlmUnit.Status.RUNNING, lease_token=token
         ).update(
@@ -421,6 +483,8 @@ def _settle_unit(
             result=result,
             attempts=result["attempts"],
             finished_at=timezone.now(),
+            retry_at=None,
+            error_code=result.get("provider_failure") or result.get("reason_code") or "",
         )
         if not updated:
             return False
@@ -486,7 +550,9 @@ def _fail(
     return result
 
 
-def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
+def execute_vlm_unit(
+    unit_id: int, *, client: VlmClient | None = None, deferred: bool = True
+) -> str:
     """Chạy một VlmUnit; idempotent: unit đã xong/huỷ/đang có owner thì bỏ qua."""
     from orchestration.runsync import refresh_run
 
@@ -527,13 +593,75 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
     request = VlmRequest(
         crop=crop,
         taxonomy=taxonomy,
-        context=CandidateContext(candidate_id=candidate.dedup_key, snapshot_revision=revision),
+        context=CandidateContext(
+            candidate_id=candidate.dedup_key,
+            snapshot_revision=revision,
+            run_id=unit.run_id,
+            unit_id=unit.pk,
+        ),
         config=config,
     )
     gate = DbBudgetGate(unit)
-    result = result_to_dict(
-        run_vlm_unit(request, client or DashScopeClient(), gate, attempts_done=gate.attempts_done)
-    )
+    try:
+        with EndpointLease("vlm:" + config.base_url, config.timeout_seconds + 60) as lease:
+            try:
+                result = result_to_dict(
+                    run_vlm_unit(
+                        request,
+                        client or DashScopeClient(),
+                        gate,
+                        attempts_done=gate.attempts_done,
+                        deferred=deferred,
+                    )
+                )
+            except VlmDeferred as exc:
+                lease.failed(
+                    exc.error.failure.value,
+                    retry_after=exc.error.retry_after,
+                    uncertain=exc.error.failure.value in ("timeout", "network"),
+                )
+                raise
+            failure = result.get("provider_failure")
+            if failure in ("network", "server_error", "rate_limited", "timeout"):
+                lease.failed(failure, uncertain=failure in ("timeout", "network"))
+    except (ResourceWaiting, VlmDeferred) as exc:
+        delay = (
+            exc.seconds
+            if isinstance(exc, ResourceWaiting)
+            else max(backoff_seconds(exc.attempts), exc.error.retry_after)
+        )
+        delay = retry_delay(delay)
+        reason = exc.code if isinstance(exc, ResourceWaiting) else exc.error.failure.value
+        retry_at = timezone.now() + timedelta(seconds=delay)
+        attempts = gate.attempts_done if isinstance(exc, ResourceWaiting) else exc.attempts
+        updated = VlmUnit.objects.filter(
+            pk=unit.pk, status=VlmUnit.Status.RUNNING, lease_token=token
+        ).update(
+            status=VlmUnit.Status.PENDING,
+            lease_token="",
+            dispatched_at=None,
+            retry_at=retry_at,
+            attempts=attempts,
+            error_code=reason,
+        )
+        if updated:
+            logger.info(
+                "vlm retry scheduled",
+                extra={
+                    "qc_run_id": unit.run_id,
+                    "vlm_unit_id": unit.pk,
+                    "error_code": reason,
+                    "attempts": attempts,
+                    "retry_at": retry_at.isoformat(),
+                },
+            )
+            if getattr(settings, "ORCHESTRATION_AUTO_DISPATCH", True):
+                try:
+                    run_vlm_unit_task.apply_async(args=(unit.pk,), countdown=delay)
+                except Exception:
+                    logger.exception("vlm retry publish failed", extra={"qc_run_id": unit.run_id})
+        refresh_run(unit.run_id)
+        return "waiting_retry"
     names = {t.class_id: t.class_name for t in taxonomy}
     _settle_unit(
         unit,
@@ -544,6 +672,19 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         class_name=names.get(result.get("label") or "", ""),
         crop_origin=crop.origin,
     )
+    if unit.evaluation_generation == 1 and result.get("provider_failure") in ("auth", "quota"):
+        # Never label candidates that were not sent as provider request failures.
+        VlmUnit.objects.filter(
+            run_id=unit.run_id,
+            evaluation_generation=unit.evaluation_generation,
+            status=VlmUnit.Status.PENDING,
+        ).update(
+            status=VlmUnit.Status.SKIPPED,
+            reason_code="provider_unavailable",
+            error_code=result["provider_failure"],
+            finished_at=timezone.now(),
+            lease_token="",
+        )
     refresh_run(unit.run_id)
     unit.refresh_from_db(fields=["status"])
     return str(unit.status)

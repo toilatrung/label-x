@@ -12,6 +12,7 @@ import { canAccessAnalysis, hasDatasetPermission } from '@/lib/auth/roles';
 import { errorMessage } from '@/lib/api/errors';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { formatDateTime, snapshotCode } from '@/lib/format';
+import { ProgressBar } from '@/components/execution/ProgressBar';
 import { AnalysisProgress } from '@/components/execution/AnalysisProgress';
 import { CandidateEvidenceList } from '@/components/execution/CandidateEvidenceList';
 import { getSnapshot } from '@/lib/snapshots/api';
@@ -116,13 +117,17 @@ function HistoryContent() {
         {detail.isLoading && <div className="lx-card__body">Đang tải chi tiết…</div>}
         {detail.isError && <div className="lx-card__body" role="alert">{errorMessage(detail.error)}</div>}
         {selected && <div className="lx-card__body lx-stack lx-stack--3">
-          <AnalysisProgress run={selected} ledger={ledger.data} error={ledger.isError ? errorMessage(ledger.error) : null} />
-          {(ledger.data ?? []).map((row) => <div key={row.engine} className="lx-stack lx-stack--2"><div className="lx-row lx-row--between"><span>{engineName[row.engine] ?? row.engine}</span><span className={`lx-badge ${statusBadge(row.status)}`}>{engineStatusLabel[row.status]}</span></div>{row.coverage !== null && <div className={row.status === 'partial' ? 'lx-progress lx-progress--warn' : 'lx-progress'}><i style={{ width: `${Math.round(row.coverage * 100)}%` }} /></div>}{selected.engines.find((engine) => engine.engine === row.engine)?.reason && <span className="lx-hint">{selected.engines.find((engine) => engine.engine === row.engine)?.reason}</span>}</div>)}
+          <AnalysisProgress run={selected} ledger={ledger.data} updatedAt={Math.min(detail.dataUpdatedAt, ledger.dataUpdatedAt || detail.dataUpdatedAt)} error={detail.isError ? errorMessage(detail.error) : ledger.isError ? errorMessage(ledger.error) : null} />
+          {(ledger.data ?? []).map((row) => <div key={row.engine} className="lx-stack lx-stack--2"><div className="lx-row lx-row--between"><span>{engineName[row.engine] ?? row.engine}</span><span className={`lx-badge ${statusBadge(row.status)}`}>{engineStatusLabel[row.status]}</span></div>{<ProgressBar label={`Tiến độ ${engineName[row.engine] ?? row.engine}`}
+            value={row.total > 0 ? Math.round(100 * (row.completed + row.failed + row.not_checked) / row.total) : undefined}
+            active={['queued', 'running'].includes(selected.status) && row.pending > 0}
+            paused={detail.isError || ledger.isError || selected.engines.find(engine => engine.engine === row.engine)?.progress?.stale}
+            warning={row.status === 'partial' || row.failed > 0} />}{selected.engines.find((engine) => engine.engine === row.engine)?.reason && <span className="lx-hint">{selected.engines.find((engine) => engine.engine === row.engine)?.reason}</span>}</div>)}
           {ledger.isLoading && <span className="lx-muted">Đang tải Coverage theo engine…</span>}
           {ledger.isError && <span role="alert">{errorMessage(ledger.error)}</span>}
           {candidates.data && <div className="lx-callout lx-callout--info"><span className="lx-callout__text">Candidate: {candidates.data.raw_count === null ? '' : `${candidates.data.raw_count} bản ghi thô → `}{candidates.data.dedup_count} sau khi gộp trùng. {reviewReady ? 'Hàng đợi Review đã sẵn sàng.' : ['queued', 'running'].includes(selected.status) ? 'Hàng đợi Review sẽ sẵn sàng khi run kết thúc.' : 'Run chưa có hàng đợi Review. Tạo run mới để phân tích lại.'}</span></div>}
           <div className="lx-actions">
-            {canManage && !selected.is_final && ['partial', 'failed', 'completed', 'cancelled'].includes(selected.status) && selected.engines.filter(engine => engine.status === 'failed' || engine.status === 'partial' || (engine.failed_units ?? 0) > 0).map(engine => <button key={engine.engine} className="lx-btn" type="button" disabled={acting} onClick={() => act('retry', engine.engine as RetryEngine)}>Chạy lại {engine.engine === 'vlm' ? 'VLM' : engineName[engine.engine] ?? engine.engine}</button>)}
+            {canManage && !selected.is_final && ['partial', 'failed', 'completed', 'cancelled'].includes(selected.status) && selected.engines.filter(engine => engine.status === 'failed' || engine.status === 'partial' || (engine.failed_units ?? 0) > 0 || (engine.progress?.skipped ?? 0) > 0).map(engine => <button key={engine.engine} className="lx-btn" type="button" disabled={acting} onClick={() => act('retry', engine.engine as RetryEngine)}>Chạy lại {engine.engine === 'vlm' ? 'VLM' : engineName[engine.engine] ?? engine.engine}</button>)}
             <Link className="lx-btn lx-btn--primary" href={`/review?run=${selected.id}`}>Mở Review Queues →</Link>
           </div>
           {selected.engines.some(engine => (engine.failed_units ?? 0) > 0 || ['partial', 'failed'].includes(engine.status)) && <p className="lx-hint">Chạy lại riêng phần lỗi của engine được chọn. Giữ kết quả thành công và hàng đợi Review đã công bố.</p>}

@@ -119,6 +119,9 @@ def vlm_ledger_counts(run_id: int) -> LedgerCounts:
     return LedgerCounts(
         completed=counts.get(VlmUnit.Status.COMPLETED, 0),
         failed=counts.get(VlmUnit.Status.FAILED, 0),
+        not_checked_reasons={NotCheckedReason.PROVIDER_UNAVAILABLE: counts[VlmUnit.Status.SKIPPED]}
+        if counts.get(VlmUnit.Status.SKIPPED)
+        else {},
         pending=counts.get(VlmUnit.Status.PENDING, 0) + counts.get(VlmUnit.Status.RUNNING, 0),
     )
 
@@ -235,6 +238,7 @@ def commit_shard_output(
                     raise StaleLeaseError(f"work_unit {unit_id} không còn thuộc lease này")
                 if (
                     fail_fast_enabled()
+                    and engine_input.engine != "detector"
                     and not WorkUnit.objects.filter(
                         pk=unit_id, run__retry_engine=engine_input.engine
                     ).exists()

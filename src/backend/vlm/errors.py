@@ -64,8 +64,11 @@ class VlmProviderError(VlmError):
 
     reason_code = VlmReasonCode.PROVIDER_ERROR
 
-    def __init__(self, failure: VlmProviderFailure, message: str = "") -> None:
+    def __init__(
+        self, failure: VlmProviderFailure, message: str = "", *, retry_after: float = 0
+    ) -> None:
         super().__init__(message or failure.value)
+        self.retry_after = retry_after
         self.failure = failure
         self.retryable = failure in RETRYABLE_FAILURES
 
@@ -85,3 +88,12 @@ RETRYABLE_FAILURES = frozenset(
         VlmProviderFailure.NETWORK,
     }
 )
+
+
+class VlmDeferred(Exception):
+    """Internal control flow: persist retry instead of sleeping in a Celery process."""
+
+    def __init__(self, error: VlmProviderError, attempts: int) -> None:
+        self.error = error
+        self.attempts = attempts
+        super().__init__(error.failure.value)

@@ -19,6 +19,7 @@ from engines.interface import EngineConfig, EngineInput, EngineUnitRef, FrameKey
 from orchestration.fail_fast import enabled as fail_fast_enabled
 from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import ShardCommit, VlmUnit
+from orchestration.resources import ResourceWaiting, retry_delay
 from orchestration.retry import default_policy
 from orchestration.runsync import refresh_run
 from orchestration.services import (
@@ -30,6 +31,7 @@ from orchestration.services import (
 )
 from orchestration.tasks import execute_shard
 from orchestration.vlm_stage import dispatch_vlm_units_safely
+from runs.gpu_worker import WorkerUnavailable
 from runs.models import QCRun, WorkUnit
 from snapshots.models import SnapshotFrame
 
@@ -86,6 +88,13 @@ def build_engine_input(work_unit: WorkUnit) -> EngineInput:
 
 def prepare_work_unit(work_unit: WorkUnit) -> dict[str, Any]:
     """Seed ledger (idempotent) và trả payload Celery của shard."""
+    if work_unit.engine == "detector" and work_unit.deadline_at is None:
+        work_unit.deadline_at = timezone.now() + timedelta(
+            seconds=getattr(settings, "ENGINE_WAIT_TIMEOUT_SECONDS", 1800)
+        )
+        WorkUnit.objects.filter(pk=work_unit.pk, deadline_at__isnull=True).update(
+            deadline_at=work_unit.deadline_at
+        )
     engine_input = build_engine_input(work_unit)
     seed_ledger(engine_input.run_id, engine_input.engine, engine_input.units)
     return engine_input_to_payload(engine_input)
@@ -134,6 +143,13 @@ def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | N
         ):
             return None, "", unit.status
         now = timezone.now()
+        if unit.retry_at and unit.retry_at > now:
+            return None, "", "waiting_retry"
+        if unit.engine == "detector" and unit.deadline_at is None:
+            unit.deadline_at = now + timedelta(
+                seconds=getattr(settings, "ENGINE_WAIT_TIMEOUT_SECONDS", 1800)
+            )
+            unit.save(update_fields=["deadline_at"])
         token = uuid.uuid4().hex  # mỗi lần nhận: token mới; token cũ (kể cả của retry) hết hiệu lực
         if unit.status == WorkUnit.Status.RUNNING:
             fresh = unit.started_at is not None and unit.started_at > now - timedelta(
@@ -143,9 +159,10 @@ def _claim(work_unit_id: int, presented_token: str | None) -> tuple[WorkUnit | N
             if fresh and not retry_ticket:
                 return None, "", "running"  # delivery trùng: đã có owner đang chạy
         unit.status = WorkUnit.Status.RUNNING
+        unit.retry_at = None
         unit.started_at = now  # lease: làm mới mỗi lần nhận, sweeper dựa vào đây
         unit.lease_token = token
-        unit.save(update_fields=["status", "started_at", "lease_token"])
+        unit.save(update_fields=["status", "started_at", "lease_token", "retry_at"])
         if run.status == QCRun.Status.QUEUED:  # run đã khoá ở trên: cập nhật an toàn
             run.status = QCRun.Status.RUNNING
             run.started_at = now
@@ -208,7 +225,69 @@ def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) 
     try:
         engine_input = build_engine_input(unit)
         seed_ledger(engine_input.run_id, engine_input.engine, engine_input.units)
+        if unit.engine == "detector":
+            if unit.deadline_at and timezone.now() >= unit.deadline_at:
+                raise WorkerUnavailable("Đã hết thời hạn xử lý Detector.", code="deadline_exceeded")
         execute_shard(engine_input, fence=(unit.pk, token))
+    except (ResourceWaiting, WorkerUnavailable) as exc:
+        if unit.engine != "detector":
+            _settle(unit, token, WorkUnit.Status.FAILED, str(exc), engine_input)
+            raise
+        waiting = isinstance(exc, ResourceWaiting)
+        calls = unit.request_attempts + int(
+            not waiting and getattr(exc, "code", "") not in ("worker_busy", "deadline_exceeded")
+        )
+        retryable = isinstance(exc, ResourceWaiting) or exc.retryable
+        deadline = unit.deadline_at or timezone.now()
+        delay = (
+            exc.seconds
+            if isinstance(exc, ResourceWaiting)
+            else max(exc.retry_after, policy.backoff(max(1, calls)))
+        )
+        delay = retry_delay(delay)
+        error_code = exc.code
+        if (
+            not retryable
+            or calls > policy.max_retries
+            or timezone.now() + timedelta(seconds=delay) >= deadline
+        ):
+            WorkUnit.objects.filter(pk=unit.pk, lease_token=token).update(
+                request_attempts=calls, error_code=error_code, retry_at=None
+            )
+            _settle(
+                unit, token, WorkUnit.Status.FAILED, str(exc), engine_input, attempts=max(1, calls)
+            )
+            return WorkUnit.Status.FAILED
+        retry_at = timezone.now() + timedelta(seconds=delay)
+        updated = WorkUnit.objects.filter(
+            pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=token
+        ).update(
+            status=WorkUnit.Status.PENDING,
+            lease_token="",
+            retry_at=retry_at,
+            error_code=error_code,
+            last_error=str(exc)[:1000],
+            request_attempts=calls,
+        )
+        if updated:
+            logger.info(
+                "detector retry scheduled",
+                extra={
+                    "qc_run_id": unit.run_id,
+                    "work_unit_id": unit.pk,
+                    "error_code": error_code,
+                    "retry_at": retry_at.isoformat(),
+                    "attempts": calls,
+                },
+            )
+            if getattr(settings, "ORCHESTRATION_AUTO_DISPATCH", True):
+                try:
+                    run_work_unit.apply_async(args=(unit.pk,), countdown=delay)
+                except Exception:
+                    logger.exception(
+                        "detector retry publish failed", extra={"qc_run_id": unit.run_id}
+                    )
+        return "waiting_retry"
     except StaleLeaseError:
         return "stale"  # đã bị thu hồi: không ghi gì, không chốt, không retry
     except Exception as exc:
@@ -244,6 +323,10 @@ def run_work_unit(self: Any, work_unit_id: int, lease_token: str | None = None) 
                 pk=unit.pk, status=WorkUnit.Status.RUNNING, lease_token=ticket
             ).update(status=WorkUnit.Status.PENDING)
             raise
+    if unit.engine == "detector":
+        WorkUnit.objects.filter(pk=unit.pk, lease_token=token).update(
+            request_attempts=unit.request_attempts + 1, retry_at=None, error_code="", last_error=""
+        )
     _settle(unit, token, WorkUnit.Status.COMPLETED)
     unit.refresh_from_db(fields=["status"])
     return unit.status
@@ -258,10 +341,13 @@ def dispatch_run(run_id: int, stale_after: float | None = None) -> int:
     Run đã huỷ/terminal thì bỏ qua. Lỗi gửi broker của một unit không làm hỏng unit khác:
     unit đó vẫn PENDING để `redispatch_pending` nhặt lại. Trả số unit đã xếp hàng được.
     """
+    refresh_run(run_id)
     run = QCRun.objects.get(pk=run_id)
     if run.cancel_requested_at or run.status not in _ACTIVE_RUN:
         return 0
-    pending_qs = run.work_units.filter(status=WorkUnit.Status.PENDING)
+    pending_qs = run.work_units.filter(status=WorkUnit.Status.PENDING).filter(
+        Q(retry_at__isnull=True) | Q(retry_at__lte=timezone.now())
+    )
     if run.retry_engine:
         pending_qs = pending_qs.filter(engine=run.retry_engine)
     if stale_after is not None:

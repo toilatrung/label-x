@@ -37,7 +37,9 @@ def retry_failed_engine(*, run_id: int, engine: str, actor: User) -> QCRun:
             raise InvalidTransitionError("Run đang có tác vụ VLM chưa kết thúc; hãy chờ hoàn tất.")
         result = run.engine_results.filter(engine=engine).first()
         if result is None or not (
-            result.failed_units > 0 or result.status in ("partial", "failed")
+            result.failed_units > 0
+            or result.status in ("partial", "failed")
+            or (engine == "vlm" and VlmUnit.objects.filter(run=run, status="skipped").exists())
         ):
             raise BusinessRuleUnmetError("Engine được chọn không có đơn vị lỗi để chạy lại.")
         if engine == "vlm":
@@ -138,6 +140,9 @@ def _retry_shards(run: QCRun, engine: str) -> int:
         unit.attempt += 1
         unit.last_error = unit.lease_token = ""
         unit.started_at = unit.finished_at = unit.dispatched_at = None
+        unit.retry_at = unit.deadline_at = None
+        unit.error_code = ""
+        unit.request_attempts = 0
         unit.save(
             update_fields=[
                 "status",
@@ -147,6 +152,10 @@ def _retry_shards(run: QCRun, engine: str) -> int:
                 "started_at",
                 "finished_at",
                 "dispatched_at",
+                "retry_at",
+                "deadline_at",
+                "error_code",
+                "request_attempts",
             ]
         )
     LedgerUnit.objects.filter(run=run, engine=engine, outcome="failed").update(outcome="pending")
@@ -170,9 +179,9 @@ def _retry_vlm(run: QCRun, actor: User) -> int:
         .values("pk")[:1]
     )
     failed = list(
-        VlmUnit.objects.filter(run=run, pk=Subquery(latest), status="failed").select_related(
-            "candidate", "evaluation"
-        )
+        VlmUnit.objects.filter(
+            run=run, pk=Subquery(latest), status__in=("failed", "skipped")
+        ).select_related("candidate", "evaluation")
     )
     config = parse_vlm_config(raw)
     for previous in failed:
