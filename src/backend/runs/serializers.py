@@ -557,12 +557,19 @@ class RankedFrameResponseSerializer(RankedFrameSerializer):
     thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
 
 
+class RankingPriorityCountsSerializer(serializers.Serializer[Any]):
+    high = serializers.IntegerField(min_value=0)
+    medium = serializers.IntegerField(min_value=0)
+    low = serializers.IntegerField(min_value=0)
+
+
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
     source: Any = serializers.ChoiceField(choices=["risk", "random_audit"])
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
+    priority_counts = RankingPriorityCountsSerializer(required=False)
     results = RankedFrameResponseSerializer(many=True)
 
 

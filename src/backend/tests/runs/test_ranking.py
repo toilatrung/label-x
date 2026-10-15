@@ -222,12 +222,14 @@ def test_ranking_endpoint_serves_risk_and_random_with_scope_protection(
     assert risk.data["results"][0]["score_version"] == SCORE_V0
     assert risk.data["results"][0]["explanation"]["contributions"]
     assert risk.data["results"][0]["priority"] == "high"
+    assert risk.data["priority_counts"] == {"high": 1, "medium": 1, "low": 1}
     assert risk.data["results"][0]["thumbnail_url"] == "https://storage.test/frames/0.jpg"
 
     searched = client.get(f"/api/runs/{run.pk}/ranking/", {"q": "9:0"})
     assert searched.status_code == 200
     assert len(searched.data["results"]) == 1
     assert searched.data["results"][0]["frame_key"]["frame_number"] == 0
+    assert searched.data["priority_counts"] == {"high": 1, "medium": 0, "low": 0}
     assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "high"}).data["results"]
     assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "urgent"}).status_code == 400
 
@@ -235,6 +237,7 @@ def test_ranking_endpoint_serves_risk_and_random_with_scope_protection(
     assert random_queue.status_code == 200
     assert random_queue.data["source"] == RunRanking.Source.RANDOM_AUDIT
     assert len(random_queue.data["results"]) == 2
+    assert random_queue.data["priority_counts"] == {"high": 1, "medium": 1, "low": 0}
 
     family = client.get(f"/api/runs/{run.pk}/ranking/", {"family": "E1"})
     assert family.status_code == 200
@@ -466,3 +469,31 @@ def test_detector_unmatched_annotation_is_a_review_warning_not_a_duplicate_clust
         run_id=run.pk, candidates=[_candidate(), unmatched], audit_percent=Decimal("50")
     )
     assert {r.pk for r in rankings} == {r.pk for r in replay}
+def test_priority_counts_ignore_selected_priority_and_cursor_but_honor_other_filters(
+    snapshot,
+    config,
+    qa_user,
+    monkeypatch,
+):
+    from runs.views import RunCursorPagination
+
+    run = _run(snapshot, config, qa_user)
+    persist_run_rankings(run_id=run.pk, candidates=[_candidate()], audit_percent=Decimal("50"))
+    monkeypatch.setattr(RunCursorPagination, "page_size", 1)
+    client = APIClient()
+    client.force_authenticate(qa_user)
+    url = f"/api/runs/{run.pk}/ranking/"
+    first = client.get(url)
+    assert len(first.data["results"]) == 1
+    assert first.data["priority_counts"] == {"high": 1, "medium": 1, "low": 1}
+    second = client.get(first.data["next"])
+    assert second.status_code == 200
+    assert second.data["priority_counts"] == first.data["priority_counts"]
+    high = client.get(url, {"priority": "high"})
+    assert high.data["priority_counts"] == first.data["priority_counts"]
+    filtered = client.get(url, {"family": "E1", "priority": "low"})
+    assert filtered.data["results"] == []
+    assert filtered.data["priority_counts"] == {"high": 1, "medium": 0, "low": 0}
+    empty = client.get(url, {"q": "no-matching-frame"})
+    assert empty.data["results"] == []
+    assert empty.data["priority_counts"] == {"high": 0, "medium": 0, "low": 0}
