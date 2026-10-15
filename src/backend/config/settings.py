@@ -282,6 +282,8 @@ LOGGING = {
 # T-025: tự xếp shard vào Celery sau khi tạo/retry run.
 ORCHESTRATION_AUTO_DISPATCH = env.bool("ORCHESTRATION_AUTO_DISPATCH", default=True)
 ORCHESTRATION_FAIL_FAST = env.bool("ORCHESTRATION_FAIL_FAST", default=True)
+# Bound broker messages; remaining VLM candidates stay in the database until a slot is free.
+VLM_DISPATCH_WINDOW = env.int("VLM_DISPATCH_WINDOW", default=4)
 FINAL_RUN_AUTO_DISPATCH = env.bool("FINAL_RUN_AUTO_DISPATCH", default=True)
 ORCHESTRATION_RUNNING_STALE_SECONDS = env.int("ORCHESTRATION_RUNNING_STALE_SECONDS", default=1800)
 ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(

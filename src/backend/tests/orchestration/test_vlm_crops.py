@@ -220,3 +220,59 @@ def test_source_byte_cap_boundary_is_50_mib() -> None:
     frame.media_size_bytes = 0
     with pytest.raises(VlmInvalidCropError, match="kích thước byte"):
         provider.load(candidate)
+
+
+def test_detector_annotation_anchor_resolves_namespaced_snapshot_shape() -> None:
+    run, storage = _setup([(7, [60, 40, 100, 80])])
+    candidate = _candidate(run, [])
+    candidate.anchor = {
+        "objects": [
+            {"namespace": "shape", "id": "7"},
+            {"namespace": "detector", "id": "prediction:1"},
+        ]
+    }
+    crop = _provider(storage).load(candidate)
+    assert crop.origin["objects"] == ["shape:7"]
+    assert crop.origin["box"] == [60.0, 40.0, 100.0, 80.0]
+
+
+@pytest.mark.parametrize(
+    "verified, box, valid",
+    [
+        (True, [60, 40, 100, 80], True),
+        (False, [60, 40, 100, 80], False),
+        (True, [-1, 40, 100, 80], False),
+        (True, [100, 40, 60, 80], False),
+        (True, [60, 40, float("nan"), 80], False),
+    ],
+)
+def test_prediction_only_crop_requires_verified_in_frame_box(verified, box, valid) -> None:
+    run, storage = _setup([])
+    candidate = _candidate(run, [])
+    candidate.engine = "detector"
+    candidate.anchor = {"objects": [{"namespace": "detector", "id": "prediction:1"}]}
+    candidate.evidence = {"artifact_verified": verified, "prediction_bbox": box}
+    provider = _provider(storage)
+    if valid:
+        assert provider.identity(candidate)
+        assert provider.load(candidate).origin["box"] == box
+    else:
+        assert provider.identity(candidate) == ""
+        with pytest.raises(VlmInvalidCropError):
+            provider.load(candidate)
+        assert storage.reads == []
+
+
+def test_prepared_batch_reuses_frame_metadata_without_reading_images(
+    django_assert_num_queries,
+) -> None:
+    run, storage = _setup([(7, [60, 40, 100, 80])])
+    candidate = _candidate(run, ["shape:7"])
+    _ = candidate.run
+    provider = _provider(storage)
+    with django_assert_num_queries(1):
+        provider.prepare([candidate] * 100)
+    with django_assert_num_queries(0):
+        for _ in range(100):
+            assert provider.identity(candidate)
+    assert storage.reads == []

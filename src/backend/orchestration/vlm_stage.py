@@ -30,7 +30,7 @@ from typing import Any, Protocol
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F, Max, Q
+from django.db.models import Exists, F, Max, OuterRef, Q
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
@@ -186,8 +186,13 @@ def start_vlm_stage(run_id: int) -> int:
     )
 
     run = QCRun.objects.select_related("config_version", "snapshot").get(pk=run_id)
+    if run.cancel_requested_at or run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
+        return 0
     raw = run_vlm_config(run)
-    if raw is None or run.cancel_requested_at:
+    if raw is None:
+        VlmBudget.objects.get_or_create(
+            run_id=run_id, defaults={"max_calls": 0, "skipped_reason": "no_model"}
+        )
         return 0
     config = parse_vlm_config(raw)
     budget, _ = VlmBudget.objects.get_or_create(
@@ -198,55 +203,91 @@ def start_vlm_stage(run_id: int) -> int:
         if not budget.skipped_reason:
             VlmBudget.objects.filter(pk=budget.pk).update(skipped_reason=SKIP_NO_TAXONOMY)
         return 0
-    provider = crop_provider()
+    if budget.used_calls >= budget.max_calls:
+        # Settle remaining pending work before refresh_run derives the terminal status.
+        # Otherwise the last provider call could leave the run waiting for a sweeper.
+        VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).update(
+            status=VlmUnit.Status.FAILED,
+            reason_code="budget_exhausted",
+            finished_at=timezone.now(),
+            lease_token="",
+        )
     from orchestration.models import Evaluation
 
-    done = set(
-        Evaluation.objects.filter(run_id=run_id, generation=EVALUATION_GENERATION).values_list(
-            "candidate_id", flat=True
-        )
+    evaluated = Evaluation.objects.filter(
+        candidate_id=OuterRef("pk"),
+        generation=EVALUATION_GENERATION,
     )
-    wanted = [
-        c
-        for c in CandidateRecord.objects.filter(run_id=run_id)
+    wanted = (
+        CandidateRecord.objects.filter(run_id=run_id)
         .exclude(engine=VLM_ENGINE)
+        .filter(~Exists(evaluated))
         .select_related("run")
         .order_by("pk")
-        if c.pk not in done
-    ]
-    routed = route_candidates(run, wanted, exhausted=budget_exhausted(run_id))
-    prepare = getattr(provider, "prepare", None)
-    if prepare is not None:
-        prepare([c for c, d in routed if d.call_qwen])  # nạp trước để identity() không N+1
-    # Điểm nối là nguồn quyết định cuối cùng: chỉ candidate nó chọn mới có VlmUnit.
-    selected = {c.pk for c in select_candidates_for_vlm(run)}
-    created = create_auto_evaluations(run, routed, config, selected_ids=selected)
+    )
+    created = 0
+    if wanted.exists():
+        # Keep the candidate selection seam, but invoke it only while preparing new candidates.
+        selected = {c.pk for c in select_candidates_for_vlm(run)}
+        batch = []
+        for candidate in wanted.iterator(chunk_size=500):
+            batch.append(candidate)
+            if len(batch) == 500:
+                routed = route_candidates(run, batch, exhausted=budget_exhausted(run_id))
+                created += create_auto_evaluations(run, routed, config, selected_ids=selected)
+                batch = []
+        if batch:
+            routed = route_candidates(run, batch, exhausted=budget_exhausted(run_id))
+            created += create_auto_evaluations(run, routed, config, selected_ids=selected)
+        logger.info("vlm stage prepared", extra={"qc_run_id": run_id, "vlm_units_created": created})
     if VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING).exists():
         transaction.on_commit(lambda: dispatch_vlm_units_safely(run_id))
     return created
 
 
 def dispatch_vlm_units(run_id: int, stale_after: float | None = None) -> int:
-    run = QCRun.objects.get(pk=run_id)
-    if run.cancel_requested_at:
-        return 0
-    qs = VlmUnit.objects.filter(run_id=run_id, status=VlmUnit.Status.PENDING)
-    if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
-        # Run đã kết thúc: chỉ re-evaluate thủ công (generation > 1) còn được chạy.
-        qs = qs.filter(evaluation_generation__gt=EVALUATION_GENERATION)
-    if stale_after is not None:
-        cutoff = timezone.now() - timedelta(seconds=stale_after)
-        qs = qs.filter(Q(dispatched_at__isnull=True) | Q(dispatched_at__lte=cutoff))
-    queued = 0
-    for unit_id in list(qs.values_list("pk", flat=True)):
-        try:
-            run_vlm_unit_task.delay(unit_id)
-        except Exception:
-            logger.exception("vlm dispatch failed", extra={"vlm_unit_id": unit_id})
-            break  # broker không với tới được: phần còn lại giữ PENDING cho sweeper
-        VlmUnit.objects.filter(pk=unit_id).update(dispatched_at=timezone.now())
-        queued += 1
-    return queued
+    # Serialize dispatchers using the same run lock as claims/cancel. Publish a small window,
+    # not one broker message for every candidate on every progress refresh.
+    with transaction.atomic():
+        run = QCRun.objects.select_for_update().get(pk=run_id)
+        if run.cancel_requested_at:
+            return 0
+        qs = VlmUnit.objects.filter(run_id=run_id)
+        if run.status not in (QCRun.Status.QUEUED, QCRun.Status.RUNNING):
+            qs = qs.filter(evaluation_generation__gt=EVALUATION_GENERATION)
+        budget = VlmBudget.objects.filter(run_id=run_id).first()
+        if budget is not None and budget.used_calls >= budget.max_calls:
+            qs.filter(status=VlmUnit.Status.PENDING).update(
+                status=VlmUnit.Status.FAILED,
+                reason_code="budget_exhausted",
+                finished_at=timezone.now(),
+                lease_token="",
+            )
+            return 0
+        window = max(1, int(getattr(settings, "VLM_DISPATCH_WINDOW", 4)))
+        pending = qs.filter(status=VlmUnit.Status.PENDING)
+        eligible = Q(dispatched_at__isnull=True)
+        if stale_after is not None:
+            cutoff = timezone.now() - timedelta(seconds=stale_after)
+            eligible |= Q(dispatched_at__lte=cutoff)
+        inflight = (
+            qs.filter(status=VlmUnit.Status.RUNNING).count() + pending.exclude(eligible).count()
+        )
+        slots = max(0, window - inflight)
+        if budget is not None:
+            slots = min(slots, max(0, budget.max_calls - budget.used_calls - inflight))
+        queued = 0
+        for unit in pending.filter(eligible).order_by("pk")[:slots]:
+            previous = unit.dispatched_at
+            VlmUnit.objects.filter(pk=unit.pk).update(dispatched_at=timezone.now())
+            try:
+                run_vlm_unit_task.delay(unit.pk)
+            except Exception:
+                VlmUnit.objects.filter(pk=unit.pk).update(dispatched_at=previous)
+                logger.exception("vlm dispatch failed", extra={"vlm_unit_id": unit.pk})
+                break
+            queued += 1
+        return queued
 
 
 def dispatch_vlm_units_safely(run_id: int, stale_after: float | None = None) -> int:
@@ -390,6 +431,16 @@ def _settle_unit(
             crop_origin=crop_origin,
             request_id=result.get("request_id") or "",
             config=config or {},
+        )
+        logger.info(
+            "vlm unit finished",
+            extra={
+                "qc_run_id": unit.run_id,
+                "vlm_unit_id": unit.pk,
+                "vlm_status": result["status"],
+                "reason_code": result.get("reason_code") or "",
+                "attempts": result["attempts"],
+            },
         )
         return True
 

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import os
 import re
 from typing import Any
@@ -20,6 +21,8 @@ import httpx
 from vlm.config import ALLOWED_API_KEY_ENVS, binding_error
 from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
+
+logger = logging.getLogger("labelx.vlm")
 
 _SAFE_ID = re.compile(r"[^A-Za-z0-9_.-]")
 REQUEST_ID_SUFFIX_CHARS = 8
@@ -144,11 +147,19 @@ class DashScopeClient:
             with httpx.Client(
                 timeout=cfg.timeout_seconds, transport=self._transport, follow_redirects=False
             ) as http:
+                logger.info(
+                    "vlm provider request starting",
+                    extra={"provider": cfg.provider, "model": cfg.model},
+                )
                 response = http.post(url, json=body, headers={"Authorization": f"Bearer {api_key}"})
         except httpx.TimeoutException:
             raise VlmProviderError(VlmProviderFailure.TIMEOUT) from None
         except httpx.HTTPError:
             raise VlmProviderError(VlmProviderFailure.NETWORK) from None
+        logger.info(
+            "vlm provider response received",
+            extra={"provider": cfg.provider, "http_status": response.status_code},
+        )
         if response.status_code != 200:
             raise classify_http_error(response)
         try:
