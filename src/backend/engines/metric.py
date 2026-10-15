@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from typing import Any, cast
 
 from django.core.files.storage import storages
+from django.db.models import Q
 
 from engines.detector import BDD100K_DETECTOR_CLASSES, _detection_candidate, predict_frames
 from engines.interface import (
@@ -24,6 +25,7 @@ from engines.interface import (
 from engines.matching import ALGORITHM_VERSION, BoundingBox, match_one_to_one
 from engines.structural import ordered_frame_units
 from runs.models import Reference
+from snapshots.models import Snapshot
 
 METRIC_DESCRIPTOR = EngineDescriptor(
     name="metric",
@@ -102,12 +104,10 @@ def _gt_frames(reference: Reference) -> dict[FrameKey, dict[str, Any]]:
         raw = source.read()
     if hashlib.sha256(raw).hexdigest() != reference.gt_checksum:
         raise ValueError("metric GT checksum mismatch")
-    return parse_gt_frames(raw, reference.snapshot_id, reference.mapping_version)
+    return parse_gt_frames(raw, reference.mapping_version)
 
 
-def parse_gt_frames(
-    raw: bytes, snapshot_id: int, mapping_version: str
-) -> dict[FrameKey, dict[str, Any]]:
+def parse_gt_frames(raw: bytes, mapping_version: str) -> dict[FrameKey, dict[str, Any]]:
     """Shared validation for uploads and runtime reads."""
     try:
         payload = json.loads(raw)
@@ -120,15 +120,6 @@ def parse_gt_frames(
     ):
         raise ValueError(
             "Ground Truth phải có schema_version labelx.metric.gt.v1 và danh sách frames."
-        )
-    if payload.get("snapshot_id") != snapshot_id:
-        source_id = payload.get("snapshot_id")
-        source = f"Snapshot #{source_id}" if type(source_id) is int else "Snapshot không xác định"
-        raise ValueError(
-            f"File Ground Truth thuộc {source}, nhưng bạn đang chọn Snapshot #{snapshot_id}. "
-            "Hãy chọn đúng Snapshot của file hoặc upload Ground Truth "
-            "tương ứng với Snapshot đang chọn. "
-            "Không chỉ đổi snapshot_id trong file vì task, frame và ảnh cũng phải khớp."
         )
     if payload.get("mapping_version") != mapping_version:
         raise ValueError("Mapping class trong file Ground Truth không khớp mapping đã chọn.")
@@ -198,8 +189,13 @@ def run_metric_engine(engine_input: EngineInput) -> EngineOutput:
     reference = None
     if type(reference_id) is int:
         reference = Reference.objects.filter(
+            Q(snapshot_id=engine_input.snapshot_id)
+            | Q(
+                upload__dataset_id=Snapshot.objects.filter(
+                    pk=engine_input.snapshot_id, status="locked"
+                ).values("dataset_id")[:1]
+            ),
             pk=reference_id,
-            snapshot_id=engine_input.snapshot_id,
             status=Reference.Status.LOCKED,
             locked_at__isnull=False,
             snapshot__status="locked",

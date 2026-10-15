@@ -186,6 +186,31 @@ def test_missing_or_unlocked_gt_is_not_checked(setup_metric, state):
     predictor.assert_not_called()
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("same_dataset", [True, False])
+def test_uploaded_gt_runs_on_another_snapshot_in_same_dataset(setup_metric, same_dataset):
+    from runs.models import GroundTruthUpload
+    from tests.orchestration.helpers import make_run
+
+    run, ref, _, _, predictor, inp = setup_metric
+    GroundTruthUpload.objects.create(
+        reference=ref,
+        dataset_id=run.dataset_id if same_dataset else run.dataset_id + 999,
+        filename="truth.json",
+        frame_count=3,
+        box_count=3,
+    )
+    other = make_run()
+    assert other.snapshot_id != ref.snapshot_id
+    output = metric.run_metric_engine(replace(inp, snapshot_id=other.snapshot_id))
+    if same_dataset:
+        assert output.unit_results[0].outcome == "completed"
+        predictor.assert_called_once()
+    else:
+        assert output.unit_results[0].not_checked_reason == "no_reference"
+        predictor.assert_not_called()
+
+
 @pytest.mark.parametrize("defect", ["checksum", "mapping", "duplicate", "box", "algorithm"])
 @pytest.mark.django_db
 def test_invalid_gt_fails_instead_of_computing_success(setup_metric, defect):
