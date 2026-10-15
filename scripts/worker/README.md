@@ -80,7 +80,10 @@ Admin toàn hệ thống → `/configuration/guidelines` → **GPU Worker** → 
 `https://gpu-host.your-tailnet.ts.net`, chọn alias `gpu-primary`, lưu rồi probe.
 Server kiểm tra online, CUDA, version, checksum và đủ 10 lớp trước run/shard.
 Đăng ký artifact bằng `manage.py check_detector --register` có chủ đích; sau đó
-chọn artifact trong ConfigVersion mới. Checkpoint không cần nằm trên server.
+vào **Models & Guidelines → Mô hình → chỉnh Detector**, chọn artifact đã đăng ký
+và lưu để tạo/phát hành ConfigVersion mới. Tại **Analysis**, chọn phiên bản vừa
+phát hành để chạy; không nhập cấu hình model ở Analysis. Checkpoint không cần
+nằm trên server. Run cũ giữ nguyên model/ConfigVersion đã ghim.
 
 Đổi máy GPU: cấu hình máy mới/token/allowlist, restart các process server rồi lưu
 revision UI mới. Run cũ giữ revision cũ; duy trì host/token cũ đến khi run cũ xong.

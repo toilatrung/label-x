@@ -1982,6 +1982,22 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "409": { $ref: "#/components/responses/Conflict" }
+  /api/model-artifacts/:
+    get:
+      operationId: model_artifacts_list
+      tags: [config]
+      summary: Danh mục detector artifact đã đăng ký để tạo ConfigVersion
+      x-labelx-trace: [FR-ENG-01, FR-ENG-05]
+      x-labelx-roles: [qa_lead, qc_admin, super_admin]
+      responses:
+        "200":
+          description: Registered detector artifacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RegisteredDetector" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/models/:
     get:
       operationId: models_list
@@ -3052,6 +3068,19 @@ components:
         config_version_id: { type: integer }
         seed: { type: integer }
         metric_reference_id: { type: integer, minimum: 1, description: Reference của Ground Truth upload đã khóa; được gắn cố định với run. }
+    RegisteredDetector:
+      type: object
+      required: [id, name, version, checksum, class_mapping_version, class_mapping]
+      properties:
+        id: { type: integer, readOnly: true }
+        name: { type: string, readOnly: true }
+        version: { type: string, readOnly: true }
+        checksum: { type: string, readOnly: true }
+        class_mapping_version: { type: string, readOnly: true }
+        class_mapping:
+          type: object
+          additionalProperties: true
+          readOnly: true
     ModelArtifact:
       type: object
       required: [name, version, checksum]

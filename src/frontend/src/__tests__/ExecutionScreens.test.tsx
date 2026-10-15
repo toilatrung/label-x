@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import ExecutionHistoryPage from '@/app/analysis/history/page';
 import AnalysisConfigPage from '@/app/analysis/config/page';
+import { ModelsGuidelinesCard } from '@/components/configuration/ModelsGuidelinesCard';
 import { installMockAuthApi } from './helpers/mock-api';
 import type { Candidate } from '@/lib/execution/api';
 
@@ -31,15 +32,20 @@ async function setup(
     configsFails?: boolean;
     candidatesOverride?: unknown;
     candidatesFails?: boolean;
+    artifactsOverride?: unknown;
   } = {}
 ) {
   const api = installMockAuthApi(); await api.signIn(username);
   const original = api.fetchSpy.getMockImplementation()!;
   const calls: Request[] = [];
+  let createdConfig: Record<string, unknown> = {};
   api.fetchSpy.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
     if (path === '/api/ground-truth/') return Response.json(null);
+    if (path === '/api/configuration/vlm/') return Response.json({ revision: 0, model: 'qwen3-vl-plus', base_url: 'https://api.shopaikey.com/v1', confidence_threshold: 0.85, api_key_configured: false });
+    if (path === '/api/model-artifacts/') return Response.json(options.artifactsOverride ?? [{ id: 1, name: 'Faster R-CNN', version: 'bdd-v1', checksum: 'a'.repeat(64), class_mapping_version: 'bdd-10', class_mapping: { classes: ['car'] } }]);
+    if (path === '/api/config-versions/7/rules/') return Response.json({ config_version_id: 7, status: 'published', rules: [{ rule_id: 'duplicate-iou', name: 'Duplicate IoU', enabled: true, parameters: { iou_threshold: 0.85 } }], release_thresholds: { warning: 0.1 }, sampling_policy: { random_frames: 10 } });
     calls.push(request);
     if (path === '/api/datasets/') return Response.json({ next: null, previous: null, results: [{ id: 1, name: 'Urban', cvat_project_id: 31 }, { id: 2, name: 'Highway', cvat_project_id: 32 }] });
     if (path === '/api/runs/' && request.method === 'GET') return Response.json({ next: null, previous: null, results: [run, run13] });
@@ -89,7 +95,10 @@ async function setup(
     }
     if (path === '/api/runs/12/retry-failed/') return Response.json({ ...run, status: 'running' }, { status: 202 });
     if (path === '/api/snapshots/') return Response.json({ next: null, previous: null, results: [{ id: 4, dataset_id: 1, status: 'locked', revision_hash: 'abc123' }] });
-    if (path === '/api/config-versions/' && request.method === 'POST') return Response.json({ id: 8, name: 'New config', status: 'draft', engines: {}, thresholds: {}, models: {}, created_by: 2, created_at: '2026-10-10T00:00:00Z' }, { status: 201 });
+    if (path === '/api/config-versions/' && request.method === 'POST') {
+      createdConfig = await request.clone().json();
+      return Response.json({ ...createdConfig, id: 8, status: 'draft', created_by: 2, created_at: '2026-10-10T00:00:00Z' }, { status: 201 });
+    }
     if (path === '/api/config-versions/') {
       if (options.configsFails) return Response.json({ code: 'INTERNAL_ERROR', message: 'Lỗi nạp config' }, { status: 500 });
       if (options.configsOverride !== undefined) return Response.json(options.configsOverride);
@@ -97,7 +106,7 @@ async function setup(
     }
     if (path === '/api/config-versions/8/publish/') return options.publishFails
       ? Response.json({ code: 'SERVICE_UNAVAILABLE', request_id: 'cfg-publish-503' }, { status: 503 })
-      : Response.json({ id: 8, name: 'New config', status: 'published', engines: {}, thresholds: {}, models: {}, created_by: 2, created_at: '2026-10-10T00:00:00Z' });
+      : Response.json({ ...createdConfig, id: 8, status: 'published', created_by: 2, created_at: '2026-10-10T00:00:00Z' });
     if (path === '/api/runs/' && request.method === 'POST') return Response.json(run, { status: 201 });
     throw new Error(`Unexpected API path: ${path}`);
   });
@@ -184,29 +193,46 @@ describe('Execution screens on real API contract', () => {
   });
 
   it('creates and publishes a version through the real config endpoints', async () => {
-    const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
-    await screen.findByRole('option', { name: /Published config/ });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />);
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    await screen.findByRole('option', { name: /Faster R-CNN/ });
+    fireEvent.change(screen.getByLabelText('Model Detector'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
     const create = calls.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/config-versions/');
     expect(create?.headers.get('Idempotency-Key')).toBeTruthy();
     expect(create && (await create.clone().json()).engines.duplicate.enabled).toBe(true);
-    // Phát hành xong thì đóng hộp thoại và chọn luôn phiên bản mới ở cột Sẵn sàng chạy.
+    const body = await create!.clone().json();
+    expect(body.models).toMatchObject({ name: 'Faster R-CNN', version: 'bdd-v1' });
+    expect(body.engines.detector).toEqual({ enabled: true, params: { score_threshold: 0.05 } });
+    expect(body.engines.duplicate.params).toEqual({ iou_threshold: 0.85 });
+    expect(body.thresholds).toEqual({ tau_loc: 0.55 });
+    expect(body.rules[0].rule_id).toBe('duplicate-iou');
+    expect(body.sampling_policy).toEqual({ random_frames: 10 });
+    expect(body.release_thresholds).toEqual({ warning: 0.1 });
+    expect(screen.queryByLabelText('Mô hình tham chiếu (JSON)')).toBeNull();
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect((screen.getByLabelText('Phiên bản cấu hình') as HTMLSelectElement).value).toBe('8');
+    expect(screen.getByText(/Đã phát hành cấu hình v8/)).toBeDefined();
+    expect(screen.getByText('Đã cấu hình · v8')).toBeDefined();
   });
 
   it('keeps a failed publish visible with its trace and retry action', async () => {
-    await setup('qcadmin', <AnalysisConfigPage />, { publishFails: true });
-    await screen.findByRole('option', { name: /Published config/ });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />, { publishFails: true });
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    await screen.findByRole('option', { name: /Faster R-CNN/ });
+    fireEvent.change(screen.getByLabelText('Model Detector'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }));
     expect(await screen.findByText(/Mã yêu cầu: cfg-publish-503/)).toBeDefined();
     expect(screen.getByText(/Phiên bản v8 đã được tạo nhưng chưa xác nhận phát hành/)).toBeDefined();
     expect(screen.getByRole('button', { name: 'Thử phát hành lại' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Thử phát hành lại' }));
+    await waitFor(() => expect(calls.filter(r => new URL(r.url).pathname === '/api/config-versions/8/publish/')).toHaveLength(2));
+    const creates = calls.filter(r => r.method === 'POST' && new URL(r.url).pathname === '/api/config-versions/');
+    expect(creates[0].headers.get('Idempotency-Key')).toBe(creates[1].headers.get('Idempotency-Key'));
   });
 
   it('displays prompt state in EngineThresholdsTable on AnalysisConfig when no config has been chosen yet (T-029 / F-1)', async () => {
@@ -250,16 +276,34 @@ describe('Execution screens on real API contract', () => {
     expect(empty.closest('.lx-callout')?.className).toContain('lx-callout--neutral');
   });
 
-  it('opens the create-version modal from a header button, with one labelled switch per engine in its own row', async () => {
+  it('keeps model editing in Models & Guidelines and analysis only selects published versions', async () => {
     await setup('qcadmin', <AnalysisConfigPage />);
     expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(await screen.findByRole('button', { name: 'Tạo phiên bản cấu hình' }));
-    const form = within(screen.getByRole('dialog', { name: 'Tạo phiên bản cấu hình' }));
-    for (const name of ['Schema / Taxonomy', 'Geometry', 'Duplicate / Overlap', 'Mô hình độc lập (Detector)', 'Mô hình thị giác – ngôn ngữ (VLM)', 'Metric']) {
-      const toggle = form.getByRole('checkbox', { name });
-      expect(toggle.closest('tr')?.textContent).toContain(name);
-    }
-    expect(form.getAllByRole('checkbox')).toHaveLength(6);
+    expect(screen.queryByRole('button', { name: 'Tạo phiên bản cấu hình' })).toBeNull();
+    expect((await screen.findByRole('link', { name: 'Models & Guidelines' })).getAttribute('href')).toBe('/configuration/guidelines');
+  });
+
+  it('does not create a detector config without a registered model', async () => {
+    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />, { artifactsOverride: [] });
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    await screen.findByText(/Chưa có model Detector đã đăng ký/);
+    expect((screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(calls.filter(r => r.method === 'POST')).toHaveLength(0);
+  });
+
+  it('keeps Detector editing read-only for QA Lead', async () => {
+    await setup('qalead', <ModelsGuidelinesCard />);
+    await waitFor(() => expect(screen.queryByText('Đang tải…')).toBeNull());
+    expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('blocks analysis when an older published config enables Detector without a model', async () => {
+    await setup('qcadmin', <AnalysisConfigPage />, { configsOverride: { next: null, previous: null, results: [{ id: 7, name: 'Missing model', status: 'published', engines: { detector: { enabled: true } }, models: {}, thresholds: {} }] } });
+    await screen.findByRole('option', { name: /Missing model/ });
+    fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
+    expect(await screen.findByText(/Phiên bản này bật Detector nhưng chưa chọn model/)).toBeDefined();
+    expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('preserves chosen config in EngineThresholdsTable and does not silently switch to results[0] when paginating away (T-029 / F-1)', async () => {

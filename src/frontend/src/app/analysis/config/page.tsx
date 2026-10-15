@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { FlowNav } from '@/components/layout/FlowNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -14,7 +14,6 @@ import { ApiRequestError } from '@/lib/api/client';
 import { DatasetPicker } from '@/lib/execution/DatasetPicker';
 import { createRun, cursorFrom, listConfigs, listSnapshots, type ConfigVersion, type RunCreate } from '@/lib/execution/api';
 import { EngineThresholdsTable } from '@/components/execution/EngineThresholdsTable';
-import { ConfigVersionModal } from '@/components/execution/ConfigVersionModal';
 import { GroundTruthUpload } from '@/components/execution/GroundTruthUpload';
 import { currentGroundTruth } from '@/lib/execution/api';
 import { formatCount, shortRevision, snapshotCode } from '@/lib/format';
@@ -24,9 +23,7 @@ const ENGINES = ['schema', 'geometry', 'duplicate', 'detector', 'metric', 'vlm']
 function ConfigContent() {
   const { session, datasetId } = useAuth();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const canCreate = hasDatasetPermission(session, datasetId, (role) => role === 'qa_lead' || role === 'super_admin');
-  const canConfigure = session?.roles.some(({ role }) => role === 'qc_admin' || role === 'super_admin') ?? false;
   const [snapshotCursor, setSnapshotCursor] = useState<string | null>(null);
   const [configCursor, setConfigCursor] = useState<string | null>(null);
   const [snapshotId, setSnapshotId] = useState<number | null>(null);
@@ -36,7 +33,6 @@ function ConfigContent() {
   const [pending, setPending] = useState<{ body: RunCreate; key: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [configOpen, setConfigOpen] = useState(false);
   const snapshots = useQuery({ queryKey: ['analysis-snapshots', session?.user.id, datasetId, snapshotCursor], queryFn: ({ signal }) => listSnapshots(datasetId!, snapshotCursor, signal), enabled: datasetId !== null, retry: false });
   const configs = useQuery({ queryKey: ['analysis-configs', session?.user.id, configCursor], queryFn: ({ signal }) => listConfigs(configCursor, signal), enabled: !!session, retry: false });
   const groundTruth = useQuery({ queryKey: ['ground-truth', session?.user.id, datasetId], queryFn: ({ signal }) => currentGroundTruth(datasetId!, signal), enabled: canCreate && datasetId !== null, retry: false, refetchInterval: 5000 });
@@ -54,6 +50,9 @@ function ConfigContent() {
   const frameCount = selectedSnapshot?.jobs?.reduce((total, job) => total + (job.frames?.length ?? 0), 0) ?? 0;
   const metricConfig = rawEngines.metric as { enabled?: boolean } | undefined;
   const metricEnabled = metricConfig?.enabled === true;
+  const detectorEnabled = (rawEngines.detector as { enabled?: boolean } | undefined)?.enabled === true;
+  const detectorModelReady = !detectorEnabled || (typeof activeConfig?.models?.name === 'string' &&
+    !!activeConfig.models.name && typeof activeConfig.models.version === 'string' && !!activeConfig.models.version);
   const gt = groundTruth.data;
   const groundTruthReady = !metricEnabled || (!groundTruth.isPending && !groundTruth.isError && (!gt || (!gt.deleted_at && gt.reference.status === 'locked' && gt.reference.snapshot_id === snapshotId)));
   const taskCount = selectedSnapshot?.jobs ? new Set(selectedSnapshot.jobs.map((job) => job.cvat_task_id)).size : 0;
@@ -62,6 +61,7 @@ function ConfigContent() {
     event.preventDefault();
     if (!canCreate || !snapshotId || !configId || submitting) return;
     if (!groundTruthReady) return;
+    if (!detectorModelReady) return;
     const body = { snapshot_id: snapshotId, config_version_id: configId, seed,
       ...(metricEnabled && gt ? { metric_reference_id: gt.reference.id } : {}) };
     const request = pending && JSON.stringify(pending.body) === JSON.stringify(body) ? pending : { body, key: crypto.randomUUID() };
@@ -79,15 +79,7 @@ function ConfigContent() {
     } finally { setSubmitting(false); }
   }
 
-  async function onConfigPublished(published: ConfigVersion) {
-    setConfigCursor(null);
-    await queryClient.invalidateQueries({ queryKey: ['analysis-configs', session?.user.id] });
-    setConfigId(published.id);
-    setSelectedConfigRecord(published);
-    setPending(null);
-  }
-
-  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn engine, đặt ngưỡng và chính sách lấy mẫu cho Snapshot. Engine không bật sẽ được ghi là Not checked, không bao giờ được xem là đạt.</p></div>{canConfigure && <button type="button" className="lx-btn lx-btn--primary" onClick={() => setConfigOpen(true)}>Tạo phiên bản cấu hình</button>}</div>}>
+  return <AppShell activeKey="analysis" flowStep={2} showFlowNav={false} pageHeader={<div className="lx-head"><div className="lx-head__text"><h1 className="lx-h1">Analysis Configuration</h1><p className="lx-lead">Chọn phiên bản cấu hình đã phát hành để chạy cho Snapshot. Chỉnh Detector và tạo phiên bản tại Models &amp; Guidelines.</p></div><Link className="lx-btn" href="/configuration/guidelines">Models &amp; Guidelines</Link></div>}>
     <form onSubmit={submit} className="lx-cols">
       <div className="lx-main lx-stack">
         <div className="lx-execution-config">
@@ -131,7 +123,7 @@ function ConfigContent() {
           </select></div>
           {(snapshots.isError || configs.isError) && <div className="lx-callout" role="alert">{snapshots.isError ? errorMessage(snapshots.error) : errorMessage(configs.error)}</div>}
           {datasetId && snapshots.data && locked.length === 0 && <p className="lx-muted lx-text-13">Dataset này chưa có Snapshot đã khoá.</p>}
-          {configs.data?.results.length === 0 && <div className="lx-callout lx-callout--neutral" role="status">Chưa có phiên bản cấu hình đã phát hành. Quality Control Admin hoặc Super Admin cần tạo và phát hành một phiên bản trước khi chạy phân tích.</div>}
+          {configs.data?.results.length === 0 && <div className="lx-callout lx-callout--neutral" role="status">Chưa có phiên bản cấu hình đã phát hành. Quality Control Admin hoặc Super Admin cần chỉnh Detector tại Models &amp; Guidelines để tạo phiên bản trước khi chạy phân tích.</div>}
           {(snapshots.data?.next || configs.data?.next) && <div className="lx-actions">{snapshots.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setSnapshotCursor(cursorFrom(snapshots.data?.next))}>Trang Snapshot tiếp</button>}{configs.data?.next && <button type="button" className="lx-btn lx-btn--sm" onClick={() => setConfigCursor(cursorFrom(configs.data?.next))}>Trang phiên bản tiếp</button>}</div>}
           <dl className="lx-kv">
             <dt>Snapshot</dt><dd className="lx-mono">{selectedSnapshot ? `${snapshotCode(selectedSnapshot.id)} · ${shortRevision(selectedSnapshot.revision_hash)}` : '—'}</dd>
@@ -143,14 +135,14 @@ function ConfigContent() {
           {canCreate && <GroundTruthUpload key={`${datasetId}-${snapshotId}`} datasetId={datasetId} snapshotId={snapshotId}
             userId={session!.user.id} enabled={canCreate} busy={submitting} />}
           {activeConfig && enabledEngineCount < ENGINES.length && <div className="lx-callout lx-callout--warning"><span className="lx-callout__text">{ENGINES.length - enabledEngineCount} engine đang tắt, nên kết quả sẽ ghi là Not checked.</span></div>}
+          {!detectorModelReady && <div className="lx-callout lx-callout--warning" role="alert">Phiên bản này bật Detector nhưng chưa chọn model. Chỉnh Detector tại <Link href="/configuration/guidelines">Models &amp; Guidelines</Link>, rồi chọn phiên bản mới để chạy.</div>}
           <ol className="lx-muted lx-text-13"><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>
           {!canCreate && <p className="lx-muted">Vai trò hiện tại chỉ được xem cấu hình và lịch sử; Quality Assurance Lead hoặc Super Admin mới được chạy phân tích.</p>}
           {submitError && <p role="alert" className="lx-callout">{submitError}</p>}
-          <button type="submit" className="lx-btn lx-btn--primary lx-btn--block" disabled={!canCreate || !selectedSnapshot || !selectedConfig || !groundTruthReady || submitting}>{submitting ? 'Đang chạy…' : 'Chạy phân tích'}</button>
+          <button type="submit" className="lx-btn lx-btn--primary lx-btn--block" disabled={!canCreate || !selectedSnapshot || !selectedConfig || !groundTruthReady || !detectorModelReady || submitting}>{submitting ? 'Đang chạy…' : 'Chạy phân tích'}</button>
         </div>
       </aside>
     </form>
-    {configOpen && <ConfigVersionModal onClose={() => setConfigOpen(false)} onPublished={onConfigPublished} />}
   </AppShell>;
 }
 
