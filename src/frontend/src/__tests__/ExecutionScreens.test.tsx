@@ -44,6 +44,7 @@ async function setup(
     if (path.startsWith('/api/auth/')) return original(request);
     if (path === '/api/ground-truth/') return Response.json(null);
     if (path === '/api/configuration/vlm/') return Response.json({ revision: 0, model: 'qwen3-vl-plus', base_url: 'https://api.shopaikey.com/v1', confidence_threshold: 0.85, api_key_configured: false });
+    if (path === '/api/model-artifacts/register/') { calls.push(request); return Response.json([{ id: 2, name: 'New Detector', version: 'v2', checksum: 'b'.repeat(64), class_mapping_version: 'bdd-10', class_mapping: { classes: ['car'] } }]); }
     if (path === '/api/model-artifacts/') return Response.json(options.artifactsOverride ?? [{ id: 1, name: 'Faster R-CNN', version: 'bdd-v1', checksum: 'a'.repeat(64), class_mapping_version: 'bdd-10', class_mapping: { classes: ['car'] } }]);
     if (path === '/api/config-versions/7/rules/') return Response.json({ config_version_id: 7, status: 'published', rules: [{ rule_id: 'duplicate-iou', name: 'Duplicate IoU', enabled: true, parameters: { iou_threshold: 0.85 } }], release_thresholds: { warning: 0.1 }, sampling_policy: { random_frames: 10 } });
     calls.push(request);
@@ -193,13 +194,15 @@ describe('Execution screens on real API contract', () => {
   });
 
   it('creates and publishes a version through the real config endpoints', async () => {
-    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />);
-    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
-    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
+    await screen.findByRole('option', { name: /Published config/ });
+    fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mô hình độc lập (Detector)' }));
     await screen.findByRole('option', { name: /Faster R-CNN/ });
     fireEvent.change(screen.getByLabelText('Model Detector'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     await waitFor(() => expect(calls.some((request) => new URL(request.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
     const create = calls.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/api/config-versions/');
     expect(create?.headers.get('Idempotency-Key')).toBeTruthy();
@@ -214,18 +217,19 @@ describe('Execution screens on real API contract', () => {
     expect(body.release_thresholds).toEqual({ warning: 0.1 });
     expect(screen.queryByLabelText('Mô hình tham chiếu (JSON)')).toBeNull();
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.getByText(/Đã phát hành cấu hình v8/)).toBeDefined();
-    expect(screen.getByText('Đã cấu hình · v8')).toBeDefined();
+    expect((screen.getByLabelText('Phiên bản cấu hình') as HTMLSelectElement).value).toBe('8');
   });
 
   it('keeps a failed publish visible with its trace and retry action', async () => {
-    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />, { publishFails: true });
-    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
-    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    const { calls } = await setup('qcadmin', <AnalysisConfigPage />, { publishFails: true });
+    await screen.findByRole('option', { name: /Published config/ });
+    fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mô hình độc lập (Detector)' }));
     await screen.findByRole('option', { name: /Faster R-CNN/ });
     fireEvent.change(screen.getByLabelText('Model Detector'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'New config' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
     expect(await screen.findByText(/Mã yêu cầu: cfg-publish-503/)).toBeDefined();
     expect(screen.getByText(/Phiên bản v8 đã được tạo nhưng chưa xác nhận phát hành/)).toBeDefined();
     expect(screen.getByRole('button', { name: 'Thử phát hành lại' })).toBeDefined();
@@ -276,20 +280,38 @@ describe('Execution screens on real API contract', () => {
     expect(empty.closest('.lx-callout')?.className).toContain('lx-callout--neutral');
   });
 
-  it('keeps model editing in Models & Guidelines and analysis only selects published versions', async () => {
-    await setup('qcadmin', <AnalysisConfigPage />);
-    expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Tạo phiên bản cấu hình' })).toBeNull();
-    expect((await screen.findByRole('link', { name: 'Models & Guidelines' })).getAttribute('href')).toBe('/configuration/guidelines');
+  it('keeps engine settings and publishing out of the Detector model dialog', async () => {
+    const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />);
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
+    await screen.findByRole('option', { name: /Faster R-CNN/ });
+    expect(screen.queryByLabelText(/Tên cấu hình/)).toBeNull();
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByLabelText('Ngưỡng tin cậy Detector')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Model Detector'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Chọn model' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(calls.filter(r => r.method === 'POST')).toHaveLength(0);
   });
 
-  it('does not create a detector config without a registered model', async () => {
+  it('registers a worker model without creating or publishing any configuration', async () => {
     const { calls } = await setup('qcadmin', <ModelsGuidelinesCard />, { artifactsOverride: [] });
     await waitFor(() => expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Chỉnh Detector' }));
-    await screen.findByText(/Chưa có model Detector đã đăng ký/);
-    expect((screen.getByRole('button', { name: 'Lưu và tạo phiên bản cấu hình' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(calls.filter(r => r.method === 'POST')).toHaveLength(0);
+    await screen.findByText('Chưa có model Detector đã đăng ký.');
+    fireEvent.click(screen.getByRole('button', { name: 'Đăng ký model từ worker' }));
+    await screen.findByRole('option', { name: /New Detector/ });
+    expect(calls.filter(r => r.method === 'POST').map(r => new URL(r.url).pathname)).toEqual(['/api/model-artifacts/register/']);
+  });
+
+  it('allows configurations without Detector when no detector models are registered', async () => {
+    const { calls } = await setup('qcadmin', <AnalysisConfigPage />, { artifactsOverride: [] });
+    fireEvent.click(await screen.findByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    fireEvent.change(screen.getByLabelText(/Tên cấu hình/), { target: { value: 'Schema only' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo và phát hành' }));
+    await waitFor(() => expect(calls.some(r => new URL(r.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
+    const create = calls.find(r => r.method === 'POST' && new URL(r.url).pathname === '/api/config-versions/');
+    expect((await create!.clone().json()).engines.detector.enabled).toBe(false);
   });
 
   it('keeps Detector editing read-only for QA Lead', async () => {

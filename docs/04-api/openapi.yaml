@@ -1998,6 +1998,28 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/RegisteredDetector" }
         "403": { $ref: "#/components/responses/Forbidden" }
+  /api/model-artifacts/register/:
+    post:
+      operationId: model_artifacts_register
+      tags: [config]
+      summary: Xác minh worker và đăng ký model từ manifest trên server
+      x-labelx-trace: [FR-ENG-01, FR-ENG-05, FR-SEC-01]
+      x-labelx-roles: [qc_admin, super_admin]
+      responses:
+        "200":
+          description: Registered detector catalog after verification
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RegisteredDetector" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "503":
+          description: Worker or model verification failed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
   /api/models/:
     get:
       operationId: models_list

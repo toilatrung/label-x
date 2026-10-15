@@ -9,7 +9,7 @@ import { getVlmSettings, type VlmSettings } from '@/lib/configuration/vlm-api';
 import { errorMessage } from '@/lib/api/errors';
 import { GpuWorkerPanel } from './GpuWorkerPanel';
 import { DetectorSettingsModal } from './DetectorSettingsModal';
-import { listConfigs, listDetectorArtifacts, type ConfigVersion, type RegisteredDetector } from '@/lib/execution/api';
+import { listDetectorArtifacts, type RegisteredDetector } from '@/lib/execution/api';
 
 type TabKey = 'models' | 'guideline' | 'worker';
 
@@ -42,11 +42,10 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
   const [tab, setTab] = useState<TabKey>('models');
   const [editingVlm, setEditingVlm] = useState(false);
   const [editingDetector, setEditingDetector] = useState(false);
-  const [detectorConfig, setDetectorConfig] = useState<ConfigVersion | null>(null);
+  const [detectorModel, setDetectorModel] = useState<RegisteredDetector | undefined>();
   const [detectorArtifacts, setDetectorArtifacts] = useState<RegisteredDetector[]>([]);
   const [detectorError, setDetectorError] = useState<string | null>(null);
   const [detectorLoading, setDetectorLoading] = useState(true);
-  const [detectorNotice, setDetectorNotice] = useState<string | null>(null);
   const [vlmSettings, setVlmSettings] = useState<VlmSettings | null>(null);
   const [vlmError, setVlmError] = useState<string | null>(null);
 
@@ -67,17 +66,15 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
   useEffect(() => {
     if (tab !== 'models' || !canReadVlm) return;
     const controller = new AbortController();
-    Promise.all([listConfigs(null, controller.signal), listDetectorArtifacts(controller.signal)]).then(([configs, artifacts]) => {
+    listDetectorArtifacts(controller.signal).then(artifacts => {
       if (controller.signal.aborted) return;
-      setDetectorConfig(configs.results[0] ?? null);
       setDetectorArtifacts(artifacts); setDetectorError(null);
     }).catch(error => { if (!controller.signal.aborted) setDetectorError(errorMessage(error)); })
       .finally(() => { if (!controller.signal.aborted) setDetectorLoading(false); });
     return () => controller.abort();
   }, [canReadVlm, tab]);
 
-  const selectedDetector = detectorArtifacts.find(artifact => artifact.name === detectorConfig?.models?.name && artifact.version === detectorConfig?.models?.version);
-  const detectorEngine = detectorConfig?.engines?.detector as { enabled?: boolean; params?: { score_threshold?: number } } | undefined;
+  const selectedDetector = detectorModel ?? detectorArtifacts[0];
   return (
     <>
     <section className="lx-card" aria-label="Mô hình và phiên bản guideline">
@@ -97,8 +94,8 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
                     <td className="lx-muted">{model.role}</td>
                     <td className="lx-mono">{model.kind === 'detector' ? selectedDetector?.version ?? '—' : model.version}</td>
                     <td className="lx-muted">{model.kind === 'detector' ? selectedDetector?.class_mapping_version ?? '—' : model.mapping}</td>
-                    <td className="r" title={model.kind === 'vlm' ? 'Ngưỡng điểm detector để gọi VLM' : undefined}>{model.kind === 'detector' ? selectedDetector ? (detectorEngine?.params?.score_threshold ?? 0.05).toFixed(2) : '—' : model.kind === 'vlm' ? vlmSettings?.confidence_threshold?.toFixed(2) ?? '—' : model.confidence ?? '—'}</td>
-                    <td><span className={model.badge}>{model.kind === 'detector' ? detectorLoading ? 'Đang tải…' : detectorError ? 'Không tải được' : selectedDetector ? detectorEngine?.enabled ? `Đã cấu hình · v${detectorConfig?.id}` : 'Đã tắt' : 'Chưa cấu hình' : model.kind === 'vlm' && vlmSettings ? vlmSettings.api_key_configured ? 'Đã cấu hình' : 'Chưa cấu hình' : model.status}</span></td>
+                    <td className="r" title={model.kind === 'vlm' ? 'Ngưỡng điểm detector để gọi VLM' : undefined}>{model.kind === 'detector' ? 'Theo cấu hình Analysis' : model.kind === 'vlm' ? vlmSettings?.confidence_threshold?.toFixed(2) ?? '—' : model.confidence ?? '—'}</td>
+                    <td><span className={model.badge}>{model.kind === 'detector' ? detectorLoading ? 'Đang tải…' : detectorError ? 'Không tải được' : selectedDetector ? 'Đã đăng ký' : 'Chưa đăng ký' : model.kind === 'vlm' && vlmSettings ? vlmSettings.api_key_configured ? 'Đã cấu hình' : 'Chưa cấu hình' : model.status}</span></td>
                     <td className="r"><EditIconButton label={model.kind === 'detector' ? 'Chỉnh Detector' : 'Chỉnh mô hình'} disabled={model.kind === 'detector' ? !canConfigureVlm || detectorLoading || !!detectorError : model.kind === 'vlm' ? !canConfigureVlm : !canWrite} onBlocked={() => { if (model.kind === 'vlm') setEditingVlm(true); if (model.kind === 'detector') setEditingDetector(true); }} /></td>
                   </tr>
                 ))}
@@ -107,16 +104,15 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
           </div>
           {vlmError && <p role="alert" className="lx-gap__notice">Không tải được cấu hình VLM: {vlmError}</p>}
           {detectorError && <p role="alert" className="lx-gap__notice">Không tải được cấu hình Detector: {detectorError}</p>}
-          {detectorNotice && <p role="status">{detectorNotice}</p>}
           <div className="lx-card__foot"><span>Mô hình chưa được xác minh không tự động biến candidate thành lỗi đã xác nhận.</span></div>
         </>
       )}
 
     </section>
     {editingVlm && <VlmSettingsModal onClose={() => setEditingVlm(false)} onSaved={acceptVlm} />}
-    {editingDetector && <DetectorSettingsModal initialConfig={detectorConfig} onClose={() => setEditingDetector(false)} onPublished={config => {
-      setDetectorConfig(config);
-      setDetectorNotice(`Đã phát hành cấu hình v${config.id}. Chọn phiên bản này tại Analysis để chạy Detector.`);
+    {editingDetector && <DetectorSettingsModal initialModel={selectedDetector} canRegister={canManageWorker} onClose={() => setEditingDetector(false)} onSelected={model => {
+      setDetectorModel(model);
+      setDetectorArtifacts(current => current.some(value => value.id === model.id) ? current : [...current, model]);
     }} />}
     {tab === 'guideline' && guidelineExtra}
     </>

@@ -36,6 +36,11 @@ export async function listDetectorArtifacts(signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/model-artifacts/', { signal, cache: 'no-store' }));
 }
 
+export async function registerDetectorArtifact() {
+  await csrf();
+  return unwrap(await apiClient.POST('/api/model-artifacts/register/'));
+}
+
 export async function getConfigRules(id: number, signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/config-versions/{id}/rules/', { params: { path: { id } }, signal }));
 }
