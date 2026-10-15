@@ -382,7 +382,12 @@ export function ReviewCanvas({
                 const width = bbox.x2 - bbox.x1;
                 const height = bbox.y2 - bbox.y1;
                 const label = ann.label || `Nhãn #${ann.label_id ?? '?'}`;
+                const selected = activeIssue?.anchor.objects.some(object =>
+                  [ann.source?.kind, ann.source?.kind === 'track' ? 'cvat_track' : 'cvat_shape'].includes(String(object.namespace))
+                  && object.id === String(ann.source?.id));
+                const emphasize = reviewMode === 'frame' || selected;
                 return <g key={`snap-ann-${ann.id}`} data-annotation-id={ann.id}
+                  opacity={emphasize ? 1 : 0.16}
                   onMouseDown={e => e.stopPropagation()}
                   onClick={e => {
                     e.stopPropagation();
@@ -395,11 +400,11 @@ export function ReviewCanvas({
                   }}>
                   <rect x={bbox.x1} y={bbox.y1} width={width} height={height}
                     transform={`rotate(${ann.rotation ?? 0} ${(bbox.x1 + bbox.x2) / 2} ${(bbox.y1 + bbox.y2) / 2})`}
-                    fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke"
+                    fill="none" stroke={selected ? '#f2c14e' : color} strokeWidth={selected ? 3 : 2} vectorEffect="non-scaling-stroke"
                     strokeDasharray={ann.occluded ? '6 4' : undefined} />
-                  <text x={bbox.x1} y={Math.max(14, bbox.y1 - 5)} fill={color} fontSize="13">
+                  {emphasize && <text x={bbox.x1} y={Math.max(14, bbox.y1 - 5)} fill={selected ? '#f2c14e' : color} fontSize="13">
                     {label} · {ann.source?.id ?? ann.id}
-                  </text>
+                  </text>}
                 </g>;
               })}
             </g>
@@ -475,15 +480,21 @@ export function ReviewCanvas({
                 const bbox = prediction.bbox;
                 const isSecondModel = prediction.source.startsWith('Qwen');
                 const color = isSecondModel ? '#c4a5ff' : '#5fd0c7';
+                const matchesEvidence = prediction.issueId === null && activeIssue?.evidence?.some(evidence => {
+                  const box = reviewBBox(evidence.prediction_bbox);
+                  return evidence.engine === prediction.source && box &&
+                    box.x1 === bbox.x1 && box.y1 === bbox.y1 && box.x2 === bbox.x2 && box.y2 === bbox.y2;
+                });
+                const emphasize = reviewMode === 'frame' || prediction.issueId === activeIssue?.id || matchesEvidence;
                 return <g key={prediction.id} data-prediction-source={prediction.source}
-                  opacity={reviewMode === 'frame' || prediction.issueId === null || prediction.issueId === activeIssue?.id ? 1 : 0.3}
+                  opacity={emphasize ? 1 : 0.12}
                   onClick={() => prediction.issueId !== null && onSelectIssue(prediction.issueId)}>
                   <rect x={bbox.x1} y={bbox.y1} width={bbox.x2 - bbox.x1} height={bbox.y2 - bbox.y1}
                     fill="none" stroke={color} strokeWidth="3" strokeDasharray={isSecondModel ? '4 4' : '10 6'} />
-                  <text x={bbox.x1 + 4} y={Math.min(imgHeight - 4, bbox.y2 + (isSecondModel ? 32 : 16))}
+                  {emphasize && <text x={bbox.x1 + 4} y={Math.min(imgHeight - 4, bbox.y2 + (isSecondModel ? 32 : 16))}
                     fill={color} fontSize="13" fontWeight="600">
                     {prediction.source}: {prediction.label}{prediction.confidence !== undefined ? ` · ${prediction.confidence.toFixed(2)}` : ''}
-                  </text>
+                  </text>}
                 </g>;
               })}
             </g>
