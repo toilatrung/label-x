@@ -13,8 +13,8 @@ info:
   description: |
     Quality Control cho annotation CVAT — contract M13 v1.
 
-    Xác thực bằng session LabelX (cookie `sessionid`); request ghi gửi header `X-CSRFToken`
-    lấy từ cookie `csrftoken` (gọi `GET /api/auth/csrf/` trước khi đăng nhập).
+    Xác thực bằng session LabelX (cookie `labelx_sessionid`); request ghi gửi header `X-CSRFToken`
+    lấy từ cookie `labelx_csrftoken` (gọi `GET /api/auth/csrf/` trước khi đăng nhập).
     Mọi lỗi trả `Error` với `code`, `message`, `request_id` (SRS §9.3.1).
     Đường dẫn có dấu `/` cuối theo quy ước Django REST framework; `/api/snapshots/` trong
     contract này là `/api/snapshots` của SRS tab:api.
@@ -315,14 +315,14 @@ paths:
     get:
       operationId: auth_csrf
       tags: [auth]
-      summary: Đặt cookie csrftoken
+      summary: Đặt cookie labelx_csrftoken
       description: Không cần đăng nhập. Frontend gọi một lần trước POST /api/auth/login/.
       security: []
       x-labelx-trace: [FR-SEC-01]
       x-labelx-roles: [anonymous]
       responses:
         "204":
-          description: Đã đặt cookie csrftoken
+          description: Đã đặt cookie labelx_csrftoken
   /api/auth/login/:
     post:
       operationId: auth_login
@@ -2551,7 +2551,7 @@ components:
     sessionAuth:
       type: apiKey
       in: cookie
-      name: sessionid
+      name: labelx_sessionid
   parameters:
     Id:
       name: id
@@ -2872,7 +2872,7 @@ components:
             INVALID_TRANSITION: {"from": "...", "event": "..."} và có thể drift_jobs.
             BUSINESS_RULE_UNMET ở frames_complete: {"undecided_issue_ids": [..]}.
             FORBIDDEN do thiếu hoặc sai CSRF (mọi request ghi, gồm auth_login/auth_logout): {"reason": "csrf"};
-            client dùng khóa này để phân biệt với thiếu quyền và lấy lại csrftoken.
+            client dùng khóa này để phân biệt với thiếu quyền và lấy lại labelx_csrftoken.
       example:
         code: LEASE_CONFLICT
         message: Lease đã hết hạn hoặc thuộc người khác

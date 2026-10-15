@@ -9,7 +9,7 @@ export { ApiRequestError } from './errors';
 
 function csrfCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
-  return document.cookie.split('; ').find((part) => part.startsWith('csrftoken='))?.slice(10);
+  return document.cookie.split('; ').find((part) => part.startsWith('labelx_csrftoken='))?.slice('labelx_csrftoken='.length);
 }
 
 export function createApiClient(options: { baseUrl?: string; fetch?: (request: Request) => Promise<Response> } = {}) {

@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (reply.error || !reply.data) throw new ApiRequestError(reply.response.status, reply.error, reply.response.headers);
         return reply.data;
       };
-      // A stale or overwritten csrftoken cookie is fixed by fetching a fresh one; retry only once.
+      // A stale or overwritten labelx_csrftoken cookie is fixed by fetching a fresh one; retry only once.
       const data = await attempt().catch((error: unknown) => {
         if (!isCsrfError(error)) throw error;
         return attempt();

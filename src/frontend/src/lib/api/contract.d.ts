@@ -133,7 +133,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Đặt cookie csrftoken
+         * Đặt cookie labelx_csrftoken
          * @description Không cần đăng nhập. Frontend gọi một lần trước POST /api/auth/login/.
          */
         get: operations["auth_csrf"];
@@ -1958,7 +1958,7 @@ export interface components {
              *     INVALID_TRANSITION: {"from": "...", "event": "..."} và có thể drift_jobs.
              *     BUSINESS_RULE_UNMET ở frames_complete: {"undecided_issue_ids": [..]}.
              *     FORBIDDEN do thiếu hoặc sai CSRF (mọi request ghi, gồm auth_login/auth_logout): {"reason": "csrf"};
-             *     client dùng khóa này để phân biệt với thiếu quyền và lấy lại csrftoken.
+             *     client dùng khóa này để phân biệt với thiếu quyền và lấy lại labelx_csrftoken.
              */
             details?: {
                 [key: string]: unknown;
@@ -4171,7 +4171,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Đã đặt cookie csrftoken */
+            /** @description Đã đặt cookie labelx_csrftoken */
             204: {
                 headers: {
                     [name: string]: unknown;

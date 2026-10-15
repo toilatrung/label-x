@@ -218,14 +218,16 @@ CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 # của CSRF; mặc định tin cùng danh sách với CORS.
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
 
-# Phiên LabelX (T-011, contract auth): cookie `sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
-# `csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
+# Phiên LabelX (T-011, contract auth): cookie `labelx_sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
+# `labelx_csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
 # (:8000) cùng site localhost nên SameSite=Lax đủ; production bật Secure qua env.
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)
+SESSION_COOKIE_NAME = "labelx_sessionid"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_NAME = "labelx_csrftoken"
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 

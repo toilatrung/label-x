@@ -1,7 +1,7 @@
 """API phiên đăng nhập LabelX `/api/auth/*` theo contract T-001 (E-02, T-011).
 
-- Xác thực bằng session Django (cookie `sessionid`); request ghi phải có header `X-CSRFToken`
-  khớp cookie `csrftoken`. CSRF được kiểm cả khi chưa đăng nhập (login, logout), vì
+- Xác thực bằng session Django (cookie `labelx_sessionid`); request ghi phải có header `X-CSRFToken`
+  khớp cookie `labelx_csrftoken`. CSRF được kiểm cả khi chưa đăng nhập (login, logout), vì
   `SessionAuthentication` của DRF chỉ kiểm cho người đã đăng nhập.
 - Lỗi theo `Error` của contract: thiếu/sai CSRF 403 FORBIDDEN, sai thông tin đăng nhập
   400 INVALID_CREDENTIALS, chưa đăng nhập hoặc phiên hết hạn 403 NOT_AUTHENTICATED.
@@ -66,9 +66,9 @@ class CsrfView(APIView):
     @extend_schema(
         operation_id="auth_csrf",
         tags=["auth"],
-        summary="Đặt cookie csrftoken",
+        summary="Đặt cookie labelx_csrftoken",
         auth=[],
-        responses={204: OpenApiResponse(description="Đã đặt cookie csrftoken")},
+        responses={204: OpenApiResponse(description="Đã đặt cookie labelx_csrftoken")},
     )
     def get(self, request: Request) -> Response:
         get_token(request._request)

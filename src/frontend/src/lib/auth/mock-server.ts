@@ -23,7 +23,7 @@ export function readCookie(request: Request, name: string): string | undefined {
 }
 
 export function checkCsrf(request: Request) {
-  const token = readCookie(request, 'csrftoken');
+  const token = readCookie(request, 'labelx_csrftoken');
   const origin = request.headers.get('origin');
   // Next may normalize the internal URL to localhost while the browser uses 127.0.0.1.
   const url = new URL(request.url);
@@ -44,7 +44,7 @@ export function issueMockSession(session: AuthSession): string {
 }
 
 export function readMockSession(request: Request): AuthSession | null {
-  const token = readCookie(request, 'sessionid');
+  const token = readCookie(request, 'labelx_sessionid');
   const record = token ? sessions.get(token) : undefined;
   if (!record || record.expiresAt <= Date.now()) {
     if (token) sessions.delete(token);
@@ -54,7 +54,7 @@ export function readMockSession(request: Request): AuthSession | null {
 }
 
 export function endMockSession(request: Request) {
-  const token = readCookie(request, 'sessionid');
+  const token = readCookie(request, 'labelx_sessionid');
   if (token) sessions.delete(token);
 }
 

@@ -61,7 +61,7 @@ expect.extend({
 afterEach(() => {
   cleanup();
   localStorage.clear();
-  document.cookie = 'csrftoken=; Max-Age=0; path=/';
+  document.cookie = 'labelx_csrftoken=; Max-Age=0; path=/';
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.clearAllMocks();
