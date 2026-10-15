@@ -7,11 +7,11 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
-from engines.interface import EngineStatus, LedgerCounts, NotCheckedReason, public_status
+from engines.interface import EngineStatus, NotCheckedReason, public_status
 from orchestration.fail_fast import enabled as fail_fast_enabled
 from orchestration.fail_fast import stop_failed_engines
 from orchestration.models import VlmBudget, VlmUnit
-from orchestration.services import ledger_counts
+from orchestration.services import ledger_counts, vlm_ledger_counts
 from orchestration.vlm_stage import (
     VLM_ENGINE,
     start_vlm_stage,
@@ -112,7 +112,7 @@ def refresh_run(run_id: int) -> None:
         if run.status == QCRun.Status.COMPLETED or (
             fail_fast_enabled() and run.status == QCRun.Status.PARTIAL
         ):
-            persist_terminal_run_rankings(run_id)
+            transaction.on_commit(lambda: _persist_rankings_safely(run_id))
             if run.status == QCRun.Status.COMPLETED and run.metric_reference_id:
                 from runs.ground_truth import cleanup_upload_safely
 
@@ -124,20 +124,9 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
     """EngineResult của vlm tính từ VlmUnit (đơn vị = candidate), không từ LedgerUnit theo frame."""
     if not vlm_stage_started(run_id):
         return  # candidate chưa sinh xong: giữ nguyên trạng thái running ban đầu
-    # Mỗi candidate chỉ tính lượt mới nhất: re-evaluate không được làm méo số đếm của ledger.
-    latest: dict[int, str] = {}
-    for candidate_id, status in (
-        VlmUnit.objects.filter(run_id=run_id)
-        .order_by("evaluation_generation")
-        .values_list("candidate_id", "status")
-    ):
-        latest[candidate_id] = status
-    statuses = list(latest.values())
-    completed = sum(s == VlmUnit.Status.COMPLETED for s in statuses)
-    failed = sum(s == VlmUnit.Status.FAILED for s in statuses)
-    pending = sum(s in (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING) for s in statuses)
-    ledger = LedgerCounts(completed=completed, failed=failed, pending=pending)
-    if not statuses:
+    ledger = vlm_ledger_counts(run_id)
+    completed, failed, pending = ledger.completed, ledger.failed, ledger.pending
+    if ledger.total == 0:
         result.status = EngineStatus.NOT_CHECKED.value
         skipped = VlmBudget.objects.filter(run_id=run_id).values_list("skipped_reason", flat=True)
         result.reason = skipped.first() or NotCheckedReason.NOT_TRIGGERED.value
@@ -160,3 +149,10 @@ def _refresh_vlm_result(run_id: int, result: EngineResult) -> None:
             "not_checked_units",
         ]
     )
+
+
+def _persist_rankings_safely(run_id: int) -> None:
+    try:
+        persist_terminal_run_rankings(run_id)
+    except Exception:
+        logger.exception("analysis finished but review ranking failed", extra={"qc_run_id": run_id})

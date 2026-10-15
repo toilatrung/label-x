@@ -600,3 +600,103 @@ def test_uncertain_and_parse_failure_flow_through_real_client(monkeypatch: Any) 
     assert reasons[1][0] == "parse_failure"
     assert reasons[0][1]["status"] == "uncertain" and reasons[0][1]["label"] is None
     assert "sk-test-not-real" not in json.dumps([r[1] for r in reasons])
+
+
+def test_dispatch_window_does_not_requeue_every_pending_unit(settings, monkeypatch) -> None:
+    from orchestration.vlm_stage import dispatch_vlm_units, run_vlm_unit_task
+
+    settings.VLM_DISPATCH_WINDOW = 1
+    sent = []
+    monkeypatch.setattr(run_vlm_unit_task, "delay", lambda pk: sent.append(pk))
+    run = _make_run()
+    _run_shards(run)
+    assert len(sent) == 1
+    assert dispatch_vlm_units(run.pk) == 0
+    assert dispatch_vlm_units(run.pk) == 0
+    assert len(sent) == 1
+    assert execute_vlm_unit(sent[0], client=FakeClient()) == "completed"
+    assert len(sent) == 2
+    assert sent[0] != sent[1]
+    assert dispatch_vlm_units(run.pk) == 0
+
+
+def test_cancelled_run_cannot_dispatch_old_vlm_backlog(monkeypatch) -> None:
+    from orchestration.vlm_stage import dispatch_vlm_units, run_vlm_unit_task
+
+    run = _make_run()
+    _run_shards(run)
+    QCRun.objects.filter(pk=run.pk).update(cancel_requested_at=timezone.now())
+    sent = []
+    monkeypatch.setattr(run_vlm_unit_task, "delay", lambda pk: sent.append(pk))
+    assert dispatch_vlm_units(run.pk, stale_after=0) == 0
+    assert sent == []
+
+
+def test_analysis_terminal_commit_survives_review_ranking_error(monkeypatch) -> None:
+    from orchestration import runsync
+
+    def broken_rankings(run_id):
+        raise ValueError("E3 candidate must have at least two anchor objects")
+
+    monkeypatch.setattr(runsync, "persist_terminal_run_rankings", broken_rankings)
+    run = _make_run(vlm_enabled=False)
+    _run_shards(run)
+    run.refresh_from_db()
+    assert run.status == QCRun.Status.COMPLETED
+    assert run.finished_at is not None
+
+
+def test_last_budgeted_call_closes_run_without_waiting_for_pending_messages() -> None:
+    run = _make_run(vlm={**VALID, "budget": {"max_calls": 1}})
+    _run_shards(run)
+    unit = VlmUnit.objects.filter(run_id=run.pk).order_by("pk").first()
+    client = FakeClient()
+    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    run.refresh_from_db()
+    assert run.status == QCRun.Status.COMPLETED
+    assert not VlmUnit.objects.filter(run_id=run.pk, status__in=["pending", "running"]).exists()
+    assert VlmUnit.objects.filter(run_id=run.pk, reason_code="budget_exhausted").count() == 2
+    assert client.calls == 1
+
+
+def test_refresh_does_not_repeat_candidate_selection_after_preparation(monkeypatch) -> None:
+    import orchestration.vlm_stage as stage
+
+    run = _make_run()
+    _run_shards(run)
+
+    def unexpected_selection(run):
+        pytest.fail("Progress refresh must not reload and reroute every prepared candidate")
+
+    monkeypatch.setattr(stage, "select_candidates_for_vlm", unexpected_selection)
+    assert stage.start_vlm_stage(run.pk) == 0
+
+
+def test_auto_preparation_queries_are_batched(django_assert_max_num_queries) -> None:
+    from orchestration.evaluation_service import create_auto_evaluations, route_candidates
+    from orchestration.models import CandidateRecord
+    from vlm.config import parse_vlm_config
+
+    run = _make_run()
+    _run_shards(run)
+    template = CandidateRecord.objects.filter(run_id=run.pk).first()
+    values = {
+        field.attname: getattr(template, field.attname)
+        for field in template._meta.concrete_fields
+        if not field.primary_key
+    }
+    candidates = []
+    for i in range(50):
+        values["dedup_key"] = f"batch-regression-{i}"
+        candidate = CandidateRecord(**values)
+        candidate.run = run
+        candidates.append(candidate)
+    CandidateRecord.objects.bulk_create(candidates)
+    routed = route_candidates(run, candidates, exhausted=False)
+    with django_assert_max_num_queries(12):
+        assert (
+            create_auto_evaluations(
+                run, routed, parse_vlm_config(VALID), selected_ids={c.pk for c in candidates}
+            )
+            == 50
+        )

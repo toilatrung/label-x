@@ -106,8 +106,10 @@ def route_candidates(
     return [(c, _decide(policy, c, manual_recheck=False, exhausted=exhausted)) for c in candidates]
 
 
-def _vlm_unit_for(candidate: CandidateRecord, run: QCRun, config: Any, generation: int) -> VlmUnit:
-    identity = crop_provider().identity(candidate)
+def _vlm_unit_for(
+    candidate: CandidateRecord, run: QCRun, config: Any, generation: int, *, provider: Any = None
+) -> VlmUnit:
+    identity = (provider or crop_provider()).identity(candidate)
     return VlmUnit(
         run_id=run.pk,
         candidate=candidate,
@@ -152,26 +154,53 @@ def create_auto_evaluations(
     Gọi trong transaction đã khoá QCRun (refresh_run). Trả số VlmUnit mới tạo.
     """
     revision = run_revision(run)
-    created_units = 0
-    for candidate, decision in routed:
-        if Evaluation.objects.filter(
-            candidate=candidate, generation=EVALUATION_GENERATION
-        ).exists():
-            continue
-        unit: VlmUnit | None = None
-        if decision.call_qwen and candidate.pk in selected_ids:
-            unit = _vlm_unit_for(candidate, run, config, EVALUATION_GENERATION)
-            unit, was_created = _get_or_create_unit(unit)
-            created_units += int(was_created)
-        Evaluation.objects.create(
+    done = set(
+        Evaluation.objects.filter(
             run_id=run.pk,
-            candidate=candidate,
             generation=EVALUATION_GENERATION,
-            source=Evaluation.Source.AUTO,
-            vlm_unit=unit,
-            **_evaluation_fields(decision, revision),
+            candidate_id__in=[c.pk for c, _ in routed],
+        ).values_list("candidate_id", flat=True)
+    )
+    provider = crop_provider()
+    prepare = getattr(provider, "prepare", None)
+    selected = [
+        c
+        for c, decision in routed
+        if c.pk not in done and decision.call_qwen and c.pk in selected_ids
+    ]
+    if prepare is not None:
+        prepare(selected)
+    existing = {
+        unit.candidate_id: unit
+        for unit in VlmUnit.objects.filter(
+            run_id=run.pk,
+            evaluation_generation=EVALUATION_GENERATION,
+            candidate_id__in=[c.pk for c in selected],
         )
-    return created_units
+    }
+    units = [
+        _vlm_unit_for(c, run, config, EVALUATION_GENERATION, provider=provider)
+        for c in selected
+        if c.pk not in existing
+    ]
+    VlmUnit.objects.bulk_create(units, batch_size=500)
+    existing.update({unit.candidate_id: unit for unit in units})
+    evaluations = []
+    for candidate, decision in routed:
+        if candidate.pk in done:
+            continue
+        evaluations.append(
+            Evaluation(
+                run_id=run.pk,
+                candidate=candidate,
+                generation=EVALUATION_GENERATION,
+                source=Evaluation.Source.AUTO,
+                vlm_unit=existing.get(candidate.pk),
+                **_evaluation_fields(decision, revision),
+            )
+        )
+    Evaluation.objects.bulk_create(evaluations, batch_size=500)
+    return len(units)
 
 
 def _get_or_create_unit(unit: VlmUnit) -> tuple[VlmUnit, bool]:

@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import math
 from typing import Any
 
 from PIL import Image, UnidentifiedImageError
@@ -39,9 +40,17 @@ def _object_ids(candidate: CandidateRecord) -> list[str]:
     objects = anchor.get("objects") if isinstance(anchor, dict) else None
     if not isinstance(objects, list):
         return []
-    return sorted(
-        str(o["id"]) for o in objects if isinstance(o, dict) and isinstance(o.get("id"), str)
-    )
+    result = []
+    for obj in objects:
+        if not isinstance(obj, dict) or not isinstance(obj.get("id"), str):
+            continue
+        namespace, object_id = obj.get("namespace"), obj["id"]
+        if namespace == "detector":
+            continue  # Predictions are not annotation identities in a locked Snapshot.
+        if namespace in ("shape", "track") and not object_id.startswith(f"{namespace}:"):
+            object_id = f"{namespace}:{object_id}"
+        result.append(object_id)
+    return sorted(result)
 
 
 def _shape_box(shape: dict[str, Any]) -> tuple[float, float, float, float] | None:
@@ -98,12 +107,62 @@ def pad_box(
     )
 
 
+def candidate_box(
+    candidate: CandidateRecord, frame: SnapshotFrame
+) -> tuple[float, float, float, float] | None:
+    """Use frozen annotation identities, or the verified Detector's explicit prediction box."""
+    objects = _object_ids(candidate)
+    if objects:
+        return union_box(frame.shapes, objects)
+    evidence = candidate.evidence
+    if candidate.engine != "detector" or evidence.get("artifact_verified") is not True:
+        return None
+    box = evidence.get("prediction_bbox")
+    if (
+        not isinstance(box, list)
+        or len(box) != 4
+        or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+            for v in box
+        )
+    ):
+        return None
+    x1, y1, x2, y2 = (float(v) for v in box)
+    if not (0 <= x1 < x2 <= frame.width and 0 <= y1 < y2 <= frame.height):
+        return None
+    return x1, y1, x2, y2
+
+
 class SnapshotCropProvider:
     """CropProvider đọc ảnh từ snapshot đã khoá."""
 
     def __init__(self, storage: ObjectStorage | None = None) -> None:
         self._storage = storage
         self._frames: dict[tuple[int, int, int], SnapshotFrame | None] = {}
+
+    def prepare(self, candidates: list[CandidateRecord]) -> None:
+        """Load only relevant frames once per preparation batch; never read image bytes here."""
+        wanted = {(c.run.snapshot_id, c.cvat_task_id, c.frame_number) for c in candidates}
+        if not wanted:
+            return
+        self._frames = dict.fromkeys(wanted)
+        frames = (
+            SnapshotFrame.objects.filter(
+                snapshot_job__snapshot_id__in={k[0] for k in wanted},
+                snapshot_job__cvat_task_id__in={k[1] for k in wanted},
+                frame_index__in={k[2] for k in wanted},
+            )
+            .select_related("snapshot_job")
+            .order_by("pk")
+        )
+        for frame in frames:
+            key = (
+                frame.snapshot_job.snapshot_id,
+                frame.snapshot_job.cvat_task_id,
+                frame.frame_index,
+            )
+            if key in self._frames and self._frames[key] is None:
+                self._frames[key] = frame
 
     def _frame(self, candidate: CandidateRecord) -> SnapshotFrame:
         key = (candidate.run.snapshot_id, candidate.cvat_task_id, candidate.frame_number)
@@ -128,7 +187,7 @@ class SnapshotCropProvider:
             frame = self._frame(candidate)
         except VlmInvalidCropError:
             return ""
-        box = union_box(frame.shapes, _object_ids(candidate))
+        box = candidate_box(candidate, frame)
         if box is None:
             return ""
         payload = {"media": frame.media_sha256, "box": box, "pad": PADDING_RATIO}
@@ -136,7 +195,7 @@ class SnapshotCropProvider:
 
     def load(self, candidate: CandidateRecord) -> CropInput:
         frame = self._frame(candidate)
-        box = union_box(frame.shapes, _object_ids(candidate))
+        box = candidate_box(candidate, frame)
         if box is None:
             raise VlmInvalidCropError("anchor không phân giải được thành bbox hợp lệ")
         if frame.width <= 0 or frame.height <= 0 or frame.width * frame.height > MAX_SOURCE_PIXELS:

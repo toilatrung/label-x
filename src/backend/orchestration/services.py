@@ -98,20 +98,28 @@ def vlm_ledger_counts(run_id: int) -> LedgerCounts:
     """Ledger của engine vlm tính từ VlmUnit (đơn vị VLM là candidate, không có LedgerUnit theo
     frame). Unit bị huỷ không nằm trong mẫu số. Mỗi candidate chỉ tính lượt (generation) mới nhất:
     re-evaluate (M04C-02) không được làm méo số đếm."""
+    from django.db.models import Count, OuterRef, Subquery
+
     from orchestration.models import VlmUnit
 
-    latest: dict[int, str] = {}
-    for candidate_id, status in (
-        VlmUnit.objects.filter(run_id=run_id)
-        .order_by("evaluation_generation")
-        .values_list("candidate_id", "status")
-    ):
-        latest[candidate_id] = status
-    statuses = list(latest.values())
+    latest = (
+        VlmUnit.objects.filter(
+            run_id=run_id,
+            candidate_id=OuterRef("candidate_id"),
+        )
+        .order_by("-evaluation_generation")
+        .values("pk")[:1]
+    )
+    counts = dict(
+        VlmUnit.objects.filter(run_id=run_id, pk=Subquery(latest))
+        .values("status")
+        .annotate(n=Count("pk"))
+        .values_list("status", "n")
+    )
     return LedgerCounts(
-        completed=sum(s == VlmUnit.Status.COMPLETED for s in statuses),
-        failed=sum(s == VlmUnit.Status.FAILED for s in statuses),
-        pending=sum(s in (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING) for s in statuses),
+        completed=counts.get(VlmUnit.Status.COMPLETED, 0),
+        failed=counts.get(VlmUnit.Status.FAILED, 0),
+        pending=counts.get(VlmUnit.Status.PENDING, 0) + counts.get(VlmUnit.Status.RUNNING, 0),
     )
 
 
