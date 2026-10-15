@@ -21,7 +21,7 @@ from rest_framework import status
 from rest_framework.request import Request
 
 from accounts.models import CvatIdentity, Role, RoleAssignment
-from accounts.permissions import record_rejection_audit
+from accounts.permissions import is_super_admin, record_rejection_audit
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from review import decision_source
@@ -129,7 +129,9 @@ def _role(user: User, dataset_id: int, roles: tuple[Role, ...]) -> str:
     raise ApiError(status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Ngoài phạm vi dataset.")
 
 
-def _verified_identity(user: User, *, action: str, request: Request) -> CvatIdentity:
+def _verified_identity(user: User, *, action: str, request: Request) -> CvatIdentity | None:
+    if is_super_admin(request.user):
+        return None
     identity = CvatIdentity.objects.select_related("employee").filter(user=user).first()
     if identity is None or identity.employee is None or not identity.employee.is_verified:
         record_rejection_audit(
@@ -596,19 +598,17 @@ def verify_rework(*, request: Request, rework_id: int) -> ReworkRequest:
     dataset_id = rework.issue.frame_review.run.dataset_id
     actor_role = _role(user, dataset_id, (Role.REVIEWER,))
     override_reason = str(body.get("override_reason", "")).strip()
-    if actor_role == Role.SUPER_ADMIN and not override_reason:
-        raise ApiError(
-            status.HTTP_400_BAD_REQUEST,
-            "VALIDATION_ERROR",
-            "Super Admin cần override_reason.",
-        )
     verifier_identity = _reviewer_identity(request, action="rework.verify")
     annotator_identity = _verified_identity(
         rework.annotator, action="rework.verify", request=request
     )
-    if (
+    if actor_role != Role.SUPER_ADMIN and (
         user.pk == rework.annotator_id
-        or verifier_identity.employee_id == annotator_identity.employee_id
+        or (
+            verifier_identity is not None
+            and annotator_identity is not None
+            and verifier_identity.employee_id == annotator_identity.employee_id
+        )
     ):
         raise ApiError(
             status.HTTP_403_FORBIDDEN,

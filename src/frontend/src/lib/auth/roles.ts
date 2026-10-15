@@ -27,6 +27,7 @@ export function rolesForDataset(session: AuthSession | null, datasetId: number |
 
 export function hasDatasetPermission(session: AuthSession | null, datasetId: number | null,
   check: (role: UserRole) => boolean, requiresIdentity = false): boolean {
+  if (session?.roles.some(({ role, dataset_id }) => role === 'super_admin' && dataset_id === null)) return true;
   if (requiresIdentity && session?.identity_mapping.status !== 'mapped') return false;
   return rolesForDataset(session, datasetId).some(check);
 }

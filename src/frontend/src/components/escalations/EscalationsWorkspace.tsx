@@ -197,7 +197,7 @@ export function EscalationsWorkspace() {
   const cursor = cursors.at(-1) ?? null;
 
   const activeRoles = rolesForDataset(session, datasetId);
-  const requiresOverride = activeRoles.includes('super_admin') && !activeRoles.includes('qa_lead');
+  const isSuperAdmin = activeRoles.includes('super_admin');
 
   const listQuery = useQuery({
     queryKey: ['escalations', session?.user.id, datasetId, runId ?? null, cursor],
@@ -219,7 +219,7 @@ export function EscalationsWorkspace() {
     );
     return escalations.at(-1)?.actor_user_id ?? null;
   }, [selected]);
-  const isOwnEscalation = escalatorId !== null && escalatorId === user?.id;
+  const isOwnEscalation = !isSuperAdmin && escalatorId !== null && escalatorId === user?.id;
 
   const mutation = useMutation({
     mutationFn: ({ issueId, body, key }: { issueId: number; body: AdjudicationInput; key: string }) =>
@@ -272,10 +272,6 @@ export function EscalationsWorkspace() {
     const cleanOverride = overrideReason.trim();
     if (!cleanRule || !cleanReason) {
       setFormError('Rule ID và lý do là bắt buộc.');
-      return;
-    }
-    if (requiresOverride && !cleanOverride) {
-      setFormError('Super Admin phải nhập lý do dùng quyền ghi đè.');
       return;
     }
     if (isOwnEscalation) {
@@ -533,9 +529,9 @@ export function EscalationsWorkspace() {
                       required
                     />
                   </div>
-                  {requiresOverride && (
+                  {isSuperAdmin && (
                     <div className="lx-field">
-                      <label className="lx-label" htmlFor="adjudication-override">Lý do ghi đè *</label>
+                      <label className="lx-label" htmlFor="adjudication-override">Ghi chú quản trị (không bắt buộc)</label>
                       <textarea
                         id="adjudication-override"
                         className="lx-textarea"

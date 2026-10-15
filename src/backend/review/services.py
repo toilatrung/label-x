@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.request import Request
 
 from accounts.models import CvatIdentity, Role, RoleAssignment
-from accounts.permissions import record_rejection_audit
+from accounts.permissions import is_super_admin, record_rejection_audit
 from config.exceptions import ApiError
 from review import decision_source
 from review.models import FrameReview, Lease
@@ -40,8 +40,10 @@ def _actor(request: Request) -> User:
     return user
 
 
-def _reviewer_identity(request: Request, *, action: str = "queues.next") -> CvatIdentity:
+def _reviewer_identity(request: Request, *, action: str = "queues.next") -> CvatIdentity | None:
     user = _actor(request)
+    if is_super_admin(user):
+        return None
     identity = CvatIdentity.objects.select_related("employee").filter(user=user).first()
     if identity is None or identity.employee is None or not identity.employee.is_verified:
         record_rejection_audit(
@@ -58,11 +60,14 @@ def _reviewer_identity(request: Request, *, action: str = "queues.next") -> Cvat
     return identity
 
 
-def _ineligibility_code(identity: CvatIdentity, entry: RunRankingEntry) -> str | None:
+def _ineligibility_code(identity: CvatIdentity | None, entry: RunRankingEntry) -> str | None:
     return _ineligibility_code_for_job(identity, entry.snapshot_frame.snapshot_job)
 
 
-def _ineligibility_code_for_job(identity: CvatIdentity, job: SnapshotJob) -> str | None:
+def _ineligibility_code_for_job(identity: CvatIdentity | None, job: SnapshotJob) -> str | None:
+    # Only an authenticated system-wide Super Admin receives the None identity.
+    if identity is None:
+        return None
     author_id = job.assignee_cvat_user_id
     if author_id is None:
         return "IDENTITY_MAPPING_MISSING"
@@ -79,7 +84,7 @@ def _ineligibility_code_for_job(identity: CvatIdentity, job: SnapshotJob) -> str
 
 
 def _deny_frame_ineligible(
-    request: Request, identity: CvatIdentity, frame: FrameReview, action: str
+    request: Request, identity: CvatIdentity | None, frame: FrameReview, action: str
 ) -> None:
     code = _ineligibility_code_for_job(identity, frame.snapshot_frame.snapshot_job)
     if code is None:
@@ -96,7 +101,7 @@ def _deny_frame_ineligible(
 
 
 def _deny_ineligible(
-    request: Request, identity: CvatIdentity, entry: RunRankingEntry, action: str
+    request: Request, identity: CvatIdentity | None, entry: RunRankingEntry, action: str
 ) -> None:
     code = _ineligibility_code(identity, entry)
     if code is None:

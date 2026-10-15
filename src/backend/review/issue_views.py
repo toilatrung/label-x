@@ -137,6 +137,7 @@ class FrameWorkspaceView(_ReviewView):
                 "lease": lease_payload(lease),
                 "queue": lease.queue_source if lease is not None else None,
                 "undecided_issue_count": undecided_issue_count(issues),
+                "anchor_policy_version": "anchor-v1",
                 "ai_evidence": ai_evidence(issues),
             }
         )

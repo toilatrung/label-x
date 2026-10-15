@@ -123,6 +123,7 @@ def test_workspace_has_issues_lease_queue_and_ai_evidence(world):
     assert data["lease"]["id"] == lease_id and data["queue"] == "risk"
     assert data["undecided_issue_count"] == 1
     assert data["snapshot_revision"] == world["run"].snapshot.revision_sha256
+    assert data["anchor_policy_version"] == "anchor-v1"
     (entry,) = data["ai_evidence"]
     assert entry["source"] == "qwen" and entry["reason_code"] == "label_conflict"
     assert entry["issue_id"] == data["issues"][0]["id"]

@@ -216,11 +216,19 @@ def _guideline_context(
     client: CvatReadClient, dataset_id: int, guideline_version: str | None = None
 ) -> dict[str, Any]:
     try:
-        return bind_taxonomy(
+        labels = client.list_labels(project_id=dataset_id)
+        context = bind_taxonomy(
             dataset_id,
-            client.list_labels(project_id=dataset_id),
+            labels,
             guideline_version=guideline_version,
         )
+        return {
+            **context,
+            "annotation_labels": [
+                {"label_id": label["id"], "name": label["name"], "color": label.get("color")}
+                for label in labels
+            ],
+        }
     except GuidelineBindingError as exc:
         raise SnapshotSourceError(str(exc)) from exc
 

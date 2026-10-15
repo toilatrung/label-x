@@ -188,6 +188,8 @@ class FrameAnnotationSerializer(serializers.Serializer[Any]):
     id = serializers.CharField()
     source: Any = FrameAnnotationSourceSerializer()
     label_id = serializers.IntegerField()
+    label = serializers.CharField(allow_null=True, required=False)
+    color = serializers.CharField(allow_null=True, required=False)
     bbox = BBoxSerializer(allow_null=True)
     rotation = serializers.FloatField(required=False)
     occluded = serializers.BooleanField(required=False)
@@ -277,6 +279,7 @@ class AiEvidenceSerializer(serializers.Serializer[Any]):
 
 
 class FrameWorkspaceSerializer(FrameIssuesSerializer):
+    anchor_policy_version = serializers.CharField(required=False)
     # Luôn được gửi; để optional như contract FrameWorkspace (giống snapshot_revision).
     lease = LeaseSerializer(allow_null=True, required=False)
     queue = serializers.ChoiceField(choices=["risk", "random"], allow_null=True, required=False)

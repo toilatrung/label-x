@@ -35,7 +35,7 @@ describe('Snapshot create form', () => {
     show();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Task 9' }));
-    screen.getAllByRole('button', { name: /\d+ Job/ }).forEach(button => fireEvent.click(button));
+    expect(screen.getByRole('checkbox', { name: 'Chọn Job 22' })).toBeDefined();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 22' }));
     fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: '  QA pass  ' } });
     await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(false));
@@ -56,7 +56,6 @@ describe('Snapshot create form', () => {
   it('retries an unknown result with the same body and idempotency key', async () => {
     post.mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce({ id: 102, status: 'locked' });
     show();
-    fireEvent.click(screen.getAllByRole('button', { name: /\d+ Job/ })[0]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn Job 17' }));
     await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' }));
@@ -64,5 +63,19 @@ describe('Snapshot create form', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Gửi lại cùng yêu cầu' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
     expect(post.mock.calls[1]).toEqual(post.mock.calls[0]);
+  });
+
+  it('preselects only the CVAT job opened from Review Queues', async () => {
+    post.mockResolvedValue({ id: 103, status: 'locked' });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><SnapshotForm datasetId={42} tasks={tasks}
+      canCreate initialJobId={18} /></QueryClientProvider>);
+    expect((screen.getByRole('checkbox', { name: 'Chọn Job 18' }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('checkbox', { name: 'Chọn Job 17' }) as HTMLInputElement).checked).toBe(false);
+    const submit = screen.getByRole('button', { name: 'Tạo snapshot và cấu hình →' });
+    await waitFor(() => expect((submit as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(submit);
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+    expect(post.mock.calls[0][0].scope).toEqual({ cvat_task_ids: [], cvat_job_ids: [18] });
   });
 });

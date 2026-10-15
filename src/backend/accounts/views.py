@@ -266,14 +266,18 @@ WORKFLOW_RULES = [
     {
         "rule": "anti_self_review",
         "name": "Reviewer không review annotation của chính mình",
-        "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
+        "description": (
+            "Backend từ chối khi trùng người; "
+            "Super Admin toàn hệ thống được thực hiện toàn bộ quy trình."
+        ),
         "enforced": False,
     },
     {
         "rule": "super_admin_override_reason",
-        "name": "Ghi đè của Super Admin phải có lý do",
+        "name": "Ghi chú quản trị của Super Admin",
         "description": (
-            "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline"
+            "Super Admin toàn hệ thống có toàn quyền; "
+            "ghi chú quản trị là tùy chọn và được lưu trong nhật ký."
         ),
         "enforced": False,
     },
@@ -286,7 +290,7 @@ WORKFLOW_RULES = [
     {
         "rule": "separation_of_duties",
         "name": "Người duyệt khác người yêu cầu",
-        "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
+        "description": "Người duyệt khác người yêu cầu, ngoại trừ Super Admin toàn hệ thống.",
         "enforced": False,
     },
 ]

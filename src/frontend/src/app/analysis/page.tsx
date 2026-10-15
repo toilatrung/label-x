@@ -20,6 +20,7 @@ function SnapshotWorkspace() {
   const router = useRouter();
   const search = useSearchParams();
   const rawId = search.get('snapshotId');
+  const jobId = Number(search.get('jobId')) || null;
   const parsed = rawId && /^[1-9]\d*$/.test(rawId) ? Number(rawId) : null;
   const id = parsed && Number.isSafeInteger(parsed) ? parsed : null;
   const userId = session?.user.id;
@@ -171,8 +172,8 @@ function SnapshotWorkspace() {
             {taskQuery.isPending && <p role="status">Đang tải Task/Job…</p>}
             {taskQuery.isError && <div className="lx-callout" role="alert">{errorMessage(taskQuery.error)}
               <button className="lx-btn" type="button" onClick={() => void taskQuery.refetch()}>Thử lại</button></div>}
-            {taskQuery.data && <SnapshotForm key={`${session.user.id}:${datasetId}`} datasetId={datasetId!}
-              tasks={taskQuery.data} canCreate={canCreate} onRequestLockChange={setRequestLocked} />}
+            {taskQuery.data && <SnapshotForm key={`${session.user.id}:${datasetId}:${jobId}`} datasetId={datasetId!}
+              tasks={taskQuery.data} canCreate={canCreate} initialJobId={jobId} onRequestLockChange={setRequestLocked} />}
           </>}
         </div>
       </section>

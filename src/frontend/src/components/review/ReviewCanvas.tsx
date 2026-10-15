@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { components } from '@/lib/api/contract';
+import { reviewBBox, type WorkspacePrediction } from '@/lib/review/workspace-api';
 
 type FrameSummary = components['schemas']['FrameSummary'];
 type Issue = components['schemas']['Issue'];
@@ -10,14 +11,22 @@ type ObjectRef = components['schemas']['ObjectRef'];
 
 export interface SnapshotAnnotation {
   id: string;
-  label: string;
-  bbox: BBox;
+  label?: string | null;
+  label_id?: number;
+  color?: string | null;
+  bbox: BBox | null;
+  rotation?: number;
+  occluded?: boolean;
+  outside?: boolean;
+  z_order?: number;
+  source?: { kind: string; id: number };
 }
 
 export interface ReviewCanvasProps {
   frame: FrameSummary;
   issues: Issue[];
   snapshotAnnotations?: SnapshotAnnotation[];
+  predictions?: WorkspacePrediction[];
   selectedIssueId: number | null;
   onSelectIssue: (issueId: number) => void;
   reviewMode: 'issue' | 'frame';
@@ -91,6 +100,7 @@ export function ReviewCanvas({
   frame,
   issues,
   snapshotAnnotations,
+  predictions,
   selectedIssueId,
   onSelectIssue,
   reviewMode,
@@ -353,23 +363,38 @@ export function ReviewCanvas({
           {/* Full Snapshot Annotations (if approved source provided) */}
           {showAnnotations && snapshotAnnotations && (
             <g id="snapshot-annotations-layer">
-              {snapshotAnnotations.map((ann) => (
-                <rect
-                  key={`snap-ann-${ann.id}`}
-                  x={ann.bbox.x1}
-                  y={ann.bbox.y1}
-                  width={Math.max(1, ann.bbox.x2 - ann.bbox.x1)}
-                  height={Math.max(1, ann.bbox.y2 - ann.bbox.y1)}
-                  fill="none"
-                  stroke="#c7ccd4"
-                  strokeWidth="2"
-                />
-              ))}
+              {[...snapshotAnnotations].sort((a, b) => (a.z_order ?? 0) - (b.z_order ?? 0)).map(ann => {
+                const bbox = reviewBBox(ann.bbox);
+                if (ann.outside || !bbox) return null;
+                const color = ann.color && /^#[0-9a-f]{6}$/i.test(ann.color) ? ann.color : '#c7ccd4';
+                const width = bbox.x2 - bbox.x1;
+                const height = bbox.y2 - bbox.y1;
+                const label = ann.label || `Nhãn #${ann.label_id ?? '?'}`;
+                return <g key={`snap-ann-${ann.id}`} data-annotation-id={ann.id}
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={e => {
+                    e.stopPropagation();
+                    const linked = issues.find(i => i.anchor.objects.some(o =>
+                      ['cvat_shape', ann.source?.kind].includes(String(o.namespace)) && o.id === String(ann.source?.id)));
+                    if (linked) onSelectIssue(linked.id);
+                    if (reviewMode === 'frame' && ann.source?.kind === 'shape') {
+                      onSelectObjectForManualIssue?.({ namespace: 'cvat_shape', id: String(ann.source.id) }, bbox);
+                    }
+                  }}>
+                  <rect x={bbox.x1} y={bbox.y1} width={width} height={height}
+                    transform={`rotate(${ann.rotation ?? 0} ${(bbox.x1 + bbox.x2) / 2} ${(bbox.y1 + bbox.y2) / 2})`}
+                    fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke"
+                    strokeDasharray={ann.occluded ? '6 4' : undefined} />
+                  <text x={bbox.x1} y={Math.max(14, bbox.y1 - 5)} fill={color} fontSize="13">
+                    {label} · {ann.source?.id ?? ann.id}
+                  </text>
+                </g>;
+              })}
             </g>
           )}
 
           {/* Issue Anchors Layer (solid yellow/white borders) */}
-          {showAnnotations && (
+          {showAnnotations && !snapshotAnnotations && (
             <g id="issue-anchors-layer">
               {issues.map((issue) => {
                 const isSelected = activeIssue?.id === issue.id;
@@ -432,14 +457,33 @@ export function ReviewCanvas({
           )}
 
           {/* Predictions Layer (dashed cyan borders) */}
-          {showPredictions && (
+          {showPredictions && predictions && (
+            <g id="model-predictions-layer">
+              {predictions.map(prediction => {
+                const bbox = prediction.bbox;
+                const isSecondModel = prediction.source.startsWith('Qwen');
+                const color = isSecondModel ? '#c4a5ff' : '#5fd0c7';
+                return <g key={prediction.id} data-prediction-source={prediction.source}
+                  opacity={reviewMode === 'frame' || prediction.issueId === null || prediction.issueId === activeIssue?.id ? 1 : 0.3}
+                  onClick={() => prediction.issueId !== null && onSelectIssue(prediction.issueId)}>
+                  <rect x={bbox.x1} y={bbox.y1} width={bbox.x2 - bbox.x1} height={bbox.y2 - bbox.y1}
+                    fill="none" stroke={color} strokeWidth="3" strokeDasharray={isSecondModel ? '4 4' : '10 6'} />
+                  <text x={bbox.x1 + 4} y={Math.min(imgHeight - 4, bbox.y2 + (isSecondModel ? 32 : 16))}
+                    fill={color} fontSize="13" fontWeight="600">
+                    {prediction.source}: {prediction.label}{prediction.confidence !== undefined ? ` · ${prediction.confidence.toFixed(2)}` : ''}
+                  </text>
+                </g>;
+              })}
+            </g>
+          )}
+          {showPredictions && !predictions && (
             <g id="predictions-layer">
               {issues.map((issue) => {
                 const isSelected = activeIssue?.id === issue.id;
                 const opacity = reviewMode === 'frame' || isSelected ? 1 : 0.3;
 
                 return issue.evidence?.map((ev, idx) => {
-                  const pBBox = ev.prediction_bbox;
+                  const pBBox = reviewBBox(ev.prediction_bbox);
                   if (!pBBox) return null;
 
                   const width = Math.max(1, pBBox.x2 - pBBox.x1);

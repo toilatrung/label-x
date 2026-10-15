@@ -176,6 +176,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
       }
 
       // Default mock responses with full OpenAPI envelopes
+      if (/^\/api\/datasets\/\d+\/tasks\/$/.test(path)) return Response.json([]);
       if (path === '/api/runs/12/') {
         return Response.json(mockRun12);
       }

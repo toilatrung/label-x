@@ -94,7 +94,7 @@ ul.dir{columns:2;font-size:14px}
 <table>
 <thead><tr><th>Action</th><th>AN</th><th>RV</th><th>QA</th><th>AD</th><th>SA</th><th>PO</th><th>DMO</th><th>Guard bổ sung</th><th>Nguồn</th></tr></thead>
 <tbody>
-<tr><td>Lưu quyết định issue</td><td></td><td>✓</td><td>✓</td><td></td><td>✓ (ghi đè có lý do)</td><td></td><td></td><td>Lease còn hạn; không self-review</td><td>UC-05; FR-REV-14; FR-SEC-06</td></tr>
+<tr><td>Lưu quyết định issue</td><td></td><td>✓</td><td>✓</td><td></td><td>✓ (ghi chú tùy chọn)</td><td></td><td></td><td>Lease còn hạn; không self-review trừ SA toàn hệ thống</td><td>UC-05; FR-REV-14; FR-SEC-06</td></tr>
 <tr><td>Phân xử</td><td></td><td></td><td>✓</td><td></td><td>✓ (ghi đè)</td><td></td><td></td><td>Khác người chuyển cấp</td><td>UC-06; FR-SEC-04</td></tr>
 <tr><td>Tạo yêu cầu sửa</td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>—</td><td>FR-RWK-01</td></tr>
 <tr><td>Báo đã sửa</td><td>✓ (assignee của yêu cầu)</td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td>Revision mới khác revision gốc</td><td>FR-RWK-02, FR-RWK-03</td></tr>
@@ -109,10 +109,11 @@ ul.dir{columns:2;font-size:14px}
 </table>
 
 <h2 id="invariants">4. Bất biến áp cho mọi action</h2>
+<p>Theo yêu cầu cập nhật quyền Super Admin: <code>super_admin</code> với <code>dataset_id = null</code> được thực hiện toàn bộ quy trình trên mọi dataset, kể cả khi action chỉ liệt kê vai trò khác. Vai trò này không bị chặn bởi identity mapping, self-review, cùng người yêu cầu/phê duyệt hoặc thiếu ghi chú ghi đè. API vẫn kiểm tra tài nguyên, lease, revision và trạng thái chuyển tiếp hợp lệ, đồng thời lưu audit. Ngoại lệ này không áp dụng cho <code>is_staff</code>/<code>is_superuser</code> nếu không có RoleAssignment tương ứng.</p>
 <ul>
-<li>Thiếu identity mapping: từ chối mọi thao tác review, phân xử, verify với <code>403 IDENTITY_MAPPING_MISSING</code> (fail closed, FR-SEC-02).</li>
-<li>Self-review theo assignee tại snapshot: <code>403 SELF_REVIEW_FORBIDDEN</code> (FR-SEC-03), kể cả Super Admin ghi đè (FR-SEC-06).</li>
-<li>Tách nhiệm vụ: người duyệt khác người yêu cầu, không dùng tài khoản khác của cùng người: <code>403 SAME_REQUESTER_APPROVER</code> (FR-SEC-04).</li>
+<li>Ngoài SA toàn hệ thống, thiếu identity mapping: từ chối review, phân xử, verify với <code>403 IDENTITY_MAPPING_MISSING</code> (fail closed, FR-SEC-02).</li>
+<li>Ngoài SA toàn hệ thống, self-review theo assignee tại snapshot: <code>403 SELF_REVIEW_FORBIDDEN</code> (FR-SEC-03).</li>
+<li>Ngoài SA toàn hệ thống, người duyệt phải khác người yêu cầu, kể cả tài khoản khác cùng thể nhân: <code>403 SAME_REQUESTER_APPROVER</code> (FR-SEC-04).</li>
 <li>Product Owner và Data/Model Owner không thao tác review và không là reviewer trong thí nghiệm mình thiết kế.</li>
 <li>Worker Detector không gọi được API ghi quyết định (rest-api.html §6).</li>
 </ul>
