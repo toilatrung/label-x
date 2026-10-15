@@ -263,6 +263,18 @@ def registered_model(run_id: int) -> dict[str, Any]:
     return verify_artifact(model, artifact)
 
 
+def _annotation_class_id(frame: SnapshotFrame, label_id: int) -> int:
+    """Map the locked CVAT label identity into the verified detector class space."""
+    context = frame.snapshot_job.snapshot.provenance.get("guideline_context", {})
+    labels = context.get("annotation_labels") or context.get("taxonomy", {}).get("labels", [])
+    names = {label.get("name") for label in labels if label.get("label_id") == label_id}
+    if len(names) != 1 or next(iter(names)) not in BDD100K_DETECTOR_CLASSES:
+        raise DetectorProvenanceError(
+            f"CVAT label_id={label_id} thiếu ánh xạ lớp detector trong snapshot"
+        )
+    return BDD100K_DETECTOR_CLASSES.index(next(iter(names)))
+
+
 def _detection_candidate(
     engine_input: EngineInput,
     frame: SnapshotFrame,
@@ -306,9 +318,10 @@ def _detection_candidate(
         if not isinstance(source, dict) or "kind" not in source or "id" not in source:
             raise ValueError("annotation ghép detector thiếu source")
         objects.append(ObjectRef(namespace=str(source["kind"]), id=str(source["id"])))
-        annotated_class_id = annotation.get("label_id")
-        if isinstance(annotated_class_id, bool) or not isinstance(annotated_class_id, int):
+        label_id = annotation.get("label_id")
+        if isinstance(label_id, bool) or not isinstance(label_id, int):
             raise ValueError("annotation ghép detector có label_id không hợp lệ")
+        annotated_class_id = _annotation_class_id(frame, label_id)
     return Candidate(
         engine=engine_input.engine,
         engine_version=engine_input.engine_version,
@@ -329,7 +342,14 @@ def _detection_candidate(
             "prediction_class": class_name,
             "confidence": float(confidence),
             "match_status": match_status,
+            # Routing compares detector class IDs; retain the CVAT ID separately for lineage.
             "annotated_class_id": annotated_class_id,
+            "annotation_label_id": annotation["label_id"] if annotation is not None else None,
+            "annotated_class_name": (
+                BDD100K_DETECTOR_CLASSES[annotated_class_id]
+                if annotated_class_id is not None
+                else None
+            ),
             "iou": iou,
             "model_version": (model or {}).get("version"),
             "checkpoint_sha256": (model or {}).get("sha256"),
@@ -369,6 +389,7 @@ def _candidates_for_frame(
 
     annotation_boxes: list[BoundingBox] = []
     annotations: dict[str, dict[str, Any]] = {}
+    annotation_classes: dict[str, int] = {}
     for index, shape in enumerate(frame.shapes):
         if not isinstance(shape, dict) or shape.get("outside"):
             continue
@@ -382,7 +403,8 @@ def _candidates_for_frame(
         ):
             continue
         ann_id = f"ann:{index}"
-        annotation_boxes.append(BoundingBox(ann_id, str(label_id), *points))
+        annotation_classes[ann_id] = _annotation_class_id(frame, label_id)
+        annotation_boxes.append(BoundingBox(ann_id, str(annotation_classes[ann_id]), *points))
         annotations[ann_id] = shape
 
     params = engine_input.config.params
@@ -399,7 +421,7 @@ def _candidates_for_frame(
     for pair in result.matches:
         det_index, raw = raw_by_id[pair.left_id]
         annotation = annotations[pair.right_id]
-        if raw["class_id"] != annotation["label_id"]:
+        if raw["class_id"] != annotation_classes[pair.right_id]:
             candidates.append(
                 _detection_candidate(
                     engine_input,
@@ -447,7 +469,8 @@ def _annotation_candidate(
             "source": "detector",
             "match_status": UNMATCHED_ANNOTATION,
             "annotation_bbox": [float(v) for v in annotation["points"]],
-            "annotated_class_id": annotation["label_id"],
+            "annotated_class_id": _annotation_class_id(frame, annotation["label_id"]),
+            "annotation_label_id": annotation["label_id"],
             "model_version": (model or {}).get("version"),
             "checkpoint_sha256": (model or {}).get("sha256"),
             "class_mapping_version": (model or {}).get("class_mapping_version"),
@@ -468,7 +491,7 @@ def predict_frames(
             snapshot_job__snapshot_id=engine_input.snapshot_id,
             snapshot_job__cvat_task_id__in={key[0] for key in wanted},
             frame_index__in={key[1] for key in wanted},
-        ).select_related("snapshot_job")
+        ).select_related("snapshot_job__snapshot")
     )
     by_key = {(frame.snapshot_job.cvat_task_id, frame.frame_index): frame for frame in frames}
     if set(by_key) != set(wanted):

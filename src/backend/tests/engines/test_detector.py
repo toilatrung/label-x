@@ -32,9 +32,21 @@ def _input() -> EngineInput:
     )
 
 
-def _frame(shapes=None):
+def _frame(shapes=None, labels=None):
+    labels = (
+        labels
+        if labels is not None
+        else [
+            {"label_id": index, "name": name} for index, name in enumerate(BDD100K_DETECTOR_CLASSES)
+        ]
+    )
     return SimpleNamespace(
-        snapshot_job=SimpleNamespace(cvat_task_id=9),
+        snapshot_job=SimpleNamespace(
+            cvat_task_id=9,
+            snapshot=SimpleNamespace(
+                provenance={"guideline_context": {"annotation_labels": labels}}
+            ),
+        ),
         frame_index=4,
         shapes=shapes or [],
     )
@@ -102,6 +114,51 @@ def test_matching_detection_same_label_is_not_a_qc_candidate():
         {"bbox_xyxy": [1, 2, 30, 40], "class_id": 2, "class_name": "car", "confidence": 0.9}
     ]
     assert _candidates_for_frame(_input(), frame, detections) == []
+
+
+def test_same_class_with_unrelated_cvat_id_does_not_create_wrong_label_issue():
+    frame = _frame([ann([0, 0, 10, 10], label_id=147)], labels=[{"label_id": 147, "name": "car"}])
+    assert _candidates_for_frame(_input(), frame, [det([0, 0, 10, 10])]) == []
+
+
+def test_equal_numeric_ids_with_different_class_names_still_raise_e2():
+    from orchestration.routing_policy import RoutingPolicy, route, routing_input_from_candidate
+
+    frame = _frame([ann([0, 0, 10, 10], label_id=2)], labels=[{"label_id": 2, "name": "bus"}])
+    (candidate,) = _candidates_for_frame(_input(), frame, [det([0, 0, 10, 10])])
+    assert candidate.family == "E2"
+    assert candidate.evidence["class_id"] == 2
+    assert candidate.evidence["annotated_class_id"] == 4
+    assert candidate.evidence["annotation_label_id"] == 2
+    assert candidate.evidence["annotated_class_name"] == "bus"
+    decision = route(
+        RoutingPolicy(),
+        routing_input_from_candidate({"engine": "detector", "evidence": candidate.evidence}),
+    )
+    assert "label_conflict" in decision.reasons
+
+
+@pytest.mark.parametrize(
+    "labels",
+    [
+        [],
+        [{"label_id": 99, "name": "car"}],
+        [{"label_id": 2, "name": "unknown"}],
+        [{"label_id": 2, "name": "car"}, {"label_id": 2, "name": "bus"}],
+    ],
+)
+def test_missing_or_ambiguous_snapshot_mapping_never_falls_back_to_numeric_ids(labels):
+    frame = _frame([ann([0, 0, 10, 10], label_id=2)], labels=labels)
+    with pytest.raises(DetectorProvenanceError, match="ánh xạ"):
+        _candidates_for_frame(_input(), frame, [det([0, 0, 10, 10])])
+
+
+def test_legacy_snapshot_taxonomy_labels_are_used_without_annotation_labels():
+    frame = _frame([ann([0, 0, 10, 10], label_id=147)])
+    frame.snapshot_job.snapshot.provenance = {
+        "guideline_context": {"taxonomy": {"labels": [{"label_id": 147, "name": "car"}]}}
+    }
+    assert _candidates_for_frame(_input(), frame, [det([0, 0, 10, 10])]) == []
 
 
 def test_unmatched_detection_is_e1_and_wrong_label_match_is_e2():
