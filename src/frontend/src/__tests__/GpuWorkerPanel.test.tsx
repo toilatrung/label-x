@@ -20,10 +20,14 @@ function reply(data: unknown, status = 200) { return { data: status === 200 ? da
   error: status === 200 ? undefined : data, response: new Response(null, { status }) }; }
 beforeEach(() => {
   vi.clearAllMocks(); auth.session.roles = [{ role: 'super_admin', dataset_id: null }];
-  get.mockImplementation((path: string) => Promise.resolve(reply(path === '/api/configuration/vlm/'
-    ? { revision: 1, base_url: 'https://api.example.test/v1', model: 'qwen3-vl-plus',
-      api_key_configured: true, confidence_threshold: 0.85 }
-    : envelope)));
+  get.mockImplementation(async (path: string) => {
+    if (path === '/api/model-artifacts/') return reply([]);
+    if (path === '/api/config-versions/') return reply({ next: null, previous: null, results: [] });
+    if (path === '/api/configuration/vlm/') return reply({ revision: 1,
+      base_url: 'https://api.example.test/v1', model: 'qwen3-vl-plus',
+      api_key_configured: true, confidence_threshold: 0.85 });
+    return reply(envelope);
+  });
 });
 afterEach(cleanup);
 

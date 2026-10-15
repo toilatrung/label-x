@@ -1371,6 +1371,23 @@ export interface paths {
         patch: operations["vlm_settings_update"];
         trace?: never;
     };
+    "/api/model-artifacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh mục detector artifact đã đăng ký để tạo ConfigVersion */
+        get: operations["model_artifacts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/models/": {
         parameters: {
             query?: never;
@@ -2083,6 +2100,16 @@ export interface components {
             seed: number;
             /** @description Reference của Ground Truth upload đã khóa; được gắn cố định với run. */
             metric_reference_id?: number;
+        };
+        RegisteredDetector: {
+            readonly id: number;
+            readonly name: string;
+            readonly version: string;
+            readonly checksum: string;
+            readonly class_mapping_version: string;
+            readonly class_mapping: {
+                [key: string]: unknown;
+            };
         };
         ModelArtifact: {
             name: string;
@@ -6112,6 +6139,27 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    model_artifacts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Registered detector artifacts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisteredDetector"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
         };
     };
     models_list: {

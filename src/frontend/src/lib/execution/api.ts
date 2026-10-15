@@ -4,6 +4,7 @@ import { apiClient, ApiRequestError } from '@/lib/api/client';
 export type Snapshot = components['schemas']['Snapshot'];
 export type ConfigVersion = components['schemas']['ConfigVersion'];
 export type ConfigVersionCreate = components['schemas']['ConfigVersionCreate'];
+export type RegisteredDetector = components['schemas']['RegisteredDetector'];
 export type Run = components['schemas']['Run'];
 export type LedgerEntry = components['schemas']['LedgerEntry'];
 export type RunShard = components['schemas']['RunShard'];
@@ -29,6 +30,14 @@ export async function listSnapshots(datasetId: number, cursor: string | null, si
 
 export async function listConfigs(cursor: string | null, signal?: AbortSignal) {
   return unwrap(await apiClient.GET('/api/config-versions/', { params: { query: { status: 'published', ...(cursor ? { cursor } : {}) } }, signal }));
+}
+
+export async function listDetectorArtifacts(signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/model-artifacts/', { signal, cache: 'no-store' }));
+}
+
+export async function getConfigRules(id: number, signal?: AbortSignal) {
+  return unwrap(await apiClient.GET('/api/config-versions/{id}/rules/', { params: { path: { id } }, signal }));
 }
 
 export async function listRuns(datasetId: number, cursor: string | null, signal?: AbortSignal) {

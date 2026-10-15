@@ -7,6 +7,11 @@ import { ModelsGuidelinesCard } from '@/components/configuration/ModelsGuideline
 const mocks = vi.hoisted(() => ({ get: vi.fn(), save: vi.fn(), role: 'qc_admin' }));
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ hasPermission: (check: (role: string) => boolean) => check(mocks.role) }) }));
 vi.mock('@/lib/configuration/vlm-api', () => ({ getVlmSettings: mocks.get, saveVlmSettings: mocks.save }));
+vi.mock('@/lib/execution/api', async importOriginal => ({
+  ...await importOriginal<typeof import('@/lib/execution/api')>(),
+  listConfigs: vi.fn().mockResolvedValue({ next: null, previous: null, results: [] }),
+  listDetectorArtifacts: vi.fn().mockResolvedValue([]),
+}));
 
 const settings = { revision: 7, base_url: 'https://api.shopaikey.com/v1', model: 'qwen3-vl-plus' as const, api_key_configured: true, confidence_threshold: 0.85 };
 

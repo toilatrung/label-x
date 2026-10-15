@@ -27,6 +27,7 @@ from runs.kpi_views import (
     WaiverApproveView,
     WaiverCreateView,
 )
+from runs.model_artifact_views import ModelArtifactListView
 from runs.views import (
     ConfigVersionListView,
     ConfigVersionPublishView,
@@ -93,6 +94,7 @@ urlpatterns = [
         name="config-versions-rules",
     ),
     path("api/models/", ModelListView.as_view(), name="models-list"),
+    path("api/model-artifacts/", ModelArtifactListView.as_view(), name="model-artifacts-list"),
     path("api/models/<int:pk>/", ModelUpdateView.as_view(), name="models-update"),
     path(
         "api/audit-samples/", AuditSampleListCreateView.as_view(), name="audit-samples-list-create"

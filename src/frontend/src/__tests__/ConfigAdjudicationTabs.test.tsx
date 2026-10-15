@@ -21,6 +21,7 @@ async function renderPage(Page: React.ComponentType) {
   api.fetchSpy.mockImplementation(async (request: Request) => {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/api/auth/')) return passthrough(request);
+    if (url.pathname === '/api/model-artifacts/') return Response.json([]);
     return Response.json({ next: null, previous: null, results: [] });
   });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AuthProvider><Page /></AuthProvider></QueryClientProvider>);
