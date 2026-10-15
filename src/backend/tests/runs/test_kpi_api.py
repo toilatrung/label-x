@@ -236,6 +236,38 @@ def test_waiver_approver_cannot_be_requester_and_rejection(world, qa):
     assert {c["name"]: c for c in gate.data["conditions"]}["coverage"]["status"] != "waived"
 
 
+@pytest.mark.django_db
+def test_global_super_admin_can_approve_own_waiver(world, qa):
+    from audit.models import AuditEvent
+
+    user = qa["a"]
+    RoleAssignment.objects.create(user=user, role=Role.SUPER_ADMIN, dataset_id=None)
+    response = _post(
+        user,
+        "/api/waivers/",
+        {
+            "run_id": world["run"].pk,
+            "condition": "coverage",
+            "reason": "Admin demo",
+            "evidence": "Checked manually",
+            "expires_at": (timezone.now() + timedelta(days=1)).isoformat(),
+        },
+        "admin-own-waiver",
+    )
+    assert response.status_code == 201, response.data
+    waiver_id = response.data["id"]
+    approved = _post(
+        user,
+        f"/api/waivers/{waiver_id}/approve/",
+        {"approved": True, "reason": "Admin approval"},
+        "admin-own-waiver-approve",
+    )
+    assert approved.status_code == 200, approved.data
+    assert approved.data["status"] == "approved"
+    audit = AuditEvent.objects.get(action="waiver.approve", object_id=str(waiver_id))
+    assert audit.after["super_admin_override"] is True
+
+
 # ---------------------------------------------------------------- BLOCKER-034 B-6: GET danh sách
 
 

@@ -21,7 +21,7 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
   const [name, setName] = useState('');
   const baseEngines = (initialConfig?.engines ?? {}) as Record<string, { enabled?: boolean; params?: Record<string, unknown> }>;
   const [enabledEngines, setEnabledEngines] = useState<string[]>(initialConfig
-    ? ENGINES.filter(engine => baseEngines[engine]?.enabled)
+    ? (baseEngines.metric?.enabled ? ['metric'] : ENGINES.filter(engine => baseEngines[engine]?.enabled))
     : ['schema', 'geometry', 'duplicate']);
   const [thresholdsText, setThresholdsText] = useState(JSON.stringify(initialConfig?.thresholds ?? {}, null, 2));
   const [artifacts, setArtifacts] = useState<RegisteredDetector[]>([]);
@@ -29,12 +29,22 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
   const [loadingModels, setLoadingModels] = useState(true);
   const [basePolicy, setBasePolicy] = useState<Awaited<ReturnType<typeof getConfigRules>> | null>(null);
   const [baseReady, setBaseReady] = useState(!initialConfig);
-  const [confidence, setConfidence] = useState(String(baseEngines.detector?.params?.score_threshold ?? 0.05));
+  const [confidence, setConfidence] = useState(String(baseEngines.metric?.params?.score_threshold ?? baseEngines.detector?.params?.score_threshold ?? 0.05));
   const [pending, setPending] = useState<{ body: ConfigVersionCreate; key: string } | null>(null);
   const [draftId, setDraftId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
+  const needsModel = enabledEngines.includes('detector') || enabledEngines.includes('metric');
+
+  function toggleEngine(engine: string, checked: boolean) {
+    setEnabledEngines(current => {
+      if (!checked) return current.filter(item => item !== engine);
+      if (engine === 'metric') return ['metric'];
+      return [...current.filter(item => item !== 'metric'), engine];
+    });
+    reset();
+  }
 
   useEffect(() => {
     if (!opener.current && document.activeElement instanceof HTMLElement) opener.current = document.activeElement;
@@ -72,9 +82,9 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
     if (enabledEngines.length === 0) return;
     let thresholds: Record<string, unknown>;
     const artifact = artifacts.find(value => String(value.id) === artifactId);
-    if (enabledEngines.includes('detector') && !artifact) { setError('Chọn model Detector đã đăng ký trước khi tạo cấu hình.'); return; }
+    if (needsModel && !artifact) { setError('Chọn model Detector đã đăng ký trước khi tạo cấu hình.'); return; }
     const score = Number(confidence);
-    if (enabledEngines.includes('detector') && (!confidence.trim() || !Number.isFinite(score) || score < 0 || score > 1)) {
+    if (needsModel && (!confidence.trim() || !Number.isFinite(score) || score < 0 || score > 1)) {
       setError('Ngưỡng tin cậy Detector phải từ 0 đến 1.'); return;
     }
     try {
@@ -83,7 +93,7 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
     } catch { setError('Ngưỡng phải là đối tượng JSON hợp lệ.'); return; }
     const models = { ...initialConfig?.models, ...(artifact ? { name: artifact.name, version: artifact.version } : {}) };
     const body: ConfigVersionCreate = { name: name.trim(), ...(basePolicy ? { rules: basePolicy.rules, sampling_policy: basePolicy.sampling_policy, release_thresholds: basePolicy.release_thresholds } : {}), engines: Object.fromEntries(ENGINES.map((engine) => [engine,
-      { ...baseEngines[engine], enabled: enabledEngines.includes(engine), ...(engine === 'detector' && enabledEngines.includes('detector') ? { params: { ...baseEngines.detector?.params, score_threshold: score } } : {}) }])), thresholds, models };
+      { ...baseEngines[engine], enabled: enabledEngines.includes(engine), ...(['detector', 'metric'].includes(engine) && enabledEngines.includes(engine) ? { params: { ...baseEngines[engine]?.params, score_threshold: score } } : {}) }])), thresholds, models };
     // Gửi lại cùng nội dung dùng lại key để backend trả về bản đã tạo, không tạo trùng.
     const request = pending && JSON.stringify(pending.body) === JSON.stringify(body) ? pending : { body, key: crypto.randomUUID() };
     setPending(request);
@@ -132,13 +142,13 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
             <fieldset className="lx-field lx-fieldset">
               <legend className="lx-label">Engine cần chạy *</legend>
               <div className="lx-card lx-card--inner"><table className="lx-table"><tbody>{ENGINES_META.map((meta) => <tr key={meta.key}>
-                <td className="lx-th--check"><label className="lx-switch"><input type="checkbox" aria-label={meta.name} disabled={busy || draftId !== null} checked={enabledEngines.includes(meta.key)} onChange={(e) => { setEnabledEngines((current) => e.target.checked ? [...current, meta.key] : current.filter((item) => item !== meta.key)); reset(); }} /><span /></label></td>
+                <td className="lx-th--check"><label className="lx-switch"><input type="checkbox" aria-label={meta.name} disabled={busy || draftId !== null} checked={enabledEngines.includes(meta.key)} onChange={(e) => toggleEngine(meta.key, e.target.checked)} /><span /></label></td>
                 <td><div className="lx-cell__main">{meta.name}</div><div className="lx-cell__sub">{meta.sub}</div></td>
               </tr>)}</tbody></table></div>
               {enabledEngines.length === 0 && <span role="alert" className="lx-gap__error">Cần bật ít nhất một engine.</span>}
             </fieldset>
             <div className="lx-field"><label className="lx-label" htmlFor="config-thresholds">Ngưỡng kiểm tra (JSON)</label><textarea className="lx-textarea" id="config-thresholds" rows={3} value={thresholdsText} onChange={(e) => { setThresholdsText(e.target.value); reset(); }} /></div>
-            {enabledEngines.includes('detector') && <><div className="lx-field"><label className="lx-label" htmlFor="detector-artifact">Model Detector</label>
+            {needsModel && <><div className="lx-field"><label className="lx-label" htmlFor="detector-artifact">Model Detector</label>
               <select id="detector-artifact" className="lx-select" required value={artifactId} disabled={busy || loadingModels || draftId !== null} onChange={e => { setArtifactId(e.target.value); reset(); }}>
                 <option value="">{loadingModels ? 'Đang tải model…' : 'Chọn model đã đăng ký'}</option>
                 {artifacts.map(artifact => <option key={artifact.id} value={artifact.id}>{artifact.name} · {artifact.version}</option>)}
@@ -154,7 +164,7 @@ export function ConfigVersionModal({ onClose, onPublished, initialConfig }: Prop
           {draftId && <div className="lx-gap__notice">Phiên bản v{draftId} đã được tạo nhưng chưa xác nhận phát hành. <button type="button" className="lx-btn lx-btn--sm" disabled={busy} onClick={retryPublish}>Thử phát hành lại</button></div>}
           <div className="lx-gap__actions">
             <button type="button" className="lx-btn" disabled={busy} onClick={() => dialog.current?.close()}>Hủy</button>
-            <button type="submit" className="lx-btn lx-btn--primary" disabled={busy || !baseReady || (enabledEngines.includes('detector') && (loadingModels || !artifactId)) || enabledEngines.length === 0 || draftId !== null}>{busy ? 'Đang lưu…' : 'Tạo và phát hành'}</button>
+            <button type="submit" className="lx-btn lx-btn--primary" disabled={busy || !baseReady || (needsModel && (loadingModels || !artifactId)) || enabledEngines.length === 0 || draftId !== null}>{busy ? 'Đang lưu…' : 'Tạo và phát hành'}</button>
           </div>
         </form>
       </div>
