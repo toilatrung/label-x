@@ -102,6 +102,7 @@ class GrantedFrameSerializer(serializers.Serializer[Any]):
 
 
 class LeaseGrantSerializer(serializers.Serializer[Any]):
+    queue = serializers.ChoiceField(choices=["risk", "random"], required=False)
     lease = LeaseSerializer()
     frame = GrantedFrameSerializer()
     resumed = serializers.BooleanField(required=False)

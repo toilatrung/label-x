@@ -17,7 +17,7 @@ from review.api_serializers import (
     QueueSummarySerializer,
 )
 from review.models import Lease
-from review.services import claim_next, queue_summary, renew
+from review.services import claim_next, current_lease, queue_summary, renew
 from runs.models import QCRun
 
 
@@ -174,3 +174,34 @@ class LeaseRenewView(APIView):
                 "expires_at": lease.expires_at.isoformat(),
             }
         )
+
+
+class CurrentLeaseView(APIView):
+    permission_classes = [HasRoleAndDatasetScope]
+    allowed_roles = (Role.REVIEWER, Role.QA_LEAD, Role.SUPER_ADMIN)
+    action_name = "leases.current"
+    object_type = "lease"
+    requires_dataset = True
+
+    def get_dataset_id(self, request: Request) -> int:
+        raw = request.query_params.get("dataset_id", "")
+        if not raw.isdigit() or int(raw) <= 0:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "Cần dataset_id hợp lệ."
+            )
+        return int(raw)
+
+    @extend_schema(
+        operation_id="leases_current",
+        tags=["review"],
+        parameters=[OpenApiParameter("dataset_id", int, required=True)],
+        responses={
+            200: LeaseGrantSerializer,
+            204: None,
+            400: ErrorSerializer,
+            403: ErrorSerializer,
+        },
+    )
+    def get(self, request: Request) -> Response:
+        grant = current_lease(request=request, dataset_id=self.get_dataset_id(request))
+        return Response(grant) if grant else Response(status=status.HTTP_204_NO_CONTENT)

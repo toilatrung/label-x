@@ -1023,6 +1023,30 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(await claims[2].clone().json()).toEqual({ run_id: 12, frame_id: 340, previous_lease_id: 1341 });
     });
 
+    it.each([1, 2])('opens %i selected frames when the server first resumes an older run', async count => {
+      let requests = 0;
+      const { calls } = await renderReviewPage('reviewer', async request => {
+        if (new URL(request.url).pathname === '/api/queues/risk/next/' && ++requests === 1) {
+          return Response.json({ ...futureGrant, resumed: true,
+            frame: { ...futureGrant.frame, run_id: 99, id: 9000 },
+            lease: { ...futureGrant.lease, id: 9900, frame_id: 9000 } });
+        }
+        return navigationApi(request);
+      });
+      await screen.findByRole('checkbox', { name: 'Chọn Task #10 • Frame #100' });
+      if (count === 1) {
+        fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu kiểm tra Task #10 • Frame #100' }));
+      } else {
+        fireEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      }
+      expect(await screen.findByRole('region', { name: /Không gian kiểm tra Review Workspace/i })).toBeDefined();
+      const claims = calls.filter(request => new URL(request.url).pathname === '/api/queues/risk/next/');
+      expect(claims).toHaveLength(2);
+      expect(await claims[0].clone().json()).toEqual({ run_id: 12, frame_id: 340 });
+      expect(await claims[1].clone().json()).toEqual({ run_id: 12, frame_id: 340, previous_lease_id: 9900 });
+    });
+
     it('clears selection when changing queue and excludes frames held by other reviewers', async () => {
       await renderReviewPage('reviewer', async request => {
         if (request.url.includes('/api/runs/12/ranking/') && new URL(request.url).searchParams.get('queue') === 'risk') {

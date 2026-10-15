@@ -1062,6 +1062,27 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/Unprocessable" }
+  /api/leases/current/:
+    get:
+      operationId: leases_current
+      tags: [review]
+      summary: Đọc active lease của chính người gọi trong dataset, không nhận frame mới
+      x-labelx-trace: [UC-04, FR-REV-04, FR-SEC-02]
+      x-labelx-roles: [reviewer, qa_lead, super_admin]
+      parameters:
+        - name: dataset_id
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Lease còn hạn cùng frame và hàng đợi gốc
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeaseGrant" }
+        "204": { description: Không có active lease trong dataset này }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/leases/{id}/renew/:
     post:
       operationId: leases_renew
@@ -3708,6 +3729,7 @@ components:
       type: object
       required: [lease, frame]
       properties:
+        queue: { $ref: "#/components/schemas/QueueName" }
         lease: { $ref: "#/components/schemas/Lease" }
         frame: { $ref: "#/components/schemas/FrameSummary" }
         resumed:

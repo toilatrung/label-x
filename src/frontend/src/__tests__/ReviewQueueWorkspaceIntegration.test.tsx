@@ -114,6 +114,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, gcTime: 0 },
@@ -182,7 +183,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
       return Response.json({ detail: 'Not found' }, { status: 404 });
     });
 
-    render(
+    const view = render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ReviewPage />
@@ -195,7 +196,7 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
       expect(screen.getByRole('button', { name: /Nhận frame kế tiếp từ hàng đợi/i })).toBeInTheDocument();
     });
 
-    return { api, calls };
+    return { api, calls, ...view };
   }
 
   it('claims next frame from queue and opens Workspace in memory without an extra claim', async () => {
@@ -308,6 +309,64 @@ describe('T-037 ReviewQueue & ReviewWorkspace Integration', () => {
 
     // "Vào kiểm tra frame (Workspace)" button must NOT be offered due to holder mismatch
     expect(screen.queryByRole('button', { name: /Vào kiểm tra frame \(Workspace\)/i })).not.toBeInTheDocument();
+  });
+
+  it('opens 50 selected frames and preserves navigation when moving to the Workspace page', async () => {
+    const frames = Array.from({ length: 50 }, (_, index) => ({ ...mockRiskFrame1,
+      frame_id: 340 + index, rank: index + 1,
+      frame_key: { cvat_task_id: 10, frame_number: 100 + index } }));
+    const { unmount, calls } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/runs/12/ranking/') {
+        return Response.json({ next: null, previous: null, results: frames });
+      }
+      if (new URL(request.url).pathname === '/api/leases/current/') return Response.json({ ...mockGrant12, queue: 'risk' });
+      if (new URL(request.url).pathname === '/api/queues/risk/next/' && (await request.clone().json()).frame_id === 341) {
+        return Response.json({ ...mockGrant12,
+          lease: { ...mockGrant12.lease, id: 9902, frame_id: 341 },
+          frame: { ...mockGrant12.frame, id: 341, frame_key: { cvat_task_id: 10, frame_number: 101 } } });
+      }
+      if (new URL(request.url).pathname === '/api/frames/341/workspace/') {
+        return Response.json({ ...mockFrameIssues, frame: { ...mockFrameIssues.frame, id: 341,
+          frame_key: { cvat_task_id: 10, frame_number: 101 } } });
+      }
+      return null;
+    });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Chọn tất cả frame có thể kiểm tra trên trang này' }));
+    expect(screen.getByText('Đã chọn 50 frame')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+    expect(await screen.findByText('Frame 1/50')).toBeInTheDocument();
+    await waitFor(() => expect(JSON.parse(sessionStorage.getItem('labelx:inspection:4:1')!).frames).toHaveLength(50));
+    unmount();
+    searchParamsState.current = '';
+    const claimsBefore = calls.filter(request => request.method === 'POST').length;
+    render(<QueryClientProvider client={queryClient}><AuthProvider><ReviewWorkspacePage /></AuthProvider></QueryClientProvider>);
+    expect(await screen.findByText('Frame 1/50')).toBeInTheDocument();
+    expect(screen.queryByText('Chưa có frame để review')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Chế độ chỉ xem/i)).not.toBeInTheDocument();
+    expect(calls.some(request => new URL(request.url).pathname === '/api/leases/current/')).toBe(true);
+    expect(calls.filter(request => request.method === 'POST').length).toBe(claimsBefore);
+    fireEvent.click(screen.getByRole('button', { name: /Frame sau/i }));
+    expect(await screen.findByText('Frame 2/50')).toBeInTheDocument();
+    const handoff = calls.filter(request => request.method === 'POST').at(-1)!;
+    expect(await handoff.clone().json()).toMatchObject({ run_id: 12, frame_id: 341, previous_lease_id: 9901 });
+    expect(screen.getByRole('button', { name: /Frame trước/i })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /Frame trước/i }));
+    expect(await screen.findByText('Frame 1/50')).toBeInTheDocument();
+    expect(await calls.filter(request => request.method === 'POST').at(-1)!.clone().json())
+      .toMatchObject({ run_id: 12, frame_id: 340, previous_lease_id: 9902 });
+  });
+
+  it('does not trust stored lease hints or claim a new frame when the server has no live lease', async () => {
+    const { unmount, calls } = await renderReviewPage('reviewer', async request => {
+      if (new URL(request.url).pathname === '/api/leases/current/') return new Response(null, { status: 204 });
+      return null;
+    });
+    unmount();
+    sessionStorage.setItem('labelx:inspection:4:1', JSON.stringify({ runId: 12, queue: 'risk', frames: [mockRiskFrame1], lease: mockGrant12.lease }));
+    searchParamsState.current = '';
+    render(<QueryClientProvider client={queryClient}><AuthProvider><ReviewWorkspacePage /></AuthProvider></QueryClientProvider>);
+    expect(await screen.findByText('Chưa có frame để review')).toBeInTheDocument();
+    expect(calls.filter(request => request.method === 'POST')).toHaveLength(0);
   });
 
   it('renders standalone /review/workspace in safe read-only inspection mode without grant', async () => {
