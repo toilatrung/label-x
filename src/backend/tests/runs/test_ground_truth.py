@@ -108,7 +108,26 @@ def test_upload_replay_metadata_and_independent_lock(world):
     assert preview.status_code == 200 and len(preview.data["frames"]) == 3
 
 
-@pytest.mark.parametrize("bad", ["snapshot", "mapping", "frame", "class", "bbox", "duplicate"])
+def test_global_super_admin_can_approve_own_ground_truth_with_audit(world):
+    from audit.models import AuditEvent
+
+    user = world[1]
+    RoleAssignment.objects.create(user=user, role=Role.SUPER_ADMIN, dataset_id=None)
+    response = upload(world)
+    ref_id = response.data["reference"]["id"]
+    assert client(user).get(f"/api/ground-truth/{ref_id}/preview/").status_code == 200
+    approved = client(user).post(f"/api/references/{ref_id}/lock/", {}, format="json")
+    assert approved.status_code == 200, approved.data
+    assert approved.data["locked_by"] == user.pk
+    assert approved.data["status"] == "locked"
+    audit = AuditEvent.objects.get(action="reference.lock", object_id=str(ref_id))
+    assert audit.after["super_admin_override"] is True
+
+
+@pytest.mark.parametrize(
+    "bad",
+    ["snapshot", "mapping", "task", "frame", "class", "bbox", "negative", "reversed", "duplicate"],
+)
 def test_upload_rejects_bad_input_without_saving_file(world, bad):
     payload = world[-1]
     if bad == "snapshot":
@@ -117,10 +136,16 @@ def test_upload_rejects_bad_input_without_saving_file(world, bad):
         payload["mapping_version"] = "wrong"
     elif bad == "frame":
         payload["frames"][0]["frame_number"] = 999
+    elif bad == "task":
+        payload["frames"][0]["cvat_task_id"] = 999
     elif bad == "class":
         payload["frames"][0]["boxes"][0]["label"] = "unknown"
     elif bad == "bbox":
         payload["frames"][0]["boxes"][0]["bbox_xyxy"] = [0, 0, 11, 10]
+    elif bad == "negative":
+        payload["frames"][0]["boxes"][0]["bbox_xyxy"] = [-1, 0, 9, 10]
+    elif bad == "reversed":
+        payload["frames"][0]["boxes"][0]["bbox_xyxy"] = [9, 0, 0, 10]
     else:
         payload["frames"].append(payload["frames"][0])
     assert upload(world, payload=payload).status_code == 400
@@ -159,6 +184,78 @@ def test_upload_idempotency_conflict_preserves_current(world):
     assert (
         GroundTruthUpload.objects.get(is_current=True).reference_id == first.data["reference"]["id"]
     )
+
+
+def test_upload_snapshot_mismatch_explains_selected_and_file_snapshot(world):
+    payload = world[-1]
+    selected_id = world[0].snapshot_id
+    payload["snapshot_id"] = selected_id + 999
+    response = upload(world, payload=payload)
+    assert response.status_code == 400
+    assert f"Snapshot #{selected_id + 999}" in response.data["message"]
+    assert f"Snapshot #{selected_id}" in response.data["message"]
+    assert "task, frame" in response.data["message"]
+    assert not GroundTruthUpload.objects.exists()
+
+
+def test_upload_mapping_mismatch_explains_mapping_failure(world):
+    world[-1]["mapping_version"] = "wrong"
+    response = upload(world)
+    assert response.status_code == 400
+    assert "Mapping class" in response.data["message"]
+    assert not GroundTruthUpload.objects.exists()
+
+
+def test_api_blocks_metric_without_gt_and_does_not_create_run(world):
+    from runs.models import QCRun
+
+    original = world[0]
+    count = QCRun.objects.count()
+    response = client(world[1]).post(
+        "/api/runs/",
+        {
+            "snapshot_id": original.snapshot_id,
+            "config_version_id": original.config_version_id,
+            "seed": 42,
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="metric-missing-gt",
+    )
+    assert response.status_code == 422, response.data
+    assert "Metric cần Ground Truth" in response.data["message"]
+    assert QCRun.objects.count() == count
+
+
+@pytest.mark.parametrize("bad", ["draft", "wrong-snapshot", "deleted"])
+def test_api_blocks_unusable_gt_without_creating_run(world, bad):
+    from runs.models import QCRun
+
+    response = upload(world)
+    ref = Reference.objects.get(pk=response.data["reference"]["id"])
+    if bad != "draft":
+        lock(world, ref)
+    if bad == "wrong-snapshot":
+        from snapshots.models import Snapshot
+
+        other = Snapshot.objects.create(dataset_id=world[0].dataset_id, created_by=world[1])
+        ref.snapshot = other
+        ref.save(update_fields=["snapshot"])
+    elif bad == "deleted":
+        GroundTruthUpload.objects.filter(reference=ref).update(deleted_at=timezone.now())
+    count = QCRun.objects.count()
+    response = client(world[1]).post(
+        "/api/runs/",
+        {
+            "snapshot_id": world[0].snapshot_id,
+            "config_version_id": world[0].config_version_id,
+            "metric_reference_id": ref.pk,
+            "seed": 42,
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=f"metric-unusable-{bad}",
+    )
+    assert response.status_code == 422, response.data
+    assert QCRun.objects.count() == count
 
 
 def test_replacement_pins_runs_and_cleanup_preserves_active_shared_input(world):

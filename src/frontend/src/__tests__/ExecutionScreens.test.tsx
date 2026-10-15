@@ -33,6 +33,7 @@ async function setup(
     candidatesOverride?: unknown;
     candidatesFails?: boolean;
     artifactsOverride?: unknown;
+    groundTruthOverride?: unknown;
   } = {}
 ) {
   const api = installMockAuthApi(); await api.signIn(username);
@@ -42,7 +43,7 @@ async function setup(
   api.fetchSpy.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.startsWith('/api/auth/')) return original(request);
-    if (path === '/api/ground-truth/') return Response.json(null);
+    if (path === '/api/ground-truth/') return Response.json(options.groundTruthOverride ?? null);
     if (path === '/api/configuration/vlm/') return Response.json({ revision: 0, model: 'qwen3-vl-plus', base_url: 'https://api.shopaikey.com/v1', confidence_threshold: 0.85, api_key_configured: false });
     if (path === '/api/model-artifacts/register/') { calls.push(request); return Response.json([{ id: 2, name: 'New Detector', version: 'v2', checksum: 'b'.repeat(64), class_mapping_version: 'bdd-10', class_mapping: { classes: ['car'] } }]); }
     if (path === '/api/model-artifacts/') return Response.json(options.artifactsOverride ?? [{ id: 1, name: 'Faster R-CNN', version: 'bdd-v1', checksum: 'a'.repeat(64), class_mapping_version: 'bdd-10', class_mapping: { classes: ['car'] } }]);
@@ -318,6 +319,53 @@ describe('Execution screens on real API contract', () => {
     await setup('qalead', <ModelsGuidelinesCard />);
     await waitFor(() => expect(screen.queryByText('Đang tải…')).toBeNull());
     expect((screen.getByRole('button', { name: 'Chỉnh Detector' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('selecting Metric disables the other five engines and publishes a model-backed Metric-only config', async () => {
+    const { calls } = await setup('qcadmin', <AnalysisConfigPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Tạo phiên bản cấu hình' }));
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.click(dialog.getByRole('checkbox', { name: 'Mô hình độc lập (Detector)' }));
+    fireEvent.click(dialog.getByRole('checkbox', { name: 'Mô hình thị giác – ngôn ngữ (VLM)' }));
+    fireEvent.click(dialog.getByRole('checkbox', { name: 'Metric' }));
+    expect(dialog.getAllByRole('checkbox').filter(input => (input as HTMLInputElement).checked)).toEqual([
+      dialog.getByRole('checkbox', { name: 'Metric' }),
+    ]);
+    fireEvent.click(dialog.getByRole('checkbox', { name: 'Geometry' }));
+    expect((dialog.getByRole('checkbox', { name: 'Metric' }) as HTMLInputElement).checked).toBe(false);
+    fireEvent.click(dialog.getByRole('checkbox', { name: 'Metric' }));
+    fireEvent.change(dialog.getByLabelText(/Tên cấu hình/), { target: { value: 'Metric exclusive' } });
+    await dialog.findByRole('option', { name: /Faster R-CNN/ });
+    fireEvent.change(dialog.getByLabelText('Model Detector'), { target: { value: '1' } });
+    fireEvent.click(dialog.getByRole('button', { name: 'Tạo và phát hành' }));
+    await waitFor(() => expect(calls.some(r => new URL(r.url).pathname === '/api/config-versions/8/publish/')).toBe(true));
+    const request = calls.find(r => r.method === 'POST' && new URL(r.url).pathname === '/api/config-versions/')!;
+    const body = await request.clone().json();
+    expect(Object.entries(body.engines).filter(([, value]) => (value as { enabled: boolean }).enabled).map(([key]) => key)).toEqual(['metric']);
+    expect(body.models).toMatchObject({ name: 'Faster R-CNN', version: 'bdd-v1' });
+  });
+
+  it.each(['missing', 'draft', 'wrong-snapshot', 'deleted', 'ready'])('checks Metric Ground Truth readiness: %s', async state => {
+    const { calls } = await setup('qalead', <AnalysisConfigPage />, {
+      configsOverride: { results: [{ id: 7, name: 'Metric only', status: 'published', engines: { metric: { enabled: true } }, models: { name: 'Faster R-CNN', version: 'bdd-v1' }, thresholds: {} }], next: null, previous: null },
+      groundTruthOverride: state === 'missing' ? null : { dataset_id: 1, filename: 'truth.json', frame_count: 1, box_count: 1,
+        deleted_at: state === 'deleted' ? '2026-10-15T00:00:00Z' : null,
+        reference: { id: 9, snapshot_id: state === 'wrong-snapshot' ? 99 : 4, status: state === 'draft' ? 'draft' : 'locked', created_by: 2 } },
+    });
+    await screen.findByRole('option', { name: /Metric only · v7/ });
+    fireEvent.change(screen.getByLabelText('Dataset'), { target: { value: '1' } });
+    await screen.findByRole('option', { name: /SNP-004/ });
+    fireEvent.change(screen.getByLabelText('Snapshot đã khoá'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(state !== 'ready'));
+    if (state !== 'ready') {
+      fireEvent.click(screen.getByRole('button', { name: 'Chạy phân tích' }));
+      expect(calls.some(r => r.method === 'POST' && new URL(r.url).pathname === '/api/runs/')).toBe(false);
+    } else {
+      // Choosing a replacement must not silently run with the previous valid GT.
+      fireEvent.change(screen.getByLabelText('Upload Ground Truth'), { target: { files: [new File(['{}'], 'invalid-replacement.json')] } });
+      await waitFor(() => expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(true));
+    }
   });
 
   it('blocks analysis when an older published config enables Detector without a model', async () => {

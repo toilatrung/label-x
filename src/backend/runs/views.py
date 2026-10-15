@@ -551,14 +551,26 @@ class RunCollectionView(APIView):
                 )
 
         try:
-            run, _created = create_qc_run(
-                snapshot_id=snapshot_id,
-                config_version_id=config_version_id,
-                seed=seed,
-                metric_reference_id=data.get("metric_reference_id"),
-                created_by=user,
-                idempotency_key=key,
-            )
+            with transaction.atomic():
+                run, _created = create_qc_run(
+                    snapshot_id=snapshot_id,
+                    config_version_id=config_version_id,
+                    seed=seed,
+                    metric_reference_id=data.get("metric_reference_id"),
+                    created_by=user,
+                    idempotency_key=key,
+                )
+                # Reject incomplete user requests before the run and its dispatch
+                # callbacks commit. A replay still returns its original run, even
+                # after successful processing has cleaned up the temporary GT.
+                if _created and "metric" in run.engine_versions:
+                    if run.metric_reference_id is None:
+                        raise BusinessRuleUnmetError(
+                            "Metric cần Ground Truth hợp lệ, đã duyệt "
+                            "và thuộc đúng Snapshot đang chọn trước khi chạy."
+                        )
+                    if run.model_artifact_id is None:
+                        raise BusinessRuleUnmetError("Metric cần model Detector đã đăng ký.")
         except SnapshotNotFoundError as exc:
             raise ApiError(status.HTTP_404_NOT_FOUND, "NOT_FOUND", str(exc)) from exc
         except ConfigVersionNotFoundError as exc:

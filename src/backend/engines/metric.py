@@ -109,15 +109,29 @@ def parse_gt_frames(
     raw: bytes, snapshot_id: int, mapping_version: str
 ) -> dict[FrameKey, dict[str, Any]]:
     """Shared validation for uploads and runtime reads."""
-    payload = json.loads(raw)
+    try:
+        payload = json.loads(raw)
+    except (ValueError, UnicodeError) as exc:
+        raise ValueError("File Ground Truth phải là JSON hợp lệ (UTF-8).") from exc
     if (
         not isinstance(payload, dict)
         or payload.get("schema_version") != "labelx.metric.gt.v1"
-        or payload.get("snapshot_id") != snapshot_id
-        or payload.get("mapping_version") != mapping_version
         or not isinstance(payload.get("frames"), list)
     ):
-        raise ValueError("metric GT schema/snapshot/mapping mismatch")
+        raise ValueError(
+            "Ground Truth phải có schema_version labelx.metric.gt.v1 và danh sách frames."
+        )
+    if payload.get("snapshot_id") != snapshot_id:
+        source_id = payload.get("snapshot_id")
+        source = f"Snapshot #{source_id}" if type(source_id) is int else "Snapshot không xác định"
+        raise ValueError(
+            f"File Ground Truth thuộc {source}, nhưng bạn đang chọn Snapshot #{snapshot_id}. "
+            "Hãy chọn đúng Snapshot của file hoặc upload Ground Truth "
+            "tương ứng với Snapshot đang chọn. "
+            "Không chỉ đổi snapshot_id trong file vì task, frame và ảnh cũng phải khớp."
+        )
+    if payload.get("mapping_version") != mapping_version:
+        raise ValueError("Mapping class trong file Ground Truth không khớp mapping đã chọn.")
     frames: dict[FrameKey, dict[str, Any]] = {}
     for frame in payload["frames"]:
         if not isinstance(frame, dict):

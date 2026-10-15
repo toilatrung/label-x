@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import CvatIdentity, Role
-from accounts.permissions import HasRoleAndDatasetScope, is_annotator_only
+from accounts.permissions import HasRoleAndDatasetScope, is_annotator_only, is_super_admin
 from audit.services import append_audit_event
 from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
@@ -333,7 +333,7 @@ class ReferenceLockView(_KpiView):
             ref = Reference.objects.select_for_update().select_related("snapshot").get(pk=pk)
             if ref.status == Reference.Status.LOCKED:
                 return Response(_reference_read(ref))  # khoá lại là no-op
-            if _same_person(actor, ref.created_by_id):
+            if not is_super_admin(actor) and _same_person(actor, ref.created_by_id):
                 raise ApiError(
                     status.HTTP_403_FORBIDDEN,
                     "SAME_REQUESTER_APPROVER",
@@ -361,7 +361,11 @@ class ReferenceLockView(_KpiView):
                 object_type="reference",
                 object_id=ref.pk,
                 before={"status": "draft"},
-                after={"status": "locked", "gt_checksum": ref.gt_checksum},
+                after={
+                    "status": "locked",
+                    "gt_checksum": ref.gt_checksum,
+                    "super_admin_override": is_super_admin(actor),
+                },
                 revision=ref.snapshot.revision_sha256,
             )
         return Response(_reference_read(ref))
@@ -633,7 +637,7 @@ class WaiverApproveView(_KpiView):
                 raise ApiError(
                     status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Waiver đã được quyết định."
                 )
-            if _same_person(actor, waiver.requested_by_id):
+            if not is_super_admin(actor) and _same_person(actor, waiver.requested_by_id):
                 raise ApiError(
                     status.HTTP_403_FORBIDDEN,
                     "SAME_REQUESTER_APPROVER",
@@ -658,7 +662,7 @@ class WaiverApproveView(_KpiView):
                 object_type="waiver",
                 object_id=waiver.pk,
                 before={"status": "pending"},
-                after={"status": waiver.status},
+                after={"status": waiver.status, "super_admin_override": is_super_admin(actor)},
                 revision=waiver.run.snapshot.revision_sha256,
                 reason=data["reason"],
             )

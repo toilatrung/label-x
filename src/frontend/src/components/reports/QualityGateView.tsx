@@ -182,7 +182,9 @@ function WaiverDecisionForm({ runId }: { runId: number }) {
         <button type="button" className="lx-btn" disabled={!ready} onClick={() => void decide(true)}>Duyệt waiver</button>
         <button type="button" className="lx-btn" disabled={!ready} onClick={() => void decide(false)}>Từ chối waiver</button>
       </div>
-      <span className="lx-hint">Người duyệt phải khác người đề nghị.</span>
+      <span className="lx-hint">{session?.roles.some(r => r.role === 'super_admin' && r.dataset_id === null)
+        ? 'Super Admin có thể duyệt cả waiver do chính mình đề nghị.'
+        : 'Người duyệt phải khác người đề nghị.'}</span>
       {error && <p role="alert" className="lx-callout lx-callout--compact lx-m-0">{error}</p>}
       {decided && (
         <p className="lx-callout lx-callout--info lx-callout--compact lx-m-0" aria-live="polite">

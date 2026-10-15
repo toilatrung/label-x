@@ -37,6 +37,7 @@ function ConfigContent() {
   const [pending, setPending] = useState<{ body: RunCreate; key: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [groundTruthImportPending, setGroundTruthImportPending] = useState(false);
   const snapshots = useQuery({ queryKey: ['analysis-snapshots', session?.user.id, datasetId, snapshotCursor], queryFn: ({ signal }) => listSnapshots(datasetId!, snapshotCursor, signal), enabled: datasetId !== null, retry: false });
   const configs = useQuery({ queryKey: ['analysis-configs', session?.user.id, configCursor], queryFn: ({ signal }) => listConfigs(configCursor, signal), enabled: !!session, retry: false });
   const groundTruth = useQuery({ queryKey: ['ground-truth', session?.user.id, datasetId], queryFn: ({ signal }) => currentGroundTruth(datasetId!, signal), enabled: canCreate && datasetId !== null, retry: false, refetchInterval: 5000 });
@@ -55,10 +56,11 @@ function ConfigContent() {
   const metricConfig = rawEngines.metric as { enabled?: boolean } | undefined;
   const metricEnabled = metricConfig?.enabled === true;
   const detectorEnabled = (rawEngines.detector as { enabled?: boolean } | undefined)?.enabled === true;
-  const detectorModelReady = !detectorEnabled || (typeof activeConfig?.models?.name === 'string' &&
+  const detectorModelReady = !(detectorEnabled || metricEnabled) || (typeof activeConfig?.models?.name === 'string' &&
     !!activeConfig.models.name && typeof activeConfig.models.version === 'string' && !!activeConfig.models.version);
   const gt = groundTruth.data;
-  const groundTruthReady = !metricEnabled || (!groundTruth.isPending && !groundTruth.isError && (!gt || (!gt.deleted_at && gt.reference.status === 'locked' && gt.reference.snapshot_id === snapshotId)));
+  const groundTruthReady = !metricEnabled || (!groundTruthImportPending && !groundTruth.isPending && !groundTruth.isError && !!gt &&
+    !gt.deleted_at && gt.reference.status === 'locked' && gt.reference.snapshot_id === snapshotId);
   const taskCount = selectedSnapshot?.jobs ? new Set(selectedSnapshot.jobs.map((job) => job.cvat_task_id)).size : 0;
 
   async function submit(event: React.FormEvent) {
@@ -145,9 +147,12 @@ function ConfigContent() {
           </dl>
           <div className="lx-field"><label className="lx-label" htmlFor="analysis-seed">Seed</label><input className="lx-input" id="analysis-seed" type="number" value={seed} onChange={(e) => { setSeed(Number(e.target.value)); setPending(null); }} /></div>
           {canCreate && <GroundTruthUpload key={`${datasetId}-${snapshotId}`} datasetId={datasetId} snapshotId={snapshotId}
-            userId={session!.user.id} enabled={canCreate} busy={submitting} />}
+            userId={session!.user.id} enabled={canCreate} busy={submitting}
+            isSuperAdmin={session?.roles.some(({ role, dataset_id }) => role === 'super_admin' && dataset_id === null)}
+            onImportPendingChange={setGroundTruthImportPending} />}
           {activeConfig && enabledEngineCount < ENGINES.length && <div className="lx-callout lx-callout--warning"><span className="lx-callout__text">{ENGINES.length - enabledEngineCount} engine đang tắt, nên kết quả sẽ ghi là Not checked.</span></div>}
-          {!detectorModelReady && <div className="lx-callout lx-callout--warning" role="alert">Phiên bản này bật Detector nhưng chưa chọn model. Tạo phiên bản cấu hình mới tại đây, chọn model đã đăng ký rồi phát hành để chạy.</div>}
+          {metricEnabled && !groundTruthReady && <p className="lx-callout lx-callout--warning" role="alert">{groundTruthImportPending ? 'Hoàn tất upload Ground Truth đang chọn trước khi chạy Metric.' : 'Metric cần Ground Truth hợp lệ, đã duyệt và thuộc đúng Snapshot đang chọn trước khi chạy.'}</p>}
+          {!detectorModelReady && <div className="lx-callout lx-callout--warning" role="alert">Phiên bản này bật {metricEnabled ? 'Metric' : 'Detector'} nhưng chưa chọn model. Tạo phiên bản cấu hình mới tại đây, chọn model đã đăng ký rồi phát hành để chạy.</div>}
           <ol className="lx-muted lx-text-13"><li>Chạy các engine song song</li><li>Gộp Issue trùng và tính mức ưu tiên</li><li>Đưa vào các hàng đợi tại Review Center</li></ol>
           {!canCreate && <p className="lx-muted">Vai trò hiện tại chỉ được xem cấu hình và lịch sử; Quality Assurance Lead hoặc Super Admin mới được chạy phân tích.</p>}
           {submitError && <p role="alert" className="lx-callout">{submitError}</p>}
