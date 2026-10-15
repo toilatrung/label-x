@@ -1057,7 +1057,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
     });
 
     it('keeps the current frame writable when the next frame cannot be acquired', async () => {
-      await renderReviewPage('reviewer', async request => {
+      const { calls } = await renderReviewPage('reviewer', async request => {
         if (request.url.includes('/api/queues/risk/next/') && (await request.clone().json()).previous_lease_id) {
           return Response.json({ code: 'LEASE_CONFLICT', message: 'Frame đích đang được giữ' }, { status: 409 });
         }
@@ -1071,6 +1071,13 @@ describe('ReviewQueues Frontend (T-034)', () => {
       await screen.findByText(/Frame đích đang được giữ/);
       expect(screen.getByText('Frame 1/2')).toBeDefined();
       expect((screen.getByRole('button', { name: 'Hoàn tất review frame' }) as HTMLButtonElement).disabled).toBe(false);
+      expect(screen.queryByText(/Thao tác với lease cũ đã bị khóa/)).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Tải lại từ server' }));
+      await screen.findByRole('button', { name: 'Kiểm tra ảnh đã chọn' });
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra ảnh đã chọn' }));
+      await screen.findByText('Frame 1/2');
+      const claims = calls.filter(request => request.url.includes('/api/queues/risk/next/'));
+      expect(await claims.at(-1)!.clone().json()).toEqual({ run_id: 12, frame_id: 340 });
     });
 
     it('advances after completion and opens completed previous frames read-only without claiming them', async () => {

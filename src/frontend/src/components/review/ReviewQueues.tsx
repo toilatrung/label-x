@@ -139,7 +139,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   // Active Lease Grant state (from claim or resume)
   const [activeGrant, setActiveGrant] = useState<LeaseGrant | null>(null);
   const [claimStatus204, setClaimStatus204] = useState<boolean>(false);
-  const [claimError, setClaimError] = useState<{ message: string; code?: string } | null>(null);
+  const [claimError, setClaimError] = useState<{ message: string; code?: string; handoff?: boolean } | null>(null);
   // Server trả lease đang giữ thay vì frame vừa chọn (mỗi reviewer giữ tối đa một lease)
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
@@ -412,6 +412,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         return;
       }
       if (result.status === 204) {
+        heldLeaseRef.current = undefined;
         setClaimStatus204(true);
         return;
       }
@@ -471,6 +472,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             ? 'Chưa đủ định danh CVAT đã xác minh của reviewer hoặc người gán nhãn. Kiểm tra người được giao job CVAT và liên kết định danh. Nếu snapshot thiếu người gán nhãn, cần tạo snapshot và run mới sau khi cập nhật.'
             : err.message,
           code: err.detail?.code,
+          handoff: typeof _variables === 'object',
         });
       } else {
         setClaimError({
@@ -532,6 +534,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   });
 
   const handleReloadServerState = () => {
+    heldLeaseRef.current = undefined;
     setIsWorkspaceOpen(false);
     setIsLeaseConflict(false);
     setActiveGrant(null);
@@ -796,7 +799,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
             {claimError.code === 'LEASE_CONFLICT' && (
               <div className="lx-mt-1">
                 <p className="lx-review-note">
-                  Quyền giữ frame đã hết hạn hoặc thuộc người khác (409 LEASE_CONFLICT). Thao tác với lease cũ đã bị khóa.
+                  {claimError.handoff
+                    ? 'Chưa chuyển frame. Frame hiện tại được giữ nguyên nếu quyền giữ còn hiệu lực; bạn có thể thử lại hoặc tải lại hàng đợi.'
+                    : 'Quyền giữ frame đã hết hạn hoặc thuộc người khác (409 LEASE_CONFLICT). Thao tác với lease cũ đã bị khóa.'}
                 </p>
                 <button
                   type="button"
