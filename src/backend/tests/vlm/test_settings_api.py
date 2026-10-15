@@ -55,6 +55,7 @@ def test_save_encrypts_and_does_not_echo_secret():
     assert SECRET not in connection.encrypted_api_key
     assert SECRET not in json.dumps(list(AuditEvent.objects.values()), default=str)
     config = parse_vlm_config(current_config())
+    assert config.max_attempts == 4  # First call plus three retries.
     assert connection_api_key(config) == SECRET
     from vlm.contract import CandidateContext, CropInput, VlmRequest
 

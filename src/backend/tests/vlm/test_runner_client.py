@@ -110,6 +110,23 @@ def test_max_attempts_exhausted_is_provider_error() -> None:
     assert result.attempts == 2 and budget.used == 2
 
 
+@pytest.mark.parametrize("status", [503, 429, 504])
+@pytest.mark.parametrize("recover", [True, False])
+def test_three_retries_use_four_calls_with_exponential_backoff(status, recover) -> None:
+    responses = iter([httpx.Response(status)] * 3 + [_ok() if recover else httpx.Response(status)])
+    sleeps: list[float] = []
+    budget = CounterBudget(10)
+    result = run_vlm_unit(
+        _req(max_attempts=4),
+        _client(lambda r: next(responses)),
+        budget,
+        sleep=sleeps.append,
+    )
+    assert result.status is (VlmStatus.CHECKED if recover else VlmStatus.FAILED)
+    assert result.attempts == 4 and budget.used == 4
+    assert sleeps == [2.0, 4.0, 8.0]
+
+
 def test_quota_and_auth_not_retried() -> None:
     quota = httpx.Response(429, json={"error": {"code": "insufficient_quota", "message": "x"}})
     for resp in (quota, httpx.Response(401), httpx.Response(400)):

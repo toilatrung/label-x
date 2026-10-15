@@ -73,7 +73,7 @@ def test_valid_config_parses_and_public_dict_has_no_secret() -> None:
         {"prompt_version": "custom"},
         {"timeout_seconds": 0},
         {"timeout_seconds": True},
-        {"max_attempts": 4},
+        {"max_attempts": 5},
         {"max_attempts": 0},
         {"budget": {"max_calls": -1}},
         {"budget": {}},
@@ -156,6 +156,7 @@ def test_boundaries_accepted() -> None:
         {"budget": {"max_calls": 0}},
         {"budget": {"max_calls": 10_000}},
         {"max_attempts": 1},
+        {"max_attempts": 4},
         {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/"},
         {"api_key_env": "DASHSCOPE_API_KEY"},
         {

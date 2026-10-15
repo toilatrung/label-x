@@ -8,13 +8,13 @@ Budget/retry:
 - Budget của run là một dòng VlmBudget; mỗi attempt thực gửi provider tăng `used_calls` bằng một
   UPDATE có điều kiện (nguyên tử). VlmAttempt unique (unit, attempt_no) nên giao lại cùng attempt
   không bị tính lần hai.
-- Tối đa `max_attempts` (≤ 3) attempt cho mỗi lượt logic; retry/backoff nằm trong
+- Tối đa `max_attempts` (≤ 4: lần đầu + 3 retry) attempt cho mỗi lượt logic; retry/backoff nằm trong
   `vlm.runner.run_vlm_unit`, không dùng retry của Celery để mỗi attempt đều được đếm.
 - VlmUnit unique theo khoá idempotency; tạo lại là no-op. Khoá chuẩn bị bằng `crop_identity`
   (danh tính crop tất định do CropProvider cung cấp), sha256 thật của crop nằm trong kết quả.
 
 VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication.
-Khi bật fail-fast, lỗi VLM dừng stage và run kết thúc với kết quả một phần.
+Khi bật fail-fast, lỗi VLM sau khi hết retry dừng stage và run kết thúc với kết quả một phần.
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ import hashlib
 import json
 import logging
 import uuid
-from dataclasses import replace
 from datetime import timedelta
 from typing import Any, Protocol
 
@@ -492,8 +491,6 @@ def execute_vlm_unit(unit_id: int, *, client: VlmClient | None = None) -> str:
         refresh_run(unit.run_id)
         return VlmUnit.Status.FAILED
     config: VlmConfig = parse_vlm_config(raw)
-    if fail_fast_enabled():
-        config = replace(config, max_attempts=1)
     public = config.as_public_dict()
     if (config.model, config.prompt_version) != (unit.model, unit.prompt_version):
         # Config của run không còn khớp lúc unit được tạo: không gọi provider với model/prompt
