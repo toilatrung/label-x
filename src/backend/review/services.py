@@ -235,12 +235,7 @@ def claim_next(
     now = _now()
     if previous_lease_id is not None:
         previous = Lease.objects.select_related("frame_review").filter(pk=previous_lease_id).first()
-        if (
-            frame_id is None
-            or previous is None
-            or previous.holder_id != user_id
-            or previous.frame_review.run_id != run_id
-        ):
+        if frame_id is None or previous is None or previous.holder_id != user_id:
             raise ApiError(
                 status.HTTP_409_CONFLICT, "LEASE_CONFLICT", "Không thể chuyển từ lease này."
             )
@@ -250,8 +245,15 @@ def claim_next(
                 "LEASE_CONFLICT",
                 "Lease hiện tại đã hết hạn; tải lại hàng đợi.",
             )
-        if previous.closed_at is None and previous.frame_review.snapshot_frame_id != frame_id:
-            if not has_review_scope(user_id=user_id, dataset_id=run.dataset_id):
+        if previous.closed_at is None and (
+            previous.frame_review.run_id != run_id
+            or previous.frame_review.snapshot_frame_id != frame_id
+        ):
+            if not has_review_scope(
+                user_id=user_id, dataset_id=run.dataset_id
+            ) or not has_review_scope(
+                user_id=user_id, dataset_id=previous.frame_review.run.dataset_id
+            ):
                 raise ApiError(
                     status.HTTP_403_FORBIDDEN, "OUT_OF_SCOPE", "Lease ngoài phạm vi hiện tại."
                 )
