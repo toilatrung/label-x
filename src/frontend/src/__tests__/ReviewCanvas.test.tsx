@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ReviewCanvas,
   calculateLetterboxTransform,
@@ -48,6 +48,42 @@ const mockIssue: Issue = {
 };
 
 describe('ReviewCanvas (T-037 Canvas & Coordinate Transformation)', () => {
+  it('cancels page scrolling while zooming, including at zoom limits, and removes the listener on unmount', () => {
+    const onZoomChange = vi.fn();
+    const props = {
+      frame: mockFrame, issues: [], selectedIssueId: null, onSelectIssue: vi.fn(),
+      reviewMode: 'issue' as const, showAnnotations: true, showPredictions: true,
+      zoom: 1, pan: { x: 0, y: 0 }, onZoomChange, onPanChange: vi.fn(),
+    };
+    const { rerender, unmount } = render(<ReviewCanvas {...props} />);
+    const canvas = screen.getByRole('img');
+    const wheel = (target: Element, deltaY: number) => {
+      const event = new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true });
+      fireEvent(target, event);
+      expect(event.defaultPrevented).toBe(true);
+    };
+    wheel(canvas, -100);
+    expect(onZoomChange).toHaveBeenLastCalledWith(1.15);
+    rerender(<ReviewCanvas {...props} zoom={2} />);
+    wheel(canvas, 100);
+    expect(onZoomChange).toHaveBeenLastCalledWith(1.7);
+    rerender(<ReviewCanvas {...props} zoom={5} />);
+    wheel(canvas, -100);
+    expect(onZoomChange).toHaveBeenLastCalledWith(5);
+    rerender(<ReviewCanvas {...props} zoom={0.5} />);
+    // Blank space around the SVG belongs to the frame viewport too.
+    const viewport = canvas.parentElement!;
+    wheel(viewport, 100);
+    expect(onZoomChange).toHaveBeenLastCalledWith(0.5);
+
+    onZoomChange.mockClear();
+    unmount();
+    const event = new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true });
+    viewport.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(onZoomChange).not.toHaveBeenCalled();
+  });
+
   it('renders the full CVAT annotations separately from model-2 suggestions', () => {
     const props = {
       frame: mockFrame, issues: [], selectedIssueId: null, onSelectIssue: vi.fn(),

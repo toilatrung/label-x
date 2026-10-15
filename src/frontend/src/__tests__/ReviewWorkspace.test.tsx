@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import { ReviewWorkspace } from '@/components/review/ReviewWorkspace';
@@ -137,6 +137,18 @@ async function renderWorkspace(
 describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('places decisions and frame completion below the canvas outside the issue details', async () => {
+    await renderWorkspace();
+    await screen.findByText('QC-00101');
+    const decisions = screen.getByRole('region', { name: 'Quyết định review frame' });
+    const frame = screen.getByRole('region', { name: 'Khung hình annotation từ CVAT' });
+    const details = screen.getByRole('complementary', { name: 'Chi tiết issue' });
+    expect(within(decisions).getByRole('button', { name: 'Lưu quyết định' })).toBeDefined();
+    expect(within(decisions).getByRole('button', { name: 'Hoàn tất review frame' })).toBeDefined();
+    expect(within(details).queryByRole('button', { name: 'Lưu quyết định' })).toBeNull();
+    expect(frame.nextElementSibling).toBe(decisions);
   });
 
   it('asks before discarding an unsaved decision when navigating frames', async () => {
