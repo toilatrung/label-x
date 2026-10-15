@@ -132,3 +132,9 @@ export async function renewLease(leaseId: number, signal?: AbortSignal): Promise
   });
   return unwrap(result);
 }
+
+export async function getCurrentLease(datasetId: number, signal?: AbortSignal): Promise<LeaseGrant | null> {
+  const result = await apiClient.GET('/api/leases/current/', { params: { query: { dataset_id: datasetId } }, signal });
+  if (result.response.status === 204) return null;
+  return unwrap(result);
+}

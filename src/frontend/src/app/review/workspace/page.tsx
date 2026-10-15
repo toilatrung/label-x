@@ -8,7 +8,31 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { canAccessReview } from '@/lib/auth/roles';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ReviewWorkspace } from '@/components/review/ReviewWorkspace';
+import { ReviewCenter } from '@/components/review/ReviewCenter';
+import { useQuery } from '@tanstack/react-query';
+import { getCurrentLease } from '@/lib/review/api';
+import { errorMessage } from '@/lib/api/errors';
 import { ReviewWorkspaceEmpty } from '@/components/review/ReviewWorkspaceEmpty';
+import { ReviewDatasetPicker } from '@/components/review/ReviewDatasetPicker';
+
+function ResumeInspection() {
+  const { session, datasetId } = useAuth();
+  const current = useQuery({
+    queryKey: ['review-current-lease', session?.user.id, datasetId],
+    queryFn: ({ signal }) => getCurrentLease(datasetId!, signal),
+    enabled: !!datasetId && !!session,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  if (!datasetId) return <AppShell activeKey="review" flowStep={2}><ReviewDatasetPicker /></AppShell>;
+  if (current.isPending || current.isFetching) return <div role="status">Đang khôi phục frame đang kiểm tra…</div>;
+  if (current.isError) return <div role="alert">{errorMessage(current.error)} <button type="button" onClick={() => current.refetch()}>Thử lại</button></div>;
+  if (!current.data) return <AppShell activeKey="review" flowStep={2}><ReviewWorkspaceEmpty /></AppShell>;
+  return <ReviewCenter key={`${session?.user.id}:${datasetId}:${current.data.lease.id}`} resumeWorkspace initialGrant={current.data} />;
+}
 
 function ReviewWorkspaceContent() {
   const searchParams = useSearchParams();
@@ -49,16 +73,11 @@ function ReviewWorkspaceContent() {
     </div>
   );
 
+  if (!frameId) return <ResumeInspection />;
+
   return (
     <AppShell activeKey="review" flowStep={2} pageHeader={pageHeaderNode}>
-      {frameId ? (
-        <ReviewWorkspace
-          frameId={frameId}
-          initialLease={initialLease}
-        />
-      ) : (
-        <ReviewWorkspaceEmpty />
-      )}
+      <ReviewWorkspace frameId={frameId} initialLease={initialLease} />
     </AppShell>
   );
 }

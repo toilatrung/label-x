@@ -84,7 +84,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>runs_ranking</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn (403 FORBIDDEN)</td><td>FR-REV-01; FR-EVL-02; BR-10</td></tr>
 <tr><td><code>internal_metrics</code></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td></td><td></td><td>Chỉ vai trò toàn hệ thống (RoleAssignment dataset_id null); QA/RV/dataset-scoped AD bị chặn 403 FORBIDDEN; chưa xác thực → 403 NOT_AUTHENTICATED. Quyền do CR-109 đề xuất, PO đã duyệt ngày 2026-10-11.</td><td>CR-109; NFR-12</td></tr>
 <tr><td><code>guidelines_rules_list</code>, <code>guidelines_rules_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>UC-12; FR-GDL-04</td></tr>
-<tr><td><code>queues_next</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Identity mapping bắt buộc; bỏ qua frame tự gán; một lease/người</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03</td></tr>
+<tr><td><code>queues_next</code>, <code>leases_current</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Identity mapping bắt buộc; bỏ qua frame tự gán; một lease/người</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03</td></tr>
 <tr><td><code>leases_renew</code>, <code>frames_complete</code></td><td colspan="7">lease_holder</td><td>Lease còn hạn và thuộc người gọi, nếu không 409 LEASE_CONFLICT</td><td>FR-REV-04, FR-REV-13, FR-REV-14</td></tr>
 <tr><td><code>frames_issues</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn</td><td>FR-REV-07; FR-EVL-02</td></tr>
 </tbody>

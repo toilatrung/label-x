@@ -676,6 +676,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/leases/current/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đọc active lease của chính người gọi trong dataset, không nhận frame mới */
+        get: operations["leases_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/leases/{id}/renew/": {
         parameters: {
             query?: never;
@@ -2573,6 +2590,7 @@ export interface components {
             cvat_deep_link?: string;
         };
         LeaseGrant: {
+            queue?: components["schemas"]["QueueName"];
             lease: components["schemas"]["Lease"];
             frame: components["schemas"]["FrameSummary"];
             /** @description true khi trả lại lease đang giữ hoặc frame incomplete của chính reviewer */
@@ -5022,6 +5040,37 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    leases_current: {
+        parameters: {
+            query: {
+                dataset_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lease còn hạn cùng frame và hàng đợi gốc */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseGrant"];
+                };
+            };
+            /** @description Không có active lease trong dataset này */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
         };
     };
     leases_renew: {

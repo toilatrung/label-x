@@ -493,3 +493,26 @@ def has_review_scope(*, user_id: int, dataset_id: int) -> bool:
         .filter(Q(dataset_id=dataset_id) | Q(role=Role.SUPER_ADMIN, dataset_id__isnull=True))
         .exists()
     )
+
+
+def current_lease(*, request: Request, dataset_id: int) -> dict[str, object] | None:
+    """Read the caller's live lease; never claim, renew or close anything."""
+    identity = _reviewer_identity(request, action="leases.current")
+    lease = (
+        Lease.objects.select_related("frame_review__run")
+        .filter(
+            holder=_actor(request),
+            closed_at__isnull=True,
+            expires_at__gt=_now(),
+            frame_review__run__dataset_id=dataset_id,
+            frame_review__state=FrameReview.State.IN_REVIEW,
+        )
+        .first()
+    )
+    if lease is None:
+        return None
+    entry = _ranking_entry(
+        lease.frame_review.run_id, lease.frame_review.snapshot_frame_id, lease.queue_source
+    )
+    _deny_ineligible(request, identity, entry, "leases.current")
+    return {**_grant_payload(lease, entry, resumed=True), "queue": lease.queue_source}

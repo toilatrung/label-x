@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useRef, useEffect } from 'react';
+import React, { useState, useTransition, useRef, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,6 +27,7 @@ import { ReviewDatasetPicker } from './ReviewDatasetPicker';
 import { ReviewWorkspace } from './ReviewWorkspace';
 import { CvatJobsPanel } from './CvatJobsPanel';
 import { Icon } from '@/components/ui/Icon';
+import { readInspectionSession, writeInspectionSession } from '@/lib/review/inspection-session';
 import { ApiRequestError, errorMessage } from '@/lib/api/errors';
 
 /** Bộ lọc gửi lên GET /api/runs/{id}/ranking/: family/origin/review_state + q, priority (MBE-02). */
@@ -83,6 +84,8 @@ function RankedFrameThumb({ frame }: { frame: RankedFrame }) {
 }
 
 export interface ReviewQueuesProps {
+  resumeWorkspace?: boolean;
+  initialGrant?: LeaseGrant;
   onWorkspaceStateChange?: (state: {
     isOpen: boolean;
     frameId?: number;
@@ -92,19 +95,22 @@ export interface ReviewQueuesProps {
   }) => void;
 }
 
-export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {}) {
+export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, initialGrant }: ReviewQueuesProps = {}) {
   const { datasetId, session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
+  const [resumeHint] = useState(() => resumeWorkspace && session?.user.id && datasetId
+    ? readInspectionSession(session.user.id, datasetId) : null);
+
   // Run ID selection: URL is the source of truth, bound to the dataset context
-  const runParam = searchParams.get('run');
+  const runParam = initialGrant ? String(initialGrant.frame.run_id) : searchParams.get('run');
   const parsedRunId =
     runParam && /^\d+$/.test(runParam.trim()) && Number(runParam) > 0
       ? Number(runParam)
-      : null;
+      : resumeHint?.runId ?? null;
 
   // Track dataset binding and selected run
   const [boundDatasetId, setBoundDatasetId] = useState<number | null>(datasetId);
@@ -113,7 +119,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const [prevRunParam, setPrevRunParam] = useState(runParam);
 
   // Queue tab selection: 'risk' vs 'random'
-  const [activeQueue, setActiveQueue] = useState<QueueName>('risk');
+  const [activeQueue, setActiveQueue] = useState<QueueName>(initialGrant?.queue ?? resumeHint?.queue ?? 'risk');
 
   // Server filters
   const [filters, setFilters] = useState<QueueFilters>({});
@@ -137,14 +143,14 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
 
 
   // Active Lease Grant state (from claim or resume)
-  const [activeGrant, setActiveGrant] = useState<LeaseGrant | null>(null);
+  const [activeGrant, setActiveGrant] = useState<LeaseGrant | null>(initialGrant ?? null);
   const [claimStatus204, setClaimStatus204] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<{ message: string; code?: string; handoff?: boolean } | null>(null);
   // Server trả lease đang giữ thay vì frame vừa chọn (mỗi reviewer giữ tối đa một lease)
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
   const [renewMessage, setRenewMessage] = useState<string | null>(null);
   const [isLeaseConflict, setIsLeaseConflict] = useState<boolean>(false);
-  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState<boolean>(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState<boolean>(!!initialGrant);
 
   // Pure tick state for lease countdown to avoid impure Date.now() during render
   const [now, setNow] = useState<number>(() => Date.now());
@@ -217,19 +223,19 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   const [selection, setSelection] = useState<{ scope: string; frames: RankedFrame[] }>({ scope: '', frames: [] });
   const [inspection, setInspection] = useState<{ scope: string; frames: RankedFrame[] }>({ scope: '', frames: [] });
   const [completedInspections, setCompletedInspections] = useState<Record<number, LeaseGrant>>({});
-  const heldLeaseRef = useRef<number | undefined>(undefined);
+  const heldLeaseRef = useRef<number | undefined>(initialGrant?.lease.id);
   if (selection.scope !== selectionScope) {
     setSelection({ scope: selectionScope, frames: [] });
-    setInspection({ scope: selectionScope, frames: [] });
+    setInspection({ scope: selectionScope, frames: resumeHint?.runId === effectiveRunId && resumeHint.queue === activeQueue ? resumeHint.frames : [] });
     setCompletedInspections({});
   }
-  useEffect(() => { heldLeaseRef.current = undefined; }, [datasetId, effectiveRunId, currentUserId]);
+  useEffect(() => { heldLeaseRef.current = initialGrant?.lease.id; }, [datasetId, effectiveRunId, currentUserId, initialGrant?.lease.id]);
   const selectedFrames = selection.scope === selectionScope ? selection.frames : [];
-  const inspectionFrames = inspection.scope === selectionScope ? inspection.frames : [];
+  const savedInspectionFrames = useMemo(() => inspection.scope === selectionScope ? inspection.frames : [], [inspection, selectionScope]);
   const isCompletedInspection = Object.values(completedInspections).some(grant => grant.frame.id === activeGrant?.frame.id);
-  const canSelectFrame = (frame: RankedFrame) =>
+  const canSelectFrame = useCallback((frame: RankedFrame) =>
     ['unreviewed', 'incomplete', 'in_review'].includes(frame.review_state) &&
-    (frame.lease_holder_user_id === null || frame.lease_holder_user_id === currentUserId);
+    (frame.lease_holder_user_id === null || frame.lease_holder_user_id === currentUserId), [currentUserId]);
   const setFrameSelection = (frames: RankedFrame[]) => setSelection({ scope: selectionScope, frames });
   const startInspection = (frames: RankedFrame[], firstId: number) => {
     setCompletedInspections({});
@@ -378,6 +384,9 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
     queryClient.invalidateQueries({ queryKey: ['review', 'summary', targetDatasetId, targetRunId] });
   };
 
+  const inspectionFrames = useMemo(() => savedInspectionFrames.length ? savedInspectionFrames
+    : resumeWorkspace ? (rankingQuery.data?.results ?? []).filter(canSelectFrame) : [], [savedInspectionFrames, resumeWorkspace, rankingQuery.data, canSelectFrame]);
+
   // 3. Mutation for Claim Next Frame
   // Biến truyền vào: frame_id khi bấm "Bắt đầu kiểm tra" trên một ảnh; undefined = frame kế tiếp.
   const claimMutation = useMutation({
@@ -394,7 +403,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         targetUserId: currentUserId,
         targetQueue: activeQueue,
         requestedFrameId: frameId,
-        requestedFrameKey: [...inspectionFrames, ...selectedFrames, ...(rankingQuery.data?.results ?? [])].find((frame) => frame.frame_id === frameId)?.frame_key,
+        requestedFrameKey: [...savedInspectionFrames, ...selectedFrames, ...(rankingQuery.data?.results ?? [])].find((frame) => frame.frame_id === frameId)?.frame_key,
       };
     },
     mutationFn: async (request: FrameClaim) => {
@@ -420,7 +429,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       heldLeaseRef.current = grant.lease.id;
       setActiveGrant(grant);
       invalidateQueueData(context.targetDatasetId, context.targetRunId);
-      if (context.requestedFrameId === undefined) {
+      if (context.requestedFrameId === undefined && !resumeWorkspace) {
         setInspection({ scope: selectionScope, frames: (rankingQuery.data?.results ?? []).filter(canSelectFrame) });
         return;
       }
@@ -428,10 +437,20 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
       // Match the source image and run instead of comparing IDs from different tables.
       if (
         grant.frame.run_id !== context.targetRunId ||
-        !context.requestedFrameKey ||
+        (context.requestedFrameId !== undefined && (!context.requestedFrameKey ||
         grant.frame.frame_key.cvat_task_id !== context.requestedFrameKey.cvat_task_id ||
-        grant.frame.frame_key.frame_number !== context.requestedFrameKey.frame_number
+        grant.frame.frame_key.frame_number !== context.requestedFrameKey.frame_number))
       ) {
+        // A fresh queue page may not know the caller already holds a lease. Use the
+        // server-verified grant for one explicit handoff to the image they selected.
+        if (grant.resumed && context.requestedFrameId !== undefined && context.requestedFrameKey
+          && typeof _variables !== 'object'
+          && grant.lease.holder_user_id === context.targetUserId
+          && grant.lease.frame_id === grant.frame.id
+          && new Date(grant.lease.expires_at).getTime() > now) {
+          claimMutation.mutate({ frameId: context.requestedFrameId, previousLeaseId: grant.lease.id });
+          return;
+        }
         setClaimNotice(
           `Bạn đang giữ ${frameTitle(grant.frame)} (Frame ID ${grant.frame.id}${
             grant.frame.run_id !== context.targetRunId ? `, Run #${grant.frame.run_id}` : ''
@@ -446,7 +465,7 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
         grant.lease.frame_id === grant.frame.id &&
         grant.frame.run_id === context.targetRunId &&
         Number.isFinite(expiresAt) &&
-        expiresAt > Date.now()
+        expiresAt > now
       ) {
         setIsWorkspaceOpen(true);
       }
@@ -586,6 +605,15 @@ export function ReviewQueues({ onWorkspaceStateChange }: ReviewQueuesProps = {})
   };
   const visibleSelectable = (rankingQuery.data?.results ?? []).filter(canSelectFrame);
   const allVisibleSelected = visibleSelectable.length > 0 && visibleSelectable.every(frame => selectedFrames.some(selected => selected.frame_id === frame.frame_id));
+
+  useEffect(() => {
+    if (!activeGrant || !currentUserId || !datasetId || !effectiveRunId || !isFrameRunMatching) return;
+    const frames = inspectionFrames.length ? inspectionFrames : (rankingQuery.data?.results ?? []).filter(canSelectFrame);
+    const current = frames.find(frame => frame.frame_key.cvat_task_id === activeGrant.frame.frame_key.cvat_task_id
+      && frame.frame_key.frame_number === activeGrant.frame.frame_key.frame_number);
+    writeInspectionSession(currentUserId, datasetId, { runId: effectiveRunId, queue: activeQueue,
+      frames, currentFrameId: current?.frame_id });
+  }, [activeGrant, currentUserId, datasetId, effectiveRunId, isFrameRunMatching, activeQueue, inspectionFrames, rankingQuery.data, canSelectFrame]);
 
   const nextCursor = cursorFrom(rankingQuery.data?.next);
   const prevCursor = cursorFrom(rankingQuery.data?.previous);
