@@ -802,8 +802,8 @@ def check_super_admin_override(
             reason_str = str(
                 query_params.get(reason_field) or reason or "Super Admin workflow access"
             ).strip()
-            request.is_override = True
-            request.override_reason = reason_str
+            setattr(request, "is_override", True)  # noqa: B010
+            setattr(request, "override_reason", reason_str)  # noqa: B010
             return reason_str
         # Thiếu override hoặc override=false -> 422 BUSINESS_RULE_UNMET
         if not override_flag:

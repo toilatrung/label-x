@@ -247,6 +247,8 @@ def adjudicate_issue(*, request: Request, issue_id: int) -> dict[str, Any]:
     )
 
     if escalator_decision is not None and not is_sa:
+        # The non-admin identity guard above has already rejected a missing identity.
+        assert adjudicator_identity is not None
         escalator_user = escalator_decision.actor
         # 3a. Same account check
         if user.pk == escalator_user.pk:

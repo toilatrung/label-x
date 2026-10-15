@@ -188,7 +188,7 @@ class FrameAnnotationSerializer(serializers.Serializer[Any]):
     id = serializers.CharField()
     source: Any = FrameAnnotationSourceSerializer()
     label_id = serializers.IntegerField()
-    label = serializers.CharField(allow_null=True, required=False)
+    label: Any = serializers.CharField(allow_null=True, required=False)
     color = serializers.CharField(allow_null=True, required=False)
     bbox = BBoxSerializer(allow_null=True)
     rotation = serializers.FloatField(required=False)
