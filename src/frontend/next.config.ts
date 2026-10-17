@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
-// The browser calls the API on the UI's own origin and Next forwards /api to Django. Cookies
-// (sessionid, csrftoken) then belong to the UI host only, so a CVAT on another port of the same
-// host, or opening the UI as localhost vs 127.0.0.1, cannot break the session or CSRF header.
+// The browser calls the API on the UI's own origin and Next forwards /api to Django. LabelX uses
+// dedicated cookie names so CVAT on another port of the same host cannot overwrite its session.
 const mockAuth = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_AUTH_MODE === "mock";
 const apiProxyTarget = (process.env.LABELX_API_PROXY_TARGET || "http://127.0.0.1:8000").replace(/\/$/, "");
 
@@ -15,8 +14,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Contract paths end in a slash; POST requests must not redirect.
   skipTrailingSlashRedirect: true,
-  // Dev: mở LabelX qua 127.0.0.1 để cookie phiên tách khỏi CVAT (localhost:8080 dùng cùng tên
-  // cookie sessionid/csrftoken; cookie không phân biệt cổng nên CVAT ghi đè phiên LabelX).
+  // Dev: allow opening LabelX via 127.0.0.1.
   allowedDevOrigins: ['127.0.0.1'],
   // The mock auth route handlers own /api/auth/* only in mock mode; elsewhere they answer 404,
   // so the proxy must run before the filesystem.

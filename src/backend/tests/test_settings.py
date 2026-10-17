@@ -6,6 +6,11 @@ def test_csrf_trusts_frontend_origins():
         assert origin in settings.CSRF_TRUSTED_ORIGINS
 
 
+def test_auth_cookies_are_isolated_from_cvat():
+    assert settings.SESSION_COOKIE_NAME == "labelx_sessionid"
+    assert settings.CSRF_COOKIE_NAME == "labelx_csrftoken"
+
+
 def test_cors_allows_idempotency_key_for_browser_writes():
     assert "idempotency-key" in settings.CORS_ALLOW_HEADERS
 

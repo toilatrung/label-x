@@ -126,7 +126,7 @@ describe('Login page', () => {
     const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname)
       .filter((path) => path !== '/api/auth/mock-users/');
     expect(paths).toEqual(['/api/auth/session/', '/api/auth/csrf/', '/api/auth/login/']);
-    expect(api.jar.has('sessionid')).toBe(true);
+    expect(api.jar.has('labelx_sessionid')).toBe(true);
   });
 
   it('does not grant a mock admin when the network fails', async () => {

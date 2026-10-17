@@ -40,7 +40,7 @@ describe('TopBar permissions', () => {
     expect(screen.queryByText('Thử nghiệm vai trò')).toBeNull();
     fireEvent.click(screen.getByText('Đăng xuất'));
     await waitFor(() => expect(screen.getByText('Khách')).toBeDefined());
-    expect(api.jar.has('sessionid')).toBe(false);
+    expect(api.jar.has('labelx_sessionid')).toBe(false);
   });
   it('links QA Lead to the Escalations route', async () => {
     const api = installMockAuthApi(); await api.signIn('qalead');

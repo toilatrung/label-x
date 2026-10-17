@@ -33,7 +33,7 @@ export function installMockAuthApi() {
       const value = pair.slice(split + 1);
       if (/Max-Age=0/i.test(cookie)) jar.delete(name);
       else jar.set(name, value);
-      if (name === 'csrftoken') document.cookie = cookie;
+      if (name === 'labelx_csrftoken') document.cookie = cookie;
     }
     return response;
   });
@@ -43,7 +43,7 @@ export function installMockAuthApi() {
     async signIn(username = 'admin', password = 'password123') {
       await fetchSpy(new Request('http://localhost:3000/api/auth/csrf/'));
       return fetchSpy(new Request('http://localhost:3000/api/auth/login/', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': jar.get('csrftoken')! },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': jar.get('labelx_csrftoken')! },
         body: JSON.stringify({ username, password }),
       }));
     },

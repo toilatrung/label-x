@@ -16,6 +16,6 @@ export async function POST(request: Request) {
   const session = toMockSession(user);
   endMockSession(request);
   const response = NextResponse.json(session, { headers: { 'Cache-Control': 'no-store' } });
-  response.cookies.set('sessionid', issueMockSession(session), sessionCookieOptions);
+  response.cookies.set('labelx_sessionid', issueMockSession(session), sessionCookieOptions);
   return response;
 }

@@ -8,6 +8,6 @@ export async function POST(request: Request) {
   if (rejected) return rejected;
   endMockSession(request);
   const response = new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
-  response.cookies.set('sessionid', '', { ...sessionCookieOptions, maxAge: 0 });
+  response.cookies.set('labelx_sessionid', '', { ...sessionCookieOptions, maxAge: 0 });
   return response;
 }
