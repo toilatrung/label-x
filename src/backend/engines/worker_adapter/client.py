@@ -31,7 +31,7 @@ def retry_after_seconds(response: httpx.Response) -> float:
     if raw.isdigit():
         return min(float(raw), 120)
     try:
-        until = parsedate_to_datetime(raw)
+        until: datetime = parsedate_to_datetime(raw)
         if until.tzinfo is None:
             until = until.replace(tzinfo=UTC)
         return max(0, min(120, (until - datetime.now(UTC)).total_seconds()))
