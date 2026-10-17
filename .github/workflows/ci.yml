@@ -52,7 +52,9 @@ jobs:
           node scripts/ci/quality-gate.cjs validate-plan
           node scripts/ci/render-plan.cjs --check
       - name: Test CI gates
-        run: node --test scripts/ci/tests/*.test.cjs
+        run: |
+          node --test scripts/ci/tests/*.test.cjs
+          python3 -m unittest discover -s scripts/ci/tests -p 'test_*.py' -v
       - name: Per-user .agent files (AGENT.html, CR-100)
         if: github.event_name == 'pull_request'
         env:
@@ -146,6 +148,7 @@ jobs:
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
         run: uv run --frozen pytest -q --strict-markers -x --durations=20
       - name: S3 integration (SeaweedFS, F-10)
+        timeout-minutes: 5
         # Cùng image/cấu hình với infrastructure/docker-compose.dev.yml; services: không truyền được command nên dùng docker run.
         env:
           LABELX_RUN_S3_INTEGRATION: '1'
@@ -158,13 +161,7 @@ jobs:
             -v "$GITHUB_WORKSPACE/infrastructure/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro" \
             chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a \
             server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=1024
-          for _attempt in $(seq 1 30); do
-            docker exec seaweedfs wget -q -O /dev/null http://127.0.0.1:9333/cluster/status && break
-            sleep 2
-          done
-          for b in labelx-snapshots labelx-evidence labelx-reports labelx-models; do
-            echo "s3.bucket.create -name $b" | docker exec -i seaweedfs weed shell -master=127.0.0.1:9333
-          done
+          uv run --frozen python ../../scripts/ci/prepare-s3.py
           uv run --frozen pytest tests/storage/test_seaweedfs_integration.py -q
       - name: SeaweedFS logs on failure
         if: failure()
