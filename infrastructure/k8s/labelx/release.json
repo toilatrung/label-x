@@ -1,21 +1,21 @@
 {
-  "source_sha": "bf08ef523cf2c945fb8af9f5c380768b5fd2f9af",
-  "ci_run_id": "39034966232",
-  "publish_run_id": "39035574156",
+  "source_sha": "6721ee4ec031ea0a8bc585a9c0671ace9844a4af",
+  "ci_run_id": "39043225432",
+  "publish_run_id": "39044216397",
   "deployment_policy": "CR-120",
   "mvp_acceptance": "unverified",
   "images": {
     "frontend": {
       "repository": "ghcr.io/toilatrung/labelx-frontend",
-      "tag": "sha-bf08ef523cf2c945fb8af9f5c380768b5fd2f9af",
-      "digest": "sha256:d693ccaedac53f121fd5af03e91194f2b5f8fe9248d84b602526d78be0ff1e44",
-      "reference": "ghcr.io/toilatrung/labelx-frontend@sha256:d693ccaedac53f121fd5af03e91194f2b5f8fe9248d84b602526d78be0ff1e44"
+      "tag": "sha-6721ee4ec031ea0a8bc585a9c0671ace9844a4af",
+      "digest": "sha256:55b800c93da3aeece9a7c0251729e64ca74ae8ae0099f4b23aa3019e1b8652dd",
+      "reference": "ghcr.io/toilatrung/labelx-frontend@sha256:55b800c93da3aeece9a7c0251729e64ca74ae8ae0099f4b23aa3019e1b8652dd"
     },
     "backend": {
       "repository": "ghcr.io/toilatrung/labelx-backend",
-      "tag": "sha-bf08ef523cf2c945fb8af9f5c380768b5fd2f9af",
-      "digest": "sha256:0a68620092f22c82c7d5f8ac6e6171a42aef489cbf28291c8f68837380ad0973",
-      "reference": "ghcr.io/toilatrung/labelx-backend@sha256:0a68620092f22c82c7d5f8ac6e6171a42aef489cbf28291c8f68837380ad0973"
+      "tag": "sha-6721ee4ec031ea0a8bc585a9c0671ace9844a4af",
+      "digest": "sha256:ea516c544d8b7cddb403820adc5bf58b917d9127a0808bbf55199f3bcef85e99",
+      "reference": "ghcr.io/toilatrung/labelx-backend@sha256:ea516c544d8b7cddb403820adc5bf58b917d9127a0808bbf55199f3bcef85e99"
     }
   }
 }
