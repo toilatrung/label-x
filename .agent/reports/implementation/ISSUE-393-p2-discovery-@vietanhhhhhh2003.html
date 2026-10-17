@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #393 ? p2 discovery bindings and provenance — LabelX</title>
+<meta name="labelx:id" content="issue-393-p2-discovery-vietanhhhhhh2003">
+<meta name="labelx:title" content="Issue #393 ? p2 discovery bindings and provenance">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="engines">
+<meta name="labelx:tags" content="[implementation, discovery, issue-393]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / issue-393-p2-discovery-vietanhhhhhh2003</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>issue-393-p2-discovery-vietanhhhhhh2003</span><b>title</b><span>Issue #393 ? p2 discovery bindings and provenance</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>templates</span><b>tags</b><span>[implementation, report, template]</span><b>priority</b><span>3</span></div>
+<h1 id="issue-393-p2-discovery-vietanhhhhhh2003">Issue #393 ? p2 discovery bindings and provenance</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Use this template to provide auditable evidence of work performed by an Executor Agent for one authorized task.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul><li><strong>Report ID</strong>: <code>ISSUE-393</code></li><li><strong>Title</strong>: Detector/matching acceptance bindings</li><li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li><li><strong>Executor</strong>: <code>Codex</code></li><li><strong>Status</strong>: <code>draft</code></li><li><strong>Task ID</strong>: <a href="https://github.com/toilatrung/label-x/issues/393">#393</a></li><li><strong>Epic ID</strong>: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a></li><li><strong>Report Date</strong>: <code>2026-10-18</code></li></ul>
+<h2 id="scope">Scope</h2>
+<p>Base: <code>7c9401c3</code> (origin/develop). Branch: <code>feat/issue-393-p2-discovery</code>. Three existing bindings retained after inspection: DET-01, MAT-01, MAT-02. DET-02 and MAT-03 now have separate integration nodes. No expected, scenario, level, fixture, threshold, required_for_mvp, dependency or production gate changed.</p><p>Detector evidence now retains original coordinate space, frozen snapshot/frame/media identity, canonical prediction and parameter hashes alongside verified model provenance. Crop loading rejects conflicting frame/revision and non-original prediction coordinates. Crop output retains original geometry while PNG output may shrink.</p><p>Trusted-main phase acceptance: <strong>NOT VERIFIED</strong>. No real GPU accuracy or independent review is claimed.</p>
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody><tr><td><code>src/backend/engines/detector.py</code></td><td>Stamp candidate evidence with snapshot, image, config and prediction provenance.</td><td>#393</td></tr><tr><td><code>src/backend/orchestration/vlm_crops.py</code></td><td>Validate declared source frame/revision and original coordinate space; return revision in crop origin.</td><td>#393</td></tr><tr><td><code>src/backend/tests/phase_mvp/test_p2_discovery.py</code></td><td>Real PostgreSQL, temporary image files and frozen inference transport; no GPU requirement at this matrix level.</td><td>#393</td></tr><tr><td><code>docs/09-testing/test-matrix.json; ci_cd_testing.html</code></td><td>Bind DET-02/MAT-03 and regenerate plan presentation.</td><td>#393</td></tr><tr><td><code>scripts/ci/tests/quality-gate.test.cjs; scripts/ci/tests/render-plan.test.cjs</code></td><td>Update exact implemented-case count from 23 to 25; gate logic is untouched.</td><td>#393</td></tr></tbody></table>
+<h2 id="related-files">Related Files</h2>
+<p>Case ? requirement ? fixture ? unchanged expected ? node ID (independent review pending):</p><table><thead><tr><th>Case</th><th>Requirement</th><th>Fixture/level</th><th>Expected (original)</th><th>Test node ID</th></tr></thead><tbody><tr><td>DET-01</td><td>FR-ENG-05, FR-ENG-09</td><td>contract: Detector stub + artifact manifest</td><td>Không suy luận với artifact sai; không có model thì Not checked; không ranking giả.</td><td>tests/phase_mvp/test_p2_discovery.py::test_det_01_artifact_fail_closed_and_no_model_not_checked</td></tr><tr><td>DET-02</td><td>FR-ENG-05, NFR-04</td><td>integration: Synthetic images + frozen stub; GPU thật ở evaluation</td><td>Mọi required frame có ledger; transform đúng; prediction/config/model hash truy nguyên.</td><td>tests/phase_mvp/test_p2_discovery.py::test_det_02_batch_ledger_original_coordinates_provenance_and_rerun</td></tr><tr><td>MAT-01</td><td>FR-ENG-06</td><td>unit: Ambiguous/dense association fixtures</td><td>Geometry trước class; loại cạnh dưới threshold trước tối ưu; max cardinality rồi IoU, tie tất định.</td><td>tests/phase_mvp/test_p2_discovery.py::test_mat_01_geometry_cardinality_iou_threshold_dense_and_ties</td></tr><tr><td>MAT-02</td><td>FR-ENG-07, FR-ENG-08, B-21</td><td>unit: Prediction/annotation without Ground Truth</td><td>Sinh missing/class candidate theo policy; có evidence; không gọi disagreement là accuracy.</td><td>tests/phase_mvp/test_p2_discovery.py::test_mat_02_disagreement_candidates_without_ground_truth</td></tr><tr><td>MAT-03</td><td>FR-ENG-08, AC-04</td><td>integration: Image/crop/checksum fixtures</td><td>Bằng chứng đúng frame và original coordinates; evidence sai bị từ chối/pending.</td><td>tests/phase_mvp/test_p2_discovery.py::test_mat_03_original_crop_resize_and_wrong_frame_revision_rejected</td></tr></tbody></table><p>Dependency: <a href="https://github.com/toilatrung/label-x/issues/392">#392</a>. Review request: pending independent reviewer; this implementation report is not review approval.</p>
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>pytest tests/phase_mvp/test_p2_discovery.py -q --strict-markers --junitxml=...</td><td>passed</td><td>5 tests, failures/errors/skipped=0; local PostgreSQL 17 on isolated port 55439. JUnit: .ci-artifacts/local/junit-p2-discovery.xml. This is local evidence, not a phase receipt.</td></tr><tr><td>quality-gate.cjs run --phase p2_discovery</td><td>blocked</td><td>Dependency p1_deterministic still has ENG-02, AGG-01, AGG-02, AGG-04, ENG-04 planned. Receipt: .ci-artifacts/local/phase/phase-p2_discovery.json. No assertion failure inferred from this dependency block.</td></tr></tbody></table>
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>validate-plan; render-plan --check</td><td>passed</td><td>12 phases, 62 cases, 25 implemented; HTML current.</td></tr><tr><td>Regression, lint/types, framework</td><td>passed</td><td>118 pytest tests (phase discovery, detector, matching, crop, public contract), 0 failures/errors/skips; 48 Node CI tests, 0 failures/skips. Ruff check/format; mypy engines/detector.py orchestration/vlm_crops.py (from src/backend, configured Django plugin); validate-framework.py passed.</td></tr><tr><td>Trusted main workflow / artifact</td><td>NOT VERIFIED</td><td>No run URL, trusted main SHA, artifact ID/name, dependency receipts or phase-passed JUnit checksums available for this unmerged change. Do not treat local JUnit as main acceptance.</td></tr><tr><td>make check</td><td>not-run</td><td>Windows has no make and Docker daemon is unavailable; run focused backend/CI checks directly. Full repository check remains required in CI/reviewer environment.</td></tr><tr><td>Local regression checksums (not trusted-main phase evidence)</td><td>recorded</td><td>plan_sha256=54df996852fa094e8e27be3193e9e5c3a28c4eb710b33451c8c55d0ca366198d; local regression JUnit SHA-256=0a9b631601c08516fe713042a3d73ee7dd54023e9155719f13db8bc0ff79f371. Local paths are ignored and not a downloadable GitHub artifact.</td></tr></tbody></table>
+<h2 id="deviations">Deviations</h2>
+<ul><li><strong>Plan Deviations</strong>: none; synthetic images/frozen stub follow DET-02 fixture. Real GPU remains evaluation-only evidence.</li><li><strong>Approved By</strong>: user authorized implementation of #393; no policy approval or threshold decision made.</li><li><strong>Known Limitations</strong>: native task invocation verifies adapter/dispatch/database integration and replay, not broker redelivery or distributed worker failure. Model stub does not prove MMDetection resize or accuracy on held-out data. Legacy evidence without the new source fields continues to use locked snapshot/media checks.</li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Five distinct executable bindings and case mapping; expected/threshold/dependencies unchanged.</li><li>[x] Local phase test evidence explicitly separated from trusted-main acceptance.</li><li>[ ] Independent review against original expected.</li><li>[ ] Dependency #392 and trusted-main phase receipt passed with complete checksums and downloadable artifact.</li><li>Keep issue #393 open until remaining acceptance evidence exists. After approved develop ? main integration, run on final trusted main SHA with dependency evidence for the same plan and SHA; verify all five case IDs, nonzero JUnit with zero failures/errors/skipped, plan/JUnit checksums, run URL and downloadable artifact ID/name.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not report unperformed work as implemented.</li>
+<li>Do not omit failed or unexecuted required checks.</li>
+<li>Do not claim completion with unmet task acceptance criteria.</li>
+<li>Do not claim review approval or move the task to <code>DONE</code>.</li>
+<li>Do not change roadmap or acceptance criteria.</li>
+<li>Do not use this report as a substitute for independent review.</li>
+<li>Do not include secrets or sensitive command output.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/reports/implementation/TASK-ID.html</code>.</li>
+<li>Preserve every heading and table column in this template.</li>
+<li>Set status <code>complete</code> only after completion criteria pass.</li>
+</ul>
+</article></main></body></html>

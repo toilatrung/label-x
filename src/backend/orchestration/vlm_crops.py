@@ -117,6 +117,8 @@ def candidate_box(
     evidence = candidate.evidence
     if candidate.engine != "detector" or evidence.get("artifact_verified") is not True:
         return None
+    if evidence.get("coordinate_space", "original") != "original":
+        return None
     box = evidence.get("prediction_bbox")
     if (
         not isinstance(box, list)
@@ -181,6 +183,17 @@ class SnapshotCropProvider:
         frame = self._frames[key]
         if frame is None:
             raise VlmInvalidCropError("frame của candidate không có trong snapshot")
+        source = candidate.evidence.get("source_frame")
+        if source is not None and source != {
+            "snapshot_id": candidate.run.snapshot_id,
+            "revision_sha256": candidate.run.snapshot.revision_sha256,
+            "cvat_task_id": frame.snapshot_job.cvat_task_id,
+            "frame_number": frame.frame_index,
+            "media_sha256": frame.media_sha256,
+            "width": frame.width,
+            "height": frame.height,
+        }:
+            raise VlmInvalidCropError("evidence không khớp frame/revision của snapshot")
         return frame
 
     def identity(self, candidate: CandidateRecord) -> str:
@@ -234,6 +247,8 @@ class SnapshotCropProvider:
         region = image.crop((left, upper, right, lower))
         data, size = _encode(region)
         origin: dict[str, Any] = {
+            "snapshot_id": candidate.run.snapshot_id,
+            "revision_sha256": candidate.run.snapshot.revision_sha256,
             "frame": {
                 "cvat_task_id": candidate.cvat_task_id,
                 "frame_number": candidate.frame_number,
