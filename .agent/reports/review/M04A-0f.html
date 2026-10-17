@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04A Pha A — VLM Qwen runtime (#279–#283) — Review Report — LabelX</title>
+<meta name="labelx:id" content="review-m04a-0f">
+<meta name="labelx:title" content="M04A Pha A — VLM Qwen runtime (#279–#283) — Review Report">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="m04">
+<meta name="labelx:tags" content="[review, report, m04, qwen, vlm, phase-a]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / M04A-0f</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>review-m04a-0f</span><b>title</b><span>M04A Pha A — VLM Qwen runtime (#279–#283) — Review Report</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>m04</span><b>tags</b><span>[review, report, m04, qwen, vlm, phase-a]</span><b>priority</b><span>3</span></div>
+<h1 id="review-m04a-0f">M04A Pha A — VLM Qwen runtime (#279–#283) — Review Report</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Báo cáo thẩm định kỹ thuật độc lập (Review Report) cho Pull Request #312 (nhánh <code>feat/M-04-a-gate</code> vào <code>feat/M-04-backend</code>) theo quy trình <code>labelx-pr-review</code> (CR-102), chuẩn bị cho QA/QC chéo theo chỉ thị điều phối trung tâm.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04A-0f</code></li>
+<li><strong>Title</strong>: <code>Thẩm định kỹ thuật Pha A — VLM Qwen runtime (#279–#283)</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung</code></li>
+<li><strong>Reviewer</strong>: <code>Phiên QA/QC chéo (chuẩn bị bàn giao)</code></li>
+<li><strong>Executor</strong>: <code>@toilatrung</code> (co-authored Claude Sonnet 5.5)</li>
+<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Decision</strong>: <code>APPROVED_WITH_CONDITIONS</code></li>
+<li><strong>Review Type</strong>: <code>code, contract, architecture, security</code></li>
+<li><strong>Task ID</strong>: <code>M04A-01…M04A-05</code> (GitHub Issues #279–#283, Epic E-12)</li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/312">#312</a></li>
+<li><strong>Head Commit Reviewed</strong>: <code>8a58d71a50359fb314cc3403d77b789deafcf8c6</code> (gộp đồng bộ: <code>467820c</code>)</li>
+<li><strong>Base Branch</strong>: <code>feat/M-04-backend</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Included Artifacts</strong>:
+  <ul>
+    <li>Contract &amp; Schema: <code>docs/04-api/openapi.yaml</code>, <code>src/frontend/src/lib/api/contract.d.ts</code>, <code>src/backend/vlm/contract.py</code>, <code>src/backend/vlm/config.py</code>.</li>
+    <li>Runtime Adapter &amp; Tasks: <code>src/backend/vlm/client.py</code>, <code>src/backend/vlm/runner.py</code>, <code>src/backend/vlm/tasks.py</code>, <code>src/backend/vlm/errors.py</code>.</li>
+    <li>Orchestration &amp; Models: <code>src/backend/orchestration/vlm_stage.py</code>, <code>src/backend/orchestration/vlm_crops.py</code>, <code>src/backend/orchestration/models.py</code>, <code>migrations/0004…0006</code>.</li>
+    <li>Read Model &amp; Candidates API: <code>src/backend/runs/vlm_read.py</code>, <code>src/backend/runs/views.py</code>, <code>src/backend/runs/serializers.py</code>.</li>
+    <li>Smoke Script: <code>scripts/m04-smoke-vlm-provider.py</code>.</li>
+    <li>Implementation Report: <code>.agent/reports/implementation/M04A-0f.html</code>.</li>
+  </ul>
+</li>
+<li><strong>Review Standard</strong>: Quy chuẩn kỹ thuật <code>labelx-pr-review</code> (CR-102), DEC-021, CR-115, CR-116.</li>
+</ul>
+
+<h2 id="ac-evidence-table">Đối chiếu Acceptance Criteria → Bằng chứng kiểm tra</h2>
+<table><thead><tr><th>Task / AC</th><th>Yêu cầu</th><th>Bằng chứng kiểm tra</th><th>Đánh giá</th></tr></thead><tbody>
+<tr><td><strong>M04A-01 (#279)</strong></td><td>Contract Qwen &amp; schema cấu hình <code>models.vlm</code>; guard chặn secret</td><td><code>tests/vlm/test_contract.py</code>, <code>test_config_api.py</code>; chặn khoá API dạng secret, provider allowlist <code>openai_compatible</code> / <code>dashscope</code>; model allowlist <code>qwen3-vl-plus</code>. Contract parity sạch (<code>openapi.yaml</code> ↔ <code>contract.d.ts</code>).</td><td><strong>ĐẠT</strong> (mock &amp; contract)</td></tr>
+<tr><td><strong>M04A-02 (#280)</strong></td><td>Qwen adapter &amp; worker thực thi; retry transient lỗi</td><td><code>tests/vlm/test_runner_client.py</code> (MockTransport); phân loại đúng HTTP status code sang reason code, không bắn exception thô ra ngoài; Celery task <code>vlm.smoke_unit</code> có test.</td><td><strong>ĐẠT</strong> (mock)</td></tr>
+<tr><td><strong>M04A-03 (#281)</strong></td><td>Điều phối candidate, retry &amp; budget nguyên tử</td><td><code>tests/orchestration/test_vlm_stage.py</code>; kiểm thử 10 luồng đồng thời tranh chấp budget; worker crash / timeout; UNIQUE constraint trên <code>(vlm_unit, attempt_number)</code>; <code>VlmUnit</code> chỉ sinh sau khi shard hoàn tất.</td><td><strong>ĐẠT</strong> (mock &amp; DB)</td></tr>
+<tr><td><strong>M04A-04 (#282)</strong></td><td>Evidence append-only &amp; API run/ledger/candidate</td><td><code>tests/orchestration/test_vlm_evidence_api.py</code>, <code>test_vlm_crops.py</code>; DB trigger chặn UPDATE/DELETE/TRUNCATE trên <code>VlmEvidence</code>; crop chỉ cắt vùng BBox kèm sha256; ledger đếm theo <code>VlmUnit</code>; API candidates trả về cấu trúc có <code>vlm</code>.</td><td><strong>ĐẠT</strong> (Postgres DB trigger)</td></tr>
+<tr><td><strong>M04A-05 (#283)</strong></td><td>Smoke Qwen &amp; bàn giao API đợt 1</td><td>
+- <em>Phần Provider Smoke</em>: ĐÃ ĐẠT qua script <code>scripts/m04-smoke-vlm-provider.py</code> với 1 lời gọi tới <code>api.shopaikey.com</code> (qwen3-vl-plus), ảnh tổng hợp, crop sha256 <code>28e53af7…52f9</code>, log đã redacted request_id.<br>
+- <em>Phần Full Flow E2E Smoke</em>: <strong>Hoãn có chủ đích</strong> sang task M04C-04 (Pha C tích hợp toàn luồng) theo chỉ thị của Phiên Điều Phối Trung Tâm (2026-10-13T13:53:39Z). Bảng bàn giao API đợt 1 đã có đầy đủ payload mẫu trong <code>M04A-0f.html</code>.
+</td><td><strong>ĐẠT CÓ ĐIỀU KIỆN</strong> (Chấp thuận hoãn E2E)</td></tr>
+</tbody></table>
+
+<h2 id="checklist-checks">Kết quả kiểm thử tự động</h2>
+<table><thead><tr><th>Mục kiểm tra</th><th>Kết quả</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td><code>pytest</code> Full backend</td><td><strong>1112 passed, 1 skipped</strong></td><td>DB Postgres cô lập; test orchestration 142 passed; test trigger append-only passed.</td></tr>
+<tr><td><code>ruff check .</code> &amp; <code>ruff format --check .</code></td><td><strong>passed</strong></td><td>Code sạch toàn diện.</td></tr>
+<tr><td><code>mypy</code> typecheck</td><td><strong>passed</strong></td><td>149 files (bao gồm gói <code>vlm</code> mới).</td></tr>
+<tr><td><code>makemigrations --check --dry-run</code></td><td><strong>passed</strong></td><td>Không có migration còn thiếu (đã commit 0004, 0005, 0006).</td></tr>
+<tr><td><code>make validate-kit</code></td><td><strong>passed</strong></td><td><code>FRAMEWORK_VALIDATION_PASS</code> trên cây gộp mới nhất.</td></tr>
+<tr><td>GitHub CI Checks PR #312</td><td><strong>6/6 passed</strong></td><td>Backend, bootstrap-windows, classifier, detector, framework, frontend đều xanh.</td></tr>
+</tbody></table>
+
+<h2 id="findings-table">Bảng Findings &amp; Giới hạn kỹ thuật</h2>
+<table><thead><tr><th>Mã</th><th>Mức độ</th><th>Mô tả</th><th>Tình trạng / Xử lý</th></tr></thead><tbody>
+<tr><td><strong>F-01</strong></td><td><code>observation</code></td><td>AC #283 chưa có full E2E smoke (Run ID + VlmUnit + Evidence ID) với provider thật.</td><td><strong>Đã phê duyệt hoãn</strong>: Phiên Điều Phối Trung Tâm chấp thuận dời E2E smoke sang Pha C (M04C-04 / PR #313) khi có đủ routing policy và classifier.</td></tr>
+<tr><td><strong>F-02</strong></td><td><code>observation</code></td><td>Cổng <code>api.shopaikey.com</code> đang dùng chưa có DEC/CR riêng thay thế DashScope.</td><td>Ghi nhận nợ kỹ thuật chờ PO ban hành DEC phê duyệt chính sách cổng dữ liệu trước khi merge develop.</td></tr>
+<tr><td><strong>F-03</strong></td><td><code>resolved</code></td><td>Nhánh PR bị behind base <code>feat/M-04-backend</code>.</td><td><strong>Đã xử lý</strong>: Đã merge sạch commit base mới nhất (commit <code>467820c</code>), <code>make validate-kit</code> pass.</td></tr>
+</tbody></table>
+
+<h2 id="conclusion">Kết luận thẩm định</h2>
+<p>PR #312 đáp ứng đầy đủ các tiêu chuẩn kỹ thuật của Pha A (VLM Qwen Runtime), toàn bộ unit test, contract test và migration trigger đạt 100%. Hồ sơ đã được đồng bộ và sẵn sàng để phiên QA/QC chéo được chỉ định thực hiện xác nhận và comment <code>Đã xem và duyệt</code> theo quy trình CR-102.</p>
+</article></main></body></html>

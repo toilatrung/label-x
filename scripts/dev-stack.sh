@@ -51,6 +51,15 @@ usage() { awk 'NR==1{next} /^[^#]/{exit} {sub(/^# ?/,""); print}' "$0"; }
 pid_of()   { cat "$RUN_DIR/$1.pid" 2>/dev/null || true; }
 alive()    { local p; p="$(pid_of "$1")"; [ -n "$p" ] && kill -0 "$p" 2>/dev/null; }
 port_busy(){ (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
+# Cổng vừa được tiến trình bị dừng nhả ra có thể còn bận thêm vài giây.
+port_still_busy() {
+  local i
+  for ((i = 0; i < 20; i++)); do
+    port_busy "$1" || return 1
+    sleep 0.5
+  done
+  return 0
+}
 
 # ---------------------------------------------------------------- chờ HTTP + stream log
 
@@ -104,6 +113,7 @@ halt() {
     kill -TERM -- "-$p" 2>/dev/null || kill -TERM "$p" 2>/dev/null || true
     for ((i = 0; i < 20; i++)); do kill -0 "$p" 2>/dev/null || break; sleep 0.5; done
     kill -KILL -- "-$p" 2>/dev/null || true
+    for ((i = 0; i < 10; i++)); do kill -0 "$p" 2>/dev/null || break; sleep 0.5; done
     say "đã dừng $name"
   fi
   rm -f "$RUN_DIR/$name.pid"
@@ -174,7 +184,7 @@ start_be() {
       stop_be
     fi
   fi
-  if port_busy "$API_PORT"; then die "Cổng $API_PORT đang bị tiến trình khác dùng."; fi
+  if port_still_busy "$API_PORT"; then die "Cổng $API_PORT đang bị tiến trình khác dùng."; fi
   local reload_args=()
   [ "${LABELX_DJANGO_AUTORELOAD-1}" = 0 ] && reload_args+=(--noreload)
   launch be "$BACKEND" "$UV" run --frozen python manage.py runserver "127.0.0.1:$API_PORT" "${reload_args[@]}"
@@ -184,7 +194,7 @@ start_be() {
     --max-memory-per-child "${LABELX_WORKER_MAX_MEMORY_KIB-393216}"
   launch beat   "$BACKEND" "$UV" run --frozen celery -A config beat -l info
   wait_http "http://127.0.0.1:$API_PORT/api/schema/" 90 be \
-    || die "API không lên — xem .cache/dev-stack/be.log"
+    || die "API không lên (đọc lỗi ở trên, sửa code rồi chạy: scripts/dev-stack.sh refresh be)"
 }
 
 start_fe() {
@@ -198,7 +208,7 @@ start_fe() {
       halt fe
     fi
   fi
-  if port_busy "$FE_PORT"; then die "Cổng $FE_PORT đang bị tiến trình khác dùng."; fi
+  if port_still_busy "$FE_PORT"; then die "Cổng $FE_PORT đang bị tiến trình khác dùng."; fi
   local poll=0
   [ -f "$RUN_DIR/fe.poll" ] && poll=1
   if [ "$poll" -eq 1 ]; then
@@ -207,7 +217,7 @@ start_fe() {
     launch fe "$FRONTEND" npx next dev -H 127.0.0.1 -p "$FE_PORT"
   fi
   wait_http "http://127.0.0.1:$FE_PORT/login" 180 fe \
-    || die "Next không lên — xem .cache/dev-stack/fe.log"
+    || die "Next không lên (đọc lỗi ở trên rồi chạy: scripts/dev-stack.sh refresh fe)"
 }
 
 stop_be() { halt beat; halt worker; halt be; }
