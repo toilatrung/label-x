@@ -216,6 +216,10 @@ ul.dir{columns:2;font-size:14px}
 <td>Không retry. Snapshot <code>failed</code> (<code>export_error</code>) và ghi rõ là lỗi quyền service account</td>
 </tr>
 <tr>
+<td>CVAT chưa cấu hình/chưa kết nối khi gọi API đọc dataset (<code>GET /api/datasets</code>)</td>
+<td>Trả <code>502</code> <code>BUSINESS_RULE_UNMET</code> "Không đọc được project CVAT."; không cache hoặc dữ liệu giả. Xem <a href="../04-api/rest-api.html#datasets-cvat-dependency">REST API</a></td>
+</tr>
+<tr>
 <td>Ảnh không tải được</td>
 <td>Ledger ghi <code>failed</code> (<code>media_error</code>) cho các đơn vị liên quan; không reject annotation</td>
 </tr>
