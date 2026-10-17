@@ -29,6 +29,7 @@ def load_annotations(engine_input: EngineInput) -> dict[FrameKey, list[Annotatio
                 frame_index__in=frames,
             )
             .select_related("snapshot_job")
+            .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
             .order_by("frame_index", "snapshot_job__cvat_job_id", "id")
         )
         annotations_by_key: dict[FrameKey, dict[str, Annotation]] = defaultdict(dict)

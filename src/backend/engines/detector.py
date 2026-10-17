@@ -491,7 +491,15 @@ def predict_frames(
             snapshot_job__snapshot_id=engine_input.snapshot_id,
             snapshot_job__cvat_task_id__in={key[0] for key in wanted},
             frame_index__in={key[1] for key in wanted},
-        ).select_related("snapshot_job__snapshot")
+        )
+        .select_related("snapshot_job__snapshot")
+        .defer(
+            "snapshot_job__normalized_json",
+            "snapshot_job__skipped_shape_counts",
+            "snapshot_job__snapshot__normalized_json",
+            "snapshot_job__snapshot__skipped_shape_counts",
+            "snapshot_job__snapshot__drift_jobs",
+        )
     )
     by_key = {(frame.snapshot_job.cvat_task_id, frame.frame_index): frame for frame in frames}
     if set(by_key) != set(wanted):

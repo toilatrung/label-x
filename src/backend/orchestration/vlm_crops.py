@@ -153,6 +153,7 @@ class SnapshotCropProvider:
                 frame_index__in={k[2] for k in wanted},
             )
             .select_related("snapshot_job")
+            .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
             .order_by("pk")
         )
         for frame in frames:
@@ -174,6 +175,7 @@ class SnapshotCropProvider:
                     frame_index=key[2],
                 )
                 .select_related("snapshot_job")
+                .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
                 .first()
             )
         frame = self._frames[key]

@@ -209,6 +209,13 @@ make dev-frontend # Next.js dev :3000</code></pre>
 </tbody>
 </table>
 <p>Kết quả xác nhận được lưu làm bằng chứng diễn tập. NFR-16 yêu cầu diễn tập khôi phục; tần suất diễn tập <strong>chưa chốt</strong>.</p>
+<h2 id="6-run-hoan-tat-thieu-hang-doi-review">6. Run đã hoàn tất nhưng thiếu hàng đợi review</h2>
+<p>Hàng đợi review (<code>RunRanking</code>) được lưu bằng callback sau commit khi run chuyển sang <code>completed</code> (<code>orchestration/runsync.py</code>), không nằm trong cùng giao dịch với trạng thái run. Nếu worker bị kill đúng lúc đó (ví dụ <code>OOMKilled</code>, exit 137), run vẫn <code>completed</code> nhưng <code>GET /api/queues/{risk,random}/</code> trả 404 "Run chưa có queue đã lưu", và review workspace báo run chưa sẵn sàng. Callback chỉ ghi log khi ranking lỗi; tín hiệu SIGKILL không để lại log.</p>
+<p>Nguyên nhân đã ghi nhận ngày 17/10/2026: truy vấn frame của <code>runs/ranking.py</code> join <code>SnapshotJob</code> và kéo cột <code>normalized_json</code> (toàn bộ payload của job) cho từng dòng frame, nên bộ nhớ tăng theo bình phương số frame và vượt giới hạn 768 MiB của worker. Các truy vấn frame trong worker nay bỏ cột đó (<code>defer</code>), và các dòng ranking được ghi theo lô nhỏ.</p>
+<p>Kiểm tra run thiếu ranking (chỉ đọc) và tạo lại, chạy trong pod backend có đủ bộ nhớ; lệnh idempotent, ranking đã có cùng nội dung được giữ nguyên:</p>
+<pre><code>kubectl -n labelx exec deploy/labelx-backend -- python manage.py persist_missing_rankings --dry-run
+kubectl -n labelx exec deploy/labelx-backend -- python manage.py persist_missing_rankings &lt;run_id&gt;</code></pre>
+<p>Chỉ chạy lệnh thứ hai sau khi bản triển khai có sửa bộ nhớ đang chạy; với bản cũ, tiến trình có thể bị OOM và làm Pod backend khởi động lại. Ngân sách bộ nhớ trong <code>infrastructure/vps-budget.json</code> chưa đổi; cần đo lại RSS thực tế của worker trên dữ liệu thật trước khi quyết định nâng giới hạn.</p>
 <h2 id="lien-quan">Liên quan</h2>
 <ul>
 <li><a href="ci-cd.html">ci-cd.html</a></li>
