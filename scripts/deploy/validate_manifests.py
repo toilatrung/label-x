@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate the rendered deployment, image receipt and persistent-data safeguards."""
 import argparse
+import ipaddress
 import json
 from pathlib import Path
 import re
@@ -140,6 +141,16 @@ def validate_cvat_profiles():
     environment = compose["cvat_server"]["environment"]
     assert str(environment["CVAT_ANALYTICS"]).endswith(":-0}"), "Analytics must default off in the reduced stack"
     assert str(environment["DJANGO_LOG_SERVER_HOST"]).endswith(":-}"), "Vector log handler must default off"
+    # The K3s ingress reaches the router through docker-proxy, so the router sees the compose network gateway.
+    # If that address is not trusted, forwarded https is rewritten to http and CVAT returns http:// upload URLs.
+    declared = compose["traefik"]["environment"]["TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS"]
+    trusted_text = re.fullmatch(r"\$\{CVAT_TRUSTED_PROXY_CIDRS:-([^}]+)\}", declared).group(1)
+    trusted = [ipaddress.ip_network(cidr) for cidr in trusted_text.split(",")]
+    assert any(ipaddress.ip_address("10.42.0.1") in net for net in trusted), "K3s pod CIDR must be trusted"
+    for gateway in ("172.17.0.1", "172.18.0.1", "172.31.255.1"):
+        assert any(ipaddress.ip_address(gateway) in net for net in trusted), f"Docker gateway {gateway} must be trusted"
+    assert f"CVAT_TRUSTED_PROXY_CIDRS={trusted_text}" in (ROOT / "scripts/deploy/prepare_cvat.py").read_text(), \
+        "prepare_cvat.py must write the same trusted proxy default as compose.vps.yaml"
     return len(profiles["default"])
 
 

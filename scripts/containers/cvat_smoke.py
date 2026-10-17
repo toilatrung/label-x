@@ -10,10 +10,30 @@ import subprocess
 import tempfile
 import textwrap
 import time
+import urllib.error
+import urllib.request
 import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 CVAT = ROOT / 'infrastructure/cvat'
+
+
+def tus_location(base_url, token):
+    """Start a TUS upload through the published router port, as the K3s ingress does, and return Location."""
+    # The router matches Host(`${CVAT_HOST:-localhost}`); the isolated stack keeps the default.
+    headers = {'Host': 'localhost', 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.cvat+json', 'X-Forwarded-Proto': 'https'}
+    create = urllib.request.Request(base_url + '/api/tasks', method='POST', headers=headers | {'Content-Type': 'application/json'},
+        data=json.dumps({'name': 'isolated-tus-test', 'labels': [{'name': 'car'}]}).encode())
+    try:
+        with urllib.request.urlopen(create, timeout=30) as response:
+            task_id = json.load(response)['id']
+        start = urllib.request.Request(f'{base_url}/api/tasks/{task_id}/data', method='POST', data=b'',
+            headers=headers | {'Tus-Resumable': '1.0.0', 'Upload-Length': '10', 'Upload-Metadata': 'filename bGl0ZS5wbmc='})
+        with urllib.request.urlopen(start, timeout=30) as response:
+            return response.headers.get('Location', '')
+    except OSError as error:
+        # Never surface URLs, headers or bodies: they can carry generated credentials.
+        raise RuntimeError('CVAT TUS check request failed with ' + (f'HTTP {error.code}' if isinstance(error, urllib.error.HTTPError) else type(error).__name__)) from None
 
 
 def main():
@@ -32,6 +52,8 @@ def main():
             text += f'  {name}:\n    container_name: {project}-{name}\n'
             if name == 'traefik':
                 text += '    ports: !override\n      - "127.0.0.1::8080"\n'
+                # Traefik reads the host Docker socket: without this constraint it would also route to any other CVAT on the host.
+                text += '    environment:\n      TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS: "Label(`com.docker.compose.project`,`' + project + '`)"\n'
         override.write_text(text)
         command = ['docker', 'compose', '-p', project, '-f', str(CVAT / 'upstream/docker-compose.yml'),
             '-f', str(CVAT / 'compose.vps.yaml'), '-f', str(override)]
@@ -121,6 +143,19 @@ except Exception as error:
                 show_server_traceback('cvat_server', 'cvat_worker_import', 'cvat_opa')
                 raise RuntimeError('CVAT task provisioning failed; generated credentials omitted')
             created = json.loads(next(row for row in prepared.stdout.splitlines() if row.startswith('LABELX_JOB:')).split(':', 1)[1])
+            # The K3s ingress reaches this router through docker-proxy, which appears as the compose network gateway.
+            # Untrusted forwarded headers would be rewritten to http and CVAT would hand browsers http:// upload URLs.
+            print('CHECK tus location https', flush=True)
+            port = compose('port', 'traefik', '8080').stdout.strip().rsplit(':', 1)[1]
+            try:
+                location = tus_location('http://127.0.0.1:' + port, credential['writer'])
+            except RuntimeError:
+                # The router access log keeps only status, method, path and client address by configuration.
+                logs = compose('logs', '--no-color', '--tail', '25', 'traefik', check=False).stdout
+                print('traefik log tail:', *[line.split('|', 1)[-1].strip()[:300] for line in logs.splitlines()], sep='\n', flush=True)
+                raise
+            if not location.startswith('https://'):
+                raise RuntimeError('CVAT upload Location is not https behind the router; CVAT_TRUSTED_PROXY_CIDRS must include the Docker network gateway')
             credential = json.dumps({'token': credential['token'], 'job': created['job']})
             test = """
 import json,sys,httpx
