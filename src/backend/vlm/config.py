@@ -17,19 +17,29 @@ from vlm.errors import VlmConfigError
 
 PROVIDER_DASHSCOPE = "dashscope"
 PROVIDER_OPENAI_COMPATIBLE = "openai_compatible"
+PROVIDER_GEMINI = "gemini"
 # Provider hợp lệ. `openai_compatible` = cổng tương thích OpenAI (kể cả bên thứ ba): crop ảnh đi
 # qua bên trung gian nên cần PO xác nhận chính sách dữ liệu trước smoke thật.
-ALLOWED_PROVIDERS = frozenset({PROVIDER_OPENAI_COMPATIBLE, PROVIDER_DASHSCOPE})
+ALLOWED_PROVIDERS = frozenset({PROVIDER_OPENAI_COMPATIBLE, PROVIDER_DASHSCOPE, PROVIDER_GEMINI})
 DEFAULT_MODEL = "qwen3-vl-plus"
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 DEFAULT_API_KEY_ENV = "VLM_API_KEY"
 # Chỉ đọc biến môi trường trong allowlist: tên tuỳ ý sẽ làm lộ secret khác (DJANGO_SECRET_KEY...)
 # sang host provider qua header Authorization.
-ALLOWED_API_KEY_ENVS = frozenset({DEFAULT_API_KEY_ENV, "DASHSCOPE_API_KEY"})
+ALLOWED_API_KEY_ENVS = frozenset({DEFAULT_API_KEY_ENV, "DASHSCOPE_API_KEY", "GEMINI_API_KEY"})
 
-# Allowlist model ID. Chỉ bản Instruct, không "thinking" (CR-116). Mở rộng cần change request.
-# Cổng OpenAI-compatible có thể dùng định danh khác (qwen-vl-plus, qwen-vl-max, qwen3-vl-...): CHƯA
-# biết ID nào hợp lệ; chỉ thêm vào tập này sau khi lấy GET /v1/models bằng key thật. Không đoán.
-ALLOWED_MODELS = frozenset({"qwen3-vl-plus"})
+# Gemini IDs và endpoint được xác minh từ tài liệu Google (2026-10-17):
+# https://ai.google.dev/gemini-api/docs/openai
+# https://ai.google.dev/gemini-api/docs/models
+# Việc cổng bên thứ ba có phục vụ từng model hay không phụ thuộc tài khoản của người dùng.
+QWEN_MODELS = frozenset({DEFAULT_MODEL})
+GEMINI_MODELS = frozenset({"gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-pro"})
+ALLOWED_MODELS = QWEN_MODELS | GEMINI_MODELS
+PROVIDER_MODELS = {
+    PROVIDER_DASHSCOPE: QWEN_MODELS,
+    PROVIDER_GEMINI: GEMINI_MODELS,
+    PROVIDER_OPENAI_COMPATIBLE: ALLOWED_MODELS,
+}
 
 # Allowlist host -> đường dẫn base_url duy nhất được phép (chống SSRF/gửi crop tới host lạ).
 # DashScope: tên host lấy từ tài liệu Alibaba qua tìm kiếm, CHƯA xác minh region PO được dùng.
@@ -40,6 +50,7 @@ ALLOWED_BASE_URLS: dict[str, frozenset[str]] = {
     "dashscope-intl.aliyuncs.com": frozenset({"/compatible-mode/v1"}),
     "dashscope-us.aliyuncs.com": frozenset({"/compatible-mode/v1"}),
     "api.shopaikey.com": frozenset({"/v1"}),
+    "generativelanguage.googleapis.com": frozenset({"/v1beta/openai"}),
 }
 ALLOWED_BASE_URL_HOSTS = frozenset(ALLOWED_BASE_URLS)
 
@@ -50,17 +61,21 @@ HOST_PROVIDER: dict[str, str] = {
     "dashscope-intl.aliyuncs.com": PROVIDER_DASHSCOPE,
     "dashscope-us.aliyuncs.com": PROVIDER_DASHSCOPE,
     "api.shopaikey.com": PROVIDER_OPENAI_COMPATIBLE,
+    "generativelanguage.googleapis.com": PROVIDER_GEMINI,
 }
 HOST_KEY_ENV: dict[str, str] = {
     "dashscope.aliyuncs.com": "DASHSCOPE_API_KEY",
     "dashscope-intl.aliyuncs.com": "DASHSCOPE_API_KEY",
     "dashscope-us.aliyuncs.com": "DASHSCOPE_API_KEY",
     "api.shopaikey.com": DEFAULT_API_KEY_ENV,
+    "generativelanguage.googleapis.com": "GEMINI_API_KEY",
 }
 
 
-def binding_error(provider: str, host: str, api_key_env: str) -> str | None:
-    """Lỗi nếu (provider, host, api_key_env) không khớp nhau; None nếu hợp lệ."""
+def binding_error(
+    provider: str, host: str, api_key_env: str, model: str | None = None
+) -> str | None:
+    """Ràng buộc provider, host, key và model; không gửi nhầm key/ảnh sang nhà khác."""
     if HOST_PROVIDER.get(host) != provider:
         return "models.vlm.provider không khớp host của base_url (provider sai host)."
     if HOST_KEY_ENV.get(host) != api_key_env:
@@ -68,11 +83,13 @@ def binding_error(provider: str, host: str, api_key_env: str) -> str | None:
             "models.vlm.api_key_env không khớp host của base_url "
             "(key không được gửi sang host khác)."
         )
+    if model is not None and model not in PROVIDER_MODELS.get(provider, frozenset()):
+        return "models.vlm.model không được hỗ trợ bởi nhà cung cấp của base_url."
     return None
 
 
 def default_api_key_env(base_url: str) -> str:
-    """Biến key mặc định theo host (cổng → VLM_API_KEY; DashScope → DASHSCOPE_API_KEY)."""
+    """Biến key theo host: VLM_API_KEY, DASHSCOPE_API_KEY hoặc GEMINI_API_KEY."""
     return HOST_KEY_ENV.get(urlparse(base_url).hostname or "", DEFAULT_API_KEY_ENV)
 
 
@@ -233,7 +250,9 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
     base_ok = isinstance(raw.get("base_url"), str) and not _base_url_errors(raw["base_url"])
     if base_ok and isinstance(provider, str) and isinstance(env_name, str):
         host = urlparse(raw["base_url"]).hostname or ""
-        mismatch = binding_error(provider, host, env_name)
+        mismatch = binding_error(
+            provider, host, env_name, model if isinstance(model, str) else None
+        )
         if mismatch and provider in ALLOWED_PROVIDERS and env_name in ALLOWED_API_KEY_ENVS:
             errors.append(mismatch)
     connection_id = raw.get("connection_id")
@@ -242,6 +261,11 @@ def validate_vlm_config(raw: Mapping[str, Any]) -> list[str]:
     ):
         errors.append("models.vlm.connection_id phải là số nguyên dương.")
     return errors
+
+
+def model_source(model: str | None) -> str:
+    """Nguồn evidence theo model đã khoá; giữ tên qwen cho dữ liệu cũ."""
+    return "gemini" if model and model.startswith("gemini-") else "qwen"
 
 
 def parse_vlm_config(raw: Mapping[str, Any]) -> VlmConfig:

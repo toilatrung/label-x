@@ -18,6 +18,7 @@ from orchestration.evaluation_read import (
 )
 from orchestration.models import Evaluation, VlmEvidence
 from review.models import FrameReview, Issue, Lease
+from vlm.config import model_source
 
 _DECIDED_STATES = frozenset(
     {Issue.State.CONFIRMED, Issue.State.REJECTED, Issue.State.RESOLVED, Issue.State.ESCALATED}
@@ -47,7 +48,7 @@ def _ai_entry(issue: Issue, evaluation: Evaluation) -> dict[str, Any]:
         source = "classifier"  # định tuyến đủ tin cậy, không cần Qwen
         suggestion = None
     else:
-        source = "qwen"
+        source = model_source(evidence.model if evidence else unit.model)
         suggestion = (
             {
                 "status": evidence.status,

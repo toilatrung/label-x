@@ -1,8 +1,8 @@
-"""Client DashScope (endpoint tương thích OpenAI) cho Qwen3-VL (M04A-02, CR-116).
+"""Client VLM tương thích OpenAI cho Qwen và Gemini.
 
-- API key đọc từ biến môi trường tên `config.api_key_env` tại thời điểm gọi; không lưu, không log.
-- Không gửi `response_format`/tham số suy luận: hỗ trợ JSON schema và chế độ suy luận của
-  qwen3-vl-plus CHƯA xác minh từ tài liệu Alibaba, nên backend validate JSON ở `parse_response`.
+- API key lấy từ kết nối mã hóa hoặc biến môi trường `config.api_key_env`; không log.
+- Qwen không nhận `response_format`/tham số suy luận. Gemini dùng reasoning_effort theo
+  tài liệu Google; cả hai được backend validate JSON ở `parse_response`.
 - Mọi lỗi httpx/HTTP được đổi thành VlmProviderError; thông điệp chỉ chứa mã trạng thái và mã
   lỗi đã làm sạch, không chứa nội dung phản hồi, header hay ảnh.
 - Bảng map mã HTTP → loại lỗi là giả định dựa trên quy ước OpenAI, CHƯA kiểm với provider thật.
@@ -19,7 +19,7 @@ from typing import Any
 import httpx
 
 from engines.worker_adapter.client import retry_after_seconds
-from vlm.config import ALLOWED_API_KEY_ENVS, binding_error
+from vlm.config import ALLOWED_API_KEY_ENVS, GEMINI_MODELS, binding_error
 from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
 
@@ -29,6 +29,7 @@ _SAFE_ID = re.compile(r"[^A-Za-z0-9_.-]")
 REQUEST_ID_SUFFIX_CHARS = 8
 MAX_MODEL_ID_CHARS = 64
 MAX_OUTPUT_TOKENS = 256
+GEMINI_MAX_OUTPUT_TOKENS = 4096  # Bao gồm thinking tokens trước JSON kết quả.
 _QUOTA_HINTS = ("quota", "insufficient", "arrear", "balance", "billing")
 
 
@@ -55,7 +56,9 @@ def _error_code(response: httpx.Response) -> str:
         return ""
     error = body.get("error") if isinstance(body, dict) else None
     if isinstance(error, dict):
-        raw = error.get("code") or error.get("type")
+        raw = error.get("code")
+        if not isinstance(raw, str) or not raw:
+            raw = error.get("status") or error.get("type")
         if isinstance(raw, str):
             return _SAFE_ID.sub("", raw)[:64].lower()
     return ""
@@ -96,7 +99,10 @@ def _content_text(payload: Any) -> str:
 
 
 class DashScopeClient:
-    """Một lần `complete` = một attempt thực gửi provider (tính budget ở tầng trên)."""
+    """Qwen/Gemini qua chat completions; giữ tên cũ để tương thích các worker.
+
+    Một lần `complete` = một attempt thực gửi provider (tính budget ở tầng trên).
+    """
 
     def __init__(self, *, transport: httpx.BaseTransport | None = None) -> None:
         self._transport = transport
@@ -107,7 +113,7 @@ class DashScopeClient:
         if cfg.api_key_env not in ALLOWED_API_KEY_ENVS:
             # Phòng thủ thêm: không bao giờ đọc biến môi trường ngoài allowlist.
             raise VlmProviderError(VlmProviderFailure.AUTH, "api_key_env không được phép")
-        mismatch = binding_error(cfg.provider, cfg.host, cfg.api_key_env)
+        mismatch = binding_error(cfg.provider, cfg.host, cfg.api_key_env, cfg.model)
         if mismatch is not None:
             # Key của nhà cung cấp này không được gửi tới host của nhà khác; nêu đúng nguyên nhân.
             raise VlmProviderError(VlmProviderFailure.AUTH, mismatch)
@@ -132,7 +138,7 @@ class DashScopeClient:
             f"data:{request.crop.mime_type};base64,"
             f"{base64.b64encode(request.crop.data).decode('ascii')}"
         )
-        body = {
+        body: dict[str, Any] = {
             "model": cfg.model,
             "temperature": 0,
             "max_tokens": MAX_OUTPUT_TOKENS,
@@ -146,6 +152,12 @@ class DashScopeClient:
                 }
             ],
         }
+        if cfg.model in GEMINI_MODELS:
+            # Gemini 3/2.5 Pro cần chỗ cho reasoning, nếu dùng 256 tokens của Qwen thì
+            # có thể hết budget trước khi có JSON. Google khuyến nghị giữ temperature mặc định.
+            body.pop("temperature")
+            body["max_tokens"] = GEMINI_MAX_OUTPUT_TOKENS
+            body["reasoning_effort"] = "none" if cfg.model == "gemini-2.5-flash" else "low"
         url = cfg.base_url.rstrip("/") + "/chat/completions"
         try:
             with httpx.Client(

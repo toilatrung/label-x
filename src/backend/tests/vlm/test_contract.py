@@ -9,7 +9,7 @@ import json
 import pytest
 from PIL import Image
 
-from vlm.config import ALLOWED_MODELS, parse_vlm_config, validate_vlm_config
+from vlm.config import parse_vlm_config, validate_vlm_config
 from vlm.contract import (
     CandidateContext,
     CropInput,
@@ -181,8 +181,45 @@ def test_default_key_env_and_providers() -> None:
     assert gateway.api_key_env == "VLM_API_KEY"
 
 
-def test_allowlist_contains_only_instruct_default() -> None:
-    assert ALLOWED_MODELS == {"qwen3-vl-plus"}
+@pytest.mark.parametrize("model", ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-pro"])
+@pytest.mark.parametrize(
+    ("provider", "base_url", "key_env"),
+    [
+        ("gemini", "https://generativelanguage.googleapis.com/v1beta/openai", "GEMINI_API_KEY"),
+        ("openai_compatible", "https://api.shopaikey.com/v1", "VLM_API_KEY"),
+    ],
+)
+def test_gemini_models_accept_google_and_gateway_with_host_bound_keys(
+    model: str, provider: str, base_url: str, key_env: str
+) -> None:
+    cfg = parse_vlm_config(_cfg(model=model, provider=provider, base_url=base_url))
+    assert cfg.model == model and cfg.api_key_env == key_env
+
+
+@pytest.mark.parametrize(
+    "over",
+    [
+        {"model": "qwen3-vl-plus"},
+        {"model": "gemini-made-up"},
+        {"api_key_env": "VLM_API_KEY"},
+        {"api_key_env": "DASHSCOPE_API_KEY"},
+        {"provider": "openai_compatible"},
+        {"base_url": "https://generativelanguage.googleapis.com/v1beta"},
+        {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"},
+        {"base_url": "https://generativelanguage.googleapis.com.evil.test/v1beta/openai"},
+        {"base_url": "https://generativelanguage.googleapis.com:443/v1beta/openai"},
+        {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai?key=secret"},
+    ],
+)
+def test_gemini_rejects_wrong_model_host_or_credential_binding(over: dict[str, object]) -> None:
+    raw = _cfg(
+        provider="gemini",
+        model="gemini-3.8-flash",
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+    )
+    raw.update(over)
+    with pytest.raises(VlmConfigError):
+        parse_vlm_config(raw)
 
 
 @pytest.mark.parametrize(
