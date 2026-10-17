@@ -968,7 +968,11 @@ class RunRankingView(APIView):
             )
 
         entries = _annotate_review_state(
-            ranking.entries.select_related("ranking", "snapshot_frame__snapshot_job"), run_id=pk
+            ranking.entries.select_related("ranking", "snapshot_frame__snapshot_job").defer(
+                "snapshot_frame__snapshot_job__normalized_json",
+                "snapshot_frame__snapshot_job__skipped_shape_counts",
+            ),
+            run_id=pk,
         )
         family = request.query_params.get("family")
         if family is not None:
