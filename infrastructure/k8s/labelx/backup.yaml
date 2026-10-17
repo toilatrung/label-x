@@ -1,0 +1,229 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: labelx-before-migrate-backup
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-before-migrate-backup
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dump-and-restore-check
+        image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+        imagePullPolicy: IfNotPresent
+        securityContext: &id001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 512Mi
+            cpu: 1000m
+        volumeMounts:
+        - &id002
+          name: ops
+          mountPath: /ops
+          readOnly: true
+        - name: work
+          mountPath: /work
+        - name: backups
+          mountPath: /backups
+        command:
+        - sh
+        - /ops/backup.sh
+        envFrom:
+        - secretRef:
+            name: labelx-backup
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+      - name: offsite-upload
+        image: labelx-backend
+        imagePullPolicy: IfNotPresent
+        securityContext: *id001
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 1Gi
+            cpu: 1000m
+        volumeMounts:
+        - *id002
+        - name: work
+          mountPath: /work
+        - name: backups
+          mountPath: /backups
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - python
+        - /ops/backup-upload.py
+        envFrom:
+        - configMapRef:
+            name: labelx-config
+        - configMapRef:
+            name: labelx-release
+        - secretRef:
+            name: labelx-backup
+        - secretRef:
+            name: labelx-runtime
+      volumes:
+      - name: ops
+        configMap:
+          name: labelx-ops
+          defaultMode: 292
+      - name: work
+        emptyDir:
+          sizeLimit: 10Gi
+      - name: backups
+        persistentVolumeClaim:
+          claimName: labelx-backups
+      - name: tmp
+        emptyDir: {}
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: labelx-daily-backup
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  schedule: 0 1 * * *
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: labelx
+            app.kubernetes.io/name: labelx-before-migrate-backup
+        spec:
+          automountServiceAccountToken: false
+          imagePullSecrets:
+          - name: labelx-ghcr
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: dump-and-restore-check
+            image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+            imagePullPolicy: IfNotPresent
+            securityContext: &id001
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+                cpu: 1000m
+            volumeMounts:
+            - &id002
+              name: ops
+              mountPath: /ops
+              readOnly: true
+            - name: work
+              mountPath: /work
+            - name: backups
+              mountPath: /backups
+            command:
+            - sh
+            - /ops/backup.sh
+            envFrom:
+            - secretRef:
+                name: labelx-backup
+            env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          - name: offsite-upload
+            image: labelx-backend
+            imagePullPolicy: IfNotPresent
+            securityContext: *id001
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+                cpu: 1000m
+            volumeMounts:
+            - *id002
+            - name: work
+              mountPath: /work
+            - name: backups
+              mountPath: /backups
+            - name: tmp
+              mountPath: /tmp
+            command:
+            - python
+            - /ops/backup-upload.py
+            envFrom:
+            - configMapRef:
+                name: labelx-config
+            - configMapRef:
+                name: labelx-release
+            - secretRef:
+                name: labelx-backup
+            - secretRef:
+                name: labelx-runtime
+          volumes:
+          - name: ops
+            configMap:
+              name: labelx-ops
+              defaultMode: 292
+          - name: work
+            emptyDir:
+              sizeLimit: 10Gi
+          - name: backups
+            persistentVolumeClaim:
+              claimName: labelx-backups
+          - name: tmp
+            emptyDir: {}
+          restartPolicy: Never

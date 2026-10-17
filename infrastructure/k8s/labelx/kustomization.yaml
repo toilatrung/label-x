@@ -1,0 +1,55 @@
+{
+  "apiVersion": "kustomize.config.k8s.io/v1beta1",
+  "kind": "Kustomization",
+  "namespace": "labelx",
+  "resources": [
+    "preflight.yaml",
+    "namespace.yaml",
+    "config.yaml",
+    "storage.yaml",
+    "datastores.yaml",
+    "backup.yaml",
+    "migration.yaml",
+    "applications.yaml",
+    "ingress.yaml",
+    "network-policy.yaml",
+    "smoke.yaml"
+  ],
+  "generatorOptions": {
+    "disableNameSuffixHash": true,
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "-30"
+    }
+  },
+  "configMapGenerator": [
+    {
+      "name": "labelx-ops",
+      "files": [
+        "ops/migrate.py",
+        "ops/backup.sh",
+        "ops/backup-upload.py",
+        "ops/smoke.py"
+      ]
+    },
+    {
+      "name": "labelx-release",
+      "literals": [
+        "SOURCE_SHA=f384c8fb0e0226476ec3080d5dff2750dd891a1b",
+        "MVP_EVIDENCE=unverified",
+        "DEPLOYMENT_POLICY=CR-120"
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "labelx-backend",
+      "newName": "ghcr.io/toilatrung/labelx-backend",
+      "digest": "sha256:4e971c050ce92a8a6c22896bc4c3f6ecc6a245a2b862905e3fc0ec87a7610422"
+    },
+    {
+      "name": "labelx-frontend",
+      "newName": "ghcr.io/toilatrung/labelx-frontend",
+      "digest": "sha256:76504c0cedbf28ad2f294476c2e91465e214cd387b75fe288bfc9548dbf4797c"
+    }
+  ]
+}

@@ -1,0 +1,419 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: labelx-backend
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  selector:
+    app.kubernetes.io/name: labelx-backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labelx-backend
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-backend
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: labelx-backend
+        image: labelx-backend
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            memory: 1536Mi
+            cpu: 1000m
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        envFrom:
+        - configMapRef:
+            name: labelx-config
+        - configMapRef:
+            name: labelx-release
+        - secretRef:
+            name: labelx-runtime
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 8000
+        startupProbe:
+          httpGet:
+            path: /healthz/
+            port: 8000
+            httpHeaders:
+            - name: Host
+              value: label-x.williamtrinh.online
+          periodSeconds: 5
+          failureThreshold: 60
+        livenessProbe:
+          httpGet:
+            path: /healthz/
+            port: 8000
+            httpHeaders:
+            - name: Host
+              value: label-x.williamtrinh.online
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - import os,psycopg,redis; c=psycopg.connect(os.environ['DATABASE_URL'],connect_timeout=3); c.execute('SELECT
+              1'); c.close(); redis.Redis.from_url(os.environ['CELERY_BROKER_URL'],socket_timeout=3).ping()
+          periodSeconds: 15
+          timeoutSeconds: 8
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      terminationGracePeriodSeconds: 45
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: labelx-frontend
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  selector:
+    app.kubernetes.io/name: labelx-frontend
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labelx-frontend
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-frontend
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: labelx-frontend
+        image: labelx-frontend
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 1Gi
+            cpu: 1000m
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: next-cache
+          mountPath: /app/.next/cache
+        envFrom:
+        - configMapRef:
+            name: labelx-config
+        - configMapRef:
+            name: labelx-release
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: HOSTNAME
+          value: 0.0.0.0
+        - name: PORT
+          value: '3000'
+        ports:
+        - containerPort: 3000
+        startupProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          periodSeconds: 5
+          failureThreshold: 60
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: next-cache
+        emptyDir:
+          sizeLimit: 256Mi
+      terminationGracePeriodSeconds: 45
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labelx-worker
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-worker
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: labelx-worker
+        image: labelx-backend
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 500m
+            memory: 768Mi
+          limits:
+            memory: 3Gi
+            cpu: 2000m
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - celery
+        - -A
+        - config
+        - worker
+        - -l
+        - INFO
+        - --concurrency=2
+        - --max-tasks-per-child=100
+        - --max-memory-per-child=524288
+        - --hostname=cpu@$(POD_NAME)
+        envFrom:
+        - configMapRef:
+            name: labelx-config
+        - configMapRef:
+            name: labelx-release
+        - secretRef:
+            name: labelx-runtime
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        readinessProbe:
+          exec: &id001
+            command:
+            - sh
+            - -ec
+            - celery -A config inspect ping --destination "cpu@$POD_NAME" --timeout=3 | grep -q pong
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 3
+        livenessProbe:
+          exec: *id001
+          timeoutSeconds: 10
+          periodSeconds: 60
+          failureThreshold: 6
+          initialDelaySeconds: 120
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      terminationGracePeriodSeconds: 300
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labelx-beat
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-beat
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-beat
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: labelx-beat
+        image: labelx-backend
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 512Mi
+            cpu: 500m
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - sh
+        - -ec
+        - rm -f /tmp/beat.pid; exec celery -A config beat -l INFO --pidfile=/tmp/beat.pid --schedule=/tmp/beat-schedule
+        envFrom:
+        - configMapRef:
+            name: labelx-config
+        - configMapRef:
+            name: labelx-release
+        - secretRef:
+            name: labelx-runtime
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        startupProbe:
+          exec: &id001
+            command:
+            - python
+            - -c
+            - import os; os.kill(int(open('/tmp/beat.pid').read().strip()),0)
+          timeoutSeconds: 5
+          periodSeconds: 5
+          failureThreshold: 60
+        livenessProbe: &id002
+          exec: *id001
+          timeoutSeconds: 5
+          periodSeconds: 30
+          failureThreshold: 3
+        readinessProbe: *id002
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      terminationGracePeriodSeconds: 45
