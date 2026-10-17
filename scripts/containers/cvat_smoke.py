@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
@@ -100,6 +101,11 @@ print('PASS real CVAT 2.77.0 PAT: jobs/annotations GET, adapter mutation guard, 
                         status = detail.get('status')
                         if isinstance(kind, str) and kind.isidentifier() and (status is None or isinstance(status, int)):
                             print(f'CHECK failure type={kind} status={status}', flush=True)
+                # Server-side cause of a 5xx: print only traceback frames and exception lines, never env, headers or bodies.
+                logs = compose('logs', '--no-color', '--tail', '400', 'cvat_server', check=False).stdout
+                frames = [line.split('|', 1)[-1].strip()[:240] for line in logs.splitlines()
+                    if re.search(r'Traceback \(most recent|^\S.*\|\s+File "|\|\s*[A-Za-z_.]+(Error|Exception|DoesNotExist)\b', line)]
+                print('CVAT server traceback lines:', *frames[-40:], sep='\n', flush=True)
                 raise RuntimeError('CVAT read-only adapter integration failed; generated credentials omitted')
             print(result.stdout.strip())
             info = compose('ps', '-a', '--format', 'json').stdout
