@@ -5,6 +5,15 @@ umask 077
 free_kib=$(df -Pk /backups | awk 'NR==2 {print $4}')
 [ "$free_kib" -ge 8388608 ] || { echo 'BLOCKED backup disk has less than 8 GiB free'; exit 1; }
 trap 'touch /work/failed' EXIT
+# Every GitOps revision recreates the datastore pods, and a new job pod can be refused by the
+# namespace network policy until it is programmed: wait for PostgreSQL instead of failing the
+# whole sync on the first refused connection (the job has backoffLimit 0).
+attempt=0
+until pg_isready --quiet --timeout=2; do
+  attempt=$((attempt + 1))
+  [ "$attempt" -lt 90 ] || { echo 'BLOCKED PostgreSQL did not accept connections within 3 minutes'; exit 1; }
+  sleep 2
+done
 backup_id="$(date -u +%Y%m%dT%H%M%SZ)-${POD_NAME}"
 printf '%s' "$backup_id" > /work/id
 pg_dump --format=custom --no-owner --no-privileges --file=/work/database.dump
