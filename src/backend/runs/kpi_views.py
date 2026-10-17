@@ -637,7 +637,8 @@ class WaiverApproveView(_KpiView):
                 raise ApiError(
                     status.HTTP_409_CONFLICT, "INVALID_TRANSITION", "Waiver đã được quyết định."
                 )
-            if not is_super_admin(actor) and _same_person(actor, waiver.requested_by_id):
+            # DEC-011 / FR-SEC-04: administrative access cannot waive four-eyes approval.
+            if _same_person(actor, waiver.requested_by_id):
                 raise ApiError(
                     status.HTTP_403_FORBIDDEN,
                     "SAME_REQUESTER_APPROVER",

@@ -35,7 +35,12 @@ jobs:
       OBJECT_STORAGE_ACCESS_KEY: ${{ secrets.TEST_OBJECT_STORAGE_ACCESS_KEY }}
       OBJECT_STORAGE_SECRET_KEY: ${{ secrets.TEST_OBJECT_STORAGE_SECRET_KEY }}
       OBJECT_STORAGE_BUCKET: ${{ vars.TEST_OBJECT_STORAGE_BUCKET }}
+      OBJECT_STORAGE_BUCKET_SNAPSHOTS: ${{ vars.TEST_OBJECT_STORAGE_BUCKET }}
+      OBJECT_STORAGE_BUCKET_EVIDENCE: ${{ vars.TEST_OBJECT_STORAGE_BUCKET }}
+      OBJECT_STORAGE_BUCKET_REPORTS: ${{ vars.TEST_OBJECT_STORAGE_BUCKET }}
+      LABELX_RUN_S3_INTEGRATION: '1'
       LABELX_TEST_NAMESPACE: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      LABELX_EVALUATION_ISOLATED: ${{ vars.LABELX_EVALUATION_ISOLATED }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,6 +52,8 @@ jobs:
           mkdir -p .ci-artifacts/upstream
           gh api "repos/$GITHUB_REPOSITORY/environments/labelx-evaluation" > .ci-artifacts/upstream/evaluation-environment.json
           node scripts/ci/quality-gate.cjs verify-environment --file .ci-artifacts/upstream/evaluation-environment.json --environment labelx-evaluation
+      - name: Probe isolated evaluation dependencies
+        run: uv run --frozen --project src/backend python scripts/ci/evaluation-probe.py
       - name: Run tests; no skip-to-green
         shell: bash
         run: |

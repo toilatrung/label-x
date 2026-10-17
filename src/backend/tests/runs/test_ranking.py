@@ -500,3 +500,78 @@ def test_priority_counts_ignore_selected_priority_and_cursor_but_honor_other_fil
     empty = client.get(url, {"q": "no-matching-frame"})
     assert empty.data["results"] == []
     assert empty.data["priority_counts"] == {"high": 0, "medium": 0, "low": 0}
+
+
+def test_ranking_frame_query_does_not_load_job_payloads(
+    snapshot: Snapshot, config: ConfigVersion, qa_user: User
+) -> None:
+    """SnapshotJob.normalized_json holds the whole job; joining it per frame is O(frames^2)."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    run = _run(snapshot, config, qa_user)
+    with CaptureQueriesContext(connection) as queries:
+        persist_run_rankings(run_id=run.pk, candidates=[_candidate()], audit_percent=Decimal("50"))
+
+    frame_selects = [
+        query["sql"]
+        for query in queries.captured_queries
+        if query["sql"].startswith("SELECT") and 'FROM "snapshots_snapshotframe"' in query["sql"]
+    ]
+    assert frame_selects
+    assert all("normalized_json" not in sql for sql in frame_selects)
+
+
+def test_entries_are_inserted_in_bounded_batches_without_changing_the_result(
+    snapshot: Snapshot, config: ConfigVersion, qa_user: User, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import runs.ranking as ranking_module
+
+    baseline = persist_run_rankings(
+        run_id=_run(snapshot, config, qa_user).pk,
+        candidates=[_candidate()],
+        audit_percent=Decimal("50"),
+    )
+    monkeypatch.setattr(ranking_module, "ENTRY_BATCH_SIZE", 1)
+    batched_run = _run(snapshot, config, qa_user)
+    batched = persist_run_rankings(
+        run_id=batched_run.pk, candidates=[_candidate()], audit_percent=Decimal("50")
+    )
+
+    assert {(item.source, item.ranking_hash) for item in batched} == {
+        (item.source, item.ranking_hash) for item in baseline
+    }
+    expected = [
+        (entry.ranking.source, entry.rank, entry.snapshot_frame_id, entry.score)
+        for ranking in baseline
+        for entry in ranking.entries.select_related("ranking").order_by("ranking_id", "rank")
+    ]
+    assert expected
+    assert RunRankingEntry.objects.filter(ranking__run=batched_run).count() == len(expected)
+
+
+def test_persist_missing_rankings_command_recovers_completed_run_without_queue(
+    snapshot: Snapshot, config: ConfigVersion, qa_user: User
+) -> None:
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    from runs.models import QCRun
+
+    run = _run(snapshot, config, qa_user)
+    QCRun.objects.filter(pk=run.pk).update(status=QCRun.Status.COMPLETED)
+    out = StringIO()
+
+    call_command("persist_missing_rankings", "--dry-run", stdout=out)
+    assert f"run {run.pk}: thiếu ranking" in out.getvalue()
+    assert not RunRanking.objects.filter(run=run).exists()
+
+    out = StringIO()
+    call_command("persist_missing_rankings", str(run.pk), stdout=out)
+    assert f"run {run.pk}: đã tạo" in out.getvalue()
+    assert RunRanking.objects.filter(run=run).count() == len(RunRanking.Source.values)
+
+    out = StringIO()
+    call_command("persist_missing_rankings", stdout=out)
+    assert "Không có run nào thiếu ranking" in out.getvalue()

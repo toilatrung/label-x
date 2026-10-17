@@ -15,6 +15,19 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 CVAT = ROOT / 'infrastructure/cvat'
 
+# /api/server/about does not exercise authorization. OPA loads its policy bundle
+# asynchronously from CVAT, so API readiness alone can race the first PAT request.
+READINESS_CODE = """
+import json, urllib.request
+with urllib.request.urlopen('http://127.0.0.1:8080/api/server/about', timeout=3) as response:
+    assert json.load(response)['version'] == '2.77.0'
+with urllib.request.urlopen('http://opa:8181/health?bundles=true', timeout=3) as response:
+    assert response.status == 200
+with urllib.request.urlopen('http://opa:8181/v1/policies', timeout=3) as response:
+    policies = json.load(response)
+    assert isinstance(policies.get('result'), list) and policies['result']
+"""
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -45,11 +58,11 @@ def main():
             compose('up', '-d')
             for attempt in range(120):
                 result = compose('exec', '-T', 'cvat_server', 'python3', '-c',
-                    "import urllib.request,json; r=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/server/about',timeout=3)); assert r['version']=='2.77.0'", check=False)
+                    READINESS_CODE, check=False)
                 if result.returncode == 0:
                     break
                 if attempt == 119:
-                    raise RuntimeError('Isolated CVAT did not become ready')
+                    raise RuntimeError('Isolated CVAT API and OPA policy bundle did not become ready')
                 time.sleep(5)
             code = """
 import json

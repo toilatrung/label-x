@@ -165,9 +165,9 @@
       "scenario": "Adapter gửi request ngoài allowlist hoặc ghi annotation",
       "expected": "Chặn mọi annotation mutation; export có POST chỉ được phép nếu là thao tác đọc đã xác minh trong contract CVAT.",
       "fixtures": "CVAT mock theo version; request recorder",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p0_snapshot.py::test_snp01_cvat277_records_reads_and_blocks_all_annotation_writes"
     },
     {
       "id": "SNP-02",
@@ -180,9 +180,9 @@
       "scenario": "Đổi thứ tự JSON/annotation không đổi nội dung",
       "expected": "Hash chuẩn hoá giống; đổi geometry/class/thuộc tính phải đổi hash.",
       "fixtures": "Hai export tương đương và một export đổi nhãn",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p0_snapshot.py::test_snp02_equivalent_exports_hash_equal_but_each_semantic_edit_changes_hash"
     },
     {
       "id": "SNP-03",
@@ -195,9 +195,9 @@
       "scenario": "Job thay đổi giữa hai lần đọc khi tạo snapshot",
       "expected": "Không khoá snapshot; liệt kê job drift; không lưu bản dữ liệu trộn.",
       "fixtures": "CVAT mock trả R1 rồi R2",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p0_snapshot.py::test_snp03_r1_r2_drift_has_exact_job_ids_and_no_mixed_rows"
     },
     {
       "id": "SNP-04",
@@ -210,9 +210,9 @@
       "scenario": "Khoá rồi thử sửa snapshot; mapping frame khác thứ tự job",
       "expected": "Snapshot bất biến; ảnh/checksum/assignee/version giữ đúng; parent snapshot mới.",
       "fixtures": "Object Storage tạm + multi-job/frame fixture",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p0_snapshot.py::test_snp04_real_objects_mapping_lineage_and_database_immutability"
     },
     {
       "id": "SNP-05",
@@ -239,9 +239,9 @@
       "scenario": "Lớp không thuộc taxonomy hoặc thiếu thuộc tính bắt buộc",
       "expected": "Candidate có rule ID và expected/actual, không tự confirm defect.",
       "fixtures": "Taxonomy version + annotation hợp lệ/sai",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_eng_01_taxonomy_version_valid_unknown_and_missing_attribute"
     },
     {
       "id": "ENG-02",
@@ -268,9 +268,9 @@
       "scenario": "Duplicate ở dưới/bằng/trên Intersection over Union 0.85",
       "expected": "Candidate đúng cặp/IoU/lớp; hai object thật vẫn cần reviewer, không tự đóng.",
       "fixtures": "Cặp box/cluster chồng lấn",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_eng_03_real_box_iou_boundary_preserves_pair_classes_and_review"
     },
     {
       "id": "AGG-01",
@@ -314,9 +314,9 @@
       "scenario": "Frame lỗi decode, unsupported shape, engine tắt, partial",
       "expected": "Không bỏ failed khỏi mẫu số; status/applicability đúng; không biến thiếu kiểm thành pass.",
       "fixtures": "Eligible/completed/failed/not-checked ledger",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_agg_03_persisted_failed_disabled_unsupported_partial_ledger"
     },
     {
       "id": "AGG-04",
@@ -344,9 +344,9 @@
       "scenario": "Model checksum sai, class unmapped, chưa có artifact",
       "expected": "Không suy luận với artifact sai; không có model thì Not checked; không ranking giả.",
       "fixtures": "Detector stub + artifact manifest",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p2_discovery.py::test_det_01_artifact_fail_closed_and_no_model_not_checked"
     },
     {
       "id": "DET-02",
@@ -373,9 +373,9 @@
       "scenario": "Matching một-một, sai class, đông object và cạnh dưới threshold",
       "expected": "Geometry trước class; loại cạnh dưới threshold trước tối ưu; max cardinality rồi IoU, tie tất định.",
       "fixtures": "Ambiguous/dense association fixtures",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p2_discovery.py::test_mat_01_geometry_cardinality_iou_threshold_dense_and_ties"
     },
     {
       "id": "MAT-02",
@@ -389,9 +389,9 @@
       "scenario": "Unmatched prediction, matched wrong class, không Ground Truth",
       "expected": "Sinh missing/class candidate theo policy; có evidence; không gọi disagreement là accuracy.",
       "fixtures": "Prediction/annotation without Ground Truth",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p2_discovery.py::test_mat_02_disagreement_candidates_without_ground_truth"
     },
     {
       "id": "MAT-03",
@@ -421,9 +421,9 @@
       "scenario": "Có frame không candidate và frame hoà điểm; rerun",
       "expected": "Ranking mọi frame, tie hash(frame_key,seed), canonical result hash tái lập.",
       "fixtures": "Fixed score/seed snapshot",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_ranking.py::test_rnk01_all_frames_tie_hash_and_canonical_result"
     },
     {
       "id": "RNK-02",
@@ -451,9 +451,9 @@
       "scenario": "Score version khoá; engine bắt buộc Failed/Not checked",
       "expected": "Không đổi score đã khoá; frame thiếu evidence không bị xếp thấp rồi ẩn.",
       "fixtures": "Score/config version + ledger",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_ranking.py::test_rnk03_persisted_score_frozen_and_missing_required_evidence_visible"
     },
     {
       "id": "RNK-04",
@@ -466,9 +466,9 @@
       "scenario": "Random sample và risk ranking có cùng seed/scope",
       "expected": "Sample ngẫu nhiên độc lập, tái lập; đối chứng dùng cùng frame universe; báo cáo riêng.",
       "fixtures": "Random manifest + baseline rankings",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_ranking.py::test_rnk04_audit_independent_and_controls_share_exact_universe"
     },
     {
       "id": "RNK-05",
@@ -515,9 +515,9 @@
       "scenario": "Hai reviewer claim cùng frame; lease hết hạn hoặc sai owner",
       "expected": "Một owner duy nhất; ghi decision bị chặn 409 khi lease sai/hết hạn; không phụ thuộc Redis lock.",
       "fixtures": "PostgreSQL transaction + parallel clients",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p3_review.py::test_rev02_parallel_postgresql_claim_owner_and_expired_decisions_without_redis"
     },
     {
       "id": "REV-03",
@@ -580,9 +580,9 @@
       "scenario": "Reviewer bất đồng hoặc guideline thiếu/đổi version",
       "expected": "Chỉ vai trò đủ quyền phân xử; giữ evidence/history; thiếu rule không tự ép sửa.",
       "fixtures": "Approved rule + guideline gap",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p3_review.py::test_esc01_authorized_adjudication_preserves_history_and_guideline_gap"
     },
     {
       "id": "RWK-01",
@@ -598,9 +598,9 @@
       "scenario": "Submit không đổi revision; verify cùng người sửa; recheck fail",
       "expected": "Không đóng issue sai; recheck đúng revision mới; fail trả rework và giữ snapshot gốc.",
       "fixtures": "CVAT R1/R2 mock + role fixtures",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p3_review.py::test_rwk01_new_cvat_revision_same_person_guard_and_failed_verify_preserve_r1"
     },
     {
       "id": "RWK-02",
@@ -774,9 +774,9 @@
       "scenario": "Report có random/risk, engine/calibration, thiếu metric",
       "expected": "Cỡ mẫu/mẫu số/CI/scope/version đúng; không trộn stream; không số vô nguồn.",
       "fixtures": "Report source records",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_gate_report.py::test_rpt01_report_preserves_metric_provenance_and_separate_streams"
     },
     {
       "id": "GTE-01",
@@ -805,9 +805,9 @@
       "scenario": "Waiver chưa duyệt/hết hạn/sai condition/sai requester",
       "expected": "Waiver chỉ có hiệu lực đúng scope, approval, expiry; không tự approve chính mình.",
       "fixtures": "Versioned waiver + controlled clock",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_gate_report.py::test_gte02_waiver_approval_identity_expiry_condition_scope"
     },
     {
       "id": "RPT-02",
