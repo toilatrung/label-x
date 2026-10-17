@@ -284,9 +284,9 @@
       "scenario": "Replay shard và retry sau worker chết",
       "expected": "Candidate/issue không trùng, candidate cũ bất biến; provenance không mất.",
       "fixtures": "PostgreSQL + worker thật + shard replay",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_agg_01_real_worker_sigkill_then_redelivery_and_replay_keep_candidates_immutable"
     },
     {
       "id": "AGG-02",
@@ -298,9 +298,9 @@
       "scenario": "Nhiều nguồn cùng object; khác nhóm lỗi",
       "expected": "Gộp đúng dedup key/version; giữ nguồn và quyết định riêng khi cần.",
       "fixtures": "Multi-source candidates",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_agg_02_multi_source_candidates_keep_sources_versions_and_independent_decisions"
     },
     {
       "id": "AGG-03",
