@@ -1,10 +1,12 @@
-"""Three-way race: frames/complete vs rework verify vs complete_scope_frames (#238/#243 limit).
+"""Three-way race: frames/complete vs rework verify vs complete_scope_frames
+(archive:238/archive:243 limit).
 
 Real PostgreSQL threads over synthetic DB rows (no CVAT, no Celery); not real-data evidence.
 
 Scenario: a Completed final run exists and a reviewer re-opens a frame under a live lease,
 is routed back to the queue, a reviewer claims the frame, confirms the new issue and sends a
-rework that the annotator has submitted. Three writers can now meet on the same frame while the
+rework that the annotator has submitted. Three writers can now meet on the same frame while
+the
 origin QCRun row lock serialises them: ``complete_frame`` (reviewer), ``verify_rework``
 (verifier) and ``complete_scope_frames`` (sweeper / final-scope path).
 
@@ -14,6 +16,9 @@ Invariants asserted for every arrival order and under repeated 4+4+4 racing:
     ``frame.complete`` audit);
   * nobody deadlocks (every wait has a timeout) and the end state is consistent.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-238, issue-243.
 
 from __future__ import annotations
 

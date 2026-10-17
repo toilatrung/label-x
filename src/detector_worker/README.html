@@ -4,8 +4,10 @@
 <style>body{max-width:980px;margin:2rem auto;padding:0 1rem;font:15px/1.6 system-ui;color:#1a1d23}code,pre{background:#f3f4f6}code{padding:.1rem .3rem}pre{padding:1rem;overflow:auto;border:1px solid #e3e6ea}h2{margin-top:2rem;border-bottom:1px solid #ddd}blockquote{border-left:4px solid #b26a00;background:#fff7df;padding:.5rem 1rem}</style>
 </head><body>
 <h1>LabelX Detector Worker</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <p>Worker độc lập chạy Faster R-CNN R-50-FPN 3x của SysCV BDD100K model zoo bằng MMDetection 2.x. Worker xác minh SHA-256 <em>trước</em> khi MMDetection đọc checkpoint và xuất box <code>x1,y1,x2,y2</code> theo pixel ảnh gốc.</p>
-<blockquote><strong>Trạng thái artifact ngày 07/10/2026:</strong> checkpoint được phục hồi từ Wayback theo quyết định của PO tại issue #17, khớp MD5 gốc <code>d2a866749432b7bd8436f0001c1625d7</code> và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Wayback chỉ là nguồn phục hồi; runtime phải dùng bản đã xác minh trong kho artifact nội bộ.</blockquote>
+<blockquote><strong>Trạng thái artifact ngày 07/10/2026:</strong> checkpoint được phục hồi từ Wayback theo quyết định của PO tại issue <a href="../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-17">#17 (lưu trữ)</a>, khớp MD5 gốc <code>d2a866749432b7bd8436f0001c1625d7</code> và đã freeze SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Wayback chỉ là nguồn phục hồi; runtime phải dùng bản đã xác minh trong kho artifact nội bộ.</blockquote>
 <h2>Build image</h2>
 <h2>Backend trên host → warm worker (BLOCKER-033)</h2>
 <p>Django/Celery không cài torch và không gọi CLI trong host nữa. Backend gửi byte ảnh qua HTTP tới worker đã nạp model; không gửi đường dẫn host vào container. CLI <code>infer/verify/fetch</code> vẫn dùng được độc lập để quản lý artifact và chạy offline.</p>

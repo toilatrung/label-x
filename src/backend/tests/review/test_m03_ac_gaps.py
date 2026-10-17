@@ -1,7 +1,11 @@
-"""AC gaps found by QA of M-03-RESOLVE: #238 AC2 (paging + filters), #239 AC2/AC3, #243 AC4.
+"""AC gaps found by QA of M-03-RESOLVE: archive:238 AC2 (paging + filters), archive:239 AC2/AC3,
+archive:243 AC4.
 
 Synthetic DB rows through the real API/services; not CVAT E2E evidence.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-238, issue-239, issue-243.
 
 from __future__ import annotations
 
@@ -29,7 +33,7 @@ pytest_plugins = ["tests.review.test_queue_lease", "tests.review.test_final_sour
 pytestmark = pytest.mark.usefixtures("snapshot_media_urls")
 
 
-# --------------------------------------------------------------------------- #238 AC2
+# --------------------------------------------------------------------------- archive:238 AC2
 
 
 @pytest.fixture
@@ -153,7 +157,7 @@ def test_ranking_paging_filter_follows_state_changes_between_pages(world, many_f
     assert [r["frame_key"]["frame_number"] for r in second.data["results"]] == [6]
 
 
-# --------------------------------------------------------------------------- #239 AC2/AC3
+# --------------------------------------------------------------------------- archive:239 AC2/AC3
 
 
 def _prediction_candidate(run, shard, *, key, family, engine="detector", bbox=(20, 20, 40, 40)):
@@ -243,7 +247,7 @@ def test_workspace_payload_has_real_predictions_guideline_and_engine_states(worl
     assert not Issue.objects.filter(state__in=["confirmed", "resolved", "rejected"]).exists()
 
 
-# --------------------------------------------------------------------------- #243 AC4
+# --------------------------------------------------------------------------- archive:243 AC4
 
 
 def _final_candidate(run, family, key):

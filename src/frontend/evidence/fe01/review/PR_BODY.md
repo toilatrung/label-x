@@ -51,3 +51,12 @@ Latest `origin/develop-fe` `e358c8be661ed4eb6eb37fdf13626bac4172d0f2` is integra
 Fresh scope/CSS/shell/privacy/receipt checks accompany the repair. Leader QA, new-head CI, clean release reproducibility, other roles/no-Dataset browser flow, delayed responses/user switching, pagination beyond page one, Task scope interactions, offscreen table scrolling, preview release click and Review Center click are NOT VERIFIED by this collector. Backend aggregation and Gate callout wiring remain pending; FE10 Overview link remains pending. Please rerun QA; this PR does not close #147.
 
 CI ownership repair (CR-100): the blocker report now uses the `-@tdt2112.html` filename and per-user metadata ID. Only report ownership metadata and public references changed; product source, eight captures and the receipt are unchanged. New-head CI is pending; leader QA and release acceptance remain pending.
+
+<!-- issue-migration-2026-10-17:start -->
+
+Historical issue references were archived on 2026-10-17; original text above is preserved.
+
+| Old issue | Current follow-up / archive |
+|---|---|
+| #147 | [Mapping and scope](../../../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-147) |
+<!-- issue-migration-2026-10-17:end -->

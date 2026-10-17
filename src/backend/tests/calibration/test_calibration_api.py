@@ -1,17 +1,22 @@
-"""Comprehensive tests for Calibration and Audit API (MBE-04, E-17, E-18, E-20, Issue #326).
+"""Comprehensive tests for Calibration and Audit API (MBE-04, E-17, E-18, E-20, archived issue
+326).
 
 Covers:
 - GET /api/audit-samples/ (list, stream filter, pagination, roles)
 - POST /api/audit-samples/ (sampling, seed idempotency, insufficient sample 422, roles, audit)
 - GET /api/benchmarks/ (list, dataset filter, pagination, roles)
 - POST /api/benchmarks/ (manual creation, snapshot validation, roles, audit)
-- POST /api/benchmarks/import-cvat/ (idempotent import by dataset_id & cvat_task_id, 202, audit)
+- POST /api/benchmarks/import-cvat/ (idempotent import by dataset_id & cvat_task_id, 202,
+audit)
 - GET /api/evaluation/performance/ (performance aggregation, not_checked status, roles)
 - GET /api/calibration/reviewers/ (reviewer list, frame counts, assignments, null rate, roles)
 - GET /api/calibration/models/ (model list from ModelArtifact, assignments, roles)
 - POST /api/calibration/assignments/ (assignment creation, 404 validation, roles, audit)
 - Happy paths, 400, 403, 404, 409, 422 error codes.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-326.
 
 from __future__ import annotations
 
