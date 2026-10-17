@@ -4,6 +4,8 @@ import json
 import os
 import secrets
 import tempfile
+import shutil
+from io import BytesIO
 import time
 from pathlib import Path
 
@@ -33,11 +35,56 @@ def client(prefix):
         config=Config(connect_timeout=10, read_timeout=120, retries={"max_attempts": 3}))
 
 
+class LocalBackup:
+    """Same-VPS copy only. Never represents offsite disaster recovery."""
+    root = Path("/backups/local")
+
+    def path(self, key):
+        path = self.root / key
+        if not path.resolve().is_relative_to(self.root.resolve()):
+            raise ValueError("Invalid backup path")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def upload_fileobj(self, stream, bucket, key, ExtraArgs=None):
+        path = self.path(key)
+        temporary = path.with_name(path.name + ".part-" + secrets.token_hex(8))
+        try:
+            with temporary.open("xb") as output:
+                shutil.copyfileobj(stream, output)
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def upload_file(self, source, bucket, key, ExtraArgs=None):
+        with open(source, "rb") as stream:
+            self.upload_fileobj(stream, bucket, key)
+
+    def download_file(self, bucket, key, destination):
+        shutil.copyfile(self.path(key), destination)
+
+    def head_object(self, Bucket, Key):
+        path = self.path(Key)
+        if not path.exists():
+            raise ClientError({"Error": {"Code": "404"}}, "HeadObject")
+        with path.open("rb") as stream:
+            return {"Metadata": {"sha256": hashlib.file_digest(stream, "sha256").hexdigest()}}
+
+    def get_object(self, Bucket, Key):
+        return {"Body": self.path(Key).open("rb")}
+
+    def put_object(self, Bucket, Key, Body, **kwargs):
+        self.upload_fileobj(BytesIO(Body), Bucket, Key)
+
+
 def main():
     wait_for("dumped")
     backup_id = (work / "id").read_text()
-    target = client("BACKUP_S3_")
-    bucket = os.environ["BACKUP_S3_BUCKET"]
+    mode = os.environ.get("BACKUP_MODE", "offsite")
+    if mode not in ("local", "offsite"):
+        raise RuntimeError("Explicit backup mode local/offsite required")
+    target = LocalBackup() if mode == "local" else client("BACKUP_S3_")
+    bucket = "local-only" if mode == "local" else os.environ["BACKUP_S3_BUCKET"]
     prefix = os.environ.get("BACKUP_S3_PREFIX", "labelx").strip("/")
     encryption_key = bytes.fromhex(os.environ["BACKUP_ENCRYPTION_KEY"])
     source = client("OBJECT_STORAGE_")
@@ -116,7 +163,8 @@ def main():
             raise RuntimeError("Remote backup round-trip checksum mismatch")
     receipt = {"schema_version": 1, "backup_id": backup_id, "source_sha": os.environ["SOURCE_SHA"],
         "dump_key": dump_key, "dump_sha256": digest, "objects": objects,
-        "mvp_acceptance": "unverified", "database_restore": "pending"}
+        "mvp_acceptance": "unverified", "database_restore": "pending",
+        "location": mode, "disaster_recovery": "unverified"}
     (work / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
     (work / "verified").touch()
     wait_for("restored")
@@ -127,7 +175,7 @@ def main():
     target.put_object(Bucket=bucket, Key=f"{prefix}/receipts/{backup_id}.json", Body=content,
         ContentType="application/json")
     Path(f"/backups/{backup_id}.json").write_bytes(content)
-    print(f"PASS backup {backup_id}: remote DB checksum, restored DB, {len(objects)} S3 objects")
+    print(f"PASS backup {backup_id}: {mode} copy, DB checksum, restored DB, {len(objects)} S3 objects; disaster recovery UNVERIFIED")
 
 
 if __name__ == "__main__":

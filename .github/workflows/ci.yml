@@ -209,8 +209,14 @@ jobs:
           kubectl kustomize infrastructure/k8s/labelx > /tmp/labelx-rendered.yaml
           docker run --rm --volume "$PWD:/repo:ro" --volume /tmp/labelx-rendered.yaml:/tmp/rendered.yaml:ro --workdir /repo labelx-backend:ci python scripts/deploy/validate_manifests.py /tmp/rendered.yaml
           python3 -m unittest discover -s scripts/deploy/tests -v
-      - name: Verify encrypted backup, S3 round-trip and disposable database restore
-        run: python3 scripts/containers/backup_smoke.py --backend labelx-backend:ci
+      - name: Verify local and offsite backup modes without deployment credentials
+        run: |
+          python3 scripts/containers/backup_smoke.py --backend labelx-backend:ci --mode local
+          python3 scripts/containers/backup_smoke.py --backend labelx-backend:ci --mode offsite
+      - name: Verify scoped S3 permissions, CORS and actual application presigned URLs
+        run: python3 scripts/containers/storage_smoke.py --backend labelx-backend:ci
+      - name: Verify pinned CVAT upstream and real read-only PAT adapter integration
+        run: python3 scripts/containers/cvat_smoke.py --backend labelx-backend:ci
 
   detector:
     # Tương đương `make detector-lint detector-test`; worker chạy độc lập, không cần GPU/MMDetection.

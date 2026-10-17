@@ -487,6 +487,7 @@ EngineOutput { status: Checked | Partial | Failed | Not checked,
 <ul>
 <li><strong>Dev local</strong>: <a href="../../infrastructure/docker-compose.dev.yml">docker-compose.dev.yml</a> chạy <code>postgres:17</code>, <code>redis:7-alpine</code>, <code>seaweedfs</code> (S3 ở cổng 9000) và <code>seaweedfs-init</code>. <code>seaweedfs-init</code> tạo các bucket <code>labelx-snapshots</code>, <code>labelx-evidence</code>, <code>labelx-reports</code>. CVAT không nằm trong compose.</li>
 <li><strong>Môi trường thật</strong> (SRS <code>fig:deployment</code>): một app server Linux chạy Gunicorn + Django/DRF và Celery CPU worker; một GPU server chạy Celery GPU worker; tầng dữ liệu gồm PostgreSQL, Redis và Object Storage hiện có; CVAT hiện có được truy cập qua HTTPS (chỉ đọc). Cấu hình phần cứng: <strong>TBD-02</strong>.</li>
+<li><a href="../../.agent/governance/change-requests/CR-121.html">CR-121, 17/10/2026</a>: VPS chưa có dependency; SeaweedFS4.48 persistent trong labelx thay S3 hiện có, CVAT2.77 Compose upstream trên host sau Traefik K3s. Local-only backup là ngoại lệ được ghi nhận, không đáp ứng mất VPS; offsite/restore #409 chưa đạt. Xem <a href="../08-devops/vps-dependencies.html">runbook và ngân sách VPS</a>.</li>
 <li>Sao lưu PostgreSQL và Object Storage (bật versioning) theo cùng lịch; RPO/RTO: <strong>TBD-17</strong> (NFR-16).</li>
 <li>Quan sát: log có cấu trúc kèm <code>run_id</code>, <code>snapshot_id</code>, <code>request_id</code>; metric hàng đợi Celery (NFR-12).</li>
 </ul>

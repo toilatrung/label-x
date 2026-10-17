@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cvat-host
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 18080
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: cvat-host
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+  labels:
+    kubernetes.io/service-name: cvat-host
+    endpointslice.kubernetes.io/managed-by: labelx-gitops
+addressType: IPv4
+ports:
+- name: http
+  protocol: TCP
+  port: 18080
+endpoints:
+- addresses:
+  - 172.17.0.1
+  conditions:
+    ready: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cvat
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+    cert-manager.io/issuer: labelx-letsencrypt
+    traefik.ingress.kubernetes.io/router.middlewares: labelx-labelx-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - cvat.williamtrinh.online
+    secretName: cvat-tls
+  rules:
+  - host: cvat.williamtrinh.online
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cvat-host
+            port:
+              number: 8080

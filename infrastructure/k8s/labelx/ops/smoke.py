@@ -75,6 +75,8 @@ def dependencies():
         finally:
             storage._client.delete_object(Bucket=storage.bucket, Key=key)
     print("PASS migrations, restricted DB role, Redis, CPU Celery, S3 put/get/delete")
+    for dependency in ("CVAT_BASE_URL", "GPU_WORKER_ALLOWED_HOSTS"):
+        print(dependency + (": configured, live function UNVERIFIED" if os.environ.get(dependency) else ": NOT CONNECTED"))
     print("UNVERIFIED: GPU/CVAT/VLM end-to-end, evaluation, NFR and full MVP evidence; issues remain open")
 
 

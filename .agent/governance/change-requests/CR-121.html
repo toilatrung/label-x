@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-121 — VPS dependencies and local backup exception — LabelX</title>
+<meta name="labelx:id" content="cr-121">
+<meta name="labelx:title" content="CR-121 — VPS dependencies and local backup exception">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[change-request, template]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / change-request-template</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>change-request-template</span><b>title</b><span>CR-121 — VPS dependencies and local backup exception</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>templates</span><b>tags</b><span>[change-request, template]</span><b>priority</b><span>2</span></div>
+<h1 id="change-request-template">CR-121 — VPS dependencies and local backup exception</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Use this template to propose, assess, approve, and trace a change to a baselined requirement, contract, architecture, roadmap, or governed scope.</p>
+<h2 id="record-metadata">Record Metadata</h2><ul>
+<li><strong>Change Request ID</strong>: <code>CR-121</code></li><li><strong>Title</strong>: <code>Self-host S3 and CVAT on the existing VPS; explicit local-only backup mode</code></li><li><strong>Owner</strong>: <code>Product Owner @toilatrung</code></li><li><strong>Proposer</strong>: <code>PO instruction recorded by Codex</code></li><li><strong>Status</strong>: <code>approved</code></li><li><strong>Change Type</strong>: <code>architecture</code></li><li><strong>Priority</strong>: <code>1</code></li><li><strong>Created Date</strong>: <code>2026-10-17</code></li><li><strong>Decision Due Date</strong>: <code>2026-10-17</code></li></ul>
+<h2 id="proposed-change">Proposed Change</h2><p>Supersedes only CR-120's assumptions of existing application S3, existing CVAT and mandatory preconfigured off-VPS S3. Deploy one persistent SeaweedFS instance in the labelx namespace, three application buckets and distinct scoped application/admin credentials. CVAT uses pinned upstream v2.77.0 Compose on the existing Ubuntu host, behind K3s Traefik. No duplicate instance, additional LabelX environment or control-plane installation.</p><p>Allow explicit local-only encrypted PostgreSQL backup plus local persistent S3/CVAT data while offsite storage is unavailable. Local mode must report disaster recovery UNVERIFIED; daily offsite jobs stay suspended and pre-migration local backup must still restore a disposable DB. No fake endpoint, no skipped migration backup, no infinite retries for absent dependencies. Add offsite later through secret provisioning and a real restore drill. Existing production/MVP acceptance gates and CR-120's digest-only GitOps scope remain unchanged.</p>
+<h2 id="justification">Justification</h2><p>PO states in the current request that no S3 or offsite backup exists and asks for the necessary architecture/bootstrap changes, accurate local/offsite distinction, optional unconnected CVAT/GPU login and a concrete deployment handoff. This record captures that delegated implementation decision before baseline changes; it is not an agent-authored review signature.</p>
+<h2 id="impact-assessment">Impact Assessment</h2><ul><li><strong>Affected Baselines</strong>: <code>docs/02-architecture/system-design.html; infrastructure/k8s/labelx; infrastructure/cvat; scripts/deploy; docs/08-devops/gitops.html</code></li><li><strong>Affected Epics or Tasks</strong>: <code>OPS-03 #399; release/MVP issues remain open</code></li><li><strong>Schedule Impact</strong>: <code>Bootstrappable without external S3/CVAT; offsite verification remains follow-up</code></li><li><strong>Cost or Resource Impact</strong>: <code>6 vCPU / 16 GB / 100 GB shared VPS; limited datasets/concurrency; disk and resource budgets required</code></li><li><strong>Security or Compliance Impact</strong>: <code>HTTPS S3; scoped credentials; CVAT read-only PAT; no real secrets in Git/logs; local backup does not protect loss of VPS</code></li><li><strong>Compatibility or Migration Impact</strong>: <code>Preserve existing PVCs/credentials; reject data without secrets; no automatic schema downgrade</code></li></ul>
+<h2 id="related-files">Related Files</h2><ul><li><strong>Affected Documents</strong>: <code>docs/08-devops/gitops.html; docs/08-devops/vps-dependencies.html</code></li><li><strong>Decisions</strong>: <a href="CR-120.html">CR-120 retained except explicit assumptions above</a></li><li><strong>Risks</strong>: <code>Single failure domain; finite disk; CVAT imports/exports may exceed budgets; GPU and offsite unverified</code></li><li><strong>Issues or Blockers</strong>: <code>No VPS access supplied; offsite backup not configured; MVP backlog open</code></li></ul>
+<h2 id="approval">Approval</h2><ul><li><strong>Decision</strong>: <code>approved</code></li><li><strong>Approver</strong>: <code>Product Owner @toilatrung, direct instruction in current session</code></li><li><strong>Decision Date</strong>: <code>2026-10-17</code></li><li><strong>Conditions</strong>: <code>PR review, no agent merge/signature, one labelx/main, keep data and uncommitted changes, truthful verification, no fake secrets or MVP passed</code></li><li><strong>Rationale</strong>: <code>PO explicitly requests implementing self-hosted dependencies and delegates local/offsite backup handling while acknowledging no offsite service exists</code></li></ul>
+<h2 id="implementation-plan">Implementation Plan</h2><ul><li><strong>Responsible Owner</strong>: <code>Codex implementation; PO review and VPS execution if no access</code></li><li><strong>Tasks</strong>: <code>S3, CVAT, bootstrap, budgets, backup modes, verification and operator runbook</code></li><li><strong>Validation Method</strong>: <code>Render/validate; isolated S3 and CVAT integration; secret-preservation tests; local/offsite backup restore; explicit VPS evidence only after live checks</code></li><li><strong>Rollback Method</strong>: <code>Pause reconciliation, retain volumes, reviewed digest rollback; CVAT restore only under maintenance from coherent database/data/keys backup</code></li></ul>
+<h2 id="completion-criteria">Completion Criteria</h2><ul><li>[x] PO scope decision recorded before modifications.</li><li>[ ] Required PR review and current-head CI completed.</li><li>[ ] VPS execution and functional verification recorded.</li><li>[ ] Offsite restore verified; not implied by local backup tests.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not modify a baseline while decision is <code>pending</code> or <code>rejected</code>.</li>
+<li>Do not self-approve unless the governance model explicitly authorizes it.</li>
+<li>Do not alter the approved scope without a new or superseding change request.</li>
+<li>Do not omit impact assessment or approval rationale.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/change-requests/CR-121.html</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

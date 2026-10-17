@@ -1,0 +1,11 @@
+{
+  "version": "v2.77.0",
+  "commit": "7dac20c766d7d4297fdf67589436387ab26f7411",
+  "files": {
+    "docker-compose.yml": "95e6c7acb4337dedeeed59ce45d84accd34524e8d303ea932e7253019ce1b950",
+    "LICENSE": "f0c98c1710670f97a3dfab70829ec8739c12898463a6eb1bbddfc21821ae9c63",
+    "components/analytics/vector/vector.toml": "76c0bac76d62f07c8462e42ab725fbcf4f2294744e249d629d255d04d9214f0b",
+    "components/analytics/grafana_conf.yml": "bb828236e1ff8a6b94cd1fc949c65a94a362a35753cc7253548eec6b7b034127",
+    "components/analytics/grafana/dashboards/all_events.json": "6a9ff91babc85e017a306fa2c5adb435f76463863eb1873c3e6a676e234739f6"
+  }
+}
