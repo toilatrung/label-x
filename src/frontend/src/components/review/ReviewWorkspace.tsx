@@ -1041,7 +1041,7 @@ export function ReviewWorkspace({
                     : (policyError || 'Tạo issue thủ công tạm khoá: thiếu phiên bản chính sách neo (anchor-v1) đã duyệt.')}
                 </span>
               ) : (
-                <span>Annotation CVAT · Xanh: đề xuất detector · Tím: đề xuất mô hình 2 (Qwen)</span>
+                <span>Vàng: annotation đang kiểm tra · Xanh: detector · Tím: VLM · Các vùng khác được làm mờ</span>
               )}
             </div>
           </section>
