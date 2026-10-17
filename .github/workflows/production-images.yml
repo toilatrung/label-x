@@ -1,20 +1,20 @@
 name: LabelX Production Images
 on:
   workflow_run:
-    workflows: [LabelX CI, LabelX Phase Testing]
+    workflows: [LabelX CI]
     branches: [main]
     types: [completed]
   workflow_dispatch:
     inputs:
       commit_sha:
-        description: Full main SHA already tested by CI and the MVP suite
+        description: Full current main SHA already tested by all CI jobs (CR-120)
         type: string
         required: true
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: production-images-${{ github.event.workflow_run.head_sha || inputs.commit_sha }}
+  group: labelx-publish-and-gitops
   cancel-in-progress: false
 env:
   SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.commit_sha }}
@@ -28,9 +28,8 @@ jobs:
         github.event.workflow_run.head_repository.full_name == github.repository))
     runs-on: ubuntu-latest
     outputs:
-      ready: ${{ steps.verified.outputs.ready }}
+      ready: ${{ steps.discover.outputs.available }}
       ci_run_id: ${{ steps.discover.outputs.ci_run_id }}
-      test_run_id: ${{ steps.discover.outputs.test_run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,31 +44,11 @@ jobs:
         run: |
           [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
           git merge-base --is-ancestor "$SOURCE_SHA" HEAD
-      - name: Find trusted CI and phase-testing runs at the same SHA
+      - name: Require all build/test CI jobs at the exact main SHA (CR-120)
         id: discover
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/ci/container-release.cjs discover
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: steps.discover.outputs.available == 'true'
-        with:
-          ref: ${{ env.SOURCE_SHA }}
-          path: tested-source
-          persist-credentials: false
-      - uses: actions/download-artifact@v8
-        if: steps.discover.outputs.available == 'true'
-        with:
-          run-id: ${{ steps.discover.outputs.test_run_id }}
-          github-token: ${{ github.token }}
-          name: phase-evidence-${{ env.SOURCE_SHA }}
-          path: tested-source/.ci-artifacts/phases
-      - name: Enforce the existing MVP evidence gate, including plan and JUnit checksums
-        id: verified
-        if: steps.discover.outputs.available == 'true'
-        working-directory: tested-source
-        run: |
-          node scripts/ci/quality-gate.cjs verify-suite --sha "$SOURCE_SHA"
-          echo 'ready=true' >> "$GITHUB_OUTPUT"
 
   publish:
     needs: gates
@@ -81,7 +60,6 @@ jobs:
       packages: write
     env:
       CI_RUN_ID: ${{ needs.gates.outputs.ci_run_id }}
-      TEST_RUN_ID: ${{ needs.gates.outputs.test_run_id }}
       FRONTEND_IMAGE: ghcr.io/toilatrung/labelx-frontend
       BACKEND_IMAGE: ghcr.io/toilatrung/labelx-backend
     steps:
@@ -137,9 +115,44 @@ jobs:
           BACKEND_DIGEST: ${{ steps.existing.outputs.backend_digest }}
         run: node scripts/ci/container-release.cjs publish
       - uses: actions/upload-artifact@v7
+        if: always() && steps.receipt.outcome == 'success'
         with:
           name: image-digests-${{ env.SOURCE_SHA }}
           path: .ci-artifacts/images/image-digests.json
           include-hidden-files: true
           if-no-files-found: error
-# Publishing creates artifacts only. cd.yml and its protected staging/production promotion are unchanged.
+      - name: Require anonymous pull of both published digests before GitOps
+        run: python3 scripts/containers/verify_public.py
+
+  gitops:
+    needs: [gates, publish]
+    if: needs.gates.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: image-digests-${{ env.SOURCE_SHA }}
+          path: .ci-artifacts/images
+      - name: Update only digest manifests through a protected and tested PR (CR-120)
+        env:
+          GH_TOKEN: ${{ secrets.LABELX_GITOPS_TOKEN }}
+        run: |
+          if [ -f infrastructure/k8s/labelx/kustomization.yaml ]; then
+            node scripts/ci/gitops-update.cjs
+          else
+            echo 'Images published and public; awaiting the initial digest-pinned manifests PR.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+# CR-120: one labelx Application automatically syncs these digests from main.
+# Phase-testing and verify-suite still report MVP evidence independently.

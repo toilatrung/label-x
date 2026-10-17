@@ -49,6 +49,7 @@ ul.dir{columns:2;font-size:14px}
 <p>CI/CD, đóng gói image và giám sát LabelX. Dev local dùng Docker Compose cho hạ tầng. CI đã có; image production frontend/backend được build và kiểm chứng riêng, publish theo gate trên main. Triển khai thật vẫn cần cấu hình target và các gate staging/production.</p>
 <h2 id="noi-dung">Nội dung</h2>
 <ul>
+<li><a href="gitops.html">gitops.html</a> — main → GHCR → Argo CD labelx, CR-120, secrets, backup và rollback.</li>
 <li><a href="ci-cd.html">ci-cd.html</a> — CI, Phase Testing và chính sách promote staging/production.</li>
 <li><a href="production-images.html">production-images.html</a> — Dockerfiles, build/smoke, GHCR, biến môi trường và tham khảo K3s/Argo CD.</li>
 <li><a href="deployment.html">deployment.html</a> — topology tham chiếu (SRS chương 10, DEC-001), dev local bằng compose, các mục production còn TBD.</li>
