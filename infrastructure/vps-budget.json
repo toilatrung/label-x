@@ -9,9 +9,10 @@
     "labelx-s3": 512
   },
   "labelx_total_mib": 3264,
-  "cvat_total_mib": 7872,
+  "cvat_total_mib": 4288,
+  "cvat_full_total_mib": 7872,
   "transient_backup_mib": 640,
-  "workload_peak_mib": 11904,
+  "workload_peak_mib": 8320,
   "os_k3s_argocd_reserve_mib": 3072,
   "additional_headroom_mib": 1024,
   "disk_small_dataset_budget_gib": {
@@ -27,6 +28,6 @@
     "temporary": 4,
     "free_headroom": 14
   },
-  "caveat": "Local-path PVC requests are not disk quotas. Existing 20Gi claims are preserved. Full PVC expansion plus large CVAT data does not fit 100GB. Move CVAT or upgrade SSD/RAM for larger tasks.",
+  "caveat": "Local-path PVC requests are not disk quotas. Existing 20Gi claims are preserved. Full PVC expansion plus large CVAT data does not fit 100GB. Move CVAT or upgrade SSD/RAM for larger tasks. cvat_total_mib is the reduced default stack; cvat_full_total_mib adds the analytics and extra-workers profiles.",
   "capacity_job_mib": 128
 }
