@@ -46,18 +46,21 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, qwen, gemini, selective-check, m-04, cr-116]</span><b>priority</b><span>3</span></div>
 <h1 id="mo-hinh-thi-giac-ngon-ngu-vlm">Mô hình thị giác – ngôn ngữ (VLM)</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
+
 <h2 id="1-trang-thai-trong-pilot-m13">1. Trạng thái: VLM trong M-04 (CR-115, CR-116)</h2>
 <blockquote><strong>Cập nhật 2026-10-17 theo yêu cầu PO.</strong> Bổ sung <strong>Gemini</strong> bên cạnh Qwen; <code>qwen3-vl-plus</code> vẫn là mặc định. M-04 ban đầu triển khai theo CR-115 và CR-116. Hướng dẫn kết nối hiện tại ở mục 1b; các mục kế hoạch lịch sử bên dưới không phải kết quả kiểm chứng với nhà cung cấp thật.</blockquote>
 <ul>
 <li>Trạng thái trước M-04: đề xuất không bật VLM trong pilot M13 (TBD-08). CR-115 thay thế phần ưu tiên này cho phạm vi M-04; calibration, KPI, ablation và nghiệm thu nằm <strong>ngoài</strong> M-04.</li>
 <li>VLM <strong>tắt</strong> vẫn là trạng thái hợp lệ cho run/config cũ: engine hiển thị <strong>Not checked</strong> (<code>disabled</code>), không bao giờ coi là đạt (H AnalysisConfig; R B-19). Ba nhóm lỗi E1–E3 không phụ thuộc VLM.</li>
-<li>Chưa có runtime pass cho VLM: các kết quả hiện chỉ là mock/fixture cho tới khi có smoke thật (task #283) và PO xác nhận chính sách dữ liệu.</li>
+<li>Chưa có runtime pass cho VLM: các kết quả hiện chỉ là mock/fixture cho tới khi có smoke thật (task <a href="../08-devops/github-issue-migration-2026-10-17.html#issue-283">#283 (lưu trữ)</a>) và PO xác nhận chính sách dữ liệu.</li>
 </ul>
 <h3 id="1a-qwen-cr-116">1a. Model và provider (CR-116)</h3>
 <table>
 <thead><tr><th>Mục</th><th>Giá trị theo kế hoạch</th><th>Trạng thái</th></tr></thead>
 <tbody>
-<tr><td>Model mặc định</td><td><code>qwen3-vl-plus</code> (bản Instruct, không dùng chế độ suy luận), cấu hình tại <code>models.vlm</code> của ConfigVersion; model ID phải thuộc allowlist trong mã nguồn</td><td>Contract A (#279) <strong>[chờ contract]</strong>; ID đã thấy trong danh sách model của cổng thử nghiệm, chưa có runtime pass</td></tr>
+<tr><td>Model mặc định</td><td><code>qwen3-vl-plus</code> (bản Instruct, không dùng chế độ suy luận), cấu hình tại <code>models.vlm</code> của ConfigVersion; model ID phải thuộc allowlist trong mã nguồn</td><td>Contract A (<a href="../08-devops/github-issue-migration-2026-10-17.html#issue-279">#279 (lưu trữ)</a>) <strong>[chờ contract]</strong>; ID đã thấy trong danh sách model của cổng thử nghiệm, chưa có runtime pass</td></tr>
 <tr><td>Provider</td><td><code>openai_compatible</code> (cổng bên thứ ba), <code>dashscope</code> (Alibaba Cloud) hoặc <code>gemini</code> (Google)</td><td>Model và host phải khớp provider</td></tr>
 <tr><td>Ràng buộc host ↔ biến key</td><td>Mỗi provider chỉ dùng host riêng và biến môi trường riêng (<code>DASHSCOPE_API_KEY</code> chỉ cho host DashScope; <code>VLM_API_KEY</code> cho cổng bên thứ ba), để key không gửi sai nơi. Config chỉ lưu <em>tên</em> biến môi trường từ allowlist, không lưu key</td><td>Đang hoàn thiện ở nhánh A <strong>[chờ contract]</strong></td></tr>
 <tr><td>Giao thức</td><td>API tương thích OpenAI (chat completions, ảnh dạng data URL); backend validate JSON đầu ra, không dựa vào JSON schema của provider</td><td>Chưa kiểm chứng JSON schema phía provider</td></tr>
@@ -94,7 +97,7 @@ ul.dir{columns:2;font-size:14px}
 <li>Kết quả engine: <code>checked</code>, <code>uncertain</code>, <code>failed</code>, <code>not_checked</code> <strong>[chờ contract]</strong>. Lỗi parse, lỗi model, hết quota hoặc hết budget trả trạng thái và reason code rõ ràng; luồng vẫn chuyển người review, không làm fail cả run.</li>
 <li><strong>Qwen chỉ tạo evidence/đề xuất.</strong> Không tạo ReviewDecision hay Adjudication, không tự xác nhận issue; reviewer/QA quyết định.</li>
 <li>Idempotency theo khoá gồm evaluation ID/generation, candidate ID, crop hash, snapshot revision, policy version, model ID và prompt version. Retry cùng evaluation không tạo bản ghi mới; đánh giá lại thủ công với khoá mới tạo evaluation mới.</li>
-<li>Evidence lưu crop hash, mapping tọa độ về ảnh gốc, provider, host (đã che) và model ID mà provider báo về, prompt version, policy version, request ID đã che và thời điểm. Tên field chính thức chốt ở task #282 <strong>[chờ contract]</strong>.</li>
+<li>Evidence lưu crop hash, mapping tọa độ về ảnh gốc, provider, host (đã che) và model ID mà provider báo về, prompt version, policy version, request ID đã che và thời điểm. Tên field chính thức chốt ở task <a href="../08-devops/github-issue-migration-2026-10-17.html#issue-282">#282 (lưu trữ)</a> <strong>[chờ contract]</strong>.</li>
 <li>Routing classifier ↔ VLM (policy versioned, ngưỡng kỹ thuật tạm) do pha C quy định; các ngưỡng mặc định chỉ là routing tạm, <strong>không</strong> phải ngưỡng chất lượng hay calibration.</li>
 </ul>
 <h2 id="3-han-muc-va-retry-inh-huong-van-hanh-a-duyet">3. Hạn mức và retry (định hướng vận hành đã duyệt)</h2>
@@ -149,7 +152,7 @@ ul.dir{columns:2;font-size:14px}
 <tr><td>Quyền xử lý ảnh: crop <strong>không gửi ra ngoài</strong> khi chưa được phép (FR-ENG-10; NFR-09). Với cổng bên thứ ba, crop và key đi qua trung gian</td><td><strong>Chờ PO xác nhận chính sách dữ liệu</strong> trước smoke thật; smoke đầu tiên chỉ dùng ảnh tổng hợp</td></tr>
 <tr><td>Credential/quota và biến môi trường <code>VLM_API_KEY</code> (hoặc <code>DASHSCOPE_API_KEY</code>) trên môi trường chạy</td><td>Chỉ chặn smoke thật; không chặn viết adapter hay mock. Không ghi key vào repo, log hay evidence</td></tr>
 <tr><td>Trigger/policy chọn candidate có version</td><td>Bản tạm của pha A chọn mọi candidate; policy thật thuộc pha C <strong>[chờ contract]</strong></td></tr>
-<tr><td>Smoke thật: một crop được phép tới provider, ghi model/prompt version và request ID đã che</td><td>Chưa thực hiện (task #283); mock không được ghi là runtime pass</td></tr>
+<tr><td>Smoke thật: một crop được phép tới provider, ghi model/prompt version và request ID đã che</td><td>Chưa thực hiện (task <a href="../08-devops/github-issue-migration-2026-10-17.html#issue-283">#283 (lưu trữ)</a>); mock không được ghi là runtime pass</td></tr>
 <tr><td>Ablation chứng minh lợi ích trong budget (T §7–8)</td><td>Ngoài phạm vi M-04; chưa đo</td></tr>
 </tbody></table>
 <ul>

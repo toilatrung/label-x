@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "decision": ".agent/governance/change-requests/CR-120.html",
+  "status": "approved",
+  "application": "labelx",
+  "namespace": "labelx",
+  "branch": "main",
+  "origin": "https://label-x.williamtrinh.online",
+  "requires_mvp_evidence_for_deployment": false,
+  "mvp_acceptance": "unverified",
+  "requires_successful_main_ci": true,
+  "requires_container_smoke": true,
+  "automated_sync": true,
+  "automated_prune": false
+}

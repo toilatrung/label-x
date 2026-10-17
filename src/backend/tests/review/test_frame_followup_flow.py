@@ -1,8 +1,11 @@
-"""#238: a frame enters awaiting_followup only when nothing is left to decide.
+"""archive:238: a frame enters awaiting_followup only when nothing is left to decide.
 
 Everything goes through the real API/services (claim, decide, rework, verify, complete).
 Synthetic fixtures only: no CVAT export, not real-data E2E evidence.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-238.
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Tests kiểm chứng độc lập cho Task T-017 (Issue #43, Epic E-03, CR-107).
+"""Tests kiểm chứng độc lập cho Task T-017 (archived issue 43, Epic E-03, CR-107).
 
 Bao gồm:
 1. Nạp tệp YAML hợp lệ (kể cả mapping có paired_class) và kiểm tra RuleMapping tạo đúng.
@@ -18,6 +18,9 @@ Bao gồm:
 15. Lọc API theo family, class_name, paired_class, version.
 16. Cursor pagination cho danh sách mapping khi có trên 50 bản ghi.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-43.
 
 from __future__ import annotations
 

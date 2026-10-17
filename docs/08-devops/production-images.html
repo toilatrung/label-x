@@ -11,6 +11,8 @@
 <style>body{max-width:1100px;margin:32px auto;padding:0 24px;font:15px/1.6 system-ui;color:#172536}h1,h2{color:#173f68}h2{margin-top:32px;border-bottom:1px solid #dbe3ec}code{background:#edf2f7;padding:2px 4px}pre{background:#edf2f7;padding:16px;overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dbe3ec;padding:8px;text-align:left;vertical-align:top}th{background:#edf3f8}a{color:#1d5ea8}.note{background:#fff5d9;border-left:4px solid #a97100;padding:12px}</style>
 </head><body><article>
 <h1>Production Docker images</h1>
+<p id="current-release-issue-backlog">Backlog kiểm chứng MVP/release hiện hành: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; xem <a href="github-issue-migration-2026-10-17.html">bảng ánh xạ issue cũ → follow-up mới ngày 17/10/2026</a>. Chưa có workflow run là NOT VERIFIED, không phải test thất bại; mọi gate giữ nguyên.</p>
+
 <h2 id="scope">Phạm vi và topology</h2>
 <p>Đóng gói ứng dụng cho Linux <code>amd64</code>, VPS Ubuntu 24.04 (6 vCPU, 16 GB RAM), K3s và Argo CD; origin công khai <code>https://label-x.williamtrinh.online</code>. Các file được phát triển trên <code>develop</code>; phát hành theo commit đã được đưa vào <code>main</code> qua quy trình hiện hành. Tài liệu này không cấp quyền triển khai, thay secret, tự merge hoặc tự push.</p>
 <table><tr><th>Image</th><th>Process mặc định</th><th>User / cổng</th></tr>
@@ -83,27 +85,9 @@ docker run --rm --network labelx -p 127.0.0.1:3000:3000 \
   labelx-frontend:production-local</code></pre>
 <p>Chỉ một beat chạy tại một thời điểm; khi rollout dùng strategy <code>Recreate</code> hoặc cơ chế leader được duyệt. Với image backend không có ENTRYPOINT đặc biệt, command được thay thế trực tiếp. Không tự migrate khi khởi động API/worker.</p>
 
-<h2 id="pipeline">CI, publish GHCR và promotion</h2>
-<ol>
-<li><code>.github/workflows/ci.yml</code> giữ nguyên các kiểm tra Windows/framework/backend/detector/frontend. Job <code>production-images</code> phụ thuộc đủ 5 job, build cả hai image amd64 rồi smoke. Develop, PR và main đều chỉ build/test ở workflow này; token chỉ có <code>contents: read</code>.</li>
-<li><code>production-images.yml</code> nhận <code>workflow_run</code> khi CI hoặc Phase Testing hoàn thành trên main, hoặc dispatch thủ công trên main với full <code>commit_sha</code>. Workflow file cần có trên default branch để GitHub phát sự kiện; default branch có thể là develop. Source commit phải đã là tổ tiên của main.</li>
-<li>Job gate không có quyền ghi package. Nó kiểm metadata repo/branch/event/path/SHA và các job bắt buộc của cả hai upstream run mới nhất. PR, fork, develop, run sai SHA, job skipped/failed hoặc thiếu build-smoke đều không đủ điều kiện.</li>
-<li>Tải <code>phase-evidence-&lt;SHA&gt;</code> từ run đã xác minh và gọi nguyên gate <code>quality-gate.cjs verify-suite</code> trên test plan của cùng commit; kiểm mọi phase MVP, case ID, checksum plan/JUnit và không skip. Nếu chưa có run thành công thì ghi đang chờ, không publish. Thiếu/expired artifact hoặc suite không đủ sẽ chặn workflow.</li>
-<li>Chỉ sau gate mới cấp <code>packages: write</code> cho job publish. Build hoặc pull lại digest của tag đã có, smoke đúng hai image, rồi push tag mới <code>sha-&lt;full-40-character-SHA&gt;</code>. Không dùng <code>latest</code> hoặc tag nhánh. Rerun tái sử dụng digest của SHA đã publish thay vì ghi đè. Người có quyền registry vẫn có thể sửa tag ngoài workflow; Kubernetes phải pin digest.</li>
-<li>Workflow summary và artifact <code>image-digests-&lt;SHA&gt;/image-digests.json</code> ghi hai tên/tag/digest/reference, source SHA, CI run ID, test run ID và publish run ID. Hai lần push registry không phải giao dịch nguyên tử; nếu một image push lỗi, workflow thất bại và rerun giữ image đã có rồi hoàn tất image còn lại.</li>
-</ol>
-<p class="note">Kế hoạch kiểm thử hiện có còn các case <code>planned</code>. Khi gate MVP chưa có bằng chứng đầy đủ, image phát hành sẽ chưa được publish; không thay test plan hoặc đánh dấu skip để vượt gate. Có thể build/test image local và trên develop/PR trong lúc hoàn thiện MVP.</p>
-<p>Publish image không phải promote production. <code>cd.yml</code> vẫn yêu cầu trusted main CI + MVP cùng SHA, environment protection, staging thành công đúng CI/test run trước production, target hooks và <code>LABELX_CD_ENABLED</code>. Tính năng này không bật CD, không sửa workflow phase-testing/cd và không thêm deploy hook. Khi vận hành tích hợp GitOps, phải nối receipt digest vào các hook được duyệt; không để Argo CD tự theo tag mutable hoặc tự sync một thay đổi image trước staging/approval. Phải dùng cùng cặp digest đã qua staging khi promote.</p>
-<h3 id="release-flow">Luồng develop → main → GitOps</h3>
-<ol>
-<li>Hoàn thiện thay đổi trên nhánh task xuất phát từ develop, chạy kiểm tra, commit và push nhánh nguồn (ví dụ <code>codex/production-images</code>). Mở PR nhánh task → develop, chờ CI và review; PO merge theo ruleset. Develop được bảo vệ: không push trực tiếp, không bỏ qua status checks.</li>
-<li>Chỉ sau khi PR task đã được review và PO merge vào develop mới mở PR <code>develop → main</code>. Chờ CI và review toàn bộ luồng; PO merge bằng merge commit. Agent không tự merge hoặc push trực tiếp main.</li>
-<li>Commit main có SHA riêng sau merge. Chạy CI và Phase Testing MVP cho chính SHA đó; workflow publish chỉ phát hành sau khi hai gate thành công. Lấy cặp digest từ summary hoặc artifact <code>image-digests-&lt;MAIN_SHA&gt;</code>.</li>
-<li>Publish mới chỉ tạo image trên GHCR. Argo CD không tự đổi ứng dụng khi registry có tag SHA mới. Cần một thay đổi GitOps riêng, cập nhật trường <code>image:</code> trong manifests hoặc giá trị Helm/Kustomize sang tag <code>sha-&lt;MAIN_SHA&gt;</code> hay, ưu tiên, <code>@sha256:...</code> từ receipt.</li>
-<li>Đưa thay đổi manifests qua CI/review và gate staging/production hiện có, giữ đúng cặp digest đã kiểm ở staging. Khi commit manifests được phê duyệt vào nhánh/path Argo CD theo dõi, Argo CD mới sync theo chính sách ứng dụng. Nếu automated sync đang bật, thời điểm merge manifests chính là điểm kích hoạt triển khai nên phải nằm sau approval.</li>
-</ol>
-<p>Phạm vi thay đổi này dừng ở images, kiểm chứng và pipeline publish. Không tạo/sửa manifests thực tế, Argo Application, deploy hook hoặc secret; bước GitOps cần được tích hợp và phê duyệt riêng.</p>
-
+<h2 id="pipeline">CI, publish GHCR và tự triển khai main (CR-120)</h2>
+<p><a href="../../.agent/governance/change-requests/CR-120.html">CR-120, PO duyệt 17/10/2026</a> thay điều kiện triển khai: đủ sáu job CI đúng SHA main, build/smoke image, publish GHCR, PR pin digest qua đủ CI rồi Argo CD labelx tự đồng bộ. Không chờ bộ bằng chứng MVP để triển khai và không giả lập MVP passed. Source/config vẫn qua develop → main; ngoại lệ digest-only PR được xác minh nội dung theo CR-120. Không dùng latest, không ghi đè tag SHA, không bỏ ruleset. Xem <a href="gitops.html">runbook GitOps</a> và <code>scripts/ci/deployment-policy.json</code>.</p>
+<p>Receipt ghi source SHA, CI/publish run, hai digest, deployment_policy CR-120 và mvp_acceptance unverified. Commit chỉ đổi digest không kích vòng build vô hạn. Luồng cd.yml cũ giữ các gate staging/production nghiệm thu, không điều khiển Application labelx. Bằng chứng MVP và production readiness vẫn cần kiểm chứng độc lập; issue MVP giữ mở.</p>
 <h2 id="ghcr">Cấu hình GitHub và visibility package</h2>
 <ol>
 <li>Review các thay đổi, đưa develop vào main theo quy trình hiện tại. Bổ sung status <code>production-images</code> vào branch protection/ruleset cùng các check đang có; không gỡ check cũ.</li>
@@ -119,8 +103,8 @@ kubectl -n labelx create secret generic ghcr-pull \
   --type=kubernetes.io/dockerconfigjson \
   --from-file=.dockerconfigjson=/secure/ghcr-readonly/config.json</code></pre>
 
-<h2 id="kubernetes">Dùng image trong K3s / Argo CD</h2>
-<p>Đoạn cấu hình tham khảo; chưa apply hay tạo Argo Application. Thay <code>FRONTEND_DIGEST</code> và <code>BACKEND_DIGEST</code> bằng giá trị <code>sha256:...</code> trong cùng receipt. Secret/ConfigMap, Service nội bộ, TLS Ingress, PostgreSQL, Redis, Object Storage, manifest GPU và NetworkPolicy phải được chuẩn bị ngoài image. Argo CD dùng manifest được duyệt trên main; Git credentials của Argo CD không thay cho imagePullSecret của kubelet.</p>
+<h2 id="kubernetes">Ví dụ image K3s / Argo CD (tham khảo)</h2>
+<p>Đoạn cũ dưới đây chỉ là tham khảo; manifests vận hành hiện hành ở infrastructure/k8s/labelx, Application ở infrastructure/argocd và runbook gitops.html. Không apply riêng ví dụ này. Thay <code>FRONTEND_DIGEST</code> và <code>BACKEND_DIGEST</code> bằng giá trị <code>sha256:...</code> trong cùng receipt. Secret/ConfigMap, Service nội bộ, TLS Ingress, PostgreSQL, Redis, Object Storage, manifest GPU và NetworkPolicy phải được chuẩn bị ngoài image. Argo CD labelx tự sync digest được duyệt theo CR-120 trên main; Git credentials của Argo CD không thay cho imagePullSecret của kubelet.</p>
 <pre><code>apiVersion: apps/v1
 kind: Deployment
 metadata:

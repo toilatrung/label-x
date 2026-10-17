@@ -37,7 +37,7 @@ function publishingContext(eventName, ref, repository, event, sha) {
   if (eventName === 'workflow_dispatch' && ref === 'refs/heads/main') return;
   if (eventName !== 'workflow_run') throw new Blocked('Publishing requires main or a trusted main workflow run');
   const trigger = event.workflow_run;
-  if (!['.github/workflows/ci.yml', '.github/workflows/phase-testing.yml'].includes(trigger?.path)) {
+  if (!['.github/workflows/ci.yml'].includes(trigger?.path)) {
     throw new Blocked('Unexpected triggering workflow');
   }
   trustedRun(trigger, sha, trigger.path);
@@ -89,24 +89,46 @@ async function pages(path, key) {
 async function discover() {
   const sha = sourceSha();
   checkContext(sha);
-  const selected = [];
-  for (const workflow of ['ci.yml', 'phase-testing.yml']) {
-    const data = await api(`/repos/${REPOSITORY}/actions/workflows/${workflow}/runs?branch=main&head_sha=${sha}&per_page=100`);
-    const run = [...data.workflow_runs].sort((a, b) => b.id - a.id)[0];
-    if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
-      output('available', 'false');
-      const message = `Images not published: waiting for successful ${workflow} at ${sha}.\n`;
-      if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, message);
-      if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch') throw new Blocked(message.trim());
-      return;
-    }
-    trustedRun(run, sha, `.github/workflows/${workflow}`);
-    const jobs = await pages(`/repos/${REPOSITORY}/actions/runs/${run.id}/jobs?filter=latest`, 'jobs');
-    requireJobs(jobs, workflow === 'ci.yml' ? REQUIRED_CI_JOBS : ['phase']);
-    selected.push(run);
+  const policy = JSON.parse(fs.readFileSync('scripts/ci/deployment-policy.json', 'utf8'));
+  if (policy.status !== 'approved' || policy.decision !== '.agent/governance/change-requests/CR-120.html' ||
+      policy.requires_mvp_evidence_for_deployment !== false || policy.mvp_acceptance !== 'unverified') {
+    throw new Blocked('CR-120 deployment policy is missing or changed');
   }
-  output('ci_run_id', selected[0].id);
-  output('test_run_id', selected[1].id);
+  const ref = await api(`/repos/${REPOSITORY}/git/ref/heads/main`);
+  if (ref.object.sha !== sha) {
+    output('available', 'false');
+    console.log('Main advanced; only the newest tested source is eligible');
+    return;
+  }
+  const data = await api(`/repos/${REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&head_sha=${sha}&per_page=100`);
+  const run = [...data.workflow_runs].sort((a, b) => b.id - a.id)[0];
+  if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
+    output('available', 'false');
+    if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch') throw new Blocked('Successful CI at this main SHA is required');
+    return;
+  }
+  trustedRun(run, sha, '.github/workflows/ci.yml');
+  requireJobs(await pages(`/repos/${REPOSITORY}/actions/runs/${run.id}/jobs?filter=latest`, 'jobs'), REQUIRED_CI_JOBS);
+  const commit = await api(`/repos/${REPOSITORY}/commits/${sha}`);
+  if (commit.parents.length) {
+    const { digestOnly, FILES } = require('./gitops-update.cjs');
+    const changedFiles = commit.files.map(file => file.filename);
+    if (changedFiles.length && changedFiles.every(file => FILES.includes(file))) {
+      const read = async (path, ref) => {
+        const file = await api(`/repos/${REPOSITORY}/contents/${path}?ref=${ref}`);
+        return JSON.parse(Buffer.from(file.content, 'base64').toString('utf8'));
+      };
+      const before = await read(FILES[0], commit.parents[0].sha);
+      const after = await read(FILES[0], sha);
+      const receipt = await read(FILES[1], sha);
+      if (digestOnly(before, after, receipt, changedFiles)) {
+        output('available', 'false');
+        console.log('Digest-only deployment revision: no image rebuild or publication loop');
+        return;
+      }
+    }
+  }
+  output('ci_run_id', run.id);
   output('available', 'true');
 }
 
@@ -131,11 +153,12 @@ async function resolveExisting() {
 function publish() {
   const sha = sourceSha();
   checkContext(sha);
-  if (!/^\d+$/.test(process.env.CI_RUN_ID || '') || !/^\d+$/.test(process.env.TEST_RUN_ID || '')) {
-    throw new Blocked('Publishing requires verified CI/test run identities on main');
+  if (!/^\d+$/.test(process.env.CI_RUN_ID || '')) {
+    throw new Blocked('Publishing requires verified build/test CI on main (CR-120)');
   }
-  const receipt = { source_sha: sha, ci_run_id: process.env.CI_RUN_ID, test_run_id: process.env.TEST_RUN_ID,
-    publish_run_id: process.env.GITHUB_RUN_ID, images: {} };
+  const receipt = { source_sha: sha, ci_run_id: process.env.CI_RUN_ID,
+    publish_run_id: process.env.GITHUB_RUN_ID, deployment_policy: 'CR-120',
+    mvp_acceptance: 'unverified', images: {} };
   for (const component of COMPONENTS) {
     const repository = image(component);
     const tag = `sha-${sha}`;
@@ -154,7 +177,7 @@ function publish() {
   fs.writeFileSync('.ci-artifacts/images/image-digests.json', JSON.stringify(receipt, null, 2) + '\n');
   if (process.env.GITHUB_STEP_SUMMARY) {
     const rows = COMPONENTS.map(c => `| ${c} | \`${receipt.images[c].repository}:${receipt.images[c].tag}\` | \`${receipt.images[c].digest}\` |`);
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n| Image | SHA tag | Digest |\n|---|---|---|\n${rows.join('\n')}\n\nPublication is not staging/production promotion; cd.yml gates still apply.\n`);
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n| Image | SHA tag | Digest |\n|---|---|---|\n${rows.join('\n')}\n\nCR-120: deployment follows successful CI and digest PR; MVP acceptance remains UNVERIFIED.\n`);
   }
 }
 

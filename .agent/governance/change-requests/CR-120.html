@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CR-120 — Một Application LabelX, tự triển khai main sau CI bằng digest — LabelX</title>
+<meta name="labelx:id" content="cr-120">
+<meta name="labelx:title" content="CR-120 — Một Application LabelX, tự triển khai main sau CI bằng digest">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[change-request, deployment, gitops, main, mvp-exception]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / cr-120</span><span class="sp"></span></header>
+<main><article>
+<h1>CR-120 — Một Application LabelX, tự triển khai main sau CI bằng digest</h1>
+<h2>Usage Purpose</h2><p>Ghi nhận chỉ đạo trực tiếp của Product Owner ngày 17/10/2026 trước khi đổi chính sách triển khai. Chỉ đạo mới nhất thay yêu cầu pilot riêng/đồng bộ thủ công trước đó; không tạo môi trường hoặc Application pilot phụ.</p>
+<h2>Record Metadata</h2><ul>
+<li><strong>Change Request ID</strong>: <code>CR-120</code></li>
+<li><strong>Title</strong>: Một Application LabelX, tự triển khai main sau CI bằng digest</li>
+<li><strong>Owner</strong>: <code>Product Owner (@toilatrung)</code></li>
+<li><strong>Proposer</strong>: <code>Product Owner; Codex ghi theo chỉ đạo trực tiếp</code></li>
+<li><strong>Status</strong>: <code>approved</code></li>
+<li><strong>Change Type</strong>: <code>process</code></li>
+<li><strong>Priority</strong>: <code>1</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-17</code></li>
+<li><strong>Decision Due Date</strong>: <code>2026-10-17</code></li></ul>
+<h2>Proposed Change</h2><p>Trước: publish GHCR đợi CI và bộ bằng chứng MVP cùng SHA; CD staging → production thủ công. Sau: duy nhất Application <code>labelx</code>, namespace <code>labelx</code>, origin <code>https://label-x.williamtrinh.online</code>, theo dõi <code>main</code>. CI của đúng SHA main phải thành công với đủ sáu job bootstrap-windows, framework, backend, detector, frontend, production-images. Build/smoke image, publish GHCR bằng tag SHA bất biến, ghi digest vào manifests, rồi Argo CD tự sync.</p>
+<p>Gate bằng chứng MVP không còn là điều kiện triển khai ứng dụng này. Không thay kết quả, test matrix, phase receipts hoặc gate nghiệm thu MVP; không tạo bằng chứng passed, không đóng issue MVP. Luồng CD staging/production cũ được giữ dưới dạng legacy nghiệm thu có gate đầy đủ; không dùng để điều khiển Application này hoặc tự suy ra readiness.</p>
+<p>Ngoại lệ tự động hóa cụ thể đối với CR-102/CR-104: pipeline dùng credential PO giới hạn repo để tạo và merge PR trực tiếp vào main <em>chỉ</em> thay hai file <code>infrastructure/k8s/labelx/kustomization.yaml</code> (hai image digest và SOURCE_SHA) và <code>release.json</code> (receipt đúng image/SHA/CI). PR phải qua đủ sáu job CI và main chưa thay đổi; pipeline xác minh diff, không push thẳng main, không sửa ruleset, không tự đăng chữ ký của người duyệt. Chấp thuận thường trực trong CR này thay chữ ký tay chỉ cho PR digest đó. Code/config/policy vẫn qua PR develop → main và review theo quy trình hiện hành.</p>
+<h2>Justification</h2><blockquote>Tôi chấp thuận triển khai trước khi hoàn tất bộ bằng chứng MVP. Ghi nhận thay đổi chính sách triển khai này rõ ràng trong repo và điều chỉnh gate liên quan; không giả lập MVP passed.</blockquote><p>Trích chỉ đạo PO trong phiên 17/10/2026; PO đồng thời yêu cầu một Application, tự đồng bộ main, giữ backup và dữ liệu persistent qua cập nhật. Đây là chấp thuận triển khai sớm, không phải chấp thuận production readiness.</p>
+<h2>Impact Assessment</h2><ul>
+<li><strong>Affected Baselines</strong>: scripts/ci/container-release.cjs; .github/workflows/production-images.yml; docs/08-devops/production-images.html; docs/08-devops/deployment.html; AGENT.html (tham chiếu ngoại lệ).</li>
+<li><strong>Affected Epics or Tasks</strong>: OPS-03 #399, REL-02 #398, REL-03 #400, REL-04 #402; MVP-RELEASE #386 vẫn mở.</li>
+<li><strong>Schedule Impact</strong>: Triển khai trước nghiệm thu MVP; sửa các issue MVP dần qua develop → main.</li>
+<li><strong>Cost or Resource Impact</strong>: VPS hiện có, PostgreSQL/Redis persistent; S3 hiện có và bucket backup ngoài VPS bắt buộc.</li>
+<li><strong>Security or Compliance Impact</strong>: Không commit secret; runtime DB role không phải owner; chỉ HTTPS; token GitOps PO giới hạn repo; backup lưu ngoài VPS trước migration; không cấp quyền gửi dữ liệu tới AI mới.</li>
+<li><strong>Compatibility or Migration Impact</strong>: Backup trước migrate; giữ PVC/PV; chỉ migration tương thích bản trước được phép tự deploy. Đổi phá vỡ schema yêu cầu kế hoạch bảo trì riêng.</li></ul>
+<h2>Related Files</h2><ul>
+<li><strong>Affected Documents</strong>: <a href="../../../docs/08-devops/gitops.html">Runbook GitOps</a>; <a href="../../../scripts/ci/deployment-policy.json">Chính sách máy đọc</a>.</li>
+<li><strong>Decisions</strong>: Chỉ đạo trực tiếp PO trong phiên ngày 2026-10-17, ghi ở Approval.</li>
+<li><strong>Risks</strong>: Chưa đủ bằng chứng MVP/evaluation/NFR; VPS đơn không HA; local PV không chống mất VPS; cần backup S3 ngoài VPS và diễn tập restore.</li>
+<li><strong>Issues or Blockers</strong>: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a> và #388–#397 giữ mở; không sửa trạng thái bằng CR này.</li></ul>
+<h2>Approval</h2><ul>
+<li><strong>Decision</strong>: <code>approved</code></li>
+<li><strong>Approver</strong>: <code>Product Owner (@toilatrung), chỉ đạo trực tiếp trong phiên</code></li>
+<li><strong>Decision Date</strong>: <code>2026-10-17</code></li>
+<li><strong>Conditions</strong>: Một labelx/main/domain; tự publish sau CI và smoke, pin digest; tự sync; backup/persistent/rollback; MVP issues mở; không ghi readiness đạt.</li>
+<li><strong>Rationale</strong>: PO thay yêu cầu pilot thủ công trước đó bằng yêu cầu triển khai bản hiện tại và tự cập nhật theo main; agent chỉ ghi quyết định, không giả làm người review hoặc tự chứng nhận MVP.</li></ul>
+<p><strong>Bổ sung theo PO trong cùng phiên:</strong> frontend/backend GHCR được phép Public; xác minh pull ẩn danh, dùng digest thực tế của cùng phiên bản, và không Sync tới khi VPS tải được cả hai image. Bộ manifests chính thức ở infrastructure/k8s/labelx, không có placeholder trong phiên bản kích hoạt.</p>
+<h2>Implementation Plan</h2><ul>
+<li><strong>Responsible Owner</strong>: <code>Codex triển khai; PO cung cấp truy cập VPS, S3 và credential GitOps</code></li>
+<li><strong>Tasks</strong>: Hoàn thiện images/GHCR, K3s/Argo, secrets, PVC, HTTPS, migration, smoke, backup, rollback.</li>
+<li><strong>Validation Method</strong>: Unit test gate và digest-only diff; actionlint; Kustomize/schema validation; image smoke; server dry-run; HTTPS/dependency smoke; backup và restore test trước khi báo deployed.</li>
+<li><strong>Rollback Method</strong>: Pause automated sync trước; backup hiện trạng; PR khôi phục cặp digest/receipt đã xác minh; đồng bộ và smoke. Không tự migrate xuống hoặc xóa PVC; restore DB chỉ trong bảo trì với xác nhận mất ghi sau backup.</li></ul>
+<h2>Completion Criteria</h2><ul>
+<li>[x] Approval PO được ghi trước khi đổi gate triển khai.</li>
+<li>[ ] Pipeline và hạ tầng đã triển khai và kiểm chứng thực tế.</li>
+<li>[ ] Kết quả backup, rollback/restore, HTTPS và phiên bản đã ghi vào release report.</li>
+<li>[ ] CR chỉ chuyển implemented khi đủ bằng chứng trong phạm vi triển khai.</li></ul>
+<h2>Forbidden Actions</h2><ul><li>Không giả lập MVP passed hoặc production readiness; không đóng issue MVP.</li><li>Không deploy main CI lỗi/thiếu job, tag latest, tự push code main hoặc bỏ bảo vệ PR.</li><li>Không xóa PVC/namespace/dữ liệu hoặc restore DB tự động khi smoke lỗi.</li></ul>
+<h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/change-requests/CR-120.html</code>; dùng HTML theo CR-103, liên kết runbook và report bằng chứng.</p>
+</article></main></body></html>

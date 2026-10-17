@@ -1,4 +1,4 @@
-"""Comprehensive RBAC matrix and role-based data filtering tests (MBE-07, Issue #329).
+"""Comprehensive RBAC matrix and role-based data filtering tests (MBE-07, archived issue 329).
 
 Covers:
 1. Matrix verification for `/api/auth/workflow-permissions/`:
@@ -18,6 +18,9 @@ Covers:
    - Releases list, manifest, and approve
 4. 403 FORBIDDEN and 403 OUT_OF_SCOPE enforcement.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-329.
 
 from __future__ import annotations
 
