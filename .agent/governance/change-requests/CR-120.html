@@ -90,5 +90,6 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Kết quả backup, rollback/restore, HTTPS và phiên bản đã ghi vào release report.</li>
 <li>[ ] CR chỉ chuyển implemented khi đủ bằng chứng trong phạm vi triển khai.</li></ul>
 <h2>Forbidden Actions</h2><ul><li>Không giả lập MVP passed hoặc production readiness; không đóng issue MVP.</li><li>Không deploy main CI lỗi/thiếu job, tag latest, tự push code main hoặc bỏ bảo vệ PR.</li><li>Không xóa PVC/namespace/dữ liệu hoặc restore DB tự động khi smoke lỗi.</li></ul>
+<h2>Đính chính phạm vi (2026-10-17)</h2><p>CR-120 chỉ quy định <strong>một Application <code>labelx</code> tự triển khai <code>main</code> theo digest</strong> sau CI. CR-120 <strong>không</strong> định nghĩa việc dựng hoặc rút gọn CVAT. CVAT tự host thuộc <a href="CR-121.html">CR-121</a> (upstream v2.77.0 Compose, bind <code>172.17.0.1:18080</code>). Cụm "CVAT rút gọn" từng bị gán nhầm cho CR-120; hiện chưa có tài liệu nào định nghĩa cụm này, nên việc dựng profile Compose rút gọn phải ghi phạm vi riêng (CR hoặc task) trước khi coi là đã được duyệt. Phân công phiên xem <a href="../../execution/session-assignments.html">session-assignments</a>.</p>
 <h2>Output Requirements</h2><p>Lưu tại <code>.agent/governance/change-requests/CR-120.html</code>; dùng HTML theo CR-103, liên kết runbook và report bằng chứng.</p>
 </article></main></body></html>

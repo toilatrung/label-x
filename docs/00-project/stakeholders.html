@@ -90,6 +90,21 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
+<h2 id="tai-khoan-theo-role-vps">Tài khoản ứng dụng theo role (VPS 17/10/2026)</h2>
+<p>Tài khoản LabelX trên môi trường <code>labelx</code> đã được tạo theo 7 role, mỗi role một tài khoản. Danh sách này chỉ ghi role và phạm vi; <strong>không ghi tên đăng nhập thật, mật khẩu hay token</strong> — thông tin đăng nhập do người vận hành giữ ngoài repo. Tên người cụ thể vẫn chưa gán (bảng trên).</p>
+<table>
+<thead><tr><th>Role (mã)</th><th>Lớp người dùng tương ứng</th><th>Phạm vi</th></tr></thead>
+<tbody>
+<tr><td><code>annotator</code></td><td>Annotator</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>reviewer</code></td><td>Reviewer</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>qa_lead</code></td><td>Quality Assurance Lead</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>qc_admin</code></td><td>Quality Control Admin</td><td>toàn hệ thống (<code>dataset_id</code> NULL)</td></tr>
+<tr><td><code>super_admin</code></td><td>Super Admin</td><td>toàn hệ thống (<code>dataset_id</code> NULL)</td></tr>
+<tr><td><code>product_owner</code></td><td>Product / Data Owner (Product Owner)</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>data_model_owner</code></td><td>Product / Data Owner (Data/Model Owner)</td><td>dataset 1 (mặc định)</td></tr>
+</tbody>
+</table>
+<p>Phạm vi theo <code>SYSTEM_WIDE_ROLES</code> trong <code>src/backend/accounts/models.py</code>: <code>super_admin</code> và <code>qc_admin</code> là toàn hệ thống (<code>dataset_id</code> NULL); constraint <code>accounts_role_assignment_system_wide_roles</code> bắt mọi role khác phải có <code>dataset_id</code>. Năm role còn lại được gán dataset mặc định <code>1</code> (đổi bằng <code>LABELX_DATASET_ID</code> khi chạy <code>create_role_accounts.py</code>). <code>dataset_id</code> không phải model riêng trong database mà trùng id project CVAT (<code>DatasetListView</code> đọc live từ CVAT), nên dataset 1 chỉ có nghĩa khi CVAT có project id 1; role dataset-scoped chỉ thấy project có id được gán. Nguồn sự thật là <code>RoleAssignment</code> trên backend. Dataset list vẫn trả 502 khi CVAT chưa kết nối (<a href="../04-api/rest-api.html#datasets-cvat-dependency">REST API</a>).</p>
 <h2 id="trach-nhiem-phe-duyet-srs">Trách nhiệm phê duyệt SRS</h2>
 <table>
 <thead>
