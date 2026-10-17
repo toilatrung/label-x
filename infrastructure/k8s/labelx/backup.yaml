@@ -42,8 +42,9 @@ spec:
             cpu: 100m
             memory: 128Mi
           limits:
-            memory: 512Mi
+            memory: 128Mi
             cpu: 1000m
+            ephemeral-storage: 256Mi
         volumeMounts:
         - &id002
           name: ops
@@ -73,8 +74,9 @@ spec:
             cpu: 100m
             memory: 256Mi
           limits:
-            memory: 1Gi
+            memory: 512Mi
             cpu: 1000m
+            ephemeral-storage: 256Mi
         volumeMounts:
         - *id002
         - name: work
@@ -107,7 +109,8 @@ spec:
         persistentVolumeClaim:
           claimName: labelx-backups
       - name: tmp
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: 256Mi
       restartPolicy: Never
 ---
 apiVersion: batch/v1
@@ -160,8 +163,9 @@ spec:
                 cpu: 100m
                 memory: 128Mi
               limits:
-                memory: 512Mi
+                memory: 128Mi
                 cpu: 1000m
+                ephemeral-storage: 256Mi
             volumeMounts:
             - &id002
               name: ops
@@ -191,8 +195,9 @@ spec:
                 cpu: 100m
                 memory: 256Mi
               limits:
-                memory: 1Gi
+                memory: 512Mi
                 cpu: 1000m
+                ephemeral-storage: 256Mi
             volumeMounts:
             - *id002
             - name: work
@@ -225,5 +230,7 @@ spec:
             persistentVolumeClaim:
               claimName: labelx-backups
           - name: tmp
-            emptyDir: {}
+            emptyDir:
+              sizeLimit: 256Mi
           restartPolicy: Never
+  suspend: true

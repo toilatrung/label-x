@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 umask 077
+# Fail once before allocating dumps when the shared disk is already under pressure.
+free_kib=$(df -Pk /backups | awk 'NR==2 {print $4}')
+[ "$free_kib" -ge 8388608 ] || { echo 'BLOCKED backup disk has less than 8 GiB free'; exit 1; }
 trap 'touch /work/failed' EXIT
 backup_id="$(date -u +%Y%m%dT%H%M%SZ)-${POD_NAME}"
 printf '%s' "$backup_id" > /work/id
@@ -26,4 +29,4 @@ cp /work/database.dump.enc "/backups/${backup_id}.dump.enc"
 cp /work/receipt.json "/backups/${backup_id}.json"
 touch /work/restored
 trap - EXIT
-echo 'PASS encrypted off-VPS backup, remote round-trip and disposable database restore'
+echo 'PASS encrypted backup round-trip and disposable database restore; check receipt location, offsite remains unverified'

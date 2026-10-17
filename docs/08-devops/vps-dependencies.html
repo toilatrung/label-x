@@ -1,0 +1,125 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LabelX và CVAT trên VPS</title><meta name="labelx:id" content="labelx-vps-dependencies"><meta name="labelx:title" content="LabelX and CVAT on the existing VPS"><meta name="labelx:type" content="reference"><meta name="labelx:domain" content="devops"><meta name="labelx:module" content="deployment"><meta name="labelx:tags" content="[vps, storage, cvat, backup, deployment]"><meta name="labelx:priority" content="1"><style>body{max-width:1100px;margin:32px auto;padding:0 24px;font:16px/1.6 system-ui}pre{background:#eef2f5;padding:14px;overflow:auto}table{border-collapse:collapse}td,th{border:1px solid #ccd6df;padding:8px;text-align:left}code{overflow-wrap:anywhere}</style></head><body><main><article><h1>LabelX và CVAT trên VPS hiện có</h1>
+<h2>Phạm vi, điều kiện và nguồn quyết định</h2>
+<p><a href="../../.agent/governance/change-requests/CR-121.html">CR-121</a> ghi nhận yêu cầu PO mới: tự host S3 và CVAT vì chưa có dependency; cho phép local-only backup có nhãn rõ ràng trong khi chưa có offsite. CR-120 giữ một Application/namespace labelx theo main, CI sáu job, digest bất biến và không công nhận MVP/readiness. Không tự merge/ký review. Issues MVP và <a href="https://github.com/toilatrung/label-x/issues/409">#409 offsite/restore</a> giữ mở.</p>
+<p>Hướng dẫn dưới đây chỉ chạy sau PR source/config đã vào main và workflow đã cập nhật receipt/digest cho main mới. Không dùng develop cho Argo và không bỏ PreSync. Chưa được cấp SSH/kubeconfig trong phiên chuẩn bị: không có bằng chứng deploy trên VPS, trusted HTTPS, login thật hoặc offsite restore. Các kiểm thử Docker cô lập không thay bằng chứng này.</p>
+<h2>DNS cần tạo và cổng</h2>
+<table><tr><th>Loại</th><th>Tên</th><th>Giá trị</th></tr><tr><td>A</td><td>label-x.williamtrinh.online</td><td>110.172.28.31 — xác minh bản ghi hiện có</td></tr><tr><td>A</td><td>cvat.williamtrinh.online</td><td>110.172.28.31</td></tr><tr><td>A</td><td>s3.williamtrinh.online</td><td>110.172.28.31</td></tr></table>
+<p>Không tạo AAAA khi chưa có IPv6 tới VPS. Internet chỉ tới Traefik K3s ở 80/443; cert-manager namespaced Issuer labelx-letsencrypt cấp TLS cho cả ba host. Không cài lại control plane. S3 chỉ expose gateway 9000 qua Ingress, không publish master/filer/volume/admin ports. CVAT Compose giữ router upstream riêng, bind <code>172.17.0.1:18080</code> trên Docker bridge; Service/EndpointSlice K3s tới địa chỉ đó. Không bind 0.0.0.0:18080 hoặc tranh 80/443. Docker gateway khác 172.17.0.1 cần PR sửa cả endpoint và cấu hình, không ép đổi mạng host.</p>
+<h2>Windows PowerShell: chỉ kết nối, giữ nguyên workspace</h2>
+<pre><code>Set-Location H:\label-x
+git status --short
+$VpsUser = Read-Host &#x27;SSH user đã được cấp quyền&#x27;
+ssh &quot;$VpsUser@110.172.28.31&quot;
+# Các lệnh tiếp theo chạy trên Ubuntu VPS, không chạy bằng PowerShell.
+# Không reset/clean/checkout workspace H:\label-x đang có thay đổi chưa commit.</code></pre>
+<h2>Ubuntu VPS: checkout và khảo sát trước khi tạo workload</h2>
+<pre><code># Nếu chưa có checkout triển khai, dùng thư mục mới; không ghi đè checkout đang có:
+git clone --branch main --single-branch https://github.com/toilatrung/label-x.git &quot;$HOME/label-x-deploy&quot;
+cd &quot;$HOME/label-x-deploy&quot;
+git rev-parse HEAD
+test -f infrastructure/k8s/labelx/object-storage.yaml
+kubectl config current-context    # phải là default
+bash scripts/deploy/inventory.sh
+python3 scripts/deploy/check_capacity.py --phase fresh</code></pre>
+<p>Với checkout đã có: kiểm git status và nhánh trước; chỉ fast-forward main sạch sau git fetch origin main. Không reset/clean để cập nhật. Inventory không xuất Secret/env. Kiểm mọi Application/workload/PVC, Docker containers/volumes, 80/443/18080, DNS và TLS. Nếu CVAT đã tồn tại ở Docker hoặc Kubernetes, dùng lại và đánh giá phiên bản/volume/credential; prepare_cvat.py từ chối tạo mới khi phát hiện instance/dữ liệu chưa được nhận diện. Không chạy compose project mới để lách lỗi tên container.</p>
+<h2>Ngân sách 6 vCPU / 16 GB / SSD 100 GB</h2>
+<table><tr><th>Thành phần</th><th>Memory limit</th></tr><tr><td>labelx-backend</td><td>768 MiB</td></tr><tr><td>labelx-frontend</td><td>384 MiB</td></tr><tr><td>labelx-worker</td><td>768 MiB</td></tr><tr><td>labelx-beat</td><td>192 MiB</td></tr><tr><td>labelx-postgres</td><td>512 MiB</td></tr><tr><td>labelx-redis</td><td>128 MiB</td></tr><tr><td>labelx-s3</td><td>512 MiB</td></tr><tr><td>Toàn bộ CVAT, gồm 8 CPU worker, analytics, router</td><td>7872 MiB</td></tr><tr><td>Backup + capacity Job đồng thời ứng dụng hiện có</td><td>768 MiB</td></tr><tr><td>Tổng đỉnh workload cấu hình</td><td>11904 MiB = 11.625 GiB</td></tr><tr><td>Dành cho OS/K3s/Argo + headroom thêm</td><td>3 GiB + 1 GiB</td></tr></table>
+<p>Cần khoảng 15.625 GiB RAM theo tổng ceilings và dự phòng, không phải kết quả đo VPS. Nếu “16 GB” là 16 tỷ byte (~14.9 GiB), tổng này không phù hợp: chuyển CVAT ra host khác hoặc nâng RAM ít nhất 24–32 GB. Nếu MemTotal thực >=15.625 GiB, chỉ phù hợp thử tải nhẹ và bộ dữ liệu nhỏ sau kiểm tra MemAvailable; chưa chứng minh throughput. CVAT NUMPROCS=1; LabelX worker concurrency=1, max-memory-per-child=393216 KiB, timeout/limits hiện hành. CPU ceilings cộng lại có overcommit trên 6 vCPU: tác vụ đồng thời sẽ bị throttle; không hứa đủ tải nặng. Không build image trên VPS. Deployments LabelX dùng Recreate để không thêm surge pods làm vượt RAM; cập nhật có gián đoạn ngắn, không phải HA. Datastore trên node đơn cũng có thể restart theo revision; không tuyên bố zero-downtime.</p>
+<p>Ngân sách disk nhỏ trong infrastructure/vps-budget.json tổng 80 GiB, gồm 14 GiB trống: OS/K3s/Argo 12, image cache 8, LabelX DB 8, Redis 1, S3 12, CVAT DB/events 3, CVAT data/cache 10, logs 2, local backups 6, tmp 4 GiB. SSD 100 GB thường chỉ ~93 GiB; full các PVC 20 GiB + CVAT lớn/backup lịch sử sẽ vượt cấu hình này. PVC local-path là request, không phải quota; không thu nhỏ PVC đã tồn tại. SeaweedFS volume.max=12 với 1 GiB/volume, tăng một volume/lần thay vì mặc định bảy; ngừng ghi khi free disk dưới 15%. Cần chuyển CVAT/data hoặc nâng SSD cho tập lớn, không tự xóa object/volume để lấy chỗ.</p>
+<p>Docker logs giới hạn 10 MiB × 3/container; CVAT rotating logs 3 bản; ClickHouse cần đủ PID cho thread pools. K8s emptyDir/ephemeral limits và CPU/RAM có trong manifests. CronJob labelx-capacity mỗi 15 phút ghi warning tại 75%, fail bounded tại 85% hoặc trống <8 GiB; đây là cảnh báo local, chưa có thông báo off-host. Theo dõi Jobs/logs/disk từ monitoring; disk đầy có thể làm cả monitoring local mất khả năng ghi. Backup giữ lịch sử, chưa tự xóa retention; vận hành phải giám sát/copy offsite rồi duyệt cleanup riêng.</p>
+<pre><code>kubectl -n labelx get pvc,pods,jobs,cronjobs
+kubectl top nodes
+kubectl top pods -n labelx
+df -h / /var/lib/rancher/k3s /var/lib/docker
+sudo du -xh --max-depth=1 /var/lib/rancher/k3s/storage /var/lib/docker/volumes
+python3 scripts/deploy/check_capacity.py --phase live
+# Xem Job labelx-capacity mới nhất và logs; không coi Synced/Healthy là đủ.</code></pre>
+<h2>Tạo secrets và storage: không cần S3/CVAT/offsite có sẵn</h2>
+<pre><code>umask 077
+mkdir -p &quot;$HOME/.config/labelx&quot;
+cp infrastructure/k8s/labelx/secrets.example.json &quot;$HOME/.config/labelx/config.json&quot;
+chmod 600 &quot;$HOME/.config/labelx/config.json&quot;
+# Bản mẫu dùng BACKUP_MODE=local, CVAT/GPU để trống có chủ đích.
+python3 scripts/deploy/bootstrap.py --context default --config &quot;$HOME/.config/labelx/config.json&quot; --recovery-file &quot;$HOME/.config/labelx/recovery-initial.json&quot;
+# Copy recovery-initial.json an toàn ra secret store/offline ngoài VPS trước khi tiếp tục.
+# Không cat Secret hoặc recovery file vào chat/log/artifact.</code></pre>
+<p>Tự sinh lần đầu: Django key, DB owner/runtime và Redis passwords, AES backup key, S3 admin/app keys. Bộ triển khai tạo: endpoint HTTPS s3.williamtrinh.online, region us-east-1, bucket snapshots/evidence/reports (default=evidence), S3 identity config và local backup mode. Người dùng cung cấp sau: DNS, credential CVAT read-only, GPU tailnet host/token, VLM nếu dùng, và offsite endpoint/bucket/credential thật. Không có URL/token giả. Runtime app không nhận S3 admin key. Không tạo bucket models nếu chưa có chức năng thực cần nó.</p>
+<p>Existing secrets giữ nguyên; dữ liệu PG/Redis/backup/S3 mà thiếu khóa gốc hoặc một phần bộ secret → dừng để khôi phục. Không đổi mật khẩu theo mặc định để vượt lỗi. Bootstrap không tự chuyển dữ liệu từ S3 external cũ; cần kế hoạch migrate riêng. File recovery O_EXCL/mode0600 không bị ghi đè. Khóa giải mã backup phải nằm ngoài VPS để tránh mất cả dữ liệu và khóa.</p>
+<h2>GitOps token, digest và lần kích hoạt Argo đầu</h2>
+<p>Secret LABELX_GITOPS_TOKEN hiện thiếu; publish của main bf08ef5 đã tạo đủ hai image public nhưng job GitOps thất bại vì thiếu token. Tạo fine-grained PAT của PO, resource owner toilatrung, chỉ repo label-x: Contents Read/Write, Pull requests Read/Write, Checks Read, Metadata Read tự cấp. Không cần Packages/Workflows/Admin quyền cho token này; workflow publish dùng GITHUB_TOKEN packages:write, artifact download dùng GITHUB_TOKEN actions:read. PAT có expiry/rotation, ruleset PO vẫn áp dụng, không bypass status checks. Không dùng broad gh login token hoặc gửi token qua chat.</p>
+<pre><code># Trên máy vận hành có gh, nhập token bằng prompt, không đặt token literal trong argv:
+gh secret set LABELX_GITOPS_TOKEN --repo toilatrung/label-x
+# Sau source/config PR vào main và đủ 6 CI job:
+MAIN_SHA=$(git ls-remote origin refs/heads/main | awk &#x27;{print $1}&#x27;)
+# Chỉ dispatch nếu workflow tương ứng chưa chạy hoặc cần chạy lại sau khi đã sửa token:
+gh workflow run production-images.yml --repo toilatrung/label-x --ref main -f commit_sha=&quot;$MAIN_SHA&quot;
+# Chờ publish + protected digest-only PR CI/merge. Fetch main mới, đối chiếu receipt và SOURCE_SHA.
+# Không dùng PR head SHA thay cho SHA main sau merge.</code></pre>
+<p>Application YAML giữ revision main và Kustomize commonAnnotationsEnvsubst với labelx.io/gitops-revision=${ARGOCD_APP_REVISION}. AppProject labelx cho đúng repository/namespace, Namespace cluster-scoped; các tài nguyên namespace cần thiết gồm EndpointSlice và cert-manager/Traefik CRD; Secret không được GitOps quản lý. Path chính xác infrastructure/k8s/labelx. PreSync chỉ cho digest transition đã được CI kiểm; source/config commit chưa publish sẽ dừng. Không selective Sync/Force/Replace để bỏ hook.</p>
+<pre><code># Chạy trên VPS, sau main đã có source/config và digest transition phù hợp:
+python3 scripts/deploy/verify_vps_images.py --context default
+# Cả hai Pod phải pull và execute được; helper dùng imagePullPolicy Always.
+kubectl apply --dry-run=server -k infrastructure/k8s/labelx
+kubectl apply -f infrastructure/argocd/project.yaml
+kubectl apply -f infrastructure/argocd/application.yaml
+kubectl -n argocd get application labelx -w
+kubectl -n labelx get pods,pvc,certificate,ingress,jobs</code></pre>
+<p>Lệnh apply Application bật auto-sync đầu tiên. Chỉ chạy sau secrets, DNS và image pulls trên node đạt. Thứ tự: PreSync identity → Namespace/Config/Issuer → S3+PG+Redis/PVC cùng wave -20 → bucket/CORS/init và presigned trusted HTTPS -15 → local/offsite backup+disposable restore -10 → migration/provision runtime DB role -5 → app/worker/beat/Ingress CVAT 0 → functional smoke PostSync. PVC WaitForFirstConsumer luôn cùng wave consumer đầu, tránh deadlock. Single beat Recreate; không migrate trong từng Pod entrypoint.</p>
+<h2>Ubuntu: khởi tạo CVAT bằng Compose upstream</h2>
+<pre><code>python3 scripts/deploy/prepare_cvat.py --env-file &quot;$HOME/.config/labelx/cvat.env&quot;
+# Copy cvat.env an toàn ra ngoài VPS; không commit hoặc in docker compose config đã nội suy.
+# Kiểm Docker bridge và K3s pod CIDR trong inventory. Mặc định 172.17.0.1 và 10.42.0.0/16;
+# khác thực tế phải sửa cấu hình đáng tin cậy và PR EndpointSlice nếu cần.
+export CVAT_ENV_FILE=&quot;$HOME/.config/labelx/cvat.env&quot;
+docker compose --env-file &quot;$CVAT_ENV_FILE&quot; -p cvat -f infrastructure/cvat/upstream/docker-compose.yml -f infrastructure/cvat/compose.vps.yaml config --quiet
+docker compose --env-file &quot;$CVAT_ENV_FILE&quot; -p cvat -f infrastructure/cvat/upstream/docker-compose.yml -f infrastructure/cvat/compose.vps.yaml up -d --wait --wait-timeout 600
+ss -ltn | grep 18080
+curl --fail https://cvat.williamtrinh.online/api/server/about
+# Tạo admin bằng prompt tương tác; không truyền password trên dòng lệnh:
+docker compose --env-file &quot;$CVAT_ENV_FILE&quot; -p cvat -f infrastructure/cvat/upstream/docker-compose.yml -f infrastructure/cvat/compose.vps.yaml exec cvat_server python3 manage.py createsuperuser</code></pre>
+<p>Upstream v2.77.0 / commit 7dac20c766d7d4297fdf67589436387ab26f7411 đã khớp version.conf và adapter. Files upstream MIT được vendor và kiểm SHA-256 qua upstream-lock.json; override pin mọi image bằng digest thực. Giữ đủ dịch vụ upstream, không chuyển CVAT sang Kubernetes. Không chạy compose down -v. CVAT PostgreSQL riêng dùng password scram thay trust, ClickHouse/Grafana admin credential riêng tự sinh; tắt Grafana anonymous Admin của cấu hình upstream, analytics yêu cầu đăng nhập riêng. Private env mode0600. Không dùng CVAT admin hoặc Grafana admin cho adapter. Kiểm login UI qua HTTPS trusted, API/about đúng2.77.0, health DB/Redis/server, services Running, không OOM/restart liên tục và truy cập route từ Pod K3s; Docker localhost login không chứng minh route VPS hoạt động.</p>
+<h2>CVAT service account và token chỉ đọc</h2>
+<pre><code>docker compose --env-file &quot;$CVAT_ENV_FILE&quot; -p cvat -f infrastructure/cvat/upstream/docker-compose.yml -f infrastructure/cvat/compose.vps.yaml exec cvat_server python3 /home/django/provision-labelx-reader.py
+umask 077
+docker compose --env-file &quot;$CVAT_ENV_FILE&quot; -p cvat -f infrastructure/cvat/upstream/docker-compose.yml -f infrastructure/cvat/compose.vps.yaml exec -T cvat_server cat /home/django/keys/labelx-reader-token.json &gt; &quot;$HOME/.config/labelx/cvat-reader.json&quot;
+chmod 600 &quot;$HOME/.config/labelx/cvat-reader.json&quot;
+python3 scripts/deploy/import_cvat.py --token-file &quot;$HOME/.config/labelx/cvat-reader.json&quot; --config &quot;$HOME/.config/labelx/config.json&quot;
+python3 scripts/deploy/bootstrap.py --context default --update-dependencies --config &quot;$HOME/.config/labelx/config.json&quot; --recovery-file &quot;$HOME/.config/labelx/recovery-cvat.json&quot;
+kubectl -n labelx rollout restart deployment/labelx-backend deployment/labelx-worker deployment/labelx-beat</code></pre>
+<p>Helper tạo tài khoản thường với password không dùng được, không admin/staff, PAT read_only=True hết hạn sau90ngày. Chỉ xuất token vào file private, không ra terminal. Gán quyền nhìn đúng organization/jobs cho tài khoản này qua admin UI; không gán admin, không dùng tài khoản admin làm adapter. Adapter chỉ GET/HEAD và chặn mutation, test cô lập chứng minh CVAT cũng trả403 cho PATCH bằng PAT đó. Khi kiểm trên VPS, dùng job thật được cấp quyền để đọc meta/annotations/media; không gửi PATCH vào dữ liệu thật để thử. Token có thể tạo qua User settings → Security → read-only/expiry thay helper, nhưng vẫn giữ private file. Không dùng legacy/read-write token.</p>
+<p>Chưa cấu hình CVAT/GPU: giữ cả URL và token CVAT rỗng, không seed project/job giả; LabelX có thể phục vụ đăng nhập, các thao tác cần CVAT phải báo chưa kết nối/lỗi dependency, không dữ liệu mock hoặc status passed. GPU_WORKER_ALLOWED_HOSTS là exact hostname HTTPS *.ts.net đã được vận hành cho phép; GPU_WORKER_CREDENTIALS là map alias→token thật (>=32 ký tự, không khoảng trắng). GPU server độc lập, không chia kubeconfig/S3 admin key. Tailscale connectivity, presigned URLs từ GPU và inference vẫn cần kiểm chứng riêng.</p>
+<h2>Kiểm chứng chức năng sau Sync</h2>
+<pre><code>kubectl -n labelx logs job/labelx-storage-init
+kubectl -n labelx logs job/labelx-before-migrate-backup -c dump-and-restore-check
+kubectl -n labelx logs job/labelx-before-migrate-backup -c offsite-upload
+kubectl -n labelx logs job/labelx-migrate
+kubectl -n labelx logs job/labelx-smoke
+kubectl -n labelx get pods -o jsonpath=&#x27;{range .items[*]}{.metadata.name}{&quot; &quot;}{range .status.containerStatuses[*]}{.imageID}{&quot; &quot;}{end}{&quot;\n&quot;}{end}&#x27;
+curl --fail https://label-x.williamtrinh.online/healthz/
+curl --fail --head https://label-x.williamtrinh.online/login
+# Tạo tài khoản LabelX bằng prompt và gán vai trò ứng dụng:
+kubectl -n labelx exec -it deploy/labelx-backend -- python manage.py createsuperuser
+kubectl -n labelx exec -it deploy/labelx-backend -- python manage.py assign_role USERNAME super_admin</code></pre>
+<p>storage-init tạo đúng3bucket, cấu hình CORS theo bucket, test put/presigned GET qua HTTPS public với Origin của LabelX và xóa canary. SeaweedFS4.48 đã được test non-root512Mi, app credential chỉ Read/Write/List/Tagging trong ba bucket; unsigned và cross-bucket bị từ chối. CORS cho hai origin LabelX/CVAT; S3 auth không dựa vào CORS. Query-signed URL là bearer credential ngắn hạn, không log URL hoặc copy vào artifacts. Test thực từ browser và GPU phải dùng URL thật do ứng dụng cấp, xác minh TLS và download đúng checksum. PostSync smoke không thay login người dùng, CVAT job thật, GPU, tải/NFR hoặc whole-VPS restore.</p>
+<h2>Backup local, bổ sung offsite và khôi phục</h2>
+<p>BACKUP_MODE=local: trước migration vẫn pg_dump, AES-256-GCM, copy object content-addressed vào backup PVC, checksum, giải mã và restore DB tạm. Receipt ghi location=local, disaster_recovery=unverified; mất VPS vẫn mất cả primary và local backup. Daily offsite CronJob mặc định suspend=true, không lặp lỗi vì thiếu endpoint. Primary S3 versioning chưa được bật/kiểm chứng; NFR backup/versioning chưa đạt. Không đánh dấu backup/restore toàn hệ thống đã đạt từ local test. Ghi nhận offsite còn thiếu ở #409.</p>
+<pre><code># Local backup theo yêu cầu, đặt tên mới; không tự xóa backup cũ:
+kubectl -n labelx create job --from=cronjob/labelx-daily-backup &quot;labelx-backup-$(date -u +%Y%m%d%H%M%S)&quot;
+# CVAT coherent local backup: dừng writers/queues tạm thời, snapshot đúng volumes, tự start lại services vốn đang chạy:
+sudo mkdir -p /var/backups/labelx-cvat
+sudo python3 scripts/deploy/backup_cvat.py --maintenance --env-file &quot;$CVAT_ENV_FILE&quot; --recovery-file &quot;$HOME/.config/labelx/recovery-cvat.json&quot; --destination &quot;/var/backups/labelx-cvat/$(date -u +%Y%m%dT%H%M%SZ)&quot;</code></pre>
+<p>CVAT helper cần maintenance và sudo để đọc nhất quán DB/data/keys/Redis/Kvrocks/events volumes. Lưu pg_dump, archive volume và private env trong AES-GCM archive, kiểm authenticated round-trip; cần dung lượng staging ~3×dữ liệu và8GiB dự phòng, nếu thiếu dừng trước bảo trì. Đây là copy cùng VPS, chưa chứng minh restore database CVAT hoặc DR. Không backup keys/plain env vào public bucket hoặc Git. Không chạy cron CVAT backup ngoài cửa sổ bảo trì đã được thống nhất.</p>
+<p>Để bổ sung offsite: tạo bucket thật ngoài VPS, bật versioning/encryption/lifecycle phù hợp và credential list/get/put hạn chế không dùng S3 admin/app key; copy recovery key tới secret store ngoài VPS. Điền BACKUP_MODE=offsite và BACKUP_S3_ENDPOINT_URL/ACCESS_KEY/SECRET_KEY/BUCKET/REGION/PREFIX vào config private. Chạy bootstrap --update-dependencies với recovery file mới; giữ nguyên tất cả khóa DB/storage/encryption. Chạy Job backup theo yêu cầu, xem receipt từ provider và restore DB tạm trước khi PR đổi labelx-daily-backup suspend=false. Không patch CronJob để selfHeal ghi đè. CVAT archive phải copy off-host và xác minh SHA/AES bằng kênh vận hành được cấp quyền; helper chưa tự giả lập cloud endpoint.</p>
+<p>Khôi phục LabelX: pause Argo và maintenance, chặn ghi API/worker/beat, backup hiện trạng; lấy receipt hoàn thành, xác minh checksum, giải mã bằng key+AAD backup_id (nonce12+ciphertext+GCMtag16), restore vào database rỗng, đối chiếu migration/grants; restore object theo mapping key và checksum, rồi mới chuyển kết nối. Không pg_restore --clean trên DB đang phục vụ. Khôi phục CVAT: xác minh encrypted archive và giải mã bằng crypt_backup.py trong backend image pin digest, key qua stdin từ recovery file; giải nén vào thư mục private mới, kiểm manifest/db.dump/archive tar; thử ở host/project cô lập với container names/ports khác trước. Production restore cần dừng mọi CVAT writer, backup trạng thái hiện tại, database rỗng và đúng data/keys/queue snapshot, cùng bản CVAT đã pin. Không restore đè volumes live. Full CVAT restore/RPO/RTO chưa diễn tập; #409 vẫn mở.</p>
+<h2>Cập nhật và rollback</h2>
+<p>Source/config PR→develop→main; CI exact main→public GHCR→protected digest-only PR→Argo auto-sync. Không latest và không tự build từ checkout bẩn trên VPS. Thêm storage/CVAT version hoặc bật offsite schedule là source/config PR thường, không thuộc ngoại lệ digest-only. Giữ nguyên credentials/PVC/bind data qua mọi update. CVAT upgrade chỉ sau backup coherent và kiểm migration; pin lại upstream commit/files/images qua PR, không git pull upstream main.</p>
+<pre><code># Rollback LabelX dùng clean worktree trên máy vận hành có Node22, git và kubectl:
+python3 scripts/deploy/rollback.py --context default --release-commit FULL_KNOWN_GOOD_RECEIPT_COMMIT
+# Script pause auto-sync/Cron, chuẩn bị diff image pair; review PR trước full Sync.
+# Chỉ bật lại auto-sync sau smoke; daily backup chỉ bật khi offsite đã xác minh.
+# CVAT: pause thao tác người dùng, backup coherent, pin cặp image/version đã biết qua PR.
+# Chỉ rollback image nếu schema tương thích; không tự downgrade DB hoặc xóa volume.</code></pre>
+<p>Rollback chỉ image không sửa schema/dữ liệu. Nếu rollback PR còn trộn thay đổi từ develop, PreSync sẽ chặn; cần digest-only transition đã review hoặc publish lại source tương thích, không bypass hook. Backup object trong khi ứng dụng đang ghi không tạo transaction chung với PostgreSQL; điểm khôi phục thống nhất cần maintenance. NFR/HA, tải6vCPU, offsite DR và GPU chưa passed.</p>
+<h2>Nguồn upstream</h2>
+<p><a href="https://github.com/cvat-ai/cvat/blob/v2.77.0/docker-compose.yml">CVAT2.77 Compose</a>; <a href="https://docs.cvat.ai/docs/api_sdk/access_tokens/">CVAT read-only PAT</a>; <a href="https://github.com/seaweedfs/seaweedfs/releases/tag/4.48">SeaweedFS4.48</a>; <a href="https://github.com/seaweedfs/seaweedfs/wiki/Amazon-S3-API">S3 gateway</a>. Cấu hình vendor và digest trong repo là nguồn tái lập, tài liệu latest không thay pin version.</p>
+</article></main></body></html>

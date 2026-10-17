@@ -1,0 +1,24 @@
+{
+  "memory_limits_mib": {
+    "cvat_db": 512,
+    "cvat_redis_inmem": 128,
+    "cvat_redis_ondisk": 256,
+    "cvat_server": 1024,
+    "cvat_worker_utils": 512,
+    "cvat_worker_import": 768,
+    "cvat_worker_export": 512,
+    "cvat_worker_annotation": 512,
+    "cvat_worker_webhooks": 384,
+    "cvat_worker_quality_reports": 384,
+    "cvat_worker_chunks": 768,
+    "cvat_worker_consensus": 384,
+    "cvat_ui": 64,
+    "traefik": 128,
+    "cvat_opa": 128,
+    "cvat_clickhouse": 1024,
+    "cvat_vector": 128,
+    "cvat_grafana": 256
+  },
+  "total_mib": 7872,
+  "note": "Small datasets only; limits are not measured VPS demand. No capacity/load acceptance."
+}
