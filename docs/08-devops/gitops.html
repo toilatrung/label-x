@@ -1,0 +1,64 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>LabelX GitOps — main → GHCR → Argo CD</title>
+<meta name="labelx:id" content="labelx-gitops"><meta name="labelx:title" content="LabelX GitOps — main → GHCR → Argo CD"><meta name="labelx:type" content="reference"><meta name="labelx:domain" content="devops"><meta name="labelx:module" content="deployment"><meta name="labelx:tags" content="[deployment, gitops, argocd, k3s, backup, rollback]"><meta name="labelx:priority" content="1">
+<style>body{max-width:1080px;margin:32px auto;padding:0 24px;font:16px/1.6 system-ui;color:#172536}pre{padding:14px;background:#eef2f5;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd6df;text-align:left;padding:8px;vertical-align:top}.note{padding:12px;border-left:4px solid #a97100;background:#fff5d9}</style></head><body><main><article><h1>LabelX: main → GHCR → Argo CD</h1>
+<p class="note">Chính sách hiện hành: <a href="../../.agent/governance/change-requests/CR-120.html">CR-120, PO chấp thuận ngày 17/10/2026</a>. Duy nhất Application <code>labelx</code>, namespace <code>labelx</code>, domain <code>label-x.williamtrinh.online</code>, theo dõi main và tự sync. Triển khai sớm không chứng minh MVP passed hoặc production readiness; <a href="https://github.com/toilatrung/label-x/issues/386">#386</a> và các issue MVP giữ mở.</p>
+<h2>Pipeline và quyền main</h2>
+<ol><li>Code/config đi PR → develop → main. CI đúng SHA main phải đạt đủ sáu job, gồm production-images build và smoke.</li><li>Workflow <code>production-images.yml</code> chỉ tin CI main cùng repo, không fork/PR/develop, không job thiếu/skipped. Luồng này không đợi bộ evidence MVP theo CR-120. Phase Testing và <code>verify-suite</code> vẫn giữ nguyên để đo nghiệm thu thật.</li><li>Build hai image có OCI revision SHA; smoke chính hai image, rồi publish GHCR. Tag <code>sha-&lt;40 hex&gt;</code> không được ghi đè; receipt ghi digest và <code>mvp_acceptance: unverified</code>.</li><li>Credential GitOps PO tạo PR trực tiếp vào main chỉ đổi hai image/danh tính SOURCE_SHA trong <code>kustomization.yaml</code> và <code>release.json</code>. CR-120 cho phép tự merge PR digest này sau đủ sáu check, không chữ ký giả và không thay ruleset. Main đổi trong lúc build/check → hủy merge cũ.</li><li>Argo CD đọc digest commit đã merge trên main, tự sync. Commit chỉ đổi digest được nhận diện bằng nội dung, không bằng title, để chặn vòng build/publish vô hạn.</li></ol>
+<p>GitHub Actions secret <code>LABELX_GITOPS_TOKEN</code>: credential PO giới hạn đúng repo, Contents/Pull requests/Actions read &amp; write, có hạn dùng và rotation. Cần token PO vì ruleset main-po-only chỉ cho PO cập nhật qua PR. Không dùng token này cho K3s/GHCR pull, không đưa credential đăng nhập gh cá nhân vào workflow. Workflow publish chỉ dùng GITHUB_TOKEN packages:write; job PR không có quyền ghi packages. Workflow legacy <code>cd.yml</code> vẫn giữ các gate nghiệm thu đầy đủ và không điều khiển Application labelx.</p>
+<h2>Phải kiểm tra trên VPS trước khi kích hoạt</h2>
+<ul><li>SSH/kubeconfig, node Ubuntu amd64, đủ RAM/disk; xác nhận namespace/Application labelx hiện có và PVC trước khi thay manifests. Không tạo Application phụ, không xóa workload hoặc dữ liệu đang có để bootstrap lại.</li><li>K3s, Argo CD, Traefik IngressClass/CRD và cert-manager CRD/controller đang chạy. Bootstrap dừng nếu thiếu; không tự nâng/cài lại control plane của VPS chưa khảo sát.</li><li>DNS A/AAAA đúng VPS, TCP 80/443 tới Traefik; Kubernetes API và DB/Redis không mở công khai. Thu hồi AAAA sai nếu ACME đi IPv6 không tới node.</li><li>S3 ứng dụng sẵn có, trusted HTTPS và truy cập được từ browser/GPU cho presigned URLs; ba bucket snapshots/evidence/reports. Bucket backup riêng ngoài VPS, credential riêng có list/get/put, không quyền delete. Bật versioning/default encryption/lifecycle trên provider theo quyền vận hành; không coi local PVC là backup chống mất VPS.</li><li>Nếu GHCR private: authfile mode 0600 chỉ read:packages. Nếu public: xác minh anonymous pull được; bootstrap tạo dockerconfig rỗng. Argo repo credential không thay imagePullSecret.</li></ul>
+<h2>Secrets và bootstrap</h2>
+<p>Tạo JSON riêng mode 0600 ngoài Git. Các khóa bắt buộc:</p>
+<pre><code>{
+  "OBJECT_STORAGE_ENDPOINT_URL": "https://S3-ENDPOINT",
+  "OBJECT_STORAGE_ACCESS_KEY": "FROM-SECRET-STORE",
+  "OBJECT_STORAGE_SECRET_KEY": "FROM-SECRET-STORE",
+  "OBJECT_STORAGE_REGION": "us-east-1",
+  "OBJECT_STORAGE_BUCKET_SNAPSHOTS": "labelx-snapshots",
+  "OBJECT_STORAGE_BUCKET_EVIDENCE": "labelx-evidence",
+  "OBJECT_STORAGE_BUCKET_REPORTS": "labelx-reports",
+  "BACKUP_S3_ENDPOINT_URL": "https://OFF-VPS-S3-ENDPOINT",
+  "BACKUP_S3_ACCESS_KEY": "FROM-SECRET-STORE",
+  "BACKUP_S3_SECRET_KEY": "FROM-SECRET-STORE",
+  "BACKUP_S3_REGION": "us-east-1",
+  "BACKUP_S3_BUCKET": "EXISTING-BACKUP-BUCKET",
+  "BACKUP_S3_PREFIX": "labelx",
+  "CVAT_BASE_URL": "https://EXISTING-CVAT",
+  "CVAT_SERVICE_TOKEN": "READ-ONLY-SERVICE-ACCOUNT",
+  "GHCR_DOCKERCONFIG_FILE": "/secure/ghcr-readonly.json"
+}</code></pre>
+<p>Bỏ GHCR_DOCKERCONFIG_FILE nếu package public. GPU_WORKER_ALLOWED_HOSTS, GPU_WORKER_CREDENTIALS (chuỗi JSON), DETECTOR_*, VLM_API_KEY/GEMINI_API_KEY/DASHSCOPE_API_KEY chỉ thêm khi đã có kết nối được phép; không có thì ghi chưa kiểm chứng tính năng tương ứng. Bootstrap tự sinh Django key, DB owner/runtime password, Redis password và khóa AES backup lần đầu; giữ nguyên toàn bộ secret nếu đã có. PVC DB tồn tại mà thiếu secret hoặc secret thiếu một phần → dừng để khôi phục credential, không tạo password mới.</p>
+<pre><code>python3 scripts/deploy/bootstrap.py   --context EXPECTED-VPS-CONTEXT   --config /secure/labelx.json   --recovery-file /secure/offline/labelx-recovery-YYYYMMDD.json
+# Chỉ sau receipt có hai digest thật từ workflow và đã merge main:
+python3 scripts/deploy/bootstrap.py   --context EXPECTED-VPS-CONTEXT   --config /secure/labelx.json   --recovery-file /secure/offline/labelx-recovery-ACTIVATION.json   --activate</code></pre>
+<p>File recovery mode 0600 chứa credential gốc và khóa giải mã backup, phải giữ offline ngoài VPS, mã hóa theo secret store của vận hành. Không upload recovery file vào artifact công khai hoặc Git. Bootstrap không ghi đè file recovery. Secret dùng kubectl stdin, không xuất giá trị ra log/argv. Rotation là tác vụ riêng cần restart workload có envFrom; không đổi Django key mà bỏ key fallback vì credential VLM/GPU trong DB đang mã hóa bằng key đó.</p>
+<p>Trước kích hoạt, fetch/checkout đúng main đã có receipt, kiểm nguồn CI/publish run và chạy <code>kubectl apply --dry-run=server -k infrastructure/k8s/labelx</code>. Với hook Job đã có, kiểm tra bằng render/schema và Argo diff vì Kubernetes không cho sửa Job template. Không selective-sync riêng Deployment để bỏ qua backup/migration/smoke.</p>
+<h2>Thứ tự sync, storage và HTTPS</h2>
+<table><thead><tr><th>Wave</th><th>Hành vi</th></tr></thead><tbody>
+<tr><td>-40 / -30 / -25</td><td>Namespace, ConfigMaps, namespaced ACME issuer, Traefik redirect, PVC.</td></tr>
+<tr><td>-20</td><td>PostgreSQL 17 và Redis AOF persistent; đợi readiness.</td></tr>
+<tr><td>-10</td><td>Sync hook: pg_dump, backup object S3, upload DB mã hóa AES-256-GCM ra S3 ngoài VPS, tải lại kiểm checksum, pg_restore vào database tạm rồi xóa đúng database tạm. Không đạt → migration/rollout bị chặn.</td></tr>
+<tr><td>-5</td><td>Sync hook migration với owner credential, advisory lock; migrate và provision role runtime hạn chế audit. Chỉ một migrator; không migrate trong entrypoint.</td></tr>
+<tr><td>0</td><td>API, frontend, CPU worker; beat một replica Recreate; Ingress TLS, daily backup CronJob.</td></tr>
+<tr><td>PostSync 10</td><td>Smoke HTTPS/public assets/proxy/CSRF, migration, runtime role, Redis/Celery, put/get/delete ba bucket S3.</td></tr></tbody></table>
+<p>Dùng Sync wave cho backup/migration để lần cài đầu có DB/PVC trước hook. Không dùng PreSync phụ thuộc datastore chưa có. Hook giữ trạng thái/log tới lần sync tiếp (BeforeHookCreation); receipt backup hoàn thành viết cuối vào S3 và PVC. Không tự rollback database khi smoke lỗi.</p>
+<p>StorageClass labelx-retain dùng local-path với reclaimPolicy Retain, PVC Prune=false/Delete=false; StatefulSet retention Retain; Application không có finalizer xóa cascade, auto-prune tắt. Update image giữ nguyên PVC DB/Redis/backup. PG/Redis chỉ ClusterIP. Pod non-root, không service-account token, root filesystem chỉ đọc, resource limit và tmp/cache tách riêng. Resource là cấu hình khởi đầu cho VPS đơn, chưa đo tải/NFR.</p>
+<p>Ingress chỉ domain chính, healthz đi API, các path còn lại đi frontend runtime proxy. cert-manager namespaced Issuer dùng Let's Encrypt HTTP-01 qua Traefik; middleware chuyển HTTP → HTTPS chỉ trên route ứng dụng, không sửa global ingress config. Chứng chỉ tự ký/ACME pending không được tính smoke passed. Xác minh Traefik không tin X-Forwarded-Proto do client tự đặt trước khi public app; giữ cookie Secure và HSTS.</p>
+<h2>Backup, khôi phục và rollback</h2>
+<p>Trước mỗi migration và hàng ngày 01:00 UTC chạy cùng quy trình backup. DB mã hóa streaming, tải lại từ S3 kiểm checksum và restore DB tạm. Objects được sao lưu theo SHA-256, giữ manifest ánh xạ bucket/key → backup object trong mỗi receipt. Không xóa snapshot/evidence hoặc backup trong lần deploy; chưa tự áp dụng retention xóa. Kiểm dung lượng PVC/ephemeral disk và chính sách S3; backup lỗi/chưa có receipt hoàn thành không dùng để restore. Backup định kỳ có RPO tối đa 24 giờ cộng thời gian job, không phải PITR; chưa có RTO/NFR được đo trên VPS.</p>
+<pre><code># Kiểm live; lưu revision, imageID, trạng thái hook và logs (không xuất Secrets):
+kubectl -n argocd get application labelx -o yaml
+kubectl -n labelx get pods,pvc,ingress,jobs,cronjobs
+kubectl -n labelx logs job/labelx-before-migrate-backup -c dump-and-restore-check
+kubectl -n labelx logs job/labelx-before-migrate-backup -c offsite-upload
+kubectl -n labelx logs job/labelx-migrate
+kubectl -n labelx logs job/labelx-smoke
+python3 infrastructure/k8s/labelx/ops/smoke.py
+# Chạy backup theo yêu cầu; dùng tên Job mới:
+kubectl -n labelx create job --from=cronjob/labelx-daily-backup labelx-backup-YYYYMMDDHHMMSS</code></pre>
+<p>Rollback khi API/login/worker hoặc migration/smoke lỗi: pause automated sync ngay (không chỉ rollout undo vì selfHeal sẽ ghi đè), ghi lại lỗi/revision; backup hiện trạng; chuẩn bị PR khôi phục receipt và cặp digest đã hoạt động. Dùng clean worktree:</p>
+<pre><code>python3 scripts/deploy/rollback.py   --context EXPECTED-VPS-CONTEXT   --release-commit FULL-GIT-SHA-WITH-KNOWN-GOOD-RECEIPT</code></pre>
+<p>Review/merge digest rollback qua PR, full sync trong Argo CD, kiểm smoke rồi bật lại auto sync và bỏ suspend daily backup. Script không xóa dữ liệu hay migrate xuống. Migration phải tương thích cả phiên bản cũ/mới; migration phá vỡ schema cần bảo trì được duyệt trước khi merge main. Trường hợp cần restore DB/object: bảo trì, dừng API/worker/beat, backup hiện trạng; lấy receipt backup hoàn thành, dùng recovery key giải mã nonce(12 byte)+ciphertext+GCM tag(16 byte), AAD là backup_id, kiểm SHA dump, restore vào DB rỗng rồi đối chiếu migrations/grants, khôi phục object mappings và kiểm checksum. Chỉ chuyển kết nối sau diễn tập và xác nhận phạm vi mất ghi sau backup; không chạy pg_restore --clean trên DB đang phục vụ.</p>
+<h2>Hạn chế và bằng chứng còn cần</h2><p>Manifests/automation được chuẩn bị không đồng nghĩa VPS đã deploy. Chỉ báo deployed khi có Argo revision/health/sync, imageID digest thực, HTTPS trusted, migration/dependency smoke và backup restore receipt thực. Bản khởi tạo release.json ghi chờ xuất bản, bootstrap --activate sẽ từ chối tới khi có receipt thật. Chưa có chứng cứ GPU/CVAT/VLM live, load/NFR/HA, khôi phục toàn VPS hoặc đầy đủ bộ MVP. Giữ các issue MVP mở; sửa qua PR develop, rồi merge main.</p>
+<h2>Nguồn kỹ thuật</h2><ul><li><a href="https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/">Argo CD sync phases/waves</a> và <a href="https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/">automated sync/self-heal</a>.</li><li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">Kubernetes StatefulSet PVC retention</a>.</li><li><a href="https://cert-manager.io/docs/usage/ingress/">cert-manager Ingress TLS</a>.</li></ul>
+</article></main></body></html>
