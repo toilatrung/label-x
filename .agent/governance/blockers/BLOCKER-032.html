@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCKER-032 — LabelX</title>
+<meta name="labelx:id" content="blocker-032">
+<meta name="labelx:title" content="M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="blockers">
+<meta name="labelx:tags" content="[blocker, m-04, m04b, classifier, training]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-032</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>blocker-032</span><b>title</b><span>M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, m-04, m04b, classifier, training]</span><b>priority</b><span>2</span></div>
+<h1 id="blocker-032">M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Ghi nhận blocker của pha B M-04 để PO xem lại; không chặn phần code đã làm.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Blocker ID</strong>: <code>BLOCKER-032</code></li>
+<li><strong>Title</strong>: <code>M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung (PO)</code></li>
+<li><strong>Reporter</strong>: <code>phiên Claude label-x-47, theo phân công của label-x-m04-5a</code></li>
+<li><strong>Status</strong>: <code>open</code></li>
+<li><strong>Blocker Type</strong>: <code>dependency</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-13</code></li>
+<li><strong>Target Resolution Date</strong>: <code>— (PO chốt)</code></li>
+</ul>
+<h2 id="blocking-condition">Blocking Condition</h2>
+<p>Trong repo và trên máy chạy không có: (1) snapshot đã khóa kèm ảnh frame thật và nhãn để tạo crop có nhãn cho 10 lớp; (2) GPU dùng được trong môi trường WSL (<code>torch.cuda.is_available()</code> = <code>False</code>, chỉ cài torch CPU). Vì vậy không thể huấn luyện và đánh giá ConvNeXt Tiny trên dữ liệu thật. Mọi checkpoint tạo ra hiện chỉ là <code>smoke_only</code> trên fixture tổng hợp; không có số accuracy nào đáng tin và không được ghi là runtime pass.</p>
+<p>Bằng chứng: <code>src/classifier_worker</code> đã có pipeline (build-dataset, train, freeze, verify, predict) kiểm bằng dữ liệu tổng hợp; manifest ghi <code>training.status</code> đúng thực tế.</p>
+<h2 id="impact">Impact</h2>
+<ul>
+<li><strong>Blocked Epics or Tasks</strong>: <code>M04B-02 (#285) phần huấn luyện thật; M04B-04 (#287) smoke trên checkpoint hợp lệ</code></li>
+<li><strong>Blocked Deliverables</strong>: <code>checkpoint classifier hợp lệ (status=trained) và smoke runtime trên crop được phép</code></li>
+<li><strong>Schedule or Quality Impact</strong>: <code>Cổng pha B mở theo brief M-04: pipeline/manifest/engine hoàn thành, training pass và runtime pass thật giữ mở. Không tính accuracy, không dùng held-out để fit.</code></li>
+</ul>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Affected Records</strong>: <code>src/classifier_worker/**</code></li>
+<li><strong>Issues</strong>: <code>#284, #285, #286, #287</code></li>
+<li><strong>Decisions</strong>: <code>DEC-021</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Change Requests</strong>: <code>CR-115</code></li>
+</ul>
+<h2 id="resolution-plan">Resolution Plan</h2>
+<ul>
+<li><strong>Required Action</strong>: <code>Cấp một snapshot khóa kèm ảnh frame được phép dùng và bản đồ label_id→tên lớp; cấp môi trường có GPU (hoặc chấp nhận huấn luyện CPU chậm); sau đó chạy build-dataset và train với --status trained.</code></li>
+<li><strong>Responsible Owner</strong>: <code>@toilatrung (PO)</code></li>
+<li><strong>Dependency or Approval</strong>: <code>quyền dùng dữ liệu BDD100K/LabelX để huấn luyện</code></li>
+<li><strong>Workaround</strong>: <code>Hoàn thành manifest/pipeline/engine bằng fixture; giữ training pass và runtime pass mở; unknown dùng đúng nghĩa abstention.</code></li>
+<li><strong>Verification Method</strong>: <code>classifier-manifest.json có training.status=trained, dataset_manifest_sha256 khớp, held_out_used=false; verify checksum PASS; smoke trên crop được phép.</code></li>
+</ul>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[ ] The blocking condition no longer prevents affected work.</li>
+<li>[ ] Resolution evidence is linked.</li>
+<li>[ ] Affected epic and task statuses are updated.</li>
+<li>[ ] Workaround removal is tracked when applicable.</li>
+</ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul>
+<li>Do not mark status <code>resolved</code> based only on a proposed action.</li>
+<li>Do not continue blocked work through an unauthorized workaround.</li>
+<li>Do not omit affected epic or task links.</li>
+<li>Do not fabricate resolution evidence.</li>
+</ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<ul>
+<li>Save as <code>.agent/governance/blockers/BLOCKER-&lt;number&gt;.md</code>.</li>
+<li>Preserve every heading in this template.</li>
+<li>Use repository-relative links and exact enum values.</li>
+</ul>
+</article></main></body></html>

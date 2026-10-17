@@ -28,7 +28,8 @@ export function AuthGuard({ children, allowedRoles, permissionCheck, requiredPer
   </div>;
   if (!session) return null;
 
-  if (requiresIdentity && session.identity_mapping.status !== 'mapped') return <ForbiddenView
+  const isSuperAdmin = session.roles.some(r => r.role === 'super_admin' && r.dataset_id === null);
+  if (requiresIdentity && !isSuperAdmin && session.identity_mapping.status !== 'mapped') return <ForbiddenView
     reason="Tài khoản chưa được liên kết với CVAT. Vui lòng liên hệ người quản trị."
     errorCode="IDENTITY_MAPPING_MISSING" />;
   if (!hasPermission((role) => (!allowedRoles || allowedRoles.includes(role)) &&

@@ -48,7 +48,7 @@ def reviewer() -> User:
 def csrf(client: APIClient) -> str:
     response = client.get("/api/auth/csrf/")
     assert response.status_code == 204
-    return str(client.cookies["csrftoken"].value)
+    return str(client.cookies["labelx_csrftoken"].value)
 
 
 def login(
@@ -74,6 +74,8 @@ def assert_error(response: Response, status: int, code: str) -> None:
 
 def test_csrf_sets_cookie(client: APIClient) -> None:
     assert csrf(client)
+    assert "labelx_csrftoken" in client.cookies
+    assert "csrftoken" not in client.cookies
 
 
 def test_login_returns_session_and_session_endpoint_matches(
@@ -87,7 +89,8 @@ def test_login_returns_session_and_session_endpoint_matches(
         "identity_mapping": {"status": "mapped", "cvat_user_id": 42},
     }
     assert response.json() == expected
-    assert client.cookies["sessionid"]["httponly"]
+    assert client.cookies["labelx_sessionid"]["httponly"]
+    assert "sessionid" not in client.cookies
     session = client.get("/api/auth/session/")
     assert session.status_code == 200
     assert session.json() == expected
@@ -106,7 +109,7 @@ def test_user_without_role_or_mapping_has_no_grant(client: APIClient) -> None:
 def test_logout_ends_session_and_is_idempotent(client: APIClient, reviewer: User) -> None:
     token = csrf(client)
     assert login(client, "reviewer1", token=token).status_code == 200
-    token = str(client.cookies["csrftoken"].value)  # login xoay csrftoken
+    token = str(client.cookies["labelx_csrftoken"].value)  # login xoay labelx_csrftoken
     assert client.post("/api/auth/logout/", HTTP_X_CSRFTOKEN=token).status_code == 204
     assert_error(client.get("/api/auth/session/"), 403, "NOT_AUTHENTICATED")
     assert client.post("/api/auth/logout/", HTTP_X_CSRFTOKEN=token).status_code == 204
@@ -142,7 +145,7 @@ def test_login_with_untrusted_origin_is_forbidden(
 def test_login_wrong_password(client: APIClient, reviewer: User) -> None:
     response = login(client, "reviewer1", password="sai", token=csrf(client))
     assert_error(response, 400, "INVALID_CREDENTIALS")
-    assert "sessionid" not in client.cookies
+    assert "labelx_sessionid" not in client.cookies
 
 
 def test_login_unknown_user_and_inactive_user_same_error(client: APIClient, reviewer: User) -> None:
@@ -171,7 +174,7 @@ def test_session_without_login(client: APIClient) -> None:
 
 def test_expired_session_is_not_authenticated(client: APIClient, reviewer: User) -> None:
     assert login(client, "reviewer1", token=csrf(client)).status_code == 200
-    key = client.cookies["sessionid"].value
+    key = client.cookies["labelx_sessionid"].value
     DjangoSession.objects.filter(session_key=key).update(
         expire_date=timezone.now() - timedelta(seconds=1)
     )
@@ -185,6 +188,8 @@ def test_logout_without_csrf_when_logged_in_is_forbidden(client: APIClient, revi
 
 
 def test_session_cookie_settings(settings: Any) -> None:
+    assert settings.SESSION_COOKIE_NAME == "labelx_sessionid"
+    assert settings.CSRF_COOKIE_NAME == "labelx_csrftoken"
     assert settings.SESSION_COOKIE_HTTPONLY is True
     assert settings.SESSION_COOKIE_SAMESITE == "Lax"
     assert settings.CSRF_COOKIE_HTTPONLY is False
@@ -259,3 +264,28 @@ def test_error_codes_match_contract() -> None:
     from config.serializers import ERROR_CODES
 
     assert ERROR_CODES == CONTRACT["components"]["schemas"]["ErrorCode"]["enum"]
+
+
+# ---------------------------------------------------------------------------- CSRF phân biệt được
+
+
+def test_login_csrf_failure_is_marked_csrf(client: APIClient, reviewer: User) -> None:
+    response = login(client, "reviewer1")
+    assert_error(response, 403, "FORBIDDEN")
+    assert response.json()["details"] == {"reason": "csrf"}
+
+
+def test_authenticated_write_csrf_failure_is_marked_csrf(client: APIClient, reviewer: User) -> None:
+    assert login(client, "reviewer1", token=csrf(client)).status_code == 200
+    response = client.post("/api/snapshots/", {}, format="json")
+    assert_error(response, 403, "FORBIDDEN")
+    assert response.json()["details"] == {"reason": "csrf"}
+
+
+def test_permission_denied_is_not_marked_csrf(client: APIClient, reviewer: User) -> None:
+    token = csrf(client)
+    assert login(client, "reviewer1", token=token).status_code == 200
+    token = str(client.cookies["labelx_csrftoken"].value)
+    response = client.post("/api/snapshots/", {}, format="json", HTTP_X_CSRFTOKEN=token)
+    assert response.status_code in (400, 403)
+    assert "reason" not in response.json()["details"]

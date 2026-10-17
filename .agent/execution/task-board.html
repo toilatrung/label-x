@@ -74,6 +74,22 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </thead>
 <tbody>
+<tr><td>M04A-01</td><td>E-12</td><td>Contract Qwen và schema cấu hình</td><td>@toilatrung</td><td>done</td><td>none</td><td>none</td><td><a href="m04/M04A-01.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/279">#279</a>; <a href="../reports/implementation/M04A-0f.html">M04A-0f</a> (PR #312 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04A-02</td><td>E-12</td><td>Qwen adapter và worker thực thi</td><td>@toilatrung</td><td>done</td><td>M04A-01</td><td>none</td><td><a href="m04/M04A-02.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/280">#280</a>; <a href="../reports/implementation/M04A-0f.html">M04A-0f</a> (PR #312 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04A-03</td><td>E-12</td><td>Điều phối candidate, retry và budget nguyên tử</td><td>@toilatrung</td><td>done</td><td>M04A-01, M04A-02</td><td>none</td><td><a href="m04/M04A-03.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/281">#281</a>; <a href="../reports/implementation/M04A-0f.html">M04A-0f</a> (PR #312 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04A-04</td><td>E-12</td><td>Evidence append-only và API run/ledger/candidate</td><td>@toilatrung</td><td>done</td><td>M04A-01, M04A-03</td><td>none</td><td><a href="m04/M04A-04.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/282">#282</a>; <a href="../reports/implementation/M04A-0f.html">M04A-0f</a> (PR #312 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04A-05</td><td>E-12</td><td>Smoke Qwen và bàn giao API đợt 1</td><td>@toilatrung</td><td>done</td><td>M04A-02, M04A-03, M04A-04</td><td>none</td><td><a href="m04/M04A-05.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/283">#283</a>; <a href="../reports/implementation/M04A-0f.html">M04A-0f</a> (PR #312 merged; E2E hoãn M04C-04)</td><td>2026-10-13</td></tr>
+<tr><td>M04B-01</td><td>E-12</td><td>Crop dataset, split và taxonomy manifest</td><td>@toilatrung</td><td>cancelled</td><td>M04A-01</td><td>none</td><td><a href="m04/M04B-01.html">Scope/AC</a>; <strong>superseded by approved CR-117</strong>; <a href="https://github.com/toilatrung/label-x/issues/284">#284</a>; <a href="../reports/implementation/M04B-classifier-@label-x-47.html">M04B-classifier</a> (PR #311 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04B-02</td><td>E-12</td><td>Fine-tune ConvNeXt Tiny và đóng gói checkpoint</td><td>@toilatrung</td><td>cancelled</td><td>M04B-01</td><td>none</td><td><a href="m04/M04B-02.html">Scope/AC</a>; <strong>superseded by approved CR-117</strong>; <a href="https://github.com/toilatrung/label-x/issues/285">#285</a>; <a href="../reports/implementation/M04B-classifier-@label-x-47.html">M04B-classifier</a> (PR #311 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04B-03</td><td>E-12</td><td>Tích hợp classifier engine/config/API</td><td>@toilatrung</td><td>cancelled</td><td>M04A-04, M04B-02</td><td>none</td><td><a href="m04/M04B-03.html">Scope/AC</a>; <strong>not planned under approved CR-117</strong>; <a href="https://github.com/toilatrung/label-x/issues/286">#286</a></td><td>2026-10-13</td></tr>
+<tr><td>M04B-04</td><td>E-12</td><td>Smoke classifier và bàn giao API đợt 2</td><td>@toilatrung</td><td>cancelled</td><td>M04B-03</td><td>none</td><td><a href="m04/M04B-04.html">Scope/AC</a>; <strong>not planned under approved CR-117</strong>; <a href="https://github.com/toilatrung/label-x/issues/287">#287</a></td><td>2026-10-13</td></tr>
+<tr><td>M04C-01</td><td>E-12</td><td>Policy định tuyến detector–Qwen (CR-117)</td><td>@toilatrung</td><td>done</td><td>M04A-01</td><td>none</td><td><a href="m04/M04C-01.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/288">#288</a>; <a href="../reports/implementation/M04C-phase-C-@codex.html">M04C-codex</a> (PR #313 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04C-02</td><td>E-12</td><td>Evaluation API và phân định lại</td><td>@toilatrung</td><td>pending</td><td>M04C-01, M04A-04</td><td>none</td><td><a href="m04/M04C-02.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/289">#289</a>; chưa có evidence implementation</td><td>2026-10-13</td></tr>
+<tr><td>M04C-03</td><td>E-12</td><td>Evidence AI trong review workspace</td><td>@toilatrung</td><td>pending</td><td>M04C-02</td><td>none</td><td><a href="m04/M04C-03.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/290">#290</a>; chưa có evidence implementation</td><td>2026-10-13</td></tr>
+<tr><td>M04C-04</td><td>E-12</td><td>Kiểm luồng A/B/C và bàn giao API đợt 3</td><td>@toilatrung</td><td>pending</td><td>M04A-05, M04C-03</td><td>none</td><td><a href="m04/M04C-04.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/291">#291</a>; chưa có evidence implementation</td><td>2026-10-13</td></tr>
+<tr><td>M04S-01</td><td>E-12</td><td>Checklist môi trường Qwen đã redacted</td><td>@DucHa180104</td><td>done</td><td>none</td><td>none</td><td><a href="m04/M04S-01.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/292">#292</a>; PR #300 merged</td><td>2026-10-13</td></tr>
+<tr><td>M04S-02</td><td>E-12</td><td>Đối chiếu class map BDD100K và crop mẫu</td><td>@Vietanhhhhhh2003</td><td>done</td><td>none</td><td>none</td><td><a href="m04/M04S-02.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/293">#293</a>; <a href="../reports/implementation/M04S-02.html">implementation report</a> (PR #295 merged)</td><td>2026-10-13</td></tr>
+<tr><td>M04S-03</td><td>E-12</td><td>Checklist smoke A/B/C và bảng API cần bàn giao</td><td>@duy12345-6789</td><td>done</td><td>none</td><td>none</td><td><a href="m04/M04S-03.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/294">#294</a>; <a href="../reports/implementation/M04S-03.html">implementation report</a> (PR #299 merged)</td><td>2026-10-13</td></tr>
 <tr>
 <td>T-001</td>
 <td>E-01</td>
@@ -112,11 +128,11 @@ ul.dir{columns:2;font-size:14px}
 <td>E-04</td>
 <td>CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</td>
 <td>Lê Duy Nam (@duy12345-6789)</td>
-<td>blocked</td>
+<td>in-progress</td>
 <td>none</td>
-<td><a href="../governance/blockers/BLOCKER-024.html">BLOCKER-024</a> (BLOCKER-023 resolved)</td>
-<td><a href="../reports/implementation/T-004.html">implementation</a>; <a href="../reports/review/T-004.html">review</a>; <a href="../reports/qa/T-004.html">QA</a>; <a href="https://github.com/toilatrung/label-x/pull/19">PR #19</a></td>
-<td>2026-10-07</td>
+<td><a href="../governance/blockers/BLOCKER-024.html">BLOCKER-024</a> (accepted 2026-10-11, DEC-014; BLOCKER-023 resolved)</td>
+<td><a href="../reports/implementation/T-004.html">implementation</a>; <a href="../reports/review/T-004.html">review</a>; <a href="../reports/qa/T-004.html">QA</a>; <a href="https://github.com/toilatrung/label-x/pull/19">PR #19</a>; cần cập nhật báo cáo T-004 (audit learner mới) và QA bổ sung; review/QA cũ giữ nguyên</td>
+<td>2026-10-11</td>
 </tr>
 <tr>
 <td>T-005</td>
@@ -273,7 +289,106 @@ ul.dir{columns:2;font-size:14px}
 <td>2026-10-09</td>
 </tr>
 <tr>
+<td>T-019</td>
+<td>E-04</td>
+<td>Nạp learner annotation BDD100K vào CVAT và đóng BLOCKER-024</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>done</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-019.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/74">PR #74</a> (merge <code>1b07c91</code>); CVAT task <code>23</code>/job <code>20</code>; PO chốt <code>done</code> dựa trên QC cấp M-02 (flow-review 2026-10-10, QA M-02-RESOLVE), không QC riêng từng task</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
 <td>T-020</td>
+<td>E-04</td>
+<td>Snapshot bất biến: chuẩn hóa, hash, lineage và concurrency guard</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>done</td>
+<td>T-019 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-020.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/76">PR #76</a> (merge <code>d2cf1ee</code>); PO chốt <code>done</code> dựa trên QC cấp M-02 (flow-review 2026-10-10, QA M-02-RESOLVE), không QC riêng từng task</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-021</td>
+<td>E-04</td>
+<td>Snapshot API, drift guard và CVAT deep link</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>T-020 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-021.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/86">PR #86</a> (merge <code>fe363c5</code>); backend <code>320 passed, 1 skipped</code></td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-022</td>
+<td>E-04</td>
+<td>Màn Snapshot, SnapshotHistory: chọn project/task/job, hash/drift, skipped shapes, parent snapshot, deep link CVAT</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>review</td>
+<td>T-021 (PR #86)</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-022.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/88">PR #88</a> (merge <code>a0b1e84</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-023</td>
+<td>E-05</td>
+<td>Thư viện matching một-một tất định, dùng chung</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>done</td>
+<td>none</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-023.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/79">PR #79</a> (merge <code>6588c0f</code>); PO chốt <code>done</code> dựa trên QC cấp M-02 (flow-review 2026-10-10, QA M-02-RESOLVE), không QC riêng từng task</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-024</td>
+<td>E-08</td>
+<td>QC Run domain, shard idempotency và lifecycle</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-020, T-021, T-023</td>
+<td>BLOCKER-025</td>
+<td><a href="../reports/implementation/T-024.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/89">PR #89</a> (merge <code>cc5ac12</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-025</td>
+<td>E-08</td>
+<td>Worker orchestration: candidate/evidence/ledger cùng transaction, dedup, retry/backoff</td>
+<td>Nguyễn Đức Hà (@ducha180104)</td>
+<td>review</td>
+<td>T-024</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-025.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/90">PR #90</a> (merge <code>5de0727</code>), <a href="https://github.com/toilatrung/label-x/pull/93">PR #93</a> (merge <code>3950ea0</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-026</td>
+<td>E-08</td>
+<td>AnalysisConfig + ExecutionHistory trên API thật</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>blocked</td>
+<td>T-024, T-025 merged</td>
+<td>detector/metric/vlm runner registration and real E2E pending (#96); T-029 relies on real evidence</td>
+<td><a href="../reports/implementation/T-026.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/91">PR #91</a> (merge <code>a2a75e2</code>); Refs #68</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-027</td>
+<td>E-09</td>
+<td>Engine Schema/Taxonomy và Geometry tất định</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>T-020 and T-025 merged</td>
+<td>none</td>
+<td><a href="../reports/implementation/T-027.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/95">PR #95</a> (merge <code>b57626f</code>); issue <a href="https://github.com/toilatrung/label-x/issues/69">#69</a></td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-047</td>
 <td>E-02</td>
 <td>DB role runtime không sửa/xoá được audit: check --deploy, lệnh cấp role, CI (M-01-RESOLVE F-02)</td>
 <td>Trịnh Quang Trung (@toilatrung)</td>
@@ -284,7 +399,7 @@ ul.dir{columns:2;font-size:14px}
 <td>2026-10-09</td>
 </tr>
 <tr>
-<td>T-021</td>
+<td>T-048</td>
 <td>E-01</td>
 <td>OpenAPI bổ sung issues/{id}, escalations, config-versions; gắn test_nodeid SEC/AUD/GDL (M-01-RESOLVE F-03, F-07)</td>
 <td>Trịnh Quang Trung (@toilatrung)</td>
@@ -295,16 +410,116 @@ ul.dir{columns:2;font-size:14px}
 <td>2026-10-09</td>
 </tr>
 <tr>
-<td>T-022</td>
+<td>T-049</td>
 <td>E-02</td>
 <td>Đóng hồ sơ M-01: merge main vào nhánh, gộp -@user, review/QA task còn thiếu, disposition BLOCKER-014 (M-01-RESOLVE F-04, F-05, F-06, F-10)</td>
 <td>Trịnh Quang Trung (@toilatrung)</td>
 <td>in-progress</td>
-<td>T-016, T-020, T-021</td>
+<td>T-016, T-047, T-048</td>
 <td>none</td>
 <td>implementation report (F-04, F-06 theo DEC-012, F-10 CI chưa chạy Actions, gộp file -@user xong; F-05 review/QA còn lại)</td>
 <td>2026-10-09</td>
 </tr>
+<tr>
+<td>T-028</td>
+<td>E-09</td>
+<td>Engine Duplicate/Overlap: IoU ≥ 0,85 sinh candidate E3</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td>
+<td>review</td>
+<td>T-023</td>
+<td>none</td>
+<td>implementation report; QA report passed (ec627bd); PR #77 (ec627bd); chờ review report dạng file (F-1)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-029</td>
+<td>E-09</td>
+<td>Hiển thị config/threshold engine chỉ đọc và candidate/evidence</td>
+<td>Trần Đức Thọ (@tdt2112)</td>
+<td>in-progress</td>
+<td>T-026 (#68), T-027 (#69), T-028 (#70)</td>
+<td>Nhánh PR #94 tích hợp mã API/UI T-026 từ #91 và develop b57626f; endpoint candidates theo Phương án 2 <a href="../governance/change-requests/CR-108.html">CR-108</a> (proposed), raw_count null, dedup_count từ DB. Chờ PO quyết định CR-108, leader review lại và nghiệm thu candidate/evidence từ pipeline thật; không đánh dấu done.</td>
+<td><a href="../reports/implementation/T-029.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/94">PR #94</a> (merge <code>4f68794</code>); Refs #57, #71; sửa F-2/F-3 và tích hợp mã F-1 vào nhánh PR hiện có. Frontend 171 tests; backend 408 passed, 1 skipped; detector 10 tests; lint/typecheck/build đạt. Báo cáo tách APIClient fixture, frontend mock và ảnh config local; F-1 chưa được leader nghiệm thu.</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-030</td>
+<td>E-11</td>
+<td>score_v0 cho mọi frame, score version bất biến, tie-break hash tất định</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</td>
+<td>review</td>
+<td>T-027/T-028 contract (soft)</td>
+<td>none</td>
+<td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/72">#72</a>; <a href="../reports/implementation/T-030.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/85">PR #85</a> (merge <code>ded90fc</code>)</td>
+<td>2026-10-09</td>
+</tr>
+<tr>
+<td>T-031</td>
+<td>E-11</td>
+<td>Random slice, control ranking, giải thích điểm + AuditSampling, E2E M-02</td>
+<td>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003), @tdt2112</td>
+<td>review</td>
+<td>T-030 (satisfied); T-024 / PR #89 (satisfied)</td>
+<td>none</td>
+<td>GitHub issue <a href="https://github.com/toilatrung/label-x/issues/73">#73</a>; <a href="../reports/implementation/T-031.html">implementation</a>; <a href="https://github.com/toilatrung/label-x/pull/92">PR #92</a> (merge <code>cd13551</code>)</td>
+<td>2026-10-10</td>
+</tr>
+<tr>
+<td>T-032</td>
+<td>E-13…E-16</td>
+<td>Chốt contract, ownership model và fixture dùng chung M-03</td>
+<td>Lê Duy Nam (@duy12345-6789)</td>
+<td>review</td>
+<td>M-02 baseline; PO approval required for contract deltas</td>
+<td>M03-D01…M03-D06 awaiting PO/CR</td>
+<td><a href="../reports/implementation/T-032.html">implementation</a>; <a href="../../docs/04-api/m03-contract-model-fixture-matrix.html">contract matrix</a>; <a href="https://github.com/toilatrung/label-x/pull/111">PR #111</a> (merge <code>5c37d42</code>); issue <a href="https://github.com/toilatrung/label-x/issues/99">#99</a>; focused contract tests <code>27 passed</code> after review remediation</td>
+<td>2026-10-10</td>
+</tr>
+<tr><td>T-033</td><td>E-13</td><td>Queue/frame và lease nguyên tử trên PostgreSQL</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>in-progress</td><td>T-032</td><td>none</td><td><a href="../reports/implementation/T-033.html">T-033.html</a></td><td>2026-10-11</td></tr>
+<tr><td>T-035</td><td>E-14</td><td>Issue và ReviewDecision persisted; stacked trên T-033/PR #128</td><td>Nguyễn Đức Hà (@DucHa180104)</td><td>in-progress</td><td>T-032, T-033/PR #128 HEAD ca25267639440494134b58317e31b579e1193e70</td><td>request_fix runtime thuộc T-040; DEC-009 reference source và T-036 Effort còn pending</td><td><a href="../reports/implementation/T-035.html">T-035.html</a></td><td>2026-10-11</td></tr>
+<tr><td>T-036</td><td>E-14</td><td>Effort events idempotent và client collector theo hoạt động</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-032 satisfied; T-033/T-035 integrated on <code>integration/m03@7326af3</code></td><td>—</td><td><a href="../reports/implementation/T-036.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/103">issue #103</a>; branch <code>feat/T-036-e14-effort-events</code></td><td>2026-10-11</td></tr>
+<tr><td>T-037</td><td>E-14</td><td>ReviewWorkspace UI &amp; In-Memory Queue Integration (Partial Draft)</td><td>@tdt2112</td><td>blocked</td><td>T-032 (PR #111), T-034 (PR #129), T-033, T-035 (PR #130 merged at 7326af3), T-036 (PR #133 merged at 7effc8e), T-040, T-046 (#125)</td><td>T-036 PO idle threshold approval (TBD-09), T-040 rework runtime, live backend services and CVAT/T-046 E2E live demo</td><td><a href="../reports/implementation/T-037.html">T-037.html</a>; <a href="../../src/frontend/T-037-HANDOFF.md">T-037-HANDOFF.md</a>; Refs #104, #97</td><td>2026-10-11</td></tr>
+<tr><td>T-038</td><td>E-15</td><td>Escalation, Adjudication và Decision Case có version</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>review</td><td>T-035 (#102), chuẩn bị mềm T-032 (#99), task hiện tại #105, Refs #97</td><td>none</td><td><a href="../reports/implementation/T-038.html">T-038.html</a></td><td>2026-10-11</td></tr>
+<tr><td>T-039</td><td>E-15</td><td>Escalations UI và tra cứu Decision Case dùng lại Workspace</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-037/T-038 integrated at <code>integration/m03@3a42998</code></td><td>—</td><td><a href="../reports/implementation/T-039.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/106">issue #106</a>; <a href="https://github.com/toilatrung/label-x/pull/138">PR #138</a>; branch <code>feat/T-039-e15-escalations-ui</code></td><td>2026-10-11</td></tr>
+<tr><td>T-040</td><td>E-16</td><td>Rework API, snapshot revision mới, re-check và verify</td><td>@Vietanhhhhhh2003 (tiếp quản từ @duy12345-6789)</td><td>review</td><td>T-035/T-038 satisfied; implementation gốc PR #136 integrated; T-045 PostgreSQL evidence integrated</td><td>—</td><td><a href="../reports/implementation/T-040.html">implementation report (gốc + tiếp quản)</a>; <a href="https://github.com/toilatrung/label-x/issues/107">issue #107</a>; <a href="https://github.com/toilatrung/label-x/pull/142">PR #142</a>; branch <code>feat/T-040-e16-rework-recheck-verify-vietanh</code></td><td>2026-10-11</td></tr>
+<tr><td>T-041</td><td>E-16</td><td>Snapshot toàn phạm vi, final QC run và verification lineage</td><td>@Vietanhhhhhh2003</td><td>review</td><td>T-040/PR #142 integrated; T-045 backend environment available</td><td>—</td><td><a href="../reports/implementation/T-041.html">implementation report</a>; <a href="https://github.com/toilatrung/label-x/issues/108">issue #108</a>; <a href="https://github.com/toilatrung/label-x/pull/159">PR #159</a>; branch <code>feat/T-041-e16-final-run-lineage</code></td><td>2026-10-11</td></tr>
+<tr><td>T-044</td><td>E-13</td><td>Chuẩn bị môi trường, cấu hình và dữ liệu kiểm thử M-03</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>review</td><td>T-032, #96, #97</td><td>BLOCKER-024, BLOCKER-026, BLOCKER-027, TBD-09</td><td><a href="../reports/implementation/T-044.html">T-044.html</a></td><td>2026-10-11</td></tr>
+<tr><td>T-045</td><td>E-13</td><td>Chạy kiểm thử PostgreSQL, API, migration và contract M-03</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>review</td><td>T-032, T-033, T-034, T-035, T-036, T-037, T-038, T-039, T-040, T-044</td><td>none</td><td><a href="../reports/implementation/T-045.html">T-045.html</a></td><td>2026-10-11</td></tr>
+<tr><td>T-046</td><td>E-17</td><td>Browser E2E, real data và production build M-03 (cuốn chiếu)</td><td>Nguyễn Đức Hà (@ducha180104)</td><td>review</td><td>T-033, T-034, T-035, T-036, T-037, T-038, T-039, T-040, T-044, T-045</td><td>TBD-09, CVAT-TOKEN, REAL-DATA-M02</td><td><a href="../reports/implementation/T-046.html">T-046.html</a></td><td>2026-10-11</td></tr>
+<tr>
+<td>M-02-RESOLVE</td>
+<td>E-04, E-05, E-08, E-09, E-11</td>
+<td>Kiểm tích hợp M-02 trên dữ liệu thật và xử lý BLOCKER-024…029 (retry/backoff, sweeper, metrics CR-109, E2E/RBAC/browser, DEC-013)</td>
+<td>Trịnh Quang Trung (@toilatrung)</td>
+<td>done</td>
+<td>T-022, T-025, T-029, T-031</td>
+<td>BLOCKER-024 (accepted 2026-10-11), 025, 026, 027, 028, 029 (còn open)</td>
+<td>implementation report; review độc lập APPROVE tại d3a6c33; CR-109 approved 2026-10-11; PR #126 (merge 975f960), #131 (06aaf32), #139 (e074fbc) đã merge; PO chốt done 2026-10-11, còn NOT VERIFIED trong báo cáo</td>
+<td>2026-10-10</td>
+</tr>
+
+<tr><td>M-03-RESOLVE</td><td>E-13…E-16</td><td>M-03-RESOLVE: Hoàn thiện vòng review–rework theo review 12/10/2026</td><td>PO @toilatrung chủ trì BE; Hà/Việt Anh hỗ trợ</td><td>pending</td><td>none</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/236">issue #236</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R01</td><td>E-13…E-16</td><td>Chốt quyết định contract, revision và policy review/effort</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>none</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/237">issue #237</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R02</td><td>E-13</td><td>Sửa queue state, holder, filters và resume trên dữ liệu thật</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>none</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/238">issue #238</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R03</td><td>E-14</td><td>Cấp Workspace payload đầy đủ và revision đúng scope Reviewer</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>M03-R01</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/239">issue #239</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R04</td><td>E-14</td><td>Hoàn thiện ReviewWorkspace cho Reviewer và Frame Review</td><td>Trần Đức Thọ (@tdt2112)</td><td>cancelled</td><td>M03-R02, M03-R03</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/240">issue #240</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a>; <a href="https://github.com/toilatrung/label-x/issues/240">#240 not planned</a>: FE chạy riêng trên develop-fe theo PO (2026-10-12)</td><td>2026-10-12</td></tr>
+<tr><td>M03-R05</td><td>E-15, cross-cutting</td><td>Chuẩn hóa Case API, enum và schema runtime M-03</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>M03-R01</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/241">issue #241</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R06</td><td>E-16</td><td>Khép kín rework khi verify fail và giữ lịch sử các vòng sửa</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>none</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/242">issue #242</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R07</td><td>E-16</td><td>Sửa guard final source và hoàn tất frame/scope đúng thời điểm</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>M03-R06</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/243">issue #243</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R08</td><td>E-16</td><td>Bổ sung GET rework và lineage/selected source trong run detail</td><td>Trịnh Quang Trung (@toilatrung)</td><td>review</td><td>M03-R01, M03-R06, M03-R07</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/244">issue #244</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R09</td><td>E-16</td><td>Làm UI rework tối thiểu và lịch sử final/verification</td><td>Trần Đức Thọ (@tdt2112)</td><td>cancelled</td><td>M03-R08</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/245">issue #245</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a>; <a href="https://github.com/toilatrung/label-x/issues/245">#245 not planned</a>: FE chạy riêng trên develop-fe theo PO (2026-10-12)</td><td>2026-10-12</td></tr>
+<tr><td>M03-R10</td><td>E-14/E-15/E-16</td><td>Nối idle policy và effort lifecycle trên mọi màn M-03</td><td>BE: PO @toilatrung; FE: @Vietanhhhhhh2003</td><td>in-progress</td><td>M03-R01, M03-R04, M03-R05, M03-R09</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/246">issue #246</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R11</td><td>E-13…E-16</td><td>Chuẩn bị môi trường E2E và dữ liệu CVAT/M-02 thật</td><td>Nguyễn Đức Hà (@DucHa180104)</td><td>pending</td><td>none</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/247">issue #247</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R12</td><td>E-13…E-16</td><td>QA độc lập toàn luồng, regression và bằng chứng nghiệm thu M-03</td><td>Lê Duy Nam (@duy12345-6789)</td><td>pending</td><td>M03-R02, M03-R04, M03-R05, M03-R06, M03-R07, M03-R08, M03-R09, M03-R10, M03-R11</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/248">issue #248</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>M03-R13</td><td>E-13…E-16</td><td>Đồng bộ hồ sơ và bàn giao PR tổng để PO chốt M-03</td><td>Lê Duy Nam (@duy12345-6789)</td><td>pending</td><td>M03-R12</td><td>none</td><td><a href="https://github.com/toilatrung/label-x/issues/249">issue #249</a>; <a href="../planning/M-03-RESOLVE-2026-10-12.html">plan/AC</a>; <a href="../governance/decisions/DEC-019.html">PO decision</a>; <a href="../governance/change-requests/CR-113.html">contract approved</a></td><td>2026-10-12</td></tr>
+<tr><td>MBE-00</td><td>E-12</td><td>Contract OpenAPI một lần cho mọi endpoint còn thiếu</td><td>@toilatrung</td><td>pending</td><td>không</td><td>none</td><td><a href="mbe/MBE-00.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/322">#322</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-01</td><td>E-12</td><td>Pipeline AI đầu cuối: Evaluation API, evidence trong workspace, lineage</td><td>@toilatrung</td><td>pending</td><td>không (M04C-01, M04A-04 đã done)</td><td>none</td><td><a href="mbe/MBE-01.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/323">#323</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-02</td><td>E-13…E-16</td><td>Review, Rework và Escalation: guideline gaps, similar cases, queues, ranking</td><td>@toilatrung</td><td>pending</td><td>MBE-00</td><td>none</td><td><a href="mbe/MBE-02.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/324">#324</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-03</td><td>E-20</td><td>Report, Export và Release: report, export PDF/CSV/JSON, releases, manifest, approve</td><td>@toilatrung</td><td>pending</td><td>MBE-00</td><td>none</td><td><a href="mbe/MBE-03.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/325">#325</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-04</td><td>E-17, E-18, E-20</td><td>Calibration và Audit: audit samples, benchmarks, performance, calibration</td><td>@Vietanhhhhhh2003</td><td>pending</td><td>MBE-00 (commit đầu)</td><td>none</td><td><a href="mbe/MBE-04.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/326">#326</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-05</td><td>E-03, E-11</td><td>Configuration: models, guideline versions, rules, workflow permissions</td><td>@Vietanhhhhhh2003</td><td>pending</td><td>MBE-00 (commit đầu)</td><td>none</td><td><a href="mbe/MBE-05.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/327">#327</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-06</td><td>E-19, E-05</td><td>Số liệu tổng hợp: run metrics, engines, review volume, datasets summary, snapshot runs</td><td>@Vietanhhhhhh2003</td><td>pending</td><td>MBE-00 (commit đầu)</td><td>none</td><td><a href="mbe/MBE-06.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/328">#328</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
+<tr><td>MBE-07</td><td>E-02</td><td>RBAC: matrix Calibration/Audit và lọc dữ liệu theo vai trò</td><td>@Vietanhhhhhh2003</td><td>pending</td><td>MBE-04 (và MBE-03 khi endpoint report merge)</td><td>none</td><td><a href="mbe/MBE-07.html">Scope/AC</a>; <a href="https://github.com/toilatrung/label-x/issues/329">#329</a>; M-BE-MVP, chỉ Backend; CR-118 approved 2026-10-13</td><td>2026-10-13</td></tr>
 </tbody>
 </table>
 <h2 id="task-details">Task Details</h2>
@@ -500,7 +715,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Epic ID</strong>: <code>E-04</code></li>
 <li><strong>Title</strong>: <code>CVAT dev trong compose, nạp dữ liệu mẫu, adapter chỉ đọc + hash</code></li>
 <li><strong>Owner</strong>: <code>Lê Duy Nam (@duy12345-6789)</code></li>
-<li><strong>Status</strong>: <code>blocked</code></li>
+<li><strong>Status</strong>: <code>in-progress</code></li>
 <li><strong>Created Date</strong>: <code>2026-10-06</code></li>
 <li><strong>Target Date</strong>: <code>2026-10-07</code></li>
 <li><strong>Priority</strong>: <code>1</code></li>
@@ -1434,5 +1649,100 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Required reports are stored in <code>.agent/reports/</code>.</li>
 <li>[ ] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
 <li>[ ] Current context and task board reflect the final status.</li>
+</ul>
+<h3 id="t-028">T-028</h3>
+<h4 id="record-metadata_28">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>T-028</code></li>
+<li><strong>Epic ID</strong>: <code>E-09</code></li>
+<li><strong>Title</strong>: <code>Engine Duplicate/Overlap: IoU ≥ 0,85 sinh candidate E3</code></li>
+<li><strong>Owner</strong>: <code>Nguyễn Xuân Việt Anh (@vietanhhhhhh2003)</code></li>
+<li><strong>Status</strong>: <code>review</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-09</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-11</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_28">Objective</h4>
+<p>Phát hiện bbox trùng/chồng tất định, có evidence, không tự thành lỗi KPI.</p>
+<h4 id="scope_28">Scope</h4>
+<h5 id="included_28">Included</h5>
+<ul>
+<li>Dùng matching T-023; IoU ≥ 0,85 sinh candidate E3</li>
+<li>Cặp tất định, anchors/evidence</li>
+<li>Structural warning không tự biến thành lỗi KPI</li>
+<li>Hàm thuần theo engine interface, test bằng fixture; đăng ký orchestrator do PR merge sau giữa engine và T-025 thực hiện</li>
+</ul>
+<h5 id="excluded_28">Excluded</h5>
+<ul>
+<li>Đăng ký engine vào orchestrator (T-025); annotation thật/live CVAT (BLOCKER-024)</li>
+</ul>
+<h4 id="preconditions_28">Preconditions</h4>
+<ul>
+<li>[x] Parent epic status is <code>EPIC_IN_PROGRESS</code>.</li>
+<li>[x] Required context package is available.</li>
+<li>[x] Dependencies, approvals, and access are available. (T-023 merge qua PR #79)</li>
+</ul>
+<h4 id="related-files_28">Related Files</h4>
+<ul>
+<li><strong>Context Package</strong>: <code>.agent/execution/current-context.html</code></li>
+<li><strong>Parent Epic</strong>: <code>.agent/planning/epics.html#e-09</code></li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-005.html, DEC-006.html, DEC-007.html</code></li>
+<li><strong>Risks</strong>: <code>none</code></li>
+<li><strong>Blockers</strong>: <code>BLOCKER-024 (annotation thật, không chặn T-028)</code></li>
+<li><strong>Change Requests</strong>: <code>none</code></li>
+</ul>
+<h4 id="acceptance-criteria_28">Acceptance Criteria</h4>
+<ul>
+<li>[x] Test theo rule ID, gồm tie và cluster</li>
+<li>[x] E3 có evidence</li>
+<li>[x] Chạy lại cho cùng thứ tự cặp</li>
+</ul>
+<h4 id="verification-requirements_28">Verification Requirements</h4>
+<ul>
+<li><strong>Automated Checks</strong>: <code>make check (exit 0, ec627bd); pytest tests/test_duplicate_overlap_engine.py tests/test_engine_interface.py tests/engines/test_matching.py (63 passed)</code></li>
+<li><strong>Manual Checks</strong>: <code>Probe ignored/ngưỡng/hoán vị — xem QA report</code></li>
+<li><strong>Expected Evidence</strong>: <code>.agent/reports/implementation/T-028.html; .agent/reports/qa/T-028.html</code></li>
+</ul>
+<h4 id="completion-criteria_28">Completion Criteria</h4>
+<ul>
+<li>[x] Every acceptance criterion passes.</li>
+<li>[ ] Required reports are stored in <code>.agent/reports/</code>. (còn thiếu review report dạng file, QA report F-1)</li>
+<li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>.</li>
+<li>[ ] Current context and task board reflect the final status. (chuyển <code>done</code> sau khi có review report và xác nhận QC độc lập)</li>
+</ul>
+<h3 id="t-030">T-030</h3>
+<h4>Acceptance Criteria</h4>
+<ul><li>[x] Mọi frame có score, kể cả frame không có candidate hoặc thiếu evidence; frame thiếu evidence có flag.</li><li>[x] Hai lần chạy cùng input, score version và seed cho cùng thứ tự và ranking hash.</li><li>[x] Mỗi kết quả lưu điểm nền, anchor counts và đóng góp <code>n_i * q_i</code>.</li><li>[x] Score version và kết quả trả về là bất biến.</li></ul>
+<h3 id="t-031">T-031</h3>
+<h4>Acceptance Criteria</h4>
+<ul><li>[x] Lát audit ngẫu nhiên chọn <code>ceil(r% × N)</code> bằng seed cố định, độc lập thứ tự risk.</li><li>[x] Random control, annotation-count heuristic và max-confidence heuristic có source, thứ tự và content hash riêng.</li><li>[x] Component giải thích điểm trả JSON-safe score, baseline, issue counts và từng đóng góp.</li><li>[x] Hai run cùng snapshot/config/seed/version cho cùng content hash và ranking hash.</li><li>[x] Seam E2E fixture BDD100K chạy snapshot → duplicate engine → score/control; full <code>make check</code> xanh.</li><li>[x] Persistence bất biến và HTTP <code>/api/runs/{id}/ranking/</code> đã nối vào runs domain T-024, có RBAC/scope và queue risk/random.</li></ul>
+<h3 id="m-02-resolve">M-02-RESOLVE</h3>
+<h4 id="record-metadata_m02r">Record Metadata</h4>
+<ul>
+<li><strong>Task ID</strong>: <code>M-02-RESOLVE</code></li>
+<li><strong>Epic ID</strong>: <code>E-04, E-05, E-08, E-09, E-11</code></li>
+<li><strong>Title</strong>: <code>Kiểm tích hợp M-02 trên dữ liệu thật và xử lý BLOCKER-024…029</code></li>
+<li><strong>Owner</strong>: <code>Trịnh Quang Trung (@toilatrung)</code></li>
+<li><strong>Status</strong>: <code>done</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-10</code></li>
+<li><strong>Target Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Priority</strong>: <code>2</code></li>
+</ul>
+<h4 id="objective_m02r">Objective</h4>
+<p>Đóng giai đoạn M-02 bằng bằng chứng chạy thật (CVAT, Redis, Celery worker) cho AC-01…AC-03, xử lý các blocker gom về task này, ghi quyết định TBD (DEC-013).</p>
+<h4 id="related-files_m02r">Related Files</h4>
+<ul>
+<li><strong>Implementation Report</strong>: <code>.agent/reports/implementation/M-02-RESOLVE.html</code></li>
+<li><strong>Review / QA</strong>: <code>.agent/reports/review/M-02-RESOLVE.html</code>, <code>.agent/reports/qa/M-02-RESOLVE.html</code> (độc lập APPROVE tại d3a6c33, xem mục Kết luận cuối)</li>
+<li><strong>Decisions</strong>: <code>.agent/governance/decisions/DEC-013.html</code></li>
+<li><strong>Blockers</strong>: <code>BLOCKER-024 (accepted 2026-10-11, DEC-014), BLOCKER-025…029 (còn open)</code></li>
+<li><strong>Change Requests</strong>: <code>CR-109 (approved 2026-10-11)</code></li>
+</ul>
+<h4 id="completion-criteria_m02r">Completion Criteria</h4>
+<ul>
+<li>[x] Every acceptance criterion passes. (PO chốt 2026-10-11; AC-02 retry-failed có evidence trên broker thật cho code fencing; NOT VERIFIED còn lại ghi trong báo cáo)</li>
+<li>[x] Required reports are stored in <code>.agent/reports/</code>.</li>
+<li>[x] Implementing commits are recorded in <code>.agent/intelligence/git-nexus/task-commit-map.html</code>. (merge #126 975f960, #139 e074fbc)</li>
+<li>[x] Current context and task board reflect the final status.</li>
 </ul>
 </article></main></body></html>

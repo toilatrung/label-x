@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>T-034 ReviewQueues Test Harness & Reproduction Guide</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 960px; margin: 0 auto; padding: 24px; color: #1e293b; }
+    h1, h2, h3 { color: #0f172a; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .badge--blocked { background: #fee2e2; color: #991b1b; }
+    .badge--pending { background: #fef3c7; color: #92400e; }
+    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+    th { background: #f1f5f9; }
+    code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    .note { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 12px; margin: 12px 0; }
+    .warning { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 12px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>T-034: ReviewQueues trên API thật — Test Harness & Hướng dẫn kiểm định</h1>
+  <p><strong>Mục tiêu:</strong> Cung cấp tài liệu kiểm thử, quy trình chạy harness và đối chiếu tiêu chí nghiệm thu (AC) cho người kiểm thử (T-046 / Hà).</p>
+
+  <div class="card">
+    <h3>Trạng thái nghiệm thu: <span class="badge badge--pending">Frontend Repaired (Validation Pending)</span> & <span class="badge badge--blocked">Real API Gate BLOCKED</span></h3>
+    <p><strong>Execution Base:</strong> <code>origin/integration/m03</code> (SHA: <code>0e0204ee5ab992b9b54835056dae19c0c26baacd</code>)</p>
+    <p><strong>Lý do chặn AC A3, A6 trên API thật:</strong> Backend T-033 (issue #100) chưa được merge vào <code>origin/integration/m03</code>. Module runtime <code>review</code> (views cho <code>/api/queues/{name}/next/</code> và <code>/api/leases/{id}/renew/</code>) chưa có trong backend code. Toàn bộ test hiện tại thực thi trên môi trường mock cô lập.</p>
+  </div>
+
+  <h2>1. Mapping Contract và API Operations</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Endpoint</th>
+        <th>Method</th>
+        <th>Mục đích</th>
+        <th>Xử lý đặc biệt</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>/api/runs/{id}/</code></td>
+        <td>GET</td>
+        <td>Lấy thông tin run và kiểm tra phạm vi</td>
+        <td>Reviewer được phép gọi (không gọi <code>GET /api/runs/</code>). Thất bại (403/404) sẽ chặn toàn bộ truy vấn ranking và mutation phía sau.</td>
+      </tr>
+      <tr>
+        <td><code>/api/runs/{id}/ranking/</code></td>
+        <td>GET</td>
+        <td>Lấy danh sách frame xếp hạng theo queue (risk/random)</td>
+        <td>Hỗ trợ cursor pagination (next/previous), filters family/origin/review_state. Chỉ fetch khi runQuery thành công.</td>
+      </tr>
+      <tr>
+        <td><code>/api/queues/{name}/next/</code></td>
+        <td>POST</td>
+        <td>Bắt đầu review: claim frame kế tiếp theo queue</td>
+        <td>Xử lý 200 (LeaseGrant), <strong>204 No Content</strong> (hàng đợi không còn frame phù hợp để nhận), 403, 409 (LEASE_CONFLICT).</td>
+      </tr>
+      <tr>
+        <td><code>/api/leases/{id}/renew/</code></td>
+        <td>POST</td>
+        <td>Gia hạn lease đang giữ</td>
+        <td>Cập nhật <code>expires_at</code> mới do server cấp; chặn và khóa thao tác nếu gặp 409 LEASE_CONFLICT.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Ma trận kịch bản kiểm thử (Test Scenarios)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Mã kịch bản</th>
+        <th>Mô tả</th>
+        <th>Dữ liệu / Vai trò (Mock)</th>
+        <th>Kết quả kỳ vọng</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>TC-01</strong></td>
+        <td>Truy cập hợp lệ & Hai hàng đợi độc lập</td>
+        <td>Reviewer, Dataset #1, Run #12</td>
+        <td>Hiển thị đúng bảng frame, rank, điểm s(f)/h(f), issue counts; chuyển tab Risk sang Random gọi API độc lập và reset cursor.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-02</strong></td>
+        <td>Phân trang bằng Server Cursor</td>
+        <td>Risk Queue, trang 1 và 2</td>
+        <td>Bấm "Trang tiếp" gọi với cursor trang 2; bấm "Trang trước" quay lại trang 1; đổi filter reset cursor về null.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-03</strong></td>
+        <td>Chặn vai trò không phù hợp (RBAC)</td>
+        <td>Annotator, PO/DMO, QC Admin (chưa có quyền review)</td>
+        <td>AuthGuard chặn trước khi mount component; 0 request dữ liệu được gửi đến backend.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-04</strong></td>
+        <td>Chặn tài khoản thiếu CVAT Identity</td>
+        <td>Reviewer có <code>identity_mapping.status = 'missing'</code></td>
+        <td>Bị chặn với mã lỗi <code>IDENTITY_MAPPING_MISSING</code>; 0 request dữ liệu.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-05</strong></td>
+        <td>Chặn query khi Run bị từ chối</td>
+        <td>GET <code>/api/runs/{id}/</code> trả 403 hoặc 404</td>
+        <td>Hiển thị lỗi tải run; 0 request ranking hay claim nào được gửi.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-06</strong></td>
+        <td>Chuyển ngữ cảnh khi đang request</td>
+        <td>Đổi Run/Dataset khi claim đang pending</td>
+        <td>Phản hồi muộn của Run cũ bị loại bỏ; không khôi phục hay hiển thị lease của Run cũ.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-07</strong></td>
+        <td>Claim Frame thành công (200)</td>
+        <td>Bấm "Bắt đầu kiểm tra"</td>
+        <td>Nút bị disable khi pending; hiển thị khung ngữ cảnh Active Lease với đầy đủ thông tin frame, lease, expires_at.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-08</strong></td>
+        <td>Khôi phục Frame đang dở (Resumed: true)</td>
+        <td>Backend trả <code>resumed: true</code></td>
+        <td>Hiển thị nhãn cảnh báo "Khôi phục phiên (Resumed)" và thông tin lease cũ.</td>
+      </tr>
+      <tr>
+        <td><strong>TC-09</strong></td>
+        <td>Hàng đợi hết frame (204 No Content)</td>
+        <td>Backend trả HTTP 204 không có body</td>
+        <td>Không parse JSON; hiển thị thông báo "Hàng đợi không còn frame phù hợp để nhận kiểm tra (204 No Content)".</td>
+      </tr>
+      <tr>
+        <td><strong>TC-10</strong></td>
+        <td>Xung đột quyền giữ (409 LEASE_CONFLICT)</td>
+        <td>Lease đã hết hạn hoặc thuộc người khác</td>
+        <td>Báo lỗi 409 LEASE_CONFLICT; khóa nút gia hạn cũ; cung cấp nút tải lại & làm mới từ server.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Hướng dẫn chạy và xác minh (Verification Steps)</h2>
+  <div class="note">
+    <p><strong>Biến môi trường cần thiết:</strong></p>
+    <ul>
+      <li><code>NEXT_PUBLIC_API_BASE_URL</code>: URL backend (mặc định: <code>http://localhost:8000</code>).</li>
+    </ul>
+    <p><em>Lưu ý: Không hard-code hoặc lưu credentials vào mã nguồn hay tài liệu harness.</em></p>
+  </div>
+
+  <pre><code># Bước 1: Di chuyển vào thư mục frontend
+cd src/frontend
+
+# Bước 2: Chạy unit tests đã bổ sung
+npm test -- src/__tests__/ReviewQueues.test.tsx
+
+# Bước 3: Kiểm tra lint và typecheck
+npm run lint
+npm run typecheck
+
+# Bước 4: Khởi động dev server và kiểm tra trực quan
+npm run dev
+# Mở trình duyệt tại: http://localhost:3000/review?run=12</code></pre>
+</body>
+</html>

@@ -27,6 +27,7 @@ export function rolesForDataset(session: AuthSession | null, datasetId: number |
 
 export function hasDatasetPermission(session: AuthSession | null, datasetId: number | null,
   check: (role: UserRole) => boolean, requiresIdentity = false): boolean {
+  if (session?.roles.some(({ role, dataset_id }) => role === 'super_admin' && dataset_id === null)) return true;
   if (requiresIdentity && session?.identity_mapping.status !== 'mapped') return false;
   return rolesForDataset(session, datasetId).some(check);
 }
@@ -37,6 +38,10 @@ export function canAccessAnalysis(role: UserRole): boolean {
 
 export function canAccessReview(role: UserRole): boolean {
   return ['reviewer', 'qa_lead', 'super_admin'].includes(role);
+}
+
+export function canAccessRework(role: UserRole): boolean {
+  return ['annotator', 'reviewer', 'qa_lead', 'super_admin'].includes(role);
 }
 
 export function canAccessEscalations(role: UserRole): boolean {
@@ -54,4 +59,12 @@ export function canAccessConfiguration(role: UserRole): boolean {
 // Tra cứu guideline: reviewer, qa_lead, qc_admin, super_admin (openapi.yaml guidelines_rules_list, rbac-matrix.html).
 export function canAccessGuidelines(role: UserRole): boolean {
   return ['reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
+}
+
+// Calibration & Audit: rbac-matrix chưa có dòng riêng; theo cột "Calibration và Audit" của WorkflowPermissions.dc.html
+// (Annotator, Reviewer, QA Lead, QC Admin, Super Admin). Product Owner và Data/Model Owner không có cột này.
+// TODO(backend): bổ sung dòng Calibration/Audit vào rbac-matrix.html (cần change request); backend kiểm quyền và lọc dữ liệu
+// theo vai trò (Annotator chỉ thấy phần "Tham gia" của chính mình, không thấy hiệu chỉnh của reviewer khác hay frame bẫy).
+export function canAccessCalibration(role: UserRole): boolean {
+  return ['annotator', 'reviewer', 'qa_lead', 'qc_admin', 'super_admin'].includes(role);
 }

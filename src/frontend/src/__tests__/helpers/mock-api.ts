@@ -19,6 +19,12 @@ export function installMockAuthApi() {
     else if (path === '/api/auth/session/' && request.method === 'GET') response = await session(request);
     else if (path === '/api/auth/logout/' && request.method === 'POST') response = await logout(request);
     else if (path === '/api/auth/mock-users/' && request.method === 'GET') response = await mockUsers();
+    else if (path === '/api/effort-events/' && request.method === 'POST') {
+      const cloned = request.clone();
+      const body = await cloned.json().catch(() => ({ events: [] }));
+      const batchLength = Array.isArray(body?.events) ? body.events.length : 0;
+      response = Response.json({ accepted: batchLength, duplicates: 0 }, { status: 202 });
+    }
     else throw new Error('Unexpected API path: ' + path);
     for (const cookie of response.headers.getSetCookie()) {
       const [pair] = cookie.split(';');
@@ -27,7 +33,7 @@ export function installMockAuthApi() {
       const value = pair.slice(split + 1);
       if (/Max-Age=0/i.test(cookie)) jar.delete(name);
       else jar.set(name, value);
-      if (name === 'csrftoken') document.cookie = cookie;
+      if (name === 'labelx_csrftoken') document.cookie = cookie;
     }
     return response;
   });
@@ -37,7 +43,7 @@ export function installMockAuthApi() {
     async signIn(username = 'admin', password = 'password123') {
       await fetchSpy(new Request('http://localhost:3000/api/auth/csrf/'));
       return fetchSpy(new Request('http://localhost:3000/api/auth/login/', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': jar.get('csrftoken')! },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': jar.get('labelx_csrftoken')! },
         body: JSON.stringify({ username, password }),
       }));
     },

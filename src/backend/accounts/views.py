@@ -1,7 +1,7 @@
 """API phiên đăng nhập LabelX `/api/auth/*` theo contract T-001 (E-02, T-011).
 
-- Xác thực bằng session Django (cookie `sessionid`); request ghi phải có header `X-CSRFToken`
-  khớp cookie `csrftoken`. CSRF được kiểm cả khi chưa đăng nhập (login, logout), vì
+- Xác thực bằng session Django (cookie `labelx_sessionid`); request ghi phải có header `X-CSRFToken`
+  khớp cookie `labelx_csrftoken`. CSRF được kiểm cả khi chưa đăng nhập (login, logout), vì
   `SessionAuthentication` của DRF chỉ kiểm cho người đã đăng nhập.
 - Lỗi theo `Error` của contract: thiếu/sai CSRF 403 FORBIDDEN, sai thông tin đăng nhập
   400 INVALID_CREDENTIALS, chưa đăng nhập hoặc phiên hết hạn 403 NOT_AUTHENTICATED.
@@ -9,7 +9,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.db import transaction
 from django.middleware.csrf import get_token
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
@@ -19,15 +23,18 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import Role
+from accounts.models import Role, WorkflowRule, ensure_default_workflow_rules
 from accounts.permissions import HasRoleAndDatasetScope
 from accounts.serializers import (
     LoginRequestSerializer,
     SessionSerializer,
     WorkflowPermissionsSerializer,
+    WorkflowRulePatchSerializer,
+    WorkflowRuleSerializer,
     build_session,
 )
-from config.exceptions import ApiError
+from audit.services import append_audit_event
+from config.exceptions import CSRF_REASON, ApiError
 from config.serializers import ErrorSerializer
 
 CSRF_FAILED_MESSAGE = "Yêu cầu thiếu hoặc sai mã bảo vệ. Vui lòng tải lại trang và thử lại."
@@ -43,7 +50,9 @@ def enforce_csrf(request: Request) -> None:
     check.process_request(request._request)
     reason = check.process_view(request._request, None, (), {})  # type: ignore[arg-type]
     if reason:
-        raise ApiError(status.HTTP_403_FORBIDDEN, "FORBIDDEN", CSRF_FAILED_MESSAGE)
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN, "FORBIDDEN", CSRF_FAILED_MESSAGE, {"reason": CSRF_REASON}
+        )
 
 
 def _error(description: str) -> OpenApiResponse:
@@ -57,9 +66,9 @@ class CsrfView(APIView):
     @extend_schema(
         operation_id="auth_csrf",
         tags=["auth"],
-        summary="Đặt cookie csrftoken",
+        summary="Đặt cookie labelx_csrftoken",
         auth=[],
-        responses={204: OpenApiResponse(description="Đã đặt cookie csrftoken")},
+        responses={204: OpenApiResponse(description="Đã đặt cookie labelx_csrftoken")},
     )
     def get(self, request: Request) -> Response:
         get_token(request._request)
@@ -225,6 +234,18 @@ ROLE_MATRIX = [
         },
     },
     {
+        "function": "Reports",
+        "roles": {
+            "annotator": "limited",
+            "reviewer": "view",
+            "qa_lead": "view",
+            "qc_admin": "view",
+            "super_admin": "view",
+            "product_owner": "view",
+            "data_model_owner": "view",
+        },
+    },
+    {
         "function": "Configuration",
         "roles": {
             "annotator": "none",
@@ -245,14 +266,18 @@ WORKFLOW_RULES = [
     {
         "rule": "anti_self_review",
         "name": "Reviewer không review annotation của chính mình",
-        "description": "Backend từ chối khi trùng người (kể cả Super Admin ghi đè)",
+        "description": (
+            "Backend từ chối khi trùng người; "
+            "Super Admin toàn hệ thống được thực hiện toàn bộ quy trình."
+        ),
         "enforced": False,
     },
     {
         "rule": "super_admin_override_reason",
-        "name": "Ghi đè của Super Admin phải có lý do",
+        "name": "Ghi chú quản trị của Super Admin",
         "description": (
-            "Áp dụng cho quyết định, phân xử, waiver, phê duyệt phát hành, duyệt guideline"
+            "Super Admin toàn hệ thống có toàn quyền; "
+            "ghi chú quản trị là tùy chọn và được lưu trong nhật ký."
         ),
         "enforced": False,
     },
@@ -265,7 +290,7 @@ WORKFLOW_RULES = [
     {
         "rule": "separation_of_duties",
         "name": "Người duyệt khác người yêu cầu",
-        "description": "Nguyên tắc bốn mắt, từ chối khi trùng người yêu cầu và phê duyệt",
+        "description": "Người duyệt khác người yêu cầu, ngoại trừ Super Admin toàn hệ thống.",
         "enforced": False,
     },
 ]
@@ -289,12 +314,104 @@ class WorkflowPermissionsView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
+        ensure_default_workflow_rules()
         session = build_session(request.user)
+        rules = [
+            {
+                "rule": r.rule,
+                "name": r.name,
+                "description": r.description,
+                "enforced": r.enforced,
+                "revision": r.revision,
+                "locked": r.locked,
+            }
+            for r in WorkflowRule.objects.all().order_by("id")
+        ]
         return Response(
             {
                 "matrix": ROLE_MATRIX,
-                "rules": WORKFLOW_RULES,
+                "rules": rules,
                 "user_roles": session["roles"],
             },
             headers={"Cache-Control": "no-store"},
         )
+
+
+class WorkflowRuleUpdateView(APIView):
+    permission_classes = [IsAuthenticated, HasRoleAndDatasetScope]
+    allowed_roles = (Role.QC_ADMIN, Role.SUPER_ADMIN)
+    action_name = "auth_workflow_rule_update"
+    requires_dataset = False
+    object_type = "workflow_rule"
+    scope_type = "system"
+
+    @extend_schema(
+        operation_id="auth_workflow_rule_update",
+        tags=["auth"],
+        summary="Bật/tắt quy tắc quy trình",
+        request=WorkflowRulePatchSerializer,
+        responses={
+            200: WorkflowRuleSerializer,
+            400: _error("Dữ liệu không hợp lệ"),
+            403: _error("Chưa đăng nhập hoặc không đủ quyền"),
+            404: _error("Không tìm thấy quy tắc"),
+            409: _error("Xung đột revision (INVALID_TRANSITION)"),
+            422: _error("Quy tắc bắt buộc không thể tắt (BUSINESS_RULE_UNMET)"),
+        },
+    )
+    def patch(self, request: Request, rule: str) -> Response:
+        ensure_default_workflow_rules()
+        serializer = WorkflowRulePatchSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        with transaction.atomic():
+            rule_obj = WorkflowRule.objects.select_for_update().filter(rule=rule).first()
+            if rule_obj is None:
+                raise ApiError(
+                    status.HTTP_404_NOT_FOUND,
+                    "NOT_FOUND",
+                    f"Quy tắc '{rule}' không tồn tại.",
+                )
+
+            if data["expected_revision"] != rule_obj.revision:
+                raise ApiError(
+                    status.HTTP_409_CONFLICT,
+                    "INVALID_TRANSITION",
+                    "expected_revision không khớp revision hiện tại.",
+                )
+
+            if rule_obj.locked and not data["enforced"]:
+                raise ApiError(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    "BUSINESS_RULE_UNMET",
+                    "Quy tắc bắt buộc theo SRS (locked) không tắt được.",
+                )
+
+            old_enforced = rule_obj.enforced
+            old_revision = rule_obj.revision
+            rule_obj.enforced = data["enforced"]
+            rule_obj.revision += 1
+            rule_obj.save(update_fields=["enforced", "revision"])
+
+            append_audit_event(
+                actor=cast(User, request.user),
+                action="workflow_rule.update",
+                object_type="workflow_rule",
+                object_id=rule_obj.rule,
+                before={"enforced": old_enforced, "revision": old_revision},
+                after={"enforced": rule_obj.enforced, "revision": rule_obj.revision},
+                revision=str(rule_obj.revision),
+                reason=data.get("reason", ""),
+            )
+
+            return Response(
+                {
+                    "rule": rule_obj.rule,
+                    "name": rule_obj.name,
+                    "description": rule_obj.description,
+                    "enforced": rule_obj.enforced,
+                    "revision": rule_obj.revision,
+                    "locked": rule_obj.locked,
+                }
+            )

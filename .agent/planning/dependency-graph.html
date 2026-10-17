@@ -1,3 +1,5 @@
+
+<h2 id="m04-task-dependencies">M-04 task dependencies — DEC-021</h2><p>Các cạnh dưới là scope M-04 mới, thay yêu cầu VLM-off. A coding không cần credential; smoke thật cần quota/input. Không task support nào là predecessor của core BE. Reference/calibration làm sau kỹ thuật.</p><table><thead><tr><th>Task</th><th>Depends on</th><th>Owner</th></tr></thead><tbody><tr><td>M04A-01</td><td>none</td><td>@toilatrung</td></tr><tr><td>M04A-02</td><td>M04A-01</td><td>@toilatrung</td></tr><tr><td>M04A-03</td><td>M04A-01, M04A-02</td><td>@toilatrung</td></tr><tr><td>M04A-04</td><td>M04A-01, M04A-03</td><td>@toilatrung</td></tr><tr><td>M04A-05</td><td>M04A-02, M04A-03, M04A-04</td><td>@toilatrung</td></tr><tr><td>M04B-01</td><td>M04A-01</td><td>@toilatrung</td></tr><tr><td>M04B-02</td><td>M04B-01</td><td>@toilatrung</td></tr><tr><td>M04B-03</td><td>M04A-04, M04B-02</td><td>@toilatrung</td></tr><tr><td>M04B-04</td><td>M04B-03</td><td>@toilatrung</td></tr><tr><td>M04C-01</td><td>M04A-01, M04B-03</td><td>@toilatrung</td></tr><tr><td>M04C-02</td><td>M04C-01, M04A-04</td><td>@toilatrung</td></tr><tr><td>M04C-03</td><td>M04C-02, M04B-03</td><td>@toilatrung</td></tr><tr><td>M04C-04</td><td>M04A-05, M04B-04, M04C-03</td><td>@toilatrung</td></tr><tr><td>M04S-01</td><td>none</td><td>@DucHa180104</td></tr><tr><td>M04S-02</td><td>none</td><td>@Vietanhhhhhh2003</td></tr><tr><td>M04S-03</td><td>none</td><td>@duy12345-6789</td></tr></tbody></table>
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dependency Graph — LabelX</title>
@@ -153,9 +155,9 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-04</code></td>
 <td><code>finish-to-finish</code></td>
 <td><code>unassigned</code></td>
-<td><code>blocked</code></td>
+<td><code>active</code></td>
 <td>Thảo luận Claude–Codex 2026-10-05</td>
-<td><code>BLOCKER-024</code></td>
+<td><code>BLOCKER-024 (accepted 2026-10-11, DEC-014)</code></td>
 </tr>
 <tr>
 <td><code>EDGE-010</code></td>
@@ -529,5 +531,7 @@ ul.dir{columns:2;font-size:14px}
 <p>Cạnh là cổng hoàn tất outcome, không cấm chuẩn bị hay prototype song song.</p>
 </li>
 <li><code>EDGE</code> loại <code>acceptance-gate</code> (E-10 → E-07): code Detector làm được sau E-05/E-08; chỉ nghiệm thu ngưỡng cần reference hiệu chỉnh.</li>
+<li>2026-10-11: <code>EDGE-009</code> (E-08 ← E-04) vẫn <code>blocked</code>: <code>BLOCKER-024</code> còn <code>open</code> (provenance learner chỉ đối chiếu với mirror, chưa theo cây ảnh chính thức). Snapshot (T-019…T-022) và QC Run (T-024, T-025) đã merge và chạy trên dữ liệu BDD100K qua mirror; chưa tính là thoả cạnh.</li>
+<li>2026-10-11 (DEC-014): <code>EDGE-009</code> (E-08 ← E-04) chuyển <code>active</code>: PO chấp nhận <code>BLOCKER-024</code> (<code>accepted</code>), với giới hạn đối chiếu ảnh chỉ theo mirror và nguồn nhãn theo lời khai PO. Ghi chú 2026-10-11 trước đó (vẫn <code>blocked</code>) là bước trước cùng ngày.</li>
 </ul>
 </article></main></body></html>

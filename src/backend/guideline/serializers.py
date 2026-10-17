@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from guideline.models import GuidelineRule, GuidelineVersion, RuleMapping
@@ -59,3 +60,21 @@ class PaginatedRuleMappingListSerializer(serializers.Serializer[dict[str, Any]])
     next = serializers.CharField(allow_null=True)
     previous = serializers.CharField(allow_null=True)
     results = RuleMappingSerializer(many=True)
+
+
+@extend_schema_serializer(component_name="GuidelineVersionEntry")
+class GuidelineVersionEntrySerializer(serializers.Serializer[dict[str, Any]]):
+    version = serializers.CharField()
+    is_current = serializers.BooleanField()
+    taxonomy_version = serializers.CharField(allow_null=True)
+    taxonomy_ready = serializers.BooleanField()
+    rule_count = serializers.IntegerField()
+    effective_from = serializers.DateTimeField(allow_null=True, required=False)
+    effective_to = serializers.DateTimeField(allow_null=True, required=False)
+
+
+@extend_schema_serializer(component_name="PaginatedGuidelineVersionEntryList")
+class PaginatedGuidelineVersionEntryListSerializer(serializers.Serializer[dict[str, Any]]):
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = GuidelineVersionEntrySerializer(many=True)

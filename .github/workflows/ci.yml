@@ -2,7 +2,7 @@ name: LabelX CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, integration/m03]
   workflow_dispatch:
 permissions:
   contents: read
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.12'
       - name: Validate governance framework
@@ -59,6 +59,9 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: node scripts/ci/check-agent-ownership.cjs
       - name: Test development bootstrap safeguards
         run: |
@@ -69,9 +72,9 @@ jobs:
         run: |
           # HTML là định dạng tài liệu duy nhất (CR-103). Tài liệu tra cứu SRS sinh từ LaTeX;
           # sinh lại và so với bản đã commit.
-          python3 scripts/srs_tex2html.py
+          python3 scripts/srs/srs_tex2html.py
           uv run --no-project --python 3.12 --with markdown --with pymdown-extensions \
-            python scripts/srs_tex2docs.py
+            python scripts/srs/srs_tex2docs.py
           git diff --exit-code -- docs/01-business docs/00-project/glossary.html docs/00-project/stakeholders.html
 
   backend:
@@ -113,15 +116,17 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.12'
       - run: uv sync --frozen
+      - name: Contract preflight (before runtime tests)
+        run: uv run --frozen pytest -q --strict-markers -x tests/test_contract.py
       - name: Lint and types
         run: |
           uv run --frozen ruff check .
           uv run --frozen ruff format --check .
-          uv run --frozen mypy config
+          uv run --frozen mypy config effort
       - name: Django and migrations
         run: |
           mkdir -p ../../.ci-artifacts
@@ -139,7 +144,7 @@ jobs:
       - name: Full pytest suite
         # Chạy MỌI test trong src/backend/tests để test mới của collaborator không bị bỏ sót;
         # bước quality-gate bên dưới chỉ chạy các ca đã đăng ký trong ma trận truy vết.
-        run: uv run --frozen pytest -q --strict-markers
+        run: uv run --frozen pytest -q --strict-markers -x --durations=20
       - name: S3 integration (SeaweedFS, F-10)
         # Cùng image/cấu hình với infrastructure/docker-compose.dev.yml; services: không truyền được command nên dùng docker run.
         env:
@@ -191,7 +196,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.10' # pyproject: requires-python >=3.7,<3.11
       - run: uv sync --frozen --extra dev

@@ -53,9 +53,11 @@ describe('Contract roles and dataset grants', () => {
     expect(hasDatasetPermission(invalid, null, canAccessReview)).toBe(false);
   });
 
-  it('fails closed for missing CVAT identity, including Super Admin', () => {
+  it('allows global Super Admin without identity and keeps reviewers fail closed', () => {
     const unmapped: AuthSession = { ...toMockSession(MOCK_USERS[0]), identity_mapping: { status: 'missing' } };
-    expect(hasDatasetPermission(unmapped, 1, canAccessReview, true)).toBe(false);
+    expect(hasDatasetPermission(unmapped, 1, canAccessReview, true)).toBe(true);
     expect(hasDatasetPermission(unmapped, 1, canAccessConfiguration)).toBe(true);
+    const reviewer: AuthSession = { ...toMockSession(MOCK_USERS[3]), identity_mapping: { status: 'missing' } };
+    expect(hasDatasetPermission(reviewer, 1, canAccessReview, true)).toBe(false);
   });
 });

@@ -49,9 +49,20 @@ describe('AuthGuard and ForbiddenView', () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it('blocks review when the session has no CVAT identity', async () => {
+  it('allows Super Admin to review without a CVAT identity', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({
       ...toMockSession(MOCK_USERS[0]), identity_mapping: { status: 'missing' },
+    })));
+    render(<AuthProvider><AuthGuard permissionCheck={canAccessReview} requiresIdentity>
+      <div>Nội dung review</div></AuthGuard></AuthProvider>);
+    expect(await screen.findByText('Nội dung review')).toBeDefined();
+    expect(screen.queryByText('IDENTITY_MAPPING_MISSING')).toBeNull();
+  });
+
+  it('still blocks a reviewer without a CVAT identity', async () => {
+    const reviewer = MOCK_USERS.find(user => user.role === 'reviewer')!;
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({
+      ...toMockSession(reviewer), identity_mapping: { status: 'missing' },
     })));
     render(<AuthProvider><AuthGuard permissionCheck={canAccessReview} requiresIdentity>
       <div>Nội dung review</div></AuthGuard></AuthProvider>);

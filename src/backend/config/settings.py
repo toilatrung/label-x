@@ -7,6 +7,7 @@ Stack theo DEC-001: Django + DRF, PostgreSQL, Celery + Redis, Object Storage (S3
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,6 +21,7 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
+SECRET_KEY_FALLBACKS = env.list("DJANGO_SECRET_KEY_FALLBACKS", default=[])
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
@@ -41,6 +43,14 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "audit.apps.AuditConfig",
     "guideline",
+    "snapshots.apps.SnapshotsConfig",
+    "runs.apps.RunsConfig",
+    "orchestration.apps.OrchestrationConfig",
+    "review.apps.ReviewConfig",
+    "effort.apps.EffortConfig",
+    "reports.apps.ReportsConfig",
+    "releases.apps.ReleasesConfig",
+    "calibration.apps.CalibrationConfig",
 ]
 
 MIDDLEWARE = [
@@ -77,6 +87,25 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
+
+# M-03 pilot policy (DEC-019 / CR-113): pilot defaults, not scientific acceptance values.
+# Each value can be overridden from the environment; an explicitly invalid value fails closed.
+REVIEW_LEASE_TTL_SECONDS = env.int("REVIEW_LEASE_TTL_SECONDS", default=900)
+REVIEW_INCOMPLETE_RESERVATION_SECONDS = env.int(
+    "REVIEW_INCOMPLETE_RESERVATION_SECONDS", default=300
+)
+REWORK_DEFAULT_DUE_HOURS = env.int("REWORK_DEFAULT_DUE_HOURS", default=72)
+# JSON object overriding the whole idle policy, e.g. {"source": "...", "decision_status": "...",
+# "t_idle_seconds": 120, "version": "..."}.
+EFFORT_IDLE_POLICY = env.json(
+    "EFFORT_IDLE_POLICY",
+    default={
+        "source": "DEC-019/P03",
+        "decision_status": "approved_for_pilot",
+        "t_idle_seconds": 120,
+        "version": "pilot-1",
+    },
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -140,7 +169,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.CursorPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # `format` is an explicit business query parameter on report endpoints, not a DRF renderer
+    # override. Leaving the default enabled turns `?format=pdf` into a 404 before the view runs.
+    "URL_FORMAT_OVERRIDE": None,
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+    # Each current-revision read costs 8+N CVAT requests (N = frames); throttle per user.
+    # Counters live in Django's default cache (per-process LocMemCache unless CACHES is set).
+    "DEFAULT_THROTTLE_RATES": {
+        "rework_current_revision": env("REWORK_CURRENT_REVISION_RATE", default="6/min"),
+    },
 }
 
 SPECTACULAR_SETTINGS = {
@@ -148,24 +185,49 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Quality Control cho annotation CVAT",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Several models share the field names "status"/"action"; pin stable component names.
+    "ENUM_NAME_OVERRIDES": {
+        "SnapshotStatusEnum": "snapshots.models.Snapshot.Status",
+        "RunStatusEnum": "runs.models.QCRun.Status",
+        "EnginePublicStatusEnum": ["running", "checked", "partial", "failed", "not_checked"],
+        "BenchmarkSourceEnum": "calibration.models.BenchmarkSource",
+        "ModelKindEnum": "runs.models.ModelKind",
+        "RunRankingSourceEnum": ["risk", "random_audit"],
+        "ReworkStatusEnum": ["fix_pending", "recheck_pending", "resolved", "reopened"],
+        "ReworkVerificationOutcomeEnum": ["pass", "fail"],
+        "DecisionCaseOutcomeEnum": ["confirm", "reject", "guideline_gap"],
+        "QueueEnum": ["risk", "random"],
+        "PersistedIssueDecisionActionEnum": [
+            "confirm",
+            "reject",
+            "uncertain",
+            "escalate",
+            "request_fix",
+        ],
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+# POST tạo snapshot/config/run từ trình duyệt gửi Idempotency-Key (contract); thiếu header này trong
+# allow-headers thì preflight bị chặn và UI báo "Không kết nối được máy chủ".
+CORS_ALLOW_HEADERS = (*default_headers, "idempotency-key")
 # Frontend khác origin cần đọc mã tra cứu cả khi lỗi 5xx trả HTML thay vì Error JSON.
 CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 # Frontend khác origin (dev: :3000 gọi API :8000) gửi POST kèm session cookie phải qua kiểm Origin
 # của CSRF; mặc định tin cùng danh sách với CORS.
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
 
-# Phiên LabelX (T-011, contract auth): cookie `sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
-# `csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
+# Phiên LabelX (T-011, contract auth): cookie `labelx_sessionid` HttpOnly, hết hạn sau 8 giờ; cookie
+# `labelx_csrftoken` để frontend đọc và gửi lại qua header X-CSRFToken. Frontend dev (:3000) và API
 # (:8000) cùng site localhost nên SameSite=Lax đủ; production bật Secure qua env.
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)
+SESSION_COOKIE_NAME = "labelx_sessionid"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_NAME = "labelx_csrftoken"
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 
@@ -173,6 +235,19 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")
 CELERY_TASK_ACKS_LATE = True
+# Broker chết không được treo request API: publish thất bại nhanh, shard để PENDING và sweeper
+# (orchestration.redispatch_pending) xếp lại. Đo thực tế: tắt Redis làm POST /api/runs/ treo >120 s.
+# Kết quả task không được ai đọc (trạng thái nằm trong DB); result backend Redis còn làm
+# `.delay()` treo vô hạn khi Redis chết (retry subscribe), nên bỏ lưu kết quả.
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_BROKER_CONNECTION_TIMEOUT = 2
+CELERY_BROKER_TRANSPORT_OPTIONS = {"socket_connect_timeout": 2, "socket_timeout": 5}
+CELERY_TASK_PUBLISH_RETRY_POLICY = {
+    "max_retries": 1,
+    "interval_start": 0,
+    "interval_step": 0.2,
+    "interval_max": 0.5,
+}
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TIMEZONE = TIME_ZONE
@@ -205,3 +280,44 @@ LOGGING = {
         "labelx": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# T-025: tự xếp shard vào Celery sau khi tạo/retry run.
+ORCHESTRATION_AUTO_DISPATCH = env.bool("ORCHESTRATION_AUTO_DISPATCH", default=True)
+ORCHESTRATION_FAIL_FAST = env.bool("ORCHESTRATION_FAIL_FAST", default=True)
+# Bound broker messages; remaining VLM candidates stay in the database until a slot is free.
+VLM_DISPATCH_WINDOW = env.int("VLM_DISPATCH_WINDOW", default=1)
+FINAL_RUN_AUTO_DISPATCH = env.bool("FINAL_RUN_AUTO_DISPATCH", default=True)
+ORCHESTRATION_RUNNING_STALE_SECONDS = env.int("ORCHESTRATION_RUNNING_STALE_SECONDS", default=1800)
+ORCHESTRATION_REDISPATCH_AFTER_SECONDS = env.int(
+    "ORCHESTRATION_REDISPATCH_AFTER_SECONDS", default=300
+)
+# Faster R-CNN chạy ngoài process backend; worker phải mount checkpoint/config bất biến.
+DETECTOR_WORKER_URL = env("DETECTOR_WORKER_URL", default="http://127.0.0.1:8501")
+DETECTOR_SERVICE_TOKEN = env("DETECTOR_SERVICE_TOKEN", default="")
+DETECTOR_CHECKPOINT_PATH = env(
+    "DETECTOR_CHECKPOINT_PATH",
+    default=str(BASE_DIR.parent.parent / ".cache/models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth"),
+)
+DETECTOR_MANIFEST_PATH = env(
+    "DETECTOR_MANIFEST_PATH",
+    default=str(BASE_DIR.parent / "detector_worker/model-manifest.json"),
+)
+DETECTOR_DEVICE = env("DETECTOR_DEVICE", default="cuda:0")
+DETECTOR_TIMEOUT_SECONDS = env.int("DETECTOR_TIMEOUT_SECONDS", default=1800)
+# Exact Tailscale HTTPS hostnames approved by Operations; empty fails closed for UI configs.
+GPU_WORKER_ALLOWED_HOSTS = env.list("GPU_WORKER_ALLOWED_HOSTS", default=[])
+GPU_WORKER_CREDENTIALS = env.json("GPU_WORKER_CREDENTIALS", default={})
+CELERY_BEAT_SCHEDULE = {
+    "orchestration-redispatch-pending": {
+        "task": "orchestration.redispatch_pending",
+        "schedule": 120.0,
+    },
+    "review-sweep-ready-final-runs": {
+        "task": "review.sweep_ready_final_runs",
+        "schedule": 120.0,
+    },
+}
+
+# Durable endpoint waiting and provider outage bounds (seconds).
+ENGINE_WAIT_TIMEOUT_SECONDS = env.int("ENGINE_WAIT_TIMEOUT_SECONDS", default=1800)
+VLM_STAGE_TIMEOUT_SECONDS = env.int("VLM_STAGE_TIMEOUT_SECONDS", default=1800)

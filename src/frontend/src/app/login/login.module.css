@@ -1,0 +1,169 @@
+/* User-provided CVAT reference is the design source for this login-only exception.
+   Local tokens keep its gradient/radius/type isolated from the shared Design System. */
+.lx-login {
+  --login-background: #201209;
+  --login-center: #030302;
+  --login-midpoint: #0c0804;
+  --login-ink: #252823;
+  --login-placeholder: #ababa6;
+  --login-line: #d9d9d5;
+  --login-radius: 32px;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 46.5vw);
+  gap: var(--space-8);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 10.33vh 3.45vw 4vh 1.36vw;
+  background: radial-gradient(ellipse at 44% 61%, var(--login-center), var(--login-midpoint) 45%, var(--login-background));
+  color: var(--on-primary);
+  font-family: var(--font-sans);
+}
+
+.lx-login__brand {
+  position: absolute;
+  top: 3.9vh;
+  left: 5.9vw;
+}
+
+.lx-login__headline {
+  align-self: center;
+  margin: 0;
+  font-size: clamp(44px, 5.5vw, 80px);
+  font-weight: 300;
+  line-height: 1.16;
+  letter-spacing: 0.02em;
+}
+
+.lx-login__headline span {
+  display: block;
+}
+
+.lx-login__panel {
+  min-width: 0;
+  min-height: 85.67vh;
+  padding: clamp(32px, 4.36vw, 64px);
+  border-radius: var(--login-radius);
+  background: var(--surface);
+  color: var(--login-ink);
+}
+
+.lx-login__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -0.025em;
+}
+
+.lx-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: 80px;
+}
+
+.lx-login__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.lx-login .lx-login__input {
+  height: 56px;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--login-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--login-ink);
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.lx-login__input::placeholder {
+  color: var(--login-placeholder);
+  opacity: 1;
+}
+
+.lx-login .lx-login__input:focus-visible {
+  border-bottom-color: var(--login-ink);
+  outline: none;
+}
+
+.lx-login .lx-login__submit {
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  margin-top: var(--space-4);
+  border-color: var(--login-ink);
+  border-radius: 5px;
+  background: var(--login-ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.lx-login .lx-login__submit:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.lx-login__error {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .lx-login {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 48vw);
+    gap: var(--space-4);
+  }
+
+  .lx-login__headline {
+    font-size: 6.2vw;
+  }
+
+  .lx-login__panel {
+    padding: var(--space-8);
+  }
+}
+
+@media (max-width: 700px) {
+  .lx-login {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-6);
+  }
+
+  .lx-login__brand {
+    position: static;
+    flex: none;
+  }
+
+  .lx-login__headline {
+    align-self: flex-start;
+    font-size: clamp(36px, 10.8vw, 64px);
+    line-height: 1.16;
+  }
+
+  .lx-login__panel {
+    flex: 1;
+    width: 100%;
+    min-height: 440px;
+    padding: var(--space-8);
+  }
+
+  .lx-login__form {
+    gap: var(--space-6);
+    margin-top: 48px;
+  }
+
+  .lx-login .lx-login__input {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "status": "seeded",
+  "database": "labelx_t046_browser",
+  "run_id": 1,
+  "frame_id": 1,
+  "issue_1_id": 1,
+  "issue_2_id": 2,
+  "issue_3_id": 3,
+  "issue_4_id": 4,
+  "decision_case_id": 1,
+  "lease_id": 1,
+  "revision": "e7621fc592fd8b76e4cc2419b062c4e1563d1fbf2c64bdcd52aa173124240c1a"
+}

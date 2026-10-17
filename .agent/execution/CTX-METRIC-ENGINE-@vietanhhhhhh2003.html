@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context bàn giao engine metric — BLOCKER-033 mục 3 — LabelX</title>
+<meta name="labelx:id" content="ctx-metric-engine-vietanhhhhhh2003">
+<meta name="labelx:title" content="Context bàn giao engine metric — BLOCKER-033 mục 3">
+<meta name="labelx:type" content="execution">
+<meta name="labelx:domain" content="agents">
+<meta name="labelx:module" content="engines">
+<meta name="labelx:tags" content="[context, metric, blocker-033, handoff]">
+<meta name="labelx:priority" content="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / templates / ctx-metric-engine-vietanhhhhhh2003</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>ctx-metric-engine-vietanhhhhhh2003</span><b>title</b><span>Context bàn giao engine metric — BLOCKER-033 mục 3</span><b>type</b><span>execution</span><b>domain</b><span>agents</span><b>module</b><span>templates</span><b>tags</b><span>[context, metric, blocker-033, handoff]</span><b>priority</b><span>1</span></div>
+<h1>Context bàn giao engine metric — BLOCKER-033 mục 3</h1>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Checkpoint theo yêu cầu người dùng: đã làm gì, ở đâu, đến đâu và bước tiếp theo. Chỉ ghi bằng chứng đã quan sát; không coi task đã nghiệm thu.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Context Package ID</strong>: <code>CTX-METRIC-ENGINE</code></li>
+<li><strong>Title</strong>: Engine metric theo PR #344, BLOCKER-033 mục 3</li>
+<li><strong>Owner</strong>: <code>@vietanhhhhhh2003 / Codex</code></li>
+<li><strong>Status</strong>: <code>ready</code></li>
+<li><strong>Target Type</strong>: <code>task</code></li>
+<li><strong>Target ID</strong>: <code>BLOCKER-033/3</code> (phạm vi người dùng giao trực tiếp; chưa tạo issue/task ID mới)</li>
+<li><strong>Domain</strong>: <code>quality-control</code></li>
+<li><strong>Module</strong>: <code>engines</code></li>
+<li><strong>Prepared Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Validated Date</strong>: <code>2026-10-14</code></li>
+<li><strong>Base Commit</strong>: <code>24835df</code>, origin/develop đã merge PR #344.</li>
+<li><strong>Task Status</strong>: <code>review</code>; code và kiểm tra tự động đã hoàn tất; smoke run #2 với checkpoint/GT thật đã pass; chờ review độc lập.</li>
+</ul>
+<h2 id="required-context">Required Context</h2>
+<table><thead><tr><th>Path</th><th>Purpose</th><th>Authority</th><th>Required</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/toilatrung/label-x/pull/344">PR #344</a></td><td>PR gộp MVP, chứa danh sách việc còn lại.</td><td>source</td><td>yes</td></tr>
+<tr><td><a href="../governance/blockers/BLOCKER-033.html">BLOCKER-033</a></td><td>Mục 3: run 112/config 37 bật metric bị failed, failed_units=1; bổ sung điều kiện GT và test runtime.</td><td>governance</td><td>yes</td></tr>
+<tr><td>docs/label-x_system-requirement-specification/sections/06-functional.tex, FR-EVL-15; .agent/governance/blockers/BLOCKER-021.html</td><td>Detector Precision/Recall theo lớp trên GT đã khóa; định nghĩa tối thiểu và provenance.</td><td>reference</td><td>yes</td></tr>
+<tr><td>src/backend/engines/interface.py; engines/matching.py; orchestration/tasks.py; dispatch.py; services.py</td><td>Engine contract, matching tất định, task idempotent và commit nguyên tử.</td><td>source</td><td>yes</td></tr>
+<tr><td><a href="../reports/implementation/METRIC-ENGINE-BLOCKER-033-@vietanhhhhhh2003.html">Báo cáo triển khai</a></td><td>Chi tiết thay đổi, định dạng GT, cách chạy/export.</td><td>report</td><td>yes</td></tr>
+</tbody></table>
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Current Context</strong>: file này là context riêng của task; không sửa current-context canonical.</li>
+<li><strong>Epic or Task Record</strong>: BLOCKER-033/3; yêu cầu trực tiếp người dùng ngày 2026-10-14: triển khai engine metric, Docker trong WSL; sau đó yêu cầu chạy cả ESLint.</li>
+<li><strong>Decisions</strong>: DEC-001, DEC-010; BLOCKER-021 định nghĩa tối thiểu.</li>
+<li><strong>Risks</strong>: chưa xác minh checkpoint/GT thật; mỗi metric shard gọi inference riêng, chưa chia cache với detector shard.</li>
+<li><strong>Blockers</strong>: BLOCKER-033; không giải quyết các mục còn lại ngoài mục 3.</li>
+<li><strong>Change Requests</strong>: CR-118; người dùng giao triển khai metric vốn được hoãn trong CR-101.</li>
+</ul>
+<h2 id="governing-constraints">Governing Constraints</h2>
+<ul>
+<li><strong>Required Approvals</strong>: người dùng đã giao triển khai; chưa có review độc lập/duyệt PR.</li>
+<li><strong>Security Constraints</strong>: CVAT chỉ đọc; không lưu secret; gt_source chỉ là key trong snapshots storage, không tải URL tùy ý.</li>
+<li><strong>Data Constraints</strong>: reference phải locked, đúng snapshot, checksum SHA-256 khớp nội dung GT; model mapping phải khớp reference.</li>
+<li><strong>Forbidden Operations</strong>: không tự merge; không ghi đè thay đổi người dùng tại workspace chính; không báo run 112 đã sửa thật khi chưa chạy checkpoint/GT thật.</li>
+</ul>
+<h2 id="current-state">Current State</h2>
+<p><strong>Làm ở đâu:</strong></p>
+<ul>
+<li>Workspace chính: <code>D:/Code/label-x</code>, nhánh <code>fix/connect-backend-apis</code>, có nhiều thay đổi frontend chưa commit từ trước. Đã giữ nguyên.</li>
+<li>Worktree task: <code>D:/Code/label-x/.worktrees/metric-engine</code>, nhánh <code>fix/metric-engine</code>, base <code>24835df</code>.</li>
+<li>WSL: <code>Ubuntu-24.04</code>; repo tương ứng <code>/mnt/d/Code/label-x/.worktrees/metric-engine</code>.</li>
+<li>Docker dev: Compose <code>infrastructure/docker-compose.dev.yml</code>, project <code>labelx-dev</code>, PostgreSQL/Redis/SeaweedFS. Không xóa volume. Test dùng PostgreSQL thật trong Docker.</li>
+<li>Python đầu tiên: <code>/mnt/d/Code/label-x/src/backend/.venv-wsl/bin/python</code>. Python theo lockfile trên Linux: <code>/home/viet_anh/.cache/labelx-metric-venv/bin/python</code>. Venv /tmp của phiên trước bị WSL xóa giữa các lần gọi; đã chuyển sang cache bền vững, dựng bằng uv sync --frozen.</li>
+<li>Frontend đã npm ci ngay trong worktree task. Không đổi package.json/package-lock.json.</li>
+</ul>
+<p><strong>Đã làm:</strong></p>
+<table><thead><tr><th>File</th><th>Thay đổi</th></tr></thead><tbody>
+<tr><td>src/backend/engines/metric.py (mới)</td><td>Runner metric; đọc GT JSON từ snapshots storage; kiểm tra reference/checksum/schema/mapping; dùng matching hiện có tính TP/FP/FN, Precision/Recall theo lớp; tổng hợp theo slice bằng cộng counts. Không sinh QC candidate giả.</td></tr>
+<tr><td>src/backend/engines/detector.py</td><td>Tách predict_frames để dùng chung inference có xác minh artifact và giữ toàn bộ prediction, gồm cả prediction đúng không thành QC candidate.</td></tr>
+<tr><td>src/backend/orchestration/builtin_engines.py; src/backend/runs/services.py</td><td>Đăng ký metric vào registry và dùng descriptor chung needs_model/needs_reference.</td></tr>
+<tr><td>src/backend/orchestration/models.py; services.py; migrations/0008_ledgerunit_details.py (mới)</td><td>LedgerUnit.details JSON lưu counts/provenance cùng transaction với ShardCommit. Replay task không nhân kết quả.</td></tr>
+<tr><td>src/backend/runs/management/commands/metric_report.py (mới, kèm __init__.py)</td><td>CLI export JSON counts/Precision/Recall theo lớp/slice, coverage, từng frame và provenance.</td></tr>
+<tr><td>src/backend/tests/engines/test_metric.py (mới)</td><td>Test matching; GT thiếu/chưa khóa/khác snapshot; checksum/schema lỗi; explicit empty GT; partial GT; Celery/ledger/replay; export report.</td></tr>
+</tbody></table>
+<p>GT thiếu/chưa khóa/khác snapshot hoặc thiếu object/frame: <code>not_checked/no_reference</code>. GT hỏng/checksum sai hoặc model mapping sai: lỗi, không báo đã kiểm tra. Thiếu model do planner xử lý <code>no_model</code>. GT format nội bộ <code>labelx.metric.gt.v1</code>, cấu hình metric.params.reference_id; xem báo cáo triển khai để có JSON mẫu.</p>
+<p><strong>Đến đâu — kiểm tra đã có:</strong></p>
+<table><thead><tr><th>Kiểm tra</th><th>Kết quả</th><th>Bằng chứng / giới hạn</th></tr></thead><tbody>
+<tr><td>Metric + detector adapter + dispatch</td><td>58 passed</td><td>16.45s, PostgreSQL thật; inference dùng mock có kiểm soát.</td></tr>
+<tr><td>Toàn backend pytest — lượt cuối</td><td>1405 passed, 2 skipped</td><td>600.56s, PostgreSQL Docker; CORS dev đúng cấu hình. Bản sao filesystem Linux /home/viet_anh/.cache/metric-check-VfeiL2; checksum 377 file backend/contract/script khớp worktree. Log .cache-metric-backend-linux-tests.log.</td></tr><tr><td>Toàn backend pytest — lượt ban đầu</td><td>1404 passed, 2 skipped, 1 failed</td><td>623.69s; lỗi test_cors_preflight_allows_idempotency_key tại tests/test_settings.py:32: thiếu access-control-allow-headers. Phiên test không đặt CORS_ALLOWED_ORIGINS; test fallback gán string thay vì list. Đã xác nhận settings và toàn bộ suite pass khi đặt CORS đúng .env.example; không sửa source CORS ngoài phạm vi metric.</td></tr>
+<tr><td>Ruff check/format toàn backend</td><td>passed</td><td>348 file đã đúng format.</td></tr>
+<tr><td>mypy backend</td><td>passed</td><td>Lượt tiếp tục: 178 source file, không có lỗi.</td></tr>
+<tr><td>Django check; makemigrations --check --dry-run</td><td>passed</td><td>Không lỗi; không thiếu migration.</td></tr>
+<tr><td>Frontend npm run lint (ESLint)</td><td>passed</td><td>Đã npm ci cài 446 package rồi chạy, exit 0.</td></tr>
+<tr><td>Frontend npm run typecheck</td><td>passed</td><td>Next typegen + tsc exit 0.</td></tr>
+<tr><td>Frontend npm test</td><td>42 file / 453 test pass</td><td>77.58s.</td></tr>
+<tr><td>Detector worker độc lập lint/test</td><td>passed; 10 test pass</td><td>4.36s, WSL venv worker.</td></tr>
+<tr><td>make validate-kit</td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; đã validate lại report/context sau khi tiếp tục.</td></tr>
+<tr><td>make check</td><td>Chưa xanh trọn lệnh</td><td>Lần đầu dừng do thiếu eslint; đã khắc phục và chạy riêng lint/typecheck/test FE pass. Lượt toàn backend cuối đã pass sau khi đặt đúng CORS. Các check chạy riêng đều pass; người dùng yêu cầu không chạy lại toàn lệnh make check và mở PR ngày 2026-10-14.</td></tr>
+</tbody></table>
+<ul>
+<li><strong>Implemented State</strong>: code triển khai xong phạm vi engine; đã commit 8ab6c707270cccde6f2fdf91c7a063dc53f8f2e6, push fix/metric-engine và mở <a href="https://github.com/toilatrung/label-x/pull/349">PR #349 vào develop</a> ngày 2026-10-14; không chạy lại make check theo yêu cầu người dùng; review độc lập còn chờ.</li>
+<li><strong>Known Gaps</strong>: Test settings đã chạy lại với CORS_ALLOWED_ORIGINS theo cấu hình dev: 4 passed trong 0.50s. Không sửa source CORS ngoài phạm vi metric. Run #2 đã kiểm chứng checkpoint/GT thật; chưa khôi phục run 112 cũ. Migration metric/reference đã áp DB dev để chạy smoke; code task chưa triển khai vào server/worker chính. Migration toàn bộ dev còn lỗi ai_model đã tồn tại, như bản ghi bên dưới.</li>
+<li><strong>Active Dependencies</strong>: reference GT locked; model artifact và checkpoint/manifest/config detector hợp lệ.</li>
+<li><strong>Active Blockers</strong>: không tuyên bố BLOCKER-033 resolved; các mục khác ngoài metric chưa xử lý.</li>
+</ul>
+<p><strong>Log cục bộ</strong> (gitignored, không thay bằng chứng trong report): <code>.cache-metric-backend-linux-tests.log</code> là lượt toàn bộ cuối đã pass; <code>.cache-metric-backend-resumed-tests.log</code> là lượt trên ổ Windows bị ngắt ở khoảng 25%, không tính là suite hoàn tất; <code>.cache-metric-backend-native-tests.log</code> là lượt ban đầu có một lỗi CORS; <code>.cache-metric-backend-tests.log</code> là lượt đầu ngắt để chuyển venv (717 passed, 1 skipped trước khi ngắt, không phải kết quả toàn bộ). Script kiểm tra tạm: <code>.cache/run-metric-native-check.sh</code>. Có hiện tượng Docker nhận shutdown khi chuyển các phiên WSL; khi chạy lại nên giữ startup và test trong cùng phiên, kiểm tra healthy trước.</p>
+<h2 id="expected-outputs">Expected Outputs</h2>
+<table><thead><tr><th>Output</th><th>Required Path</th><th>Verification</th></tr></thead><tbody>
+<tr><td>Engine metric + test + migration</td><td>src/backend/engines/metric.py; tests/engines/test_metric.py; orchestration/migrations/0008_ledgerunit_details.py</td><td>Đã có; 58 test mục tiêu pass.</td></tr>
+<tr><td>Hướng dẫn GT/export</td><td>.agent/reports/implementation/METRIC-ENGINE-BLOCKER-033-@vietanhhhhhh2003.html</td><td>Đã có; cần giữ trạng thái draft khi chưa hoàn tất kiểm chứng.</td></tr>
+<tr><td>Kết quả CORS xác nhận</td><td>src/backend/tests/test_settings.py</td><td>Đã xác nhận: 4 passed trong 0.50s với CORS_ALLOWED_ORIGINS đúng cấu hình mẫu.</td></tr>
+<tr><td>Smoke thật / review</td><td>Run có model + reference GT locked; PR vào develop khi được yêu cầu</td><td>Smoke run #2 đã completed; review PR còn chờ, không tự duyệt/merge.</td></tr>
+</tbody></table>
+<h2 id="next-steps">Bước tiếp theo</h2>
+<ol>
+<li>Vào đúng worktree task, không checkout/cherry-pick lên workspace chính đang bẩn.</li>
+<li>Khi cần tái lập kiểm tra: đặt môi trường theo src/backend/.env.example; nhóm settings đã pass trong WSL với Python /home/viet_anh/.cache/labelx-metric-venv/bin/python:</li>
+</ol>
+<pre>cd /mnt/d/Code/label-x/.worktrees/metric-engine/src/backend
+export CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+# Cấp DJANGO_SECRET_KEY và DATABASE_URL qua môi trường local phù hợp.
+/home/viet_anh/.cache/labelx-metric-venv/bin/python -m pytest tests/test_settings.py -q --tb=short</pre>
+<ol start="3"><li>Cập nhật report bằng kết quả thực tế; make validate-kit sau khi sửa tài liệu.</li><li>Khi có GT/checkpoint: migrate, tạo reference qua API, QA Lead khóa, tạo/publish config metric trỏ reference_id và model, chạy QC run rồi export manage.py metric_report RUN_ID.</li><li>Rà diff, commit/push/tạo PR khi cần; review độc lập trước merge vào develop. Không xử lý các mục khác của BLOCKER-033 trừ khi được giao.</li></ol>
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul><li>[x] Context mô tả nơi làm, source và phạm vi.</li><li>[x] Có danh sách file, bằng chứng pass/fail và giới hạn.</li><li>[x] Có lệnh và việc tiếp theo để tiếp tục.</li><li>[ ] Task nghiệm thu / review hoàn tất — chưa đạt, không gắn done.</li></ul>
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không báo CORS rerun đã pass nếu chưa có output.</li><li>Không báo checkpoint/run 112 thật đã pass từ test mock.</li><li>Không overwrite thay đổi frontend ở workspace chính.</li><li>Không tự duyệt/merge hoặc đổi trạng thái BLOCKER-033 resolved.</li></ul>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Lưu context riêng theo CR-100; cập nhật báo cáo cùng username. Bản sửa sẵn sàng review; giữ chưa done tới khi có đủ nghiệm thu và review; không thay tài liệu canonical.</p>
+<h2 id="run-112-verification">Kiểm chứng run 112 — 2026-10-14</h2>
+<p>Đã kiểm tra Ubuntu-24.04 WSL và origin/develop mới nhất tại 3e822dc. Develop có tài liệu ghi nhận run 112 nhưng không có DB dump/GT hay bản fix metric. Settings DB trên develop khớp worktree task.</p>
+<ul>
+<li>DB Docker labelx-dev: postgres, labelx, test_labelx, labelx_t039_browser, labelx_test_244. Các DB có bảng qc_run đều không có run 112; labelx có 0 QC run và 0 ModelArtifact.</li>
+<li>DB Docker labelx-t036-postgres: postgres, labelx_ci, labelx_t036_update, labelx_t036_final, test_labelx_t036_final. Không tìm thấy run 112.</li>
+<li>Repo /home/viet_anh/label-x đang ở main; .env trỏ localhost:5433/labelx và kết nối bị timeout. Theo yêu cầu người dùng, đã đổi DATABASE_URL sang localhost:5432 trong phiên kiểm chứng (không ghi đè .env). Kết nối thành công; run_112=not_found, latest_run_ids=[], registered_artifacts=[]. Metric chưa được gọi vì không có run/work unit đầu vào.</li>
+<li>Đã tìm thấy checkpoint thật tại D:/Code/label-x/.cache/detector-models/faster_rcnn_r50_fpn_3x_det_bdd100k.pth. SHA-256 ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540 khớp manifest đã đóng băng. Có 10 ảnh BDD100K validation, chưa tìm thấy GT liên kết run 112.</li>
+<li>Lệnh inference Docker trên một ảnh validation chưa chạy: yêu cầu quyền thực thi bị người dùng từ chối. Không dùng output smoke có sẵn để tuyên bố kiểm chứng run 112.</li>
+</ul>
+<p><strong>Kết quả:</strong> chưa thể kiểm chứng metric trên checkpoint và GT thật của run 112. Cần khôi phục/kết nối DB và object storage chứa run 112, snapshot của run và reference GT tương ứng. Không tạo dữ liệu giả thay run 112; không sửa lịch sử run; không áp migration lên DB rỗng chỉ để giả định nghiệm thu đã đạt.</p><h2 id="new-metric-run-verification">Run mới kiểm chứng metric — 2026-10-14</h2>
+<p>Theo yêu cầu người dùng, đã tạo run kiểm chứng mới trên localhost:5432/labelx. Run #2 đã completed; metric checked, coverage 1/1 (100%), failed=0, not_checked=0. Đây là run mới, không khôi phục run 112 cũ.</p>
+<ul>
+<li>Snapshot #1 locked; dataset 900112 là namespace dữ liệu kiểm chứng local, không phải project CVAT thật. Một ảnh b1c66a42-6f7d68ca.jpg (1280×720), SHA-256 76bf84536edbaf192a8a699efc62ba2b06056bac12c426ecfcc2e003d91fbd32.</li>
+<li>34 bbox GT được nhập từ <a href="https://huggingface.co/datasets/dgural/bdd100k/tree/c2e7f26">dgural/bdd100k c2e7f26</a>, cùng nguồn của ảnh validation đã có. File samples.json (10.000 mẫu) có SHA-256 1e8853904e2926c434557bb90a36b1638ac03ebb77adfc21f04d821a6a998a09. Chuyển bbox xywh chuẩn hóa sang xyxy pixel, giữ toàn bộ bbox; không lấy prediction làm GT. Slice của lượt smoke này trống; per-slice đã có test tự động riêng.</li>
+<li>Reference #1 do tài khoản import kỹ thuật (ID 2, password unusable) tạo; người dùng đã duyệt GT, cho phép admin dev (ID 1) khóa qua ReferenceLockView. Reference locked, checksum 6bd1f8a4862f0b2e5da9c857a0207a69cdacf4a61cd2e45af3a65fa246d203ec. Đây là duyệt GT cho run kiểm chứng, không phải review/duyệt PR triển khai.</li>
+<li>Config #1 published, model artifact #1. Checkpoint SHA-256 ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540; manifest/version/class mapping đã được verify_artifact xác minh thật. Docker image labelx-detector-worker:dev, CPU, score threshold 0.05, matching IoU 0.5. Inference không mock.</li>
+<li>Celery task chạy eager qua cùng run_work_unit/execute_shard/commit_shard_output; dùng PostgreSQL và S3 Docker thật. Task completed trong 16.085s. Replay completed trong 0.032s, log invocation không thay đổi; đúng một ShardCommit.</li>
+<li>Run #1 được giữ failed để lưu lịch sử: wrapper ban đầu gọi image không có tag :dev, Docker exit 125. Đã sửa wrapper local dùng đúng image và --pull never, tạo run #2 với cùng snapshot/config/reference, không sửa trạng thái terminal của run #1.</li>
+<li>Migration orchestration.0008_ledgerunit_details và runs.0007_kpi_reference_evaluation_waiver đã áp DB dev. Migrate toàn bộ dừng tại runs.0008_aimodel vì ai_model đã tồn tại; không fake migration hoặc thay bảng này. Đây là vấn đề schema dev ngoài phạm vi metric; không cản run #2 hoàn tất.</li>
+</ul>
+<table><thead><tr><th>Class</th><th>TP</th><th>FP</th><th>FN</th><th>Precision</th><th>Recall</th></tr></thead><tbody>
+<tr><td>car</td><td>17</td><td>13</td><td>2</td><td>0.566667</td><td>0.894737</td></tr>
+<tr><td>motorcycle</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td>rider</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td>traffic light</td><td>2</td><td>2</td><td>5</td><td>0.5</td><td>0.285714</td></tr>
+<tr><td>traffic sign</td><td>5</td><td>3</td><td>1</td><td>0.625</td><td>0.833333</td></tr>
+<tr><td>bicycle</td><td>0</td><td>1</td><td>0</td><td>0</td><td>null</td></tr>
+<tr><td>pedestrian</td><td>0</td><td>2</td><td>0</td><td>0</td><td>null</td></tr>
+<tr><td>truck</td><td>0</td><td>1</td><td>0</td><td>0</td><td>null</td></tr>
+</tbody></table>
+<p>Đây là kiểm chứng runtime trên một ảnh, không phải benchmark toàn dataset. Artifact local: .cache/metric-new-run/metric-report.json (counts/coverage/provenance), run-summary.json, gt-review.json, gt-review.html, inference-invocations.log và last-detector-output.log. Script prepare-metric-run.py và execute-metric-run.py nằm trong .cache; chạy cùng phiên startup Docker. Thay đổi source metric vẫn ở worktree task, chưa đưa vào worker/server workspace chính.</p>
+<h2 id="temporary-ground-truth-upload">2026-10-14 — Upload Ground Truth lưu tạm (user-approved extension)</h2>
+<p>User đã duyệt hướng upload GT, chạy Metric rồi tự xóa file khi lưu kết quả thành công; bản gốc nằm trên máy nhân viên. PR #349 đã merge; GitHub từ chối reopen vì PR đã merge. User yêu cầu chưa commit vội: thay đổi này chỉ ở local worktree, không commit/push/tạo PR mới và không chạy lại make.</p>
+<ul>
+<li>Analysis Configuration: upload JSON, xem annotation theo frame, QA Lead khác người upload duyệt bằng ReferenceLockView hiện có. Một GT hiện hành cho mỗi Dataset; GT gắn với Snapshot bất biến.</li>
+<li>POST /api/ground-truth/ nhận multipart file + snapshot_id + mapping_version + Idempotency-Key. Kiểm tra schema labelx.metric.gt.v1, checksum, frame thuộc Snapshot, class BDD100K, bbox pixel, ID trùng, số hữu hạn và giới hạn 20 MiB. GET /api/ground-truth/?dataset_id= trả metadata; GET /api/ground-truth/{reference_id}/preview/ trả annotation có kiểm checksum và quyền Dataset.</li>
+<li>QCRun.metric_reference khóa đúng bản GT tại thời điểm tạo run; worker dùng FK này, không lấy bản hiện hành mới nhất. Run mới bị chặn nếu yêu cầu GT đã bị thay thế; run đang chạy giữ bản đã gắn. RunCreate có metric_reference_id tùy chọn; không sửa config đã publish. Giữ tương thích với reference cấu hình trước khi có upload.</li>
+<li>Xóa object sau transaction lưu kết quả/ranking commit, chỉ khi mọi run cùng dùng GT đều Completed và Metric Checked, không có failed/not_checked. Queued/Running/Partial/Failed/Cancelled giữ file. Upload mới không xóa GT mà run còn cần.</li>
+<li>Bản bị thay thế mà chưa có run được dọn sau commit. Metadata, tên file, checksum, mapping, số frame/bbox và thời điểm xóa vẫn còn; ledger giữ counts và provenance. Replay run/task cũ không cần file; run mới sau khi file xóa phải upload lại.</li>
+<li>Storage delete lỗi không làm fail run đã commit: callback ghi log, periodic orchestration.redispatch_pending thử dọn lại. Không có TTL tự xóa GT của run lỗi/hủy; cần chính sách dọn riêng nếu muốn loại bỏ các bản này.</li>
+</ul>
+<h3>Mẫu file upload</h3>
+<pre>{
+  "schema_version": "labelx.metric.gt.v1",
+  "snapshot_id": 1,
+  "mapping_version": "bdd100k-det-10-v1",
+  "frames": [{
+    "cvat_task_id": 900112, "frame_number": 0,
+    "boxes": [{"id": "car-1", "label": "car", "bbox_xyxy": [10, 20, 100, 120]}],
+    "slices": ["day"]
+  }]
+}</pre>
+<p>Thay snapshot_id, task/frame và bbox theo dữ liệu thật. Frame không có object phải có boxes: []; frame thiếu GT sẽ là Not checked và file không tự xóa. Không hỗ trợ trực tiếp COCO/CVAT XML/BDD100K raw trong thay đổi này; cần chuyển sang schema metric đã có.</p>
+<h3>Design và kiểm chứng</h3>
+<p>Đọc labelx-design và labelx-design-fidelity; đọc Next.js use-client từ node_modules/next/dist/docs. Giữ cấu trúc AnalysisConfig.dc.html: FlowNav, bảng engine, lấy mẫu, cột Sẵn sàng chạy. Delta được user duyệt: thêm upload/preview/duyệt GT trong cột Sẵn sàng chạy bằng lx-field, lx-input, lx-btn, lx-stack, lx-hint; không thêm navigation/class/token mới. Giao diện tự cảnh báo upload lại khi file đã xóa. Kiểm chứng tương tác bằng Testing Library; chưa chụp so sánh trình duyệt 1440/390 trong lượt này.</p>
+<p id="gt-checks">Kiểm chứng: 75 backend tests PASS trên PostgreSQL (24.50 s, sau sửa mapping fixture và shared response Gone/410); gồm upload/RBAC/validation, GT bị thay thế, cleanup shared run, cleanup storage failure/retry, commit callback và replay không inference, metric/detector dispatch và OpenAPI/schema parity. Lượt cuối sau guard chặn GT superseded cũng chạy 75 tests. Ruff check/format PASS (352 files); mypy PASS (181 source files); Django check + makemigrations --check --dry-run PASS. Frontend lint/typecheck PASS; 457 tests trong 43 files PASS (41.11 s), gồm 4 test mới upload multipart/preview/approval/reupload/error và regression Analysis Configuration. Framework validator PASS; git diff --check PASS. Không chạy lại make. Chưa áp dụng migration runs.0009 vào DB dev/server chính; baseline DB dev đã có schema drift runs.0008/ai_model, không fake migration hay sửa schema ngoài phạm vi. Chưa có independent review; giữ trạng thái review/local, không coi là đã deploy.</p>
+<h2 id="ground-truth-live-demo">Demo local theo yêu cầu user — 2026-10-14</h2>
+<p>Không commit/push. Khởi động source worktree hiện tại: Next.js tại http://127.0.0.1:3000, Django tại http://127.0.0.1:8001, worker Celery solo chạy checkpoint thật. Trang hướng dẫn http://127.0.0.1:8001/demo/ có link giao diện và tải JSON Ground Truth công khai.</p>
+<p>DB mới labelx_gt_upload_demo (PostgreSQL 5432), migrate đầy đủ gồm runs.0009 không lỗi. Không thay schema DB dev labelx đang có drift. Broker/result Redis DB 12 tách khỏi worker dev. Các helper/settings/routes demo nằm trong .cache, không sửa auth hay settings production.</p>
+<p>Dataset demo 900112, Snapshot #1, Config #1, 1 ảnh BDD100K và 34 bbox thật đã duyệt ở lượt trước. Tạo demo-upload/demo-duyet với QA Lead scope Dataset; config được tạo bởi tài khoản demo-config/QC Admin. Đây là tài khoản demo, không phải independent code review.</p>
+<p>Smoke chạy qua HTTP thật ở proxy frontend: đăng nhập, multipart upload, preview, đăng xuất và đăng nhập người duyệt, lock reference, tạo run qua API, worker Docker inference thật. Run demo #1 Completed; metric Checked, coverage 1/1 = 100%, failed/not_checked = 0. Task mất 14.84 giây; GT object xóa lúc 20:28:56 (Asia/Saigon); metadata vẫn còn. Artifact .cache/gt-upload-demo/smoke-result.json và worker.log.</p>
+<p>Kiểm tra bằng Edge headless/CDP trên giao diện thật, đăng nhập demo-duyet, chọn Snapshot #1/Config #1: thao tác upload hiển thị; trạng thái file đã xóa hiển thị; Chạy phân tích bị chặn cho tới upload lại. Ảnh .cache/gt-upload-demo/analysis-config-desktop.png (1440 px) và analysis-config-mobile.png (390 px). Đã xem hai ảnh: giữ FlowNav, bảng engine, phần Lấy mẫu và cột Sẵn sàng chạy; mobile xếp cột dọc, upload không tràn ngang (scrollWidth = innerWidth = 390), bảng engine có vùng cuộn ngang theo layout hiện hành. Các viewport ở lượt trước chưa chụp nay đã có evidence demo.</p>
+<h2 id="ground-truth-pr-extension">PR mới cho luồng upload Ground Truth — 2026-10-14</h2>
+<p>User yêu cầu commit/push và tạo PR mới cho người có CVAT, thay thế yêu cầu giữ thay đổi chưa commit ở các lượt trước. Nhánh feat/temporary-ground-truth-upload tạo từ origin/develop 948d4e9; PR #349 đã merge, không thể reopen.</p>
+<p>Chuyển các thay đổi GT sang worktree gt-upload bằng 3-way patch, giữ các thay đổi VLM mới trên develop. Migration trong PR là runs.0011_qcrun_metric_reference_groundtruthupload, phụ thuộc runs.0010_vlm_confidence_threshold; runs.0009 chỉ là tên ở demo/baseline cũ. API contract TypeScript được sinh lại từ YAML mới nhất.</p>
+<p>Giữ Dataset API CVAT hiện hành, không commit routes, settings, tài khoản hay dữ liệu demo. Lỗi Dataset demo đã tái hiện HTTP 502 và xác nhận CvatConfigurationError: CVAT_BASE_URL is required; không phải lỗi Metric/upload. Demo Dataset 900112 là namespace public BDD100K, không phải project CVAT thật. Người dùng PR cần cấu hình CVAT_BASE_URL và CVAT_SERVICE_TOKEN như luồng hiện có.</p>
+<p>GT upload nhận JSON labelx.metric.gt.v1, không nhận trực tiếp CVAT XML/COCO/raw BDD100K. Cần mapping class phù hợp với ModelArtifact và task/frame thuộc Snapshot đã khóa. Một GT hiện hành/Dataset; run đang chạy giữ GT đã gắn; run mới sau khi GT bị xóa phải upload lại. Giữ quy tắc người duyệt khác người upload.</p>
+<p id="gt-pr-validation">Kiểm chứng trên baseline develop 948d4e9: 75 backend tests PASS (44.09 s), Ruff check/format PASS (357 files), mypy PASS (183 source files), Django check và migration check PASS. Frontend lint/typecheck PASS; full suite có 486 passed / 1 failed trong 487 tests (92.52 s), test lỗi thuộc Review Queues pagination; chạy lại toàn bộ ReviewQueues.test.tsx: 29/29 PASS (6.32 s), không sửa code/test Review Queues. Các test upload GT và Execution Screens đều qua trong full suite. Không coi lượt full suite đầu tiên là pass; CI sẽ kiểm tra lại trên base hiện hành. Trong lúc kiểm tra, origin/develop cập nhật thêm PR #351 (0528d12); nhánh giữ baseline đã kiểm chứng, không đưa thay đổi guideline hay Review Queues vào commit GT. Bằng chứng smoke checkpoint thật và UI desktop/mobile ở mục Demo local; không chạy lại make theo yêu cầu user. Independent review và CI của PR mới còn chờ.</p>
+<h2 id="gt-pr-355">PR #355 — kết quả cuối sau tích hợp develop</h2>
+<p>User đã yêu cầu đẩy PR cho người có CVAT và chạy nốt kiểm chứng. PR <a href="https://github.com/toilatrung/label-x/pull/355">#355</a> (base develop, head feat/temporary-ground-truth-upload) đã mở từ implementation commit c0fd1f1.</p>
+<p>Tích hợp origin/develop 0528d12 sau PR #351. Conflict chỉ ở OpenAPI YAML và TypeScript contract: giữ cả endpoint GT và guideline, sinh lại contract từ YAML đã gộp. Không đưa cấu hình/routes/GT/tài khoản demo vào PR. Luồng Dataset CVAT không đổi.</p>
+<p>Kiểm chứng cuối: 75 backend tests PASS (27.60 s), Ruff check/format PASS (362 files), mypy PASS (187 source files), Django check và migration check PASS; frontend typecheck/lint PASS; toàn bộ frontend 496 tests trong 47 files PASS (65.60 s). Lượt full suite lỗi 1 test trước tích hợp develop được giữ ở lịch sử kiểm chứng, không phải kết quả cuối. Framework validator và git diff --check PASS. Không chạy lại make theo yêu cầu user.</p>
+<p>Independent review và CI GitHub còn chờ; không tự duyệt/merge. Smoke checkpoint và screenshot là bằng chứng local; nhóm có CVAT cần kiểm chứng thêm với Snapshot/GT thực của môi trường của họ.</p>
+</article></main></body></html>

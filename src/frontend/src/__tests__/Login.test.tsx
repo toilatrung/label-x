@@ -13,48 +13,48 @@ vi.mock('next/navigation', () => ({
 
 async function mountLogin() {
   render(<AuthProvider><LoginPage /></AuthProvider>);
-  await waitFor(() => expect((screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }) as HTMLButtonElement).disabled).toBe(false));
+  await waitFor(() => expect((screen.getByRole('button', { name: /^Sign in$/ }) as HTMLButtonElement).disabled).toBe(false));
 }
 
 describe('Login page', () => {
-  it('offers all seven mock roles and fills a selected account', async () => {
+  it('shows only the requested branding, headline and sign-in controls', async () => {
     installMockAuthApi();
     await mountLogin();
-    expect(screen.getByLabelText('Tên đăng nhập')).toBeDefined();
-    expect(await screen.findByRole('button', { name: /productowner/ })).toBeDefined();
-    expect(screen.getByRole('button', { name: /modelowner/ })).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: /reviewer/ }));
-    expect((screen.getByLabelText('Tên đăng nhập') as HTMLInputElement).value).toBe('reviewer');
-    expect((screen.getByLabelText('Mật khẩu') as HTMLInputElement).value).toBe('password123');
+    expect(screen.getByRole('img', { name: 'LabelX' })).toBeDefined();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('AnnotationQuality ControlPlatform');
+    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeDefined();
+    expect(screen.getByLabelText('Email or username')).toBeDefined();
+    expect(screen.getByLabelText('Password')).toBeDefined();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByText(/New user|Create an account|Forgot password/i)).toBeNull();
   });
 
-  it('loads demo accounts from the dev-only route, not from the client bundle', async () => {
+  it('does not load or display the demo-account picker', async () => {
     const api = installMockAuthApi();
     await mountLogin();
-    await screen.findByRole('button', { name: /productowner/ });
     const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname);
-    expect(paths).toContain('/api/auth/mock-users/');
+    expect(paths).not.toContain('/api/auth/mock-users/');
+    expect(screen.queryByRole('button', { name: /productowner/ })).toBeNull();
   });
 
-  it('hides demo accounts when the mock route is unavailable', async () => {
-    const api = installMockAuthApi();
-    const passthrough = api.fetchSpy.getMockImplementation()!;
-    api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/mock-users/'
-      ? new Response(JSON.stringify({ code: 'NOT_FOUND', message: 'API mẫu chưa được bật.' }), { status: 404 })
-      : passthrough(request));
+  it('keeps accessible required fields and password-manager autocomplete', async () => {
+    installMockAuthApi();
     await mountLogin();
-    await waitFor(() => expect(api.fetchSpy.mock.calls.some(([request]) =>
-      new URL(request.url).pathname === '/api/auth/mock-users/')).toBe(true));
-    expect(screen.queryByText(/Tài khoản mẫu thử nghiệm/)).toBeNull();
-    expect(screen.queryByRole('button', { name: /productowner/ })).toBeNull();
+    const username = screen.getByLabelText('Email or username') as HTMLInputElement;
+    const password = screen.getByLabelText('Password') as HTMLInputElement;
+    expect(username.required && password.required).toBe(true);
+    expect(username.autocomplete).toBe('username');
+    expect(password.autocomplete).toBe('current-password');
+    expect(password.type).toBe('password');
   });
 
   it('shows the contract INVALID_CREDENTIALS message', async () => {
     installMockAuthApi();
     await mountLogin();
-    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'wrong_password' } });
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong_password' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect(await screen.findByRole('alert')).toBeDefined();
     expect(screen.getByText('Tên đăng nhập hoặc mật khẩu không chính xác.')).toBeDefined();
     expect(push).not.toHaveBeenCalled();
@@ -71,9 +71,9 @@ describe('Login page', () => {
     api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
       ? Response.json({ code, message: 'Sensitive backend diagnostic', request_id: 'login-client-error' }, { status })
       : passthrough(request));
-    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect((await screen.findByRole('alert')).textContent).toBe(message);
     expect(screen.queryByText('Sensitive backend diagnostic')).toBeNull();
     expect(push).not.toHaveBeenCalled();
@@ -92,9 +92,9 @@ describe('Login page', () => {
     const passthrough = api.fetchSpy.getMockImplementation()!;
     api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
       ? response() : passthrough(request));
-    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect((await screen.findByRole('alert')).textContent)
       .toBe(`Máy chủ gặp lỗi. Vui lòng thử lại sau. Mã yêu cầu: ${requestId}`);
     expect(screen.queryByText(/Sensitive/)).toBeNull();
@@ -107,9 +107,9 @@ describe('Login page', () => {
     const passthrough = api.fetchSpy.getMockImplementation()!;
     api.fetchSpy.mockImplementation(async (request: Request) => new URL(request.url).pathname === '/api/auth/login/'
       ? new Response('{', { status: 400, headers: { 'Content-Type': 'application/json' } }) : passthrough(request));
-    fireEvent.change(screen.getByLabelText('Tên đăng nhập'), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect((await screen.findByRole('alert')).textContent)
       .toBe('Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.');
     expect(push).not.toHaveBeenCalled();
@@ -118,22 +118,24 @@ describe('Login page', () => {
   it('logs in through csrf then login and navigates to the shell', async () => {
     const api = installMockAuthApi();
     await mountLogin();
-    fireEvent.click(await screen.findByRole('button', { name: /reviewer/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'reviewer' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     await waitFor(() => expect(push).toHaveBeenCalledWith('/'));
     expect(push).toHaveBeenCalledOnce();
     const paths = api.fetchSpy.mock.calls.map(([request]) => new URL(request.url).pathname)
       .filter((path) => path !== '/api/auth/mock-users/');
     expect(paths).toEqual(['/api/auth/session/', '/api/auth/csrf/', '/api/auth/login/']);
-    expect(api.jar.has('sessionid')).toBe(true);
+    expect(api.jar.has('labelx_sessionid')).toBe(true);
   });
 
   it('does not grant a mock admin when the network fails', async () => {
     const api = installMockAuthApi();
     await mountLogin();
     api.fetchSpy.mockRejectedValue(new TypeError('Network unavailable'));
-    fireEvent.click(await screen.findByRole('button', { name: /^admin \(/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Đăng nhập vào LabelX/ }));
+    fireEvent.change(screen.getByLabelText('Email or username'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect(await screen.findByText('Không kết nối được máy chủ. Vui lòng thử lại.')).toBeDefined();
     expect(push).not.toHaveBeenCalled();
   });

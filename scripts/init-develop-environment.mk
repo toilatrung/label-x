@@ -16,12 +16,20 @@ UV       := $(shell command -v uv 2>/dev/null || echo $(HOME)/.local/bin/uv)
 PYTHON_VERSION := 3.12
 NODE_MAJOR_MIN := 22
 
+# A Windows-created `.venv` cannot be safely managed by Linux uv through a
+# `/mnt/<drive>` mount.  Keep the two interpreters isolated while preserving
+# an explicit UV_PROJECT_ENVIRONMENT supplied by the developer or CI.
+ifneq ($(strip $(WSL_DISTRO_NAME)),)
+UV_PROJECT_ENVIRONMENT ?= .venv-wsl
+export UV_PROJECT_ENVIRONMENT
+endif
+
 .DEFAULT_GOAL := help
 .PHONY: db-runtime-role check-audit-grants help setup doctor tools env infra-up infra-down infra-logs infra-reset \
-        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-hash \
+        cvat-up cvat-down cvat-logs cvat-ps cvat-superuser cvat-import-sample cvat-bdd100k-sample cvat-audit-learner cvat-prepare-learner-bdd100k cvat-hash \
         backend-install frontend-install migrate superuser \
-        dev-backend dev-worker dev-beat dev-frontend \
-        check lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
+        dev-backend dev-worker dev-beat dev-frontend up down refresh status \
+        check contract lint format test detector-lint detector-test detector-image typecheck gen-api validate-kit clean
 
 help: ## Liệt kê lệnh
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -97,6 +105,16 @@ cvat-audit-learner: ## Audit YOLO learner ZIP; cần LEARNER_EXPORTS và BDD100K
 		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
 		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)"
 
+cvat-prepare-learner-bdd100k: ## Audit strict + tạo manifest T-019; cần LEARNER_EXPORTS và BDD100K_IMAGES_ROOT
+	@test -n "$(LEARNER_EXPORTS)" || (echo "Thiếu LEARNER_EXPORTS='/path/a.zip /path/b.zip'" >&2; exit 2)
+	@test -n "$(BDD100K_IMAGES_ROOT)" || (echo "Thiếu BDD100K_IMAGES_ROOT=/path/images/100k" >&2; exit 2)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python \
+		scripts/development/learner_annotation_audit.py \
+		$(foreach export,$(LEARNER_EXPORTS),--export "$(export)") \
+		--bdd100k-images-root "$(BDD100K_IMAGES_ROOT)" --strict-bdd100k \
+		--output "$(or $(LEARNER_AUDIT_OUTPUT),.cache/cvat/t019-learner-audit.json)" \
+		--bdd100k-manifest-output "$(or $(LEARNER_MANIFEST_OUTPUT),.cache/cvat/t019-learner-bdd100k.json)"
+
 cvat-hash: ## Đọc/hash một job; cần JOB_ID và token trong backend .env
 	@test -n "$(JOB_ID)" || (echo "Thiếu JOB_ID=<id>" >&2; exit 2)
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py hash_cvat_job "$(JOB_ID)"
@@ -128,7 +146,7 @@ dev-backend: ## Chạy Django API ở :8000
 	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py runserver 0.0.0.0:8000
 
 dev-worker: ## Chạy Celery worker
-	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -l info
+	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config worker -l info --concurrency "$${LABELX_WORKER_CONCURRENCY-2}" --max-tasks-per-child "$${LABELX_WORKER_MAX_TASKS_PER_CHILD-20}" --max-memory-per-child "$${LABELX_WORKER_MAX_MEMORY_KIB-393216}"
 
 dev-beat: ## Chạy Celery beat (chưa có task/lịch polling CVAT)
 	cd "$(BACKEND)" && "$(UV)" run --frozen celery -A config beat -l info
@@ -136,9 +154,25 @@ dev-beat: ## Chạy Celery beat (chưa có task/lịch polling CVAT)
 dev-frontend: ## Chạy Next.js ở :3000
 	cd "$(FRONTEND)" && npm run dev
 
+# Cả stack chạy nền (không CVAT); log/PID ở .cache/dev-stack/. Chi tiết: scripts/dev-stack.sh --help.
+up: ## Bật hạ tầng + migrate + API, worker, beat, Next ở nền (POLL=1: Next webpack + polling)
+	bash "$(ROOT)/scripts/dev-stack.sh" start $(if $(POLL),--poll)
+
+down: ## Dừng API, worker, beat, Next và tắt hạ tầng (giữ dữ liệu)
+	bash "$(ROOT)/scripts/dev-stack.sh" stop
+
+refresh: ## Nạp lại code sửa từ Windows: TARGET=fe (mặc định) | be | all
+	bash "$(ROOT)/scripts/dev-stack.sh" refresh $(or $(TARGET),fe)
+
+status: ## Trạng thái tiến trình dev và container hạ tầng
+	bash "$(ROOT)/scripts/dev-stack.sh" status
+
 # ---------------------------------------------------------------- quality
 
-check: lint typecheck test detector-lint detector-test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
+check: contract lint typecheck test detector-lint detector-test validate-kit ## Toàn bộ kiểm tra trước khi tạo PR
+
+contract: ## Kiểm tra OpenAPI, truy vết SRS, role và schema trước khi chạy bộ test lớn
+	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q --strict-markers -x tests/test_contract.py
 
 lint: ## Ruff + ESLint
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check . && "$(UV)" run --frozen ruff format --check .
@@ -148,10 +182,10 @@ format: ## Tự format backend
 	cd "$(BACKEND)" && "$(UV)" run --frozen ruff check --fix . && "$(UV)" run --frozen ruff format .
 
 typecheck: ## mypy + tsc
-	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit engines guideline cvat_adapter storage
+	cd "$(BACKEND)" && "$(UV)" run --frozen mypy config accounts audit calibration effort engines guideline cvat_adapter orchestration ranking runs snapshots storage
 	cd "$(FRONTEND)" && npm run typecheck
 
-test: ## pytest (cần infra-up) + npm test
+test: contract ## Kiểm tra contract trước, rồi pytest (cần infra-up) + npm test
 	cd "$(BACKEND)" && "$(UV)" run --frozen pytest -q
 	cd "$(FRONTEND)" && npm test
 
@@ -163,6 +197,22 @@ detector-lint: ## Ruff worker Detector (target Python 3.7 của image MMDetectio
 
 detector-image: ## Build image GPU worker Detector (vẫn chạy được với --device cpu)
 	docker build -f "$(ROOT)/infrastructure/detector-worker/Dockerfile" -t labelx-detector-worker:dev "$(ROOT)"
+
+.PHONY: detector-up detector-down detector-logs detector-check detector-register
+detector-up: ## Bật warm detector-worker, mount checkpoint host read-only và đợi healthy
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py up
+
+detector-down: ## Tắt riêng detector-worker (giữ checkpoint và hạ tầng khác)
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py down
+
+detector-logs: ## Xem log detector-worker
+	cd "$(ROOT)" && "$(UV)" run --project "$(BACKEND)" --frozen python scripts/development/detector_runtime.py logs
+
+detector-check: ## Kiểm tra checkpoint host + worker + provenance; không ghi DB
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check_detector
+
+detector-register: ## Đăng ký artifact đã verify; không tự sửa/publish ConfigVersion
+	cd "$(BACKEND)" && "$(UV)" run --frozen python manage.py check_detector --register
 
 gen-api: ## Sinh type TypeScript từ OpenAPI (cần dev-backend đang chạy)
 	cd "$(FRONTEND)" && npm run gen:api

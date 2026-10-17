@@ -56,8 +56,19 @@ function parseNameStatus(out) {
   });
 }
 
+// Promotion carries changes already integrated on develop, from multiple authors.
+// Repository identity is required so a fork named develop cannot use this path.
+function isReleasePromotion(env) {
+  return env.BASE_REF === 'main' && env.HEAD_REF === 'develop' &&
+    Boolean(env.GITHUB_REPOSITORY) && env.HEAD_REPOSITORY === env.GITHUB_REPOSITORY;
+}
+
 function main(env = process.env) {
   const {PR_AUTHOR, BASE_SHA, HEAD_SHA} = env;
+  if (isReleasePromotion(env)) {
+    console.log('AGENT_OWNERSHIP_PASS: same-repository develop to main promotion');
+    return 0;
+  }
   if (!BASE_SHA || !HEAD_SHA) { console.error('Cần BASE_SHA và HEAD_SHA.'); return 2; }
   const integrators = parseIntegrators(fs.readFileSync(path.join(ROOT, INTEGRATORS_FILE), 'utf8'));
   const r = spawnSync('git', ['diff', '--name-status', '--find-renames', `${BASE_SHA}...${HEAD_SHA}`],
@@ -72,5 +83,5 @@ function main(env = process.env) {
   return 0;
 }
 
-module.exports = {parseIntegrators, perUserOwner, evaluate, parseNameStatus, suggest};
+module.exports = {parseIntegrators, perUserOwner, evaluate, parseNameStatus, suggest, isReleasePromotion};
 if (require.main === module) process.exitCode = main();

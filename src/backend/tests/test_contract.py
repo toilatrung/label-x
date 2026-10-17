@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 import yaml
+from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.validation import validate_schema
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -100,6 +101,16 @@ def test_t008_state_guards_and_error_contract(spec):
             assert operation["requestBody"]["required"]
 
 
+def test_t021_snapshot_api_contract_has_list_drift_and_deep_links(spec):
+    assert "get" in spec["paths"]["/api/snapshots/"]
+    accepted = spec["components"]["schemas"]["SnapshotAccepted"]
+    assert "drift_jobs" in accepted["properties"]
+    snapshot = spec["components"]["schemas"]["Snapshot"]
+    job = snapshot["properties"]["jobs"]["items"]
+    assert {"cvat_url", "frames"} <= set(job["properties"])
+    assert job["properties"]["cvat_url"]["format"] == "uri"
+
+
 def test_every_ref_resolves(spec):
     def walk(node: Any) -> None:
         if isinstance(node, dict):
@@ -178,12 +189,46 @@ def test_review_decision_schema_preserves_audit_and_reference_links(spec):
         assert ref in srs, f"ReviewDecision: {ref} không có trong SRS"
 
 
+def test_request_fix_is_output_only_for_decisions_endpoint(spec):
+    schemas = spec["components"]["schemas"]
+    input_actions = set(schemas["IssueDecisionAction"]["enum"])
+    persisted_actions = set(schemas["PersistedIssueDecisionAction"]["enum"])
+    assert input_actions == {"confirm", "reject", "uncertain", "escalate"}
+    assert persisted_actions == input_actions | {"request_fix"}
+    assert schemas["IssueDecisionCreate"]["properties"]["action"]["$ref"] == (
+        "#/components/schemas/IssueDecisionAction"
+    )
+    assert schemas["IssueDecision"]["properties"]["action"]["$ref"] == (
+        "#/components/schemas/PersistedIssueDecisionAction"
+    )
+    assert "request_fix" in schemas["ReviewDecision"]["properties"]["decision"]["enum"]
+    rework = spec["paths"]["/api/rework/"]["post"]
+    assert rework["x-labelx-transition"] == "issue.request_fix"
+    assert "ReviewDecision(request_fix)" in rework["description"]
+
+
 def test_every_operation_declares_known_roles(spec):
     roles = set(spec["components"]["schemas"]["Role"]["enum"]) | PSEUDO_ROLES
     for path, method, op in operations(spec):
         declared = op.get("x-labelx-roles")
         assert declared, f"{method.upper()} {path} thiếu x-labelx-roles"
         assert set(declared) <= roles, f"{path}: vai trò lạ {set(declared) - roles}"
+
+
+@pytest.mark.parametrize(
+    ("path", "method"),
+    [
+        ("/api/gpu-worker/config/", "get"),
+        ("/api/gpu-worker/config/", "put"),
+        ("/api/gpu-worker/probe/", "post"),
+    ],
+)
+def test_worker_trace_and_roles_match_runtime_schema(spec, path, method):
+    documented = spec["paths"][path][method]
+    runtime = SchemaGenerator().get_schema(request=None, public=True)["paths"][path][method]
+    for extension in ("x-labelx-trace", "x-labelx-roles"):
+        assert runtime[extension] == documented[extension]
+    assert set(documented["x-labelx-roles"]) == {"super_admin", "qc_admin"}
 
 
 def test_operation_ids_are_unique(spec):
@@ -256,3 +301,85 @@ def test_contract_declares_workflow_permissions(spec: dict[str, Any]) -> None:
         "product_owner",
         "data_model_owner",
     }
+
+
+def test_dataset_endpoints_contract_and_error_codes(spec):
+    # 1. Kiểm tra OpenAPI contract tĩnh (docs/04-api/openapi.yaml)
+    datasets_list_static = spec["paths"]["/api/datasets/"]["get"]
+    assert {"200", "400", "403", "502"} <= set(datasets_list_static["responses"])
+    param_names = [
+        p.get("name") or p.get("$ref") for p in datasets_list_static.get("parameters", [])
+    ]
+    assert any("Cursor" in str(p) or p == "cursor" for p in param_names)
+
+    datasets_tasks_static = spec["paths"]["/api/datasets/{id}/tasks/"]["get"]
+    assert {"200", "400", "403", "404", "502"} <= set(datasets_tasks_static["responses"])
+    path_param = [
+        p
+        for p in datasets_tasks_static.get("parameters", [])
+        if "Id" in str(p.get("$ref", "")) or p.get("name") == "id"
+    ]
+    assert path_param, "datasets_tasks must use id path parameter"
+
+    # 2. Sinh schema thực tế từ DRF Spectacular và đối chiếu chính xác
+    generator = SchemaGenerator()
+    generated = generator.get_schema(request=None, public=True)
+    gen_paths = generated["paths"]
+
+    # Đối chiếu /api/datasets/
+    assert "/api/datasets/" in gen_paths
+    gen_list_op = gen_paths["/api/datasets/"]["get"]
+    assert gen_list_op["operationId"] == datasets_list_static["operationId"]
+
+    # Parameter: cursor
+    gen_list_params = {p["name"]: p for p in gen_list_op.get("parameters", [])}
+    assert "cursor" in gen_list_params
+    assert gen_list_params["cursor"]["in"] == "query"
+
+    # Responses: 200 và error codes 400, 403, 502
+    assert {"200", "400", "403", "502"} <= set(gen_list_op["responses"])
+    list_200 = gen_list_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert "PaginatedDatasetList" in list_200["$ref"]
+    for code in ("400", "403", "502"):
+        resp = gen_list_op["responses"][code]
+        err_schema = resp["content"]["application/json"]["schema"]
+        assert "Error" in err_schema["$ref"], f"Response {code} must reference Error schema"
+
+    # Đối chiếu /api/datasets/{id}/tasks/
+    assert "/api/datasets/{id}/tasks/" in gen_paths
+    gen_tasks_op = gen_paths["/api/datasets/{id}/tasks/"]["get"]
+    assert gen_tasks_op["operationId"] == datasets_tasks_static["operationId"]
+
+    # Parameter: id
+    gen_tasks_params = {p["name"]: p for p in gen_tasks_op.get("parameters", [])}
+    assert "id" in gen_tasks_params
+    assert gen_tasks_params["id"]["in"] == "path"
+    assert gen_tasks_params["id"]["required"] is True
+
+    # Responses: 200 và error codes 400, 403, 404, 502
+    assert {"200", "400", "403", "404", "502"} <= set(gen_tasks_op["responses"])
+    tasks_200 = gen_tasks_op["responses"]["200"]["content"]["application/json"]["schema"]
+    assert tasks_200["type"] == "array"
+    assert "CvatTask" in tasks_200["items"]["$ref"]
+    for code in ("400", "403", "404", "502"):
+        resp = gen_tasks_op["responses"][code]
+        err_schema = resp["content"]["application/json"]["schema"]
+        assert "Error" in err_schema["$ref"], f"Response {code} must reference Error schema"
+
+
+@pytest.mark.parametrize(
+    ("path", "method"),
+    [
+        ("/api/config-versions/{id}/publish/", "post"),
+        ("/api/runs/{id}/cancel/", "post"),
+        ("/internal/metrics/", "get"),
+    ],
+)
+def test_bodyless_endpoints_match_contract(spec, path, method):
+    """F-8: schema sinh từ view không được thêm requestBody và phải phủ mã lỗi của contract."""
+    static = spec["paths"][path][method]
+    generated = SchemaGenerator().get_schema(request=None, public=True)["paths"][path][method]
+    assert generated["operationId"] == static["operationId"]
+    assert "requestBody" not in static
+    assert "requestBody" not in generated
+    assert set(static["responses"]) <= set(generated["responses"])

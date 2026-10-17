@@ -78,14 +78,39 @@ def test_list_jobs_stops_on_empty_page_even_if_next_is_present() -> None:
     assert calls == 1
 
 
+def test_frame_download_and_deep_links_are_read_only() -> None:
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, content=b"jpeg", headers={"content-type": "image/jpeg"})
+
+    with CvatReadClient(
+        "http://cvat.example.test", "token", transport=httpx.MockTransport(handler)
+    ) as client:
+        assert client.get_job_frame(12, 7) == (b"jpeg", "image/jpeg")
+        assert client.job_url(5, 12) == "http://cvat.example.test/tasks/5/jobs/12"
+        assert client.job_url(5, 12, frame_index=7).endswith("/tasks/5/jobs/12?frame=7")
+
+    assert [request.method for request in requests] == ["GET"]
+    assert dict(requests[0].url.params) == {
+        "type": "frame",
+        "number": "7",
+        "quality": "original",
+    }
+
+
 def test_only_adapter_constructs_httpx_client_in_backend() -> None:
+    # Each external service owns a named adapter. Do not allow arbitrary client.py files:
+    # GPU inference POST is not a CVAT operation and must not relax CVAT's read-only hook.
+    adapters = {"cvat_adapter/client.py", "vlm/client.py", "engines/worker_adapter/client.py"}
     backend = Path(__file__).resolve().parents[2]
     offenders = []
     for path in backend.rglob("*.py"):
         relative = path.relative_to(backend)
         if (
             "tests" in relative.parts
-            or path.name == "client.py"
+            or relative.as_posix() in adapters
             or any(part.startswith(".") for part in relative.parts)
         ):
             continue

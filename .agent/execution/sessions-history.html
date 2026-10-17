@@ -139,12 +139,48 @@ ul.dir{columns:2;font-size:14px}
 <td>2026-10-09</td>
 <td>2026-10-09</td>
 <td>claude-code (integrator) cho Trịnh Quang Trung</td>
-<td>M-01-RESOLVE; T-016, T-020, T-021, T-022</td>
+<td>M-01-RESOLVE; T-016, T-047, T-048, T-049</td>
 <td>completed</td>
-<td>Audit M-01 trên develop 9f9b509 (NO-GO), xử lý F-01, F-02, F-03, F-04, F-07, F-08, F-09; gộp 23 file riêng (CR-100) vào file chính và xoá; đăng ký T-020…T-022. F-05 (review/QA độc lập) và F-06 (BLOCKER-014) chờ PO.</td>
-<td><code>.agent/reports/review/flow-2026-10-09.html</code>, <code>.agent/reports/qa/M-01-2026-10-09.html</code>, <code>.agent/reports/implementation/T-016.html</code>, <code>T-020.html</code>, <code>T-021.html</code>, <code>T-022.html</code></td>
+<td>Audit M-01 trên develop 9f9b509 (NO-GO), xử lý F-01, F-02, F-03, F-04, F-07, F-08, F-09; gộp 23 file riêng (CR-100) vào file chính và xoá; đăng ký T-047…T-049. F-05 (review/QA độc lập) và F-06 (BLOCKER-014) chờ PO.</td>
+<td><code>.agent/reports/review/flow-2026-10-09.html</code>, <code>.agent/reports/qa/M-01-2026-10-09.html</code>, <code>.agent/reports/implementation/T-016.html</code>, <code>T-047.html</code>, <code>T-048.html</code>, <code>T-049.html</code></td>
 <td>none</td>
 </tr>
+<tr>
+<td>SES-008</td>
+<td>2026-10-10</td>
+<td>2026-10-11</td>
+<td>claude-code (integrator, phiên QC) cho Trịnh Quang Trung</td>
+<td>review luồng develop + PR #126; F-1, F-6 (flow-2026-10-10); T-019…T-032, T-047…T-049</td>
+<td>completed</td>
+<td>Review luồng develop 5c37d42 cộng PR #126 (M-02-RESOLVE, merge local, make check xanh); xử lý F-1: gộp 22 file riêng (CR-100) vào file chính và xoá; F-6: đồng bộ planning với task board. Mã M-01-RESOLVE T-020, T-021, T-022 (SES-007) đổi sang T-047, T-048, T-049 vì trùng mã snapshot M-02 (issue #62…#64); các dòng SES-007 đã sửa theo mã mới. T-019, T-020, T-023 giữ done theo PO (QC cấp M-02 thay QC riêng từng task). Phiếu chốt PO 2026-10-11: CR-109 approved; ký bổ sung E-05, E-08, E-09, E-11 (EPIC_IN_PROGRESS). Phiếu lần 2 (DEC-014): BLOCKER-024 accepted (T-004 in-progress, E-04 EPIC_IN_PROGRESS, EDGE-009 active); BLOCKER-026 đóng khi PR #126 merge và review APPROVE; lease 1800 giây giữ, BLOCKER-025 open. Chưa làm: duyệt PR #126, #127, #131 (CR-102) chờ PO.</td>
+<td><code>.agent/reports/review/flow-2026-10-10.html</code> (PR #127), <code>.agent/reports/implementation/T-047.html</code>, <code>T-048.html</code>, <code>T-049.html</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>SES-009</td>
+<td>2026-10-11</td>
+<td>2026-10-11</td>
+<td>claude-code (integrator, phiên QC) cho Trịnh Quang Trung</td>
+<td>đồng bộ hồ sơ tích hợp M-02 (PR #131) sau khi #134, #127 merge và #126 được APPROVE</td>
+<td>completed</td>
+<td>PR #134 (fix đăng nhập CSRF, merge 0520a2c) và PR #127 (flow-2026-10-10, merge 20ab4a4) đã vào develop. PR #126 reviewer độc lập APPROVE tại d3a6c33; ghi nhận R-8 (minor) và các mục NOT VERIFIED: SIGKILL/broker thật, tự phục hồi với lease mặc định 1800 s, tính lại hash từ dữ liệu nguồn, SeaweedFS. Gộp fix/M-02-RESOLVE 9ff3da1 (đã chứa develop 20ab4a4) vào chore/qc-integrate-M-02 bằng merge commit. BLOCKER-026 giữ open: chỉ đóng khi #126 merge vào develop và PO đưa mã task/CR cùng hạn cho phần metrics hoãn lại.</td>
+<td><code>.agent/execution/current-context.html</code>, <code>.agent/governance/blockers/BLOCKER-026.html</code>, <code>.agent/intelligence/git-nexus/task-commit-map.html</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>SES-010</td>
+<td>2026-10-11</td>
+<td>2026-10-11</td>
+<td>claude-code (integrator, phiên QC) cho Trịnh Quang Trung</td>
+<td>đóng M-02-RESOLVE sau khi #126, #131, #139 merge</td>
+<td>completed</td>
+<td>M-02-RESOLVE chuyển done/complete theo yêu cầu PO: implementation complete, review approved (độc lập APPROVE tại d3a6c33; R-8 sửa bằng #139), QA ghi nhận cuối; commit map ghi hash merge 975f960, e074fbc. BLOCKER-025 và BLOCKER-026 vẫn open.</td>
+<td><code>.agent/reports/implementation/M-02-RESOLVE.html</code>, <code>.agent/reports/review/M-02-RESOLVE.html</code>, <code>.agent/reports/qa/M-02-RESOLVE.html</code>, <code>.agent/execution/task-board.html</code></td>
+<td>none</td>
+</tr>
+<tr><td>SES-011</td><td>2026-10-12</td><td>2026-10-12</td><td>Codex cho PO @toilatrung</td><td>M-03-RESOLVE / M03-R01</td><td>completed</td><td>Tiếp nhận phiếu P01…P09 A; policy 900/300/120 s pilot; DEC-019 accepted/CR-113 approved; chuyển mọi Backend PO, FE mới develop-fe; giữ thiếu input E2E/runtime/ETA, không triển khai product. Scope completed của session chỉ là tiếp nhận/quản trị.</td><td><a href="../governance/decisions/DEC-019.html">DEC-019</a>; <a href="../governance/change-requests/CR-113.html">CR-113</a></td><td>none</td></tr>
+<tr><td>SES-012</td><td>2026-10-13</td><td>2026-10-13</td><td>Codex cho PO @toilatrung (integrator)</td><td>Gộp file riêng M-03/M-04 (CR-100)</td><td>completed</td><td>Gộp 4 task-board-@user, 14 báo cáo implementation và 1 báo cáo review vào file chính; thêm hàng T-033…T-046 vào task board; M04S-02/03 chuyển review (report complete). Không task nào done; M04S-04 blocked chờ quyền dữ liệu.</td><td><code>.agent/execution/task-board.html</code>, <code>.agent/execution/current-context.html</code></td><td>none</td></tr>
 </tbody>
 </table>
+<h2 id="m04-dispatch-20261013">2026-10-13 — Nhánh code và phân công M-04</h2><p>PO yêu cầu tạo nhánh code và issue/task nhỏ; Backend tập trung @toilatrung. Tạo feat/M-04-backend từ origin/develop@a2e0195 trong /tmp/labelx-m04, mang kế hoạch bằng cherry-pick 2b2d603. Tạo issue tổng #278 và 16 sub-issues #279…#294; 13 BE PO, 3 support Hà/Việt Anh/Nam; #213 thu hẹp FE cho Thọ, #212/#214 deferred không đóng, #216 backlog FE độc lập. DEC-021 và dispatch ghi path/owner/dependency; task mới pending, chưa implementation. Bản nội dung issue cũ lưu trong dispatch. Sửa nhầm liên kết CR-115 ở E-05 do commit planning trước. validate-kit PASS; kiểm issue/assignee/sub-issue qua GitHub. Worktree gốc không chỉnh trong lượt này.</p>
 </article></main></body></html>

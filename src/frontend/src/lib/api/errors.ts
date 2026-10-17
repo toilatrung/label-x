@@ -21,8 +21,11 @@ export const ERROR_MESSAGES = {
   ISSUE_EXISTS: 'Issue đã tồn tại cho annotation và rule này. Vui lòng kiểm tra Issue hiện có.',
   BUSINESS_RULE_UNMET: 'Chưa đủ điều kiện thực hiện thao tác. Vui lòng kiểm tra các yêu cầu liên quan.',
   INSUFFICIENT_SAMPLE: 'Chưa đủ mẫu để đánh giá. Vui lòng bổ sung mẫu và thử lại.',
+  POLICY_NOT_CONFIGURED: 'Chính sách review chưa được cấu hình. Vui lòng liên hệ quản trị viên.',
+  POLICY_VERSION_MISMATCH: 'Phiên bản chính sách không khớp. Vui lòng tải lại và thử lại.',
 } satisfies Record<ErrorCode, string>;
 
+export const CSRF_ERROR_MESSAGE = 'Mã bảo vệ của phiên không hợp lệ hoặc đã bị thay thế (ví dụ do cookie của ứng dụng khác cùng host). Vui lòng tải lại trang và thử lại.';
 export const NETWORK_ERROR_MESSAGE = 'Không kết nối được máy chủ. Vui lòng thử lại.';
 export const FALLBACK_ERROR_MESSAGE = 'Không thể xử lý yêu cầu. Vui lòng thử lại.';
 export const SERVER_ERROR_MESSAGE = 'Máy chủ gặp lỗi. Vui lòng thử lại sau.';
@@ -42,12 +45,14 @@ export function readErrorDetail(value: unknown): ErrorDetail | undefined {
   };
 }
 
-export function apiErrorMessage(status: number, code?: string, requestId?: string): string {
+export function apiErrorMessage(status: number, code?: string, requestId?: string, reason?: string): string {
   let message: string;
   if (status >= 500 && status < 600) {
     // Do not surface server diagnostics or mislabel a server failure as validation.
     message = SERVER_ERROR_MESSAGE;
     if (requestId?.trim()) message += ` Mã yêu cầu: ${requestId.trim()}`;
+  } else if (code === 'FORBIDDEN' && reason === 'csrf') {
+    message = CSRF_ERROR_MESSAGE;
   } else if (code && Object.hasOwn(ERROR_MESSAGES, code)) {
     message = ERROR_MESSAGES[code as ErrorCode];
   } else {
@@ -72,11 +77,18 @@ export class ApiRequestError extends Error {
   constructor(public status: number, detail?: unknown, headers?: Headers) {
     const body = readErrorDetail(detail);
     const requestId = body?.request_id?.trim() || headers?.get('X-Request-ID')?.trim() || undefined;
-    super(apiErrorMessage(status, body?.code, requestId));
+    const reason = typeof body?.details?.reason === 'string' ? body.details.reason : undefined;
+    super(apiErrorMessage(status, body?.code, requestId, reason));
     this.name = 'ApiRequestError';
     this.detail = body;
     this.requestId = requestId;
   }
+}
+
+/** True when the server rejected the request for a missing or mismatched CSRF token. */
+export function isCsrfError(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.status === 403 &&
+    error.detail?.code === 'FORBIDDEN' && error.detail.details?.reason === 'csrf';
 }
 
 export function errorMessage(error: unknown): string {

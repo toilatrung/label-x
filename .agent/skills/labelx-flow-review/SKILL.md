@@ -84,12 +84,29 @@ Với mỗi khâu đã có code:
 - [ ] `current-context.html` tăng revision, `sessions-history.html` có phiên này.
 - [ ] Blocker đang mở có người chịu trách nhiệm và hạn; milestone có nguy cơ trễ thì ghi rõ cùng phương án (CR).
 - [ ] `make validate-kit` đạt.
+- [ ] `main` là tổ tiên của `develop` (mục "Merge `main` vào `develop`" bên dưới); không có PR đóng đợt nào bị squash.
 
 ## 5. Kết luận và báo cáo
 
 - Viết `.agent/reports/review/flow-<YYYY-MM-DD>.html` từ `.agent/templates/review-report-template.html`, `Review Type: release`. Khi merge lên `main` thì thêm `.agent/reports/releases/` theo `release-report-template.html`.
 - Báo cáo gồm: bảng PR → task, bảng vai trò × màn, sơ đồ luồng đánh dấu khâu thật và khâu stub, finding theo mức độ như skill `labelx-pr-review`, danh sách việc chặn release.
 - Kết luận chỉ là một trong hai: **Cho merge develop → main**, hoặc **Chưa** kèm danh sách finding `critical`/`major` phải xử lý. Finding phát sinh từ nhiều PR thì giao cho owner của task tạo ra phần lệch, hoặc mở task mới trên task board.
+
+## Merge `main` vào `develop` và `develop` vào `main`: chỉ bằng merge commit
+
+`develop` và `main` phải giữ quan hệ tổ tiên. Nếu `main` có commit mà `develop` không có (ví dụ CR-104 `7a6a8c5`), PR `develop` → `main` sẽ xung đột dù nội dung đã trùng.
+
+- Kiểm trước khi mở PR đóng đợt:
+
+```bash
+git fetch origin
+git merge-base --is-ancestor origin/main origin/develop || echo "main chưa là tổ tiên của develop"
+git merge-tree --write-tree origin/main origin/develop    # phải không có CONFLICT
+```
+
+- Nếu chưa là tổ tiên: tạo nhánh từ `develop`, `git merge origin/main`, giải quyết xung đột theo thứ tự trong AGENT.html (bản đã duyệt thắng), kiểm cây `git diff origin/develop HEAD` rỗng nếu nội dung đã trùng, rồi mở PR vào `develop`.
+- **Merge PR đó và PR `develop` → `main` bằng "Create a merge commit". Không squash, không rebase.** Squash bỏ commit merge nên `main` vẫn không là tổ tiên và xung đột quay lại (đã xảy ra ở PR #78 → #81, đợt M-01).
+- PR đồng bộ thuần (cây không đổi) không trộn thêm thay đổi khác; việc khác đi PR riêng.
 
 ## Phối hợp khi nhiều phiên hoặc nhiều người cùng làm
 

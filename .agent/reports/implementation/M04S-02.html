@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M04S-02 — Đối chiếu class map BDD100K và crop mẫu — LabelX</title>
+<meta name="labelx:id" content="implementation-m04s-02">
+<meta name="labelx:title" content="M04S-02 — Đối chiếu class map BDD100K và crop mẫu">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="classifier"><meta name="labelx:tags" content="[implementation, m04s-02, bdd100k, classifier, inventory]">
+<meta name="labelx:priority" content="2">
+<style>:root{--bg:#f6f7f9;--card:#fff;--border:#dfe3e8;--ink:#18202a;--muted:#586273;--brand:#d1202d;--head:#1f2933;--warn:#fff4d6;--ok:#edf8f3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.58 Inter,"Segoe UI",system-ui,sans-serif}.top{background:var(--head);color:#fff;padding:12px 24px}.top b{color:var(--brand)}main{max-width:1240px;margin:24px auto;padding:0 24px 60px}article{background:var(--card);border:1px solid var(--border);padding:12px 32px 30px}h1{line-height:1.25}h2{border-bottom:1px solid var(--border);padding-bottom:5px;margin-top:28px}h3{margin-top:22px}code{background:#f0f2f4;padding:1px 4px;font:12px ui-monospace,Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:12.5px;margin:12px 0;display:block;overflow-x:auto}th,td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}th{background:#eef1f4;white-space:nowrap}.meta{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;background:#f1f3f5;padding:10px;margin-top:12px}.note{background:var(--warn);border-left:4px solid #a56a00;padding:10px 14px}.ok{background:var(--ok);border-left:4px solid #19704b;padding:10px 14px}.nowrap{white-space:nowrap}</style>
+</head><body><header class="top">Label<b>X</b> · M04S-02 implementation</header><main><article>
+<div class="meta"><b>id</b><span>implementation-m04s-02-vietanhhhhhh2003</span><b>type</b><span>report</span><b>status</b><span>complete</span></div>
+<h1>M04S-02 — Đối chiếu class map BDD100K và crop mẫu</h1>
+
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Inventory độc lập cho M-04: đối chiếu class map detector BDD100K hiện có và lập danh sách locator có thể dùng để xem xét crop mẫu cho classifier. Báo cáo không tạo ảnh, không sửa taxonomy và không tuyên bố có dataset train/validation hay calibration đạt.</p>
+
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04S-02</code></li>
+<li><strong>Title</strong>: <code>Đối chiếu class map BDD100K và crop mẫu</code></li>
+<li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: <code>M04S-02 / GitHub #293</code></li>
+<li><strong>Epic ID</strong>: <code>E-12</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Implemented</strong>: class ID/name theo manifest runtime; nguồn/checksum; 17 locator prediction trên tối đa 10 ảnh evidence; kích thước, chỉ số ảnh, trạng thái revision và case dễ nhầm.</li>
+<li><strong>Not Implemented</strong>: materialize crop 224×224, xác nhận ground truth, tạo split, fine-tune, calibration, sửa runtime/BE/OpenAPI/migration/dependency/CI/compose.</li>
+</ul>
+<div class="note"><strong>Cách đọc locator:</strong> đây là output detector ở ngưỡng <code>0.05</code>, không phải annotation hay ground truth. Confidence thấp được giữ có chủ đích để chỉ ra case dễ nhầm. Không được đưa các locator này thẳng vào train/validation nếu chưa đối chiếu annotation có provenance và split theo source group.</div>
+
+<h2 id="changes-made">Changes Made</h2>
+<table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
+<tr><td><code>.agent/reports/implementation/M04S-02.html</code></td><td>Tạo inventory class map, provenance, locator và giới hạn kiểm chứng; không nhúng hay xuất ảnh.</td><td>M04S-02</td></tr>
+</tbody></table>
+
+<h2 id="source-baseline">Source Baseline and Integrity</h2>
+<table><thead><tr><th>Nguồn</th><th>SHA / revision</th><th>Vai trò và giới hạn</th></tr></thead><tbody>
+<tr><td><code>origin/develop</code></td><td><code>a2e01954e44a9ae7bbed14f8db718a3c8fc45f1d</code></td><td>Baseline tạo nhánh report.</td></tr>
+<tr><td><code>src/detector_worker/model-manifest.json</code></td><td>SHA-256 <code>bff02fd33fd2ad8a7e8b207466a6f0e19790ce1403a0a6a1f6950475b27eb097</code></td><td>Nguồn chuẩn trong repo cho thứ tự 10 lớp, model/checkpoint và policy training split.</td></tr>
+<tr><td><code>src/detector_worker/evidence/t005-cpu-2026-10-08/predictions.json</code></td><td>SHA-256 <code>d31c3584a07e9150279a24b9a2272b47730960c14f815f03ac36f2332a0b29af</code></td><td>342 prediction trên 10 ảnh; locator bên dưới trỏ tới JSON này.</td></tr>
+<tr><td><code>src/detector_worker/evidence/t005-cpu-2026-10-08/summary.json</code></td><td>SHA-256 <code>f1b6b15b60407bed5e52d890b619a398c9287bd6b4d54bdbd7fadd575f6922fe</code></td><td>Provenance ảnh, SHA từng ảnh, số đếm class và giới hạn môi trường CPU.</td></tr>
+<tr><td><code>src/backend/fixtures/bdd100k_guideline_v1.yaml</code></td><td>SHA-256 <code>299ac35722f7d5e3c5afb94c7bcb5c7a0ab44bec9e30e9fd6a297b9d897c3c4f</code></td><td>Guideline mẫu cho pilot, dùng để ghi case dễ nhầm; không phải taxonomy chính thức đã được QA duyệt.</td></tr>
+<tr><td>Kế hoạch M-04 / CR-115</td><td><code>origin/feat/M-04-backend@39cd32b23fb80b6aea23e3eaf0a13691d42c08cb</code></td><td>Yêu cầu classifier crop 224×224 giữ tỉ lệ + padding, truy vết snapshot/annotation và split theo source group. Nhánh này còn thay đổi phần VLM qua CR-116; thay đổi đó không làm đổi inventory classifier ở báo cáo này.</td></tr>
+</tbody></table>
+<p>Model được manifest ghi là <code>Faster R-CNN R-50-FPN 3x BDD100K</code>, version <code>syscv-bdd100k-models@0935a8a3</code>, checkpoint SHA-256 <code>ba1be4c41669969ff89083a9ac9355a5fdd81505786d9b5eb3a5126a4d053540</code>. Training manifest hiện chỉ là policy “toàn bộ BDD100K train được xem là training data”; repo không chứa danh sách file train đầy đủ trong artifact này.</p>
+
+<h2 id="class-map">Class Map 10 lớp</h2>
+<p><code>class_id</code> là chỉ số zero-based theo mảng <code>class_mapping.classes</code>; cùng ánh xạ xuất hiện trong từng prediction. Manifest không có trường ID riêng ngoài thứ tự mảng.</p>
+<table><thead><tr><th>ID</th><th>Class name</th><th>Đối chiếu nguồn</th><th>Mẫu trong evidence</th><th>Case dễ nhầm / kiểm tay</th></tr></thead><tbody>
+<tr><td>0</td><td><code>pedestrian</code></td><td>Manifest + prediction khớp</td><td>48</td><td><code>rider</code>; người ngồi trên phương tiện không phải pedestrian.</td></tr>
+<tr><td>1</td><td><code>rider</code></td><td>Manifest + prediction khớp</td><td>2</td><td><code>pedestrian</code>; cần gắn cả người và bicycle/motorcycle theo guideline mẫu.</td></tr>
+<tr><td>2</td><td><code>car</code></td><td>Manifest + prediction khớp</td><td>188</td><td><code>truck</code>/<code>bus</code>; pickup và khoang hành khách liền khối cần kiểm tay.</td></tr>
+<tr><td>3</td><td><code>truck</code></td><td>Manifest + prediction khớp</td><td>9</td><td><code>car</code>/<code>bus</code>; thùng hàng/cabin tách biệt là dấu hiệu guideline mẫu.</td></tr>
+<tr><td>4</td><td><code>bus</code></td><td>Manifest + prediction khớp</td><td>4</td><td><code>truck</code>/<code>car</code>; minibus vẫn được guideline mẫu xếp bus.</td></tr>
+<tr><td>5</td><td><code>train</code></td><td>Manifest có; prediction evidence không có</td><td>0</td><td>Không có locator trong repo. Tram được guideline mẫu xếp train; cần annotation có provenance trước khi tạo crop.</td></tr>
+<tr><td>6</td><td><code>motorcycle</code></td><td>Manifest + prediction khớp</td><td>2</td><td><code>bicycle</code>; evidence có hai nhãn chồng gần như cùng một box, confidence thấp.</td></tr>
+<tr><td>7</td><td><code>bicycle</code></td><td>Manifest + prediction khớp</td><td>1</td><td><code>motorcycle</code>; cần nhìn động cơ và kiểm rider riêng.</td></tr>
+<tr><td>8</td><td><code>traffic light</code></td><td>Manifest + prediction khớp</td><td>20</td><td><code>traffic sign</code>; biển phát sáng không mặc nhiên là traffic light.</td></tr>
+<tr><td>9</td><td><code>traffic sign</code></td><td>Manifest + prediction khớp</td><td>68</td><td><code>traffic light</code>/biển quảng cáo; chỉ biển giao thông cố định hoặc tạm theo guideline mẫu.</td></tr>
+</tbody></table>
+
+<h2 id="locator-provenance">Provenance ảnh dùng trong locator</h2>
+<p>Summary ghi nguồn là Hugging Face dataset <code>dgural/bdd100k</code>, dataset card <code>bdd100k-validation</code>, revision <code>c2e7f266756bcd07b87f1a45a35937c8eac20241</code>; lựa chọn 10 file đầu thư mục <code>data/</code> theo thứ tự lexical và kiểm SHA-256 với LFS OID. Repo không chứa byte ảnh, annotation gốc, snapshot ID hay CVAT revision để kiểm độc lập nội dung.</p>
+<table><thead><tr><th>Image index</th><th>Filename</th><th>SHA-256 của ảnh theo summary</th><th>Kích thước</th></tr></thead><tbody>
+<tr><td>0</td><td><code>b1c66a42-6f7d68ca.jpg</code></td><td><code>76bf84536edbaf192a8a699efc62ba2b06056bac12c426ecfcc2e003d91fbd32</code></td><td>1280×720</td></tr>
+<tr><td>2</td><td><code>b1c81faa-c80764c5.jpg</code></td><td><code>d60d83e09a23f819183cb7725ba4011665b26ebc137d35384198d376ac91cf2f</code></td><td>1280×720</td></tr>
+<tr><td>3</td><td><code>b1c9c847-3bda4659.jpg</code></td><td><code>b7263e1490640e59ac547e3d4783484af84ba139429e235a9c5095d9f0340978</code></td><td>1280×720</td></tr>
+<tr><td>4</td><td><code>b1ca2e5d-84cf9134.jpg</code></td><td><code>1ead19ec62c69d94b3329f8cc6142e74a02a5b07d2b3f2bd4c9c77b74aefa8a6</code></td><td>1280×720</td></tr>
+<tr><td>5</td><td><code>b1ca8418-84a133a0.jpg</code></td><td><code>93d09740f72ec8842742715c5e6aad3c22e3522ce125ade465b446d9201a7fa9</code></td><td>1280×720</td></tr>
+<tr><td>6</td><td><code>b1cac6a7-04e33135.jpg</code></td><td><code>54ada0f98638a4c968d8d29e47578ae1aed605a16a773e0dfea7d16071975744</code></td><td>1280×720</td></tr>
+<tr><td>8</td><td><code>b1cd1e94-549d0bfe.jpg</code></td><td><code>f5da4f49797b718e4af25f381b3c7f49018b202dc8cd7f12328c640e67ff1b44</code></td><td>1280×720</td></tr>
+</tbody></table>
+
+<h2 id="sample-locators">17 locator crop/prediction tham khảo</h2>
+<p>Locator JSON có dạng <code>images[image_index].detections[detection_index]</code>. BBox là <code>[x1,y1,x2,y2]</code> theo pixel ảnh gốc 1280×720. “Frame” bên dưới chỉ là vị trí ảnh trong JSON evidence, không phải CVAT frame. Revision/snapshot: <strong>không có trong nguồn</strong>. Crop 224×224 chưa được tạo; M04B-01 phải lấy annotation đúng revision, crop theo bbox, giữ tỉ lệ và padding rồi ghi hash output.</p>
+<table><thead><tr><th>#</th><th>Class</th><th>Locator</th><th>File / frame inventory</th><th>BBox xyxy</th><th>Score</th><th>Ý nghĩa inventory</th></tr></thead><tbody>
+<tr><td>1</td><td><code>pedestrian (0)</code></td><td><code>images[8].detections[3]</code></td><td><code>b1cd1e94-549d0bfe.jpg</code> / 8</td><td><code>1193.34,390.84,1238.95,496.28</code></td><td>0.996952</td><td>Mẫu confidence cao.</td></tr>
+<tr><td>2</td><td><code>pedestrian (0)</code></td><td><code>images[4].detections[5]</code></td><td><code>b1ca2e5d-84cf9134.jpg</code> / 4</td><td><code>1030.69,253.19,1079.72,375.95</code></td><td>0.993953</td><td>Mẫu confidence cao khác ảnh.</td></tr>
+<tr><td>3</td><td><code>rider (1)</code></td><td><code>images[0].detections[31]</code></td><td><code>b1c66a42-6f7d68ca.jpg</code> / 0</td><td><code>651.19,353.10,665.30,380.26</code></td><td>0.286759</td><td>Box nhỏ; chồng vùng bicycle/motorcycle.</td></tr>
+<tr><td>4</td><td><code>rider (1)</code></td><td><code>images[5].detections[15]</code></td><td><code>b1ca8418-84a133a0.jpg</code> / 5</td><td><code>1200.45,210.63,1268.41,325.05</code></td><td>0.055492</td><td>Sát biên phải, confidence rất thấp.</td></tr>
+<tr><td>5</td><td><code>car (2)</code></td><td><code>images[3].detections[0]</code></td><td><code>b1c9c847-3bda4659.jpg</code> / 3</td><td><code>325.10,343.94,378.62,386.20</code></td><td>0.999477</td><td>Mẫu confidence cao.</td></tr>
+<tr><td>6</td><td><code>car (2)</code></td><td><code>images[6].detections[0]</code></td><td><code>b1cac6a7-04e33135.jpg</code> / 6</td><td><code>487.86,402.80,748.60,602.93</code></td><td>0.999401</td><td>Box lớn; hữu ích đối chiếu scale.</td></tr>
+<tr><td>7</td><td><code>truck (3)</code></td><td><code>images[6].detections[15]</code></td><td><code>b1cac6a7-04e33135.jpg</code> / 6</td><td><code>839.29,183.75,920.60,222.27</code></td><td>0.304282</td><td>Confidence thấp; bắt buộc kiểm annotation.</td></tr>
+<tr><td>8</td><td><code>truck (3)</code></td><td><code>images[6].detections[16]</code></td><td><code>b1cac6a7-04e33135.jpg</code> / 6</td><td><code>500.00,397.69,534.22,443.27</code></td><td>0.245738</td><td>Gần trùng locator bus #10.</td></tr>
+<tr><td>9</td><td><code>bus (4)</code></td><td><code>images[8].detections[2]</code></td><td><code>b1cd1e94-549d0bfe.jpg</code> / 8</td><td><code>300.67,282.72,546.03,473.94</code></td><td>0.997387</td><td>Mẫu confidence cao.</td></tr>
+<tr><td>10</td><td><code>bus (4)</code></td><td><code>images[6].detections[40]</code></td><td><code>b1cac6a7-04e33135.jpg</code> / 6</td><td><code>500.03,397.62,534.28,442.43</code></td><td>0.053339</td><td>Cùng vùng #8, minh họa truck/bus conflict.</td></tr>
+<tr><td>11</td><td><code>motorcycle (6)</code></td><td><code>images[5].detections[11]</code></td><td><code>b1ca8418-84a133a0.jpg</code> / 5</td><td><code>1200.67,231.10,1278.03,349.09</code></td><td>0.117396</td><td>Sát biên, gần rider #4.</td></tr>
+<tr><td>12</td><td><code>motorcycle (6)</code></td><td><code>images[0].detections[41]</code></td><td><code>b1c66a42-6f7d68ca.jpg</code> / 0</td><td><code>650.32,363.00,664.73,388.58</code></td><td>0.077404</td><td>Chồng bicycle #13 và rider #3.</td></tr>
+<tr><td>13</td><td><code>bicycle (7)</code></td><td><code>images[0].detections[38]</code></td><td><code>b1c66a42-6f7d68ca.jpg</code> / 0</td><td><code>650.41,363.19,664.78,389.03</code></td><td>0.144948</td><td>Mẫu duy nhất; conflict với motorcycle.</td></tr>
+<tr><td>14</td><td><code>traffic light (8)</code></td><td><code>images[8].detections[6]</code></td><td><code>b1cd1e94-549d0bfe.jpg</code> / 8</td><td><code>122.60,292.65,151.36,319.03</code></td><td>0.973746</td><td>Mẫu confidence cao.</td></tr>
+<tr><td>15</td><td><code>traffic light (8)</code></td><td><code>images[8].detections[9]</code></td><td><code>b1cd1e94-549d0bfe.jpg</code> / 8</td><td><code>1136.14,305.57,1164.90,339.77</code></td><td>0.925184</td><td>Mẫu phía phải ảnh.</td></tr>
+<tr><td>16</td><td><code>traffic sign (9)</code></td><td><code>images[2].detections[2]</code></td><td><code>b1c81faa-c80764c5.jpg</code> / 2</td><td><code>587.85,160.28,677.07,224.12</code></td><td>0.996957</td><td>Mẫu confidence cao.</td></tr>
+<tr><td>17</td><td><code>traffic sign (9)</code></td><td><code>images[2].detections[3]</code></td><td><code>b1c81faa-c80764c5.jpg</code> / 2</td><td><code>502.98,167.17,586.72,222.64</code></td><td>0.996445</td><td>Mẫu liền kề #16.</td></tr>
+</tbody></table>
+<p><strong>Class 5 — train:</strong> không tạo locator giả. Evidence ghi <code>0</code> detection nên nguồn chưa có. Đây là thiếu dữ liệu mẫu, không phải bằng chứng dataset không có train.</p>
+
+<h2 id="handoff">Handoff cho M04B-01</h2>
+<ol>
+<li>Dùng class order đúng <code>bdd100k-det-10-v1</code>; từ chối nhãn ngoài map hoặc đưa vào <code>unknown</code> theo policy được duyệt, không tự đổi ID.</li>
+<li>Đọc annotation có provenance thay vì lấy prediction trên làm nhãn. Mỗi crop cần source image SHA, snapshot/revision, annotation/object ID, bbox gốc, split/source group, thuật toán resize/padding và crop SHA-256.</li>
+<li>Tách train/validation theo source group; không dùng BDD100K train cho held-out. Locator cùng ảnh phải cùng split để tránh leakage.</li>
+<li>Materialize 224×224 bằng giữ tỉ lệ + padding theo kế hoạch; ghi padding/scale để ánh xạ ngược. Case sát biên phải và box rất nhỏ cần test riêng.</li>
+<li>Bổ sung annotation/crop cho <code>train</code> và xác minh các conflict rider–bicycle–motorcycle, car–truck–bus, traffic light–traffic sign trước khi coi inventory là dataset.</li>
+</ol>
+
+<h2 id="related-files">Related Files</h2>
+<ul>
+<li><strong>Task Records</strong>: <a href="https://github.com/toilatrung/label-x/issues/293">GitHub issue #293</a>; task source trên <code>origin/feat/M-04-backend:.agent/execution/m04/M04S-02.html</code>.</li>
+<li><strong>Context Packages</strong>: <code>origin/feat/M-04-backend:.agent/planning/M-04-ABC-implementation-2026-10-13.html</code>.</li>
+<li><strong>Task Board</strong>: Không sửa file dùng chung theo ranh giới issue.</li>
+<li><strong>Current Context</strong>: Không sửa file dùng chung theo ranh giới issue.</li>
+<li><strong>Decisions</strong>: <code>DEC-021</code> trên nhánh context M-04.</li>
+<li><strong>Change Requests</strong>: <code>CR-115</code> là nguồn yêu cầu classifier; phần VLM đã có <code>CR-116</code> trên nhánh context nhưng ngoài phạm vi inventory.</li>
+<li><strong>Risks or Blockers</strong>: Thiếu ảnh/annotation bytes, snapshot revision và mẫu class <code>train</code>; không chặn PO thực hiện M04B-01.</li>
+<li><strong>Review Request</strong>: <code>@DucHa180104 hoặc @toilatrung qua PR vào develop</code>.</li>
+<li><strong>Commits</strong>: <code>ghi tại PR/issue sau khi commit report</code>.</li>
+</ul>
+
+<h2 id="command-evidence">Command Evidence</h2>
+<table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td><code>gh issue view 293 --repo toilatrung/label-x</code></td><td>passed</td><td>Đã đọc scope, acceptance, branch boundary và yêu cầu Nhận + ETA.</td></tr>
+<tr><td><code>git fetch origin develop</code></td><td>passed</td><td>Nhánh report tạo từ <code>origin/develop@a2e0195</code>.</td></tr>
+<tr><td><code>Get-FileHash -Algorithm SHA256 &lt;sources&gt;</code></td><td>passed</td><td>Bốn checksum nguồn được ghi trong bảng Source Baseline and Integrity.</td></tr>
+<tr><td><code>ConvertFrom-Json predictions.json</code> + chọn tối đa hai score cao nhất mỗi class có mặt</td><td>passed</td><td>17 locator; đủ 9 class có prediction, class <code>train</code> ghi thiếu nguồn.</td></tr>
+<tr><td><code>docker version</code> trong Ubuntu 24.04 WSL</td><td>passed</td><td>Docker client/server <code>29.8.2</code>, server <code>linux/amd64</code>.</td></tr>
+</tbody></table>
+
+<h2 id="verification-evidence">Verification Evidence</h2>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Đối chiếu class map manifest ↔ prediction</td><td>passed</td><td>10 class unique theo đúng order; mọi prediction dùng ID/name trong map.</td></tr>
+<tr><td>Đối chiếu locator ↔ JSON</td><td>passed</td><td>17/17 locator sinh trực tiếp từ chỉ số mảng; bbox nằm trong kích thước 1280×720 của entry nguồn.</td></tr>
+<tr><td>Rà soát secret/API key/ảnh</td><td>passed</td><td>Report chỉ có path, hash, metadata và tọa độ; không chứa credential, request payload provider hay byte ảnh.</td></tr>
+<tr><td><code>make validate-kit</code> trong Ubuntu 24.04 WSL</td><td>passed</td><td><code>FRAMEWORK_VALIDATION_PASS</code> bằng Python 3.12 qua <code>uv</code>.</td></tr>
+</tbody></table>
+
+<h2 id="deviations">Deviations</h2>
+<ul>
+<li><strong>Plan Deviations</strong>: Repo baseline không có crop/annotation materialized; dùng detector prediction hiện có làm locator tham khảo và đánh dấu rõ không phải nhãn. Kế hoạch/CR-115 nằm trên nhánh M-04, chưa có trong <code>origin/develop</code>, nên chỉ đọc theo SHA và không chép/sửa file của PO.</li>
+<li><strong>Approved By</strong>: <code>scope issue #293 do @toilatrung tạo; chưa có review approval cho report</code>.</li>
+<li><strong>Known Limitations</strong>: ảnh không nằm trong repo; provenance mirror chưa phải cây chính thức bdd100k.com; không có annotation ID, snapshot/revision, split/source group cho từng locator; <code>train</code> không có mẫu; guideline là fixture mẫu; score detector không phải nhãn hay xác suất calibrated.</li>
+</ul>
+
+<h2 id="completion-criteria">Completion Criteria</h2>
+<ul>
+<li>[x] Mọi thay đổi chỉ thuộc file report được issue #293 cho phép.</li>
+<li>[x] Đủ 10 class ID/name theo nguồn; nguồn thiếu được đánh dấu.</li>
+<li>[x] Có 17 locator (không quá 20), kích thước, frame inventory, revision status, provenance và case dễ nhầm.</li>
+<li>[x] Crop được mô tả là mẫu tham khảo, không phải train/validation/calibration đạt.</li>
+<li>[x] Không có secret, API key hay ảnh trong report/repository.</li>
+<li>[x] Independent review/PR approval — xem comment duyệt trên PR 295 (@toilatrung).</li>
+</ul>
+
+<h2 id="forbidden-actions">Forbidden Actions</h2>
+<ul><li>Không dùng prediction locator làm ground truth.</li><li>Không ghi mock/inventory thành runtime model pass.</li><li>Không fine-tune, sửa taxonomy hoặc gửi ảnh ra dịch vụ từ report này.</li><li>Không tự đóng issue hay tự duyệt report.</li></ul>
+
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Output duy nhất: <code>.agent/reports/implementation/M04S-02.html</code>. Baseline nguồn: <code>a2e01954e44a9ae7bbed14f8db718a3c8fc45f1d</code>. Commit SHA và kết quả WSL validation được ghi ở PR/issue vì không thể nhúng SHA commit chứa chính file vào nội dung file trước khi commit.</p>
+<div class="ok"><strong>Kết luận:</strong> class map runtime đủ 10 lớp; evidence có locator tham khảo cho 9/10 lớp. Input để xây dataset classifier vẫn thiếu annotation/snapshot revision và mẫu <code>train</code>, nên PO cần xác minh/materialize trong M04B-01; task này không tạo dependency chặn.</div>
+</article></main></body></html>

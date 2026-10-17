@@ -24,14 +24,23 @@ async function setup(username: string, handler: () => Response) {
   const api = installMockAuthApi();
   await api.signIn(username);
   const passthrough = api.fetchSpy.getMockImplementation()!;
-  api.fetchSpy.mockImplementation(async (request: Request) =>
-    new URL(request.url).pathname === PATH ? handler() : passthrough(request));
+  api.fetchSpy.mockImplementation(async (request: Request) => {
+    const path = new URL(request.url).pathname;
+    if (path === PATH) return handler();
+    if (path === '/api/review-policy/') return json({
+      policy_version: 'pilot-1', source: 'settings', decision_status: 'approved',
+      lease_ttl_seconds: 900, resume_reservation_seconds: 300, idle_threshold_seconds: 120,
+      idle_gap_rule: 'exclude_over_threshold', immediate_exclusion_reasons: ['hidden', 'offline'],
+      renew_on: 'successful_write',
+    });
+    return passthrough(request);
+  });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><AuthProvider><ConfigurationPage /></AuthProvider></QueryClientProvider>);
   return api;
 }
 
-describe('WorkflowPermissions (T-016)', () => {
+describe('WorkflowPermissions (T-016, FE-09)', () => {
   it('renders the matrix, rules and own roles returned by the API', async () => {
     const api = await setup('qalead', () => json({
       matrix: [{ function: 'Rework', roles: roles('execute') }],
@@ -45,7 +54,12 @@ describe('WorkflowPermissions (T-016)', () => {
     expect(screen.getByText('Không tự review')).toBeDefined();
     expect(screen.getByText('Chờ triển khai')).toBeDefined();
     expect(screen.getByText('Đã áp dụng')).toBeDefined();
-    expect(screen.getByText('Dataset #1')).toBeDefined();
+    expect(screen.getByText('pilot-1')).toBeDefined();
+    expect(screen.getByText('900 giây')).toBeDefined();
+    expect(screen.getAllByText('Thực hiện').length).toBe(5);
+    expect(screen.queryByText('Vai trò của bạn')).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect((screen.getByRole('checkbox', { name: 'Ghi nhật ký' }) as HTMLInputElement).checked).toBe(true);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(true);
     expect(screen.queryByRole('button', { name: /sửa|xoá|xóa|edit|delete/i })).toBeNull();
   });
@@ -60,5 +74,10 @@ describe('WorkflowPermissions (T-016)', () => {
     const api = await setup('reviewer', () => json({}));
     await screen.findAllByText(/quyền/i);
     expect(api.fetchSpy.mock.calls.some(([r]) => new URL(r.url).pathname === PATH)).toBe(false);
+  });
+
+  it('shows an empty row when the API returns no matrix rows', async () => {
+    await setup('qalead', () => json({ matrix: [], rules: [], user_roles: [] }));
+    expect(await screen.findByText('Chưa có ma trận phân quyền.')).toBeDefined();
   });
 });

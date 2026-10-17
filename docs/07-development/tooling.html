@@ -92,15 +92,20 @@ ul.dir{columns:2;font-size:14px}
 make dev-backend    # http://localhost:8000/api/docs/
 make dev-worker     # Celery worker
 make dev-frontend   # http://localhost:3000
+make up             # cả stack chạy nền, không CVAT: http://127.0.0.1:3000 (make down để dừng)
+make refresh        # nạp lại FE sau khi sửa code từ Windows; TARGET=be|all cho backend/worker
 make superuser      # tạo tài khoản Django admin
 make check          # lint + typecheck + test + validate-kit (cần infra-up)</code></pre>
 <p><code>make setup</code> chạy lại an toàn: <code>make env</code> không ghi đè <code>src/backend/.env</code> và <code>src/frontend/.env.local</code> nếu đã có.</p>
 <h3 id="frontend-3000-goi-api-8000-session-csrf">Frontend :3000 gọi API :8000 (session + CSRF)</h3>
 <ul>
-<li>API xác thực bằng session Django (<code>SessionAuthentication</code>). Frontend phải gửi request với <code>credentials: "include"</code> và gửi header <code>X-CSRFToken</code> (lấy từ cookie <code>csrftoken</code>) cho mọi request ghi.</li>
+<li>API xác thực bằng session Django (<code>SessionAuthentication</code>). Frontend phải gửi request với <code>credentials: "include"</code> và gửi header <code>X-CSRFToken</code> (lấy từ cookie <code>labelx_csrftoken</code>) cho mọi request ghi.</li>
 <li><code>CORS_ALLOWED_ORIGINS=http://localhost:3000</code> và <code>CORS_ALLOW_CREDENTIALS = True</code> đã có (<code>.env.example</code>, <code>settings.py</code>).</li>
 <li><code>CSRF_TRUSTED_ORIGINS</code> đọc từ biến môi trường, mặc định bằng <code>CORS_ALLOWED_ORIGINS</code>, nên POST từ <code>localhost:3000</code> qua được kiểm CSRF Origin.</li>
 <li><strong>Chưa có</strong> endpoint đăng nhập API trong <code>src/backend/config/urls.py</code> (chỉ có <code>admin/</code>, <code>api/schema/</code>, <code>api/docs/</code>). Tài khoản từ <code>make superuser</code> chỉ đăng nhập được Django admin.</li>
+<li><strong>Chạy cùng máy với CVAT (<code>localhost:8080</code>).</strong> Cookie không phân biệt cổng, vì vậy LabelX dùng tên cookie riêng <code>labelx_sessionid</code>/<code>labelx_csrftoken</code> để phiên CVAT không thể ghi đè phiên LabelX. UI mặc định gọi API cùng origin và Next proxy <code>/api</code> sang <code>LABELX_API_PROXY_TARGET</code> (mặc định <code>http://127.0.0.1:8000</code>). Không đặt <code>NEXT_PUBLIC_API_BASE_URL</code> trừ khi cố ý gọi trực tiếp. <code>LABELX_API_PROXY_TARGET</code> và <code>LABELX_API_PROXY_TIMEOUT_MS</code> được đọc khi build/khởi động.</li>
+<li>Backend phải liệt kê origin của UI trong cả <code>CORS_ALLOWED_ORIGINS</code> và <code>CSRF_TRUSTED_ORIGINS</code>, ví dụ <code>http://127.0.0.1:3000</code> (thêm vào danh sách phân tách bằng dấu phẩy nếu vẫn cần <code>http://localhost:3000</code>).</li>
+<li>Lỗi 403 <code>FORBIDDEN</code> do CSRF mang <code>details.reason = "csrf"</code>; UI hiển thị nguyên nhân CSRF (không phải “không có quyền”) và đăng nhập tự lấy lại <code>labelx_csrftoken</code> rồi thử lại một lần.</li>
 <li>Cả hai mục trên là việc mở. Luồng chi tiết: <a href="../06-security/security-policies.html">../06-security/security-policies.html</a> mục 9.</li>
 </ul>
 <h2 id="3-danh-sach-make-target-ung-theo-scriptsinit-develop-environmentmk">3. Danh sách make target (đúng theo <code>scripts/init-develop-environment.mk</code>)</h2>
@@ -208,6 +213,26 @@ make check          # lint + typecheck + test + validate-kit (cần infra-up)</c
 <td></td>
 <td><code>dev-frontend</code></td>
 <td><code>npm run dev</code> (Next.js :3000)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>up</code></td>
+<td><code>scripts/dev-stack.sh start</code> — bật hạ tầng, <code>uv sync</code>/<code>npm ci</code> khi lock đổi, migrate khi thiếu, rồi chạy API (127.0.0.1:8000), worker, beat, Next (127.0.0.1:3000) ở nền; log ở <code>.cache/dev-stack/</code>. <code>POLL=1</code>: Next chạy webpack + polling để tự reload khi sửa code trên <code>/mnt</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>down</code></td>
+<td><code>scripts/dev-stack.sh stop</code> — dừng các tiến trình trên và <code>docker compose down</code> (giữ volume)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>refresh</code></td>
+<td><code>scripts/dev-stack.sh refresh</code> — WSL không nhận sự kiện file từ Windows trên <code>/mnt</code>: <code>TARGET=fe</code> (mặc định) xoá cache <code>.next</code> và chạy lại Next; <code>be</code> chạy lại API, worker, beat; <code>all</code> cả hai</td>
+</tr>
+<tr>
+<td></td>
+<td><code>status</code></td>
+<td><code>scripts/dev-stack.sh status</code></td>
 </tr>
 <tr>
 <td>Chất lượng</td>

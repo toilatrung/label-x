@@ -1,0 +1,26 @@
+name: labelx-detector
+services:
+  detector-worker:
+    image: ${DETECTOR_IMAGE:-labelx-detector-worker:dev}
+    build:
+      context: ..
+      dockerfile: infrastructure/detector-worker/Dockerfile
+    entrypoint: ["python", "-m", "labelx_detector.service"]
+    environment:
+      DETECTOR_SERVICE_TOKEN: ${DETECTOR_SERVICE_TOKEN:?Set a random detector service token}
+      DETECTOR_DEVICE: ${DETECTOR_DEVICE:-cuda:0}
+    ports: ["127.0.0.1:${DETECTOR_HOST_PORT:-8501}:8501"]
+    volumes:
+      - type: bind
+        source: ${DETECTOR_MODEL_DIR:?Set the absolute host checkpoint directory}
+        target: /models
+        read_only: true
+        bind:
+          create_host_path: false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,urllib.request; r=urllib.request.Request('http://127.0.0.1:8501/health',headers={'Authorization':'Bearer '+os.environ['DETECTOR_SERVICE_TOKEN']}); urllib.request.urlopen(r,timeout=10).close()"]
+      interval: 10s
+      timeout: 15s
+      start_period: 90s
+      retries: 12

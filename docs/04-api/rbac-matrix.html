@@ -76,12 +76,15 @@ ul.dir{columns:2;font-size:14px}
 <tr><td><code>datasets_tasks</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>Đọc CVAT qua adapter chỉ đọc</td><td>UC-01; FR-SNP-01</td></tr>
 <tr><td><code>snapshots_create</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Không trùng phạm vi đang xuất (409 SCOPE_BUSY)</td><td>UC-01; tab:rbac "Chạy"</td></tr>
 <tr><td><code>snapshots_retrieve</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-SNP-03, FR-SNP-04</td></tr>
-<tr><td><code>runs_list</code>, <code>runs_ledger</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-AGG-04; FR-RPT-04</td></tr>
+<tr><td><code>runs_list</code>, <code>runs_ledger</code>, <code>runs_shards</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-AGG-04; FR-RPT-04</td></tr>
+<tr><td><code>config_versions_list</code></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>FR-ENG-01</td></tr>
+<tr><td><code>config_versions_create</code>, <code>config_versions_publish</code></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td></td><td></td><td>Config đã publish không sửa được; create idempotent theo Idempotency-Key</td><td>FR-ENG-01; FR-SEC-05</td></tr>
 <tr><td><code>runs_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>RV chỉ xem</td><td>FR-AGG-05</td></tr>
 <tr><td><code>runs_create</code>, <code>runs_cancel</code>, <code>runs_retry_failed</code></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Theo bảng transition QC Run</td><td>UC-02; tab:rbac "Chạy"</td></tr>
 <tr><td><code>runs_ranking</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn (403 FORBIDDEN)</td><td>FR-REV-01; FR-EVL-02; BR-10</td></tr>
+<tr><td><code>internal_metrics</code></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td></td><td></td><td>Chỉ vai trò toàn hệ thống (RoleAssignment dataset_id null); QA/RV/dataset-scoped AD bị chặn 403 FORBIDDEN; chưa xác thực → 403 NOT_AUTHENTICATED. Quyền do CR-109 đề xuất, PO đã duyệt ngày 2026-10-11.</td><td>CR-109; NFR-12</td></tr>
 <tr><td><code>guidelines_rules_list</code>, <code>guidelines_rules_retrieve</code></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td></td><td>—</td><td>UC-12; FR-GDL-04</td></tr>
-<tr><td><code>queues_next</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Identity mapping bắt buộc; bỏ qua frame tự gán; một lease/người</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03</td></tr>
+<tr><td><code>queues_next</code>, <code>leases_current</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Identity mapping bắt buộc; bỏ qua frame tự gán; một lease/người</td><td>UC-04; FR-REV-03; FR-SEC-02, FR-SEC-03</td></tr>
 <tr><td><code>leases_renew</code>, <code>frames_complete</code></td><td colspan="7">lease_holder</td><td>Lease còn hạn và thuộc người gọi, nếu không 409 LEASE_CONFLICT</td><td>FR-REV-04, FR-REV-13, FR-REV-14</td></tr>
 <tr><td><code>frames_issues</code></td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>Người lập GT của tập đánh giá bị chặn</td><td>FR-REV-07; FR-EVL-02</td></tr>
 </tbody>
@@ -91,7 +94,7 @@ ul.dir{columns:2;font-size:14px}
 <table>
 <thead><tr><th>Action</th><th>AN</th><th>RV</th><th>QA</th><th>AD</th><th>SA</th><th>PO</th><th>DMO</th><th>Guard bổ sung</th><th>Nguồn</th></tr></thead>
 <tbody>
-<tr><td>Lưu quyết định issue</td><td></td><td>✓</td><td>✓</td><td></td><td>✓ (ghi đè có lý do)</td><td></td><td></td><td>Lease còn hạn; không self-review</td><td>UC-05; FR-REV-14; FR-SEC-06</td></tr>
+<tr><td>Lưu quyết định issue</td><td></td><td>✓</td><td>✓</td><td></td><td>✓ (ghi chú tùy chọn)</td><td></td><td></td><td>Lease còn hạn; không self-review trừ SA toàn hệ thống</td><td>UC-05; FR-REV-14; FR-SEC-06</td></tr>
 <tr><td>Phân xử</td><td></td><td></td><td>✓</td><td></td><td>✓ (ghi đè)</td><td></td><td></td><td>Khác người chuyển cấp</td><td>UC-06; FR-SEC-04</td></tr>
 <tr><td>Tạo yêu cầu sửa</td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td></td><td></td><td>—</td><td>FR-RWK-01</td></tr>
 <tr><td>Báo đã sửa</td><td>✓ (assignee của yêu cầu)</td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td>Revision mới khác revision gốc</td><td>FR-RWK-02, FR-RWK-03</td></tr>
@@ -106,10 +109,11 @@ ul.dir{columns:2;font-size:14px}
 </table>
 
 <h2 id="invariants">4. Bất biến áp cho mọi action</h2>
+<p>Theo yêu cầu cập nhật quyền Super Admin: <code>super_admin</code> với <code>dataset_id = null</code> được thực hiện toàn bộ quy trình trên mọi dataset, kể cả khi action chỉ liệt kê vai trò khác. Vai trò này không bị chặn bởi identity mapping, self-review, cùng người yêu cầu/phê duyệt hoặc thiếu ghi chú ghi đè. API vẫn kiểm tra tài nguyên, lease, revision và trạng thái chuyển tiếp hợp lệ, đồng thời lưu audit. Ngoại lệ này không áp dụng cho <code>is_staff</code>/<code>is_superuser</code> nếu không có RoleAssignment tương ứng.</p>
 <ul>
-<li>Thiếu identity mapping: từ chối mọi thao tác review, phân xử, verify với <code>403 IDENTITY_MAPPING_MISSING</code> (fail closed, FR-SEC-02).</li>
-<li>Self-review theo assignee tại snapshot: <code>403 SELF_REVIEW_FORBIDDEN</code> (FR-SEC-03), kể cả Super Admin ghi đè (FR-SEC-06).</li>
-<li>Tách nhiệm vụ: người duyệt khác người yêu cầu, không dùng tài khoản khác của cùng người: <code>403 SAME_REQUESTER_APPROVER</code> (FR-SEC-04).</li>
+<li>Ngoài SA toàn hệ thống, thiếu identity mapping: từ chối review, phân xử, verify với <code>403 IDENTITY_MAPPING_MISSING</code> (fail closed, FR-SEC-02).</li>
+<li>Ngoài SA toàn hệ thống, self-review theo assignee tại snapshot: <code>403 SELF_REVIEW_FORBIDDEN</code> (FR-SEC-03).</li>
+<li>Ngoài SA toàn hệ thống, người duyệt phải khác người yêu cầu, kể cả tài khoản khác cùng thể nhân: <code>403 SAME_REQUESTER_APPROVER</code> (FR-SEC-04).</li>
 <li>Product Owner và Data/Model Owner không thao tác review và không là reviewer trong thí nghiệm mình thiết kế.</li>
 <li>Worker Detector không gọi được API ghi quyết định (rest-api.html §6).</li>
 </ul>

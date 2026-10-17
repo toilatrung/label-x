@@ -477,7 +477,7 @@ def test_anti_self_review_reviewer_matches_author_rejected():
     assert event.object_id == "frame-555"
 
 
-def test_anti_self_review_super_admin_with_override_cannot_self_review():
+def test_anti_self_review_super_admin_can_self_review():
     factory = APIRequestFactory()
     admin = _create_user("super_admin_self")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -492,15 +492,11 @@ def test_anti_self_review_super_admin_with_override_cannot_self_review():
     )
     request.user = admin
 
-    with pytest.raises(ApiError) as exc_info:
-        check_anti_self_review(
-            request=request,
-            author_cvat_user_id=999,
-            action="review.claim",
-        )
-
-    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
-    assert exc_info.value.error_code == "SELF_REVIEW_FORBIDDEN"
+    check_anti_self_review(
+        request=request,
+        author_cvat_user_id=999,
+        action="review.claim",
+    )
 
 
 def test_separation_of_duties_same_labelx_user_rejected():
@@ -585,8 +581,8 @@ def test_separation_of_duties_cross_account_same_person_rejected():
 # ---------------------------------------------------------------------------
 
 
-def test_super_admin_override_without_reason_returns_422_and_records_audit():
-    """Super Admin override without reason returns 422 and records audit rejection."""
+def test_super_admin_override_without_reason_is_allowed():
+    """Administrative workflow access does not require a note."""
     factory = APIRequestFactory()
     admin = _create_user("super_admin_no_reason")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -594,20 +590,12 @@ def test_super_admin_override_without_reason_returns_422_and_records_audit():
     request = factory.post("/api/action/?override=true", {"override": True})
     request.user = admin
 
-    with pytest.raises(ApiError) as exc_info:
-        check_super_admin_override(request=request)
-
-    assert exc_info.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert exc_info.value.error_code == "BUSINESS_RULE_UNMET"
-
-    event = AuditEvent.objects.filter(actor=admin).order_by("-id").first()
-    assert event is not None
-    assert event.action == "override.action.rejected"
-    assert event.after["code"] == "BUSINESS_RULE_UNMET"
+    assert check_super_admin_override(request=request) == "Super Admin workflow access"
+    assert request.is_override is True
 
 
-def test_super_admin_override_whitespace_reason_returns_422_and_records_audit():
-    """Super Admin override with whitespace-only reason returns 422 and records audit."""
+def test_super_admin_override_blank_note_is_optional():
+    """A blank administrative note does not block workflow access."""
     factory = APIRequestFactory()
     admin = _create_user("super_admin_blank_reason")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -621,15 +609,8 @@ def test_super_admin_override_whitespace_reason_returns_422_and_records_audit():
     )
     request.user = admin
 
-    with pytest.raises(ApiError) as exc_info:
-        check_super_admin_override(request=request)
-
-    assert exc_info.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert exc_info.value.error_code == "BUSINESS_RULE_UNMET"
-
-    event = AuditEvent.objects.filter(actor=admin).order_by("-id").first()
-    assert event is not None
-    assert event.after["code"] == "BUSINESS_RULE_UNMET"
+    check_super_admin_override(request=request)
+    assert request.is_override is True
 
 
 def test_non_super_admin_attempting_override_returns_403_and_records_audit():
@@ -748,8 +729,8 @@ def test_integration_403_workflow_permissions_through_atomic_requests_pipeline()
 
 
 @pytest.mark.urls("tests.accounts.test_rbac_scope")
-def test_integration_422_override_missing_reason_through_atomic_requests_pipeline():
-    """422 override rejection through full Django HTTP stack persists rejection audit."""
+def test_integration_admin_without_note_records_success_audit():
+    """Administrative access remains audited through the full Django HTTP stack."""
     client = APIClient()
     admin = _create_user("admin_pipeline_422")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -760,12 +741,11 @@ def test_integration_422_override_missing_reason_through_atomic_requests_pipelin
         {"override": True, "dataset_id": 10},
         format="json",
     )
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert response.data["code"] == "BUSINESS_RULE_UNMET"
+    assert response.status_code == status.HTTP_200_OK
 
-    event = AuditEvent.objects.filter(actor=admin, action="run.override_action.rejected").first()
+    event = AuditEvent.objects.filter(actor=admin, action="run.override_action").first()
     assert event is not None
-    assert event.after["code"] == "BUSINESS_RULE_UNMET"
+    assert event.after["is_override"] is True
 
 
 @pytest.mark.urls("tests.accounts.test_rbac_scope")
@@ -912,8 +892,8 @@ def test_object_endpoint_query_body_dataset_id_conflict_rejected_400():
 
 
 @pytest.mark.urls("tests.accounts.test_rbac_scope")
-def test_integration_super_admin_missing_override_flag_returns_422_and_no_mutation():
-    """Super Admin on override endpoint without override flag returns 422 and no mutation."""
+def test_integration_super_admin_without_override_flag_can_act():
+    """Super Admin may use normal workflow actions without an extra flag."""
     client = APIClient()
     admin = _create_user("admin_no_flag")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -924,24 +904,14 @@ def test_integration_super_admin_missing_override_flag_returns_422_and_no_mutati
         {"dataset_id": 10},
         format="json",
     )
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert response.data["code"] == "BUSINESS_RULE_UNMET"
-
-    rejection_event = AuditEvent.objects.filter(
-        actor=admin, action="run.override_action.rejected"
-    ).first()
-    assert rejection_event is not None
-    assert rejection_event.after["code"] == "BUSINESS_RULE_UNMET"
-
-    mutation_audit_exists = AuditEvent.objects.filter(
-        actor=admin, action="run.override_action"
-    ).exists()
-    assert not mutation_audit_exists
+    assert response.status_code == status.HTTP_200_OK
+    event = AuditEvent.objects.get(actor=admin, action="run.override_action")
+    assert event.after["is_override"] is True
 
 
 @pytest.mark.urls("tests.accounts.test_rbac_scope")
-def test_integration_super_admin_override_false_returns_422_and_no_mutation():
-    """Super Admin on override endpoint with override=false returns 422 and no mutation."""
+def test_integration_super_admin_override_false_can_act():
+    """Disabling an optional flag does not remove a Super Admin's business role."""
     client = APIClient()
     admin = _create_user("admin_false_flag")
     RoleAssignment.objects.create(user=admin, role=Role.SUPER_ADMIN, dataset_id=None)
@@ -952,19 +922,9 @@ def test_integration_super_admin_override_false_returns_422_and_no_mutation():
         {"dataset_id": 10, "override": False},
         format="json",
     )
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert response.data["code"] == "BUSINESS_RULE_UNMET"
-
-    rejection_event = AuditEvent.objects.filter(
-        actor=admin, action="run.override_action.rejected"
-    ).first()
-    assert rejection_event is not None
-    assert rejection_event.after["code"] == "BUSINESS_RULE_UNMET"
-
-    mutation_audit_exists = AuditEvent.objects.filter(
-        actor=admin, action="run.override_action"
-    ).exists()
-    assert not mutation_audit_exists
+    assert response.status_code == status.HTTP_200_OK
+    event = AuditEvent.objects.get(actor=admin, action="run.override_action")
+    assert event.after["is_override"] is True
 
 
 @pytest.mark.urls("tests.accounts.test_rbac_scope")

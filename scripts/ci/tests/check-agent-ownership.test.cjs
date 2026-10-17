@@ -1,10 +1,23 @@
 'use strict';
 const {test} = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
-const {parseIntegrators, perUserOwner, evaluate, parseNameStatus} = require('../check-agent-ownership.cjs');
+const {parseIntegrators, perUserOwner, evaluate, parseNameStatus, isReleasePromotion} = require('../check-agent-ownership.cjs');
 
 const integrators = parseIntegrators('# comment\ntoilatrung\n@QcUser  # QC\n\n');
 const run = (author, changes) => evaluate({author, integrators, changes});
+
+test('only same-repository develop to main promotion uses integrated ownership', () => {
+  const promotion = {BASE_REF: 'main', HEAD_REF: 'develop', GITHUB_REPOSITORY: 'org/repo', HEAD_REPOSITORY: 'org/repo'};
+  assert.equal(isReleasePromotion(promotion), true);
+  for (const override of [
+    {HEAD_REPOSITORY: 'fork/repo'},
+    {HEAD_REF: 'feature'},
+    {BASE_REF: 'develop'},
+    {GITHUB_REPOSITORY: ''},
+    {HEAD_REPOSITORY: undefined},
+  ]) assert.equal(isReleasePromotion({...promotion, ...override}), false);
+  assert.equal(isReleasePromotion({}), false);
+});
 
 test('integrator list ignores comments, @ and case', () => {
   assert.deepEqual([...integrators].sort(), ['qcuser', 'toilatrung']);

@@ -9,6 +9,8 @@ export default defineConfig({
     env: { NEXT_PUBLIC_AUTH_MODE: 'mock' },
     globals: true,
     pool: 'threads',
+    maxWorkers: 4,
+    testTimeout: 15000,
     setupFiles: ['./src/__tests__/setup.ts'],
     environmentOptions: { jsdom: { url: 'http://localhost:3000' } },
   },

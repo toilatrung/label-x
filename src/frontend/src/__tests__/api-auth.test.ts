@@ -7,7 +7,7 @@ import { GET as session } from '@/app/api/auth/session/route';
 import { POST as logout } from '@/app/api/auth/logout/route';
 import { installMockAuthApi } from './helpers/mock-api';
 
-function writeRequest(path: string, body: unknown, cookie = 'csrftoken=test-csrf', token = 'test-csrf') {
+function writeRequest(path: string, body: unknown, cookie = 'labelx_csrftoken=test-csrf', token = 'test-csrf') {
   return new Request('http://localhost:3000/api/auth/' + path + '/', {
     method: 'POST', headers: { Cookie: cookie, 'X-CSRFToken': token, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -19,7 +19,7 @@ describe('T-001 auth contract', () => {
     const response = await csrf();
     expect(response.status).toBe(204);
     expect(await response.text()).toBe('');
-    expect(response.headers.get('set-cookie')).toContain('csrftoken=');
+    expect(response.headers.get('set-cookie')).toContain('labelx_csrftoken=');
     expect(response.headers.get('set-cookie')).not.toContain('HttpOnly');
   });
 
@@ -32,9 +32,9 @@ describe('T-001 auth contract', () => {
     expect(data.identity_mapping.status).toBe('mapped');
     expect(data).not.toHaveProperty('token');
     expect(response.headers.get('set-cookie')).toContain('HttpOnly');
-    expect(api.jar.get('sessionid')).not.toBe('4');
+    expect(api.jar.get('labelx_sessionid')).not.toBe('4');
     const restored = await session(new Request('http://localhost:3000/api/auth/session/', {
-      headers: { Cookie: 'sessionid=' + api.jar.get('sessionid') },
+      headers: { Cookie: 'labelx_sessionid=' + api.jar.get('labelx_sessionid') },
     }));
     expect(await restored.json()).toEqual(data);
   });
@@ -42,9 +42,9 @@ describe('T-001 auth contract', () => {
   it('rejects absent CSRF, mismatched tokens and cross-origin login', async () => {
     for (const request of [
       writeRequest('login', { username: 'admin', password: 'password123' }, '', ''),
-      writeRequest('login', { username: 'admin', password: 'password123' }, 'csrftoken=correct', 'wrong'),
+      writeRequest('login', { username: 'admin', password: 'password123' }, 'labelx_csrftoken=correct', 'wrong'),
       new Request(writeRequest('login', { username: 'admin', password: 'password123' }), {
-        headers: { Cookie: 'csrftoken=test-csrf', 'X-CSRFToken': 'test-csrf', Origin: 'https://other.example' },
+        headers: { Cookie: 'labelx_csrftoken=test-csrf', 'X-CSRFToken': 'test-csrf', Origin: 'https://other.example' },
       }),
     ]) {
       const response = await login(request);
@@ -65,7 +65,7 @@ describe('T-001 auth contract', () => {
   it('checks browser Origin against Host even when Next normalizes the internal URL', async () => {
     const response = await login(new Request('http://localhost:3102/api/auth/login/', {
       method: 'POST', headers: { Host: '127.0.0.1:3102', Origin: 'http://127.0.0.1:3102',
-        Cookie: 'csrftoken=host-csrf', 'X-CSRFToken': 'host-csrf', 'Content-Type': 'application/json' },
+        Cookie: 'labelx_csrftoken=host-csrf', 'X-CSRFToken': 'host-csrf', 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'admin', password: 'password123' }),
     }));
     expect(response.status).toBe(200);
@@ -78,14 +78,14 @@ describe('T-001 auth contract', () => {
       expect((await response.json()).code).toBe('VALIDATION_ERROR');
     }
     const invalidJson = new Request('http://localhost:3000/api/auth/login/', {
-      method: 'POST', headers: { Cookie: 'csrftoken=x', 'X-CSRFToken': 'x' }, body: '{',
+      method: 'POST', headers: { Cookie: 'labelx_csrftoken=x', 'X-CSRFToken': 'x' }, body: '{',
     });
     expect((await login(invalidJson)).status).toBe(400);
   });
 
   it('rejects forged sessions and expired sessions with 403 NOT_AUTHENTICATED', async () => {
     const forged = await session(new Request('http://localhost:3000/api/auth/session/', {
-      headers: { Cookie: 'sessionid=1' },
+      headers: { Cookie: 'labelx_sessionid=1' },
     }));
     expect(forged.status).toBe(403);
     expect((await forged.json()).code).toBe('NOT_AUTHENTICATED');
@@ -93,7 +93,7 @@ describe('T-001 auth contract', () => {
     await api.signIn();
     vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 9 * 60 * 60 * 1000);
     const expired = await session(new Request('http://localhost:3000/api/auth/session/', {
-      headers: { Cookie: 'sessionid=' + api.jar.get('sessionid') },
+      headers: { Cookie: 'labelx_sessionid=' + api.jar.get('labelx_sessionid') },
     }));
     expect(expired.status).toBe(403);
   });
@@ -101,7 +101,7 @@ describe('T-001 auth contract', () => {
   it('invalidates a server session and supports repeated logout with 204', async () => {
     const api = installMockAuthApi();
     await api.signIn();
-    const cookie = 'sessionid=' + api.jar.get('sessionid') + '; csrftoken=x';
+    const cookie = 'labelx_sessionid=' + api.jar.get('labelx_sessionid') + '; labelx_csrftoken=x';
     for (let count = 0; count < 2; count++) {
       const response = await logout(writeRequest('logout', undefined, cookie, 'x'));
       expect(response.status).toBe(204);
@@ -129,7 +129,7 @@ describe('Shared typed API client', () => {
   });
 
   it('sends CSRF and cookies on contract write paths', async () => {
-    document.cookie = 'csrftoken=client-csrf; path=/';
+    document.cookie = 'labelx_csrftoken=client-csrf; path=/';
     const transport = vi.fn(async (request: Request) => {
       expect(request.method).toBe('POST');
       return new Response(null, { status: 204 });

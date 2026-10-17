@@ -1,0 +1,746 @@
+{
+  "status": "passed",
+  "generated_at": "2026-10-11T13:36:17.122Z",
+  "auth": "real Django session + CSRF cookie/header",
+  "data": "isolated PostgreSQL database labelx_t039_browser",
+  "frontend": "http://localhost:3000",
+  "backend": "http://localhost:8000",
+  "browser": "msedge.exe",
+  "checks": [
+    {
+      "name": "QA Lead sees escalation evidence, reviewer decision, and reusable Decision Case lookup",
+      "status": "passed"
+    },
+    {
+      "name": "Review Workspace reuses Decision Case lookup for its active issue",
+      "status": "passed"
+    },
+    {
+      "name": "Cursor pagination reaches second page",
+      "status": "passed",
+      "first_page_count": 50,
+      "second_page_count": 1
+    },
+    {
+      "name": "QA Lead adjudication uses real CSRF, idempotency key, and guideline_gap compatibility seam",
+      "status": "passed"
+    },
+    {
+      "name": "Same-account escalator is blocked in the UI",
+      "status": "passed"
+    },
+    {
+      "name": "Backend rejects an alias sharing the escalator EmployeeIdentity",
+      "status": "passed"
+    },
+    {
+      "name": "Super Admin override reason is required before submission",
+      "status": "passed"
+    },
+    {
+      "name": "t039_reviewer is denied by frontend guard and backend API",
+      "status": "passed"
+    },
+    {
+      "name": "t039_annotator is denied by frontend guard and backend API",
+      "status": "passed"
+    },
+    {
+      "name": "Unmapped QA Lead fails closed before escalation data fetch",
+      "status": "passed"
+    },
+    {
+      "name": "Dataset scope filters reads and rejects cross-dataset adjudication",
+      "status": "passed"
+    }
+  ],
+  "api": [
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_qalead",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=1",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/frames/1/issues/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/guidelines/rules/RULE-01/",
+      "query": "?version=t039-guide",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=1",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/runs/1/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/snapshots/1/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "?cursor=50",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=1",
+      "status": 200
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_qalead",
+      "method": "POST",
+      "path": "/api/issues/1/adjudications/",
+      "query": "",
+      "status": 201
+    },
+    {
+      "username": "t039_qalead",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=1",
+      "status": 200
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_self_qa",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=2",
+      "status": 200
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=3",
+      "status": 200
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_alias_qa",
+      "method": "POST",
+      "path": "/api/issues/3/adjudications/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_superadmin",
+      "method": "GET",
+      "path": "/api/decision-cases/",
+      "query": "?issue=1",
+      "status": 200
+    },
+    {
+      "username": "t039_reviewer",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_reviewer",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_reviewer",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_reviewer",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_annotator",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_annotator",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_annotator",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_annotator",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 403
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "GET",
+      "path": "/api/auth/session/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "GET",
+      "path": "/api/escalations/",
+      "query": "",
+      "status": 200
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "GET",
+      "path": "/api/auth/csrf/",
+      "query": "",
+      "status": 204
+    },
+    {
+      "username": "t039_outscope_qa",
+      "method": "POST",
+      "path": "/api/issues/1/adjudications/",
+      "query": "",
+      "status": 403
+    }
+  ],
+  "pageErrors": [],
+  "expectedConsoleErrors": [
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_self_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_alias_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_alias_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/issues/3/adjudications/"
+    },
+    {
+      "username": "t039_superadmin",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_reviewer",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_annotator",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/auth/session/"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "source": "http://localhost:8000/api/issues/1/adjudications/"
+    }
+  ],
+  "expectedEnvironmentErrors": [
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "source": "http://localhost:9000/labelx-snapshots/t039/browser.jpg?AWSAccessKeyId=labelx&Signature=aF9ZovU%2FdTOuj39n9WReLA6ULCU%3D&Expires=1791729344"
+    },
+    {
+      "username": "t039_qalead",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_self_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_self_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_alias_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_alias_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_superadmin",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_superadmin",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_reviewer",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_reviewer",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_annotator",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_annotator",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "message": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    }
+  ],
+  "expectedRequestFailures": [
+    {
+      "username": "t039_qalead",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "http://localhost:9000/labelx-snapshots/t039/browser.jpg?AWSAccessKeyId=labelx&Signature=aF9ZovU%2FdTOuj39n9WReLA6ULCU%3D&Expires=1791729344",
+      "error": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_self_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_self_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_alias_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_alias_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_superadmin",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_superadmin",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_reviewer",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_reviewer",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_annotator",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_annotator",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_unmapped_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "username": "t039_outscope_qa",
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    }
+  ],
+  "expectedNavigationCancellations": [
+    {
+      "username": "t039_qalead",
+      "url": "http://localhost:8000/api/decision-cases/?issue=1",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "http://localhost:8000/api/decision-cases/?issue=1",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "username": "t039_qalead",
+      "url": "http://localhost:8000/api/decision-cases/?issue=1",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "username": "t039_self_qa",
+      "url": "http://localhost:8000/api/decision-cases/?issue=2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "username": "t039_alias_qa",
+      "url": "http://localhost:8000/api/decision-cases/?issue=3",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "username": "t039_superadmin",
+      "url": "http://localhost:8000/api/decision-cases/?issue=1",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "requestFailures": [],
+  "consoleErrors": []
+}

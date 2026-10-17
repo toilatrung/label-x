@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-041 Final Run Lineage Implementation Report — LabelX</title>
+<meta name="labelx:id" content="implementation-t-041">
+<meta name="labelx:title" content="T-041 Final Run Lineage Implementation">
+<meta name="labelx:type" content="report"><meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="review"><meta name="labelx:tags" content="[implementation, m03, rework, t-041, final-run, lineage]">
+<meta name="labelx:priority" content="1"></head><body><main><article>
+<div class="meta"><b>id</b><span>T-041-vietanhhhhhh2003</span><b>title</b><span>T-041 Final Run Lineage Implementation</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>review</span><b>tags</b><span>[implementation, m03, rework, t-041, final-run, lineage]</span><b>priority</b><span>1</span></div>
+<h1>T-041 — Snapshot toàn phạm vi, final QC run và verification lineage</h1>
+<h2>Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>T-041</code></li>
+<li><strong>Owner</strong>: Nguyễn Xuân Việt Anh (<code>@Vietanhhhhhh2003</code>)</li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task State</strong>: <code>review</code></li>
+<li><strong>Independent Review / QA</strong>: <code>pending</code></li>
+<li><strong>Task</strong>: <a href="https://github.com/toilatrung/label-x/issues/108">T-041 / issue #108</a></li>
+<li><strong>Base</strong>: <code>origin/integration/m03@0aa8b25</code></li>
+<li><strong>Branch</strong>: <code>feat/T-041-e16-final-run-lineage</code></li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/159">#159</a>, base <code>integration/m03</code></li>
+</ul>
+<h2>Thay đổi</h2><ul>
+<li><code>review/finalization_service.py</code>: khóa run gốc, fail closed khi issue/rework còn mở, snapshot toàn CVAT scope, đối chiếu job hash đã verify, tạo final run và chọn operational source theo ledger.</li>
+<li><code>review/models.py</code> và migration <code>0005</code>: <code>final_run_link</code> append-only nối final run với toàn bộ verification history; unique bảo vệ replay.</li>
+<li><code>review/tasks.py</code>: task <code>qc.build_final_run</code>, enqueue sau transaction verify pass và periodic sweeper khôi phục lỗi publish broker.</li>
+<li>Run terminal Partial/Failed/Cancelled không được chọn làm nguồn và cho phép một attempt final mới; run Completed nhưng required ledger thiếu vẫn giữ run gốc.</li>
+<li>Không thêm endpoint <code>/api/runs/{id}/lineage/</code> vì M03-D05 vẫn ghi <code>requires_approved_change_request</code>; model/service đã sẵn cho consumer sau phê duyệt.</li>
+</ul>
+<h2>AC → Evidence</h2><table><thead><tr><th>Acceptance criterion</th><th>Evidence</th><th>Kết quả</th></tr></thead><tbody>
+<tr><td>Idempotent/concurrent final trigger</td><td><code>test_concurrent_final_triggers_have_one_effect</code>, <code>test_build_final_run_is_idempotent_and_links_verification</code></td><td>Đạt trên PostgreSQL, hai DB connection</td></tr>
+<tr><td>Không finalise khi scope chưa xong; origin bất biến</td><td><code>test_open_issue_blocks_finalization</code> và assertion origin run</td><td>Đạt</td></tr>
+<tr><td>Partial/Failed/Cancelled, retry và ledger gate</td><td><code>test_terminal_attempt_can_retry_without_two_active_effects</code>, <code>test_operational_source_changes_only_after_complete_required_ledger</code></td><td>Đạt</td></tr>
+<tr><td>Verification lineage</td><td>DB unique + append-only trigger và focused lineage assertion</td><td>Đạt</td></tr>
+<tr><td>CVAT revision thật/browser E2E</td><td>T-045/T-046 external environment</td><td>Chưa kiểm; không dùng fixture để tuyên bố E2E</td></tr>
+</tbody></table>
+<h2>Verification</h2><table><thead><tr><th>Kiểm tra</th><th>Kết quả</th></tr></thead><tbody>
+<tr><td>Focused PostgreSQL <code>test_finalization.py</code> + <code>test_rework.py</code></td><td><code>12 passed</code> trong full verification</td></tr>
+<tr><td>Full backend PostgreSQL</td><td><code>610 passed, 1 skipped</code></td></tr>
+<tr><td><code>makemigrations --check --dry-run</code></td><td><code>No changes detected</code></td></tr>
+<tr><td>Ruff + mypy</td><td><code>PASS</code></td></tr>
+</tbody></table>
+<h2>Gate còn lại</h2><ul>
+<li>Independent review/QC và CI trên PR head vẫn pending; real CVAT revision/browser E2E vẫn thuộc gate T-045/T-046 của issue #108.</li>
+<li>M03-D05 cần PO/CR phê duyệt trước khi mở lineage read endpoint cho UI.</li>
+</ul>
+</article></main></body></html>

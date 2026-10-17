@@ -36,7 +36,7 @@ def test_error_request_log_has_request_id_and_redacts_secrets(monkeypatch):
             fake_token,
             fake_password,
             extra={
-                "headers": {"Cookie": f"sessionid={fake_token}"},
+                "headers": {"Cookie": f"labelx_sessionid={fake_token}"},
                 "cvat_service_token": fake_token,
             },
         )
@@ -47,7 +47,7 @@ def test_error_request_log_has_request_id_and_redacts_secrets(monkeypatch):
         "/api/failure/",
         HTTP_X_REQUEST_ID="request-t015-test",
         HTTP_AUTHORIZATION=f"Bearer {fake_token}",
-        HTTP_COOKIE=f"sessionid={fake_token}",
+        HTTP_COOKIE=f"labelx_sessionid={fake_token}",
     )
 
     response = RequestIDMiddleware(failing_response)(request)

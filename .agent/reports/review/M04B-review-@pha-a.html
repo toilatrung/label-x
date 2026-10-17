@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04B Review Report — LabelX</title>
+<meta name="labelx:id" content="m04b-review-@pha-a">
+<meta name="labelx:title" content="M04B Review Report — Classifier ConvNeXt Tiny Worker">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="quality">
+<meta name="labelx:module" content="m04">
+<meta name="labelx:tags" content="[review, report, m04, classifier, convnext, worker]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / reports / review / M04B-review-@pha-a</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>m04b-review-@pha-a</span><b>title</b><span>M04B Review Report — Classifier ConvNeXt Tiny Worker</span><b>type</b><span>report</span><b>domain</b><span>quality</span><b>module</b><span>m04</span><b>tags</b><span>[review, report, m04, classifier, convnext, worker]</span><b>priority</b><span>3</span></div>
+<h1 id="m04b-review">M04B Review Report — Classifier ConvNeXt Tiny Worker (#284, #285)</h1><div style="border-left:4px solid #8a5300;background:#fdf2d8;padding:12px 16px;margin:12px 0"><strong>Disposition theo CR-117 (APPROVED 2026-10-13):</strong> Báo cáo này superseded: pha B (ConvNeXt classifier) bị bỏ khỏi runtime M-04. Nội dung giữ làm lịch sử; không còn là bằng chứng runtime hiện hành và không phải review độc lập CR-102. Quality/accuracy detector: NOT VERIFIED.</div>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Hồ sơ bằng chứng kỹ thuật cho PR #311 (nhánh <code>feat/M-04-b-gate</code> vào <code>feat/M-04-backend</code>). Bản ghi này <strong>không phải phê duyệt độc lập</strong>: commit tạo báo cáo và owner/executor đều gắn với <code>@toilatrung</code>, còn tên phiên Pha A/Pha B không xác lập được một reviewer độc lập theo CR-102.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Report ID</strong>: <code>M04B-review-@pha-a</code></li>
+<li><strong>Title</strong>: <code>Thẩm định kỹ thuật chéo Pha B — Worker ConvNeXt Tiny Classifier (#284, #285)</code></li>
+<li><strong>Owner</strong>: <code>@toilatrung</code></li>
+<li><strong>Reviewer</strong>: <code>chưa có reviewer độc lập được xác lập</code></li>
+<li><strong>Executor</strong>: <code>Phiên Pha B (label-x-47)</code></li>
+<li><strong>Status</strong>: <code>superseded</code></li>
+<li><strong>Decision</strong>: <code>CHANGES_REQUESTED</code></li>
+<li><strong>Review Type</strong>: <code>code, security, worker, governance</code></li>
+<li><strong>Task ID</strong>: <code>M04B-01, M04B-02</code> (Issues #284, #285)</li>
+<li><strong>Pull Request</strong>: <a href="https://github.com/toilatrung/label-x/pull/311">#311</a></li>
+<li><strong>Head Commit Reviewed</strong>: <code>aaf3d3ae21f8d1ec95bf58430712a26498d4e3cd</code></li>
+<li><strong>Base Branch</strong>: <code>feat/M-04-backend</code></li>
+<li><strong>Report Date</strong>: <code>2026-10-13</code></li>
+</ul>
+<h2 id="review-scope">Review Scope</h2>
+<ul>
+<li><strong>Phạm vi PR #311</strong>: Gói độc lập <code>src/classifier_worker</code> (bộ dataset, inference model ConvNeXt Tiny, CLI predict-batch, pyproject/uv.lock riêng, 79 test unit) và hồ sơ quản trị <code>BLOCKER-032.html</code>.</li>
+<li><strong>Không đụng chạm backend</strong>: Toàn bộ <code>src/backend/**</code> giữ nguyên, đảm bảo tính cô lập tuyệt đối và không phát sinh xung đột với Pha A (#312) và Pha C (#313).</li>
+</ul>
+
+<h2 id="ac-evidence">Đối chiếu Acceptance Criteria → Bằng chứng kiểm tra</h2>
+<table><thead><tr><th>Task / AC</th><th>Yêu cầu</th><th>Bằng chứng kiểm tra</th><th>Đánh giá</th></tr></thead><tbody>
+<tr><td><strong>M04B-01 (#284)</strong></td><td>Crop dataset, split &amp; taxonomy manifest</td><td><code>src/classifier_worker/labelx_classifier/{taxonomy,crops,dataset}.py</code>; 10 lớp BDD100K, letterbox crop 224×224 có geometry mapping, builder dataset có provenance, split băm sha256. <code>tests/test_crops.py</code>, <code>tests/test_dataset.py</code> passed.</td><td><strong>ĐẠT</strong></td></tr>
+<tr><td><strong>M04B-02 (#285)</strong></td><td>Worker package, ConvNeXt Tiny, predict-batch CLI</td><td><code>src/classifier_worker/labelx_classifier/{model,artifact,train,infer,cli}.py</code>; đóng gói + kiểm checksum sha256 trước khi <code>torch.load(weights_only=True)</code>; CLI <code>predict-batch</code> an toàn. <code>tests/test_train_and_artifact.py</code>, <code>tests/test_batch.py</code>, <code>tests/test_hardening.py</code> passed.</td><td><strong>ĐẠT</strong></td></tr>
+<tr><td><strong>Bảo mật &amp; Độc lập</strong></td><td>Không rò rỉ secret, dependency lock riêng</td><td><code>pyproject.toml</code> + <code>uv.lock</code> riêng ghim torch CPU; không phụ thuộc venv backend; kiểm tra sha256 nghiêm ngặt chống model deserialization attack.</td><td><strong>ĐẠT</strong></td></tr>
+<tr><td><strong>Quản trị &amp; Xung đột</strong></td><td>Tuân thủ CR-100, CR-117, không trùng mã</td><td>Đã đổi mã thành <code>BLOCKER-032.html</code> (tránh trùng FE-12); gộp sạch với base <code>feat/M-04-backend</code> (đã chứa Pha A và Pha C).</td><td><strong>ĐẠT</strong></td></tr>
+</tbody></table>
+
+<h2 id="findings-table">Bảng Findings</h2>
+<table><thead><tr><th>Mã</th><th>Mức độ</th><th>Mô tả</th><th>Tình trạng</th></tr></thead><tbody>
+<tr><td><strong>F-01</strong></td><td><code>observation</code></td><td>Checkpoint hiện tại là <code>smoke_only</code> trên dữ liệu tổng hợp (chưa huấn luyện trên dữ liệu thật do chờ crop thật theo BLOCKER-032).</td><td>Phù hợp với thiết kế giai đoạn; không chặn merge worker.</td></tr>
+<tr><td><strong>F-02</strong></td><td><code>observation</code></td><td>Phần backend #286 (ClassifierUnit) nằm ở PR riêng sau này khi kết nối toàn luồng.</td><td>Đúng kế hoạch phân chia pha.</td></tr>
+<tr><td><strong>F-03</strong></td><td><code>resolved</code></td><td>Xung đột mã BLOCKER-030 giữa FE-12 và Pha B.</td><td>Đã đổi tên sang BLOCKER-032 và merge base sạch sẽ.</td></tr>
+<tr><td><strong>F-04</strong></td><td><code>major</code></td><td>Báo cáo từng tự nhận là review chéo/APPROVED nhưng không có danh tính reviewer độc lập với owner/executor; commit tạo báo cáo <code>0378515</code> do chính <code>@toilatrung</code> author và commit.</td><td>Thu hồi kết luận APPROVED; cần reviewer độc lập thực hiện lại review trên SHA được chốt và ghi nhận danh tính/bằng chứng theo CR-102.</td></tr>
+</tbody></table>
+
+<h2 id="conclusion">Kết luận</h2>
+<p>Các bằng chứng kỹ thuật ghi nhận 79 test pass, code cô lập và CI xanh tại thời điểm kiểm tra. Tuy nhiên hồ sơ không chứng minh được sự độc lập giữa reviewer và executor, nên <strong>không có phê duyệt hợp lệ theo CR-102 (CHANGES_REQUESTED)</strong>. Cần một reviewer độc lập đánh giá lại SHA cuối; không được dùng báo cáo này làm bằng chứng nghiệm thu.</p>
+</article></main></body></html>

@@ -40,7 +40,13 @@ describe('TopBar permissions', () => {
     expect(screen.queryByText('Thử nghiệm vai trò')).toBeNull();
     fireEvent.click(screen.getByText('Đăng xuất'));
     await waitFor(() => expect(screen.getByText('Khách')).toBeDefined());
-    expect(api.jar.has('sessionid')).toBe(false);
+    expect(api.jar.has('labelx_sessionid')).toBe(false);
+  });
+  it('links QA Lead to the Escalations route', async () => {
+    const api = installMockAuthApi(); await api.signIn('qalead');
+    render(<AuthProvider><TopBar /></AuthProvider>);
+    const link = await screen.findByRole('link', { name: 'Escalations' });
+    expect(link.getAttribute('href')).toBe('/escalations');
   });
   it('keeps reviewer guideline access in Configuration without exposing workflow permissions', async () => {
     const api = installMockAuthApi(); await api.signIn('reviewer');
@@ -69,4 +75,29 @@ describe('TopBar permissions', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  it.each([
+    ['admin', true], ['qalead', true], ['qcadmin', true], ['reviewer', true], ['annotator', true],
+    ['productowner', false], ['modelowner', false],
+  ] as const)('shows Calibration & Audit with real routes only to %s when permitted', async (username, allowed) => {
+    const api = installMockAuthApi(); await api.signIn(username);
+    render(<AuthProvider><TopBar /></AuthProvider>);
+    await waitFor(() => expect(screen.getByText(/mẫu/)).toBeDefined());
+    expect(!!screen.queryByRole('button', { name: 'Calibration & Audit' })).toBe(allowed);
+    if (!allowed) return;
+    fireEvent.click(screen.getByRole('button', { name: 'Calibration & Audit' }));
+    const hrefs = ['Performance Evaluation', 'Ground Truth Benchmark', 'Audit Sampling', 'Calibration']
+      .map((name) => screen.getByRole('menuitem', { name: new RegExp(`^${name}`) }).getAttribute('href'));
+    expect(hrefs).toEqual(['/calibration/performance', '/calibration/benchmark', '/calibration/audit-sampling', '/calibration/calibration']);
+  });
+
+  it('links Reports & Releases and exposes the user menu items from the design', async () => {
+    const api = installMockAuthApi(); await api.signIn('qalead');
+    render(<AuthProvider><TopBar /></AuthProvider>);
+    const link = await screen.findByRole('link', { name: 'Reports & Releases' });
+    expect(link.getAttribute('href')).toBe('/reports');
+    fireEvent.click(document.querySelector('[aria-controls="nav-menu-user"]') as HTMLElement);
+    expect(screen.getByRole('menuitem', { name: 'Hồ sơ' })).toBeDefined();
+    expect(screen.getByRole('menuitem', { name: 'Cài đặt' })).toBeDefined();
+    expect(screen.getByRole('menuitem', { name: 'Đăng xuất' })).toBeDefined();
+  });
 });

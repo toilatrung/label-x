@@ -1,0 +1,72 @@
+{
+ "run_id": 107,
+ "create_http": 201,
+ "target_shard_running_when_killed": true,
+ "db_at_kill": {
+  "status": "running",
+  "finished": false,
+  "cancel": false,
+  "units": {
+   "running": 3,
+   "completed": 4,
+   "pending": 11
+  },
+  "commits": 4,
+  "dup_keys": 0,
+  "cands": 0,
+  "ledger": 1764,
+  "rankings": 0
+ },
+ "db_after_kill": {
+  "status": "running",
+  "finished": false,
+  "cancel": false,
+  "units": {
+   "running": 3,
+   "completed": 4,
+   "pending": 11
+  },
+  "commits": 4,
+  "dup_keys": 0,
+  "cands": 0,
+  "ledger": 1764,
+  "rankings": 0
+ },
+ "db_before_sweep": {
+  "status": "running",
+  "finished": false,
+  "cancel": false,
+  "units": {
+   "running": 3,
+   "completed": 15
+  },
+  "commits": 15,
+  "dup_keys": 0,
+  "cands": 88,
+  "ledger": 1764,
+  "rankings": 0
+ },
+ "sweeper": "runs=1 queued=3",
+ "final": {
+  "status": "completed",
+  "finished": true,
+  "cancel": false,
+  "units": {
+   "completed": 18
+  },
+  "commits": 18,
+  "dup_keys": 0,
+  "cands": 163,
+  "ledger": 1764,
+  "rankings": 5
+ },
+ "seconds_kill_to_sweep": 48.2,
+ "seconds_kill_to_completed": 93.8,
+ "hash_equal_baseline": {
+  "candidates_sha256": true,
+  "content_hash": true,
+  "ranking_hash": true,
+  "ledger_sha256": true
+ },
+ "note": "sweeper ch\u1ea1y th\u1ee7 c\u00f4ng v\u1edbi --running-older-than; m\u1eb7c \u0111\u1ecbnh t\u1ef1 \u0111\u1ed9ng l\u00e0 ORCHESTRATION_RUNNING_STALE_SECONDS=1800 + chu k\u1ef3 beat 120 s"
+}

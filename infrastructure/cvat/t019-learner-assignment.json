@@ -1,0 +1,34 @@
+{
+  "schema_version": "labelx-cvat-sample-v1",
+  "provenance": {
+    "dataset": "bdd100k",
+    "split": "val",
+    "source": "T-005 BDD100K validation frame selection",
+    "source_artifact": "src/detector_worker/evidence/t005-cpu-2026-10-08/predictions.json",
+    "annotation_role": "empty learner assignment; detector predictions are not imported"
+  },
+  "labels": [
+    {"name": "pedestrian", "type": "rectangle", "color": "#ff6b6b"},
+    {"name": "rider", "type": "rectangle", "color": "#f06595"},
+    {"name": "car", "type": "rectangle", "color": "#845ef7"},
+    {"name": "truck", "type": "rectangle", "color": "#5c7cfa"},
+    {"name": "bus", "type": "rectangle", "color": "#339af0"},
+    {"name": "train", "type": "rectangle", "color": "#22b8cf"},
+    {"name": "motorcycle", "type": "rectangle", "color": "#20c997"},
+    {"name": "bicycle", "type": "rectangle", "color": "#51cf66"},
+    {"name": "traffic light", "type": "rectangle", "color": "#fcc419"},
+    {"name": "traffic sign", "type": "rectangle", "color": "#ff922b"}
+  ],
+  "images": [
+    {"file_name": "val/b1c66a42-6f7d68ca.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1c81faa-3df17267.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1c81faa-c80764c5.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1c9c847-3bda4659.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1ca2e5d-84cf9134.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1ca8418-84a133a0.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1cac6a7-04e33135.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1cd1e94-26dd524f.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1cd1e94-549d0bfe.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []},
+    {"file_name": "val/b1ceb32e-3f481b43.jpg", "split": "val", "learner_annotation_status": "missing", "annotations": []}
+  ]
+}

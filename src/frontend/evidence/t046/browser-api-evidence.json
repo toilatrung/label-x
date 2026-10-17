@@ -1,0 +1,87 @@
+{
+  "status": "passed",
+  "generated_at": "2026-10-11T14:49:44.732Z",
+  "auth": "Real Django Session + CSRF Cookie/Header",
+  "database": "isolated PostgreSQL database labelx_t046_browser",
+  "frontend": "http://localhost:3000",
+  "backend": "http://localhost:8000",
+  "browser": "msedge.exe",
+  "checks": [
+    {
+      "name": "Reviewer accesses /review successfully",
+      "status": "passed"
+    },
+    {
+      "name": "Queue claim fails closed on unconfigured Policy TBD-09 (requires approved PO policy; deferred to M-03-RESOLVE)",
+      "status": "blocked",
+      "http_status": 500,
+      "expected_policy": "REVIEW_LEASE_TTL_SECONDS"
+    },
+    {
+      "name": "Reviewer loads ReviewWorkspace canvas with zoom/pan and layers",
+      "status": "passed"
+    },
+    {
+      "name": "ReviewWorkspace reuses DecisionCaseLookup for active issue",
+      "status": "passed"
+    },
+    {
+      "name": "Reviewer submits decision (reject) with active lease and revision match",
+      "status": "passed",
+      "decision_id": 4
+    },
+    {
+      "name": "ReviewWorkspace retains persisted state upon page reload",
+      "status": "passed"
+    },
+    {
+      "name": "CVAT deep link is correctly rendered with target URL",
+      "status": "passed",
+      "href": "/tasks/46002/jobs/46001?frame=0"
+    },
+    {
+      "name": "Reviewer is denied by guard on /escalations",
+      "status": "passed"
+    },
+    {
+      "name": "Annotator is denied on /escalations",
+      "status": "passed"
+    },
+    {
+      "name": "QA Lead loads /escalations list with real API data",
+      "status": "passed",
+      "count": 3
+    },
+    {
+      "name": "QA Lead successfully saves adjudication with guideline_missing outcome",
+      "status": "passed"
+    },
+    {
+      "name": "Self QA separation guard checked",
+      "status": "passed"
+    },
+    {
+      "name": "Natural person alias separation check verified",
+      "status": "passed"
+    },
+    {
+      "name": "Super Admin override check verified",
+      "status": "passed"
+    },
+    {
+      "name": "Unmapped QA Lead fails closed with IDENTITY_MAPPING_MISSING",
+      "status": "passed"
+    },
+    {
+      "name": "Out-of-scope QA Lead cannot read or mutate foreign dataset issues",
+      "status": "passed"
+    },
+    {
+      "name": "Atomic Rework API endpoint contract verified",
+      "status": 409
+    }
+  ],
+  "api_calls_count": 56,
+  "page_errors_count": 0,
+  "unexpected_console_errors_count": 0
+}

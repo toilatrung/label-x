@@ -93,19 +93,29 @@ ul.dir{columns:2;font-size:14px}
 <td><strong>Vòng review–rework khép kín</strong> — Reviewer xử lý frame theo hàng đợi đến phân xử, sửa trên CVAT, verify và QC run cuối.</td>
 <td><code>Trịnh Quang Trung</code></td>
 <td><code>2026-10-09 → 2026-10-16</code></td>
-<td><code>proposed</code></td>
+<td><code>in-progress</code></td>
 <td><code>E-13, E-14, E-15, E-16</code></td>
 <td>AC-04, AC-05, AC-06, AC-11 đạt; lease nguyên tử dưới tải đồng thời (NFR-15); transition ngoài bảng bị từ chối.</td>
 </tr>
 <tr>
 <td><code>M-04</code></td>
 <td><code>R-001</code></td>
-<td><strong>Reference và discovery</strong> — Công cụ reference, reference tập hiệu chỉnh đã khoá; Detector sinh E1/E2; score được hiệu chỉnh và khoá version.</td>
+<td><strong>Qwen VLM, classifier và routing kỹ thuật</strong> — M-04 chạy theo cổng A (Qwen runtime có evidence) và C (routing/phân định lại có API) với Faster R-CNN làm nguồn candidate; giai đoạn B ConvNeXt đã bị bỏ theo CR-117 (APPROVED 2026-10-13; quality detector NOT VERIFIED). Reference, calibration và đánh giá hiệu quả chuyển sau cổng kỹ thuật theo <a href="M-04-ABC-implementation-2026-10-13.html">kế hoạch M-04 A/B/C</a>.</td>
 <td><code>Trịnh Quang Trung</code></td>
-<td><code>2026-10-09 → 2026-10-16</code></td>
+<td><code>theo cổng M-04A → M-04B → M-04C</code></td>
 <td><code>in-progress</code></td>
-<td><code>E-06, E-07, E-10, E-12, E-17</code></td>
-<td>Reference hiệu chỉnh khoá version (FR-EVL-04); ngưỡng Detector chọn trên tập hiệu chỉnh; score version khoá kèm kết quả ngoài fold/ablation (FR-RNK-10, 11); TBD-08 có quyết định.</td>
+<td><code>E-08, E-10, E-12; classifier work package mới</code></td>
+<td>Qwen chạy thật trên crop được phép, evidence/ledger/API đọc được; classifier trả top-3/score/margin/unknown theo taxonomy; routing xử lý classifier-only, Qwen, conflict, uncertain, retry/budget và stale revision. Calibration/ablation không là gate M-04.</td>
+</tr>
+<tr>
+<td><code>M-BE-MVP</code></td>
+<td><code>R-001</code></td>
+<td><strong>Hoàn thiện Backend và nối API lên giao diện cho MVP</strong> — gom toàn bộ giai đoạn code Backend và nối API vào giao diện đã dựng, nằm ngay sau M-04; PO tự kiểm thử thủ công trên giao diện, không QC độc lập. Cập nhật 2026-10-13: không đặt hạn, làm liên tục; toàn bộ 22 dòng (33 endpoint) của BLOCKER-031 phải xong ở mức MVP, chỉ Backend, @toilatrung (MBE-00…03) và @Vietanhhhhhh2003 (MBE-04…07) làm song song; nối FE làm thủ công sau. Xem <a href="M-BE-MVP-2026-10-13.html">kế hoạch M-BE-MVP</a>.</td>
+<td><code>Trịnh Quang Trung</code></td>
+<td><code>bắt đầu 2026-10-14; không đặt hạn</code></td>
+<td><code>in-progress</code></td>
+<td><code>phần backend và nối FE của E-02…E-22 theo BLOCKER-031; E-12</code></td>
+<td>Pipeline AI đầu cuối hiển thị trong Review Workspace; các dòng P0 của BLOCKER-031 đã nối; PO ghi kết quả manual test. Chờ PO duyệt <a href="../governance/change-requests/CR-118.html">CR-118</a>.</td>
 </tr>
 <tr>
 <td><code>M-05</code></td>
@@ -127,6 +137,16 @@ ul.dir{columns:2;font-size:14px}
 <td><code>E-23, E-24</code></td>
 <td>NFR có ngưỡng đã duyệt được kiểm; diễn tập restore nhất quán (NFR-16); mọi Must + Should có evidence; blocker bắt buộc đóng.</td>
 </tr>
+<tr>
+<td><code>M-FE01</code></td>
+<td><code>R-001</code></td>
+<td><strong>Hoàn thiện Frontend theo thiết kế</strong> — Song song với M-02…M-05 trên nhánh <code>develop-fe</code>. Phase 1: dựng đủ 24 màn theo <code>docs/design/screens</code>, chức năng chưa có API hiển thị "Chức năng vẫn chưa được kết nối với server". Phase 2: nối route vào API thật. Chi tiết: <a href="M-FE01.html">M-FE01</a>.</td>
+<td><code>Trịnh Quang Trung (frontend: Trần Đức Thọ)</code></td>
+<td><code>2026-10-11 → 2026-10-20</code></td>
+<td><code>proposed</code></td>
+<td><code>phần frontend của E-02…E-22</code></td>
+<td>Phase 1: kiểm toán độ khớp thiết kế đạt mức A 20/20, ảnh chụp đối chiếu, <code>make check</code> xanh. Phase 2: route nối API thật, test frontend trong CI. Chờ <a href="../governance/change-requests/CR-111.html">CR-111</a>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="progress-notes">Progress Notes</h2>
@@ -135,5 +155,8 @@ ul.dir{columns:2;font-size:14px}
 <li>2026-10-08: PO giữ phạm vi và hạn <code>M-01</code> 2026-10-09. Phần còn lại tách thành T-006…T-018, đã gán owner (PR #27); AC version guideline E-03 sửa theo <code>CR-106</code>. Chuỗi 5 tầng T-011 → T-013 → T-012 → T-016 → T-018 có thể làm trễ hạn: <code>RISK-012</code> (monitoring).</li>
 <li>2026-10-08: <code>M-02</code> chuyển <code>in-progress</code> — E-04 đã bắt đầu nhưng <code>EPIC_BLOCKED</code> theo <code>BLOCKER-024</code>; AC-01…AC-03 chưa đo được trên dữ liệu BDD100K thật cho tới khi PO cung cấp bộ annotation người học.</li>
 <li>2026-10-08: <code>M-04</code> chuyển <code>in-progress</code> — E-10 làm sớm theo phiếu giao đợt 1 (T-005, PR #22, <code>DEC-008</code>); E-06, E-07 phụ thuộc <code>BLOCKER-022</code>.</li>
+<li>2026-10-11: <code>M-02</code> vẫn <code>in-progress</code>. Trên develop đã merge T-019…T-032 (PR #74…#111); trạng thái theo task board: T-019, T-020, T-023 <code>done</code> (PO chốt theo QC cấp M-02), T-026 <code>blocked</code>, T-029 <code>in-progress</code>, còn lại <code>review</code>. Task <code>M-02-RESOLVE</code> (độc lập với milestone, dọn tồn đọng M-02) đã <code>done</code> (PR #126 merge 975f960, #139 e074fbc, PO chốt 2026-10-11); BLOCKER-024 <code>accepted</code>, BLOCKER-025…029 còn <code>open</code>. E-05, E-08, E-09, E-11: PO ký bổ sung 2026-10-11 (DEC-002), chuyển <code>EPIC_IN_PROGRESS</code>; chưa epic nào <code>EPIC_DONE</code>. CR-109 được PO duyệt 2026-10-11. BLOCKER-024: PO chấp nhận ngày 2026-10-11 (<code>accepted</code>, DEC-014) với giới hạn mirror và lời khai nguồn nhãn; E-04 chuyển <code>EPIC_IN_PROGRESS</code>. BLOCKER-026 đóng khi PR #126 merge và review APPROVE; BLOCKER-025 giữ open (lease 1800 giây chỉnh sau pilot). Mã task M-01-RESOLVE <code>T-020</code>…<code>T-022</code> đã đổi sang <code>T-047</code>…<code>T-049</code> do trùng mã với snapshot M-02.</li>
+<li>2026-10-11: đề xuất <code>M-FE01</code> (CR-111, <code>proposed</code>): tách phần frontend của M-02…M-05 sang nhánh <code>develop-fe</code> để làm song song; M-02…M-05 đo acceptance phần backend/API, epic <code>EPIC_DONE</code> khi cả Phase 2 xong.</li>
+<li>2026-10-13: <code>CR-115</code> được PO duyệt, đổi thứ tự M-04 thành M-04A Qwen runtime → M-04B ConvNeXt Tiny classifier → M-04C routing/re-evaluate. Kế hoạch chi tiết: <a href="M-04-ABC-implementation-2026-10-13.html">M-04 A/B/C</a>. Chưa task A/B/C nào được đánh dấu done trong lần cập nhật này.</li>
 </ul>
-</article></main></body></html>
+<h2 id="m03-resolve-po-20261012">M-03 — phiếu PO resolve 2026-10-12</h2><p>DEC-019/CR-113 đã duyệt policy/contract và chuyển toàn bộ Backend PO; FE mới theo develop-fe/CR-111. Milestone in-progress vì code đợt trước đã tích hợp và resolve còn mở; không có implementation mới hoặc nghiệm thu trong lượt tiếp nhận. E-13…E-16 READY cho scope resolve; task implementation mới pending. E2E/runtime inputs và ETA chưa bàn giao; epic DONE sau FE Phase 2/API acceptance. Cập nhật 2026-10-12 (R13): backend các task R02, R03, R05, R06, R07, R08 đã merge vào integration/m03, chưa QC độc lập; R04/R09 not planned (FE chạy riêng trên develop-fe); R10, R11, R12 còn mở. Xem <a href="../reports/review/M03-R13-aggregate-2026-10-12.html">báo cáo tổng hợp R13</a>.</p></article></main></body></html>

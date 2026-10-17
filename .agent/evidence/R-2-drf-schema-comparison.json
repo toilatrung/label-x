@@ -1,0 +1,183 @@
+{
+  "comparison_target": "Dataset Endpoints Contract vs DRF Generated Schema",
+  "endpoints": {
+    "/api/datasets/": {
+      "operation_id": {
+        "static": "datasets_list",
+        "generated": "datasets_list",
+        "match": true
+      },
+      "parameters": {
+        "static": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ],
+        "generated": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50)"
+          }
+        ]
+      },
+      "responses": {
+        "static_codes": [
+          "200",
+          "400",
+          "403",
+          "502"
+        ],
+        "generated_codes": [
+          "200",
+          "400",
+          "403",
+          "502"
+        ],
+        "codes_match": true,
+        "details": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedDatasetList"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Cursor Dataset không hợp lệ."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Không có phạm vi Dataset."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Không đọc được project CVAT."
+          }
+        }
+      }
+    },
+    "/api/datasets/{id}/tasks/": {
+      "operation_id": {
+        "static": "datasets_tasks",
+        "generated": "datasets_tasks",
+        "match": true
+      },
+      "parameters": {
+        "static": [
+          {
+            "$ref": "#/components/parameters/Id"
+          }
+        ],
+        "generated": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID của dataset (CVAT project ID)",
+            "required": true
+          }
+        ]
+      },
+      "responses": {
+        "static_codes": [
+          "200",
+          "400",
+          "403",
+          "404",
+          "502"
+        ],
+        "generated_codes": [
+          "200",
+          "400",
+          "403",
+          "404",
+          "502"
+        ],
+        "codes_match": true,
+        "details": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CvatTask"
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Yêu cầu không hợp lệ."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Không có quyền truy cập Dataset."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Dataset không tồn tại."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Không đọc được Task/Job CVAT."
+          }
+        }
+      }
+    }
+  }
+}

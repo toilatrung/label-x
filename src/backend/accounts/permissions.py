@@ -3,8 +3,8 @@
 Enforces:
 - RBAC by role and dataset scope (AC 1).
 - Separation of duties (requester != approver) and anti-self-review (AC 2).
-- Fail-closed identity checks and non-overridable self-review invariant (DEC-011).
-- Super Admin override with mandatory reason and audit labeling (AC 3).
+- Identity checks and separation of duties for non-administrative roles.
+- System-wide Super Admin access to every workflow, with audit records.
 - Strict RoleAssignment lookup without undocumented is_superuser bypass.
 - Fail-closed dataset scope: missing, invalid type, or conflicting dataset_id is rejected.
 """
@@ -174,6 +174,17 @@ def append_action_audit(
         after=payload_after,
         revision=req_id,
         reason=override_reason_str,
+    )
+
+
+def is_super_admin(user: Any) -> bool:
+    """System-wide business Super Admin can perform the complete workflow."""
+    return bool(
+        user
+        and user.is_authenticated
+        and RoleAssignment.objects.filter(
+            user_id=user.pk, role=Role.SUPER_ADMIN, dataset_id__isnull=True
+        ).exists()
     )
 
 
@@ -414,7 +425,11 @@ class HasRoleAndDatasetScope(BasePermission):
             )
 
         assignments = list(RoleAssignment.objects.filter(user_id=user.pk))
-        matching_assignments = [a for a in assignments if a.role in required_roles]
+        matching_assignments = [
+            a
+            for a in assignments
+            if a.role in required_roles or (a.role == Role.SUPER_ADMIN and a.dataset_id is None)
+        ]
 
         action = getattr(view, "action_name", getattr(view, "operation_id", self.action_name))
         obj_type = getattr(view, "object_type", self.object_type)
@@ -473,9 +488,11 @@ def check_anti_self_review(
 ) -> None:
     """FR-SEC-02, FR-SEC-03, FR-SEC-06: Fail-closed identity check and anti-self-review invariant.
 
-    Super Admin CANNOT override this check under any circumstances.
+    System-wide Super Admin may complete the entire workflow, including self-review.
     """
     user = getattr(request, "user", None)
+    if is_super_admin(user):
+        return
     user_id = int(user.pk) if user and user.pk is not None else 0
     identity = CvatIdentity.objects.filter(user_id=user_id).first()
     if identity is None:
@@ -536,6 +553,9 @@ def check_separation_of_duties(
             "NOT_AUTHENTICATED",
             "Chua dang nhap hoac phien het han.",
         )
+
+    if is_super_admin(user):
+        return
 
     # 1. Khong cho phep ca requester_user_id va requester_cvat_user_id cung thieu
     if requester_user_id is None and requester_cvat_user_id is None:
@@ -757,7 +777,7 @@ def check_super_admin_override(
     caller_id = int(user.pk) if user and user.pk is not None else 0
 
     # 1. Xác định RoleAssignment của caller trước khi xử lý cờ override
-    is_super_admin = RoleAssignment.objects.filter(
+    caller_is_super_admin = RoleAssignment.objects.filter(
         user_id=caller_id, role=Role.SUPER_ADMIN
     ).exists()
 
@@ -774,7 +794,17 @@ def check_super_admin_override(
             override_flag = False
 
     # 2. Caller có vai trò SUPER_ADMIN trên endpoint hỗ trợ nhánh override:
-    if is_super_admin:
+    if caller_is_super_admin:
+        if is_super_admin(user):
+            reason = (
+                (data.get(reason_field) or data.get("reason")) if isinstance(data, dict) else None
+            )
+            reason_str = str(
+                query_params.get(reason_field) or reason or "Super Admin workflow access"
+            ).strip()
+            setattr(request, "is_override", True)  # noqa: B010
+            setattr(request, "override_reason", reason_str)  # noqa: B010
+            return reason_str
         # Thiếu override hoặc override=false -> 422 BUSINESS_RULE_UNMET
         if not override_flag:
             record_rejection_audit(
@@ -840,3 +870,79 @@ def check_super_admin_override(
 
         # Không yêu cầu override -> được đi luồng bình thường nếu role cho phép
         return None
+
+
+def get_user_scoped_datasets(
+    user: User, allowed_roles: tuple[Role, ...] | list[Role] | None = None
+) -> set[int] | None:
+    """Trả về tập hợp dataset_id mà user được phân công cho allowed_roles.
+
+    Nếu user có vai trò toàn hệ thống (SUPER_ADMIN hoặc QC_ADMIN có dataset_id=None),
+    trả về None (có quyền toàn hệ thống).
+    Ngược lại, trả về set[int] các dataset_id được phân công.
+    """
+    if not user or not getattr(user, "is_authenticated", False):
+        return set()
+
+    if is_super_admin(user):
+        return None
+
+    qs = RoleAssignment.objects.filter(user=user)
+    if allowed_roles is not None:
+        qs = qs.filter(role__in=allowed_roles)
+    assignments = list(qs)
+    if any(a.role in SYSTEM_WIDE_ROLES and a.dataset_id is None for a in assignments):
+        return None
+    return {a.dataset_id for a in assignments if a.dataset_id is not None}
+
+
+def enforce_dataset_scope(
+    *,
+    request: Request,
+    user: User,
+    dataset_id: int,
+    allowed_roles: tuple[Role, ...] | list[Role] | None = None,
+    action: str = "api.access",
+    object_type: str = "dataset",
+) -> None:
+    """Kiểm tra dataset_id có nằm trong phạm vi của user.
+
+    Ném 403 OUT_OF_SCOPE nếu tài nguyên nằm ngoài phạm vi được phân công.
+    """
+    scoped = get_user_scoped_datasets(user, allowed_roles=allowed_roles)
+    if scoped is not None and dataset_id not in scoped:
+        record_rejection_audit(
+            request=request,
+            code="OUT_OF_SCOPE",
+            object_type=object_type,
+            object_id=str(dataset_id),
+            action=action,
+            message=f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+        )
+        raise ApiError(
+            status.HTTP_403_FORBIDDEN,
+            "OUT_OF_SCOPE",
+            f"Tài nguyên dataset {dataset_id} nằm ngoài phạm vi được phân công.",
+        )
+
+
+def is_annotator_only(user: User, dataset_id: int | None = None) -> bool:
+    """Kiểm tra user chỉ có vai trò ANNOTATOR, không có vai trò cao hơn."""
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+
+    from django.db.models import Q
+
+    qs = RoleAssignment.objects.filter(user=user)
+    if dataset_id is not None:
+        qs = qs.filter(Q(dataset_id=dataset_id) | Q(dataset_id__isnull=True))
+    roles = set(qs.values_list("role", flat=True))
+    higher_roles = {
+        Role.REVIEWER,
+        Role.QA_LEAD,
+        Role.QC_ADMIN,
+        Role.SUPER_ADMIN,
+        Role.PRODUCT_OWNER,
+        Role.DATA_MODEL_OWNER,
+    }
+    return Role.ANNOTATOR in roles and not bool(roles & higher_roles)
