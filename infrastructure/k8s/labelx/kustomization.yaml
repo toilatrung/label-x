@@ -39,7 +39,7 @@
     {
       "name": "labelx-release",
       "literals": [
-        "SOURCE_SHA=6721ee4ec031ea0a8bc585a9c0671ace9844a4af",
+        "SOURCE_SHA=912f1f58c01c3c35922e32fb439cfd4bd7fbda4e",
         "MVP_EVIDENCE=unverified",
         "DEPLOYMENT_POLICY=CR-120"
       ]
@@ -55,12 +55,12 @@
     {
       "name": "labelx-backend",
       "newName": "ghcr.io/toilatrung/labelx-backend",
-      "digest": "sha256:ea516c544d8b7cddb403820adc5bf58b917d9127a0808bbf55199f3bcef85e99"
+      "digest": "sha256:82293a5df5aa2a3f66f79913d2ada6769b0954386bac7e09dba281e83eb78c1a"
     },
     {
       "name": "labelx-frontend",
       "newName": "ghcr.io/toilatrung/labelx-frontend",
-      "digest": "sha256:55b800c93da3aeece9a7c0251729e64ca74ae8ae0099f4b23aa3019e1b8652dd"
+      "digest": "sha256:01d01cb26739a1873d15802f0134ba34350dd9309b4778ead107e086aad03cc0"
     }
   ]
 }
