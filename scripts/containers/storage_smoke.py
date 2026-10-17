@@ -30,7 +30,7 @@ def main():
             path = Path(directory, 's3.json'); path.write_text(data['labelx-s3']['s3.json']); path.chmod(0o644)
             docker('run', '-d', '--name', name, '--network', name, '--network-alias', 's3', '--user', '10001:10001',
                 '--read-only', '--memory', '512m', '--cpus', '1', '--pids-limit', '128', '--cap-drop', 'ALL', '--volume', name+'-data:/data', '--tmpfs', '/tmp:rw,size=64m',
-                '--volume', str(path)+':/etc/s3.json:ro', '--volume', str(ROOT/'infrastructure/k8s/labelx/ops/master.toml')+':/etc/seaweedfs/master.toml:ro', S3, '-telemetry=false', 'server', '-dir=/data', '-s3', '-s3.port=9000',
+                '--volume', str(path)+':/etc/s3.json:ro', '--volume', str(ROOT/'infrastructure/k8s/labelx/ops/master.toml')+':/etc/seaweedfs/master.toml:ro', S3, 'server', '-master.telemetry=false', '-dir=/data', '-s3', '-s3.port=9000',
                 '-s3.config=/etc/s3.json', '-master.volumeSizeLimitMB=32', '-volume.max=12', '-s3.allowedOrigins=https://label-x.williamtrinh.online')
             wait_until(lambda: docker('run','--rm','--network',name,args.backend,'python','-c',
                 "import socket; socket.create_connection(('s3',9000),timeout=2).close()",check=False).returncode==0,'isolated authenticated SeaweedFS')
