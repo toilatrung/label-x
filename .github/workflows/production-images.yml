@@ -1,0 +1,145 @@
+name: LabelX Production Images
+on:
+  workflow_run:
+    workflows: [LabelX CI, LabelX Phase Testing]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Full main SHA already tested by CI and the MVP suite
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: production-images-${{ github.event.workflow_run.head_sha || inputs.commit_sha }}
+  cancel-in-progress: false
+env:
+  SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.commit_sha }}
+jobs:
+  gates:
+    if: >-
+      github.repository == 'toilatrung/label-x' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.verified.outputs.ready }}
+      ci_run_id: ${{ steps.discover.outputs.ci_run_id }}
+      test_run_id: ${{ steps.discover.outputs.test_run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Require a commit already on main
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+      - name: Find trusted CI and phase-testing runs at the same SHA
+        id: discover
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci/container-release.cjs discover
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.discover.outputs.available == 'true'
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          path: tested-source
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        if: steps.discover.outputs.available == 'true'
+        with:
+          run-id: ${{ steps.discover.outputs.test_run_id }}
+          github-token: ${{ github.token }}
+          name: phase-evidence-${{ env.SOURCE_SHA }}
+          path: tested-source/.ci-artifacts/phases
+      - name: Enforce the existing MVP evidence gate, including plan and JUnit checksums
+        id: verified
+        if: steps.discover.outputs.available == 'true'
+        working-directory: tested-source
+        run: |
+          node scripts/ci/quality-gate.cjs verify-suite --sha "$SOURCE_SHA"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: gates
+    if: needs.gates.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CI_RUN_ID: ${{ needs.gates.outputs.ci_run_id }}
+      TEST_RUN_ID: ${{ needs.gates.outputs.test_run_id }}
+      FRONTEND_IMAGE: ghcr.io/toilatrung/labelx-frontend
+      BACKEND_IMAGE: ghcr.io/toilatrung/labelx-backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Resolve existing SHA tags without overwriting them
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci/container-release.cjs existing
+      - name: Build backend or reuse the already-published digest
+        env:
+          EXISTING_DIGEST: ${{ steps.existing.outputs.backend_digest }}
+        run: |
+          if [ -n "$EXISTING_DIGEST" ]; then
+            docker pull "$BACKEND_IMAGE@$EXISTING_DIGEST"
+            docker tag "$BACKEND_IMAGE@$EXISTING_DIGEST" "$BACKEND_IMAGE:sha-$SOURCE_SHA"
+          else
+            docker buildx build --load --platform linux/amd64 --provenance=false \
+              --label "org.opencontainers.image.revision=$SOURCE_SHA" \
+              --tag "$BACKEND_IMAGE:sha-$SOURCE_SHA" src/backend
+          fi
+      - name: Build frontend or reuse the already-published digest
+        env:
+          EXISTING_DIGEST: ${{ steps.existing.outputs.frontend_digest }}
+        run: |
+          if [ -n "$EXISTING_DIGEST" ]; then
+            docker pull "$FRONTEND_IMAGE@$EXISTING_DIGEST"
+            docker tag "$FRONTEND_IMAGE@$EXISTING_DIGEST" "$FRONTEND_IMAGE:sha-$SOURCE_SHA"
+          else
+            docker buildx build --load --platform linux/amd64 --provenance=false \
+              --label "org.opencontainers.image.revision=$SOURCE_SHA" \
+              --tag "$FRONTEND_IMAGE:sha-$SOURCE_SHA" src/frontend
+          fi
+      - name: Smoke the exact images before pushing
+        run: python3 scripts/containers/smoke.py --backend "$BACKEND_IMAGE:sha-$SOURCE_SHA" --frontend "$FRONTEND_IMAGE:sha-$SOURCE_SHA"
+      - name: Push new tags and record immutable digest references
+        id: receipt
+        env:
+          FRONTEND_DIGEST: ${{ steps.existing.outputs.frontend_digest }}
+          BACKEND_DIGEST: ${{ steps.existing.outputs.backend_digest }}
+        run: node scripts/ci/container-release.cjs publish
+      - uses: actions/upload-artifact@v7
+        with:
+          name: image-digests-${{ env.SOURCE_SHA }}
+          path: .ci-artifacts/images/image-digests.json
+          include-hidden-files: true
+          if-no-files-found: error
+# Publishing creates artifacts only. cd.yml and its protected staging/production promotion are unchanged.
