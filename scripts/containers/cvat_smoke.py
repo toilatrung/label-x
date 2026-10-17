@@ -3,10 +3,12 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
 import tempfile
+import textwrap
 import time
 import uuid
 
@@ -71,18 +73,39 @@ from cvat_adapter.client import CvatReadClient,CvatWriteBlocked
 c=json.load(sys.stdin)
 url='http://cvat-server:8080'
 with CvatReadClient(url,c['token']) as client:
+ print('CHECK jobs GET',flush=True)
  jobs=client.list_jobs(); assert any(j['id']==c['job'] for j in jobs)
+ print('CHECK annotations GET',flush=True)
  data=client._get('api/jobs/'+str(c['job'])+'/annotations'); assert isinstance(data,dict)
+ print('CHECK adapter mutation guard',flush=True)
  try: client._client.patch(url+'/api/jobs/'+str(c['job'])+'/annotations',json={})
  except CvatWriteBlocked: pass
  else: raise AssertionError('Adapter allowed mutation')
+print('CHECK server mutation denial',flush=True)
 r=httpx.patch(url+'/api/jobs/'+str(c['job'])+'/annotations',headers={'Authorization':'Bearer '+c['token']},json={'version':0,'tags':[],'shapes':[],'tracks':[]})
 assert r.status_code==403, r.status_code
 print('PASS real CVAT 2.77.0 PAT: jobs/annotations GET, adapter mutation guard, server read-only PATCH denial')
 """
+            test = "try:\n" + textwrap.indent(test, " ") + "\nexcept Exception as error:\n import json\n print('CHECK_ERROR:'+json.dumps({'type':type(error).__name__,'status':getattr(getattr(error,'response',None),'status_code',None)}),flush=True)\n raise SystemExit(1)\n"
             result = subprocess.run(['docker', 'run', '--rm', '-i', '--network', project + '_cvat', args.backend,
                 'python', '-c', test], input=credential, text=True, capture_output=True)
             if result.returncode:
+                # Only fixed stage labels are safe; never expose HTTP bodies, URLs or credentials.
+                stages = {'CHECK jobs GET', 'CHECK annotations GET', 'CHECK adapter mutation guard', 'CHECK server mutation denial'}
+                for line in result.stdout.splitlines():
+                    if line in stages:
+                        print(line, flush=True)
+                    elif line.startswith('CHECK_ERROR:'):
+                        detail = json.loads(line.split(':', 1)[1])
+                        kind = detail.get('type', '')
+                        status = detail.get('status')
+                        if isinstance(kind, str) and kind.isidentifier() and (status is None or isinstance(status, int)):
+                            print(f'CHECK failure type={kind} status={status}', flush=True)
+                # Server-side cause of a 5xx: print only traceback frames and exception lines, never env, headers or bodies.
+                logs = compose('logs', '--no-color', '--tail', '400', 'cvat_server', check=False).stdout
+                frames = [line.split('|', 1)[-1].strip()[:240] for line in logs.splitlines()
+                    if re.search(r'Traceback \(most recent|^\S.*\|\s+File "|\|\s*[A-Za-z_.]+(Error|Exception|DoesNotExist)\b', line)]
+                print('CVAT server traceback lines:', *frames[-40:], sep='\n', flush=True)
                 raise RuntimeError('CVAT read-only adapter integration failed; generated credentials omitted')
             print(result.stdout.strip())
             info = compose('ps', '-a', '--format', 'json').stdout
