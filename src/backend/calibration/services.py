@@ -592,7 +592,7 @@ def get_calibration_models() -> list[dict[str, Any]]:
 
     for art in models_qs:
         name_lower = art.name.lower()
-        if "vlm" in name_lower or "qwen" in name_lower:
+        if any(name in name_lower for name in ("vlm", "qwen", "gemini")):
             kind = "vlm"
         elif "detector" in name_lower or "rcnn" in name_lower or "yolo" in name_lower:
             kind = "detector"

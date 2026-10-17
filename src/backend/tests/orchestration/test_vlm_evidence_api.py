@@ -85,6 +85,27 @@ def test_checked_unit_writes_one_evidence_with_provenance_and_api_exposes_it() -
     assert "sk-test-not-real" not in json.dumps(vlm, default=str)
 
 
+def test_gemini_source_and_model_survive_worker_and_candidate_api() -> None:
+    run = _make_run(
+        vlm={
+            **VALID,
+            "provider": "gemini",
+            "model": "gemini-3.8-flash",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        }
+    )
+    _run_shards(run)
+    unit = VlmUnit.objects.filter(run_id=run.pk).order_by("pk").first()
+    pending = {row["id"]: row for row in _candidates(run)}[unit.candidate_id]["vlm"]
+    assert pending["source"] == "gemini" and pending["model_version"] == "gemini-3.8-flash"
+    assert execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False) == "completed"
+    evidence = VlmEvidence.objects.get(unit=unit)
+    assert evidence.provider == "gemini" and evidence.model == "gemini-3.8-flash"
+    assert evidence.provider_host == "generativelanguage.googleapis.com"
+    result = {row["id"]: row for row in _candidates(run)}[unit.candidate_id]["vlm"]
+    assert result["source"] == "gemini" and result["class_name"] == "car"
+
+
 def test_redelivery_never_adds_evidence_and_evidence_is_append_only() -> None:
     run = _make_run()
     _run_shards(run)

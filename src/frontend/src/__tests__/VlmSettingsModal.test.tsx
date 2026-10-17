@@ -88,6 +88,46 @@ describe('VLM settings', () => {
     expect(await screen.findByText(/Đã lưu cấu hình VLM/)).toBeInTheDocument();
   });
 
+  it('selects Gemini on the gateway and updates the saved model row', async () => {
+    mocks.save.mockResolvedValue({ ...settings, revision: 8, model: 'gemini-3.8-flash' });
+    render(<ModelsGuidelinesCard />);
+    const row = screen.getByRole('row', { name: /Mô hình thị giác – ngôn ngữ/ });
+    await within(row).findByText('qwen3-vl-plus');
+    fireEvent.click(within(row).getByRole('button', { name: 'Chỉnh mô hình' }));
+    fireEvent.change(await screen.findByLabelText('Model'), { target: { value: 'gemini-3.8-flash' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu cấu hình VLM' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({
+      expected_revision: 7, base_url: settings.base_url, model: 'gemini-3.8-flash', confidence_threshold: 0.85,
+    }));
+    expect(await within(row).findByText('gemini-3.8-flash')).toBeInTheDocument();
+    expect((screen.getByLabelText('Model') as HTMLSelectElement).value).toBe('gemini-3.8-flash');
+  });
+
+  it('uses Google instead of DashScope when switching to Gemini and clears the other key', async () => {
+    mocks.get.mockResolvedValue({ ...settings, base_url: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' });
+    render(<VlmSettingsModal onClose={vi.fn()} />);
+    fireEvent.change(await screen.findByLabelText('API key'), { target: { value: 'dashscope-key' } });
+    fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'gemini-2.5-flash' } });
+    expect((screen.getByLabelText('Base URL') as HTMLInputElement).value).toBe('https://generativelanguage.googleapis.com/v1beta/openai');
+    expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('');
+    expect(screen.getByLabelText('API key')).toHaveAttribute('required');
+    fireEvent.change(screen.getByLabelText('API key'), { target: { value: 'google-key' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu cấu hình VLM' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'gemini-2.5-flash', base_url: 'https://generativelanguage.googleapis.com/v1beta/openai', api_key: 'google-key',
+    })));
+  });
+
+  it('restores the saved Gemini selection on reload', async () => {
+    mocks.get.mockResolvedValue({ ...settings, model: 'gemini-2.5-pro' });
+    render(<VlmSettingsModal onClose={vi.fn()} />);
+    expect((await screen.findByLabelText('Model') as HTMLSelectElement).value).toBe('gemini-2.5-pro');
+    fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'qwen3-vl-plus' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Tải lại' }));
+    await waitFor(() => expect((screen.getByLabelText('Model') as HTMLSelectElement).value).toBe('gemini-2.5-pro'));
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
   it('submits a replacement key and clears it after save', async () => {
     render(<VlmSettingsModal onClose={vi.fn()} />);
     const input = await screen.findByLabelText('API key');
@@ -120,6 +160,7 @@ describe('VLM settings', () => {
     mocks.role = 'qa_lead';
     render(<VlmSettingsModal onClose={vi.fn()} />);
     expect(await screen.findByLabelText('API key')).toBeDisabled();
+    expect(screen.getByLabelText('Model')).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Lưu cấu hình VLM' })).toBeNull();
   });
 

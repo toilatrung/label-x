@@ -5,12 +5,17 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { errorMessage } from '@/lib/api/errors';
 import { getVlmSettings, saveVlmSettings, type VlmSettings } from '@/lib/configuration/vlm-api';
 
+const MODELS: VlmSettings['model'][] = ['qwen3-vl-plus', 'gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
+const GATEWAY_BASE_URL = 'https://api.shopaikey.com/v1';
+
 export function VlmSettingsModal({ onClose, onSaved }: { onClose: () => void; onSaved?: (value: VlmSettings) => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const { hasPermission } = useAuth();
   const canWrite = hasPermission(role => ['qc_admin', 'super_admin'].includes(role));
   const [settings, setSettings] = useState<VlmSettings | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
+  const [model, setModel] = useState<VlmSettings['model']>('qwen3-vl-plus');
   const [apiKey, setApiKey] = useState('');
   const [confidence, setConfidence] = useState('');
   const [loading, setLoading] = useState(true);
@@ -19,7 +24,16 @@ export function VlmSettingsModal({ onClose, onSaved }: { onClose: () => void; on
   const [saved, setSaved] = useState(false);
 
   function accept(value: VlmSettings) {
-    setSettings(value); setBaseUrl(value.base_url); setApiKey(''); setConfidence(String(value.confidence_threshold));
+    setSettings(value); setBaseUrl(value.base_url); setModel(value.model); setApiKey(''); setConfidence(String(value.confidence_threshold));
+  }
+
+  function selectModel(value: VlmSettings['model']) {
+    setModel(value); setSaved(false);
+    if (value.startsWith('gemini-') && baseUrl.includes('.aliyuncs.com/')) {
+      setBaseUrl(GEMINI_BASE_URL); setApiKey('');
+    } else if (value === 'qwen3-vl-plus' && baseUrl.startsWith(GEMINI_BASE_URL)) {
+      setBaseUrl(GATEWAY_BASE_URL); setApiKey('');
+    }
   }
 
   useEffect(() => {
@@ -54,7 +68,7 @@ export function VlmSettingsModal({ onClose, onSaved }: { onClose: () => void; on
     }
     setBusy(true); setError(null); setSaved(false);
     try {
-      const value = await saveVlmSettings({ expected_revision: settings.revision, base_url: baseUrl.trim(), model: settings.model, confidence_threshold: threshold, ...(apiKey ? { api_key: apiKey } : {}) });
+      const value = await saveVlmSettings({ expected_revision: settings.revision, base_url: baseUrl.trim(), model, confidence_threshold: threshold, ...(apiKey ? { api_key: apiKey } : {}) });
       accept(value); onSaved?.(value);
       setSaved(true);
     } catch (err) { setError(errorMessage(err)); }
@@ -79,10 +93,22 @@ export function VlmSettingsModal({ onClose, onSaved }: { onClose: () => void; on
           <div className="lx-gap__fields">
           {loading && <p role="status">Đang tải cấu hình VLM…</p>}
           {settings && !loading && <>
-            <div className="lx-field"><label className="lx-label" htmlFor="vlm-model">Model</label><input id="vlm-model" className="lx-input" value={settings.model} readOnly /></div>
+            <div className="lx-field"><label className="lx-label" htmlFor="vlm-model">Model</label>
+              <select id="vlm-model" className="lx-input" value={model} disabled={!canWrite || busy}
+                onChange={event => selectModel(event.target.value as VlmSettings['model'])}>
+                {MODELS.map(value => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </div>
             <div className="lx-field"><label className="lx-label" htmlFor="vlm-base-url">Base URL</label>
-              <input id="vlm-base-url" className="lx-input" type="url" required value={baseUrl} disabled={!canWrite || busy} onChange={event => { setBaseUrl(event.target.value); setSaved(false); }} aria-describedby="vlm-url-help" />
-              <p id="vlm-url-help" className="lx-muted">Hỗ trợ https://api.shopaikey.com/v1 hoặc endpoint DashScope /compatible-mode/v1. Crop ảnh sẽ được gửi đến nhà cung cấp đã chọn.</p>
+              <input id="vlm-base-url" className="lx-input" type="url" list="vlm-endpoints" required value={baseUrl} disabled={!canWrite || busy} onChange={event => { setBaseUrl(event.target.value); setApiKey(''); setSaved(false); }} aria-describedby="vlm-url-help" />
+              <datalist id="vlm-endpoints">
+                <option value={GATEWAY_BASE_URL}>Cổng OpenAI-compatible · Qwen hoặc Gemini</option>
+                <option value={GEMINI_BASE_URL}>Google Gemini API</option>
+                <option value="https://dashscope-intl.aliyuncs.com/compatible-mode/v1">DashScope International · Qwen</option>
+                <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">DashScope China · Qwen</option>
+                <option value="https://dashscope-us.aliyuncs.com/compatible-mode/v1">DashScope US · Qwen</option>
+              </datalist>
+              <p id="vlm-url-help" className="lx-muted">Gemini: {GEMINI_BASE_URL}. Qwen: endpoint DashScope /compatible-mode/v1. Cả hai có thể dùng {GATEWAY_BASE_URL} nếu tài khoản hỗ trợ model đã chọn. Crop ảnh sẽ được gửi đến nhà cung cấp đã chọn.</p>
             </div>
             <div className="lx-field"><label className="lx-label" htmlFor="vlm-api-key">API key</label>
               <input id="vlm-api-key" className="lx-input" type="password" autoComplete="new-password" required={keyRequired} value={apiKey} disabled={!canWrite || busy} onChange={event => { setApiKey(event.target.value); setSaved(false); }} aria-describedby="vlm-key-help" placeholder={settings.api_key_configured ? 'Đã lưu API key' : 'Nhập API key'} />

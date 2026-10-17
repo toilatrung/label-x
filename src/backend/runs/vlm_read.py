@@ -12,6 +12,7 @@ from typing import Any
 
 from orchestration.models import VlmBudget, VlmEvidence, VlmUnit
 from runs.models import EngineResult, QCRun
+from vlm.config import model_source
 
 NOT_CHECKED_STATES = frozenset({"disabled", "no_model", "not_applicable", "not_triggered"})
 
@@ -76,17 +77,18 @@ def build_vlm_view(unit: VlmUnit | None, engine_state: str) -> dict[str, Any]:
         else:
             state = str(unit.status)  # pending | running
     conclusion = {"checked": "confirmed", "uncertain": "uncertain"}.get(state)
+    model = evidence.model if evidence else (unit.model if unit else None)
     return {
         "state": state,
         "engine_status": _engine_status(state),
-        "source": "qwen",
+        "source": model_source(model),
         "conclusion": conclusion,
         "class_id": (evidence.label_class_id or None) if evidence else None,
         "class_name": (evidence.class_name or None) if evidence else None,
         "reason_code": (unit.reason_code or None) if unit is not None else None,
         "evidence_id": evidence.pk if evidence else None,
         "evaluation_id": None,  # tài nguyên evaluation do M04C-02 định nghĩa
-        "model_version": (evidence.model if evidence else (unit.model if unit else None)),
+        "model_version": model,
         "provider": (evidence.provider or None) if evidence else None,
         "provider_host": (evidence.provider_host or None) if evidence else None,
         "response_model": (evidence.response_model or None) if evidence else None,
