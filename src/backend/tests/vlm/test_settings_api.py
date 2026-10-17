@@ -74,15 +74,29 @@ def test_save_encrypts_and_does_not_echo_secret():
         )
 
 
-def test_new_qc_config_inherits_and_pins_connection_with_idempotent_replay():
+@pytest.mark.parametrize(
+    ("model", "base_url"),
+    [
+        ("qwen3-vl-plus", "https://api.shopaikey.com/v1"),
+        ("gemini-3.8-flash", "https://generativelanguage.googleapis.com/v1beta/openai"),
+        ("gemini-2.5-flash", "https://generativelanguage.googleapis.com/v1beta/openai"),
+        ("gemini-2.5-pro", "https://generativelanguage.googleapis.com/v1beta/openai"),
+        ("gemini-3.8-flash", "https://api.shopaikey.com/v1"),
+    ],
+)
+def test_new_qc_config_inherits_and_pins_connection_with_idempotent_replay(model, base_url):
     client = actor()
-    first = save(client).data["revision"]
+    first_response = save(client, model=model, base_url=base_url)
+    assert first_response.status_code == 200, first_response.data
+    first = first_response.data["revision"]
     body = {"name": "VLM", "engines": {"vlm": {"enabled": True}}}
     created = client.post(
         "/api/config-versions/", body, format="json", HTTP_IDEMPOTENCY_KEY="vlm-new"
     )
     assert created.status_code == 201, created.data
     assert created.data["models"]["vlm"]["connection_id"] == first
+    assert created.data["models"]["vlm"]["model"] == model
+    assert created.data["models"]["vlm"]["base_url"] == base_url
     assert SECRET not in created.content.decode()
     published = client.post(f"/api/config-versions/{created.data['id']}/publish/")
     assert published.status_code == 200, published.data
@@ -93,6 +107,43 @@ def test_new_qc_config_inherits_and_pins_connection_with_idempotent_replay():
     assert replay.data["models"]["vlm"]["connection_id"] == first
     assert current_config()["connection_id"] == second
     assert connection_api_key(parse_vlm_config(replay.data["models"]["vlm"])) == SECRET
+
+
+def test_switch_to_google_requires_new_key_and_sends_only_that_key():
+    client = actor()
+    revision = save(client).data["revision"]
+    body = {
+        "expected_revision": revision,
+        "model": "gemini-3.8-flash",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    }
+    assert client.patch(URL, body, format="json").status_code == 400
+    assert VlmConnection.objects.count() == 1
+    response = client.patch(URL, {**body, "api_key": "saved-google-secret"}, format="json")
+    assert response.status_code == 200, response.data
+    assert response.data["model"] == "gemini-3.8-flash"
+    assert "saved-google-secret" not in response.content.decode()
+    assert "saved-google-secret" not in json.dumps(list(AuditEvent.objects.values()), default=str)
+    config = parse_vlm_config(current_config())
+    assert config.provider == "gemini" and config.api_key_env == "GEMINI_API_KEY"
+    from tests.vlm.test_contract import PNG, TAXONOMY
+    from vlm.contract import CandidateContext, CropInput, VlmRequest
+
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"label":"bus"}'}}]})
+
+    request = VlmRequest(
+        config=config,
+        crop=CropInput(PNG, "image/png"),
+        taxonomy=TAXONOMY,
+        context=CandidateContext("1", "r"),
+    )
+    text, _, _ = DashScopeClient(transport=httpx.MockTransport(handler)).complete(request)
+    assert json.loads(text)["label"] == "bus"
+    assert seen[0].headers["authorization"] == "Bearer saved-google-secret"
 
 
 def test_key_preserved_and_url_change_requires_new_key():

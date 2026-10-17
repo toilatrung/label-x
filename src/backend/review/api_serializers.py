@@ -308,7 +308,7 @@ class AiEvidenceSerializer(serializers.Serializer[Any]):
     status: Any = serializers.CharField(
         help_text="pending | running | completed | failed | cancelled"
     )
-    source: Any = serializers.CharField(help_text="classifier | qwen")
+    source: Any = serializers.CharField(help_text="classifier | qwen | gemini")
     reason_code = serializers.CharField(allow_null=True)
     reasons = serializers.ListField(child=serializers.CharField())
     review_required = serializers.BooleanField()

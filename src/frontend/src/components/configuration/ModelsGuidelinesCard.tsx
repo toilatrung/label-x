@@ -22,7 +22,7 @@ const TABS = [
 const MODELS = [
   { name: 'Detector', role: 'Phát hiện object độc lập', version: null, mapping: null, confidence: null, status: 'Chưa cấu hình', badge: 'lx-badge', kind: 'detector' },
   { name: 'Classifier', role: 'Kiểm tra lại nhãn của object', version: 'v1.8', mapping: 'Taxonomy v3 · 12 lớp', confidence: '0.70', status: 'Đang dùng', badge: 'lx-badge lx-badge--success' },
-  { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: 'qwen3-vl-plus', mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Theo cấu hình QC', badge: 'lx-badge', kind: 'vlm' },
+  { name: 'Mô hình thị giác – ngôn ngữ', role: 'Kiểm tra có chọn lọc', version: null, mapping: 'Mô tả bằng văn bản', confidence: null, status: 'Theo cấu hình QC', badge: 'lx-badge', kind: 'vlm' },
 ];
 
 /**
@@ -92,7 +92,7 @@ export function ModelsGuidelinesCard({ guidelineExtra }: {
                   <tr key={model.name}>
                     <td className="lx-cell__main">{model.name}</td>
                     <td className="lx-muted">{model.role}</td>
-                    <td className="lx-mono">{model.kind === 'detector' ? selectedDetector?.version ?? '—' : model.version}</td>
+                    <td className="lx-mono">{model.kind === 'detector' ? selectedDetector?.version ?? '—' : model.kind === 'vlm' ? vlmSettings?.model ?? '—' : model.version}</td>
                     <td className="lx-muted">{model.kind === 'detector' ? selectedDetector?.class_mapping_version ?? '—' : model.mapping}</td>
                     <td className="r" title={model.kind === 'vlm' ? 'Ngưỡng điểm detector để gọi VLM' : undefined}>{model.kind === 'detector' ? 'Theo cấu hình Analysis' : model.kind === 'vlm' ? vlmSettings?.confidence_threshold?.toFixed(2) ?? '—' : model.confidence ?? '—'}</td>
                     <td><span className={model.badge}>{model.kind === 'detector' ? detectorLoading ? 'Đang tải…' : detectorError ? 'Không tải được' : selectedDetector ? 'Đã đăng ký' : 'Chưa đăng ký' : model.kind === 'vlm' && vlmSettings ? vlmSettings.api_key_configured ? 'Đã cấu hình' : 'Chưa cấu hình' : model.status}</span></td>

@@ -478,7 +478,7 @@ export function ReviewCanvas({
             <g id="model-predictions-layer">
               {predictions.map(prediction => {
                 const bbox = prediction.bbox;
-                const isSecondModel = prediction.source.startsWith('Qwen');
+                const isSecondModel = /^(Qwen|Gemini) · mô hình 2$/.test(prediction.source);
                 const color = isSecondModel ? '#c4a5ff' : '#5fd0c7';
                 const matchesEvidence = prediction.issueId === null && activeIssue?.evidence?.some(evidence => {
                   const box = reviewBBox(evidence.prediction_bbox);

@@ -6,7 +6,7 @@
 <meta name="labelx:type" content="reference">
 <meta name="labelx:domain" content="ai">
 <meta name="labelx:module" content="quality-control">
-<meta name="labelx:tags" content="[ai, vlm, qwen, selective-check, m-04, cr-116]">
+<meta name="labelx:tags" content="[ai, vlm, qwen, gemini, selective-check, m-04, cr-116]">
 <meta name="labelx:priority" content="3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -44,10 +44,10 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 12-ai / vlm</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, qwen, selective-check, m-04, cr-116]</span><b>priority</b><span>3</span></div>
+<div class="meta"><b>id</b><span>ai-vlm</span><b>title</b><span>Mô hình thị giác – ngôn ngữ (VLM)</span><b>type</b><span>reference</span><b>domain</b><span>ai</span><b>module</b><span>quality-control</span><b>tags</b><span>[ai, vlm, qwen, gemini, selective-check, m-04, cr-116]</span><b>priority</b><span>3</span></div>
 <h1 id="mo-hinh-thi-giac-ngon-ngu-vlm">Mô hình thị giác – ngôn ngữ (VLM)</h1>
 <h2 id="1-trang-thai-trong-pilot-m13">1. Trạng thái: VLM trong M-04 (CR-115, CR-116)</h2>
-<blockquote><strong>Cập nhật 2026-10-13.</strong> M-04 triển khai kỹ thuật VLM runtime theo <strong>CR-115</strong> (đổi ưu tiên: A — VLM runtime, B — ConvNeXt Tiny classifier, C — routing) và <strong>CR-116</strong> (đã duyệt: VLM là <strong>Qwen</strong>, thay Gemini). Phần dưới đây mô tả theo kế hoạch; mục nào chưa khớp contract thực tế được đánh dấu <strong>[chờ contract]</strong>. Không có nội dung nào ở đây là kết quả runtime đã chạy thật.</blockquote>
+<blockquote><strong>Cập nhật 2026-10-17 theo yêu cầu PO.</strong> Bổ sung <strong>Gemini</strong> bên cạnh Qwen; <code>qwen3-vl-plus</code> vẫn là mặc định. M-04 ban đầu triển khai theo CR-115 và CR-116. Hướng dẫn kết nối hiện tại ở mục 1b; các mục kế hoạch lịch sử bên dưới không phải kết quả kiểm chứng với nhà cung cấp thật.</blockquote>
 <ul>
 <li>Trạng thái trước M-04: đề xuất không bật VLM trong pilot M13 (TBD-08). CR-115 thay thế phần ưu tiên này cho phạm vi M-04; calibration, KPI, ablation và nghiệm thu nằm <strong>ngoài</strong> M-04.</li>
 <li>VLM <strong>tắt</strong> vẫn là trạng thái hợp lệ cho run/config cũ: engine hiển thị <strong>Not checked</strong> (<code>disabled</code>), không bao giờ coi là đạt (H AnalysisConfig; R B-19). Ba nhóm lỗi E1–E3 không phụ thuộc VLM.</li>
@@ -58,15 +58,25 @@ ul.dir{columns:2;font-size:14px}
 <thead><tr><th>Mục</th><th>Giá trị theo kế hoạch</th><th>Trạng thái</th></tr></thead>
 <tbody>
 <tr><td>Model mặc định</td><td><code>qwen3-vl-plus</code> (bản Instruct, không dùng chế độ suy luận), cấu hình tại <code>models.vlm</code> của ConfigVersion; model ID phải thuộc allowlist trong mã nguồn</td><td>Contract A (#279) <strong>[chờ contract]</strong>; ID đã thấy trong danh sách model của cổng thử nghiệm, chưa có runtime pass</td></tr>
-<tr><td>Provider</td><td><code>openai_compatible</code> (cổng bên thứ ba) hoặc <code>dashscope</code> (Alibaba Cloud)</td><td><strong>[chờ contract]</strong></td></tr>
+<tr><td>Provider</td><td><code>openai_compatible</code> (cổng bên thứ ba), <code>dashscope</code> (Alibaba Cloud) hoặc <code>gemini</code> (Google)</td><td>Model và host phải khớp provider</td></tr>
 <tr><td>Ràng buộc host ↔ biến key</td><td>Mỗi provider chỉ dùng host riêng và biến môi trường riêng (<code>DASHSCOPE_API_KEY</code> chỉ cho host DashScope; <code>VLM_API_KEY</code> cho cổng bên thứ ba), để key không gửi sai nơi. Config chỉ lưu <em>tên</em> biến môi trường từ allowlist, không lưu key</td><td>Đang hoàn thiện ở nhánh A <strong>[chờ contract]</strong></td></tr>
 <tr><td>Giao thức</td><td>API tương thích OpenAI (chat completions, ảnh dạng data URL); backend validate JSON đầu ra, không dựa vào JSON schema của provider</td><td>Chưa kiểm chứng JSON schema phía provider</td></tr>
 <tr><td>Region/base URL DashScope, tên model theo từng cổng</td><td>Phụ thuộc tài khoản; danh sách model của một cổng phụ thuộc kênh của key</td><td>Chưa xác minh với tài liệu chính thức; cần PO xác nhận trước smoke thật</td></tr>
 </tbody></table>
 <ul>
-<li>Config bị từ chối nếu chứa key, secret, prompt hoặc khoá lạ; <strong>FE không gửi prompt, key, model ID hay ảnh</strong> — FE chỉ gửi <code>reason</code> và <code>expected_revision</code> khi yêu cầu đánh giá lại.</li>
-<li>Secret chỉ ở runtime (biến môi trường), không ghi vào DB, log hay evidence.</li>
+<li>ConfigVersion bị từ chối nếu chứa key, secret, prompt hoặc khoá lạ. Khi yêu cầu đánh giá lại, FE chỉ gửi reason và expected_revision; model và crop do backend lấy từ cấu hình đã khoá.</li>
+<li>API key có thể lưu mã hóa trong kết nối VLM hoặc đọc từ biến môi trường theo host. Không ghi key dạng rõ vào ConfigVersion, log hay evidence.</li>
 </ul>
+<h3 id="1b-ket-noi-gemini">1b. Chọn Qwen hoặc Gemini trong Configuration</h3>
+<ol>
+<li>Vào <strong>Configuration → Mô hình</strong>, chỉnh <strong>Mô hình thị giác – ngôn ngữ</strong>. Chọn model: <code>qwen3-vl-plus</code>, <code>gemini-3.8-flash</code>, <code>gemini-2.5-flash</code> hoặc <code>gemini-2.5-pro</code>.</li>
+<li>Gemini trực tiếp dùng Base URL <code>https://generativelanguage.googleapis.com/v1beta/openai</code> và key Google AI Studio. Qwen dùng endpoint DashScope. Cổng <code>https://api.shopaikey.com/v1</code> nhận cả hai họ model khi tài khoản của cổng có hỗ trợ.</li>
+<li>Nhập API key và lưu. Khi đổi endpoint phải nhập key mới; đổi model trong cùng endpoint có thể giữ key đã lưu. API key được mã hóa và không hiển thị lại.</li>
+<li>Tạo phiên bản cấu hình QC mới và bật VLM. Model, provider và kết nối được khoá theo phiên bản; thay đổi kết nối sau đó không đổi các run cũ.</li>
+</ol>
+<p>Nếu dùng <code>api_key_env</code> thay vì kết nối đã lưu, Google chỉ đọc <code>GEMINI_API_KEY</code>, DashScope chỉ đọc <code>DASHSCOPE_API_KEY</code>, cổng chỉ đọc <code>VLM_API_KEY</code>. Endpoint Google không nhận model Qwen và endpoint DashScope không nhận model Gemini.</p>
+<p>Evidence và lớp phủ trên canvas ghi đúng nguồn Qwen/Gemini. Cả hai chỉ đề xuất nhãn hoặc <code>uncertain</code>, không tạo quyết định review. Gemini có hạn mức đầu ra riêng để dành chỗ cho thinking trước JSON kết quả.</p>
+<p>Tài liệu chính thức: <a href="https://ai.google.dev/gemini-api/docs/openai">Gemini OpenAI compatibility</a> và <a href="https://ai.google.dev/gemini-api/docs/models">Gemini models</a> (đối chiếu ngày 2026-10-17). Google giới hạn các model 2.5 cho tài khoản đã từng sử dụng; dự án mới nên chọn <code>gemini-3.8-flash</code>. Việc thêm hỗ trợ được kiểm tra bằng mock; chưa chạy smoke Gemini có trả phí.</p>
 <h2 id="2-kien-truc-a-chot-neu-bat-b-08">2. Kiến trúc (B-08, bổ sung bởi CR-115)</h2>
 <pre class="highlight"><code>Candidate (từ engine khác trong run) → chọn theo policy → worker VLM kiểm chọn lọc → Evidence có cấu trúc</code></pre>
 <ul>

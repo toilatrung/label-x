@@ -21,6 +21,7 @@ export interface ReviewEvidenceTableProps {
 
 const AI_SOURCE_LABELS: Record<string, string> = {
   qwen: 'Mô hình thị giác – ngôn ngữ (VLM)',
+  gemini: 'Mô hình thị giác – ngôn ngữ (Gemini)',
   classifier: 'Đối chiếu detector',
   detector: 'Đối chiếu detector',
 };

@@ -1,0 +1,27 @@
+# Allow only build inputs; host dependencies, env files and evidence never enter the context.
+**
+!package.json
+!package-lock.json
+!next.config.ts
+!tsconfig.json
+!next-env.d.ts
+!src/
+!src/**
+!public/
+!public/**
+src/__tests__/
+public/samples/
+**/.env
+**/.env.*
+**/.git
+**/.cache
+**/node_modules
+**/.next
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pth
+**/*.pt
+**/*.onnx
+**/datasets/
+**/secrets/

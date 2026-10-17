@@ -61,7 +61,16 @@ def _candidate(run, key="b"):
     )
 
 
-def _evaluation(run, candidate, *, qwen: bool, generation=1, status="completed", result="checked"):
+def _evaluation(
+    run,
+    candidate,
+    *,
+    qwen: bool,
+    generation=1,
+    status="completed",
+    result="checked",
+    model="qwen-test",
+):
     unit = None
     if qwen:
         unit = VlmUnit.objects.create(
@@ -70,7 +79,7 @@ def _evaluation(run, candidate, *, qwen: bool, generation=1, status="completed",
             idempotency_key=f"k{generation}",
             evaluation_generation=generation,
             policy_version="p1",
-            model="qwen-test",
+            model=model,
             prompt_version="v1",
             status=status,
             result={"status": result},
@@ -83,7 +92,7 @@ def _evaluation(run, candidate, *, qwen: bool, generation=1, status="completed",
             class_name="car",
             rationale="giống xe",
             provider="mock",
-            model="qwen-test",
+            model=model,
             prompt_version="v1",
             policy_version="p1",
             snapshot_revision="rev",
@@ -113,9 +122,12 @@ def _claim(world):
 
 
 @pytest.mark.django_db
-def test_workspace_has_issues_lease_queue_and_ai_evidence(world):
+@pytest.mark.parametrize(
+    ("model", "source"), [("qwen-test", "qwen"), ("gemini-3.8-flash", "gemini")]
+)
+def test_workspace_has_issues_lease_queue_and_ai_evidence(world, model, source):
     candidate = _candidate(world["run"])
-    _evaluation(world["run"], candidate, qwen=True)
+    _evaluation(world["run"], candidate, qwen=True, model=model)
     lease_id, frame_id = _claim(world)
     response = client(world["reviewer"]).get(f"/api/frames/{frame_id}/workspace/")
     assert response.status_code == 200, response.data
@@ -125,9 +137,10 @@ def test_workspace_has_issues_lease_queue_and_ai_evidence(world):
     assert data["snapshot_revision"] == world["run"].snapshot.revision_sha256
     assert data["anchor_policy_version"] == "anchor-v1"
     (entry,) = data["ai_evidence"]
-    assert entry["source"] == "qwen" and entry["reason_code"] == "label_conflict"
+    assert entry["source"] == source and entry["reason_code"] == "label_conflict"
     assert entry["issue_id"] == data["issues"][0]["id"]
     assert entry["evidence_refs"]["crop_sha256"] == "d" * 64
+    assert entry["evidence_refs"]["model"] == model
     assert entry["suggestion"]["status"] == "checked"
     assert entry["review_required"] is False
     # Qwen chỉ đề xuất: không tạo quyết định review.
