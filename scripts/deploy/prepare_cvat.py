@@ -59,12 +59,13 @@ def main():
     fd = os.open(args.env_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, 'w') as file:
         file.write('CVAT_HOST=cvat.williamtrinh.online\nCVAT_BIND_IP=172.17.0.1\n')
-        file.write('CVAT_TRUSTED_PROXY_CIDRS=10.42.0.0/16,172.17.0.1/32\n')
+        file.write('CVAT_TRUSTED_PROXY_CIDRS=10.42.0.0/16,172.16.0.0/12\n')
         file.write('CVAT_POSTGRES_PASSWORD=' + secrets.token_hex(32) + '\n')
         file.write('CLICKHOUSE_PASSWORD=' + secrets.token_hex(32) + '\n')
         file.write('CVAT_GRAFANA_ADMIN_PASSWORD=' + secrets.token_hex(32) + '\n')
     print('Private env created mode 0600; copy securely off VPS before first start. No credentials printed.')
-    print('Verify K3s pod CIDRs match trusted proxies; do not bind CVAT to 0.0.0.0 or ports 80/443.')
+    print('Verify K3s pod CIDRs match trusted proxies; the Docker range covers the compose network gateway that docker-proxy shows to the router.')
+    print('Do not bind CVAT to 0.0.0.0 or ports 80/443.')
 
 
 if __name__ == '__main__':

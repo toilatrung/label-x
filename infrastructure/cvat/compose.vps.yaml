@@ -58,6 +58,8 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
+      CVAT_ANALYTICS: ${CVAT_ANALYTICS:-0}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -76,6 +78,15 @@ services:
       timeout: 10s
       start_period: 180s
       retries: 12
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+      cvat_opa:
+        condition: service_started
   cvat_worker_utils:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 512m
@@ -87,6 +98,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -94,6 +106,13 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
   cvat_worker_import:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 768m
@@ -105,6 +124,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -112,6 +132,13 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
   cvat_worker_export:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 512m
@@ -123,6 +150,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -130,6 +158,15 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+    profiles:
+    - extra-workers
   cvat_worker_annotation:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 512m
@@ -141,6 +178,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -148,6 +186,15 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+    profiles:
+    - extra-workers
   cvat_worker_webhooks:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 384m
@@ -159,6 +206,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -166,6 +214,15 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+    profiles:
+    - extra-workers
   cvat_worker_quality_reports:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 384m
@@ -177,6 +234,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -184,6 +242,15 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+    profiles:
+    - extra-workers
   cvat_worker_chunks:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 768m
@@ -195,6 +262,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -202,6 +270,13 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
   cvat_worker_consensus:
     image: cvat/server:v2.77.0@sha256:9119c7e00a41204820e6591f5e17b021c5e12999b6182a0b2a5348b2452b3d02
     mem_limit: 384m
@@ -213,6 +288,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
+      DJANGO_LOG_SERVER_HOST: ${DJANGO_LOG_SERVER_HOST:-}
       CVAT_POSTGRES_PASSWORD: ${CVAT_POSTGRES_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       DJANGO_SETTINGS_MODULE: cvat.settings.labelx
@@ -220,6 +296,15 @@ services:
       NUMPROCS: '1'
     volumes:
     - ../settings.py:/opt/cvat/cvat/settings/labelx.py:ro
+    depends_on: !override
+      cvat_redis_inmem:
+        condition: service_started
+      cvat_redis_ondisk:
+        condition: service_started
+      cvat_db:
+        condition: service_started
+    profiles:
+    - extra-workers
   cvat_ui:
     image: cvat/ui:v2.77.0@sha256:02a3e424519527f767b913fac1bef0724a5e0ec671f9aed7ea9b90634a223c92
     mem_limit: 64m
@@ -241,7 +326,7 @@ services:
         max-size: 10m
         max-file: '3'
     environment:
-      TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS: ${CVAT_TRUSTED_PROXY_CIDRS:-10.42.0.0/16,172.17.0.1/32}
+      TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS: ${CVAT_TRUSTED_PROXY_CIDRS:-10.42.0.0/16,172.16.0.0/12}
     ports: !override
     - ${CVAT_BIND_IP:-172.17.0.1}:18080:8080
   cvat_opa:
@@ -267,6 +352,8 @@ services:
     environment:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    profiles:
+    - analytics
   cvat_vector:
     image: timberio/vector:0.26.0-alpine@sha256:13779856a8afe8240a1549208040dec12a50cd9b9d98b577d9327d2c212499d8
     mem_limit: 128m
@@ -279,6 +366,8 @@ services:
         max-file: '3'
     environment:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
+    profiles:
+    - analytics
   cvat_grafana:
     image: grafana/grafana-oss:10.1.2@sha256:63854c5592bab6c7b8ac2ceb35b420925465eb24ef05f2402e4cb805253efb46
     mem_limit: 256m
@@ -295,3 +384,5 @@ services:
       GF_AUTH_DISABLE_LOGIN_FORM: 'false'
       GF_SECURITY_ADMIN_PASSWORD: ${CVAT_GRAFANA_ADMIN_PASSWORD:?private env required}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?private env required}
+    profiles:
+    - analytics
