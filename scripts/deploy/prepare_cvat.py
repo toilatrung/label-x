@@ -62,6 +62,7 @@ def main():
         file.write('CVAT_TRUSTED_PROXY_CIDRS=10.42.0.0/16,172.17.0.1/32\n')
         file.write('CVAT_POSTGRES_PASSWORD=' + secrets.token_hex(32) + '\n')
         file.write('CLICKHOUSE_PASSWORD=' + secrets.token_hex(32) + '\n')
+        file.write('CVAT_GRAFANA_ADMIN_PASSWORD=' + secrets.token_hex(32) + '\n')
     print('Private env created mode 0600; copy securely off VPS before first start. No credentials printed.')
     print('Verify K3s pod CIDRs match trusted proxies; do not bind CVAT to 0.0.0.0 or ports 80/443.')
 

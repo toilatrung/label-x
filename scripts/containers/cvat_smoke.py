@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     project = 'labelx-cvat-test-' + uuid.uuid4().hex[:8]
     service_names = list(json.loads((CVAT / 'resources.json').read_text())['memory_limits_mib'])
-    env = os.environ | {'CVAT_POSTGRES_PASSWORD': secrets.token_hex(24), 'CLICKHOUSE_PASSWORD': secrets.token_hex(24)}
+    env = os.environ | {'CVAT_POSTGRES_PASSWORD': secrets.token_hex(24), 'CLICKHOUSE_PASSWORD': secrets.token_hex(24), 'CVAT_GRAFANA_ADMIN_PASSWORD': secrets.token_hex(24)}
     with tempfile.TemporaryDirectory(prefix=project) as directory:
         override = Path(directory, 'isolation.yaml')
         text = 'services:\n'
