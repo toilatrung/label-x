@@ -19,6 +19,38 @@
     "cvat_vector": 128,
     "cvat_grafana": 256
   },
+  "profiles": {
+    "default": [
+      "cvat_db",
+      "cvat_redis_inmem",
+      "cvat_redis_ondisk",
+      "cvat_opa",
+      "cvat_server",
+      "cvat_ui",
+      "traefik",
+      "cvat_worker_utils",
+      "cvat_worker_import",
+      "cvat_worker_chunks"
+    ],
+    "analytics": [
+      "cvat_clickhouse",
+      "cvat_vector",
+      "cvat_grafana"
+    ],
+    "extra-workers": [
+      "cvat_worker_export",
+      "cvat_worker_annotation",
+      "cvat_worker_webhooks",
+      "cvat_worker_quality_reports",
+      "cvat_worker_consensus"
+    ]
+  },
+  "profile_total_mib": {
+    "default": 4288,
+    "analytics": 1408,
+    "extra-workers": 2176
+  },
+  "default_total_mib": 4288,
   "total_mib": 7872,
-  "note": "Small datasets only; limits are not measured VPS demand. No capacity/load acceptance."
+  "note": "Default (no --profile) is the reduced stack LabelX needs: API, UI, task creation (import), frame chunks (chunks) and cleanup (utils). Small datasets only; limits are not measured VPS demand. No capacity/load acceptance."
 }
