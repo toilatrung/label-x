@@ -148,6 +148,24 @@ emit('docs/00-project/glossary.html','\n'.join(x for x in o if x is not None)+'\
 # stakeholders
 o=[fm('project-stakeholders','Stakeholder và lớp người dùng LabelX','project','repository',['stakeholders','roles','users'],2)]
 o.append("# Stakeholder và lớp người dùng LabelX\n\n## Purpose\n\nVai trò tham gia dự án và người dùng hệ thống, trách nhiệm phê duyệt và quyền chính. Tên người cụ thể chưa được gán (cần điền khi giao việc).\n\n## Lớp người dùng\n\n"+table(['Vai trò','Mô tả và nhiệm vụ','Quyền chính'],D['users']))
+# Deployment role-account notes belong here so regeneration preserves them.
+o.append("""
+<h2 id="tai-khoan-theo-role-vps">Tài khoản ứng dụng theo role (VPS 17/10/2026)</h2>
+<p>Tài khoản LabelX trên môi trường <code>labelx</code> đã được tạo theo 7 role, mỗi role một tài khoản. Danh sách này chỉ ghi role và phạm vi; <strong>không ghi tên đăng nhập thật, mật khẩu hay token</strong> — thông tin đăng nhập do người vận hành giữ ngoài repo. Tên người cụ thể vẫn chưa gán (bảng trên).</p>
+<table>
+<thead><tr><th>Role (mã)</th><th>Lớp người dùng tương ứng</th><th>Phạm vi</th></tr></thead>
+<tbody>
+<tr><td><code>annotator</code></td><td>Annotator</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>reviewer</code></td><td>Reviewer</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>qa_lead</code></td><td>Quality Assurance Lead</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>qc_admin</code></td><td>Quality Control Admin</td><td>toàn hệ thống (<code>dataset_id</code> NULL)</td></tr>
+<tr><td><code>super_admin</code></td><td>Super Admin</td><td>toàn hệ thống (<code>dataset_id</code> NULL)</td></tr>
+<tr><td><code>product_owner</code></td><td>Product / Data Owner (Product Owner)</td><td>dataset 1 (mặc định)</td></tr>
+<tr><td><code>data_model_owner</code></td><td>Product / Data Owner (Data/Model Owner)</td><td>dataset 1 (mặc định)</td></tr>
+</tbody>
+</table>
+<p>Phạm vi theo <code>SYSTEM_WIDE_ROLES</code> trong <code>src/backend/accounts/models.py</code>: <code>super_admin</code> và <code>qc_admin</code> là toàn hệ thống (<code>dataset_id</code> NULL); constraint <code>accounts_role_assignment_system_wide_roles</code> bắt mọi role khác phải có <code>dataset_id</code>. Năm role còn lại được gán dataset mặc định <code>1</code> (đổi bằng <code>LABELX_DATASET_ID</code> khi chạy <code>create_role_accounts.py</code>). <code>dataset_id</code> không phải model riêng trong database mà trùng id project CVAT (<code>DatasetListView</code> đọc live từ CVAT), nên dataset 1 chỉ có nghĩa khi CVAT có project id 1; role dataset-scoped chỉ thấy project có id được gán. Nguồn sự thật là <code>RoleAssignment</code> trên backend. Dataset list vẫn trả 502 khi CVAT chưa kết nối (<a href="../04-api/rest-api.html#datasets-cvat-dependency">REST API</a>).</p>
+""")
 o.append("\n## Trách nhiệm phê duyệt SRS\n\n"+table(['Vai trò','Phê duyệt','Người được gán'],[["Product Owner M13","Phạm vi, KPI, tiêu chí nghiệm thu","chưa gán"],["Quality Assurance Lead","Taxonomy lỗi, reference, quy trình phân xử","chưa gán"],["Quality Control Admin","Cấu hình kỹ thuật, quyền, engine","chưa gán"],["Tech Lead Backend","Kiến trúc, API, yêu cầu phi chức năng","chưa gán"],["Data/Model Owner","Dữ liệu BDD100K, Detector baseline","chưa gán"]]))
 o.append("\n## Quy tắc tách nhiệm vụ\n\n- Reviewer không review annotation của chính mình (assignee tại snapshot) — B-12.\n- Người duyệt waiver, khoá reference, phân xử khác người yêu cầu — B-11, B-12.\n- Super Admin không là người duyệt mặc định; ghi đè phải có lý do và gắn nhãn trong audit.\n\nNguồn: [SRS M13](../01-business/labelX.html) mục 2.6, bảng ma trận quyền chương 6; `docs/00-project/sources/architecture_review.html`.\n")
 emit('docs/00-project/stakeholders.html','\n'.join(o))
