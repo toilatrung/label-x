@@ -1,5 +1,8 @@
 """M03-R10 backend: idle/blur/hidden/pause exclusion, overlap dedupe, policy version."""
 
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-246.
+
 from __future__ import annotations
 
 import uuid
@@ -142,7 +145,7 @@ def test_gap_outside_event_and_each_consumer_activity_are_validated_and_stored()
 
 
 # ---------------------------------------------------------------------------
-# AC audit supplement: tests added by #246 audit to fill evidence gaps
+# AC audit supplement: tests added by archive:246 audit to fill evidence gaps
 # ---------------------------------------------------------------------------
 
 

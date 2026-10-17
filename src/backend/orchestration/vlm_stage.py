@@ -1,14 +1,18 @@
 """Stage VLM phụ thuộc candidate (M04A-03, CR-116).
 
 Thứ tự: engine sinh candidate chạy xong (mọi WorkUnit không còn mở) -> `start_vlm_stage` tạo
-VlmUnit theo policy `vlm-trigger-v0` -> mỗi VlmUnit chạy qua Celery. VLM không bao giờ chạy trước
+VlmUnit theo policy `vlm-trigger-v0` -> mỗi VlmUnit chạy qua Celery. VLM không bao giờ chạy
+trước
 candidate vì VlmUnit chỉ được tạo từ CandidateRecord đã commit.
 
 Budget/retry:
-- Budget của run là một dòng VlmBudget; mỗi attempt thực gửi provider tăng `used_calls` bằng một
-  UPDATE có điều kiện (nguyên tử). VlmAttempt unique (unit, attempt_no) nên giao lại cùng attempt
+- Budget của run là một dòng VlmBudget; mỗi attempt thực gửi provider tăng `used_calls` bằng
+một
+  UPDATE có điều kiện (nguyên tử). VlmAttempt unique (unit, attempt_no) nên giao lại cùng
+attempt
   không bị tính lần hai.
-- Tối đa `max_attempts` (≤ 4: lần đầu + 3 retry) attempt cho mỗi lượt logic; retry/backoff nằm trong
+- Tối đa `max_attempts` (≤ 4: lần đầu + 3 retry) attempt cho mỗi lượt logic; retry/backoff nằm
+trong
   `vlm.runner.run_vlm_unit`; production hẹn task sau mỗi lỗi tạm thời và dùng DbBudgetGate.
 - VlmUnit unique theo khoá idempotency; tạo lại là no-op. Khoá chuẩn bị bằng `crop_identity`
   (danh tính crop tất định do CropProvider cung cấp), sha256 thật của crop nằm trong kết quả.
@@ -16,6 +20,9 @@ Budget/retry:
 VLM chỉ tạo kết quả/đề xuất; không tạo ReviewDecision hay Adjudication.
 Lỗi VLM được giữ theo candidate. Retry được lưu và hẹn qua Celery; outage có hạn chờ rõ.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-289.
 
 from __future__ import annotations
 
@@ -63,7 +70,8 @@ logger = logging.getLogger("labelx.orchestration")
 VLM_ENGINE = "vlm"
 TRIGGER_POLICY_VERSION = "classification-routing-v0"  # policy C; pha A dùng vlm-trigger-v0
 SKIP_NO_TAXONOMY = "not_applicable"
-# Lượt đánh giá logic đầu tiên. Manual recheck/re-evaluate (M04C-02/#289) sẽ tăng generation; ràng
+# Lượt đánh giá logic đầu tiên. Manual recheck/re-evaluate (M04C-02/archive:289) sẽ tăng generation;
+# ràng
 # buộc unique (run, candidate, generation) và khoá idempotency đã hỗ trợ nhiều generation.
 EVALUATION_GENERATION = 1
 _OPEN_STATUSES = (VlmUnit.Status.PENDING, VlmUnit.Status.RUNNING)

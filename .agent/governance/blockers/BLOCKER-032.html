@@ -44,14 +44,16 @@ ul.dir{columns:2;font-size:14px}
 </style></head>
 <body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / blockers / BLOCKER-032</span><span class="sp"></span></header>
 <main><article>
-<div class="meta"><b>id</b><span>blocker-032</span><b>title</b><span>M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, m-04, m04b, classifier, training]</span><b>priority</b><span>2</span></div>
-<h1 id="blocker-032">M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</h1>
+<div class="meta"><b>id</b><span>blocker-032</span><b>title</b><span>M04B (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-284">#284 (lưu trữ)</a>/<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-285">#285 (lưu trữ)</a>): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, m-04, m04b, classifier, training]</span><b>priority</b><span>2</span></div>
+<h1 id="blocker-032">M04B (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-284">#284 (lưu trữ)</a>/<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-285">#285 (lưu trữ)</a>): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Ghi nhận blocker của pha B M-04 để PO xem lại; không chặn phần code đã làm.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Blocker ID</strong>: <code>BLOCKER-032</code></li>
-<li><strong>Title</strong>: <code>M04B (#284/#285): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</code></li>
+<li><strong>Title</strong>: <code>M04B (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-284">#284 (lưu trữ)</a>/<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-285">#285 (lưu trữ)</a>): chưa có crop có nhãn thật và snapshot/ảnh thật để huấn luyện ConvNeXt Tiny; chỉ có torch CPU</code></li>
 <li><strong>Owner</strong>: <code>@toilatrung (PO)</code></li>
 <li><strong>Reporter</strong>: <code>phiên Claude label-x-47, theo phân công của label-x-m04-5a</code></li>
 <li><strong>Status</strong>: <code>open</code></li>
@@ -65,14 +67,14 @@ ul.dir{columns:2;font-size:14px}
 <p>Bằng chứng: <code>src/classifier_worker</code> đã có pipeline (build-dataset, train, freeze, verify, predict) kiểm bằng dữ liệu tổng hợp; manifest ghi <code>training.status</code> đúng thực tế.</p>
 <h2 id="impact">Impact</h2>
 <ul>
-<li><strong>Blocked Epics or Tasks</strong>: <code>M04B-02 (#285) phần huấn luyện thật; M04B-04 (#287) smoke trên checkpoint hợp lệ</code></li>
+<li><strong>Blocked Epics or Tasks</strong>: <code>M04B-02 (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-285">#285 (lưu trữ)</a>) phần huấn luyện thật; M04B-04 (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-287">#287 (lưu trữ)</a>) smoke trên checkpoint hợp lệ</code></li>
 <li><strong>Blocked Deliverables</strong>: <code>checkpoint classifier hợp lệ (status=trained) và smoke runtime trên crop được phép</code></li>
 <li><strong>Schedule or Quality Impact</strong>: <code>Cổng pha B mở theo brief M-04: pipeline/manifest/engine hoàn thành, training pass và runtime pass thật giữ mở. Không tính accuracy, không dùng held-out để fit.</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Affected Records</strong>: <code>src/classifier_worker/**</code></li>
-<li><strong>Issues</strong>: <code>#284, #285, #286, #287</code></li>
+<li><strong>Issues</strong>: <code><a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-284">#284 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-285">#285 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-286">#286 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-287">#287 (lưu trữ)</a></code></li>
 <li><strong>Decisions</strong>: <code>DEC-021</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>CR-115</code></li>

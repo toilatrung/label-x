@@ -12,7 +12,7 @@ type FrameSummary = components['schemas']['FrameSummary'];
 export interface EffortCollectorStatus {
   isAvailable: boolean;
   status: 'INTEGRATED_T036';
-  dependencyIssue: 'https://github.com/toilatrung/label-x/issues/103';
+  dependencyIssue: 'https://github.com/toilatrung/label-x/issues/395';
   idlePolicy: 'pending_po_approval' | 'configured';
   reason: string;
 }
@@ -20,7 +20,7 @@ export interface EffortCollectorStatus {
 export const effortCollectorStatus: EffortCollectorStatus = {
   isAvailable: true,
   status: 'INTEGRATED_T036',
-  dependencyIssue: 'https://github.com/toilatrung/label-x/issues/103',
+  dependencyIssue: 'https://github.com/toilatrung/label-x/issues/395',
   idlePolicy: 'pending_po_approval',
   reason:
     'Module T-036 (PR133) đã tích hợp vào baseline. Ngưỡng idle cutoff đang chờ PO phê duyệt cấu hình (TBD-09); idleAfterMs đặt là null.',

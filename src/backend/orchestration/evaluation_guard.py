@@ -1,12 +1,15 @@
 """Guard idempotency + revision cho evaluation/re-evaluate (M04C-02, CR-115).
 
-Hàm thuần, không DB và không đoán schema evidence: view/service của #289 gọi vào đây
+Hàm thuần, không DB và không đoán schema evidence: view/service của archive:289 gọi vào đây
 trước khi ghi. Quy tắc:
 - revision cũ → 409 (StaleRevisionError), không ghi gì;
 - cùng Idempotency-Key + cùng payload + cùng người → replay (trả evaluation cũ);
 - cùng key khác payload hoặc khác người → 409 (EvaluationKeyReusedError);
 - manual recheck với key mới luôn tạo evaluation mới, dù revision/model không đổi.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-289.
 
 from __future__ import annotations
 

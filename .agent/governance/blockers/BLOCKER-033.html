@@ -46,6 +46,8 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>blocker-033</span><b>title</b><span>M-BE-MVP: chưa tích hợp Faster R-CNN và còn các lỗ hổng MVP cần sửa trên develop sau khi merge integration/m-be-mvp</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, m-be-mvp, detector, faster-rcnn, gate, frontend]</span><b>priority</b><span>1</span></div>
 <h1 id="blocker-033">M-BE-MVP: chưa tích hợp Faster R-CNN và còn các lỗ hổng MVP cần sửa trên develop sau khi merge integration/m-be-mvp</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Ghi lại những gì chưa đạt khi gộp <code>integration/m-be-mvp</code> vào <code>develop</code>. Theo chỉ đạo của người dùng, các việc này được sửa tiếp trên <code>develop</code> sau khi merge, không chặn việc merge. Mã A-xx, C-xx, D-xx là mã lỗi trong báo cáo <a href="../../reports/qa/FE-BE-WIRING-2026-10-13.html">FE-BE-WIRING-2026-10-13</a>.</p>
 <h2 id="record-metadata">Record Metadata</h2>
@@ -77,14 +79,14 @@ ul.dir{columns:2;font-size:14px}
 <blockquote>Detector và VLM tạm thời chưa cần theo người dùng (2026-10-14), nhưng vẫn ghi ở đây để không mất dấu. MVP cần ít nhất mục 4 (gate) chạy được trên dữ liệu thật.</blockquote>
 <h2 id="impact">Impact</h2>
 <ul>
-<li><strong>Blocked Epics or Tasks</strong>: <code>M-BE-MVP (MBE-01…07, issue #321…#329); BLOCKER-031</code></li>
+<li><strong>Blocked Epics or Tasks</strong>: <code>M-BE-MVP (MBE-01…07, issue <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-321">#321 (lưu trữ)</a>…<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-329">#329 (lưu trữ)</a>); BLOCKER-031</code></li>
 <li><strong>Blocked Deliverables</strong>: <code>Gate passed trên run thật; detector/VLM evidence; KPI metric; màn Calibration/Configuration dùng dữ liệu thật</code></li>
 <li><strong>Schedule or Quality Impact</strong>: <code>Merge vào develop được nhưng chưa đủ điều kiện develop → main; các màn nêu trên có thể khiến người xem tưởng dữ liệu mẫu là thật</code></li>
 </ul>
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Affected Records</strong>: <code>src/backend/engines/registration.py, src/backend/review/finalization_service.py, src/backend/config/settings.py (DETECTOR_*), src/frontend/src/components/calibration/**, src/frontend/src/components/configuration/**, src/frontend/src/components/snapshots/SnapshotSample.tsx</code></li>
-<li><strong>Issues</strong>: <code>#321…#329; PR #340, #341, #342</code></li>
+<li><strong>Issues</strong>: <code><a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-321">#321 (lưu trữ)</a>…#329; PR #340, #341, #342</code></li>
 <li><strong>Decisions</strong>: <code>DEC-001</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>CR-118</code></li>

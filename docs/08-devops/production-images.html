@@ -11,6 +11,8 @@
 <style>body{max-width:1100px;margin:32px auto;padding:0 24px;font:15px/1.6 system-ui;color:#172536}h1,h2{color:#173f68}h2{margin-top:32px;border-bottom:1px solid #dbe3ec}code{background:#edf2f7;padding:2px 4px}pre{background:#edf2f7;padding:16px;overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dbe3ec;padding:8px;text-align:left;vertical-align:top}th{background:#edf3f8}a{color:#1d5ea8}.note{background:#fff5d9;border-left:4px solid #a97100;padding:12px}</style>
 </head><body><article>
 <h1>Production Docker images</h1>
+<p id="current-release-issue-backlog">Backlog kiểm chứng MVP/release hiện hành: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; xem <a href="github-issue-migration-2026-10-17.html">bảng ánh xạ issue cũ → follow-up mới ngày 17/10/2026</a>. Chưa có workflow run là NOT VERIFIED, không phải test thất bại; mọi gate giữ nguyên.</p>
+
 <h2 id="scope">Phạm vi và topology</h2>
 <p>Đóng gói ứng dụng cho Linux <code>amd64</code>, VPS Ubuntu 24.04 (6 vCPU, 16 GB RAM), K3s và Argo CD; origin công khai <code>https://label-x.williamtrinh.online</code>. Các file được phát triển trên <code>develop</code>; phát hành theo commit đã được đưa vào <code>main</code> qua quy trình hiện hành. Tài liệu này không cấp quyền triển khai, thay secret, tự merge hoặc tự push.</p>
 <table><tr><th>Image</th><th>Process mặc định</th><th>User / cổng</th></tr>

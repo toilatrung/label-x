@@ -1,4 +1,4 @@
-"""RBAC and dataset scope permissions for LabelX API (T-012, Epic E-02, Issue #41).
+"""RBAC and dataset scope permissions for LabelX API (T-012, Epic E-02, archived issue 41).
 
 Enforces:
 - RBAC by role and dataset scope (AC 1).
@@ -8,6 +8,9 @@ Enforces:
 - Strict RoleAssignment lookup without undocumented is_superuser bypass.
 - Fail-closed dataset scope: missing, invalid type, or conflicting dataset_id is rejected.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-41.
 
 from __future__ import annotations
 
@@ -189,7 +192,7 @@ def is_super_admin(user: Any) -> bool:
 
 
 class HasRoleAndDatasetScope(BasePermission):
-    """RBAC by role and dataset scope at API (Issue #41, AC 1)."""
+    """RBAC by role and dataset scope at API (archived issue 41, AC 1)."""
 
     allowed_roles: tuple[Role, ...] | None = None
     action_name: str = "api.access"

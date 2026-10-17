@@ -1,4 +1,4 @@
-"""Additional test coverage for Issue #244:
+"""Additional test coverage for archived issue 244:
 
 - GET idempotency: database state before and after GET requests (counts, updated_at).
 - Stability of cursor pagination and filtering across page 1 and page 2 without frame loss.
@@ -8,6 +8,9 @@
 - Verifier separation of duties (must be different person from author/annotator).
 - Absence of /lineage/ standalone endpoint (confirming 404).
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-244.
 
 from __future__ import annotations
 

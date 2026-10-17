@@ -19,3 +19,12 @@
 5. `src/frontend/src/app/review/page.tsx`: Production route integrating `ReviewQueues` protected by `AuthGuard` (`canAccessReview`, `requiresIdentity`).
 6. `src/frontend/src/__tests__/ReviewQueues.test.tsx`: Test suite covering AC A1–A4 scenarios.
 7. `src/frontend/evidence/t034/harness.html`: Test harness document for manual verification by T-046.
+
+<!-- issue-migration-2026-10-17:start -->
+
+Historical issue references were archived on 2026-10-17; original text above is preserved.
+
+| Old issue | Current follow-up / archive |
+|---|---|
+| #101 | [Mapping and scope](../../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-101) |
+<!-- issue-migration-2026-10-17:end -->

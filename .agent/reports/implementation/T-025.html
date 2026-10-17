@@ -79,4 +79,10 @@ ul.dir{columns:2;font-size:14px}
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul><li><strong>Plan Deviations</strong>: none (FK/dispatch đã nối ở PR bổ sung sau khi T-024 merge).</li><li><strong>Approved By</strong>: not-applicable</li><li><strong>Known Limitations</strong>: run mặc định bật schema/geometry/detector chưa có runner nên kết thúc <code>partial</code> tới khi T-027 cắm vào; migration 0003 thêm FK nên lỗi trên DB dev có bản ghi orchestration với run_id không có trong qc_run (xoá các bản ghi mồ côi hoặc <code>TRUNCATE</code> 3 bảng orchestration_* rồi migrate); ngưỡng retry là đề xuất, chờ chốt sau pilot (BLOCKER-025). Mức retry là đề xuất chờ chốt.</li></ul>
-</article></main></body></html>
+</article></main>
+<!-- issue-migration-2026-10-17:start -->
+<section id="issue-migration-2026-10-17"><h2>Ánh xạ GitHub Issues sau reset 17/10/2026</h2><p>Giữ nguyên nội dung hồ sơ trước đợt reset. Các trạng thái và issue cũ trong hồ sơ là snapshot lịch sử; backlog hiện hành: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>. Follow-up mới chỉ bao phủ phần kiểm chứng ghi rõ trong issue, không kế thừa nghiệm thu cũ.</p><table><thead><tr><th>Issue cũ (archive)</th><th>Follow-up mới / phạm vi</th></tr></thead><tbody><tr><td><a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-57">#57</a></td><td><a href="https://github.com/toilatrung/label-x/issues/391">#391: [MVP-p0_snapshot] Rà soát và bind 6 ca còn thiếu: Nền tảng, CVAT và Snapshot</a>; <a href="https://github.com/toilatrung/label-x/issues/392">#392: [MVP-p1_deterministic] Rà soát và bind 8 ca còn thiếu: Kiểm xác định, aggregation và ledger</a></td></tr>
+<tr><td><a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-67">#67</a></td><td><a href="https://github.com/toilatrung/label-x/issues/392">#392: [MVP-p1_deterministic] Rà soát và bind 8 ca còn thiếu: Kiểm xác định, aggregation và ledger</a></td></tr>
+</tbody></table></section>
+<!-- issue-migration-2026-10-17:end -->
+</body></html>
