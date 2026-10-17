@@ -655,3 +655,24 @@ def test_ranking_passes_stored_json_through_even_when_unexpected(world):
     (row,) = ranking_rows(client(world["reviewer"]), world["run"].pk)
     assert row["issue_counts"] == {"E1": "three", "E2": None, "extra": {"nested": 1}}
     assert row["explanation"] == ["not", "a", "dict"]
+
+
+@pytest.mark.django_db
+def test_claim_and_ranking_listing_do_not_load_job_payloads(world):
+    """SnapshotJob.normalized_json holds the whole job; per queue entry it exhausted the pod."""
+    from django.test.utils import CaptureQueriesContext
+
+    api = client(world["reviewer"])
+    run_id = world["run"].pk
+    with CaptureQueriesContext(connection) as queries:
+        claim = api.post(next_url(), {"run_id": run_id}, format="json")
+        listing = api.get(f"/api/runs/{run_id}/ranking/", {"queue": "risk"})
+
+    assert claim.status_code == 200 and listing.status_code == 200
+    selects = [
+        query["sql"]
+        for query in queries.captured_queries
+        if query["sql"].startswith("SELECT") and "snapshots_snapshotjob" in query["sql"]
+    ]
+    assert selects
+    assert all("normalized_json" not in sql for sql in selects)
