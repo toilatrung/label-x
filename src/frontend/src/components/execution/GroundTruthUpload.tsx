@@ -67,7 +67,7 @@ export function GroundTruthUpload({ datasetId, snapshotId, userId, enabled, busy
         onChange={(e) => { setFile(e.target.files?.[0] ?? null); setKey(null); setError(null); }} />
       <span className="lx-hint">JSON labelx.metric.gt.v1, tối đa 20 MiB. Bounding box dùng tọa độ pixel của Snapshot đã chọn.</span>
       <span className="lx-hint">{snapshotId
-        ? `Đang upload cho Snapshot #${snapshotId}. snapshot_id, task và frame trong file phải khớp Snapshot này.`
+        ? `Đang upload cho Snapshot #${snapshotId}. Ground Truth được kiểm tra theo task, frame, class và kích thước ảnh.`
         : 'Chọn Dataset và Snapshot đã khoá trước khi upload Ground Truth.'}</span>
     </div>
     <div className="lx-field"><label className="lx-label" htmlFor="ground-truth-mapping">Mapping class của Ground Truth</label>
@@ -85,11 +85,10 @@ export function GroundTruthUpload({ datasetId, snapshotId, userId, enabled, busy
         <summary>Annotation Ground Truth theo frame</summary><pre className="lx-code">{JSON.stringify(preview.frames, null, 2)}</pre>
       </details>}
       <span className="lx-hint">{current.deleted_at ? 'File đã xóa sau khi chạy thành công. Chạy lại cần upload lại.'
-        : current.reference.snapshot_id !== snapshotId ? 'Ground Truth thuộc Snapshot khác. Hãy upload cho Snapshot đang chọn.'
         : current.reference.status === 'locked' ? 'Ground Truth đã duyệt, sẵn sàng chạy.'
         : isSuperAdmin ? 'Super Admin có thể xem và duyệt Ground Truth này, kể cả do chính mình upload.'
         : 'Chờ QA Lead khác người upload duyệt Ground Truth.'}</span>
-      {!current.deleted_at && current.reference.snapshot_id === snapshotId && current.reference.status === 'draft'
+      {!current.deleted_at && current.reference.status === 'draft'
         && (isSuperAdmin || current.reference.created_by !== userId) && <button type="button" className="lx-btn lx-btn--sm"
           disabled={!enabled || working || busy || preview?.reference_id !== current.reference.id} onClick={() => void act(false)}>Duyệt Ground Truth</button>}
     </div> : !query.isPending && !query.isError && <p className="lx-hint">Chưa upload Ground Truth cho Dataset này.</p>}

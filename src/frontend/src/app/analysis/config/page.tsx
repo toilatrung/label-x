@@ -60,7 +60,7 @@ function ConfigContent() {
     !!activeConfig.models.name && typeof activeConfig.models.version === 'string' && !!activeConfig.models.version);
   const gt = groundTruth.data;
   const groundTruthReady = !metricEnabled || (!groundTruthImportPending && !groundTruth.isPending && !groundTruth.isError && !!gt &&
-    !gt.deleted_at && gt.reference.status === 'locked' && gt.reference.snapshot_id === snapshotId);
+    !gt.deleted_at && gt.reference.status === 'locked');
   const taskCount = selectedSnapshot?.jobs ? new Set(selectedSnapshot.jobs.map((job) => job.cvat_task_id)).size : 0;
 
   async function submit(event: React.FormEvent) {

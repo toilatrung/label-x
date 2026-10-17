@@ -388,8 +388,8 @@ describe('Execution screens on real API contract', () => {
     await screen.findByRole('option', { name: /SNP-004/ });
     fireEvent.change(screen.getByLabelText('Snapshot đã khoá'), { target: { value: '4' } });
     fireEvent.change(screen.getByLabelText('Phiên bản cấu hình'), { target: { value: '7' } });
-    await waitFor(() => expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(state !== 'ready'));
-    if (state !== 'ready') {
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Chạy phân tích' }) as HTMLButtonElement).disabled).toBe(!['ready', 'wrong-snapshot'].includes(state)));
+    if (!['ready', 'wrong-snapshot'].includes(state)) {
       fireEvent.click(screen.getByRole('button', { name: 'Chạy phân tích' }));
       expect(calls.some(r => r.method === 'POST' && new URL(r.url).pathname === '/api/runs/')).toBe(false);
     } else {

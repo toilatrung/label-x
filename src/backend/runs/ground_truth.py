@@ -18,7 +18,7 @@ from django.utils import timezone
 from audit.services import append_audit_event
 from engines.interface import FrameKey
 from engines.matching import ALGORITHM_VERSION
-from engines.metric import _truth_boxes, parse_gt_frames
+from engines.metric import _gt_frames, _truth_boxes, parse_gt_frames
 from runs.models import EngineResult, GroundTruthUpload, QCRun, Reference
 from snapshots.models import Snapshot, SnapshotFrame
 
@@ -50,24 +50,10 @@ def create_upload(
     raw = file.read(MAX_UPLOAD_BYTES + 1)
     if len(raw) > MAX_UPLOAD_BYTES:
         raise ValueError("Ground Truth tối đa 20 MiB.")
-    frames = parse_gt_frames(raw, snapshot.pk, mapping_version)
+    frames = parse_gt_frames(raw, mapping_version)
     if not frames:
         raise ValueError("Ground Truth phải có ít nhất một frame.")
-    snapshot_frames = {
-        FrameKey(task, number): (width, height)
-        for task, number, width, height in SnapshotFrame.objects.filter(
-            snapshot_job__snapshot=snapshot
-        ).values_list("snapshot_job__cvat_task_id", "frame_index", "width", "height")
-    }
-    box_count = 0
-    for identity, frame in frames.items():
-        if identity not in snapshot_frames:
-            raise ValueError("Ground Truth chứa frame không thuộc Snapshot đã chọn.")
-        width, height = snapshot_frames[identity]
-        for box in _truth_boxes(frame, 0):
-            if not (0 <= box.x1 < box.x2 <= width and 0 <= box.y1 < box.y2 <= height):
-                raise ValueError("Bounding box vượt kích thước ảnh trong Snapshot.")
-            box_count += 1
+    box_count = validate_frame_annotations(snapshot, frames)
     checksum = hashlib.sha256(raw).hexdigest()
     digest = hashlib.sha256(
         f"{snapshot.pk}:{checksum}:{mapping_version}:{matching_threshold}:{minimum_area}".encode()
@@ -127,6 +113,26 @@ def create_upload(
             raise
 
 
+def validate_frame_annotations(snapshot: Snapshot, frames: dict[FrameKey, dict[str, Any]]) -> int:
+    """Match annotations to task/frame and image bounds, regardless of export snapshot ID."""
+    snapshot_frames = {
+        FrameKey(task, number): (width, height)
+        for task, number, width, height in SnapshotFrame.objects.filter(
+            snapshot_job__snapshot=snapshot
+        ).values_list("snapshot_job__cvat_task_id", "frame_index", "width", "height")
+    }
+    box_count = 0
+    for identity, frame in frames.items():
+        if identity not in snapshot_frames:
+            raise ValueError("Ground Truth chứa frame không thuộc Snapshot đã chọn.")
+        width, height = snapshot_frames[identity]
+        for box in _truth_boxes(frame, 0):
+            if not (0 <= box.x1 < box.x2 <= width and 0 <= box.y1 < box.y2 <= height):
+                raise ValueError("Bounding box vượt kích thước ảnh trong Snapshot.")
+            box_count += 1
+    return box_count
+
+
 def bind_upload(snapshot: Snapshot, reference_id: int | None) -> Reference | None:
     """Called inside run creation transaction; same lock order as upload/cleanup."""
     lock_dataset(snapshot.dataset_id)
@@ -140,14 +146,13 @@ def bind_upload(snapshot: Snapshot, reference_id: int | None) -> Reference | Non
     if upload is None:
         return None  # Preserve legacy explicitly configured references.
     ref = upload.reference
-    if ref.snapshot_id != snapshot.pk:
-        raise ValueError("Ground Truth không thuộc Snapshot đã chọn. Hãy upload lại.")
     if upload.deleted_at:
         raise ValueError("File Ground Truth đã xóa sau lần chạy trước. Hãy upload lại.")
     if not upload.is_current:
         raise ValueError("Ground Truth đã được thay thế. Hãy tải lại bản hiện hành của Dataset.")
     if ref.status != Reference.Status.LOCKED or not ref.locked_at:
         raise ValueError("Ground Truth cần được QA Lead khác người upload duyệt trước khi chạy.")
+    validate_frame_annotations(snapshot, _gt_frames(ref))
     return ref
 
 

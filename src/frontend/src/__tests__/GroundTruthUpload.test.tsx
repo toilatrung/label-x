@@ -57,8 +57,8 @@ describe('temporary Ground Truth upload', () => {
     expect(screen.queryByRole('button', { name: 'Duyệt Ground Truth' })).toBeNull();
   });
 
-  it('requires preview before another QA Lead approves', async () => {
-    const calls = setup(metadata, 3);
+  it.each([4, 99])('requires preview before approval across snapshots: %s', async snapshotId => {
+    const calls = setup({ ...metadata, reference: { ...metadata.reference, snapshot_id: snapshotId } }, 3);
     const approve = await screen.findByRole('button', { name: 'Duyệt Ground Truth' });
     expect((approve as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Xem Ground Truth' }));

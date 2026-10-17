@@ -126,13 +126,11 @@ def test_global_super_admin_can_approve_own_ground_truth_with_audit(world):
 
 @pytest.mark.parametrize(
     "bad",
-    ["snapshot", "mapping", "task", "frame", "class", "bbox", "negative", "reversed", "duplicate"],
+    ["mapping", "task", "frame", "class", "bbox", "negative", "reversed", "duplicate"],
 )
 def test_upload_rejects_bad_input_without_saving_file(world, bad):
     payload = world[-1]
-    if bad == "snapshot":
-        payload["snapshot_id"] += 999
-    elif bad == "mapping":
+    if bad == "mapping":
         payload["mapping_version"] = "wrong"
     elif bad == "frame":
         payload["frames"][0]["frame_number"] = 999
@@ -186,16 +184,69 @@ def test_upload_idempotency_conflict_preserves_current(world):
     )
 
 
-def test_upload_snapshot_mismatch_explains_selected_and_file_snapshot(world):
+@pytest.mark.parametrize("source_id", [None, 999])
+def test_upload_accepts_different_or_missing_export_snapshot(world, source_id):
     payload = world[-1]
-    selected_id = world[0].snapshot_id
-    payload["snapshot_id"] = selected_id + 999
+    if source_id is None:
+        payload.pop("snapshot_id")
+    else:
+        payload["snapshot_id"] = source_id
     response = upload(world, payload=payload)
-    assert response.status_code == 400
-    assert f"Snapshot #{selected_id + 999}" in response.data["message"]
-    assert f"Snapshot #{selected_id}" in response.data["message"]
-    assert "task, frame" in response.data["message"]
-    assert not GroundTruthUpload.objects.exists()
+    assert response.status_code == 201, response.data
+    ref = Reference.objects.get(pk=response.data["reference"]["id"])
+    lock(world, ref)
+    assert len(metric._gt_frames(ref)) == 3
+    assert new_run(world, ref).metric_reference_id == ref.pk
+
+
+@pytest.mark.parametrize("compatible", [True, False])
+def test_reuse_upload_on_another_snapshot_checks_annotation_scope(world, compatible):
+    response = upload(world)
+    ref = Reference.objects.get(pk=response.data["reference"]["id"])
+    lock(world, ref)
+    from snapshots.normalization import FrameExport, JobExport
+    from snapshots.services import create_locked_snapshot
+
+    target = create_locked_snapshot(
+        dataset_id=world[0].dataset_id,
+        created_by=world[1],
+        taxonomy_version="t",
+        guideline_version="g",
+        jobs=[
+            JobExport(
+                cvat_job_id=5,
+                cvat_task_id=9 if compatible else 99,
+                source_updated_at="2026-10-15T00:00:00Z",
+                annotations={"shapes": [], "tracks": []},
+                frames=tuple(
+                    FrameExport(
+                        frame_index=i,
+                        source_frame_id=1000 + i,
+                        file_name=f"{i}.jpg",
+                        width=10,
+                        height=10,
+                        media_bytes=f"frame-{i}".encode(),
+                        media_storage_key=f"snapshots/orch/{i}.jpg",
+                    )
+                    for i in range(3)
+                ),
+            )
+        ],
+    )
+    assert target.pk != ref.snapshot_id
+    kwargs = dict(
+        snapshot_id=target.pk,
+        config_version_id=world[0].config_version_id,
+        seed=42,
+        created_by=world[1],
+        metric_reference_id=ref.pk,
+    )
+    if compatible:
+        run, _ = create_qc_run(**kwargs)
+        assert run.metric_reference_id == ref.pk
+    else:
+        with pytest.raises(BusinessRuleUnmetError, match="frame"):
+            create_qc_run(**kwargs)
 
 
 def test_upload_mapping_mismatch_explains_mapping_failure(world):
@@ -226,7 +277,7 @@ def test_api_blocks_metric_without_gt_and_does_not_create_run(world):
     assert QCRun.objects.count() == count
 
 
-@pytest.mark.parametrize("bad", ["draft", "wrong-snapshot", "deleted"])
+@pytest.mark.parametrize("bad", ["draft", "deleted"])
 def test_api_blocks_unusable_gt_without_creating_run(world, bad):
     from runs.models import QCRun
 
@@ -234,13 +285,7 @@ def test_api_blocks_unusable_gt_without_creating_run(world, bad):
     ref = Reference.objects.get(pk=response.data["reference"]["id"])
     if bad != "draft":
         lock(world, ref)
-    if bad == "wrong-snapshot":
-        from snapshots.models import Snapshot
-
-        other = Snapshot.objects.create(dataset_id=world[0].dataset_id, created_by=world[1])
-        ref.snapshot = other
-        ref.save(update_fields=["snapshot"])
-    elif bad == "deleted":
+    if bad == "deleted":
         GroundTruthUpload.objects.filter(reference=ref).update(deleted_at=timezone.now())
     count = QCRun.objects.count()
     response = client(world[1]).post(
