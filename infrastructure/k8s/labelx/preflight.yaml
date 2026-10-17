@@ -1,0 +1,132 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: labelx-release-preflight
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: '-50'
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: verify-release
+        image: labelx-backend
+        command:
+        - python
+        - -c
+        - |
+          """PreSync: only deploy a verified digest transition, never an unbuilt main config commit."""
+          import base64
+          import copy
+          import json
+          import os
+          import re
+          import urllib.request
+
+          REPOSITORY = "toilatrung/label-x"
+          ROOT = "infrastructure/k8s/labelx/"
+          FILES = {ROOT + "kustomization.yaml", ROOT + "release.json"}
+          REQUIRED_JOBS = {"bootstrap-windows", "framework", "backend", "detector", "frontend", "production-images"}
+
+
+          def verified_transition(before, after, receipt, files):
+              if not files or not set(files) <= FILES:
+                  raise RuntimeError("Await the digest-only commit after successful main CI and image publication")
+              if not re.fullmatch(r"[a-f0-9]{40}", receipt.get("source_sha", "")):
+                  raise RuntimeError("Invalid source SHA")
+              if receipt.get("deployment_policy") != "CR-120" or receipt.get("mvp_acceptance") != "unverified":
+                  raise RuntimeError("Deployment must not claim MVP acceptance")
+              expected = copy.deepcopy(before)
+              expected["images"] = []
+              for component in ("backend", "frontend"):
+                  entry = receipt.get("images", {}).get(component, {})
+                  repository = "ghcr.io/toilatrung/labelx-" + component
+                  digest = entry.get("digest", "")
+                  if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest) or entry.get("repository") != repository:
+                      raise RuntimeError("Both real GHCR image digests are required")
+                  if entry.get("tag") != "sha-" + receipt["source_sha"] or entry.get("reference") != repository + "@" + digest:
+                      raise RuntimeError("Image pair does not match the same source SHA")
+                  expected["images"].append({"name": "labelx-" + component, "newName": repository, "digest": digest})
+              for config in expected["configMapGenerator"]:
+                  if config["name"] == "labelx-release":
+                      config["literals"] = ["SOURCE_SHA=" + receipt["source_sha"], "MVP_EVIDENCE=unverified", "DEPLOYMENT_POLICY=CR-120"]
+              if expected != after:
+                  raise RuntimeError("Image transition changed unverified infrastructure/configuration")
+
+
+          def api(path):
+              request = urllib.request.Request("https://api.github.com/repos/" + REPOSITORY + path,
+                  headers={"Accept": "application/vnd.github+json", "User-Agent": "labelx-deployment-preflight"})
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  return json.load(response)
+
+
+          def content(path, ref):
+              value = api("/contents/" + path + "?ref=" + ref)
+              return json.loads(base64.b64decode(value["content"]))
+
+
+          def main():
+              revision = os.environ.get("GITOPS_REVISION", "")
+              if not re.fullmatch(r"[a-f0-9]{40}", revision):
+                  raise RuntimeError("Argo CD must substitute ARGOCD_APP_REVISION in the pod annotation")
+              commit = api("/commits/" + revision)
+              parent = commit["parents"][0]["sha"]
+              receipt = content(ROOT + "release.json", revision)
+              verified_transition(content(ROOT + "kustomization.yaml", parent),
+                  content(ROOT + "kustomization.yaml", revision), receipt, [item["filename"] for item in commit["files"]])
+              run_id = str(receipt.get("ci_run_id", ""))
+              if not run_id.isdigit():
+                  raise RuntimeError("CI identity missing")
+              run = api("/actions/runs/" + run_id)
+              if (run.get("head_sha") != receipt["source_sha"] or run.get("head_branch") != "main"
+                  or run.get("event") not in ("push", "workflow_dispatch") or run.get("path") != ".github/workflows/ci.yml"
+                  or run.get("status") != "completed" or run.get("conclusion") != "success"
+                  or run.get("repository", {}).get("full_name") != REPOSITORY
+                  or run.get("head_repository", {}).get("full_name") != REPOSITORY):
+                  raise RuntimeError("Successful trusted CI at the exact source SHA is required")
+              jobs = api("/actions/runs/" + run_id + "/jobs?filter=latest&per_page=100")["jobs"]
+              for name in REQUIRED_JOBS:
+                  matches = [job for job in jobs if job["name"] == name]
+                  if len(matches) != 1 or matches[0]["status"] != "completed" or matches[0]["conclusion"] != "success":
+                      raise RuntimeError("Required CI job missing or not successful: " + name)
+              print("PASS CR-120: verified source CI and pinned image transition; MVP acceptance remains UNVERIFIED")
+
+
+          if __name__ == "__main__":
+              try:
+                  main()
+              except Exception as error:
+                  print(f"Deployment preflight blocked: {type(error).__name__}: {error}", flush=True)
+                  raise SystemExit(1) from None
+        env:
+        - name: GITOPS_REVISION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['labelx.io/gitops-revision']
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+            cpu: 250m

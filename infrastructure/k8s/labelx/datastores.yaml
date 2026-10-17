@@ -1,0 +1,209 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: labelx-postgres
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+spec:
+  selector:
+    app.kubernetes.io/name: labelx-postgres
+  ports:
+  - name: tcp
+    port: 5432
+    targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: labelx-postgres
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+spec:
+  serviceName: labelx-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-postgres
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-postgres
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: postgres
+        image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        - name: tmp
+          mountPath: /var/run/postgresql
+        - name: tmp2
+          mountPath: /tmp
+        command:
+        - docker-entrypoint.sh
+        - postgres
+        envFrom:
+        - secretRef:
+            name: labelx-postgres
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - labelx_owner
+            - -d
+            - labelx
+          periodSeconds: 5
+        startupProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - labelx_owner
+            - -d
+            - labelx
+          failureThreshold: 60
+          periodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: labelx-postgres
+      - name: tmp
+        emptyDir: {}
+      - name: tmp2
+        emptyDir: {}
+      terminationGracePeriodSeconds: 120
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: labelx-redis
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+spec:
+  selector:
+    app.kubernetes.io/name: labelx-redis
+  ports:
+  - name: tcp
+    port: 6379
+    targetPort: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: labelx-redis
+  labels:
+    app.kubernetes.io/part-of: labelx
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+spec:
+  serviceName: labelx-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: labelx-redis
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: labelx
+        app.kubernetes.io/name: labelx-redis
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: labelx-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: redis
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 512Mi
+            cpu: 500m
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - sh
+        - -ec
+        - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$REDIS_PASSWORD"
+        envFrom:
+        - secretRef:
+            name: labelx-redis
+        ports:
+        - containerPort: 6379
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -ec
+            - REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping | grep -qx PONG
+          periodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: labelx-redis
+      - name: tmp
+        emptyDir: {}
+      - name: tmp2
+        emptyDir: {}
+      terminationGracePeriodSeconds: 120

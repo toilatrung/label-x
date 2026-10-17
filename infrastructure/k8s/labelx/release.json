@@ -1,0 +1,21 @@
+{
+  "source_sha": "f384c8fb0e0226476ec3080d5dff2750dd891a1b",
+  "ci_run_id": "39032528790",
+  "publish_run_id": "39033083582",
+  "deployment_policy": "CR-120",
+  "mvp_acceptance": "unverified",
+  "images": {
+    "frontend": {
+      "repository": "ghcr.io/toilatrung/labelx-frontend",
+      "tag": "sha-f384c8fb0e0226476ec3080d5dff2750dd891a1b",
+      "digest": "sha256:76504c0cedbf28ad2f294476c2e91465e214cd387b75fe288bfc9548dbf4797c",
+      "reference": "ghcr.io/toilatrung/labelx-frontend@sha256:76504c0cedbf28ad2f294476c2e91465e214cd387b75fe288bfc9548dbf4797c"
+    },
+    "backend": {
+      "repository": "ghcr.io/toilatrung/labelx-backend",
+      "tag": "sha-f384c8fb0e0226476ec3080d5dff2750dd891a1b",
+      "digest": "sha256:4e971c050ce92a8a6c22896bc4c3f6ecc6a245a2b862905e3fc0ec87a7610422",
+      "reference": "ghcr.io/toilatrung/labelx-backend@sha256:4e971c050ce92a8a6c22896bc4c3f6ecc6a245a2b862905e3fc0ec87a7610422"
+    }
+  }
+}
