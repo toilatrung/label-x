@@ -69,6 +69,97 @@ def test_success_builds_openai_request_and_redacts() -> None:
     assert SECRET not in json.dumps(body) and SECRET not in repr(result)
 
 
+@pytest.mark.parametrize(
+    ("model", "effort"),
+    [("gemini-3.8-flash", "low"), ("gemini-2.5-flash", "none"), ("gemini-2.5-pro", "low")],
+)
+@pytest.mark.parametrize("gateway", [False, True])
+def test_gemini_request_uses_selected_model_key_image_and_records_provenance(
+    monkeypatch: pytest.MonkeyPatch, model: str, effort: str, gateway: bool
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "google-only-secret")
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "model": model,
+                "choices": [{"message": {"content": '{"label":"bus","rationale":"Bus"}'}}],
+            },
+        )
+
+    result = run_vlm_unit(
+        _req(
+            provider="openai_compatible" if gateway else "gemini",
+            model=model,
+            base_url=(
+                "https://api.shopaikey.com/v1"
+                if gateway
+                else "https://generativelanguage.googleapis.com/v1beta/openai"
+            ),
+        ),
+        _client(handler),
+        CounterBudget(2),
+    )
+    assert result.status is VlmStatus.CHECKED and result.label == "bus"
+    assert result.model == result.response_model == model
+    assert result.provider == ("openai_compatible" if gateway else "gemini")
+    assert result.provider_host == (
+        "api.shopaikey.com" if gateway else "generativelanguage.googleapis.com"
+    )
+    (sent,) = seen
+    expected_base = (
+        "https://api.shopaikey.com/v1"
+        if gateway
+        else "https://generativelanguage.googleapis.com/v1beta/openai"
+    )
+    assert str(sent.url) == expected_base + "/chat/completions"
+    assert sent.headers["authorization"] == f"Bearer {SECRET if gateway else 'google-only-secret'}"
+    body = json.loads(sent.content)
+    assert body["model"] == model and body["reasoning_effort"] == effort
+    assert body["max_tokens"] >= 2048 and "temperature" not in body
+    image = body["messages"][0]["content"][0]["image_url"]["url"]
+    assert base64.b64decode(image.split(",", 1)[1]) == PNG
+    assert "google-only-secret" not in repr(result) and SECRET not in repr(result)
+
+
+def test_gemini_missing_key_does_not_fall_back_to_gateway_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    seen: list[httpx.Request] = []
+    result = run_vlm_unit(
+        _req(
+            provider="gemini",
+            model="gemini-3.8-flash",
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+        ),
+        _client(lambda request: seen.append(request) or _ok()),
+        CounterBudget(2),
+    )
+    assert result.status is VlmStatus.FAILED and result.attempts == 0
+    assert seen == []
+
+
+def test_google_error_status_is_sanitized_without_echoing_message() -> None:
+    error = classify_http_error(
+        httpx.Response(
+            429,
+            json={
+                "error": {
+                    "code": 429,
+                    "status": "RESOURCE_EXHAUSTED",
+                    "message": "Private credential and crop details must never be echoed",
+                }
+            },
+        )
+    )
+    assert error.failure is VlmProviderFailure.RATE_LIMITED and error.retryable
+    assert "resource_exhausted" in str(error) and "Private" not in str(error)
+
+
 def test_uncertain_label() -> None:
     result = run_vlm_unit(_req(), _client(lambda r: _ok("uncertain")), CounterBudget(5))
     assert result.status is VlmStatus.UNCERTAIN and result.label is None
@@ -376,6 +467,14 @@ def test_client_refuses_key_to_wrong_host_both_directions(
     client = _client(handler)
     gw = parse_vlm_config(SHOPAI)
     dash = parse_vlm_config(VALID)
+    gemini = parse_vlm_config(
+        {
+            **VALID,
+            "provider": "gemini",
+            "model": "gemini-3.8-flash",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        }
+    )
     crop = CropInput(PNG, "image/png")
     ctx = CandidateContext("c", "r")
     cases = [
@@ -383,6 +482,11 @@ def test_client_refuses_key_to_wrong_host_both_directions(
         dataclasses.replace(dash, api_key_env="VLM_API_KEY"),  # key cổng → DashScope
         dataclasses.replace(gw, provider="dashscope"),  # provider không khớp host
         dataclasses.replace(dash, provider="openai_compatible"),
+        dataclasses.replace(gemini, api_key_env="VLM_API_KEY"),
+        dataclasses.replace(gemini, api_key_env="DASHSCOPE_API_KEY"),
+        dataclasses.replace(gw, api_key_env="GEMINI_API_KEY"),
+        dataclasses.replace(gemini, model="qwen3-vl-plus"),
+        dataclasses.replace(dash, model="gemini-3.8-flash"),
     ]
     for bad in cases:
         request = VlmRequest(crop, TAXONOMY, ctx, bad)

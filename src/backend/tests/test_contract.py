@@ -62,6 +62,16 @@ def test_contract_is_valid_openapi_3(spec):
     validate_schema(spec)
 
 
+def test_vlm_model_choices_match_the_runtime_api(spec):
+    from vlm.config import ALLOWED_MODELS
+    from vlm.settings_views import VlmSettingsUpdateSerializer
+
+    schemas = spec["components"]["schemas"]
+    for name in ("VlmSettings", "VlmSettingsUpdate"):
+        assert set(schemas[name]["properties"]["model"]["enum"]) == ALLOWED_MODELS
+    assert set(VlmSettingsUpdateSerializer().fields["model"].choices) == ALLOWED_MODELS
+
+
 def test_contract_covers_t001_endpoints(spec):
     for path, method in REQUIRED_PATHS.items():
         assert method in spec["paths"].get(path, {}), f"thiếu {method.upper()} {path}"

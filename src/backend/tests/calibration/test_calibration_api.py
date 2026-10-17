@@ -491,7 +491,10 @@ def test_evaluation_performance_empty_and_aggregated(
 
 
 @pytest.mark.django_db
-def test_calibration_reviewers_and_models_list(qa_lead_user: User, reviewer_user: User) -> None:
+@pytest.mark.parametrize("model_name", ["qwen-vl-max", "gemini-3.8-flash"])
+def test_calibration_reviewers_and_models_list(
+    qa_lead_user: User, reviewer_user: User, model_name: str
+) -> None:
     client = APIClient()
     client.force_authenticate(qa_lead_user)
 
@@ -507,7 +510,7 @@ def test_calibration_reviewers_and_models_list(qa_lead_user: User, reviewer_user
 
     # 2. Models list
     art = ModelArtifact.objects.create(
-        name="qwen-vl-max",
+        name=model_name,
         version="2.5",
         checksum="checksum12345",
     )
@@ -516,7 +519,7 @@ def test_calibration_reviewers_and_models_list(qa_lead_user: User, reviewer_user
     mod_results = res_mod.data["results"]
     assert len(mod_results) >= 1
     mod_item = next(m for m in mod_results if m["model_id"] == art.pk)
-    assert mod_item["name"] == "qwen-vl-max"
+    assert mod_item["name"] == model_name
     assert mod_item["kind"] == "vlm"
     assert mod_item["assignments"] == 0
     assert mod_item["agreement_rate"] is None

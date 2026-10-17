@@ -81,14 +81,14 @@ export function workspacePredictions(data: FrameWorkspace): WorkspacePrediction[
     }
   }
   for (const item of data.ai_evidence ?? []) {
-    if (item.source !== 'qwen' || item.status !== 'completed' || item.suggestion?.status !== 'checked'
+    if (!['qwen', 'gemini'].includes(item.source) || item.status !== 'completed' || item.suggestion?.status !== 'checked'
       || !item.suggestion.class_name) continue;
     const issue = data.issues.find(i => i.id === item.issue_id);
     const evidenceBox = issue?.evidence?.map(ev => reviewBBox(ev.prediction_bbox)).find(Boolean);
     const bbox = evidenceBox ?? reviewBBox(issue?.anchor.bbox);
     if (!bbox) continue;
-    predictions.push({ id: `qwen-${item.evaluation_id}`, issueId: item.issue_id, bbox,
-      label: item.suggestion.class_name, source: 'Qwen · mô hình 2' });
+    predictions.push({ id: `${item.source}-${item.evaluation_id}`, issueId: item.issue_id, bbox,
+      label: item.suggestion.class_name, source: `${item.source === 'gemini' ? 'Gemini' : 'Qwen'} · mô hình 2` });
   }
   return predictions;
 }

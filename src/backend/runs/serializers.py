@@ -290,7 +290,7 @@ class ConfigVersionCreateSerializer(serializers.Serializer[Any]):
         return value
 
     def validate_models(self, value: dict[str, Any]) -> dict[str, Any]:
-        """models.vlm phải đúng schema Qwen (M04A-01): allowlist model/host, không secret/prompt."""
+        """models.vlm đúng schema VLM: allowlist model/host, không secret/prompt."""
         if "vlm" in value:
             errors = validate_vlm_config(value["vlm"])
             if errors:
@@ -364,7 +364,7 @@ VLM_STATES = [
 
 
 class CandidateVlmSerializer(serializers.Serializer[Any]):
-    """Evidence VLM (Qwen) của candidate; chỉ là đề xuất, không phải quyết định review."""
+    """Evidence VLM (Qwen/Gemini) của candidate; chỉ là đề xuất, không phải quyết định review."""
 
     # Chuỗi thuần (không enum tự sinh) để không va chạm tên enum của drf-spectacular; giá trị hợp lệ
     # nằm trong help_text và được test khoá lại.
@@ -372,7 +372,7 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     engine_status = serializers.CharField(
         help_text="checked | partial | failed | not_checked | running (payload FE v0)"
     )
-    source: Any = serializers.CharField(help_text="Luôn là qwen")
+    source: Any = serializers.CharField(help_text="qwen | gemini, theo model đã khoá")
     conclusion = serializers.CharField(
         allow_null=True, help_text="confirmed | uncertain | null; chỉ là đề xuất AI"
     )

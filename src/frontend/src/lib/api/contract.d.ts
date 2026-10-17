@@ -2350,7 +2350,7 @@ export interface components {
             } | null;
         };
         /**
-         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, skipped, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+         * @description Evidence VLM (Qwen/Gemini) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, skipped, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
          * @example {
          *       "state": "checked",
          *       "engine_status": "checked",
@@ -2402,7 +2402,7 @@ export interface components {
             state: string;
             /** @description checked | partial | failed | not_checked | running (payload FE v0) */
             engine_status: string;
-            /** @description Luôn là qwen */
+            /** @description qwen | gemini, theo model đã khoá */
             source: string;
             /** @description confirmed | uncertain | null */
             conclusion?: string | null;
@@ -3215,7 +3215,7 @@ export interface components {
             thresholds?: {
                 [key: string]: unknown;
             };
-            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible hoặc dashscope), model (allowlist, hiện chỉ qwen3-vl-plus; ID khác chỉ thêm sau khi xác minh với provider), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 3), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, mặc định theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu; worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp. Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại. provider cũng phải khớp host (dashscope chỉ host DashScope, openai_compatible chỉ host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
+            /** @description Model/artifact tham chiếu theo version đã khoá. Khoá vlm (CR-116) gồm provider (openai_compatible, dashscope hoặc gemini), model (allowlist: qwen3-vl-plus, gemini-3.8-flash, gemini-2.5-flash, gemini-2.5-pro), base_url (https, host trong allowlist và đúng đường dẫn của host đó, không port/userinfo/query/fragment), prompt_version, timeout_seconds (1 đến 120), max_attempts (1 đến 4), budget {max_calls} (0 đến 10000) và api_key_env (tuỳ chọn; là TÊN biến môi trường, không phải khoá; bị ràng với host: DashScope chỉ dùng DASHSCOPE_API_KEY, api.shopaikey.com chỉ dùng VLM_API_KEY, generativelanguage.googleapis.com chỉ dùng GEMINI_API_KEY, mặc định theo host). connection_id (tuỳ chọn, số nguyên dương) tham chiếu kết nối VLM đã lưu; worker lấy key mã hóa từ kết nối và kiểm tra provider/model/base_url/api_key_env khớp. Không cung cấp models.vlm khi bật engine thì cấu hình mới lấy kết nối hiện tại. provider và model cũng phải khớp host (dashscope chỉ Qwen trên host DashScope, gemini chỉ Gemini tại https://generativelanguage.googleapis.com/v1beta/openai, openai_compatible cho cả hai trên host cổng); sai cặp bị từ chối 400 và publish trả 422. Host api.shopaikey.com là cổng OpenAI-compatible của bên thứ ba: crop ảnh đi qua bên trung gian và cần PO xác nhận chính sách dữ liệu trước khi chạy thật. Không nhận api_key hay prompt. Khoá giống secret (api_key, secret, token, password, authorization...) bị từ chối 400 ở mọi vùng engines/thresholds/models; publish kiểm lại và trả 422. */
             models?: {
                 [key: string]: unknown;
             };
@@ -3462,7 +3462,7 @@ export interface components {
             revision: number;
             base_url: string;
             /** @enum {string} */
-            model: "qwen3-vl-plus";
+            model: "qwen3-vl-plus" | "gemini-3.8-flash" | "gemini-2.5-flash" | "gemini-2.5-pro";
             api_key_configured: boolean;
             /** @description Ngưỡng score detector để gọi VLM khi score thấp hơn; không phải confidence của kết quả VLM. Cấu hình QC mới bật VLM kế thừa ngưỡng này nếu không truyền classification_routing.score_threshold. */
             confidence_threshold: number;
@@ -3471,7 +3471,7 @@ export interface components {
             expected_revision: number;
             base_url: string;
             /** @enum {string} */
-            model: "qwen3-vl-plus";
+            model: "qwen3-vl-plus" | "gemini-3.8-flash" | "gemini-2.5-flash" | "gemini-2.5-pro";
             api_key?: string;
             /** @description Bỏ qua để giữ ngưỡng đã lưu; mặc định ban đầu 0.85. */
             confidence_threshold?: number;
@@ -3543,12 +3543,12 @@ export interface components {
             evaluation_source: string;
             /** @description pending | running | completed | failed | cancelled */
             status: string;
-            /** @description classifier (định tuyến đủ tin cậy, không gọi Qwen) | qwen */
+            /** @description classifier (định tuyến đủ tin cậy, không gọi VLM) | qwen | gemini */
             source: string;
             reason_code: string | null;
             reasons: string[];
             review_required: boolean;
-            /** @description Đề xuất của Qwen: status (checked | uncertain | failed), class_name, rationale (lời giải thích của model, không phải bằng chứng đã xác minh) */
+            /** @description Đề xuất của VLM: status (checked | uncertain | failed), class_name, rationale (lời giải thích của model, không phải bằng chứng đã xác minh) */
             suggestion: {
                 [key: string]: unknown;
             } | null;

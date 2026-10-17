@@ -22,6 +22,7 @@ from runs.models import VlmConfiguration, VlmConnection
 from vlm.config import (
     ALLOWED_MODELS,
     DEFAULT_MAX_ATTEMPTS,
+    DEFAULT_MODEL,
     HOST_PROVIDER,
     default_api_key_env,
     validate_vlm_config,
@@ -32,7 +33,7 @@ from vlm.connection import credential_cipher
 class VlmSettingsSerializer(serializers.Serializer[dict[str, Any]]):
     revision = serializers.IntegerField()
     base_url = serializers.CharField()
-    model = serializers.CharField()
+    model = serializers.ChoiceField(choices=sorted(ALLOWED_MODELS))
     api_key_configured = serializers.BooleanField()
     confidence_threshold = serializers.FloatField()
 
@@ -61,7 +62,7 @@ def public_settings(connection: VlmConnection | None) -> dict[str, Any]:
     return {
         "revision": connection.pk if connection else 0,
         "base_url": connection.config["base_url"] if connection else "https://api.shopaikey.com/v1",
-        "model": connection.config["model"] if connection else "qwen3-vl-plus",
+        "model": connection.config["model"] if connection else DEFAULT_MODEL,
         "api_key_configured": bool(connection and connection.encrypted_api_key),
         "confidence_threshold": (
             connection.confidence_threshold if connection else DEFAULT_SCORE_THRESHOLD
