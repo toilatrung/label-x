@@ -134,6 +134,7 @@ class VlmUnit(models.Model):
         COMPLETED = "completed", "Completed"
         FAILED = "failed", "Failed"
         CANCELLED = "cancelled", "Cancelled"
+        SKIPPED = "skipped", "Skipped"
 
     run = models.ForeignKey(
         "runs.QCRun", on_delete=models.PROTECT, db_column="run_id", related_name="+"
@@ -149,6 +150,9 @@ class VlmUnit(models.Model):
     reason_code = models.CharField(max_length=24, blank=True, default="")
     result = models.JSONField(null=True, blank=True)
     attempts = models.PositiveIntegerField(default=0)
+    retry_at = models.DateTimeField(null=True, blank=True)
+    deadline_at = models.DateTimeField(null=True, blank=True)
+    error_code = models.CharField(max_length=32, blank=True, default="")
     lease_token = models.CharField(max_length=32, blank=True, default="")
     dispatched_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
@@ -300,3 +304,17 @@ class Evaluation(models.Model):
 
     def __str__(self) -> str:
         return f"Evaluation candidate={self.candidate_id} gen={self.generation} [{self.source}]"
+
+
+class ResourceLease(models.Model):
+    """One physical endpoint, shared by every run and Celery process."""
+
+    key = models.CharField(max_length=64, primary_key=True)
+    owner = models.CharField(max_length=32, blank=True, default="")
+    expires_at = models.DateTimeField(null=True, blank=True)
+    retry_at = models.DateTimeField(null=True, blank=True)
+    failures = models.PositiveIntegerField(default=0)
+    error_code = models.CharField(max_length=32, blank=True, default="")
+
+    def __str__(self) -> str:
+        return f"Endpoint lease {self.key[:12]}"

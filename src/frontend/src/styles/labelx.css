@@ -669,3 +669,22 @@ button.lx-menu__item { width: 100%; background: transparent; border: 0; font-fam
 .lx-profile-status.is-configured .lx-profile-status__light { background: var(--success); box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--success) 12%, transparent); animation: lx-profile-light 2.4s ease-in-out infinite; }
 @keyframes lx-profile-light { 50% { box-shadow: 0 0 0 calc(var(--space-1) * 1.5) color-mix(in srgb, var(--success) 4%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .lx-profile-status.is-configured .lx-profile-status__light { animation: none; } .lx-profile-status, .lx-profile-token__delete { transition: none; } }
+
+/* Motion shows activity; width remains tied to server counters. */
+.lx-progress { position: relative; }
+.lx-progress > i { position: relative; transition: width 350ms ease; }
+.lx-progress--active::after {
+  content: ""; position: absolute; inset: 0; width: 35%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 45%, white), transparent);
+  animation: lx-progress-sweep 1.8s linear infinite;
+}
+.lx-progress--indeterminate > i { transform: translateX(-100%); }
+.lx-progress--indeterminate.lx-progress--active > i { animation: lx-progress-sweep 1.8s linear infinite; }
+.lx-progress--indeterminate::after { display: none; }
+.lx-progress--paused { opacity: .65; }
+@keyframes lx-progress-sweep { from { transform: translateX(-100%); } to { transform: translateX(390%); } }
+@media (prefers-reduced-motion: reduce) {
+  .lx-progress > i { transition: none; }
+  .lx-progress--active::after, .lx-progress--indeterminate.lx-progress--active > i { animation: none; }
+  .lx-progress--indeterminate > i { transform: none; }
+}

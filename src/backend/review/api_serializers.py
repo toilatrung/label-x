@@ -27,7 +27,14 @@ SEVERITIES = Issue.Severity.values
 FRAME_STATES = FrameReview.State.values
 ENGINE_NAMES = ["schema", "geometry", "duplicate", "detector", "metric", "vlm"]
 ENGINE_STATUSES = ["running", "checked", "partial", "failed", "not_checked"]
-NOT_CHECKED_REASONS = ["disabled", "no_model", "no_reference", "not_applicable", "not_triggered"]
+NOT_CHECKED_REASONS = [
+    "disabled",
+    "no_model",
+    "no_reference",
+    "not_applicable",
+    "not_triggered",
+    "provider_unavailable",
+]
 DECISION_ACTIONS = [
     "confirm",
     "reject",
@@ -248,12 +255,35 @@ class IssueSerializer(serializers.Serializer[Any]):
     review_decisions = ReviewDecisionRecordSerializer(many=True)
 
 
+class EngineProgressSerializer(serializers.Serializer[Any]):
+    phase = serializers.ChoiceField(
+        choices=[
+            "queued",
+            "preparing",
+            "running",
+            "waiting_retry",
+            "overdue",
+            "finished",
+        ]
+    )
+    retry_at = serializers.DateTimeField(allow_null=True, required=False)
+    deadline_at = serializers.DateTimeField(allow_null=True, required=False)
+    last_activity_at = serializers.DateTimeField(allow_null=True, required=False)
+    error_code = serializers.CharField(allow_null=True, required=False)
+    pending = serializers.IntegerField()
+    skipped = serializers.IntegerField()
+    failed = serializers.IntegerField()
+    provider_calls = serializers.IntegerField()
+    stale = serializers.BooleanField()
+
+
 class EngineStatusSerializer(serializers.Serializer[Any]):
     engine = serializers.ChoiceField(choices=ENGINE_NAMES)
     status = serializers.ChoiceField(choices=ENGINE_STATUSES)
     # Always sent; optional in the contract on purpose (see FrameSummarySerializer).
     reason = serializers.ChoiceField(choices=NOT_CHECKED_REASONS, allow_null=True, required=False)
     failed_units = serializers.IntegerField(required=False)
+    progress = EngineProgressSerializer(required=False)
 
 
 class FrameIssuesSerializer(serializers.Serializer[Any]):

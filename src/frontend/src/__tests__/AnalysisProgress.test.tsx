@@ -47,3 +47,19 @@ it('does not show all engines finished while the VLM ledger still has a pending 
   expect(screen.getByText(/5 hoàn tất · 0 lỗi · 0/)).toBeDefined();
   expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100');
 });
+
+it('shows durable retry status and keeps an outage visible', () => {
+  render(<AnalysisProgress run={{ ...base, engines: [base.engines[0], {
+    ...base.engines[1], progress: { phase: 'waiting_retry', pending: 5, skipped: 0, failed: 1,
+      provider_calls: 4, stale: false, retry_at: '2026-10-15T13:00:00Z' },
+  }] }} ledger={[]} error="offline" />);
+  expect(screen.getByText(/Thử lại lúc/)).toBeDefined();
+  expect(screen.getByRole('progressbar').classList.contains('lx-progress--active')).toBe(false);
+  expect(screen.getByText(/4 lượt gọi đã ghi nhận/)).toBeDefined();
+});
+
+it('pauses activity when the last successful poll is stale', () => {
+  render(<AnalysisProgress run={base} ledger={[]} updatedAt={Date.now() - 60_000} />);
+  expect(screen.getByText(/Chưa nhận được cập nhật mới/)).toBeDefined();
+  expect(screen.getByRole('progressbar').classList.contains('lx-progress--active')).toBe(false);
+});

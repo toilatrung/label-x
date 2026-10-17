@@ -144,6 +144,7 @@ class NotCheckedReason(StrEnum):
     NO_REFERENCE = "no_reference"
     NOT_APPLICABLE = "not_applicable"
     NOT_TRIGGERED = "not_triggered"
+    PROVIDER_UNAVAILABLE = "provider_unavailable"
 
 
 # Đơn vị ngoài phạm vi áp dụng: không vào mẫu số (B-04 "mẫu số áp dụng", DEC-010; PO 2026-10-08).

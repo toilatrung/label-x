@@ -77,24 +77,26 @@ def test_first_error_stops_only_that_engine_and_publishes_partial(settings, monk
         retry_failed_qc_run(run_id=run.pk, actor=run.created_by)
 
 
-def test_vlm_failure_stops_siblings_and_late_evidence(settings, monkeypatch):
+def test_vlm_failure_preserves_siblings_and_late_evidence(settings, monkeypatch):
+    from orchestration.models import ResourceLease
+
     settings.ORCHESTRATION_FAIL_FAST = True
     run = _make_run(vlm={**VALID, "max_attempts": 4})
     _run_shards(run)
     units = list(VlmUnit.objects.filter(run=run).order_by("pk"))
     late, token, _ = _claim_unit(units[1].pk)
     client = FakeClient([_provider_error()] * 4)
-    assert execute_vlm_unit(units[0].pk, client=client) == "failed"
+    assert execute_vlm_unit(units[0].pk, client=client, deferred=False) == "failed"
     assert client.calls == 4
     assert VlmBudget.objects.get(run=run).used_calls == 4
     assert VlmAttempt.objects.filter(unit=units[0]).count() == 4
-    assert set(VlmUnit.objects.filter(run=run).values_list("status", flat=True)) == {"failed"}
-    assert not _settle_unit(late, token, {"status": VlmStatus.CHECKED.value})
-    assert execute_vlm_unit(units[2].pk, client=client) == "failed"
-    assert client.calls == 4
+    assert VlmUnit.objects.filter(run=run, status="failed").count() == 1
+    assert _settle_unit(late, token, {"status": VlmStatus.CHECKED.value, "attempts": 1})
+    ResourceLease.objects.update(retry_at=None)
+    assert execute_vlm_unit(units[2].pk, client=FakeClient(), deferred=False) == "completed"
     run.refresh_from_db()
     assert run.status == QCRun.Status.PARTIAL
-    assert run.engine_results.get(engine="vlm").failed_units == 3
+    assert run.engine_results.get(engine="vlm").failed_units == 1
     assert run.rankings.count() == len(RunRanking.Source.values)
 
 
@@ -104,12 +106,12 @@ def test_vlm_transient_errors_recover_before_fail_fast_stops_siblings(settings):
     _run_shards(run)
     units = list(VlmUnit.objects.filter(run=run).order_by("pk"))
     client = FakeClient([_provider_error()] * 3)
-    assert execute_vlm_unit(units[0].pk, client=client) == "completed"
+    assert execute_vlm_unit(units[0].pk, client=client, deferred=False) == "completed"
     assert client.calls == 4
     assert VlmBudget.objects.get(run=run).used_calls == 4
     assert VlmAttempt.objects.filter(unit=units[0]).count() == 4
     assert not VlmUnit.objects.filter(run=run, status="failed").exists()
     assert VlmUnit.objects.filter(run=run, status="pending").count() == len(units) - 1
     # Redelivery must not call the provider or charge the budget again.
-    assert execute_vlm_unit(units[0].pk, client=client) == "completed"
+    assert execute_vlm_unit(units[0].pk, client=client, deferred=False) == "completed"
     assert client.calls == 4

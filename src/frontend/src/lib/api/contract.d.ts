@@ -2133,7 +2133,7 @@ export interface components {
          * @description SRS tab:enginestates
          * @enum {string}
          */
-        NotCheckedReason: "disabled" | "no_model" | "no_reference" | "not_applicable" | "not_triggered";
+        NotCheckedReason: "disabled" | "no_model" | "no_reference" | "not_applicable" | "not_triggered" | "provider_unavailable";
         RunCreate: {
             snapshot_id: number;
             config_version_id: number;
@@ -2156,11 +2156,28 @@ export interface components {
             version: string;
             checksum: string;
         };
+        EngineProgress: {
+            /** @enum {string} */
+            phase: "queued" | "preparing" | "running" | "waiting_retry" | "overdue" | "finished";
+            /** Format: date-time */
+            retry_at?: string | null;
+            /** Format: date-time */
+            deadline_at?: string | null;
+            /** Format: date-time */
+            last_activity_at?: string | null;
+            error_code?: string | null;
+            pending: number;
+            skipped: number;
+            failed: number;
+            provider_calls: number;
+            stale: boolean;
+        };
         EngineRunStatus: {
             engine: components["schemas"]["EngineName"];
             status: components["schemas"]["EngineStatus"];
             reason?: components["schemas"]["NotCheckedReason"] | null;
             failed_units?: number;
+            progress?: components["schemas"]["EngineProgress"];
         };
         Run: {
             id: number;
@@ -2333,7 +2350,7 @@ export interface components {
             } | null;
         };
         /**
-         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
+         * @description Evidence VLM (Qwen) của candidate, chỉ ở GET /api/runs/{id}/candidates/. Chỉ là đề xuất AI và lời giải thích của model không phải bằng chứng đã xác minh; không tạo ReviewDecision. state phân biệt disabled, no_model, not_applicable, not_triggered, pending, running, checked, uncertain, failed, skipped, cancelled. Các trường provider, provider_host, response_model ghi provenance thực tế vì kết quả có thể đi qua cổng trung gian.
          * @example {
          *       "state": "checked",
          *       "engine_status": "checked",
@@ -2381,7 +2398,7 @@ export interface components {
          *     }
          */
         CandidateVlm: {
-            /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | cancelled */
+            /** @description disabled | no_model | not_applicable | not_triggered | pending | running | checked | uncertain | failed | skipped | cancelled */
             state: string;
             /** @description checked | partial | failed | not_checked | running (payload FE v0) */
             engine_status: string;
@@ -2391,7 +2408,7 @@ export interface components {
             conclusion?: string | null;
             class_id?: string | null;
             class_name?: string | null;
-            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | null */
+            /** @description invalid_crop | provider_error | parse_failure | budget_exhausted | provider_unavailable | deadline_exceeded | null */
             reason_code?: string | null;
             evidence_id?: number | null;
             /** @description Chưa dùng ở pha A; tài nguyên evaluation do M04C-02 định nghĩa */

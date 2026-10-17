@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from engines.worker_adapter.client import retry_after_seconds
 from vlm.config import ALLOWED_API_KEY_ENVS, binding_error
 from vlm.contract import VlmRequest, build_prompt
 from vlm.errors import VlmProviderError, VlmProviderFailure
@@ -75,7 +76,10 @@ def classify_http_error(response: httpx.Response) -> VlmProviderError:
         failure = VlmProviderFailure.SERVER_ERROR
     else:
         failure = VlmProviderFailure.BAD_REQUEST
-    return VlmProviderError(failure, f"provider HTTP {status}" + (f" ({code})" if code else ""))
+    delay = retry_after_seconds(response)
+    return VlmProviderError(
+        failure, f"provider HTTP {status}" + (f" ({code})" if code else ""), retry_after=delay
+    )
 
 
 def _content_text(payload: Any) -> str:
@@ -149,7 +153,12 @@ class DashScopeClient:
             ) as http:
                 logger.info(
                     "vlm provider request starting",
-                    extra={"provider": cfg.provider, "model": cfg.model},
+                    extra={
+                        "provider": cfg.provider,
+                        "model": cfg.model,
+                        "qc_run_id": request.context.run_id,
+                        "vlm_unit_id": request.context.unit_id,
+                    },
                 )
                 response = http.post(url, json=body, headers={"Authorization": f"Bearer {api_key}"})
         except httpx.TimeoutException:
@@ -158,7 +167,12 @@ class DashScopeClient:
             raise VlmProviderError(VlmProviderFailure.NETWORK) from None
         logger.info(
             "vlm provider response received",
-            extra={"provider": cfg.provider, "http_status": response.status_code},
+            extra={
+                "provider": cfg.provider,
+                "http_status": response.status_code,
+                "qc_run_id": request.context.run_id,
+                "vlm_unit_id": request.context.unit_id,
+            },
         )
         if response.status_code != 200:
             raise classify_http_error(response)

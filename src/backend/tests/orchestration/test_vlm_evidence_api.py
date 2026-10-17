@@ -52,7 +52,7 @@ def test_checked_unit_writes_one_evidence_with_provenance_and_api_exposes_it() -
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).order_by("pk").first()
     client = FakeClient(label="1")
-    assert execute_vlm_unit(unit.pk, client=client) == "completed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "completed"
     evidence = VlmEvidence.objects.get(unit=unit)
     assert (evidence.status, evidence.label_class_id, evidence.class_name) == (
         "checked",
@@ -89,9 +89,9 @@ def test_redelivery_never_adds_evidence_and_evidence_is_append_only() -> None:
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     for _ in range(3):
-        execute_vlm_unit(unit.pk, client=FakeClient(label="2"))
+        execute_vlm_unit(unit.pk, client=FakeClient(label="2"), deferred=False)
     assert VlmEvidence.objects.filter(unit=unit).count() == 1
     evidence = VlmEvidence.objects.get(unit=unit)
     assert evidence.label_class_id == "1"  # không bị ghi đè
@@ -113,7 +113,9 @@ def test_failed_unit_evidence_has_reason_and_no_label() -> None:
     run = _make_run(vlm={**VALID, "max_attempts": 1})
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    execute_vlm_unit(unit.pk, client=FakeClient(["không phải json"]))  # parse failure
+    execute_vlm_unit(
+        unit.pk, client=FakeClient(["không phải json"]), deferred=False
+    )  # parse failure
     evidence = VlmEvidence.objects.get(unit=unit)
     assert (evidence.status, evidence.reason_code, evidence.label_class_id) == (
         "failed",
@@ -130,7 +132,7 @@ def test_uncertain_is_ai_conclusion_not_a_class() -> None:
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    execute_vlm_unit(unit.pk, client=FakeClient(label="uncertain"))
+    execute_vlm_unit(unit.pk, client=FakeClient(label="uncertain"), deferred=False)
     row = {r["id"]: r for r in _candidates(run)}[unit.candidate_id]["vlm"]
     assert row["state"] == "uncertain" and row["conclusion"] == "uncertain"
     assert row["class_id"] is None and row["class_name"] is None
@@ -168,7 +170,7 @@ def test_candidate_has_stable_id_and_no_secret_or_image_in_payload() -> None:
     run = _make_run()
     _run_shards(run)
     for unit in VlmUnit.objects.filter(run_id=run.pk):
-        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+        execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     rows = _candidates(run)
     ids = [r["id"] for r in rows]
     assert ids == sorted(CandidateRecord.objects.filter(run_id=run.pk).values_list("pk", flat=True))
@@ -207,7 +209,7 @@ def test_candidates_not_selected_by_policy_are_not_triggered_not_pending(
     selected = next(r for r in rows if r["vlm"]["state"] == "pending")
     unit = VlmUnit.objects.get(run_id=run.pk)
     assert unit.candidate_id == selected["id"]
-    execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     states_after = sorted(r["vlm"]["state"] for r in _candidates(run))
     assert states_after == ["checked", "not_triggered", "not_triggered"]
 
@@ -222,7 +224,7 @@ def test_unit_with_changed_config_is_failed_without_provider_call() -> None:
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
     VlmUnit.objects.filter(pk=unit.pk).update(model="other-model")
     client = FakeClient()
-    assert execute_vlm_unit(unit.pk, client=client) == "failed"
+    assert execute_vlm_unit(unit.pk, client=client, deferred=False) == "failed"
     assert client.calls == 0
     assert VlmEvidence.objects.get(unit=unit).reason_code == "provider_error"
 
@@ -261,7 +263,7 @@ def test_owner_connection_cannot_truncate_evidence_even_via_cascade() -> None:
     run = _make_run()
     _run_shards(run)
     unit = VlmUnit.objects.filter(run_id=run.pk).first()
-    execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+    execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     assert VlmEvidence.objects.count() == 1
     with connection.cursor() as cursor:
         cursor.execute("SET labelx.allow_evidence_truncate = 'off'")  # trạng thái production
@@ -293,7 +295,7 @@ def test_ledger_endpoint_counts_vlm_units_not_zero() -> None:
     assert (pending["total"], pending["pending"], pending["completed"]) == (3, 3, 0)
     assert pending["unit"] == "shape" and pending["status"] == "running"
     for unit in VlmUnit.objects.filter(run_id=run.pk).order_by("pk"):
-        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+        execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     entry = vlm_entry()
     assert (entry["total"], entry["eligible"], entry["completed"], entry["failed"]) == (3, 3, 2, 1)
     assert entry["pending"] == 0 and entry["coverage"] == pytest.approx(2 / 3)

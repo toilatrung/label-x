@@ -172,7 +172,9 @@ def make_handler(worker: WarmDetector, token: str) -> type[BaseHTTPRequestHandle
             except (ValueError, OSError, KeyError):
                 self.reply(422, {"error": "invalid_batch"})
                 return
-            except Exception:
+            except Exception as exc:
+                # Do not log payloads, image URLs or arbitrary exception text.
+                print(f"Detector inference unavailable: {type(exc).__name__}", flush=True)
                 self.reply(503, {"error": "inference_unavailable"})
                 return
             self.reply(200, result)

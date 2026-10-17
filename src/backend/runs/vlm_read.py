@@ -69,6 +69,8 @@ def build_vlm_view(unit: VlmUnit | None, engine_state: str) -> dict[str, Any]:
             )
         elif unit.status == VlmUnit.Status.FAILED:
             state = "failed"
+        elif unit.status == VlmUnit.Status.SKIPPED:
+            state = "skipped"
         elif unit.status == VlmUnit.Status.CANCELLED:
             state = "cancelled"
         else:

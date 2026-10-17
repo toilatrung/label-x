@@ -23,6 +23,7 @@ from runs.models import (
     RunRankingEntry,
     WorkUnit,
 )
+from runs.progress import engine_progress
 from runs.routing_config import validate_routing_thresholds
 from runs.vlm_read import build_vlm_view, run_vlm_engine_state
 from vlm.config import validate_vlm_config
@@ -65,6 +66,7 @@ class EngineRunStatusSerializer(serializers.Serializer[Any]):
 class RunSerializer(serializers.ModelSerializer[Any]):
     """Schema for Run matching OpenAPI components.schemas.Run."""
 
+    include_progress = False
     model_artifact = ModelArtifactSerializer(read_only=True, allow_null=True)
     engines = serializers.SerializerMethodField()
     origin_run_id = serializers.IntegerField(
@@ -93,15 +95,20 @@ class RunSerializer(serializers.ModelSerializer[Any]):
     @extend_schema_field(EngineStatusSerializer(many=True))
     def get_engines(self, obj: QCRun) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
+        work_units = list(obj.work_units.all()) if self.include_progress else []
         for er in obj.engine_results.all():
-            results.append(
-                {
-                    "engine": er.engine,
-                    "status": er.status,
-                    "reason": er.reason,
-                    "failed_units": er.failed_units,
-                }
-            )
+            row: dict[str, Any] = {
+                "engine": er.engine,
+                "status": er.status,
+                "reason": er.reason,
+                "failed_units": er.failed_units,
+            }
+            if self.include_progress:
+                progress = engine_progress(obj, er.engine, work_units=work_units)
+                if er.status != "running" and not progress["pending"]:
+                    progress["phase"] = "finished"
+                row["progress"] = progress
+            results.append(row)
         return results
 
 
@@ -125,6 +132,7 @@ class SelectedFinalSourceSerializer(serializers.Serializer[Any]):
 class RunDetailSerializer(RunSerializer):
     """GET /api/runs/{id}/: Run plus final-run lineage and operational source (D05)."""
 
+    include_progress = True
     verification_lineage = serializers.SerializerMethodField()
     selected_final_sources = serializers.SerializerMethodField()
     operational_source = serializers.SerializerMethodField()
@@ -345,6 +353,7 @@ VLM_STATES = [
     "no_model",
     "not_applicable",
     "not_triggered",
+    "skipped",
     "pending",
     "running",
     "checked",
@@ -371,7 +380,10 @@ class CandidateVlmSerializer(serializers.Serializer[Any]):
     class_name = serializers.CharField(allow_null=True)
     reason_code = serializers.CharField(
         allow_null=True,
-        help_text="invalid_crop | provider_error | parse_failure | budget_exhausted | null",
+        help_text=(
+            "invalid_crop | provider_error | parse_failure | budget_exhausted | "
+            "provider_unavailable | deadline_exceeded | null"
+        ),
     )
     evidence_id = serializers.IntegerField(allow_null=True)
     evaluation_id = serializers.CharField(allow_null=True)

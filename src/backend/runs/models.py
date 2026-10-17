@@ -315,6 +315,10 @@ class WorkUnit(dj_models.Model):
         db_index=True,
     )
     attempt = dj_models.PositiveIntegerField(default=1)
+    retry_at = dj_models.DateTimeField(null=True, blank=True)
+    deadline_at = dj_models.DateTimeField(null=True, blank=True)
+    error_code = dj_models.CharField(max_length=32, blank=True, default="")
+    request_attempts = dj_models.PositiveIntegerField(default=0)
     last_error = dj_models.TextField(blank=True, default="")
     started_at = dj_models.DateTimeField(null=True, blank=True)
     finished_at = dj_models.DateTimeField(null=True, blank=True)

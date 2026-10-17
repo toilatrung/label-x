@@ -64,6 +64,8 @@ class CandidateContext:
     candidate_id: str
     snapshot_revision: str
     current_label: str | None = None  # nhãn annotator/detector đang tranh chấp (class_id)
+    run_id: int | None = None
+    unit_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -103,6 +105,7 @@ class VlmResult:
     label: str | None = None
     rationale: str | None = None
     reason_code: VlmReasonCode | None = None
+    provider_failure: str | None = None
     attempts: int = 0
     request_id: str | None = None  # ID provider đã redacted/cắt ngắn
     model: str | None = None  # model ID đã yêu cầu (config)

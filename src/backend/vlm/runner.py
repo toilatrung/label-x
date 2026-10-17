@@ -22,6 +22,7 @@ from vlm.contract import (
     validate_crop,
 )
 from vlm.errors import (
+    VlmDeferred,
     VlmError,
     VlmInvalidCropError,
     VlmParseError,
@@ -65,9 +66,11 @@ def _failed(
     attempts: int,
     request_id: str | None = None,
     response_model: str | None = None,
+    provider_failure: str | None = None,
 ) -> VlmResult:
     return VlmResult(
         status=VlmStatus.FAILED,
+        provider_failure=provider_failure,
         reason_code=reason,
         attempts=attempts,
         request_id=request_id,
@@ -85,11 +88,13 @@ def run_vlm_unit(
     client: VlmClient,
     budget: BudgetGate,
     *,
-    sleep: Callable[[float], None] = time.sleep,
+    sleep: Callable[[float], None] | None = None,
     attempts_done: int = 0,
+    deferred: bool = False,
 ) -> VlmResult:
     """Chạy một lượt logic. `attempts_done` là số attempt đã gửi ở lần thực thi trước (worker
     chết giữa chừng): tổng attempt của lượt logic không vượt `max_attempts`."""
+    sleep = sleep or time.sleep
     try:
         validate_crop(request.crop)
     except VlmInvalidCropError as exc:
@@ -104,7 +109,14 @@ def run_vlm_unit(
         try:
             client.preflight(request)  # chưa đủ điều kiện gửi (thiếu key...) thì KHÔNG tính budget
         except VlmProviderError as exc:
-            return _failed(request, exc.reason_code, attempts, request_id, response_model)
+            return _failed(
+                request,
+                exc.reason_code,
+                attempts,
+                request_id,
+                response_model,
+                getattr(exc, "failure", None),
+            )
         if not budget.try_consume():
             # Không gọi provider khi hết budget; chuyển người review (reason rõ).
             return _failed(
@@ -121,9 +133,21 @@ def run_vlm_unit(
             return _failed(request, exc.reason_code, attempts, request_id, response_model)
         except VlmProviderError as exc:
             last_reason = exc.reason_code
-            logger.warning("vlm provider failure", extra={"failure": exc.failure.value})
+            logger.warning(
+                "vlm provider failure",
+                extra={
+                    "failure": exc.failure.value,
+                    "qc_run_id": request.context.run_id,
+                    "vlm_unit_id": request.context.unit_id,
+                    "attempt": attempts,
+                },
+            )
             if not exc.retryable or attempts >= request.config.max_attempts:
-                return _failed(request, last_reason, attempts, request_id, response_model)
+                return _failed(
+                    request, last_reason, attempts, request_id, response_model, exc.failure.value
+                )
+            if deferred:
+                raise VlmDeferred(exc, attempts) from None
             sleep(backoff_seconds(attempts))
             continue
         except VlmError as exc:

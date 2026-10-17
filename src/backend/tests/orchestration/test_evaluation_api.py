@@ -181,7 +181,7 @@ def test_cancelled_run_and_disabled_vlm_are_422() -> None:
 def test_manual_evaluation_runs_after_run_finished_without_touching_old_evidence() -> None:
     run, cid = _prepared()
     for unit in VlmUnit.objects.filter(run_id=run.pk):
-        execute_vlm_unit(unit.pk, client=FakeClient(label="1"))
+        execute_vlm_unit(unit.pk, client=FakeClient(label="1"), deferred=False)
     run.refresh_from_db()
     assert run.status == QCRun.Status.COMPLETED
     old = VlmEvidence.objects.get(candidate_id=cid)
@@ -190,7 +190,9 @@ def test_manual_evaluation_runs_after_run_finished_without_touching_old_evidence
     resp = _post(_api(run), cid, "m-1", reason="xem lại", expected_revision=_revision(run))
     assert resp.status_code == 202
     new_unit = VlmUnit.objects.get(candidate_id=cid, evaluation_generation=2)
-    assert execute_vlm_unit(new_unit.pk, client=FakeClient(label="2")) == "completed"
+    assert (
+        execute_vlm_unit(new_unit.pk, client=FakeClient(label="2"), deferred=False) == "completed"
+    )
     assert VlmEvidence.objects.filter(candidate_id=cid).count() == 2
     old.refresh_from_db()
     assert (old.pk, old.status, old.label_class_id, old.created_at) == old_fields

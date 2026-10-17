@@ -14,14 +14,25 @@ from django.conf import settings
 from django.utils import timezone
 
 from engines.detector import BDD100K_DETECTOR_CLASSES, MANIFEST_SCHEMA_VERSION
-from engines.worker_adapter.client import request_json
+from engines.worker_adapter.client import request_json, retry_after_seconds
 from runs.models import GpuWorkerConfig, GpuWorkerSelection, ModelArtifact, RunGpuWorker
 
 SHA256 = re.compile(r"[a-f0-9]{64}")
 
 
 class WorkerUnavailable(RuntimeError):
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "worker_unavailable",
+        retryable: bool = False,
+        retry_after: float = 0,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+        self.retry_after = retry_after
 
 
 def validate_url(url: str) -> str:
@@ -63,19 +74,64 @@ def request_worker(
     url = validate_url(config.url)
     token = credential(config.credential_ref)
     timeout = 5 if path == "/health" else config.timeout_seconds
+    if body is not None and path == "/infer":
+        from orchestration.resources import EndpointLease
+
+        with EndpointLease(url, max(config.timeout_seconds + 60, 1800)) as lease:
+            try:
+                return _request_worker(config, path, body, url, token, timeout)
+            except WorkerUnavailable as exc:
+                if exc.retryable:
+                    lease.failed(
+                        exc.code,
+                        retry_after=exc.retry_after,
+                        uncertain=exc.code in {"timeout", "network"},
+                    )
+                raise
+    return _request_worker(config, path, body, url, token, timeout)
+
+
+def _request_worker(
+    config: GpuWorkerConfig,
+    path: str,
+    body: dict[str, Any] | None,
+    url: str,
+    token: str,
+    timeout: float,
+) -> dict[str, Any]:
     try:
         result = request_json(
             "GET" if body is None else "POST", url + path, token=token, timeout=timeout, body=body
         )
     except httpx.HTTPStatusError as exc:
-        if exc.response.status_code in (401, 403):
-            raise WorkerUnavailable("GPU Worker từ chối xác thực.") from None
+        status = exc.response.status_code
+        code = "worker_unavailable"
+        try:
+            error = exc.response.json().get("error")
+            if error in ("worker_busy", "inference_unavailable", "invalid_batch", "unauthorized"):
+                code = error
+        except (ValueError, AttributeError, TypeError):
+            pass
+        if status in (401, 403):
+            raise WorkerUnavailable("GPU Worker từ chối xác thực.", code="auth") from None
+        delay = retry_after_seconds(exc.response)
         raise WorkerUnavailable(
-            "Không kết nối được GPU Worker hoặc response không hợp lệ."
+            f"GPU Worker HTTP {status}: {code}",
+            code=code,
+            retryable=status in (408, 429, 500, 502, 503, 504),
+            retry_after=delay,
         ) from None
-    except (httpx.HTTPError, ValueError):
+    except httpx.TimeoutException:
         raise WorkerUnavailable(
-            "Không kết nối được GPU Worker hoặc response không hợp lệ."
+            "GPU Worker hết thời gian chờ.", code="timeout", retryable=True
+        ) from None
+    except httpx.HTTPError:
+        raise WorkerUnavailable(
+            "Không kết nối được GPU Worker.", code="network", retryable=True
+        ) from None
+    except ValueError:
+        raise WorkerUnavailable(
+            "GPU Worker trả response không hợp lệ.", code="invalid_response"
         ) from None
     if not isinstance(result, dict):
         raise WorkerUnavailable("GPU Worker trả response không hợp lệ.")
@@ -119,7 +175,12 @@ def verify_remote(payload: dict[str, Any], artifact: ModelArtifact | None = None
     }
 
 
-def probe(config: GpuWorkerConfig, artifact: ModelArtifact | None = None) -> dict[str, Any]:
+def probe(
+    config: GpuWorkerConfig,
+    artifact: ModelArtifact | None = None,
+    *,
+    strict: bool = False,
+) -> dict[str, Any]:
     started = time.monotonic()
     result: dict[str, Any] = {
         "revision": config.pk,
@@ -144,6 +205,8 @@ def probe(config: GpuWorkerConfig, artifact: ModelArtifact | None = None) -> dic
             state="ready", message="GPU Worker sẵn sàng.", model=verified, device=device[:64]
         )
     except (WorkerUnavailable, ValueError):
+        if strict:
+            raise
         # Do not persist or expose arbitrary upstream diagnostics, URLs, headers or credentials.
         result.update(
             state="unavailable",

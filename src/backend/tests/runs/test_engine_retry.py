@@ -35,10 +35,12 @@ def failed_vlm_run():
     run = _make_run(vlm={**VALID, "max_attempts": 4, "budget": {"max_calls": 20}})
     _run_shards(run)
     units = list(VlmUnit.objects.filter(run=run).order_by("pk"))
-    assert execute_vlm_unit(units[0].pk, client=FakeClient()) == "completed"
+    assert execute_vlm_unit(units[0].pk, client=FakeClient(), deferred=False) == "completed"
     assert (
         execute_vlm_unit(
-            units[1].pk, client=FakeClient([VlmProviderError(VlmProviderFailure.AUTH)])
+            units[1].pk,
+            client=FakeClient([VlmProviderError(VlmProviderFailure.AUTH)]),
+            deferred=False,
         )
         == "failed"
     )
@@ -69,7 +71,7 @@ def test_retry_vlm_only_failed_candidates_preserves_evidence_rankings_and_budget
         assert {c.args[0] for c in delay.call_args_list} == {u.pk for u in latest}
         assert dispatch_vlm_units(run.pk) == 0
     for unit in latest:
-        assert execute_vlm_unit(unit.pk, client=FakeClient()) == "completed"
+        assert execute_vlm_unit(unit.pk, client=FakeClient(), deferred=False) == "completed"
     run.refresh_from_db()
     assert run.status == "completed"
     assert vlm_ledger_counts(run.pk).completed == 3
@@ -86,13 +88,15 @@ def test_retry_vlm_failure_does_not_stop_other_retry_units():
     units = list(VlmUnit.objects.filter(run=run, evaluation_generation=2).order_by("pk"))
     assert (
         execute_vlm_unit(
-            units[0].pk, client=FakeClient([VlmProviderError(VlmProviderFailure.AUTH)])
+            units[0].pk,
+            client=FakeClient([VlmProviderError(VlmProviderFailure.AUTH)]),
+            deferred=False,
         )
         == "failed"
     )
     units[1].refresh_from_db()
     assert units[1].status == "pending"
-    assert execute_vlm_unit(units[1].pk, client=FakeClient()) == "completed"
+    assert execute_vlm_unit(units[1].pk, client=FakeClient(), deferred=False) == "completed"
     run.refresh_from_db()
     assert run.status == "partial"
     retry_failed_engine(run_id=run.pk, engine="vlm", actor=run.created_by)
@@ -264,7 +268,7 @@ def test_cancelled_qc_retries_only_failed_vlm_and_preserves_cancelled_units():
     with patch("orchestration.vlm_stage.run_vlm_unit_task.delay") as delay:
         assert dispatch_vlm_units(run.pk) == 1
         assert delay.call_args.args == (retry.pk,)
-    assert execute_vlm_unit(retry.pk, client=FakeClient()) == "completed"
+    assert execute_vlm_unit(retry.pk, client=FakeClient(), deferred=False) == "completed"
     run.refresh_from_db()
     assert run.status == "partial"  # Work intentionally cancelled earlier is still unfinished.
     assert list(untouched.all()) == before
@@ -307,8 +311,8 @@ def test_vlm_retry_refills_window_after_unit_finishes_without_waiting_for_beat(s
     with patch("orchestration.vlm_stage.run_vlm_unit_task.delay") as delay:
         assert dispatch_vlm_units(run.pk) == 1
         assert [c.args[0] for c in delay.call_args_list] == [units[0].pk]
-        assert execute_vlm_unit(units[0].pk, client=FakeClient()) == "completed"
+        assert execute_vlm_unit(units[0].pk, client=FakeClient(), deferred=False) == "completed"
         assert [c.args[0] for c in delay.call_args_list] == [u.pk for u in units]
         # Duplicate delivery must not queue or charge the next unit twice.
-        assert execute_vlm_unit(units[0].pk, client=FakeClient()) == "completed"
+        assert execute_vlm_unit(units[0].pk, client=FakeClient(), deferred=False) == "completed"
         assert delay.call_count == 2
