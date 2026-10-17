@@ -47,7 +47,7 @@ ul.dir{columns:2;font-size:14px}
 <div class="meta"><b>id</b><span>prod-images-2026-10-17</span><b>title</b><span>Production Images — Implementation Evidence</span><b>type</b><span>report</span><b>domain</b><span>development</span><b>module</b><span>deployment</span><b>tags</b><span>[implementation, docker, ghcr, production]</span><b>priority</b><span>3</span></div>
 <h1 id="prod-images-2026-10-17">Production Images — Implementation Evidence</h1>
 <h2 id="usage-purpose">Usage Purpose</h2>
-<p>Ghi lại bằng chứng thực hiện yêu cầu trực tiếp của PO: bổ sung images production và pipeline publish trên develop, push origin/develop rồi mở PR develop → main. Đây là báo cáo implementation, chưa phải phê duyệt release hay triển khai.</p>
+<p>Ghi lại bằng chứng thực hiện yêu cầu trực tiếp của PO: bổ sung images production và pipeline publish. PO đã cho phép tạo nhánh <code>codex/production-images</code> từ commit task, push nhánh nguồn và mở PR vào develop theo ruleset. Chỉ sau khi được review và PO merge vào develop mới mở PR develop → main. Đây là báo cáo implementation, chưa phải phê duyệt release hay triển khai.</p>
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Report ID</strong>: <code>PROD-IMAGES-2026-10-17</code></li>
@@ -83,12 +83,14 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Decisions</strong>: <code>existing branch/review and staging/production promotion policies retained</code></li>
 <li><strong>Change Requests</strong>: <code>CR-100, CR-102, CR-103, CR-104, CR-105; no policy changes</code></li>
 <li><strong>Risks or Blockers</strong>: <code>existing MVP plan: 57 planned cases of 62 total; release stays gated until required evidence passes</code></li>
-<li><strong>Review Request</strong>: <code>pending PO review on develop → main PR, under CR-102; no agent self-approval</code></li>
-<li><strong>Commits</strong>: <code>implementation commit and PR are recorded by Git/GitHub after this local evidence snapshot; no direct push to main</code></li>
+<li><strong>Review Request</strong>: <code>pending PO review on codex/production-images → develop PR, under CR-102; no agent self-approval or merge</code></li>
+<li><strong>Commits</strong>: <code>cfde888ac6b8ee82253f7c47bde62443f24e4300 — implementation; follow-up documentation commit records PO-approved source-branch flow</code></li>
 </ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td><code>git status; git branch --show-current; read repository instructions and CI/CD</code></td><td>passed</td><td>Started clean on develop at 81a9a69. Origin advanced one commit; fast-forwarded to be38020 with autostash successfully restored. No user changes discarded.</td></tr>
+<tr><td><code>git push origin develop</code></td><td>failed</td><td>GitHub GH013 rejected direct push: PR and five required status checks are mandatory. No remote develop change. PO then approved a codex source branch and PR into develop; no ruleset bypass.</td></tr>
+<tr><td><code>git worktree add -b codex/production-images /tmp/labelx-production-images-wt cfde888</code></td><td>passed</td><td>Isolated task worktree contains only committed task changes; the main workspace remains on develop with unrelated uncommitted user changes preserved. No stash/reset/checkout of that workspace.</td></tr>
 <tr><td><code>docker buildx build --load --platform linux/amd64 --provenance=false -t labelx-backend:production-local src/backend</code></td><td>passed</td><td>Backend collectstatic: 154 files copied, 444 post-processed. Local image ID sha256:d98dc6d189cd2518366a5965910a106fb5d44b5d8cec4d926ecb543ac9ec7d5c; UID 10001:10001.</td></tr>
 <tr><td><code>docker buildx build --load --platform linux/amd64 --provenance=false -t labelx-frontend:production-local src/frontend</code></td><td>passed</td><td>Next.js production standalone build. Local image ID sha256:56625a55403bafe73d5ec425ef63f5cbeea79cb126ca0b4c706f24ec778cde75; USER node. Local IDs are not published GHCR digests.</td></tr>
 <tr><td><code>python3 scripts/containers/smoke.py --backend labelx-backend:production-local --frontend labelx-frontend:production-local</code></td><td>passed</td><td>Three PASS groups: clean non-root amd64 images + migration/runtime role; Gunicorn/admin/static/worker/beat; standalone frontend/assets/runtime proxy/cookies/static/no mock. Isolated PostgreSQL/Redis containers and network removed.</td></tr>
@@ -107,8 +109,8 @@ ul.dir{columns:2;font-size:14px}
 </tbody></table>
 <h2 id="deviations">Deviations</h2>
 <ul>
-<li><strong>Plan Deviations</strong>: <code>none; later explicit PO instruction authorizes commit/push develop and PR main, superseding the earlier local-only instruction</code></li>
-<li><strong>Approved By</strong>: <code>direct PO instruction in this session; PO retains review and main merge</code></li>
+<li><strong>Plan Deviations</strong>: <code>direct develop push was rejected by ruleset; PO explicitly replaced the no-new-branch instruction with codex/task → develop PR first, then develop → main only after review and PO merge</code></li>
+<li><strong>Approved By</strong>: <code>direct PO instruction in this session; PO retains review and merges; no publication or VPS deployment in this step</code></li>
 <li><strong>Known Limitations</strong>: <code>MVP planned cases block release by design. GitHub package access/visibility, branch status requirements and GitOps integration remain operator configuration. Publishing does not update Argo CD until manifests change through the approved promotion process.</code></li>
 </ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
