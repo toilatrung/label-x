@@ -1,4 +1,7 @@
-"""QC Run, Sharding and Engine Lifecycle domain models (T-024, E-08, Issue #66)."""
+"""QC Run, Sharding and Engine Lifecycle domain models (T-024, E-08, archived issue 66)."""
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-66.
 
 from __future__ import annotations
 

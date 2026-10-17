@@ -1,16 +1,23 @@
-"""Comprehensive tests for RBAC, dataset scope, and workflow permissions (T-012, Issue #41).
+"""Comprehensive tests for RBAC, dataset scope, and workflow permissions (T-012, archived issue
+41).
 
 Covers all Acceptance Criteria and Review Findings:
 - AC 1 & Finding 7: Table-driven role tests across all 7 roles derived from rbac-matrix.
-- AC 1 & Finding 2: Strict RoleAssignment lookup; superuser without RoleAssignment is rejected.
-- AC 1 & Finding 3: Fail-closed dataset scope: missing, invalid type, and conflicting dataset_id.
-- AC 2 & Finding 4: Separation of duties and anti-self-review fail-closed when identity is missing.
+- AC 1 & Finding 2: Strict RoleAssignment lookup; superuser without RoleAssignment is
+rejected.
+- AC 1 & Finding 3: Fail-closed dataset scope: missing, invalid type, and conflicting
+dataset_id.
+- AC 2 & Finding 4: Separation of duties and anti-self-review fail-closed when identity is
+missing.
 - AC 2 & DEC-011: Unique cvat_user_id prevents duplicate mapping; second account fails closed.
 - AC 2: Non-overridable anti-self-review invariant (Super Admin cannot self-review).
 - AC 3 & Finding 5: Override flow: view automatically labels audit with is_override=True.
 - AC 3 & Finding 5: Override without reason returns 422 and records rejection audit.
 - WorkflowPermissions API endpoint returns 7 roles in matrix and workflow rules.
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-41.
 
 from __future__ import annotations
 

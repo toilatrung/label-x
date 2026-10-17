@@ -46,6 +46,8 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>blocker-029</span><b>title</b><span>PR #92 (T-031): chạy E2E trên dữ liệu BDD100K thật và kiểm frontend ở M-02-RESOLVE</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, t-031, pr-92, m-02, evidence]</span><b>priority</b><span>2</span></div>
 <h1 id="blocker-029">BLOCKER-029: PR #92 (T-031): chạy E2E trên dữ liệu BDD100K thật và kiểm frontend ở M-02-RESOLVE</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Blocker ID</strong>: <code>BLOCKER-029</code></li>
@@ -62,7 +64,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="blocking-condition">Blocking Condition</h2>
 <p>PR #92 (T-031) đã được review và resolve conflict ở mức backend. Hai phần kiểm chứng chưa chạy và được gom về <strong>M-02-RESOLVE</strong> (PO chốt 2026-10-10: test trên dữ liệu thật ở cuối giai đoạn M-02, không chờ trước khi merge):</p>
 <table><thead><tr><th>#</th><th>Mục</th><th>Trạng thái</th><th>Lý do</th></tr></thead><tbody>
-<tr><td>V1</td><td>E2E snapshot → run → engine → score trên dữ liệu BDD100K thật của T-019 (AC thứ 3 của issue #73)</td><td>NOT VERIFIED</td><td>Test hiện có <code>test_bdd100k_worker_pipeline_persists_reproducible_ranking_and_api</code> chạy worker thật nhưng trên fixture <code>normalized-snapshot-v1.json</code> (1 job, 2 frame, 1 shape bị bỏ qua), không phải tập BDD100K của T-019 trên CVAT. Cần bằng chứng provenance/checksum, hash đầu ra và chạy lại hai lần.</td></tr>
+<tr><td>V1</td><td>E2E snapshot → run → engine → score trên dữ liệu BDD100K thật của T-019 (AC thứ 3 của issue <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-73">#73 (lưu trữ)</a>)</td><td>NOT VERIFIED</td><td>Test hiện có <code>test_bdd100k_worker_pipeline_persists_reproducible_ranking_and_api</code> chạy worker thật nhưng trên fixture <code>normalized-snapshot-v1.json</code> (1 job, 2 frame, 1 shape bị bỏ qua), không phải tập BDD100K của T-019 trên CVAT. Cần bằng chứng provenance/checksum, hash đầu ra và chạy lại hai lần.</td></tr>
 <tr><td>V2</td><td>Frontend sau khi merge develop: <code>npm run build</code>, <code>tsc --noEmit</code>, <code>vitest run</code> với <code>contract.d.ts</code> đã gộp</td><td>NOT VERIFIED</td><td>Job kiểm tra frontend bị dừng theo yêu cầu PO, không chờ kết quả. PR không sửa giao diện; chỉ <code>contract.d.ts</code> được cập nhật và đã tự gộp với develop. Trước đó 138 frontend test passed trên nhánh PR (theo mô tả PR).</td></tr>
 <tr><td>V3</td><td>Quyền endpoint <code>/api/runs/{id}/ranking/</code></td><td>Một phần</td><td>Test hiện có kiểm 1 trường hợp bị từ chối (user không có vai trò ở dataset). Chưa có test lặp cho từng vai trò ngoài ma trận (annotator, qc_admin, productowner, modelowner…). Khớp ma trận RBAC: Reviewer, QA Lead, Super Admin.</td></tr>
 </tbody></table>

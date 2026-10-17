@@ -1,5 +1,8 @@
 """Comprehensive test suite for QC Run lifecycle, sharding, and idempotency (T-024)."""
 
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-66.
+
 from __future__ import annotations
 
 import pytest
@@ -394,7 +397,7 @@ def test_api_idor_protection(
     assert cancel_resp.status_code == 403
 
 
-# --- 6. Acceptance criteria T-024 (#66) ---
+# --- 6. Acceptance criteria T-024 (archive:66) ---
 
 
 def _create(snapshot: Snapshot, config: ConfigVersion, user: User, key: str | None = None) -> QCRun:

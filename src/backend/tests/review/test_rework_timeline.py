@@ -1,4 +1,7 @@
-"""#242 follow-up: read-only per-round rework timeline (synthetic fixtures)."""
+"""archive:242 follow-up: read-only per-round rework timeline (synthetic fixtures)."""
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-242.
 
 from __future__ import annotations
 

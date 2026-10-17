@@ -46,6 +46,8 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>blocker-031</span><b>title</b><span>Danh sách API chưa nối (routed) vào frontend M-FE01: nối ngay khi backend hoàn thiện</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, frontend, api, m-fe01, wiring]</span><b>priority</b><span>2</span></div>
 <h1 id="blocker-031">BLOCKER-031: Danh sách API chưa nối (routed) vào frontend M-FE01: nối ngay khi backend hoàn thiện</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <h2 id="usage-purpose">Usage Purpose</h2>
 <p>Sổ theo dõi tập trung mọi API mà giao diện M-FE01 đã dựng sẵn nhưng chưa nối (routed) vào backend. Mỗi dòng gắn với <code>TODO(backend)</code> trong code. Khi backend hoàn thiện một endpoint, dev <strong>phải nối ngay</strong> vào frontend theo quy trình bên dưới và tick cột Đã nối.</p>
 <h2 id="record-metadata">Record Metadata</h2>
@@ -108,7 +110,7 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="related-files">Related Files</h2>
 <ul>
 <li><strong>Affected Records</strong>: <code>src/frontend/src/lib/mock/*, src/frontend/src/lib/*/sample-data.ts, các component trong bảng</code></li>
-<li><strong>Issues</strong>: <code>#164, #165, #166, #167 (FE-11…FE-14)</code></li>
+<li><strong>Issues</strong>: <code><a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-164">#164 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-165">#165 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-166">#166 (lưu trữ)</a>, <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-167">#167 (lưu trữ)</a> (FE-11…FE-14)</code></li>
 <li><strong>Decisions</strong>: <code>none</code></li>
 <li><strong>Risks</strong>: <code>none</code></li>
 <li><strong>Change Requests</strong>: <code>CR-111 (M-FE01); cần CR mới cho nhóm B (endpoint, rbac-matrix Calibration/Audit)</code></li>

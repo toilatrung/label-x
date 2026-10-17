@@ -1,4 +1,4 @@
-"""Role-matrix verification for D04 rework and D05 run detail endpoints (Issue #244).
+"""Role-matrix verification for D04 rework and D05 run detail endpoints (archived issue 244).
 
 Endpoints verified:
 - GET /api/rework/ (dataset_id required, status, cursor, counts, round_count)
@@ -13,6 +13,9 @@ Role matrix:
 - qc_admin: system-wide reader on runs; 403 on rework without dataset assignment
 - outsider / other roles (product_owner, data_model_owner, no role): 403 / denied
 """
+
+# Historical issue mapping: docs/08-devops/github-issue-migration-2026-10-17.html
+# Anchors: issue-244.
 
 from __future__ import annotations
 

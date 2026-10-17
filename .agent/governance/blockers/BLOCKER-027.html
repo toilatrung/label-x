@@ -46,6 +46,8 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>blocker-027</span><b>title</b><span>T-022 chưa có bằng chứng chạy trên CVAT thật cho AC Snapshot</span><b>type</b><span>governance</span><b>domain</b><span>governance</span><b>module</b><span>blockers</span><b>tags</b><span>[blocker, t-022, pr-88, snapshot, evidence]</span><b>priority</b><span>2</span></div>
 <h1 id="blocker-027">BLOCKER-027: T-022 chưa có bằng chứng chạy trên CVAT thật cho AC Snapshot</h1>
+<aside id="github-issue-tracker-current"><p><strong>GitHub Issues, 17/10/2026:</strong> tracker hiện hành <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html">bảng ánh xạ issues cũ</a>. Tham chiếu cũ dẫn tới archive/phạm vi follow-up; không coi thiếu run/evidence là test fail. Các bảng task cũ giữ trạng thái tại thời điểm ghi, không thay thế backlog mới.</p></aside>
+
 <h2 id="record-metadata">Record Metadata</h2>
 <ul>
 <li><strong>Blocker ID</strong>: <code>BLOCKER-027</code></li>
@@ -73,7 +75,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] CSRF, Idempotency-Key khi tạo Snapshot qua UI sau fix CORS (preflight đã có test, tạo run qua UI đã chứng minh nhưng tạo snapshot chưa chạy lại); deep link Job/Frame: không có bằng chứng. NOT VERIFIED.</li>
 <li>[ ] Đẩy commit bằng chứng và review lại head của PR #88: chưa làm (nhánh chưa push); thuộc review độc lập.</li>
 </ul>
-<h4 id="checklist-b">B. Nghiệm thu tích hợp #96 (chạy thật end-to-end từ UI/API, T-026/T-029)</h4>
+<h4 id="checklist-b">B. Nghiệm thu tích hợp <a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-96">#96 (lưu trữ)</a> (chạy thật end-to-end từ UI/API, T-026/T-029)</h4>
 <ul>
 <li>[x] Hai run trên code cuối (42 và 43; snapshot 3, config 2 gồm duplicate + geometry + schema, seed 20261010) cùng <code>candidates_sha256</code>, <code>content_hash</code>, <code>ranking_hash</code> và <code>ledger_sha256</code> (<code>ac01-final-runs-42-43.json</code>). Run 35, 36, 37 (<code>ac01-run35.json</code>, <code>ac01-run36.json</code>, <code>ac01-run37.json</code>) chạy trước F-1 nên ledger khác có chủ đích. Candidate chỉ là duplicate/E3 (163); geometry 0 candidate, schema not_checked: bằng chứng ranking chỉ cho engine duplicate. </li>
 <li>[x] Run tạo qua UI trình duyệt thật (không dispatch thủ công), qua broker Redis và worker thật: qa_lead tạo run từ form → <code>POST /api/runs/</code> 201 → QC-72 COMPLETED (<code>ui-create-run-result.json</code>, <code>ui-create-run-form.png</code>, <code>ui-create-run-after-submit.png</code>, <code>ui-run-history-terminal.png</code>). Trước fix CORS (<code>c8c8826</code>) thao tác này lỗi “Không kết nối được máy chủ”.</li>
@@ -85,7 +87,7 @@ ul.dir{columns:2;font-size:14px}
 <li>[ ] Review độc lập và PO duyệt (CR-102): chưa có.</li>
 </ul>
 <p><strong>Đối chiếu chéo</strong>: AC-03 và RBAC phục vụ cả A và B; bảng bên dưới cho biết mục nào thuộc danh mục nào.</p>
-<table><thead><tr><th>Bằng chứng</th><th>Danh mục A (T-022)</th><th>Danh mục B (#96)</th></tr></thead><tbody>
+<table><thead><tr><th>Bằng chứng</th><th>Danh mục A (T-022)</th><th>Danh mục B (<a href="../../../docs/08-devops/github-issue-migration-2026-10-17.html#issue-96">#96 (lưu trữ)</a>)</th></tr></thead><tbody>
 <tr><td>Snapshot khoá từ CVAT job 1, revision hash</td><td>Có</td><td>Dùng làm đầu vào run</td></tr>
 <tr><td>AC-03 drift, bất biến, lineage</td><td>Có</td><td>Không</td></tr>
 <tr><td>RBAC 7 vai trò × 13 endpoint</td><td>Có (snapshots)</td><td>Có (runs, config, metrics)</td></tr>

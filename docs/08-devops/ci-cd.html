@@ -46,6 +46,7 @@ ul.dir{columns:2;font-size:14px}
 <main><article>
 <div class="meta"><b>id</b><span>labelx-ci-cd</span><b>title</b><span>CI/CD và cổng kiểm thử LabelX</span><b>type</b><span>reference</span><b>domain</b><span>devops</span><b>module</b><span>repository</span><b>tags</b><span>[ci, cd, github-actions, quality-gates]</span><b>priority</b><span>2</span></div>
 <h1 id="cicd-labelx">CI/CD LabelX</h1>
+<p id="current-release-issue-backlog">Backlog kiểm chứng MVP/release hiện hành: <a href="https://github.com/toilatrung/label-x/issues/386">#386</a>; xem <a href="github-issue-migration-2026-10-17.html">bảng ánh xạ issue cũ → follow-up mới ngày 17/10/2026</a>. Chưa có workflow run là NOT VERIFIED, không phải test thất bại; các gate nghiệm thu MVP giữ nguyên, điều kiện triển khai theo CR-120 ghi bên dưới.</p>
 <p><strong>CR-120, 17/10/2026:</strong> <a href="gitops.html">Luồng triển khai LabelX hiện hành</a> dùng CI main → build/smoke → GHCR → PR digest → Argo auto sync; không đợi bằng chứng MVP và không đánh dấu MVP passed. Phần staging/production cd.yml bên dưới mô tả luồng nghiệm thu legacy, không điều khiển Application labelx.</p>
 <h2 id="trang-thai-va-gioi-han">Trạng thái và giới hạn</h2>
 <p>GitHub Actions kiểm tra framework, backend, frontend, detector và Windows bootstrap. Đã bổ sung Dockerfiles production và build/smoke image, xem <a href="production-images.html">production-images.html</a>. Stack DEC-001 và chính sách promote được giữ nguyên; CD vẫn có preflight chặn thiếu bằng chứng MVP, cấu hình target và hook.</p>
