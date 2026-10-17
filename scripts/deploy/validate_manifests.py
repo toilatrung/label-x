@@ -91,6 +91,11 @@ def validate(items, receipt, application, storage_class):
     assert preflight["metadata"]["annotations"]["argocd.argoproj.io/hook"] == "PreSync"
     assert preflight["spec"]["template"]["spec"]["containers"][0]["command"][-1] == (ROOT / "infrastructure/k8s/labelx/ops/preflight.py").read_text()
     assert workloads["labelx-smoke"]["metadata"]["annotations"]["argocd.argoproj.io/hook"] == "PostSync"
+    assert workloads["labelx-storage-init"]["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"] == "-15"
+    assert isinstance(workloads["labelx-daily-backup"]["spec"]["suspend"], bool), "Explicit schedule state required"
+    # Scope the storage to the application project; CVAT stays upstream Compose behind a private endpoint.
+    assert ("StatefulSet", "labelx-s3") in identities
+    assert ("EndpointSlice", "cvat-host") in identities
     return len(items)
 
 

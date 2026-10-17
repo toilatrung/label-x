@@ -1,0 +1,9 @@
+# Three buckets on one VPS: grow one logical volume at a time, not upstream's seven.
+[master.volume_growth]
+copy_1 = 1
+copy_2 = 1
+copy_3 = 1
+copy_other = 1
+threshold = 0.9
+[master.maintenance]
+scripts = ""

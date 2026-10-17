@@ -1,0 +1,32 @@
+{
+  "labelx_steady_limits_mib": {
+    "labelx-backend": 768,
+    "labelx-frontend": 384,
+    "labelx-worker": 768,
+    "labelx-beat": 192,
+    "labelx-postgres": 512,
+    "labelx-redis": 128,
+    "labelx-s3": 512
+  },
+  "labelx_total_mib": 3264,
+  "cvat_total_mib": 7872,
+  "transient_backup_mib": 640,
+  "workload_peak_mib": 11904,
+  "os_k3s_argocd_reserve_mib": 3072,
+  "additional_headroom_mib": 1024,
+  "disk_small_dataset_budget_gib": {
+    "os_k3s_argocd": 12,
+    "image_cache": 8,
+    "labelx_database": 8,
+    "redis": 1,
+    "s3_objects": 12,
+    "cvat_database_events": 3,
+    "cvat_data_cache": 10,
+    "logs": 2,
+    "local_backups": 6,
+    "temporary": 4,
+    "free_headroom": 14
+  },
+  "caveat": "Local-path PVC requests are not disk quotas. Existing 20Gi claims are preserved. Full PVC expansion plus large CVAT data does not fit 100GB. Move CVAT or upgrade SSD/RAM for larger tasks.",
+  "capacity_job_mib": 128
+}

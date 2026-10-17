@@ -10,13 +10,14 @@ import uuid
 from smoke import docker, wait_until
 
 PG = "postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3"
-S3 = "chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a"
+S3 = "chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d"
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--backend", required=True)
+    parser.add_argument("--mode", choices=["local", "offsite"], default="offsite")
     args = parser.parse_args()
     prefix = "labelx-backup-smoke-" + uuid.uuid4().hex[:10]
     names, volumes = [], []
@@ -51,11 +52,18 @@ def main():
             wait_until(lambda: docker("run", "--rm", "--network", prefix, args.backend, "python", "-c",
                 "import urllib.request; urllib.request.urlopen('http://s3:9333/cluster/status',timeout=2)",
                 check=False).returncode == 0, "isolated S3")
-            for bucket in ("test-snapshots", "test-evidence", "test-reports", "test-backups"):
+            def weed_shell(command):
                 result = subprocess.run(["docker", "exec", "-i", prefix + "-s3", "weed", "shell", "-master=localhost:9333"],
-                    input=f"s3.bucket.create -name {bucket}\n", capture_output=True, text=True)
-                if result.returncode:
-                    raise RuntimeError("Could not create isolated S3 bucket")
+                    input=command + "\n", capture_output=True, text=True)
+                return result.stdout if result.returncode == 0 else ""
+
+            for bucket in ("test-snapshots", "test-evidence", "test-reports", "test-backups"):
+                # /cluster/status answers before the raft leader and filer are ready; weed shell can exit 0 on
+                # such errors, so retry creation until the bucket is actually listed.
+                def created(bucket=bucket):
+                    weed_shell(f"s3.bucket.create -name {bucket}")
+                    return bucket in weed_shell("s3.bucket.list").split()
+                wait_until(created, "isolated S3 bucket " + bucket, timeout=90)
             env = ["PYTHONPATH=/app", "DJANGO_SECRET_KEY=" + uuid.uuid4().hex * 2, "DJANGO_ALLOWED_HOSTS=localhost,postgres",
                 "DJANGO_DEBUG=False", f"DATABASE_URL=postgres://labelx_owner:{password}@postgres:5432/labelx",
                 "RUNTIME_DB_PASSWORD=" + uuid.uuid4().hex,
@@ -68,6 +76,9 @@ def main():
                 "BACKUP_S3_SECRET_KEY=" + secret, "BACKUP_S3_REGION=us-east-1", "BACKUP_S3_BUCKET=test-backups",
                 "BACKUP_ENCRYPTION_KEY=" + uuid.uuid4().hex * 2, "PGHOST=postgres", "PGDATABASE=labelx",
                 "PGUSER=labelx_owner", "PGPASSWORD=" + password]
+            env.append("BACKUP_MODE=" + args.mode)
+            if args.mode == "local":
+                env = [value for value in env if not value.startswith("BACKUP_S3_")]
             container("migrate", args.backend, "python", "/ops/migrate.py", env=env,
                 mounts=[f"{operations}:/ops:ro"], detach=False)
             container("seed", args.backend, "python", "-c", """
@@ -92,18 +103,25 @@ for bucket in ('test-snapshots','test-evidence','test-reports'):
                 print(docker("logs", prefix + "-" + role).stdout.strip())
             container("verify", args.backend, "python", "-c", """
 import boto3,hashlib,json,os
-c=boto3.client('s3',endpoint_url=os.environ['BACKUP_S3_ENDPOINT_URL'],aws_access_key_id=os.environ['BACKUP_S3_ACCESS_KEY'],aws_secret_access_key=os.environ['BACKUP_S3_SECRET_KEY'])
-items=c.list_objects_v2(Bucket='test-backups',Prefix='labelx/receipts/')['Contents']
-assert len(items)==1
-r=json.loads(c.get_object(Bucket='test-backups',Key=items[0]['Key'])['Body'].read())
+from pathlib import Path
+if os.environ['BACKUP_MODE']=='local':
+ receipts=list(Path('/backups/local/labelx/receipts').glob('*.json')); assert len(receipts)==1
+ r=json.loads(receipts[0].read_text())
+ def read(key): return (Path('/backups/local')/key).read_bytes()
+else:
+ c=boto3.client('s3',endpoint_url=os.environ['BACKUP_S3_ENDPOINT_URL'],aws_access_key_id=os.environ['BACKUP_S3_ACCESS_KEY'],aws_secret_access_key=os.environ['BACKUP_S3_SECRET_KEY'])
+ items=c.list_objects_v2(Bucket='test-backups',Prefix='labelx/receipts/')['Contents']; assert len(items)==1
+ r=json.loads(c.get_object(Bucket='test-backups',Key=items[0]['Key'])['Body'].read())
+ def read(key): return c.get_object(Bucket='test-backups',Key=key)['Body'].read()
+assert r['location']==os.environ['BACKUP_MODE'] and r['disaster_recovery']=='unverified'
 assert r['database_restore']=='passed_disposable_database'
 assert len(r['objects'])==3
 for item in r['objects']:
- data=c.get_object(Bucket='test-backups',Key=item['backup_key'])['Body'].read()
+ data=read(item['backup_key'])
  assert hashlib.sha256(data).hexdigest()==item['sha256']
 assert r['mvp_acceptance']=='unverified'
 print('PASS completed backup receipt and all three object checksums')
-""", env=env, detach=False)
+""", env=env, mounts=[prefix + "-backups:/backups:ro"], detach=False)
             print("PASS isolated backup/migration/restore regression; VPS/off-site deployment remains UNVERIFIED")
     except BaseException:
         for name in names:
