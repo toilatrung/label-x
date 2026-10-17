@@ -70,7 +70,7 @@ ul.dir{columns:2;font-size:14px}
 <li>CPU worker chạy Schema, Geometry, Duplicate, Matching, Ranking; GPU worker chạy Detector baseline (SRS 10, sơ đồ thành phần).</li>
 <li>T và A đề xuất tách hàng đợi CPU và GPU (A mục 20.1: "worker GPU tách hàng đợi riêng"). Tên queue và routing Celery <strong>chưa cấu hình</strong> trong repo.</li>
 <li>Cấu hình phần cứng app server và GPU server: <strong>TBD-02</strong> (Tech Lead, trước build).</li>
-<li>Cách phục vụ frontend Next.js ở production (<code>next start</code> hay host khác) và reverse proxy/TLS: <strong>chưa có căn cứ</strong>, chờ TBD-02.</li>
+<li>Image frontend production dùng Next.js standalone, runtime proxy tới Django; hướng dẫn TLS/Ingress cho domain và K3s: <a href="production-images.html">production-images.html</a>. Chưa triển khai target thật.</li>
 </ul>
 <h2 id="3-dev-local">3. Dev local</h2>
 <p>Chi tiết lệnh: <a href="../07-development/tooling.html">../07-development/tooling.html</a>.</p>
@@ -83,7 +83,7 @@ make dev-frontend # Next.js dev :3000</code></pre>
 <ul>
 <li>Compose chỉ chứa hạ tầng (PostgreSQL, Redis, SeaweedFS + job tạo bucket). Django, Celery và Next.js chạy trực tiếp trên máy dev.</li>
 <li>CVAT không chạy trong compose; trỏ <code>CVAT_BASE_URL</code> tới instance thật khi có (TBD-01). <code>NEXT_PUBLIC_CVAT_BASE_URL</code> mặc định <code>http://localhost:8080</code> chỉ dùng để dựng deep link.</li>
-<li>Repo <strong>chưa có</strong> Dockerfile cho backend/frontend.</li>
+<li>Dockerfile production frontend/backend, static Django, runtime proxy và hướng dẫn K3s/Argo CD: <a href="production-images.html">production-images.html</a>. Compose ở đây vẫn chỉ dùng cho dev.</li>
 </ul>
 <h2 id="4-production-tbd">4. Production — TBD</h2>
 <table>
