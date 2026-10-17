@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: labelx
+  namespace: argocd
+  annotations:
+    labelx.io/deployment-policy: CR-120
+    labelx.io/mvp-acceptance: unverified
+spec:
+  project: labelx
+  source:
+    repoURL: https://github.com/toilatrung/label-x.git
+    targetRevision: main
+    path: infrastructure/k8s/labelx
+    kustomize:
+      commonAnnotations:
+        labelx.io/gitops-revision: ${ARGOCD_APP_REVISION}
+      commonAnnotationsEnvsubst: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: labelx
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - PruneLast=true
+    - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 15s
+        factor: 2
+        maxDuration: 3m

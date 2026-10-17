@@ -204,6 +204,13 @@ jobs:
           docker buildx build --load --platform linux/amd64 --provenance=false --tag labelx-frontend:ci src/frontend
       - name: Smoke the production images with isolated PostgreSQL and Redis
         run: python3 scripts/containers/smoke.py --backend labelx-backend:ci --frontend labelx-frontend:ci
+      - name: Validate pinned Kubernetes deployment and CI preflight
+        run: |
+          kubectl kustomize infrastructure/k8s/labelx > /tmp/labelx-rendered.yaml
+          docker run --rm --volume "$PWD:/repo:ro" --volume /tmp/labelx-rendered.yaml:/tmp/rendered.yaml:ro --workdir /repo labelx-backend:ci python scripts/deploy/validate_manifests.py /tmp/rendered.yaml
+          python3 -m unittest discover -s scripts/deploy/tests -v
+      - name: Verify encrypted backup, S3 round-trip and disposable database restore
+        run: python3 scripts/containers/backup_smoke.py --backend labelx-backend:ci
 
   detector:
     # Tương đương `make detector-lint detector-test`; worker chạy độc lập, không cần GPU/MMDetection.

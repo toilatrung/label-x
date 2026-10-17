@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: labelx
+  namespace: argocd
+spec:
+  description: 'CR-120: one LabelX application; deployment is not MVP acceptance'
+  sourceRepos:
+  - https://github.com/toilatrung/label-x.git
+  destinations:
+  - namespace: labelx
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  namespaceResourceBlacklist:
+  - group: ''
+    kind: Secret
