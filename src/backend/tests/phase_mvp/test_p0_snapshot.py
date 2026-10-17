@@ -281,7 +281,8 @@ def test_snp04_real_objects_mapping_lineage_and_database_immutability(snapshot_a
     locked_context = parent.provenance["guideline_context"]
     assert {key: locked_context[key] for key in expected_context} == expected_context
     assert locked_context["taxonomy"] == {
-        "version": expected_version, "labels": expected_context["labels"],
+        "version": expected_version,
+        "labels": expected_context["labels"],
     }
     assert list(parent.jobs.values_list("cvat_job_id", flat=True)) == [17, 31]
     for job in parent.jobs.all():
