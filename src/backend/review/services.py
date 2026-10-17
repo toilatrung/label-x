@@ -193,6 +193,10 @@ def _ranking_entry(run_id: int, frame_id: int, source: str) -> RunRankingEntry:
     ranking_source = RunRanking.Source.RISK if source == "risk" else RunRanking.Source.RANDOM_AUDIT
     entry = (
         RunRankingEntry.objects.select_related("snapshot_frame__snapshot_job")
+        .defer(
+            "snapshot_frame__snapshot_job__normalized_json",
+            "snapshot_frame__snapshot_job__skipped_shape_counts",
+        )
         .filter(ranking__run_id=run_id, ranking__source=ranking_source, snapshot_frame_id=frame_id)
         .first()
     )
@@ -306,6 +310,10 @@ def claim_next(
     entries = list(
         RunRankingEntry.objects.filter(ranking=ranking)
         .select_related("snapshot_frame__snapshot_job")
+        .defer(
+            "snapshot_frame__snapshot_job__normalized_json",
+            "snapshot_frame__snapshot_job__skipped_shape_counts",
+        )
         .order_by("rank", "pk")
     )
     if frame_id is not None and not any(entry.snapshot_frame_id == frame_id for entry in entries):

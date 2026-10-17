@@ -19,6 +19,7 @@ from snapshots.models import SnapshotFrame
 
 SCORABLE_FAMILIES = frozenset({"E1", "E2", "E3"})
 DEFAULT_AUDIT_PERCENT = Decimal("10")
+ENTRY_BATCH_SIZE = 100
 
 
 class RankingPersistenceError(RuntimeError):
@@ -59,6 +60,8 @@ def persist_run_rankings(
         snapshot_frames = tuple(
             SnapshotFrame.objects.filter(snapshot_job__snapshot_id=run.snapshot_id)
             .select_related("snapshot_job")
+            # Job payloads hold every frame of the job; the join would copy one per frame row.
+            .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
             .order_by("snapshot_job__cvat_task_id", "frame_index", "id")
         )
         engine_statuses = tuple(
@@ -176,7 +179,7 @@ def _create_ranking(
         ranking_hash=ranking_hash,
     )
     if risk_frames is not None:
-        entries = [
+        entries = (
             _entry(
                 ranking,
                 frame_records[frame.frame_key],
@@ -188,9 +191,9 @@ def _create_ranking(
                 source_value=frame.score,
             )
             for frame in risk_frames
-        ]
+        )
     elif ordering is not None:
-        entries = [
+        entries = (
             _entry(
                 ranking,
                 frame_records[item.frame_key],
@@ -202,10 +205,19 @@ def _create_ranking(
                 source_value=item.value,
             )
             for item in ordering.entries
-        ]
+        )
     else:  # pragma: no cover - internal programming guard
         raise AssertionError("risk_frames or ordering is required")
-    RunRankingEntry.objects.bulk_create(entries)
+    # Entries carry large explanation JSON: build and insert them in bounded batches so the
+    # worker never holds every serialized row (and one giant INSERT) in memory at once.
+    batch: list[RunRankingEntry] = []
+    for entry in entries:
+        batch.append(entry)
+        if len(batch) >= ENTRY_BATCH_SIZE:
+            RunRankingEntry.objects.bulk_create(batch)
+            batch = []
+    if batch:
+        RunRankingEntry.objects.bulk_create(batch)
     return ranking
 
 

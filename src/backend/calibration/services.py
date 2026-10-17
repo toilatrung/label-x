@@ -112,6 +112,7 @@ def sample_audit(
     frames = list(
         SnapshotFrame.objects.filter(snapshot_job__snapshot=run.snapshot)
         .select_related("snapshot_job")
+        .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
         .order_by("snapshot_job__cvat_task_id", "frame_index", "id")
     )
     total_frames = len(frames)

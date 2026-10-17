@@ -117,6 +117,7 @@ def _retry_shards(run: QCRun, engine: str) -> int:
                 frame_index=row.frame_number,
             )
             .select_related("snapshot_job")
+            .defer("snapshot_job__normalized_json", "snapshot_job__skipped_shape_counts")
             .first()
         )
         if frame is None:
