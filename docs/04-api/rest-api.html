@@ -468,6 +468,7 @@ ul.dir{columns:2;font-size:14px}
 </tr>
 </tbody>
 </table>
+<p id="datasets-cvat-dependency"><strong>Phụ thuộc CVAT của <code>GET /api/datasets</code>:</strong> endpoint đọc trực tiếp danh sách project từ CVAT (adapter chỉ đọc), không có bản sao trong database LabelX. Khi CVAT chưa cấu hình, chưa kết nối, timeout hoặc token bị từ chối, API trả <code>502</code> mã <code>BUSINESS_RULE_UNMET</code> với thông điệp "Không đọc được project CVAT." — đây là trạng thái dependency chưa sẵn sàng, không phải lỗi dữ liệu và không trả dataset giả. Người dùng chưa có <code>RoleAssignment</code> nhận <code>403</code>. Đăng nhập và các màn không cần CVAT vẫn hoạt động.</p>
 <p><strong>Không</strong> triển khai: <code>/releases*</code>, <code>/assistant/query</code>, <code>/sample-manifests</code>, <code>/calibration-sessions</code>, <code>/review-context</code>, SSE events (A §25). Lý do: ngoài phạm vi M13, hoặc đã bị B-13/FR-GTE-04 loại. Xem <a href="../02-architecture/decisions.html">decisions.html</a>.</p>
 <h2 id="5-requestresponse-chinh">5. Request/response chính</h2>
 <h3 id="51-post-apisnapshots">5.1 <code>POST /api/snapshots</code></h3>
