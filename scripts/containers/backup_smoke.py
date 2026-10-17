@@ -52,11 +52,18 @@ def main():
             wait_until(lambda: docker("run", "--rm", "--network", prefix, args.backend, "python", "-c",
                 "import urllib.request; urllib.request.urlopen('http://s3:9333/cluster/status',timeout=2)",
                 check=False).returncode == 0, "isolated S3")
-            for bucket in ("test-snapshots", "test-evidence", "test-reports", "test-backups"):
+            def weed_shell(command):
                 result = subprocess.run(["docker", "exec", "-i", prefix + "-s3", "weed", "shell", "-master=localhost:9333"],
-                    input=f"s3.bucket.create -name {bucket}\n", capture_output=True, text=True)
-                if result.returncode:
-                    raise RuntimeError("Could not create isolated S3 bucket")
+                    input=command + "\n", capture_output=True, text=True)
+                return result.stdout if result.returncode == 0 else ""
+
+            for bucket in ("test-snapshots", "test-evidence", "test-reports", "test-backups"):
+                # /cluster/status answers before the raft leader and filer are ready; weed shell can exit 0 on
+                # such errors, so retry creation until the bucket is actually listed.
+                def created(bucket=bucket):
+                    weed_shell(f"s3.bucket.create -name {bucket}")
+                    return bucket in weed_shell("s3.bucket.list").split()
+                wait_until(created, "isolated S3 bucket " + bucket, timeout=90)
             env = ["PYTHONPATH=/app", "DJANGO_SECRET_KEY=" + uuid.uuid4().hex * 2, "DJANGO_ALLOWED_HOSTS=localhost,postgres",
                 "DJANGO_DEBUG=False", f"DATABASE_URL=postgres://labelx_owner:{password}@postgres:5432/labelx",
                 "RUNTIME_DB_PASSWORD=" + uuid.uuid4().hex,
