@@ -15,6 +15,7 @@ from engines.interface import (
     FrameKey,
     NotCheckedEngineUnitResult,
     ObjectRef,
+    RuleStatus,
 )
 from engines.structural import (
     StructuralAnnotation,
@@ -29,6 +30,11 @@ GEOMETRY_APPLICABILITY_VERSION = "1.0.0"
 GEOMETRY_ANCHOR_POLICY_VERSION = "1.0.0"
 GEOMETRY_RULE_ID = "G-014"
 GEOMETRY_NOT_CHECKED_RULE_IDS = ("G-009",)
+# G-009 (boundary tightness) needs a reference box; none exists, so it is declared, not measured.
+GEOMETRY_RULE_STATUS = tuple(
+    RuleStatus(rule_id=rule_id, status="not_checked", reason="no_reference")
+    for rule_id in GEOMETRY_NOT_CHECKED_RULE_IDS
+)
 GEOMETRY_SRS_REQUIREMENT = "FR-ENG-03"
 DEFAULT_BOUNDS_TOLERANCE_PX = 2.0
 DEFAULT_MIN_AREA_PX2 = 24.0
@@ -183,6 +189,7 @@ def run_geometry_engine(
         engine_version=GEOMETRY_ENGINE_VERSION,
         candidates=tuple(candidates),
         unit_results=tuple(unit_results),
+        rule_status=GEOMETRY_RULE_STATUS,
     )
 
 

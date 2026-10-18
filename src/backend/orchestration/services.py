@@ -158,9 +158,23 @@ def _validate(engine_input: EngineInput, output: EngineOutput) -> None:
                 raise ShardOutputError("đơn vị not_checked phải có lý do hợp lệ")
         elif reason is not None:
             raise ShardOutputError("chỉ đơn vị not_checked mới được có lý do")
+    shard_frames = {u.frame for u in engine_input.units}
     for candidate in output.candidates:
         if (candidate.engine, candidate.engine_version) != (output.engine, output.engine_version):
             raise ShardOutputError("candidate không thuộc engine của shard")
+        if candidate.frame not in shard_frames:
+            raise ShardOutputError("candidate tham chiếu frame ngoài các đơn vị của shard")
+
+
+def _validate_snapshot_provenance(engine_input: EngineInput) -> None:
+    """Shard phải chạy trên đúng snapshot đã khoá của run; run không tồn tại thì bỏ qua."""
+    from runs.models import QCRun
+
+    snapshot_id = (
+        QCRun.objects.filter(pk=engine_input.run_id).values_list("snapshot_id", flat=True).first()
+    )
+    if snapshot_id is not None and snapshot_id != engine_input.snapshot_id:
+        raise ShardOutputError("snapshot của shard không khớp snapshot đã khoá của run")
 
 
 def _candidate_record(run_id: int, shard: ShardCommit, candidate: Candidate) -> CandidateRecord:
@@ -217,6 +231,7 @@ def commit_shard_output(
     from runs.models import WorkUnit
 
     _validate(engine_input, output)
+    _validate_snapshot_provenance(engine_input)
     run_id = engine_input.run_id
     if ShardCommit.objects.filter(
         run_id=run_id, idempotency_key=engine_input.idempotency_key
