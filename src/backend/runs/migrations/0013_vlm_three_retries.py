@@ -1,9 +1,11 @@
 """Use three retries for new runs while retaining pinned connection revisions."""
 
+from django.apps.registry import Apps
 from django.db import migrations
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
 
-def upgrade_current_connection(apps, schema_editor):
+def upgrade_current_connection(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     alias = schema_editor.connection.alias
     selection_model = apps.get_model("runs", "VlmConfiguration")
     connection_model = apps.get_model("runs", "VlmConnection")
