@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from cvat_adapter.client import build_job_url
@@ -42,6 +43,15 @@ class SnapshotCreateSerializer(serializers.Serializer[dict[str, Any]]):
     note = serializers.CharField(required=False, allow_blank=True, max_length=1000, default="")
 
 
+# Committed contract (docs/04-api/openapi.yaml) is the source of truth for these response shapes.
+URI_STRING_SCHEMA = {"type": "string", "format": "uri"}
+FAILURE_REASON_SCHEMA = {
+    "type": "string",
+    "nullable": True,
+    "enum": ["drift_detected", "export_error", None],
+}
+
+
 class SnapshotFrameSerializer(serializers.ModelSerializer[SnapshotFrame]):
     cvat_url = serializers.SerializerMethodField()
 
@@ -49,6 +59,7 @@ class SnapshotFrameSerializer(serializers.ModelSerializer[SnapshotFrame]):
         model = SnapshotFrame
         fields = ["id", "frame_index", "file_name", "width", "height", "cvat_url"]
 
+    @extend_schema_field(URI_STRING_SCHEMA)
     def get_cvat_url(self, frame: SnapshotFrame) -> str:
         job = frame.snapshot_job
         return build_job_url(
@@ -76,17 +87,20 @@ class SnapshotJobSerializer(serializers.ModelSerializer[SnapshotJob]):
             "frames",
         ]
 
+    @extend_schema_field(URI_STRING_SCHEMA)
     def get_cvat_url(self, job: SnapshotJob) -> str:
         return build_job_url(settings.CVAT_BASE_URL, job.cvat_task_id, job.cvat_job_id)
 
 
 class SnapshotSerializer(serializers.ModelSerializer[Snapshot]):
+    status = serializers.ChoiceField(choices=Snapshot.Status.choices, read_only=True)
     revision_hash = serializers.SerializerMethodField()
     parent_snapshot_id = serializers.IntegerField(allow_null=True)
     jobs = SnapshotJobSerializer(many=True, read_only=True)
     created_by = serializers.IntegerField(source="created_by_id")
     failure_reason = serializers.SerializerMethodField()
     out_of_scope_shapes = serializers.SerializerMethodField()
+    drift_jobs = serializers.ListField(child=serializers.IntegerField(), read_only=True)
 
     class Meta:
         model = Snapshot
@@ -110,6 +124,7 @@ class SnapshotSerializer(serializers.ModelSerializer[Snapshot]):
     def get_revision_hash(self, snapshot: Snapshot) -> str | None:
         return snapshot.revision_sha256 or None
 
+    @extend_schema_field(FAILURE_REASON_SCHEMA)
     def get_failure_reason(self, snapshot: Snapshot) -> str | None:
         return snapshot.failure_reason or None
 
@@ -118,6 +133,9 @@ class SnapshotSerializer(serializers.ModelSerializer[Snapshot]):
 
 
 class SnapshotAcceptedSerializer(serializers.ModelSerializer[Snapshot]):
+    status = serializers.ChoiceField(choices=Snapshot.Status.choices, read_only=True)
+    drift_jobs = serializers.ListField(child=serializers.IntegerField(), read_only=True)
+
     class Meta:
         model = Snapshot
         fields = ["id", "status", "drift_jobs"]
