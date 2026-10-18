@@ -3774,13 +3774,15 @@ components:
       description: |
         Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
         cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
+        cvat_track: id track CVAT; hình học lấy từ frame tương ứng trong Snapshot.
+        API review chuẩn hóa ID có tiền tố shape:/track: thành namespace và ID nguồn riêng.
         detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
         reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
       required: [namespace, id]
       properties:
         namespace:
           type: string
-          enum: [cvat_shape, detector, reviewer_region]
+          enum: [cvat_shape, cvat_track, detector, reviewer_region]
         id: { type: string }
     Anchor:
       type: object
@@ -3817,6 +3819,16 @@ components:
       type: object
       required: [engine]
       properties:
+        annotation_ids:
+          type: array
+          items: { type: string }
+        cluster_annotation_ids:
+          type: array
+          items: { type: string }
+        labels:
+          type: array
+          items: { type: string }
+        same_label: { type: boolean }
         engine: { $ref: "#/components/schemas/EngineName" }
         rule_id: { type: string, nullable: true }
         expected: { type: string, nullable: true }

@@ -36,6 +36,37 @@ def review_evidence(raw: Any) -> list[dict[str, Any]]:
     return result
 
 
+def review_anchor(raw: Any) -> dict[str, Any]:
+    """Canonical read representation; preserve immutable candidate/issue JSON and dedup keys.
+
+    Duplicate engine v1 stores typed IDs (shape:17 / track:17) under cvat_shape.
+    Other engines and manual issues store a bare source ID. Both identify snapshot sources.
+    """
+    if not isinstance(raw, dict):
+        return {"kind": "annotation", "objects": [], "policy_version": "unknown"}
+    anchor = dict(raw)
+    objects = []
+    refs = raw.get("objects")
+    for ref in refs if isinstance(refs, list | tuple) else []:
+        if not isinstance(ref, dict):
+            continue
+        item = dict(ref)
+        namespace = item.get("namespace")
+        if not isinstance(namespace, str):
+            continue
+        identifier = str(item.get("id", ""))
+        kind, separator, source_id = identifier.partition(":")
+        if namespace in {"cvat_shape", "cvat_track", "shape", "track"}:
+            item["id"] = identifier
+            if separator and kind in {"shape", "track"} and source_id:
+                item.update(namespace=f"cvat_{kind}", id=source_id)
+            elif namespace in {"shape", "track"}:
+                item.update(namespace=f"cvat_{namespace}", id=identifier)
+        objects.append(item)
+    anchor["objects"] = objects
+    return anchor
+
+
 def decision_record(decision: ReviewDecision) -> dict[str, object]:
     return {
         "id": decision.pk,
@@ -83,7 +114,7 @@ def issue_response(issue: Issue) -> dict[str, object]:
         "family": issue.family,
         "origin": issue.origin,
         "state": issue.state,
-        "anchor": issue.anchor,
+        "anchor": review_anchor(issue.anchor),
         "n_i": issue.n_i,
         "q_i": issue.q_i,
         "severity": issue.severity,
@@ -212,7 +243,7 @@ def frame_predictions(frame: FrameReview) -> list[dict[str, object]]:
             "engine": candidate.engine,
             "engine_version": candidate.engine_version,
             "family": candidate.family,
-            "anchor": candidate.anchor,
+            "anchor": review_anchor(candidate.anchor),
             "evidence": candidate.evidence,
         }
         for candidate in candidates

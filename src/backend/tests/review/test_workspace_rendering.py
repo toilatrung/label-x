@@ -11,7 +11,8 @@ from accounts.permissions import (
     get_user_scoped_datasets,
     is_super_admin,
 )
-from review.serialization import frame_annotations, review_evidence
+from review.api_serializers import EvidenceSerializer
+from review.serialization import frame_annotations, review_anchor, review_evidence
 from review.services import _ineligibility_code_for_job, _reviewer_identity
 
 
@@ -49,6 +50,42 @@ def test_detector_evidence_matches_review_contract_without_changing_source():
     evidence = {"engine": "detector", "prediction_bbox": [1, 2, 30, 40]}
     assert review_evidence(evidence)[0]["prediction_bbox"] == {"x1": 1, "y1": 2, "x2": 30, "y2": 40}
     assert evidence["prediction_bbox"] == [1, 2, 30, 40]
+
+
+def test_duplicate_typed_ids_have_canonical_snapshot_refs_without_mutation():
+    raw = {
+        "kind": "annotation_cluster",
+        "objects": [
+            {"namespace": "cvat_shape", "id": "shape:9090"},
+            {"namespace": "cvat_shape", "id": "shape:9142"},
+            {"namespace": "cvat_shape", "id": "track:9090"},
+        ],
+        "policy_version": "1.0.0",
+    }
+    anchor = review_anchor(raw)
+    assert anchor["objects"] == [
+        {"namespace": "cvat_shape", "id": "9090"},
+        {"namespace": "cvat_shape", "id": "9142"},
+        {"namespace": "cvat_track", "id": "9090"},
+    ]
+    assert raw["objects"][0]["id"] == "shape:9090"
+    assert review_anchor(anchor) == anchor
+    assert review_anchor(None)["objects"] == []
+    assert review_anchor({"objects": 123})["objects"] == []
+    assert review_anchor({"objects": [{"namespace": {}}]})["objects"] == []
+
+
+def test_duplicate_evidence_serializer_retains_pair_and_cluster_without_detector():
+    evidence = {
+        "engine": "duplicate",
+        "iou": 0.883964,
+        "annotation_ids": ["shape:9090", "shape:9142"],
+        "cluster_annotation_ids": ["shape:9090", "shape:9142"],
+        "labels": ["45", "45"],
+        "same_label": True,
+    }
+    (serialized,) = EvidenceSerializer(review_evidence(evidence), many=True).data
+    assert {key: serialized[key] for key in evidence} == evidence
 
 
 def test_global_super_admin_is_recognized_from_business_role(monkeypatch):

@@ -2628,7 +2628,7 @@ export interface components {
          */
         ObjectRef: {
             /** @enum {string} */
-            namespace: "cvat_shape" | "detector" | "reviewer_region";
+            namespace: "cvat_shape" | "cvat_track" | "detector" | "reviewer_region";
             id: string;
         };
         /** @description Neo issue theo DEC-006 và SRS tab:anchors; kind quyết định trường nào bắt buộc */
@@ -2653,6 +2653,10 @@ export interface components {
             run_id?: number;
         };
         Evidence: {
+            annotation_ids?: string[];
+            cluster_annotation_ids?: string[];
+            labels?: string[];
+            same_label?: boolean;
             engine: components["schemas"]["EngineName"];
             rule_id?: string | null;
             expected?: string | null;

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useId } from 'react';
 import type { components } from '@/lib/api/contract';
 import { reviewBBox, type WorkspacePrediction } from '@/lib/review/workspace-api';
+import { annotationMatchesObject, resolveIssueFocus } from '@/lib/review/issue-focus';
 
 type FrameSummary = components['schemas']['FrameSummary'];
 type Issue = components['schemas']['Issue'];
@@ -276,7 +277,10 @@ export function ReviewCanvas({
     return () => viewport.removeEventListener('wheel', handleWheel);
   }, [zoom, onZoomChange]);
 
-  const activeIssue = issues.find((i) => i.id === selectedIssueId) ?? issues[0] ?? null;
+  const activeIssue = issues.find((i) => i.id === selectedIssueId) ?? null;
+  const focus = resolveIssueFocus(activeIssue, snapshotAnnotations, frame);
+  const focusId = useId().replace(/:/g, '');
+  const focused = reviewMode === 'issue' && hasTrustworthyDimensions && focus.regions.length > 0;
 
   return (
     <div
@@ -309,13 +313,19 @@ export function ReviewCanvas({
         onMouseDown={handleMouseDown}
       >
         <defs>
-          <clipPath id="frameBounds">
+          <filter id={`${focusId}-blur`}><feGaussianBlur stdDeviation="4" /></filter>
+          <clipPath id={`${focusId}-focus`}>
+            {focus.regions.map(({ bbox, rotation, id }) => <rect key={id}
+              x={bbox.x1} y={bbox.y1} width={bbox.x2 - bbox.x1} height={bbox.y2 - bbox.y1}
+              transform={`rotate(${rotation} ${(bbox.x1 + bbox.x2) / 2} ${(bbox.y1 + bbox.y2) / 2})`} />)}
+          </clipPath>
+          <clipPath id={`${focusId}-frameBounds`}>
             <rect x="0" y="0" width={imgWidth} height={imgHeight} />
           </clipPath>
         </defs>
 
         <g
-          clipPath="url(#frameBounds)"
+          clipPath={`url(#${focusId}-frameBounds)`}
           transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}
           style={{ transformOrigin: '0 0' }}
         >
@@ -329,6 +339,8 @@ export function ReviewCanvas({
               width={imgWidth}
               height={imgHeight}
               preserveAspectRatio="xMidYMid meet"
+              filter={focused ? `url(#${focusId}-blur)` : undefined}
+              opacity={focused ? 0.4 : 1}
               onError={() => setMediaError(true)}
             />
           ) : mediaError ? (
@@ -372,6 +384,10 @@ export function ReviewCanvas({
             </g>
           )}
 
+          {focused && frame.image_url && !mediaError && <image data-testid="issue-focus-image"
+            href={frame.image_url} width={imgWidth} height={imgHeight}
+            clipPath={`url(#${focusId}-focus)`} pointerEvents="none" />}
+
           {/* Full Snapshot Annotations (if approved source provided) */}
           {showAnnotations && snapshotAnnotations && (
             <g id="snapshot-annotations-layer">
@@ -382,17 +398,14 @@ export function ReviewCanvas({
                 const width = bbox.x2 - bbox.x1;
                 const height = bbox.y2 - bbox.y1;
                 const label = ann.label || `Nhãn #${ann.label_id ?? '?'}`;
-                const selected = activeIssue?.anchor.objects.some(object =>
-                  [ann.source?.kind, ann.source?.kind === 'track' ? 'cvat_track' : 'cvat_shape'].includes(String(object.namespace))
-                  && object.id === String(ann.source?.id));
+                const selected = reviewMode === 'issue' && focus.annotations.includes(ann);
                 const emphasize = reviewMode === 'frame' || selected;
                 return <g key={`snap-ann-${ann.id}`} data-annotation-id={ann.id}
                   opacity={emphasize ? 1 : 0.16}
                   onMouseDown={e => e.stopPropagation()}
                   onClick={e => {
                     e.stopPropagation();
-                    const linked = issues.find(i => i.anchor.objects.some(o =>
-                      ['cvat_shape', ann.source?.kind].includes(String(o.namespace)) && o.id === String(ann.source?.id)));
+                    const linked = issues.find(i => i.anchor?.objects?.some(o => annotationMatchesObject(ann, o)));
                     if (linked) onSelectIssue(linked.id);
                     if (reviewMode === 'frame' && ann.source?.kind === 'shape') {
                       onSelectObjectForManualIssue?.({ namespace: 'cvat_shape', id: String(ann.source.id) }, bbox);

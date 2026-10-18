@@ -10,6 +10,7 @@ import { hasDatasetPermission } from '@/lib/auth/roles';
 import { useLeaseManager } from './useLeaseManager';
 import { useEffortCollector } from './useEffortCollector';
 import { ReviewCanvas } from './ReviewCanvas';
+import { resolveIssueFocus } from '@/lib/review/issue-focus';
 import { ReviewEvidenceTable } from './ReviewEvidenceTable';
 import { ReviewIssueAssessment, annotationForIssue, guidelineRuleForIssue, isUnmatchedAnnotation } from './ReviewIssueAssessment';
 import { ReviewGuidelineLookup } from './ReviewGuidelineLookup';
@@ -76,7 +77,7 @@ export function resolveAnchorPolicy(
       };
     }
     if (issues.length > 0) {
-      const conflicting = issues.some((i) => i.anchor.policy_version !== trimmed);
+      const conflicting = issues.some((i) => i.anchor?.policy_version !== trimmed);
       if (conflicting) {
         return {
           policy: null,
@@ -95,7 +96,7 @@ export function resolveAnchorPolicy(
     };
   }
 
-  const firstPolicy = issues[0].anchor.policy_version;
+  const firstPolicy = issues[0].anchor?.policy_version;
   if (!firstPolicy || firstPolicy !== SUPPORTED_POLICY) {
     return {
       policy: null,
@@ -103,7 +104,7 @@ export function resolveAnchorPolicy(
     };
   }
 
-  const allMatch = issues.every((i) => i.anchor.policy_version === firstPolicy);
+  const allMatch = issues.every((i) => i.anchor?.policy_version === firstPolicy);
   if (!allMatch) {
     return {
       policy: null,
@@ -407,9 +408,7 @@ export function ReviewWorkspace({
         }
 
         setData(frameData);
-        if (frameData.issues && frameData.issues.length > 0) {
-          setSelectedIssueId(previous => frameData.issues.some(i => i.id === previous) ? previous : frameData.issues[0].id);
-        }
+        setSelectedIssueId(previous => frameData.issues.some(i => i.id === previous) ? previous : frameData.issues[0]?.id ?? null);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -758,6 +757,7 @@ export function ReviewWorkspace({
   const currentIssueIndex = issues.findIndex((i) => i.id === selectedIssueId);
   const activeIssue = currentIssueIndex >= 0 ? issues[currentIssueIndex] : issues[0] ?? null;
   const activeAnnotation = activeIssue ? annotationForIssue(activeIssue, data.annotations) : undefined;
+  const focusReasons = activeIssue ? resolveIssueFocus(activeIssue, data.annotations, data.frame).reasons : [];
   const comparisonAnnotation = activeIssue?.family === 'E3' && !isUnmatchedAnnotation(activeIssue)
     ? annotationForIssue(activeIssue, data.annotations?.filter(annotation => annotation.id !== activeAnnotation?.id)) : undefined;
   const currentAnnotationClass = activeAnnotation?.label || activeIssue?.evidence?.[0]?.actual || undefined;
@@ -852,7 +852,7 @@ export function ReviewWorkspace({
                 <button
                   type="button"
                   aria-pressed={reviewMode === 'frame'}
-                  onClick={() => setReviewMode('frame')}
+                  onClick={() => { setReviewMode('frame'); setZoom(1); setPan({ x: 0, y: 0 }); }}
                 >
                   Frame Review
                 </button>
@@ -954,6 +954,7 @@ export function ReviewWorkspace({
             {/* Interactive Canvas View */}
             <div className="lx-stage__view lx-stage__view--flush">
               <ReviewCanvas
+                key={data.frame.id}
                 frame={data.frame}
                 issues={issues}
                 snapshotAnnotations={data.annotations}
@@ -1125,6 +1126,7 @@ export function ReviewWorkspace({
                         : 'Cảnh báo cấu trúc annotation'}
                 </h2>
 
+                {focusReasons.length > 0 && <div className="lx-callout lx-callout--warning" role="status">{focusReasons.join(' ')}</div>}
                 <ReviewIssueAssessment key={activeIssue.id} issue={activeIssue} frame={data.frame}
                   annotation={activeAnnotation} comparisonAnnotation={comparisonAnnotation} currentAnnotationClass={currentAnnotationClass} />
                 <details>
@@ -1132,7 +1134,7 @@ export function ReviewWorkspace({
                 <dl className="lx-kv">
                   <dt>Frame · Object</dt>
                   <dd>
-                    {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor.objects?.[0]?.id ?? 'N/A'}
+                    {String(data.frame.frame_key.frame_number).padStart(5, '0')} · {activeIssue.anchor?.objects?.[0]?.id ?? 'N/A'}
                   </dd>
                   <dt>Annotation hiện tại</dt>
                   <dd>{currentAnnotationClass || 'Không có dữ liệu nhãn'}</dd>
@@ -1144,9 +1146,9 @@ export function ReviewWorkspace({
                     ) : ''}
                   </dd>
                   <dt>Loại neo</dt>
-                  <dd>{activeIssue.anchor.kind}</dd>
+                  <dd>{activeIssue.anchor?.kind ?? 'Thiếu anchor'}</dd>
                   <dt>Mã quy tắc</dt>
-                  <dd>{activeIssue.rule_ids?.join(', ') || activeIssue.anchor.rule_id || 'Chưa liên kết'}</dd>
+                  <dd>{activeIssue.rule_ids?.join(', ') || activeIssue.anchor?.rule_id || 'Chưa liên kết'}</dd>
                 </dl>
                 </details>
               </div>
