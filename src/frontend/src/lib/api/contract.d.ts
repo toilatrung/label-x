@@ -2623,6 +2623,8 @@ export interface components {
         /**
          * @description Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
          *     cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
+         *     cvat_track: id track CVAT; hình học lấy từ frame tương ứng trong Snapshot.
+         *     API review chuẩn hóa ID có tiền tố shape:/track: thành namespace và ID nguồn riêng.
          *     detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
          *     reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
          */
