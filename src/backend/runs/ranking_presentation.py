@@ -19,6 +19,8 @@ def _has_json_type(family: str | None, kind: str) -> Q:
 
 
 def _positive_count(family: str) -> Q:
+    # PostgreSQL jsonb orders unlike types: objects/bools can compare above 0.
+    # Check the JSON type before interpreting a legacy value as a count.
     return _has_json_type(family, "number") & Q(**{f"issue_counts__{family}__gt": 0})
 
 

@@ -986,6 +986,7 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
           <div className="lx-card__body lx-stack">
             <p>Thứ tự review theo điểm xếp hạng, không phải mức rủi ro đã được xác định. Điểm nền = 0.01 × số box.</p>
             <p>Nghi vấn tính điểm do engine đề xuất; Issue review và lỗi đã xác nhận được ghi nhận qua quyết định review. Không có nghi vấn không có nghĩa ảnh sạch.</p>
+            <p className="lx-hint">Nhóm có nghi vấn tính điểm gồm cả ảnh thiếu bằng chứng. Nhóm chưa đánh giá đầy đủ chỉ gồm ảnh chưa ghi nhận nghi vấn tính điểm.</p>
             {runQuery.data.engines.filter(engine => ['schema', 'geometry', 'duplicate', 'detector'].includes(engine.engine) && engine.status !== 'checked').map(engine => (
               <p key={engine.engine} className="lx-muted">{engine.engine}: {engine.status.toUpperCase().replaceAll('_', ' ')}{engine.reason ? ` — ${engine.reason}` : ''}. Chưa đánh giá đầy đủ; nghi vấn từ engine khác vẫn có hiệu lực.</p>
             ))}

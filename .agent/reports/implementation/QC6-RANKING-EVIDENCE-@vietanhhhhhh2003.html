@@ -54,7 +54,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Title</strong>: <code>Ranking evidence presentation v1</code></li>
 <li><strong>Owner</strong>: <code>@Vietanhhhhhh2003</code></li>
 <li><strong>Executor</strong>: <code>Codex</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
 <li><strong>Task ID</strong>: <code>QC6-RANKING-EVIDENCE</code> — người dùng giao trực tiếp; liên quan #394, không đóng issue MVP</li>
 <li><strong>Epic ID</strong>: <code>Không gán epic mới</code></li>
 <li><strong>Report Date</strong>: <code>2026-10-18</code></li>
@@ -62,11 +62,11 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="scope">Scope</h2>
 <ul><li><strong>Implemented</strong>: <code>Nhóm review theo bằng chứng, API filter/counts, diễn giải score và regression.</code></li>
 <li><strong>Not Implemented</strong>: <code>Canvas/hiệu ứng Issue Review, thay công thức score_v0, migration ranking, deploy, merge.</code></li></ul>
-<p>Base: develop <code>f669fb8f</code>. Checkout riêng vì checkout ban đầu có thay đổi chưa commit và ref remote hỏng. Không đụng các thay đổi đó.</p>
+<p>Base lúc bắt đầu: develop <code>f669fb8f</code>; nhánh đã rebase lên develop <code>125be0c1</code> (các file trong scope không đổi giữa hai baseline). Checkout riêng vì checkout ban đầu có thay đổi chưa commit và ref remote hỏng. Không đụng các thay đổi đó.</p>
 <h2 id="changes-made">Changes Made</h2>
 <table><thead><tr><th>File or Artifact</th><th>Change Summary</th><th>Task ID</th></tr></thead><tbody>
 <tr><td>ranking/score_v0.py</td><td>Chỉ bổ sung docstring; giữ nguyên 0.01 × số box, rank, score_version và hash.</td><td>QC6-RANKING-EVIDENCE</td></tr>
-<tr><td>runs/ranking_presentation.py; serializers.py; views.py</td><td>Ba nhóm: suspected (có nghi vấn E1/E2/E3 tính điểm), unassessed (không có nghi vấn tính điểm và thiếu bằng chứng), no_suspicions (không ghi nhận nghi vấn tính điểm khi engine đầy đủ). Không phân hạng rủi ro bằng ngưỡng. SQL CASE xử lý cả JSON key vắng; facets trước priority/cursor, sau các bộ lọc còn lại.</td><td>QC6-RANKING-EVIDENCE</td></tr>
+<tr><td>runs/ranking_presentation.py; serializers.py; views.py</td><td>Ba nhóm: suspected (có nghi vấn E1/E2/E3 tính điểm), unassessed (không có nghi vấn tính điểm và thiếu bằng chứng), no_suspicions (không ghi nhận nghi vấn tính điểm khi engine đầy đủ). Không phân hạng rủi ro bằng ngưỡng. SQL CASE xử lý cả JSON key vắng; kiểm kiểu jsonb_typeof đồng bộ Python để JSON cũ sai kiểu không gây 500 hay đếm thành nghi vấn. Dữ liệu không đọc được làm cờ thiếu bằng chứng bật; E3 số dương hợp lệ vẫn giữ; facets trước priority/cursor, sau các bộ lọc còn lại.</td><td>QC6-RANKING-EVIDENCE</td></tr>
 <tr><td>ReviewQueues.tsx</td><td>Bỏ khẳng định rủi ro từ source/rank; giải thích điểm nền; đổi 0 issue; phân biệt nghi vấn, Issue review, lỗi xác nhận. Hiện detector NOT CHECKED — disabled và vẫn giữ E3.</td><td>QC6-RANKING-EVIDENCE</td></tr>
 <tr><td>openapi.yaml; contract.d.ts</td><td>Contract nhóm ưu tiên đổi có chủ đích sang enum suspected/unassessed/no_suspicions; frontend và backend phải phát hành cùng nhau. missing_evidence là trạng thái đọc bổ sung kết quả engine, không ghi đè cờ/explanation đã lưu. Presentation v1 độc lập score_v0.</td><td>QC6-RANKING-EVIDENCE</td></tr>
 <tr><td>tests/runs/test_ranking.py; tests/test_score_v0.py; ReviewQueues.test.tsx</td><td>Toàn tập không candidate, baseline 0.13/0.12, E3+detector disabled, bằng chứng đầy đủ, filter/facet/cursor và không ghi lại ranking.</td><td>QC6-RANKING-EVIDENCE</td></tr>
@@ -75,16 +75,16 @@ ul.dir{columns:2;font-size:14px}
 <h2 id="related-files">Related Files</h2>
 <ul><li><strong>Task Records</strong>: yêu cầu người dùng QC#6; <a href="https://github.com/toilatrung/label-x/issues/394">#394</a> chỉ liên quan, không dùng PR này làm bằng chứng hoàn tất MVP.</li>
 <li><strong>Review Request</strong>: @toilatrung hoặc @DucHa180104 theo CR-102; chưa có phê duyệt độc lập.</li>
-<li><strong>Commits</strong>: xem lịch sử nhánh fix/ranking-evidence-priority.</li></ul>
+<li><strong>Commits</strong>: <a href="../../intelligence/git-nexus/task-commit-map-@vietanhhhhhh2003.html">Git Nexus mapping</a>; f6e91cda, ee80b5bc, nhánh fix/ranking-evidence-priority.</li></ul>
 <h2 id="command-evidence">Command Evidence</h2>
 <table><thead><tr><th>Command</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
 <tr><td>pytest tests/test_contract.py</td><td>passed</td><td>24 passed</td></tr>
-<tr><td>pytest tests/runs/test_ranking.py tests/test_score_v0.py tests/week5/test_export_ranking.py</td><td>passed</td><td>31 passed; PostgreSQL 17 riêng trong WSL; lần đầu local Windows bị lỗi kết nối do WSL dừng, đã chạy lại cùng phiên.</td></tr>
+<tr><td>pytest tests/runs/test_ranking.py tests/test_score_v0.py tests/week5/test_export_ranking.py</td><td>passed</td><td>58 passed khi mở rộng thêm tests/review/test_queue_lease.py và 6 ca JSON cũ; PostgreSQL 17 riêng trong WSL; lần đầu local Windows bị lỗi kết nối do WSL dừng, đã chạy lại cùng phiên.</td></tr>
 <tr><td>vitest ReviewQueues.test.tsx</td><td>passed</td><td>46 passed</td></tr>
 <tr><td>ruff check / format --check; mypy</td><td>passed</td><td>408 files formatted; 211 source files typechecked.</td></tr>
 <tr><td>npm run lint; npm run typecheck</td><td>passed</td><td>ESLint, Next typegen và tsc.</td></tr>
 <tr><td>validate-framework.py</td><td>passed</td><td>FRAMEWORK_VALIDATION_PASS; chạy lại sau khi thêm report.</td></tr>
-<tr><td>Toàn bộ pytest / vitest và detector checks</td><td>pending</td><td>Đang thu kết quả; sẽ cập nhật trước commit.</td></tr>
+<tr><td>Toàn bộ pytest / vitest và detector checks</td><td>passed</td><td>CI <a href="https://github.com/toilatrung/label-x/actions/runs/39120524055">39120524055</a>, source ee80b5bc: backend 1730 passed, 5 skipped, 3 subtests passed; S3 integration 1 passed; frontend 611 passed (57 files), build/lint/typecheck passed; detector/framework/bootstrap passed. 5 skips của full suite không được coi là bằng chứng hoàn tất các integration case tương ứng; targeted regression 58 passed không skip. Full local lần đầu dừng sau 1100 passed, 2 failed, 3 skipped: lỗi legacy JSON đã sửa; lỗi Redis local khắc phục bằng Redis riêng. Dừng lượt full local thứ hai sau khi CI xác nhận full suite để không lặp kiểm tra; không ghi lượt bị dừng là pass.</td></tr>
 </tbody></table>
 <h2 id="verification-evidence">Verification Evidence</h2>
 <table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
@@ -101,7 +101,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Approved By</strong>: <code>Phạm vi do người dùng yêu cầu trực tiếp; phê duyệt PR còn chờ.</code></li>
 <li><strong>Known Limitations</strong>: <code>Enum priority thay đổi; không tương thích client cũ dùng high/medium/low. Không đánh đồng checked hay no_suspicions với ảnh sạch; engine optional không required không là bằng chứng bắt buộc. Quyết định review vẫn là nguồn xác nhận lỗi.</code></li></ul>
 <h2 id="completion-criteria">Completion Criteria</h2>
-<p>Implementation và regression được bàn giao qua PR riêng vào develop. Chưa tuyên bố DONE/MVP/production, chưa tự review hay phê duyệt.</p>
+<p>Implementation và regression hoàn tất, bàn giao qua <a href="https://github.com/toilatrung/label-x/pull/450">PR #450</a> vào develop. Source sau ee80b5bc chỉ bổ sung diễn giải nhóm review, comment và báo cáo/ảnh; ReviewQueues 46 passed, browser 1440/390, lint/typecheck chạy lại đạt. Phê duyệt độc lập vẫn chờ Trịnh Quang Trung hoặc Nguyễn Đức Hà. Chưa tuyên bố DONE/MVP/production, chưa tự review hay phê duyệt.</p>
 <h2 id="forbidden-actions">Forbidden Actions</h2>
 <ul>
 <li>Do not report unperformed work as implemented.</li>
