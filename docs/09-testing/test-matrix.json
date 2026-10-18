@@ -436,9 +436,9 @@
       "scenario": "Cụm duplicate nhiều box; điểm nền và nhiều candidate một issue",
       "expected": "Đếm tối đa m-1 lỗi cho cụm; không double count; giải thích n_i q_i + h(f).",
       "fixtures": "Issue anchors + duplicate cluster",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_ranking.py::test_rnk02_duplicate_cluster_counts_m_minus_one_once_and_explains_score"
     },
     {
       "id": "RNK-03",
