@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đề xuất PO: bàn giao tuần 5 và đánh giá KPI — LabelX</title>
+<meta name="labelx:id" content="po-evaluation-proposal">
+<meta name="labelx:title" content="Đề xuất PO: bàn giao tuần 5 và đánh giá KPI">
+<meta name="labelx:type" content="proposal">
+<meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="evaluation">
+<meta name="labelx:tags" content="[proposal, week5, kpi, readiness, po-decision]">
+<meta name="labelx:priority" content="1">
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+.note{margin:12px 0;padding:8px 14px;border-left:3px solid var(--info);background:var(--selected)}
+.bad{color:#9b1c1c;font-weight:600}.ok{color:#146c2e;font-weight:600}.na{color:var(--warn);font-weight:600}
+@media print{.top{display:none}article{border:0}}
+</style>
+</head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>docs / 09-testing / po-evaluation-proposal</span><span class="sp"></span></header>
+<main><article>
+<div class="meta"><b>id</b><span>po-evaluation-proposal</span><b>title</b><span>Đề xuất PO: bàn giao tuần 5 và đánh giá KPI</span><b>type</b><span>proposal</span><b>domain</b><span>testing</span><b>module</b><span>evaluation</span><b>tags</b><span>[proposal, week5, kpi, readiness, po-decision]</span><b>priority</b><span>1</span></div>
+<h1 id="de-xuat">Đề xuất PO: bàn giao tuần 5 và đánh giá KPI</h1>
+<blockquote><strong>ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT.</strong> Tài liệu này không phải decision, không có chữ ký, và không điền con số nào để vượt gate. Mọi trạng thái "chưa xác minh" nghĩa là hồ sơ trong repo chưa chứng minh, không phải đã thất bại. Nguồn: hồ sơ trong repo tại <code>develop</code> (DEC-003, DEC-015, DEC-016, DEC-018, DEC-024 đề xuất, BLOCKER-005/022/024) và đề xuất policy ở <a href="evaluation-policy-proposal.html">evaluation-policy-proposal.html</a>.</blockquote>
+
+<h2 id="phan-biet">1. Bốn loại bằng chứng, không nhầm lẫn</h2>
+<table><thead><tr><th>Loại</th><th>Trả lời câu hỏi</th><th>Bằng chứng hiện có</th><th>Chưa có</th></tr></thead><tbody>
+<tr><td>Kiểm thử code</td><td>Code trên <code>develop</code> có đúng hành vi đã bind không?</td><td><code>make check</code> xanh trên develop <code>c53f877</code> (pytest 1714 passed, 4 skipped; vitest 601 passed); matrix 32/62 ca implemented.</td><td>30 ca còn <code>planned</code>; Phase Testing 0 run.</td></tr>
+<tr><td>Kiểm tra UI</td><td>Luồng dataset → snapshot → run → ranking → link CVAT chạy đúng trên server thật?</td><td>Trang chủ và <code>/api/schema/</code> trả 200 (chỉ chứng minh server sống, không chứng minh luồng).</td><td>Chưa ai đi luồng UI có đăng nhập; chưa có đối chiếu CSV với server.</td></tr>
+<tr><td>Bàn giao MVP</td><td>Mentor nhận được sản phẩm chạy và file xếp hạng?</td><td>Image GHCR và Argo CD đã triển khai (CR-120).</td><td>CSV xếp hạng + manifest + ZIP, demo, báo cáo QA UI.</td></tr>
+<tr><td>Nghiệm thu KPI</td><td>KPI-1 (Recall@20%) và KPI-2 (giảm công sức) có đạt ngưỡng đã duyệt không?</td><td>Không có. Evaluation đang <strong>BLOCKED</strong> (thiếu đầu vào và approval), không phải failed.</td><td>Reference khóa, model checksum, split, quyền dữ liệu, policy approved.</td></tr>
+</tbody></table>
+<div class="note">Ba loại đầu <em>không</em> chứng minh KPI. Preflight <code>inputs_verified</code> cũng không có nghĩa KPI pass.</div>
+
+<h2 id="readiness">2. Bảng readiness cho đánh giá chính thức</h2>
+<table><thead><tr><th>Hạng mục</th><th>Bằng chứng hiện có</th><th>Còn thiếu hoặc rủi ro</th><th>Owner theo hồ sơ</th><th>Cách kiểm chứng</th></tr></thead><tbody>
+<tr><td><strong>Reference</strong></td><td>DEC-003: GT là nhãn gốc BDD100K; annotation cần review là tệp do người học gán. DEC-016 D01: Nam chuẩn bị reference, QA Lead duyệt và khóa, không tự duyệt dữ liệu mình lập.</td><td><span class="bad">Rủi ro lớn:</span> BLOCKER-024 (accepted) ghi bộ annotation người học T-004 không nằm trên ảnh BDD100K (252 ảnh duy nhất, val 0 / train 0 / ngoài BDD100K 252), nên giả định "GT = nhãn gốc BDD100K" cho bộ này cần làm rõ. <code>reference_lock_allowed</code> chưa bật; QA confirmation (D05-QA) còn pending. Trên server, LabelX chưa upload Ground Truth cho dataset. Task có tên "Demo_gt" chưa được xác minh là reference độc lập.</td><td>Lê Duy Nam (lập), Nguyễn Đức Hà (duyệt, khóa)</td><td>File reference thật, SHA-256 từ bytes; hồ sơ ai gán nhãn, khi nào, phân xử; mapping frame với ảnh; chứng minh độc lập với ranking và model; đếm lỗi E1/E2/E3 theo nhóm.</td></tr>
+<tr><td><strong>Model (detector)</strong></td><td>DEC-003: dùng detector công khai huấn luyện trên BDD100K train; cần artifact cố định, checksum, mapping 10 lớp, danh sách ảnh huấn luyện (FR-ENG-05, FR-EVL-05b, AS-03). Đội dùng detector worker kiểu Faster R-CNN trong dev.</td><td>BLOCKER-005 ghi <code>resolved</code> nhưng Resolution Date <code>not-set</code>. Tôi chưa thấy trong hồ sơ đã đọc checksum checkpoint, mapping hay training manifest. Phân biệt: artifact <em>đang chạy</em> trên server với artifact <em>đã xác minh</em>.</td><td>Nguyễn Xuân Việt Anh</td><td>Checkpoint bytes, <code>model_sha256</code>, nguồn, giấy phép; kiểm ảnh đánh giá không thuộc BDD100K train (rò rỉ).</td></tr>
+<tr><td><strong>Split</strong></td><td>DEC-016 D03: scope là ảnh/frame, không xử lý video; giữ grouping gate FR-EVL-05/FR-RNK-10 theo nhóm nguồn ảnh; không dùng image-level random CV.</td><td>Chưa chọn split, N, seed, coverage; chưa khóa. Cần PO/Data Owner chốt khóa nhóm là <code>video_id</code> (theo tài liệu policy readiness) hay nhóm nguồn ảnh (theo DEC-016), vì hai tài liệu khác nhau.</td><td>Nam + Hà (coverage/split/eligibility)</td><td>Manifest split, <code>split_sha256</code>; preflight kiểm calibration và held-out không giao nhau và không giao train hoặc guideline.</td></tr>
+<tr><td><strong>Quyền sử dụng</strong></td><td>Chưa có hồ sơ trong repo.</td><td>Giấy phép dữ liệu BDD100K, quyền dùng ảnh và model trong cuộc thi và đánh giá. Preflight chỉ đối chiếu điều được khai báo, không chứng minh quyền pháp lý.</td><td>PO</td><td>Ghi license/authorized_use vào provenance của reference, model, split; kiểm điều khoản thực tế của dataset.</td></tr>
+<tr><td><strong>Policy và approval</strong></td><td>Chỉ có bản nháp (<code>evaluation-policy.example.json</code>, mọi trường null) và đề xuất DEC-024 ở trạng thái proposed; giá trị lấy từ DEC-018 (ước lượng chưa đo).</td><td>Không có decision accepted. <span class="bad">Lỗi gate:</span> <code>policyReady</code> đọc approval bằng regex markdown, DEC dạng HTML không khớp, nên dù PO duyệt vẫn không đạt. Cần task hoặc CR sửa riêng. Hạn khóa preregistration: <strong>19/10/2026</strong> (TBD-K3/K4 theo BLOCKER-022).</td><td>PO (duyệt), QA Lead</td><td><code>policyReady</code> chấp nhận policy thật; <code>approved_decision</code> trỏ hồ sơ accepted kiểu evaluation/acceptance/testing có chữ ký thật.</td></tr>
+</tbody></table>
+
+<h2 id="hai-giai-doan">3. Phương án hai giai đoạn</h2>
+<h3>Giai đoạn 1: bàn giao MVP và file xếp hạng cho mentor (làm ngay, không cần KPI)</h3>
+<ul>
+<li>CSV xếp hạng của đúng snapshot, kèm manifest nguồn dữ liệu và ZIP; ghi rõ đây là <strong>kết quả demo trên 10 frame</strong>, không phải kết quả KPI.</li>
+<li>Báo cáo QA UI độc lập và demo có chú thích tiếng Việt (nếu dựng từ ảnh chụp, ghi đúng là walkthrough từ ảnh chụp).</li>
+<li>Phạm vi mentor: Cleanlab/confident learning, uncertainty sampling và đối chiếu GT. <strong>Không</strong> tích hợp các thuật toán đó vào MVP.</li>
+</ul>
+<h3>Giai đoạn 2: đánh giá chính thức (song song, giữ BLOCKED đến khi đủ đầu vào)</h3>
+<ol>
+<li>Lập và khóa reference độc lập (người lập khác người duyệt; người phân xử không xem ranking).</li>
+<li>Xác minh checkpoint và kiểm rò rỉ ảnh huấn luyện.</li>
+<li>Chốt split theo nhóm, khóa checksum trước khi xem kết quả.</li>
+<li>Đo baseline và calibration, rồi mới đề xuất cỡ mẫu và ngưỡng; PO duyệt; khóa preregistration; chạy held-out một lần.</li>
+</ol>
+<div class="note">Các frame đã dùng để xem ranking hoặc tinh chỉnh (ví dụ 10 frame trong demo, job #4) <strong>không</strong> được coi là held-out chưa bị tác động.</div>
+
+<h2 id="quyet-dinh">4. Ba việc PO cần quyết định</h2>
+<table><thead><tr><th>#</th><th>Quyết định</th><th>Đề xuất</th><th>Hậu quả nếu chưa quyết</th></tr></thead><tbody>
+<tr><td>1</td><td>Phạm vi bàn giao tuần 5</td><td>Giai đoạn 1 như trên; KPI để giai đoạn 2.</td><td>Mentor có thể hiểu nhầm số demo là kết quả KPI.</td></tr>
+<tr><td>2</td><td>Người lập reference và người phân xử độc lập</td><td>Giữ theo DEC-016 (Nam lập, Hà duyệt), thêm người phân xử không xem ranking; xác nhận lại nguồn ảnh vì BLOCKER-024.</td><td>Không khóa được reference; KPI-1 không đo được.</td></tr>
+<tr><td>3</td><td>Người phụ trách model, split và quyền sử dụng, kèm thời hạn</td><td>Việt Anh (model), Nam và Hà (split), PO (quyền sử dụng); đặt hạn cụ thể trước khóa preregistration.</td><td>Evaluation giữ BLOCKED; lỡ hạn 19/10/2026.</td></tr>
+</tbody></table>
+
+<h2 id="duyet-ngay">5. Việc có thể duyệt ngay và việc cần bổ sung</h2>
+<table><thead><tr><th>Có thể duyệt ngay</th><th>Cần bổ sung trước</th></tr></thead><tbody>
+<tr><td>Phạm vi giai đoạn 1; quy tắc "không tích hợp thuật toán mentor vào MVP"; quy trình khóa held-out trước.</td><td>Reference độc lập có checksum; model checksum và training manifest; split; hồ sơ quyền dữ liệu; giá trị ngưỡng (cần đo baseline); sửa lỗi gate regex (CR hoặc task).</td></tr>
+</tbody></table>
+
+<h2 id="blocker">6. Danh sách blocker và bằng chứng cần có</h2>
+<table><thead><tr><th>Blocker</th><th>Owner</th><th>Hành động tiếp theo</th><th>Bằng chứng cần có</th></tr></thead><tbody>
+<tr><td>Chưa có credentials để xuất dữ liệu và kiểm UI trên server thật</td><td>PO</td><td>Cấp credentials qua kênh riêng (file mode 0600 hoặc biến môi trường), không qua tin nhắn.</td><td>CSV + manifest; báo cáo QA UI; digest image đang chạy.</td></tr>
+<tr><td>Ground Truth chưa upload cho dataset trên LabelX</td><td>Nam, Hà</td><td>Xác minh nguồn ảnh, rồi mới nạp reference.</td><td>Reference đã khóa, đếm lỗi theo nhóm.</td></tr>
+<tr><td>Checkpoint chưa có checksum trong hồ sơ</td><td>Việt Anh</td><td>Cung cấp artifact, checksum, mapping, training manifest.</td><td><code>model_sha256</code>; kiểm rò rỉ.</td></tr>
+<tr><td>Split và nhóm khóa chưa chọn</td><td>Nam, Hà</td><td>Chốt khóa nhóm và tỉ lệ, khóa file.</td><td><code>split_sha256</code>.</td></tr>
+<tr><td>Lỗi gate regex trong <code>policyReady</code></td><td>Tech Lead Backend</td><td>Mở task hoặc CR sửa; không đổi baseline gate.</td><td>Test dùng fixture DEC dạng HTML.</td></tr>
+<tr><td>Runner đánh giá chưa có (#388), environments (#390)</td><td>Vận hành</td><td>Theo <a href="runner-setup-checklist.html">runner-setup-checklist.html</a> nếu đã có.</td><td>Runner online; Phase Testing chạy trên main tin cậy.</td></tr>
+</tbody></table>
+</article></main></body></html>
