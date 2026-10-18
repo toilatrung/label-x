@@ -1,0 +1,122 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<title>#388 — Checklist đăng ký runner labelx-evaluation</title>
+<meta name="labelx:id" content="runner-setup-checklist">
+<meta name="labelx:title" content="#388 — Checklist đăng ký runner labelx-evaluation">
+<meta name="labelx:type" content="reference"><meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="evaluation"><meta name="labelx:tags" content="[runner, evaluation, ops-01, checklist, self-hosted]">
+<meta name="labelx:priority" content="1">
+<style>body{font:15px/1.6 system-ui;max-width:1100px;margin:32px auto;padding:0 20px}table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border:1px solid #bbb;padding:7px 9px;text-align:left;vertical-align:top}th{background:#f3f4f6}pre{padding:12px;background:#eee;overflow:auto}code{font-family:monospace}.warn{border-left:4px solid #8a5300;background:#fdf2d8;padding:10px 14px;margin:14px 0}li{margin:4px 0}</style>
+</head><body>
+<h1>#388 — Checklist đăng ký runner <code>labelx-evaluation</code></h1>
+<div class="warn"><strong>Chỉ là tài liệu cho người vận hành.</strong> Không có runner nào được đăng ký, không đổi settings repo, secrets hay variables bởi tài liệu này. Việc đăng ký cần người có quyền admin repo và quyền trên máy runner. Bổ sung cho <a href="evaluation-runner.html">evaluation-runner.html</a> (quy trình vận hành); trạng thái #388 vẫn <strong>NOT VERIFIED</strong> tới khi có bằng chứng ở mục 8.</div>
+
+<h2>0. Vì sao phải là máy riêng</h2>
+<ul>
+<li><strong>Không đặt trên VPS production.</strong> Ngân sách RAM của VPS đã sát (đỉnh workload 8.320 MiB + OS/K3s/Argo 3.072 + headroom 1.024 &asymp; 12,4 GiB, <code>infrastructure/vps-budget.json</code>); chạy Postgres/Redis/S3 test và pytest cạnh production có thể gây OOM cho pod production. VPS cũng giữ credential production.</li>
+<li><strong>Repo là public.</strong> Runner tự host trên repo public là rủi ro nếu chạy mã không tin cậy. Workflow <code>phase-testing.yml</code> chỉ có <code>workflow_dispatch</code> và <code>if: github.ref == 'refs/heads/main'</code>, nên không chạy mã PR/fork; giữ nguyên hai điều kiện này và không thêm trigger <code>pull_request</code>.</li>
+<li>Máy runner không có đường mạng tới production (DB, Redis, S3, CVAT, VPS) và không giữ credential production.</li>
+</ul>
+
+<h2>1. Kiểm tra trước khi bắt đầu</h2>
+<table><thead><tr><th>#</th><th>Việc</th><th>Lệnh / cách kiểm</th></tr></thead><tbody>
+<tr><td>1.1</td><td>Chọn máy Linux riêng (x86-64), mã hoá đĩa, truy cập SSH hạn chế cho người bảo trì</td><td>Ghi hostname, OS, CPU/RAM/disk vào inventory riêng. Chưa có số sizing đã đo trong repo; ghi số thực tế, không suy đoán. Nếu ca cần Detector thật, ghi rõ CPU hay GPU; không coi CPU/mock là GPU pass.</td></tr>
+<tr><td>1.2</td><td>Xác nhận máy không route được tới production</td><td><code>nc -vz -w3 &lt;vps-host&gt; 5432</code> phải thất bại; không có kubeconfig, .env hay key production trên máy</td></tr>
+<tr><td>1.3</td><td>Tạo tài khoản dịch vụ không đặc quyền, không trong nhóm <code>docker</code> và không sudo</td><td><code>sudo adduser --disabled-password --gecos "" labelx-runner</code> rồi <code>id labelx-runner</code></td></tr>
+<tr><td>1.4</td><td>Cài công cụ ghim phiên bản (mục 2) bằng gói/archive đã kiểm checksum</td><td>Ghi <code>python --version</code>, <code>node --version</code>, <code>uv --version</code>, <code>gh --version</code> kèm SHA-256 gói vào inventory</td></tr>
+</tbody></table>
+
+<h2>2. Phiên bản ghim (lấy từ repo)</h2>
+<table><thead><tr><th>Thành phần</th><th>Phiên bản</th><th>Nguồn</th></tr></thead><tbody>
+<tr><td>Python</td><td>3.12 (<code>requires-python &gt;= 3.12</code>, <code>src/backend/.python-version</code>)</td><td><code>.github/workflows/ci.yml</code>, <code>pyproject.toml</code></td></tr>
+<tr><td>Node.js</td><td>22</td><td><code>ci.yml</code>, <code>phase-testing.yml</code> dùng <code>node scripts/ci/quality-gate.cjs</code></td></tr>
+<tr><td>Phụ thuộc backend</td><td>theo <code>src/backend/uv.lock</code>, cài bằng <code>uv sync --frozen --project src/backend</code></td><td><code>phase-testing.yml</code></td></tr>
+<tr><td>uv</td><td>không có phiên bản ghim riêng ở repo; ghi phiên bản cài và SHA-256 vào inventory, không nâng cấp âm thầm trên máy dùng cho baseline</td><td><code>ci.yml</code> dùng action <code>astral-sh/setup-uv</code> v10.3.0</td></tr>
+<tr><td>PostgreSQL</td><td><code>postgres:17</code> (ghim digest trong inventory)</td><td><code>ci.yml</code></td></tr>
+<tr><td>Redis</td><td><code>redis:7-alpine</code> (ghim digest trong inventory); dùng instance riêng, không dùng chỉ số DB làm ranh giới bảo mật</td><td><code>ci.yml</code></td></tr>
+<tr><td>S3 tương thích</td><td>SeaweedFS <code>chrislusf/seaweedfs:3.80@sha256:1055999e08eed1789b0ae45d235126e4495e23d3fb9d6396293fd42539b1ae6a</code> (CI hiện dùng); <code>scripts/containers/storage_smoke.py</code> dùng bản 4.48 cho smoke lưu trữ. Chọn một bản, ghim digest và ghi vào inventory</td><td><code>ci.yml</code>, <code>storage_smoke.py</code></td></tr>
+<tr><td>GitHub Actions runner</td><td><strong>không ghim ở đây</strong>: lấy bản release hiện hành và SHA-256 do GitHub công bố trên trang Settings &rarr; Actions &rarr; Runners &rarr; New self-hosted runner, ghi vào inventory</td><td>GitHub</td></tr>
+</tbody></table>
+
+<h2>3. Dịch vụ kiểm thử cô lập (trên máy runner)</h2>
+<ol>
+<li>Tạo project Docker Compose riêng cho evaluation (tên project riêng, volume riêng, <strong>không</strong> dùng <code>infrastructure/docker-compose.dev.yml</code>), bind cổng vào <code>127.0.0.1</code> với cổng duy nhất.</li>
+<li>PostgreSQL: tạo role riêng được quyền tạo database test của pytest, không quyền trên database khác.</li>
+<li>Redis: một instance riêng cho broker và result backend (URL có thể khác số DB nhưng cùng instance riêng này).</li>
+<li>S3: tạo trước một bucket test, cấp credential chỉ cho bucket đó, từ chối mọi bucket production; dùng bucket không versioning hoặc đặt lifecycle xoá phiên bản cũ và delete marker.</li>
+<li>Ghi digest image từng dịch vụ vào inventory: <code>docker image inspect --format '{{index .RepoDigests 0}}' &lt;image&gt;</code></li>
+</ol>
+
+<h2>4. Cài và đăng ký runner (người có quyền admin repo)</h2>
+<pre><code># Dưới tài khoản labelx-runner, thư mục riêng
+mkdir -p ~/actions-runner &amp;&amp; cd ~/actions-runner
+# Tải bản runner từ trang GitHub; KIỂM SHA-256 trước khi giải nén
+echo "&lt;sha256-do-github-cong-bo&gt;  actions-runner-linux-x64-&lt;version&gt;.tar.gz" | sha256sum -c -
+tar xzf actions-runner-linux-x64-&lt;version&gt;.tar.gz
+
+# Token đăng ký ngắn hạn: nhập ẩn, không đưa vào lịch sử shell hay repo
+read -rs REG_TOKEN
+./config.sh --url https://github.com/toilatrung/label-x --token "$REG_TOKEN" \
+  --name labelx-evaluation-01 --labels labelx-evaluation --unattended
+unset REG_TOKEN
+
+# Chạy như dịch vụ hệ thống (cần sudo, thực hiện bởi người vận hành)
+sudo ./svc.sh install labelx-runner &amp;&amp; sudo ./svc.sh start</code></pre>
+<ul>
+<li>Runner có các nhãn <code>self-hosted</code>, <code>linux</code> (mặc định) và <code>labelx-evaluation</code> (thêm); khớp <code>runs-on: [self-hosted, linux, labelx-evaluation]</code> của workflow.</li>
+<li>Giới hạn runner group chỉ cho repo này. Trong Settings &rarr; Actions &rarr; General kiểm tra chính sách workflow từ fork PR (yêu cầu phê duyệt cho mọi cộng tác viên ngoài).</li>
+<li>Không đăng ký runner này cho repo/org khác.</li>
+</ul>
+
+<h2>5. Secrets và variables (người có quyền admin repo đặt trong environment <code>labelx-evaluation</code>)</h2>
+<table><thead><tr><th>Loại</th><th>Tên</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>Secret</td><td><code>DJANGO_SECRET_KEY</code></td><td>khoá riêng cho evaluation, không dùng khoá production</td></tr>
+<tr><td>Secret</td><td><code>TEST_DATABASE_URL</code></td><td>role Postgres riêng ở mục 3</td></tr>
+<tr><td>Secret</td><td><code>TEST_CELERY_BROKER_URL</code>, <code>TEST_CELERY_RESULT_BACKEND</code></td><td>Redis riêng ở mục 3</td></tr>
+<tr><td>Secret</td><td><code>TEST_OBJECT_STORAGE_ENDPOINT_URL</code>, <code>TEST_OBJECT_STORAGE_ACCESS_KEY</code>, <code>TEST_OBJECT_STORAGE_SECRET_KEY</code></td><td>credential chỉ cho bucket test</td></tr>
+<tr><td>Variable</td><td><code>TEST_OBJECT_STORAGE_BUCKET</code></td><td>tên bucket test</td></tr>
+<tr><td>Variable</td><td><code>LABELX_EVALUATION_POLICY</code></td><td>đường dẫn policy trong checkout; chỉ đặt sau khi policy được PO duyệt (xem <a href="evaluation-policy-proposal.html">đề xuất policy</a>)</td></tr>
+<tr><td>Variable</td><td><strong><code>LABELX_EVALUATION_ISOLATED</code> = <code>true</code></strong></td><td><strong>Workflow đọc <code>vars.LABELX_EVALUATION_ISOLATED</code> và probe chặn nếu khác <code>true</code>, nhưng biến này chưa có trong danh sách acceptance của #390.</strong> Đặt sau khi xác nhận mục 3 thật sự cô lập.</td></tr>
+</tbody></table>
+<p>Không in giá trị secret ra log, không commit. Environment <code>labelx-evaluation</code> cần reviewer độc lập, <code>prevent_self_review = true</code> và giới hạn nhánh <code>main</code> (việc của #390).</p>
+
+<h2>6. Lệnh kiểm trên máy runner</h2>
+<pre><code># 6.1 Công cụ
+python3 --version; node --version; uv --version; gh --version
+# 6.2 Phụ thuộc khoá (từ checkout trusted main)
+uv sync --frozen --project src/backend
+# 6.3 Probe dịch vụ cô lập. Nạp biến từ tệp mode 0600, không bật set -x
+export LABELX_EVALUATION_ISOLATED=true
+export LABELX_TEST_NAMESPACE=ci-manual-1
+set -a; . /path/to/private-0600.env; set +a
+uv run --frozen --project src/backend python scripts/ci/evaluation-probe.py</code></pre>
+<p>Probe thực hiện: Postgres insert/read trong bảng tạm rồi rollback; Redis PING, SET/GET và DELETE đúng khoá; S3 bucket health và PUT/HEAD/GET/DELETE dưới namespace duy nhất. Đầu ra chỉ có tên kiểm tra, trạng thái và namespace; lỗi cleanup làm probe thất bại. Lưu JSON đã làm sạch cùng SHA commit và phiên bản công cụ.</p>
+<pre><code># 6.4 Kiểm runner đã online và đủ nhãn (người có quyền admin repo)
+gh api repos/toilatrung/label-x/actions/runners \
+  --jq '.runners[] | {name, status, busy, labels: [.labels[].name]}'
+# kỳ vọng: status "online", busy false, labels gồm self-hosted, linux, labelx-evaluation</code></pre>
+
+<h2>7. Chạy thử và dọn dẹp</h2>
+<ol>
+<li>Sau khi #390 hoàn tất, dispatch <code>LabelX Phase Testing</code> với một phase an toàn (ví dụ <code>scaffold</code>) trên <code>main</code>; workflow tự chạy kiểm environment, probe và pytest.</li>
+<li>Dọn sau run: chỉ xoá tài nguyên mang namespace/project của run; không dùng <code>docker system prune</code>, <code>FLUSHALL</code> hay xoá bucket dùng chung. Dọn workspace giữa các job.</li>
+<li>Xoay credential: tạm dừng dispatch, chờ job đang chạy xong, cấp credential mới, cập nhật secrets, chạy probe và một run có review, rồi thu hồi credential cũ.</li>
+</ol>
+
+<h2>8. Bằng chứng cần nộp để đóng #388</h2>
+<ul>
+<li>Inventory runner đã làm sạch: tên, trạng thái online/idle, nhãn, phiên bản runner, SHA-256 archive.</li>
+<li>Inventory công cụ và digest image dịch vụ.</li>
+<li>JSON kết quả probe PASS kèm commit SHA.</li>
+<li>Cấu hình environment (reviewer, <code>prevent_self_review</code>, giới hạn nhánh), danh sách <strong>tên</strong> secret/variable (không giá trị).</li>
+<li>URL một lần Phase Testing thật, artifact <code>phase-evidence-&lt;SHA&gt;</code> và xác nhận dọn dẹp.</li>
+</ul>
+<p>Chưa có các mục trên thì #388 ở trạng thái <strong>NOT VERIFIED</strong>; không ghi failed khi chưa chạy.</p>
+
+<h2>9. Cần quyết định/cung cấp</h2>
+<ol>
+<li>Máy riêng nào dùng làm runner và ai là người vận hành (cấu hình, SSH, token đăng ký).</li>
+<li>Có cần GPU cho các ca evaluation không (phụ thuộc checkpoint Detector và ca được chạy).</li>
+<li>Thêm <code>LABELX_EVALUATION_ISOLATED</code> vào acceptance của #390 (biến workflow đang bắt buộc).</li>
+<li>Chọn bản SeaweedFS (3.80 như CI hay 4.48 như smoke) cho dịch vụ S3 test.</li>
+</ol>
+</body></html>
