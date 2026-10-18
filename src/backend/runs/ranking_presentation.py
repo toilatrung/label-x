@@ -3,13 +3,44 @@
 These are review groups, not calibrated risk levels or confirmed error counts.
 """
 
-from django.db.models import Q
+from django.db.models import CharField, F, Func, Q, Value
+from django.db.models.fields.json import KeyTransform
+from django.db.models.lookups import Exact
 
 from runs.models import QCRun
 
 PRIORITIES = ("suspected", "unassessed", "no_suspicions")
 SCORING_ENGINES = frozenset({"schema", "geometry", "duplicate", "detector"})
-HAS_SUSPICIONS = Q(issue_counts__E1__gt=0) | Q(issue_counts__E2__gt=0) | Q(issue_counts__E3__gt=0)
+
+
+def _has_json_type(family: str | None, kind: str) -> Q:
+    value = F("issue_counts") if family is None else KeyTransform(family, "issue_counts")
+    return Q(Exact(Func(value, function="jsonb_typeof", output_field=CharField()), Value(kind)))
+
+
+def _positive_count(family: str) -> Q:
+    return _has_json_type(family, "number") & Q(**{f"issue_counts__{family}__gt": 0})
+
+
+def _valid_count(family: str) -> Q:
+    return ~Q(issue_counts__has_key=family) | (
+        _has_json_type(family, "number") & ~Q(**{f"issue_counts__{family}__lt": 0})
+    )
+
+
+HAS_SUSPICIONS = _positive_count("E1") | _positive_count("E2") | _positive_count("E3")
+VALID_COUNTS = (
+    _has_json_type(None, "object") & _valid_count("E1") & _valid_count("E2") & _valid_count("E3")
+)
+
+
+def counts_are_valid(issue_counts: object) -> bool:
+    return isinstance(issue_counts, dict) and all(
+        isinstance(count, (int, float)) and not isinstance(count, bool) and count >= 0
+        for family in ("E1", "E2", "E3")
+        if family in issue_counts
+        for count in [issue_counts[family]]
+    )
 
 
 def run_evidence_incomplete(run: QCRun) -> bool:
@@ -22,7 +53,13 @@ def run_evidence_incomplete(run: QCRun) -> bool:
     )
 
 
-def review_priority(issue_counts: dict[str, int], missing_evidence: bool) -> str:
-    if any(issue_counts.get(family, 0) > 0 for family in ("E1", "E2", "E3")):
+def review_priority(issue_counts: object, missing_evidence: bool) -> str:
+    if isinstance(issue_counts, dict) and any(
+        isinstance(count, (int, float)) and not isinstance(count, bool) and count > 0
+        for family in ("E1", "E2", "E3")
+        for count in [issue_counts.get(family)]
+    ):
         return "suspected"
-    return "unassessed" if missing_evidence else "no_suspicions"
+    return (
+        "unassessed" if missing_evidence or not counts_are_valid(issue_counts) else "no_suspicions"
+    )

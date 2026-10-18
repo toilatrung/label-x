@@ -571,6 +571,48 @@ def test_evidence_groups_keep_frames_and_frozen_scores(
     assert list(run.rankings.values("content_hash", "ranking_hash", "score_version")) == hashes
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "counts,expected",
+    [
+        ({"E1": "three", "E2": None}, "unassessed"),
+        ({"E1": True}, "unassessed"),
+        ({"E1": {"nested": 1}}, "unassessed"),
+        ({"E1": -1}, "unassessed"),
+        (["unexpected"], "unassessed"),
+        ({"E3": 1, "E1": "bad"}, "suspected"),
+    ],
+)
+def test_legacy_counts_pass_through_without_inventing_suspicions(
+    snapshot, config, qa_user, counts, expected
+):
+    from runs.models import EngineResult
+
+    run = _run(snapshot, config, qa_user)
+    run.engine_results.update(status="checked", reason=None)
+    EngineResult.objects.update_or_create(
+        run=run, engine="detector", defaults={"status": "checked", "required": False}
+    )
+    persist_run_rankings(run_id=run.pk, candidates=[], audit_percent=Decimal("100"))
+    entry = RunRankingEntry.objects.filter(ranking__run=run, ranking__source="risk").first()
+    entry.issue_counts = counts
+    entry.save(update_fields=["issue_counts"])
+    client = APIClient()
+    client.force_authenticate(qa_user)
+    url = f"/api/runs/{run.pk}/ranking/"
+    response = client.get(url)
+    row = next(
+        row for row in response.data["results"] if row["frame_id"] == entry.snapshot_frame_id
+    )
+    assert row["issue_counts"] == counts
+    assert row["priority"] == expected
+    assert row["missing_evidence"] is True
+    for group, count in response.data["priority_counts"].items():
+        filtered = client.get(url, {"priority": group})
+        assert len(filtered.data["results"]) == count
+        assert all(row["priority"] == group for row in filtered.data["results"])
+
+
 def test_ranking_frame_query_does_not_load_job_payloads(
     snapshot: Snapshot, config: ConfigVersion, qa_user: User
 ) -> None:

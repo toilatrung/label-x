@@ -24,7 +24,12 @@ from runs.models import (
     WorkUnit,
 )
 from runs.progress import engine_progress
-from runs.ranking_presentation import PRIORITIES, review_priority, run_evidence_incomplete
+from runs.ranking_presentation import (
+    PRIORITIES,
+    counts_are_valid,
+    review_priority,
+    run_evidence_incomplete,
+)
 from runs.routing_config import validate_routing_thresholds
 from runs.vlm_read import build_vlm_view, run_vlm_engine_state
 from vlm.config import validate_vlm_config
@@ -552,7 +557,7 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         incomplete = self.context.get("run_evidence_incomplete")
         if incomplete is None:
             incomplete = run_evidence_incomplete(obj.ranking.run)
-        return obj.missing_evidence or bool(incomplete)
+        return obj.missing_evidence or bool(incomplete) or not counts_are_valid(obj.issue_counts)
 
     @extend_schema_field(serializers.ChoiceField(choices=PRIORITIES))
     def get_priority(self, obj: RunRankingEntry) -> str:

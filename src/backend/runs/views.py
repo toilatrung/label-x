@@ -27,7 +27,12 @@ from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
 from runs.kpi import ledger_entries
 from runs.models import AIModel, ConfigVersion, ModelKind, QCRun, RunRanking, WorkUnit
-from runs.ranking_presentation import HAS_SUSPICIONS, PRIORITIES, run_evidence_incomplete
+from runs.ranking_presentation import (
+    HAS_SUSPICIONS,
+    PRIORITIES,
+    VALID_COUNTS,
+    run_evidence_incomplete,
+)
 from runs.serializers import (
     CandidateSerializer,
     ConfigVersionCreateSerializer,
@@ -1032,12 +1037,18 @@ class RunRankingView(APIView):
 
         incomplete = run_evidence_incomplete(ranking.run)
         entries = entries.annotate(
-            has_scored_suspicions=Case(When(HAS_SUSPICIONS, then=Value(True)), default=Value(False))
+            has_scored_suspicions=Case(
+                When(HAS_SUSPICIONS, then=Value(True)), default=Value(False)
+            ),
+            valid_scored_counts=Case(When(VALID_COUNTS, then=Value(True)), default=Value(False)),
         )
         groups = {
             "suspected": Q(has_scored_suspicions=True),
-            "unassessed": Q(has_scored_suspicions=False, missing_evidence=True),
-            "no_suspicions": Q(has_scored_suspicions=False, missing_evidence=False),
+            "unassessed": Q(has_scored_suspicions=False)
+            & (Q(missing_evidence=True) | Q(valid_scored_counts=False)),
+            "no_suspicions": Q(
+                has_scored_suspicions=False, missing_evidence=False, valid_scored_counts=True
+            ),
         }
         if incomplete:
             groups["unassessed"] = Q(has_scored_suspicions=False)

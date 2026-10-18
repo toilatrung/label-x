@@ -2513,7 +2513,7 @@ export interface components {
             /** @enum {string} */
             source: "risk" | "random_audit";
             review_state: components["schemas"]["FrameReviewState"];
-            /** @description Trạng thái đọc: cờ đã lưu hoặc engine schema/geometry/duplicate/detector hay engine required chưa checked hoặc thiếu kết quả. Không ghi đè cờ trong ranking/explanation đã lưu; detector disabled vẫn thiếu bằng chứng E1/E2. Không vô hiệu nghi vấn E3 từ duplicate. */
+            /** @description Trạng thái đọc: cờ đã lưu, issue_counts không đọc được, hoặc engine schema/geometry/duplicate/detector hay engine required chưa checked hoặc thiếu kết quả. Không ghi đè cờ trong ranking/explanation đã lưu; detector disabled vẫn thiếu bằng chứng E1/E2. Không vô hiệu nghi vấn E3 từ duplicate. */
             missing_evidence: boolean;
             /** @description Số issue theo IssueFamily */
             issue_counts: {
