@@ -708,9 +708,9 @@
       "scenario": "Recall@k trên reference nhỏ; ceil(kN), zero errors, đủ/thiếu mẫu",
       "expected": "Đếm lỗi không phải frame; denominator đúng; insufficient sample không kết luận đạt.",
       "fixtures": "Tiny hand-computed reference",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p5_evaluation.py::test_kpi01_recall_at_k_counts_errors_not_frames_with_ceil_and_min_sample"
     },
     {
       "id": "KPI-02",
