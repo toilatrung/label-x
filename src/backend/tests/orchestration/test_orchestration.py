@@ -33,6 +33,7 @@ from orchestration.services import (
     seed_ledger,
 )
 from orchestration.tasks import execute_shard, run_engine_shard
+from runs.models import QCRun
 from tests.orchestration.helpers import make_run
 
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -53,10 +54,11 @@ def units(*frames: int) -> tuple[EngineUnitRef, ...]:
 
 def make_input(shard: int, frames: tuple[int, ...], run_id: int | None = None) -> EngineInput:
     run_id = run_id or RUN
+    snapshot_id = QCRun.objects.filter(pk=run_id).values_list("snapshot_id", flat=True).first()
     return EngineInput(
         idempotency_key=f"key-{run_id}-{shard}",
         run_id=run_id,
-        snapshot_id=3,
+        snapshot_id=snapshot_id or 3,
         engine=ENGINE,
         engine_version="1.0.0",
         config=EngineConfig(ENGINE, "1.0.0", True, {"t": 0.5}),
