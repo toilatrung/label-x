@@ -27,7 +27,7 @@ OPEN_STATES = (
     Issue.State.REOPENED,
 )
 THRESHOLDS: dict[str, float] = {
-    "coverage": 1.0,
+    "coverage": 0.95,  # FR-GTE-01: coverage engine bắt buộc ≥ 95% theo mẫu số ledger
     "open_critical_issues": 0.0,
     "rework_verified": 1.0,
     "residual": 0.05,
@@ -140,6 +140,48 @@ def _active_waiver(run_ids: list[int], condition: str) -> Waiver | None:
     )
 
 
+def gate_conditions(
+    *,
+    coverage: float | None,
+    source_completed: bool,
+    open_critical: int,
+    rework: float,
+    residual: float | None,
+    agreement: float | None,
+    reason: str | None,
+) -> list[dict[str, Any]]:
+    """FR-GTE-01/02: ngưỡng pilot áp trực tiếp; thiếu dữ liệu là not_checked, không tự đạt."""
+    cov_ok = None if coverage is None else (coverage >= THRESHOLDS["coverage"] and source_completed)
+    return [
+        _condition("coverage", coverage, cov_ok, reason=reason),
+        _condition(
+            "open_critical_issues",
+            float(open_critical),
+            open_critical <= THRESHOLDS["open_critical_issues"],
+        ),
+        _condition("rework_verified", rework, rework >= THRESHOLDS["rework_verified"]),
+        _condition(
+            "residual",
+            residual,
+            None if residual is None else residual <= THRESHOLDS["residual"],
+        ),
+        _condition(
+            "agreement",
+            agreement,
+            None if agreement is None else agreement >= THRESHOLDS["agreement"],
+        ),
+    ]
+
+
+def overall_status(conditions: list[dict[str, Any]], *, complete: bool) -> str:
+    statuses = {item["status"] for item in conditions}
+    if "failed" in statuses or not complete:
+        return "failed"
+    if "not_checked" in statuses:
+        return "not_checked"
+    return "passed"
+
+
 def gate_result(run: QCRun) -> dict[str, Any]:
     origin = origin_of(run)
     source, reason, _attempts, _blockers = evaluate_operational_source(origin)
@@ -147,18 +189,19 @@ def gate_result(run: QCRun) -> dict[str, Any]:
     complete = reason == "selected_final"
 
     cov, _eligible = coverage_value(source)
-    cov_ok = None if cov is None else (cov >= 1.0 and source.status == QCRun.Status.COMPLETED)
     open_critical, _ = open_critical_count(run_ids)
     rework, _ = rework_ratio(run_ids)
     residual, _ = residual_ratio(origin)
     agreement, _ = agreement_ratio(run_ids)
-    conditions = [
-        _condition("coverage", cov, cov_ok, reason=None if complete else reason),
-        _condition("open_critical_issues", float(open_critical), open_critical == 0),
-        _condition("rework_verified", rework, rework >= 1.0),
-        _condition("residual", residual, None if residual is None else residual <= 0.05),
-        _condition("agreement", agreement, None if agreement is None else agreement >= 0.9),
-    ]
+    conditions = gate_conditions(
+        coverage=cov,
+        source_completed=source.status == QCRun.Status.COMPLETED,
+        open_critical=open_critical,
+        rework=rework,
+        residual=residual,
+        agreement=agreement,
+        reason=None if complete else reason,
+    )
     for item in conditions:
         # Waiver chỉ cứu coverage/agreement và không biến run chưa Completed thành đạt.
         if item["name"] in WAIVABLE and item["status"] != "passed":
@@ -166,13 +209,7 @@ def gate_result(run: QCRun) -> dict[str, Any]:
             if waiver is not None and source.status == QCRun.Status.COMPLETED:
                 item["status"] = "waived"
                 item["waiver_id"] = waiver.pk
-    statuses = {item["status"] for item in conditions}
-    if "failed" in statuses or not complete:
-        overall = "failed"
-    elif "not_checked" in statuses:
-        overall = "not_checked"
-    else:
-        overall = "passed"
+    overall = overall_status(conditions, complete=complete)
     return {
         "run_id": run.pk,
         "source_run_id": source.pk,

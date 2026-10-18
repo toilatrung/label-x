@@ -788,9 +788,9 @@
       "scenario": "Các ngưỡng pilot ở dưới/bằng/trên; missing/Partial reference",
       "expected": "95%/0/100%/5%/90% áp đúng policy, không lấy reviewer agreement thay engine accuracy; thiếu dữ liệu chưa đạt.",
       "fixtures": "Boundary gate fixtures theo cấu hình đã chốt",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_gate_report.py::test_gte01_pilot_thresholds_boundaries_missing_and_partial_reference"
     },
     {
       "id": "GTE-02",

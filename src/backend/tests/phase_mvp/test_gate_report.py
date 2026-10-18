@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from accounts.models import CvatIdentity, Role, RoleAssignment
 from audit.models import AuditEvent
-from runs.kpi import _active_waiver
+from runs.kpi import THRESHOLDS, _active_waiver, gate_conditions, overall_status
 from runs.models import Waiver
 from tests.review.test_queue_lease import client
 from tests.review.test_queue_lease import world as world
@@ -116,3 +116,68 @@ def test_rpt01_report_preserves_metric_provenance_and_separate_streams(world, qa
         row.engine for row in run.engine_results.all()
     }
     assert data["metrics"]["G-1"]["method"] != data["metrics"]["G-3"]["method"]
+
+
+def _gate(**over):
+    base = {
+        "coverage": 0.95,
+        "source_completed": True,
+        "open_critical": 0,
+        "rework": 1.0,
+        "residual": 0.05,
+        "agreement": 0.9,
+        "reason": None,
+    }
+    conditions = gate_conditions(**{**base, **over})
+    return {row["name"]: row["status"] for row in conditions}, conditions
+
+
+def test_gte01_pilot_thresholds_boundaries_missing_and_partial_reference():
+    # FR-GTE-01: 95% / 0 / 100% / 5% / 90% do chính policy, không có hằng số thứ hai.
+    assert THRESHOLDS == {
+        "coverage": 0.95,
+        "open_critical_issues": 0.0,
+        "rework_verified": 1.0,
+        "residual": 0.05,
+        "agreement": 0.9,
+    }
+    at_boundary, conditions = _gate()
+    assert set(at_boundary.values()) == {"passed"}
+    assert overall_status(conditions, complete=True) == "passed"
+    assert [row["threshold"] for row in conditions] == list(THRESHOLDS.values())
+
+    cases = [  # (condition, field, ngay dưới ngưỡng, ngay trên ngưỡng)
+        ("coverage", "coverage", 0.9499, 0.9501),
+        ("open_critical_issues", "open_critical", 1, 0),
+        ("rework_verified", "rework", 0.9999, 1.0),
+        ("residual", "residual", 0.0501, 0.0499),
+        ("agreement", "agreement", 0.8999, 0.9001),
+    ]
+    for name, field, bad, good in cases:
+        statuses, rows = _gate(**{field: bad})
+        assert statuses[name] == "failed", (name, bad)
+        assert {k: v for k, v in statuses.items() if k != name} == {
+            k: "passed" for k in statuses if k != name
+        }
+        assert overall_status(rows, complete=True) == "failed"
+        statuses, rows = _gate(**{field: good})
+        assert statuses[name] == "passed", (name, good)
+        assert overall_status(rows, complete=True) == "passed"
+
+    # FR-GTE-02: thiếu dữ liệu là chưa đạt, không tự đạt và không bị agreement che.
+    for field in ("coverage", "residual", "agreement"):
+        statuses, rows = _gate(**{field: None})
+        assert statuses[field] == "not_checked"
+        assert overall_status(rows, complete=True) == "not_checked"
+    statuses, rows = _gate(coverage=None, agreement=1.0)
+    assert statuses["coverage"] == "not_checked" and statuses["agreement"] == "passed"
+    assert overall_status(rows, complete=True) != "passed"
+
+    # Run cuối Partial/Failed: coverage 100% vẫn không đạt và gate tổng không đạt.
+    statuses, rows = _gate(coverage=1.0, source_completed=False, reason="selected_partial")
+    assert statuses["coverage"] == "failed"
+    assert next(row for row in rows if row["name"] == "coverage")["reason"] == "selected_partial"
+    assert overall_status(rows, complete=False) == "failed"
+    # Đủ mọi điều kiện nhưng run cuối chưa hoàn tất vẫn không phát hành kết quả đạt.
+    passed_rows = _gate()[1]
+    assert overall_status(passed_rows, complete=False) == "failed"
