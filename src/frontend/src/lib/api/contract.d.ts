@@ -2530,7 +2530,24 @@ export interface components {
             priority?: "high" | "medium" | "low";
             /** Format: uri */
             thumbnail_url?: string | null;
+            /** @description score_v1 — tầng cao nhất có A_t > 0 (0 = không có nghi vấn). null với ranking score_v0. */
+            dominant_tier?: number | null;
+            /** @description score_v1 — số nghi vấn đã chuẩn hóa theo tầng (khóa "1".."5"). null với score_v0. Không phải số box dư hay lỗi đã xác nhận. */
+            issue_counts_by_tier?: {
+                [key: string]: number;
+            } | null;
+            /** @description score_v1 — nhóm bằng chứng theo predicate dùng chung với filter và evidence_counts. null với score_v0. */
+            evidence_group?: components["schemas"]["EvidenceGroup"] | null;
+            /** @description score_v1 — phạm vi engine đã cấu hình (enabled, out_of_scope, assessment_status). null với score_v0. */
+            evidence_scope?: {
+                [key: string]: unknown;
+            } | null;
         };
+        /**
+         * @description suspected = có nghi vấn chuẩn hóa hợp lệ; unassessed = chưa đủ bằng chứng trong phạm vi; no_suspicions = đủ bằng chứng trong phạm vi và không có nghi vấn.
+         * @enum {string}
+         */
+        EvidenceGroup: "suspected" | "unassessed" | "no_suspicions";
         GuidelineRule: {
             /** @example VEH-03 */
             rule_id: string;
@@ -3285,6 +3302,16 @@ export interface components {
                 medium: number;
                 low: number;
             };
+            /** @description score_v1 — số frame theo dominant_tier (khóa "0".."5"); cùng tập filter với priority_counts, bỏ filter tier và cursor. null với score_v0. */
+            tier_counts?: {
+                [key: string]: number;
+            } | null;
+            /** @description score_v1 — số frame theo evidence_group; bỏ filter evidence_group và cursor, tổng bằng số frame của tập tương ứng. null với score_v0. */
+            evidence_counts?: {
+                suspected: number;
+                unassessed: number;
+                no_suspicions: number;
+            } | null;
             results: components["schemas"]["RankedFrame"][];
         };
         PaginatedGuidelineRuleList: {
@@ -4900,6 +4927,10 @@ export interface operations {
                 /** @description Tìm theo frame_key (cvat_task_id hoặc frame_number) */
                 q?: string;
                 priority?: "high" | "medium" | "low";
+                /** @description Chỉ áp dụng cho ranking score_v1; lọc theo tầng ưu tiên chi phối (0 = không có nghi vấn). Ranking score_v0 trả danh sách rỗng. */
+                tier?: number;
+                /** @description Chỉ áp dụng cho ranking score_v1; cùng predicate với nhãn evidence_group và evidence_counts. */
+                evidence_group?: components["schemas"]["EvidenceGroup"];
                 /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
                 cursor?: components["parameters"]["Cursor"];
             };

@@ -920,6 +920,14 @@ paths:
         - name: priority
           in: query
           schema: { type: string, enum: [high, medium, low] }
+        - name: tier
+          in: query
+          description: Chỉ áp dụng cho ranking score_v1; lọc theo tầng ưu tiên chi phối (0 = không có nghi vấn). Ranking score_v0 trả danh sách rỗng.
+          schema: { type: integer, minimum: 0, maximum: 5 }
+        - name: evidence_group
+          in: query
+          description: Chỉ áp dụng cho ranking score_v1; cùng predicate với nhãn evidence_group và evidence_counts.
+          schema: { $ref: "#/components/schemas/EvidenceGroup" }
         - $ref: "#/components/parameters/Cursor"
       responses:
         "200":
@@ -3650,6 +3658,31 @@ components:
           enum: [high, medium, low]
           description: Mức ưu tiên suy ra từ s(f) (MBE-02)
         thumbnail_url: { type: string, format: uri, nullable: true }
+        dominant_tier:
+          type: integer
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: score_v1 — tầng cao nhất có A_t > 0 (0 = không có nghi vấn). null với ranking score_v0.
+        issue_counts_by_tier:
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+          nullable: true
+          description: score_v1 — số nghi vấn đã chuẩn hóa theo tầng (khóa "1".."5"). null với score_v0. Không phải số box dư hay lỗi đã xác nhận.
+        evidence_group:
+          allOf: [{ $ref: "#/components/schemas/EvidenceGroup" }]
+          nullable: true
+          description: score_v1 — nhóm bằng chứng theo predicate dùng chung với filter và evidence_counts. null với score_v0.
+        evidence_scope:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: score_v1 — phạm vi engine đã cấu hình (enabled, out_of_scope, assessment_status). null với score_v0.
+
+    EvidenceGroup:
+      type: string
+      enum: [suspected, unassessed, no_suspicions]
+      description: suspected = có nghi vấn chuẩn hóa hợp lệ; unassessed = chưa đủ bằng chứng trong phạm vi; no_suspicions = đủ bằng chứng trong phạm vi và không có nghi vấn.
 
     # ------------------------------------------------------------ guidelines
     GuidelineRule:
@@ -4586,6 +4619,20 @@ components:
             high: { type: integer, minimum: 0 }
             medium: { type: integer, minimum: 0 }
             low: { type: integer, minimum: 0 }
+        tier_counts:
+          type: object
+          nullable: true
+          description: score_v1 — số frame theo dominant_tier (khóa "0".."5"); cùng tập filter với priority_counts, bỏ filter tier và cursor. null với score_v0.
+          additionalProperties: { type: integer, minimum: 0 }
+        evidence_counts:
+          type: object
+          nullable: true
+          description: score_v1 — số frame theo evidence_group; bỏ filter evidence_group và cursor, tổng bằng số frame của tập tương ứng. null với score_v0.
+          required: [suspected, unassessed, no_suspicions]
+          properties:
+            suspected: { type: integer, minimum: 0 }
+            unassessed: { type: integer, minimum: 0 }
+            no_suspicions: { type: integer, minimum: 0 }
         results:
           type: array
           items: { $ref: "#/components/schemas/RankedFrame" }

@@ -11,6 +11,7 @@ from rest_framework import serializers
 
 from orchestration.evaluation_read import evaluation_summary
 from orchestration.models import CandidateRecord
+from ranking import read_v1
 from review.api_serializers import EngineStatusSerializer, FrameKeySerializer
 from review.lineage import run_lineage_fields
 from review.models import FrameReview
@@ -497,6 +498,10 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     explanation = ExplanationField(read_only=True)
     priority = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
+    dominant_tier = serializers.SerializerMethodField()
+    issue_counts_by_tier = serializers.SerializerMethodField()
+    evidence_group = serializers.SerializerMethodField()
+    evidence_scope = serializers.SerializerMethodField()
 
     class Meta:
         model = RunRankingEntry
@@ -516,8 +521,30 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
             "lease_holder_user_id",
             "priority",
             "thumbnail_url",
+            "dominant_tier",
+            "issue_counts_by_tier",
+            "evidence_group",
+            "evidence_scope",
         ]
         read_only_fields = fields
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True, min_value=0, max_value=5))
+    def get_dominant_tier(self, obj: RunRankingEntry) -> int | None:
+        return read_v1.dominant_tier(obj.ranking.score_version, obj.explanation)
+
+    @extend_schema_field(
+        serializers.DictField(child=serializers.IntegerField(min_value=0), allow_null=True)
+    )
+    def get_issue_counts_by_tier(self, obj: RunRankingEntry) -> dict[str, int] | None:
+        return read_v1.issue_counts_by_tier(obj.ranking.score_version, obj.explanation)
+
+    @extend_schema_field(serializers.ChoiceField(choices=read_v1.EVIDENCE_GROUPS, allow_null=True))
+    def get_evidence_group(self, obj: RunRankingEntry) -> str | None:
+        return read_v1.evidence_group(obj.ranking.score_version, obj.explanation)
+
+    @extend_schema_field({"type": "object", "additionalProperties": True, "nullable": True})
+    def get_evidence_scope(self, obj: RunRankingEntry) -> dict[str, Any] | None:
+        return read_v1.evidence_scope(obj.ranking.score_version, obj.explanation)
 
     @extend_schema_field(FrameKeySerializer)
     def get_frame_key(self, obj: RunRankingEntry) -> dict[str, int]:
@@ -567,6 +594,22 @@ class RankedFrameResponseSerializer(RankedFrameSerializer):
 
     priority: Any = serializers.ChoiceField(choices=["high", "medium", "low"], required=False)
     thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
+    dominant_tier: Any = serializers.IntegerField(
+        allow_null=True, required=False, min_value=0, max_value=5
+    )
+    issue_counts_by_tier: Any = serializers.DictField(
+        child=serializers.IntegerField(min_value=0), allow_null=True, required=False
+    )
+    evidence_group: Any = serializers.ChoiceField(
+        choices=read_v1.EVIDENCE_GROUPS, allow_null=True, required=False
+    )
+    evidence_scope: Any = serializers.DictField(allow_null=True, required=False)
+
+
+class RankingEvidenceCountsSerializer(serializers.Serializer[Any]):
+    suspected = serializers.IntegerField(min_value=0)
+    unassessed = serializers.IntegerField(min_value=0)
+    no_suspicions = serializers.IntegerField(min_value=0)
 
 
 class RankingPriorityCountsSerializer(serializers.Serializer[Any]):
@@ -582,6 +625,10 @@ class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):
     content_hash = serializers.CharField()
     ranking_hash = serializers.CharField()
     priority_counts = RankingPriorityCountsSerializer(required=False)
+    tier_counts: Any = serializers.DictField(
+        child=serializers.IntegerField(min_value=0), allow_null=True, required=False
+    )
+    evidence_counts = RankingEvidenceCountsSerializer(allow_null=True, required=False)
     results = RankedFrameResponseSerializer(many=True)
 
 

@@ -21,6 +21,7 @@ from config.exceptions import ApiError
 from config.serializers import ErrorSerializer
 from orchestration.evaluation_read import latest_evaluations
 from orchestration.models import CandidateRecord
+from ranking import read_v1
 from review import services as review_services
 from review.lineage import run_lineage
 from review.models import FrameReview, Lease, ReviewDecision
@@ -934,6 +935,10 @@ class RunRankingView(APIView):
             ),
             OpenApiParameter("q", str, required=False),
             OpenApiParameter("priority", str, required=False, enum=["high", "medium", "low"]),
+            OpenApiParameter("tier", int, required=False, enum=[0, 1, 2, 3, 4, 5]),
+            OpenApiParameter(
+                "evidence_group", str, required=False, enum=list(read_v1.EVIDENCE_GROUPS)
+            ),
             OpenApiParameter("cursor", str, required=False),
         ],
         responses={
@@ -1029,6 +1034,45 @@ class RunRankingView(APIView):
             else:
                 entries = entries.none()
 
+        is_v1 = read_v1.is_v1(ranking.score_version)
+        tier_param = request.query_params.get("tier")
+        tier: int | None = None
+        if tier_param is not None:
+            if tier_param not in {"0", "1", "2", "3", "4", "5"}:
+                raise ApiError(
+                    status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "tier không hợp lệ."
+                )
+            tier = int(tier_param)
+        group = request.query_params.get("evidence_group")
+        if group is not None and group not in read_v1.EVIDENCE_GROUPS:
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "evidence_group không hợp lệ."
+            )
+        # tier/evidence_group chỉ có nghĩa với score_v1; v0 giữ chính sách đọc đã version hóa.
+        tier_counts: dict[str, int] | None = None
+        evidence_counts: dict[str, int] | None = None
+        if is_v1:
+            by_group = entries.filter(explanation__evidence_group=group) if group else entries
+            by_tier = (
+                entries.filter(explanation__dominant_tier=tier) if tier is not None else entries
+            )
+            # Mỗi facet bỏ filter của chính nó nhưng giữ filter của facet kia.
+            tier_counts = {str(t): 0 for t in range(0, 6)}
+            for value, n in by_group.values_list("explanation__dominant_tier").annotate(
+                n=Count("pk")
+            ):
+                if str(value) in tier_counts:
+                    tier_counts[str(value)] = n
+            evidence_counts = {name: 0 for name in read_v1.EVIDENCE_GROUPS}
+            for value, n in by_tier.values_list("explanation__evidence_group").annotate(
+                n=Count("pk")
+            ):
+                if value in evidence_counts:
+                    evidence_counts[value] = n
+            entries = by_tier.filter(explanation__evidence_group=group) if group else by_tier
+        elif tier is not None or group is not None:
+            entries = entries.none()
+
         ranking_total = ranking.entries.count()
         priority = request.query_params.get("priority")
         if priority not in {None, "high", "medium", "low"}:
@@ -1061,4 +1105,6 @@ class RunRankingView(APIView):
         response.data["content_hash"] = ranking.content_hash
         response.data["ranking_hash"] = ranking.ranking_hash
         response.data["priority_counts"] = priority_counts
+        response.data["tier_counts"] = tier_counts
+        response.data["evidence_counts"] = evidence_counts
         return response

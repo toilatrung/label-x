@@ -245,6 +245,9 @@ class QCRun(dj_models.Model):
     dataset_id = dj_models.PositiveBigIntegerField(db_index=True)
     scope_hash = dj_models.CharField(max_length=64, db_index=True)
     score_version = dj_models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
+    # score_v1: policy đóng băng khi tạo run; null chỉ dành cho run legacy score_v0.
+    score_policy_snapshot = dj_models.JSONField(null=True, blank=True)
+    score_policy_hash = dj_models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
     cancel_requested_at = dj_models.DateTimeField(null=True, blank=True)
     next_step_enqueued_at = dj_models.DateTimeField(null=True, blank=True)
     claimed_at = dj_models.DateTimeField(null=True, blank=True)
