@@ -111,12 +111,20 @@ def rank_frames(
             raise ValueError(f"duplicate frame key: {frame.key}")
         by_key[frame.key] = frame
 
-    contributions: dict[str, list[IssueContribution]] = defaultdict(list)
+    # BR-08: candidates pointing at the same (anchor, family) are one issue; its n_i is counted
+    # once (a cluster of m boxes is m - 1 errors, not one per matching pair) and q_i is the
+    # largest candidate confidence (score_v0 definition for E1/E2).
+    issues: dict[tuple[str, str, str], IssueContribution] = {}
     for candidate in candidates:
         frame_key = _candidate_frame_key(candidate)
         if frame_key not in by_key:
             raise ValueError(f"candidate refers to frame outside snapshot: {frame_key}")
-        contributions[frame_key].append(_contribution(candidate))
+        item = _contribution(candidate)
+        key = (frame_key, item.family, _anchor_identity(candidate))
+        issues[key] = item if key not in issues else _merge_issue(issues[key], item)
+    contributions: dict[str, list[IssueContribution]] = defaultdict(list)
+    for (frame_key, _family, _anchor), item in issues.items():
+        contributions[frame_key].append(item)
 
     required = frozenset(required_engines)
     if any(not engine for engine in required):
@@ -181,6 +189,34 @@ def _contribution(candidate: Mapping[str, object]) -> IssueContribution:
         raise ValueError(f"score_v0 does not define a score for family {family!r}")
     return IssueContribution(
         _canonical_hash(candidate), family, anchor_count, n_i, q_i, Decimal(n_i) * q_i
+    )
+
+
+def _anchor_identity(candidate: Mapping[str, object]) -> str:
+    anchor = _required_mapping(candidate, "anchor")
+    objects = anchor["objects"]
+    assert isinstance(objects, Sequence)  # validated by _contribution
+    return json.dumps(
+        [
+            anchor.get("kind"),
+            anchor.get("policy_version"),
+            sorted(json.dumps(item, sort_keys=True, default=str) for item in objects),
+        ],
+        separators=(",", ":"),
+        default=str,
+    )
+
+
+def _merge_issue(left: IssueContribution, right: IssueContribution) -> IssueContribution:
+    """Commutative merge so the result never depends on candidate order."""
+    q_i = max(left.q_i, right.q_i)
+    return IssueContribution(
+        min(left.candidate_hash, right.candidate_hash),
+        left.family,
+        left.anchor_count,
+        left.n_i,
+        q_i,
+        Decimal(left.n_i) * q_i,
     )
 
 
