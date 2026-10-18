@@ -33,6 +33,7 @@ from engines.interface import (
     FrameKey,
     NotCheckedEngineUnitResult,
     ObjectRef,
+    RuleStatus,
     public_status,
 )
 from engines.schema_taxonomy import (
@@ -147,7 +148,19 @@ def test_eng_02_bounds_area_inverted_and_unchecked_tightness():
         },
     )
     assert output.candidates == ()
-    assert "G-009" in GEOMETRY_NOT_CHECKED_RULE_IDS
+    # G-009 (tightness) is emitted as Not checked: no reference box, so nothing is measured.
+    assert output.rule_status == (RuleStatus("G-009", "not_checked", "no_reference"),)
+    assert [r.rule_id for r in output.rule_status] == list(GEOMETRY_NOT_CHECKED_RULE_IDS)
+    loose = run_geometry_engine(
+        engine_input(),
+        {FRAME: StructuralFrame(100, 100, (annotation(x1=0, y1=0, x2=100, y2=100),))},
+    )
+    assert loose.candidates == ()
+    (bad,) = run_geometry_engine(
+        engine_input(), {FRAME: StructuralFrame(100, 100, (annotation(x1=21),))}
+    ).candidates
+    assert bad.anchor.rule_id == "G-014"
+    assert not any("tight" in name for name in vars(bad.evidence))
 
 
 def test_eng_03_real_box_iou_boundary_preserves_pair_classes_and_review():
@@ -171,7 +184,7 @@ def test_agg_03_persisted_failed_disabled_unsupported_partial_ledger():
     assert connection.vendor == "postgresql", "AGG integration requires PostgreSQL"
     run = make_run()
     frames = tuple(FrameKey(9, i) for i in range(5))
-    inp = engine_input("fake", run_id=run.pk, frames=frames)
+    inp = replace(engine_input("fake", run_id=run.pk, frames=frames), snapshot_id=run.snapshot_id)
     seed_ledger(run.pk, inp.engine, inp.units)
     output = EngineOutput(
         inp.idempotency_key,
@@ -201,7 +214,7 @@ def test_supplemental_transaction_rollback_and_replay_are_immutable():
     """Metadata fault only; does not claim real worker death or S3 fault coverage."""
     assert connection.vendor == "postgresql"
     run = make_run()
-    inp = engine_input("fake", run_id=run.pk)
+    inp = replace(engine_input("fake", run_id=run.pk), snapshot_id=run.snapshot_id)
     seed_ledger(run.pk, inp.engine, inp.units)
     candidate = Candidate(
         "fake",
@@ -389,3 +402,103 @@ def test_agg_02_multi_source_candidates_keep_sources_versions_and_independent_de
     assert ReviewDecision.objects.filter(issue__in=(structural, dup_v1, dup_v2)).count() == 2
     after = [(r.pk, r.evidence, r.evidence_sha256) for r in CandidateRecord.objects.order_by("pk")]
     assert after == before  # decisions never mutate engine candidates
+
+
+def _plugin_candidate(frame, engine="plugin_x"):
+    return Candidate(
+        engine,
+        "1.0.0",
+        "E3",
+        frame,
+        Anchor("pair", (ObjectRef("cvat_shape", "1"),), "v1", "PLG-01"),
+        {"source": engine},
+    )
+
+
+@pytest.mark.django_db
+def test_eng_04_contract_rejects_bad_output_and_valid_plugin_uses_common_review(world):  # noqa: F811
+    from orchestration.registry import registry
+
+    run = world["run"]
+    frame = FrameKey(200, 0)
+    other = FrameKey(200, 1)
+    inp = replace(
+        engine_input("plugin_x", run_id=run.pk, frames=(frame,)), snapshot_id=run.snapshot_id
+    )
+    seed_ledger(run.pk, inp.engine, inp.units)
+    done = tuple(EngineUnitResult(u, "completed", 1) for u in inp.units)
+    good = EngineOutput(inp.idempotency_key, "plugin_x", "1.0.0", (), done)
+    wrong_unit = EngineUnitRef("frame", other)
+    bad_outputs = {
+        "key": replace(good, idempotency_key="another-shard"),
+        "engine": replace(good, engine="geometry"),
+        "version": replace(good, engine_version="9.9.9"),
+        "candidate engine": replace(good, candidates=(_plugin_candidate(frame, "geometry"),)),
+        "frame outside shard": replace(good, candidates=(_plugin_candidate(other),)),
+        "missing unit": replace(good, unit_results=()),
+        "unknown unit": replace(good, unit_results=(EngineUnitResult(wrong_unit, "completed", 1),)),
+        "duplicate unit": replace(good, unit_results=done + done),
+        "unfinished status": replace(
+            good, unit_results=(EngineUnitResult(inp.units[0], "running", 1),)
+        ),
+        "pending status": replace(
+            good, unit_results=(EngineUnitResult(inp.units[0], "pending", 1),)
+        ),
+        "skipped without reason": replace(
+            good, unit_results=(EngineUnitResult(inp.units[0], "not_checked", 1),)
+        ),
+        "skipped with invalid reason": replace(
+            good,
+            unit_results=(NotCheckedEngineUnitResult(inp.units[0], "not_checked", 1, "because"),),
+        ),
+        "reason on completed unit": replace(
+            good,
+            unit_results=(
+                NotCheckedEngineUnitResult(inp.units[0], "completed", 1, "not_applicable"),
+            ),
+        ),
+    }
+    for name, output in bad_outputs.items():
+        with pytest.raises(services.ShardOutputError):
+            commit_shard_output(inp, output)
+        assert not ShardCommit.objects.filter(run=run).exists(), name
+        assert not CandidateRecord.objects.filter(run=run).exists(), name
+    # Output built for another snapshot than the run's locked one is rejected as well.
+    foreign = replace(inp, snapshot_id=run.snapshot_id + 1000)
+    with pytest.raises(services.ShardOutputError, match="snapshot"):
+        commit_shard_output(foreign, good)
+    assert not ShardCommit.objects.filter(run=run).exists()
+    assert ledger_counts(run.pk, "plugin_x").pending == 1  # ledger untouched by every rejection
+
+    # A valid skipped unit with a reason is accepted as not-checked, never as completed.
+    inp2 = replace(inp, idempotency_key="plugin-x-skipped", shard_index=1, units=(wrong_unit,))
+    seed_ledger(run.pk, inp2.engine, inp2.units)
+    skipped = replace(
+        good,
+        idempotency_key=inp2.idempotency_key,
+        unit_results=(NotCheckedEngineUnitResult(wrong_unit, "not_checked", 1, "not_applicable"),),
+    )
+    assert commit_shard_output(inp2, skipped)
+    counts = ledger_counts(run.pk, "plugin_x")
+    assert (counts.completed, counts.not_checked, counts.pending) == (0, 1, 1)
+
+    # A valid plugin output is committed like any built-in engine's and reviewed in the common flow.
+
+    output = EngineOutput(
+        inp.idempotency_key,
+        "plugin_x",
+        "1.0.0",
+        (_plugin_candidate(frame),),
+        tuple(EngineUnitResult(u, "completed", 1) for u in inp.units),
+    )
+    assert commit_shard_output(inp, output)
+    (record,) = CandidateRecord.objects.filter(run=run)
+    assert (record.engine, record.engine_version) == ("plugin_x", "1.0.0")
+    EngineResult.objects.create(run=run, engine="plugin_x", status="completed")
+    RunRankingEntry.objects.filter(ranking__run=run).update(missing_evidence=False)
+    _, frame_id = claim(world)
+    (issue,) = Issue.objects.filter(frame_review_id=frame_id, candidate_id=record.pk)
+    assert issue.state == Issue.State.IN_REVIEW  # same reviewer flow as built-in engines
+    # A new engine is not runnable until it is registered with an approved descriptor.
+    with pytest.raises(LookupError):
+        registry.runner("plugin_x", "1.0.0")

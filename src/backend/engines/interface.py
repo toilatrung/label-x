@@ -116,6 +116,15 @@ class NotCheckedEngineUnitResult(EngineUnitResult):
 
 
 @dataclass(frozen=True)
+class RuleStatus:
+    """Rule an engine declares it did not check (applicability, never a finding)."""
+
+    rule_id: str
+    status: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class EngineOutput:
     """Pure-Python representation of the public ``EngineOutput`` schema."""
 
@@ -124,6 +133,7 @@ class EngineOutput:
     engine_version: str
     candidates: tuple[Candidate, ...]
     unit_results: tuple[EngineUnitResult, ...]
+    rule_status: tuple[RuleStatus, ...] = ()
 
 
 class EngineStatus(StrEnum):

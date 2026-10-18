@@ -254,9 +254,7 @@
       "scenario": "Bounds/diện tích ở dưới, bằng và trên ngưỡng H; toạ độ đảo",
       "expected": "Kiểm đúng 2 px, 24 px² theo convention; G-009 Not checked, không đo tightness giả.",
       "fixtures": "Bounding box boundary fixtures",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented", "runner": "pytest", "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_eng_02_bounds_area_inverted_and_unchecked_tightness"
     },
     {
       "id": "ENG-03",
@@ -436,9 +434,9 @@
       "scenario": "Cụm duplicate nhiều box; điểm nền và nhiều candidate một issue",
       "expected": "Đếm tối đa m-1 lỗi cho cụm; không double count; giải thích n_i q_i + h(f).",
       "fixtures": "Issue anchors + duplicate cluster",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_ranking.py::test_rnk02_duplicate_cluster_counts_m_minus_one_once_and_explains_score"
     },
     {
       "id": "RNK-03",
@@ -708,9 +706,9 @@
       "scenario": "Recall@k trên reference nhỏ; ceil(kN), zero errors, đủ/thiếu mẫu",
       "expected": "Đếm lỗi không phải frame; denominator đúng; insufficient sample không kết luận đạt.",
       "fixtures": "Tiny hand-computed reference",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p5_evaluation.py::test_kpi01_recall_at_k_counts_errors_not_frames_with_ceil_and_min_sample"
     },
     {
       "id": "KPI-02",
@@ -790,9 +788,9 @@
       "scenario": "Các ngưỡng pilot ở dưới/bằng/trên; missing/Partial reference",
       "expected": "95%/0/100%/5%/90% áp đúng policy, không lấy reviewer agreement thay engine accuracy; thiếu dữ liệu chưa đạt.",
       "fixtures": "Boundary gate fixtures theo cấu hình đã chốt",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_gate_report.py::test_gte01_pilot_thresholds_boundaries_missing_and_partial_reference"
     },
     {
       "id": "GTE-02",
@@ -1064,9 +1062,7 @@
       "scenario": "Engine output sai snapshot/frame/status/provenance hoặc partial thiếu skipped reason",
       "expected": "Hợp đồng engine từ chối output sai; plugin hợp lệ dùng luồng review chung; engine mới vẫn cần scope được duyệt.",
       "fixtures": "EngineJob/EngineResult fixtures theo A mục 20.3",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented", "runner": "pytest", "test_nodeid": "tests/phase_mvp/test_p1_deterministic.py::test_eng_04_contract_rejects_bad_output_and_valid_plugin_uses_common_review"
     },
     {
       "id": "UX-01",
