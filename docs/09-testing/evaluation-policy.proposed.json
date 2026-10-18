@@ -1,0 +1,24 @@
+{
+  "_notice": "ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT. Bản nháp để PO điền; không dùng làm LABELX_EVALUATION_POLICY cho tới khi status=approved và approved_decision trỏ DEC accepted.",
+  "schema_version": 1,
+  "status": "draft",
+  "approved_decision": null,
+  "reference_version": null,
+  "reference_sha256": null,
+  "model_sha256": null,
+  "split_sha256": null,
+  "model_provenance": {
+    "source": null,
+    "license": null,
+    "authorized_use": null
+  },
+  "score_version": "score_v0",
+  "minimum_reference_errors": 100,
+  "minimum_errors_per_group": 20,
+  "minimum_recall_at_20": 0.5,
+  "minimum_effort_reduction": 0.2,
+  "residual_non_inferiority_margin": 0.05,
+  "false_positive_non_inferiority_margin": 0.05,
+  "maximum_ui_p95_ms": 1500,
+  "maximum_run_duration_ms": null
+}

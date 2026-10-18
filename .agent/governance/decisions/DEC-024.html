@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEC-024 — Đề xuất giá trị TBD-07, 10, 11, 12, K1–K4 — LabelX</title>
+<meta name="labelx:id" content="dec-024">
+<meta name="labelx:title" content="DEC-024: Đề xuất evaluation policy cho #389 (ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT)">
+<meta name="labelx:type" content="governance">
+<meta name="labelx:domain" content="governance">
+<meta name="labelx:module" content="evaluation">
+<meta name="labelx:tags" content="[decision, evaluation, policy, issue-389, proposed]">
+<meta name="labelx:priority" content="2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><header class="top"><span class="logo">Label<b>X</b></span><span>.agent / governance / decisions / dec-024</span><span class="sp"></span></header>
+<main><article>
+<h1 id="dec-024">DEC-024: Đề xuất evaluation policy cho #389 (ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT)</h1>
+<p><strong>ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT.</strong> Bản nháp do agent soạn. Không có người duyệt, không có chữ ký; trạng thái <code>proposed</code>. Không được dùng làm <code>approved_decision</code> cho tới khi PO chuyển sang <code>accepted</code> bằng quyết định thật.</p>
+<h2 id="usage-purpose">Usage Purpose</h2>
+<p>Dự thảo hồ sơ quyết định cho policy evaluation mà <code>quality-gate.cjs</code> (<code>policyReady</code>) đòi: giá trị ngưỡng, reference/model/split được khoá bằng checksum và phương pháp đánh giá. Đề xuất đầy đủ nằm ở <a href="../../../docs/09-testing/evaluation-policy-proposal.html">docs/09-testing/evaluation-policy-proposal.html</a>; bản nháp policy ở <a href="../../../docs/09-testing/evaluation-policy.proposed.json">evaluation-policy.proposed.json</a>.</p>
+<h2 id="record-metadata">Record Metadata</h2>
+<ul>
+<li><strong>Decision ID</strong>: <code>DEC-024</code></li>
+<li><strong>Title</strong>: <code>DEC-024: Đề xuất evaluation policy cho #389 (ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT)</code></li>
+<li><strong>Owner</strong>: <code>Product Owner (vai trò theo SRS 7.3; người duyệt cụ thể để trống đến khi duyệt)</code></li>
+<li><strong>Decision Makers</strong>: <code>Product Owner; QA Lead; Data/Model Owner (theo SRS bảng 7.4; chưa xác nhận người)</code></li>
+<li><strong>Status</strong>: <code>proposed</code></li>
+<li><strong>Decision Type</strong>: <code>governance</code></li>
+<li><strong>Created Date</strong>: <code>2026-10-18</code></li>
+<li><strong>Decision Date</strong>: <code>pending</code></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>#389 yêu cầu policy evaluation có ngưỡng, checksum reference/model và hồ sơ approval độc lập. Gate hiện chặn mọi evaluation tới khi có policy approved. DEC-018 đã đề xuất giá trị TBD-K1…K4 và TBD-12 nhưng vẫn <code>proposed</code> và là ước lượng chưa đo. CR-101 bỏ pilot nhỏ và đặt hạn khoá preregistration 19/10/2026. Giá trị trong bản này lấy lại từ DEC-018 và nguồn đã có; mục nào không có căn cứ thì ghi cần đo trước.</p>
+<h2 id="decision-drivers">Decision Drivers</h2>
+<ul><li>Khoá trước khi chạy held-out (SRS 7.3, B-14); không chọn ngưỡng theo kết quả.</li><li>Không bịa số: giá trị phải có nguồn hoặc ghi rõ cần đo.</li><li>Gate hiện hành không được hạ; approval phải độc lập và có thật.</li></ul>
+<h2 id="options-considered">Options Considered</h2>
+<table><thead><tr><th>Option</th><th>Benefits</th><th>Costs and Risks</th><th>Constraint Fit</th></tr></thead><tbody>
+<tr><td>A. Duyệt bộ giá trị đề xuất (DEC-018 + mục 2 của đề xuất) sau khi đếm lỗi reference</td><td>Khoá được preregistration kịp 19/10</td><td>Giá trị chưa dựa trên đo; E<sub>min</sub> = 100 có thể không đạt; KPI-2 thăm dò</td><td><code>partially-meets</code></td></tr>
+<tr><td>B. Giữ trống tới khi có baseline</td><td>Không chốt số vô căn cứ</td><td>Không kịp preregistration; CR-101 không còn pilot nhỏ</td><td><code>partially-meets</code></td></tr>
+</tbody></table>
+<h2 id="decision-outcome">Decision Outcome</h2>
+<ul><li><strong>Selected Option</strong>: <code>pending</code></li><li><strong>Rationale</strong>: <code>chờ PO và QA Lead</code></li><li><strong>Effective Date</strong>: <code>pending</code></li></ul>
+<h2 id="consequences">Consequences</h2>
+<p>Chưa có hiệu lực. Khi PO duyệt cần: điền <code>reference_version</code>, <code>reference_sha256</code>, <code>model_sha256</code>, <code>split_sha256</code>, <code>model_provenance</code>; đặt <code>status=approved</code> và <code>approved_decision</code> trỏ hồ sơ accepted; xử lý vấn đề gate đọc approval (mục 8 của đề xuất): <code>policyReady</code> hiện đòi chuỗi markdown <code>**Status**: `accepted`</code> và Decision Type evaluation/acceptance/testing, không khớp mẫu HTML.</p>
+<h2 id="related-files">Related Files</h2>
+<ul><li><a href="DEC-018.html">DEC-018</a> (giá trị K1–K4, TBD-12, proposed), <a href="DEC-015.html">DEC-015</a>, <a href="DEC-016.html">DEC-016</a>, <a href="../change-requests/CR-101.html">CR-101</a></li><li><code>docs/09-testing/evaluation-policy-proposal.html</code>, <code>docs/09-testing/evaluation-policy.proposed.json</code>, <code>docs/09-testing/evaluation-policy-readiness.html</code></li></ul>
+</article></main></body></html>

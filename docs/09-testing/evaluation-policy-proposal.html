@@ -1,0 +1,92 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<title>#389 — Đề xuất evaluation policy (chưa được duyệt)</title>
+<meta name="labelx:id" content="evaluation-policy-proposal">
+<meta name="labelx:title" content="#389 — Đề xuất evaluation policy (chưa được duyệt)">
+<meta name="labelx:type" content="reference"><meta name="labelx:domain" content="testing">
+<meta name="labelx:module" content="evaluation"><meta name="labelx:tags" content="[evaluation, policy, proposal, held-out, preregistration]">
+<meta name="labelx:priority" content="1">
+<style>body{font:15px/1.6 system-ui;max-width:1100px;margin:32px auto;padding:0 20px}table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border:1px solid #bbb;padding:7px 9px;text-align:left;vertical-align:top}th{background:#f3f4f6}pre{padding:14px;background:#eee;overflow:auto}code{font-family:monospace}.warn{border-left:4px solid #8a5300;background:#fdf2d8;padding:10px 14px;margin:14px 0}.none{background:#fff4f4}</style>
+</head><body>
+<h1>#389 — Đề xuất evaluation policy</h1>
+<div class="warn"><strong>ĐỀ XUẤT, CHƯA ĐƯỢC DUYỆT.</strong> Tài liệu này do agent soạn để PO/QA Lead xem xét. Không phải quyết định, không có chữ ký, không cấp approval. Bản nháp quyết định (<a href="../../.agent/governance/decisions/DEC-024.html">DEC-024</a>) ở trạng thái <code>proposed</code> và bản nháp policy (<a href="evaluation-policy.proposed.json">evaluation-policy.proposed.json</a>) ở trạng thái <code>draft</code>. <code>policyReady</code>, <code>quality-gate.cjs</code> và các ngưỡng baseline <strong>không bị đổi</strong>. Phase Testing và evaluation vẫn <strong>NOT VERIFIED</strong>.</div>
+<p>Phạm vi: <a href="https://github.com/toilatrung/label-x/issues/389">#389 EVL-01</a>, phục vụ #394/#396. Quy tắc dùng xuyên suốt: <strong>không bịa số</strong>. Mỗi giá trị hoặc lấy từ một nguồn đã có (SRS/charter/DEC/CR) và nêu rõ nguồn cùng trạng thái duyệt của nguồn, hoặc ghi &quot;cần đo baseline trước, không đề xuất số&quot;. Hạn khoá preregistration theo CR-101: <strong>19/10/2026</strong>.</p>
+
+<h2>1. Điều kiện gate hiện hành (không đổi)</h2>
+<p><code>policyReady</code> yêu cầu: <code>status=approved</code>; <code>reference_version</code>, <code>score_version</code>; sáu trường số <code>&ge; 0</code> (<code>minimum_reference_errors</code> và <code>minimum_errors_per_group</code> là số nguyên <code>&ge; 1</code>; bốn trường còn lại là <strong>tỉ lệ trong [0, 1], không phải phần trăm</strong>); <code>reference_sha256</code>, <code>model_sha256</code> là SHA-256 hex; <code>approved_decision</code> trỏ <code>.agent/governance/decisions/*.html</code> accepted. <code>evaluation-inputs.cjs</code> đòi thêm <code>split_sha256</code> và <code>model_provenance</code> (source/license/authorized_use). <code>maximum_ui_p95_ms</code> và <code>maximum_run_duration_ms</code> có trong file mẫu nhưng gate hiện chưa kiểm.</p>
+
+<h2>2. Giá trị đề xuất theo từng trường policy</h2>
+<table><thead><tr><th>Trường</th><th>Đề xuất</th><th>Căn cứ và trạng thái nguồn</th><th>Ghi chú / rủi ro</th></tr></thead><tbody>
+<tr><td><code>reference_version</code></td><td><code>null</code> (PO/QA Lead điền)</td><td>SRS 7.3: QA Lead khoá reference (GT version, mapping, &tau;<sub>m</sub>, a<sub>min</sub>, E<sub>min</sub>)</td><td>Chỉ có sau khi reference được lập, hai người xác minh độc lập và QA Lead phân xử trước khi khoá (FR-EVL-01, CR-101). Không có số để đề xuất.</td></tr>
+<tr><td><code>reference_sha256</code>, <code>model_sha256</code>, <code>split_sha256</code></td><td><code>null</code></td><td>Tính từ bytes thật bằng <code>sha256sum</code> (readiness doc)</td><td>Không đề xuất giá trị; nếu bytes đổi sau duyệt thì cần checksum và approval mới.</td></tr>
+<tr><td><code>score_version</code></td><td><code>score_v0</code> (mặc định an toàn)</td><td>SRS 6.4.1: chưa đủ nhãn hiệu chỉnh thì dùng score_v0; CR-101 (&quot;không đạt n<sub>min</sub> thì dùng score_v0&quot;); DEC-015/016: n<sub>min</sub> = 50 positive issue mỗi nhóm lỗi, 5-fold group CV</td><td>Đổi sang version đã hiệu chỉnh chỉ khi calibration đạt n<sub>min</sub> mỗi nhóm, đã khoá <em>trước</em> khi chạm held-out, và PO duyệt. Báo cáo phải ghi rõ đang dùng score_v0 và confidence không phải xác suất đã hiệu chỉnh.</td></tr>
+<tr><td><code>minimum_reference_errors</code></td><td><strong>100</strong></td><td>DEC-018 TBD-K4: E<sub>min</sub> = 100 lỗi đã xác minh. <strong>DEC-018 đang <code>proposed</code>, giá trị là ước lượng của agent chưa dựa trên đo đạc.</strong></td><td class="none"><strong>Rủi ro thực:</strong> DEC-003 không chèn lỗi; DEC-002 BLOCKER-017 nói D1/D2 là hai nửa của held-out. Nếu held-out chỉ khoảng 160 frame (D1 = D2 = 80) thì 100 lỗi E1–E3 có thể không đạt và KPI-1 luôn &quot;không đủ mẫu&quot;. Cần <em>đếm lỗi thật trong reference</em> rồi mới khoá.</td></tr>
+<tr><td><code>minimum_errors_per_group</code></td><td><strong>20</strong></td><td>DEC-018 TBD-K4: E<sub>min,g</sub> = 20 mỗi nhóm E1/E2/E3 (<code>proposed</code>)</td><td>Nhóm dưới ngưỡng chỉ báo cáo, không kết luận (SRS 7.1.3). Cùng rủi ro đếm lỗi ở dòng trên, nhất là E2/E3.</td></tr>
+<tr><td><code>minimum_recall_at_20</code></td><td><strong>0.5</strong></td><td>DEC-018 TBD-K1: Recall@20% &ge; 50% (<code>proposed</code>). Ngẫu nhiên kỳ vọng &asymp; 20% (SRS 7.1.2)</td><td>Áp lên <strong>cận dưới khoảng tin cậy 95%</strong> (cluster bootstrap theo video, B &ge; 1000, seed khoá trước) và cận dưới &Delta; so với ngẫu nhiên và heuristic mật độ phải &gt; 0 (SRS 7.1.3). SRS: K1 &quot;chốt từ baseline trên tập hiệu chỉnh trước khi chạy held-out&quot; (B-14); chưa có baseline. 50% là ước lượng, không có số đo.</td></tr>
+<tr><td><code>minimum_effort_reduction</code></td><td><strong>0.2</strong></td><td>DEC-018 TBD-K2: KPI-2 (1 &minus; T<sub>A</sub>/T<sub>B</sub>) &ge; 20% (<code>proposed</code>)</td><td>Áp lên cận dưới CI 95% (SRS 7.2.5). Với 4 reviewer ngoài và 80 frame mỗi giai đoạn, chưa có power analysis nên DEC-018 coi KPI-2 là <strong>thăm dò</strong>; báo cáo power hậu kiểm, không đổi thiết kế (CR-101).</td></tr>
+<tr><td><code>residual_non_inferiority_margin</code></td><td><strong>0.05</strong></td><td>DEC-018 TBD-K3: &delta; = 5 điểm phần trăm tuyệt đối (<code>proposed</code>). SRS 7.2.4: kiểm định một phía, &alpha; = 0,025, H<sub>0</sub>: &rho;<sub>A</sub> &minus; &rho;<sub>B</sub> &ge; &delta;</td><td>SRS yêu cầu chọn &delta; từ residual baseline đo ở pilot nhỏ, nhưng CR-101 đã bỏ pilot nhỏ. DEC-018 ghi rõ điểm này. 5 điểm cũng là ngưỡng guardrail residual khởi điểm của gate (SRS 7.2.4) và <strong>không thay</strong> kiểm định.</td></tr>
+<tr><td><code>false_positive_non_inferiority_margin</code></td><td><strong>0.05</strong></td><td>DEC-018 TBD-K3: &delta;<sub>fp</sub> = 5 điểm (<code>proposed</code>); SRS G-5 (box thừa)</td><td>Cùng lưu ý với &delta;. Nhánh assisted không được nhiều box thừa hơn baseline quá &delta;<sub>fp</sub>.</td></tr>
+<tr><td><code>maximum_ui_p95_ms</code></td><td><strong>1500</strong> (chỉ dùng nếu PO muốn khoá)</td><td>SRS NFR-01: mở frame kế tiếp p95 &le; 1,5 s, cache ấm. SRS 8: số này &quot;đề xuất khởi điểm, chưa được phê duyệt, chưa có phép đo&quot;; TBD-13</td><td>Gate hiện chưa đọc trường này. Trường chỉ chứa một số, trong khi NFR-02 (lưu quyết định p95 &le; 500 ms) không có trường riêng. Đo trong tuần thử nghiệm 20–23/10 (CR-101) rồi mới khoá.</td></tr>
+<tr class="none"><td><code>maximum_run_duration_ms</code></td><td><code>null</code> — <strong>cần đo baseline trước, không đề xuất số</strong></td><td>SRS NFR-03: thời gian QC Run 10.000 frame &le; &quot;TBD-13&quot; trên phần cứng chốt ở TBD-02</td><td>Không có số trong SRS/DEC/CR. Phần cứng triển khai theo CR-121 là VPS 6 vCPU / 16 GB dùng chung; cần đo run thật rồi Tech Lead chốt.</td></tr>
+</tbody></table>
+<p>Quy đổi từ phần trăm sang tỉ lệ của gate: 50% &rarr; <code>0.5</code>, 20% &rarr; <code>0.2</code>, 5 điểm &rarr; <code>0.05</code>.</p>
+
+<h2>3. Cỡ mẫu</h2>
+<table><thead><tr><th>Hạng mục</th><th>Đề xuất</th><th>Căn cứ</th></tr></thead><tbody>
+<tr><td>Thí nghiệm effort (TBD-12)</td><td>4 reviewer ngoài, thiết kế chéo AB/BA, 2 người mỗi chuỗi, 80 frame mỗi giai đoạn (D1 = D2 = 80)</td><td>DEC-018 TBD-12 (<code>proposed</code>, hạn 19/10); CR-101: theo nguồn lực reviewer ngoài, không pilot nhỏ; SRS EX-01: 4 reviewer là mức sàn (AS-05)</td></tr>
+<tr><td>Power analysis</td><td>Không đề xuất số power trước</td><td>SRS 7.2.5 yêu cầu power 80% từ phương sai đo ở pilot nhỏ; CR-101 bỏ pilot nên chỉ báo cáo power hậu kiểm. Kết luận KPI-2 là thăm dò.</td></tr>
+<tr><td>N frame calibration và held-out (TBD-03)</td><td><strong>Cần Data Owner/QA Lead cung cấp</strong>, không đề xuất số</td><td>TBD-03 chưa có giá trị trong tài liệu; phụ thuộc số lỗi đếm được ở mục 2</td></tr>
+<tr><td>Lát kiểm tra ngẫu nhiên r (TBD-10)</td><td>10% frame, tối thiểu 200 frame</td><td>DEC-018 (<code>proposed</code>; QA Lead chốt). Không phải trường của policy này.</td></tr>
+<tr><td>t<sub>idle</sub> (TBD-11)</td><td>30 giây, độ nhạy 60 giây; buổi làm quen 30 phút</td><td>DEC-018 (<code>proposed</code>; PO chốt)</td></tr>
+</tbody></table>
+
+<h2>4. Cách chia split theo video_id</h2>
+<ul>
+<li>Đơn vị nhóm là <code>video_id</code> (cluster bootstrap và split cùng khoá). Manifest v1 gồm bốn tập <code>train</code>, <code>guideline</code>, <code>calibration</code>, <code>held_out</code> kèm provenance (source/license/authorized_use) theo <code>evaluation-inputs.cjs</code>. Preflight chặn: held-out giao train/guideline/calibration; calibration giao train/guideline.</li>
+<li>Tập train của Detector là danh sách ảnh BDD100K split train; ảnh của tệp người học thuộc train bị loại khỏi tập đánh giá (FR-EVL-05b, CR-101). Cần xác nhận dataset kiểm nằm ngoài train (CR-117 B.3).</li>
+<li>D1/D2 là hai nửa của held-out (DEC-002 BLOCKER-017), chia ngẫu nhiên theo video nguồn, phân tầng theo slice và số lỗi reference, không giao tập hiệu chỉnh; mỗi frame đúng một reviewer cùng nhánh (SRS EX-02). Seed chia D1/D2 và gán AB/BA khoá trước (PO).</li>
+<li>Không dùng held-out hoặc GT held-out để chọn score, k*, ngưỡng hay fit (DEC-015, DEC-016: không tự bỏ leakage gate).</li>
+<li>Người lập reference không tham gia thí nghiệm trên cùng dữ liệu; reviewer không biết reference (EX-10).</li>
+</ul>
+
+<h2>5. Matching/counting và hiệu chỉnh</h2>
+<ul>
+<li>Đã ghi ở DEC-015/DEC-016 và nhắc lại ở DEC-018: &tau;<sub>m</sub> = 0,50, &tau;<sub>amb</sub> = 0,30, a<sub>min</sub> = 24 px², visibility 0,2, n<sub>min</sub> = 50, 5 fold. <strong>Lưu ý không nhất quán cần PO làm rõ:</strong> DEC-015 D06 ghi &quot;n<sub>min</sub> 50 và Group CV 5 fold vẫn đề xuất&quot;; DEC-016 ghi &quot;n<sub>min</sub>/folds sau thống kê&quot;; DEC-018 coi cả hai là đã chọn. Trạng thái thật của n<sub>min</sub> và số fold cần xác nhận.</li>
+<li>Hiệu chỉnh score (FR-RNK-10): out-of-fold group CV theo video chỉ trên calibration; thiếu nhãn thì giữ score_v0.</li>
+<li>Ablation (FR-RNK-11): bỏ điểm nền h(f), bỏ từng nhóm đặc trưng, so với score_v0 và các heuristic; chọn version theo Recall@20% ngoài fold; không chạm held-out.</li>
+<li>Đối chứng KPI-1 (SRS 7.1.2): ngẫu nhiên với S &ge; 1000 seed, heuristic mật độ annotation, heuristic Detector (confidence lớn nhất E1/E2), oracle (tham khảo). Khoảng tin cậy 95% bằng cluster bootstrap theo video, B &ge; 1000, seed khoá trước.</li>
+</ul>
+
+<h2>6. Danh sách khoá trước khi đo (SRS 7.3)</h2>
+<table><thead><tr><th>Mục</th><th>Người khoá</th></tr></thead><tbody>
+<tr><td>Detector: artifact, checksum, mapping lớp, &tau;<sub>conf</sub>, xác nhận không huấn luyện trên held-out</td><td>Data/Model Owner</td></tr>
+<tr><td>Score version: đặc trưng, tham số, h(f), &tau;<sub>E1</sub>, &tau;<sub>E2</sub>, seed phá hoà</td><td>QC Admin</td></tr>
+<tr><td>Reference: GT version, mapping, &tau;<sub>m</sub>, a<sub>min</sub>, E<sub>min</sub></td><td>QA Lead</td></tr>
+<tr><td>Ngưỡng K1, K2, &delta;, &delta;<sub>fp</sub></td><td>Product Owner (K3 cùng QA Lead)</td></tr>
+<tr><td>Thí nghiệm: seed D1/D2 và AB/BA, k*, r, t<sub>idle</sub>, cỡ mẫu, mô hình phân tích, độ nhạy</td><td>Product Owner</td></tr>
+</tbody></table>
+
+<h2>7. Đầu vào PO/vận hành phải cung cấp</h2>
+<table><thead><tr><th>#</th><th>Đầu vào</th><th>Ai</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>1</td><td>Reference bytes thật (GT, mapping, counting policy, taxonomy, provenance, quyền dữ liệu), <code>reference_version</code> và <code>reference_sha256</code></td><td>QA Lead, Data Owner</td><td>Hai người xác minh độc lập + phân xử trước khi khoá; đếm số lỗi E1–E3 thật (cần cho E<sub>min</sub>)</td></tr>
+<tr><td>2</td><td>Checkpoint Detector thật, <code>model_sha256</code>, version, class mapping, nguồn/license/quyền sử dụng (<code>model_provenance</code>)</td><td>Data/Model Owner</td><td>Không thay bằng CPU/stub rồi báo GPU thật pass</td></tr>
+<tr><td>3</td><td>Split manifest v1 (<code>video_id</code>), <code>split_sha256</code>, N calibration/held-out (TBD-03), danh sách train BDD100K</td><td>Data Owner, QA Lead</td><td>Xác nhận dataset kiểm ngoài train</td></tr>
+<tr><td>4</td><td>Xác nhận giấy phép BDD100K cho pilot và lưu nội bộ (TBD-18)</td><td>Data Owner</td><td>Trước khi nạp dữ liệu</td></tr>
+<tr><td>5</td><td>Quyết định cuối cho giá trị ở mục 2 và mục 3; PO/QA Lead xác nhận hoặc sửa DEC-018</td><td>Product Owner, QA Lead</td><td>Hạn 19/10/2026</td></tr>
+<tr><td>6</td><td>Danh sách 4 reviewer ngoài (AS-05), seed D1/D2 và AB/BA</td><td>Product Owner</td><td>Tên reviewer chưa có trong repo</td></tr>
+<tr><td>7</td><td>Runner <code>labelx-evaluation</code> + DB/Redis/S3 test cô lập (#388), environments và biến <code>LABELX_EVALUATION_POLICY</code> (#390)</td><td>Vận hành</td><td>Xem hướng dẫn runner</td></tr>
+<tr><td>8</td><td>Đo trong tuần thử nghiệm: UI p95, thời gian QC Run (NFR-01…03, TBD-13)</td><td>Tech Lead</td><td>Trước khi khoá <code>maximum_*</code></td></tr>
+</tbody></table>
+
+<h2>8. Vấn đề gate cần xử lý riêng (chưa sửa)</h2>
+<p><code>policyReady</code> đọc hồ sơ approval bằng hai biểu thức chính quy markdown: <code>**Status**: `accepted`</code> và <code>**Decision Type**: `(evaluation|acceptance|testing)`</code>. Hồ sơ quyết định của repo là HTML theo mẫu (<code>&lt;strong&gt;Status&lt;/strong&gt;: &lt;code&gt;accepted&lt;/code&gt;</code>) và enum <code>Decision Type</code> của mẫu là <code>architecture | product | process | governance | security | operations</code>, <strong>không có</strong> evaluation/acceptance/testing. Test của gate chỉ dùng fixture markdown. Hệ quả: một DEC HTML đúng mẫu <strong>không thể</strong> làm <code>policyReady</code> đạt, nên gate không đạt được dù PO đã duyệt. Theo chỉ dẫn của task này tôi không đổi gate. Đề xuất (cần task/CR được duyệt): (a) cho <code>policyReady</code> đọc metadata HTML và chấp nhận <code>governance</code>; hoặc (b) mở rộng enum của mẫu và thêm hai dòng nguyên văn vào DEC. Cần quyết định trước khi PO ký, vì nếu không bản ký sẽ không dùng được.</p>
+
+<h2>9. Quyết định cần PO</h2>
+<ol>
+<li>Xác nhận hoặc sửa các giá trị ở mục 2 (đặc biệt E<sub>min</sub> = 100 sau khi đếm lỗi thật; K1 50%; K2 20%; &delta; = &delta;<sub>fp</sub> = 5 điểm).</li>
+<li>Giá trị cho <code>maximum_run_duration_ms</code> (cần đo) và có khoá <code>maximum_ui_p95_ms</code> = 1500 không.</li>
+<li>Trạng thái thật của n<sub>min</sub> = 50 và 5 fold (DEC-015/016/018 không nhất quán).</li>
+<li>Cách xử lý vấn đề gate ở mục 8.</li>
+<li>Chấp nhận KPI-2 là thăm dò (4 reviewer, 80 frame, không power analysis trước) hay hoãn thí nghiệm để đủ cỡ mẫu.</li>
+</ol>
+<p>Liên quan: <a href="evaluation-policy-readiness.html">evaluation-policy-readiness.html</a>, <a href="evaluation-runner.html">evaluation-runner.html</a>, DEC-018, DEC-015, DEC-016, CR-101.</p>
+</body></html>
