@@ -48,7 +48,7 @@ ul.dir{columns:2;font-size:14px}
 <li><strong>Report ID</strong>: <code>issue-review-anchor-focus-20261018-vietanh</code></li>
 <li><strong>Owner</strong>: <code>Vietanhhhhhh2003</code></li>
 <li><strong>Executor</strong>: <code>Codex</code></li>
-<li><strong>Status</strong>: <code>draft</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
 <li><strong>Task ID</strong>: yêu cầu người dùng ngày 18/10/2026; liên quan <a href="https://github.com/toilatrung/label-x/issues/395">#395 — MVP-p3_review</a></li>
 <li><strong>Epic ID</strong>: <a href="https://github.com/toilatrung/label-x/issues/386">#386 — MVP-RELEASE</a></li>
 <li><strong>Report Date</strong>: <code>2026-10-18</code></li>
@@ -80,8 +80,9 @@ Canvas cũ chỉ giảm opacity các annotation khác, không có lớp blur cho
 <li>Detector worker lint/format: passed; 24 tests passed. Django system check: passed.</li>
 <li>validate-framework: passed; verify-design: 25 screens / 19 tab states passed.</li>
 <li>Playwright: chuyển issue và chế độ review passed trên local replay. Bằng chứng payload/ảnh/video đã commit.</li>
-<li>Toàn bộ backend PostgreSQL: đang chạy; đã xuất hiện failure, cần lấy kết quả và đối chứng baseline trước khi chốt gate.</li>
-<li>Chạy từng target tương đương make check bằng lệnh native trên Windows; không tuyên bố make check pass khi toàn bộ backend chưa hoàn tất.</li>
+<li>Toàn bộ backend Windows/PostgreSQL: 1714 passed, 6 failed, 4 skipped, 4 errors. Một failure thuộc type sinh từ mô tả OpenAPI bổ sung: đã sinh lại contract.d.ts và test kiểm đồng bộ schema passed.</li>
+<li>Đối chứng checkout develop sạch 125be0c: đúng 5 failure và 4 error còn lại tái hiện; 113 test cùng đợt đối chứng passed. Chúng thuộc VLM dispatch khi thiếu Redis, SIGKILL không có trên Windows, quyền file POSIX 0600 và giới hạn 32767 ký tự của biến môi trường Windows. Không thay mã ngoài phạm vi để sửa các failure này.</li>
+<li>Chạy từng target tương đương make check bằng lệnh native trên Windows; không tuyên bố make check local pass. CI Linux/PostgreSQL của commit af6aa10 đang chạy tại thời điểm hoàn tất báo cáo; trạng thái cập nhật ở <a href="https://github.com/toilatrung/label-x/pull/452/checks">PR #452 checks</a>.</li>
 <li>PostgreSQL riêng trong .cache/issue-focus/pgdata, port 55433; tắt fsync/synchronous_commit để giảm thời gian I/O của database kiểm thử, không chạm database ứng dụng.</li>
 </ul>
 <h2>Design fidelity</h2><table><tr><th>Vùng ReviewWorkspace.dc.html</th><th>Kết quả</th></tr>
@@ -89,6 +90,8 @@ Canvas cũ chỉ giảm opacity các annotation khác, không có lớp blur cho
 <tr><td>Issue / Frame Review</td><td>Giữ điều khiển hiện có; bổ sung focus theo yêu cầu người dùng, hai box dùng overlay annotation hiện có.</td></tr>
 <tr><td>Đối chiếu bằng chứng / lỗi anchor</td><td>Giữ các card; E3 đối chiếu hai annotation Snapshot, cảnh báo dùng lx-callout.</td></tr></table>
 <h2>Related Files và bàn giao</h2><p><a href="../../../src/frontend/evidence/issue-focus/index.html">Video, ảnh và payload trước–sau</a>.
+<a href="../../../src/frontend/evidence/issue-focus/windows-baseline-comparison.json">Đối chứng failure Windows với baseline</a>;
+<a href="../../../src/frontend/evidence/issue-focus/backend-regressions.xml">JUnit regression PostgreSQL</a>.
 Video trước quay production; video sau quay bản local với payload và ảnh thật, anchor qua hàm serialization đã sửa.
 Đây không phải bằng chứng production đã được triển khai. Không commit mật khẩu, cookie hay URL ký S3; không lưu quyết định review.</p>
 <h2>Risks / Follow-up</h2><p>Chưa triển khai production. PR cần reviewer theo CR-102 và CI trước khi merge.

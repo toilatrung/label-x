@@ -26,4 +26,6 @@ Script chỉ đọc API production; mọi request ghi trong replay bị chặn.<
 <h2>Phạm vi bằng chứng</h2><p>Ảnh/video local xác minh giao diện với dữ liệu thật đã ghi lại, không chứng minh production đã được cập nhật.
 Test PostgreSQL xác minh candidate → materialize issue → workspace API → cả hai bbox; Vitest xác minh mapping,
 chuyển issue/frame, chế độ review và lỗi anchor. Không thay ranking, priority hoặc queue filters.</p>
+<p><a href="backend-regressions.xml">JUnit: 8 regression backend passed</a> ·
+<a href="windows-baseline-comparison.json">Đối chứng 5 failure / 4 error Windows tái hiện trên develop sạch</a>.</p>
 </body></html>
