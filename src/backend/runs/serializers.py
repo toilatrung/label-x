@@ -24,6 +24,7 @@ from runs.models import (
     WorkUnit,
 )
 from runs.progress import engine_progress
+from runs.ranking_presentation import PRIORITIES, review_priority, run_evidence_incomplete
 from runs.routing_config import validate_routing_thresholds
 from runs.vlm_read import build_vlm_view, run_vlm_engine_state
 from vlm.config import validate_vlm_config
@@ -496,6 +497,7 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
     issue_counts = IssueCountsField(read_only=True)
     explanation = ExplanationField(read_only=True)
     priority = serializers.SerializerMethodField()
+    missing_evidence = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -546,14 +548,15 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
         holder = getattr(obj, "active_lease_holder_id", None)
         return int(holder) if holder is not None else None
 
-    @extend_schema_field(serializers.ChoiceField(choices=["high", "medium", "low"]))
+    def get_missing_evidence(self, obj: RunRankingEntry) -> bool:
+        incomplete = self.context.get("run_evidence_incomplete")
+        if incomplete is None:
+            incomplete = run_evidence_incomplete(obj.ranking.run)
+        return obj.missing_evidence or bool(incomplete)
+
+    @extend_schema_field(serializers.ChoiceField(choices=PRIORITIES))
     def get_priority(self, obj: RunRankingEntry) -> str:
-        total = max(int(self.context.get("ranking_total", 0)), 1)
-        if obj.rank <= (total + 2) // 3:
-            return "high"
-        if obj.rank <= (total * 2 + 2) // 3:
-            return "medium"
-        return "low"
+        return review_priority(obj.issue_counts, self.get_missing_evidence(obj))
 
     @extend_schema_field(serializers.URLField(allow_null=True))
     def get_thumbnail_url(self, obj: RunRankingEntry) -> str | None:
@@ -565,14 +568,14 @@ class RankedFrameSerializer(serializers.ModelSerializer[Any]):
 class RankedFrameResponseSerializer(RankedFrameSerializer):
     """Describe optional contract additions without marking method fields required."""
 
-    priority: Any = serializers.ChoiceField(choices=["high", "medium", "low"], required=False)
+    priority: Any = serializers.ChoiceField(choices=PRIORITIES, required=False)
     thumbnail_url: Any = serializers.URLField(allow_null=True, required=False)
 
 
 class RankingPriorityCountsSerializer(serializers.Serializer[Any]):
-    high = serializers.IntegerField(min_value=0)
-    medium = serializers.IntegerField(min_value=0)
-    low = serializers.IntegerField(min_value=0)
+    suspected = serializers.IntegerField(min_value=0)
+    unassessed = serializers.IntegerField(min_value=0)
+    no_suspicions = serializers.IntegerField(min_value=0)
 
 
 class PaginatedRankedFrameListSerializer(serializers.Serializer[Any]):

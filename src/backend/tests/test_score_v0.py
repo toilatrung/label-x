@@ -52,6 +52,30 @@ def test_scores_every_frame_and_explains_score_v0_contributions() -> None:
     assert len(ranking_hash) == 64 and all(item.score_version == SCORE_V0 for item in ranked)
 
 
+@pytest.mark.parametrize("with_e3", [False, True])
+def test_ten_frame_baseline_is_review_order_not_risk(with_e3: bool) -> None:
+    from runs.ranking_presentation import review_priority
+
+    frames = [FrameInput(13, i, annotation_count=13 if i == 2 else 12) for i in range(10)]
+    candidates = (
+        [
+            _candidate("E3", 13, 0, anchors=2),
+            _candidate("E3", 13, 4, anchors=3),
+        ]
+        if with_e3
+        else []
+    )
+    ranked, _ = rank_frames(frames, candidates, seed=6)
+    assert len(ranked) == 10
+    for row in ranked:
+        group = review_priority(dict(row.anchor_counts), missing_evidence=True)
+        assert group == ("suspected" if row.contributions else "unassessed")
+        if row.frame_key in {"13:2", "13:9"}:
+            assert row.score == row.baseline_score
+            assert row.score == Decimal("0.13" if row.frame_key == "13:2" else "0.12")
+            assert group == "unassessed"
+
+
 def test_ranking_hash_and_order_are_reproducible_when_candidate_input_order_changes() -> None:
     frames = [FrameInput(3, 1), FrameInput(3, 2)]
     candidates = [_candidate("E1", 3, 1, confidence=0.5), _candidate("E2", 3, 2, confidence=0.5)]

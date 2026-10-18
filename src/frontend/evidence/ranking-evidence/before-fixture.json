@@ -1,0 +1,314 @@
+{
+  "run": {
+    "id": 6,
+    "snapshot_id": 4,
+    "config_version_id": 1,
+    "seed": 6,
+    "status": "completed",
+    "is_final": false,
+    "origin_run_id": null,
+    "score_version": "score_v0",
+    "model_artifact": null,
+    "created_by": 4,
+    "created_at": "2026-10-18T00:00:00Z",
+    "finished_at": "2026-10-18T00:01:00Z",
+    "engines": [
+      {
+        "engine": "schema",
+        "status": "checked",
+        "reason": null,
+        "failed_units": 0
+      },
+      {
+        "engine": "geometry",
+        "status": "checked",
+        "reason": null,
+        "failed_units": 0
+      },
+      {
+        "engine": "duplicate",
+        "status": "checked",
+        "reason": null,
+        "failed_units": 0
+      },
+      {
+        "engine": "detector",
+        "status": "not_checked",
+        "reason": "disabled",
+        "failed_units": 0
+      }
+    ]
+  },
+  "frames": [
+    {
+      "frame_id": 100,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 0
+      },
+      "rank": 1,
+      "score": 1.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {
+        "E3": 2
+      },
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": [
+          {
+            "family": "E3",
+            "candidate_hash": "fixture-0-0",
+            "anchor_count": 2,
+            "n_i": 1,
+            "q_i": 0.5,
+            "contribution": 0.5
+          },
+          {
+            "family": "E3",
+            "candidate_hash": "fixture-0-1",
+            "anchor_count": 2,
+            "n_i": 1,
+            "q_i": 0.5,
+            "contribution": 0.5
+          }
+        ]
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "high"
+    },
+    {
+      "frame_id": 104,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 4
+      },
+      "rank": 2,
+      "score": 0.6,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {
+        "E3": 1
+      },
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": [
+          {
+            "family": "E3",
+            "candidate_hash": "fixture-4-0",
+            "anchor_count": 2,
+            "n_i": 1,
+            "q_i": 0.5,
+            "contribution": 0.5
+          }
+        ]
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "high"
+    },
+    {
+      "frame_id": 102,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 2
+      },
+      "rank": 3,
+      "score": 0.13,
+      "baseline_score": 0.13,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.13,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "high"
+    },
+    {
+      "frame_id": 109,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 9
+      },
+      "rank": 4,
+      "score": 0.12,
+      "baseline_score": 0.12,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.12,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "high"
+    },
+    {
+      "frame_id": 101,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 1
+      },
+      "rank": 5,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "medium"
+    },
+    {
+      "frame_id": 103,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 3
+      },
+      "rank": 6,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "medium"
+    },
+    {
+      "frame_id": 105,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 5
+      },
+      "rank": 7,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "medium"
+    },
+    {
+      "frame_id": 106,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 6
+      },
+      "rank": 8,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "low"
+    },
+    {
+      "frame_id": 107,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 7
+      },
+      "rank": 9,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "low"
+    },
+    {
+      "frame_id": 108,
+      "frame_key": {
+        "cvat_task_id": 13,
+        "frame_number": 8
+      },
+      "rank": 10,
+      "score": 0.1,
+      "baseline_score": 0.1,
+      "score_version": "score_v0",
+      "queue": "risk",
+      "source": "risk",
+      "review_state": "unreviewed",
+      "missing_evidence": false,
+      "issue_counts": {},
+      "explanation": {
+        "score_version": "score_v0",
+        "baseline_score": 0.1,
+        "contributions": []
+      },
+      "lease_holder_user_id": null,
+      "thumbnail_url": null,
+      "priority": "low"
+    }
+  ]
+}

@@ -98,6 +98,10 @@ def rank_frames(
 ) -> tuple[tuple[RankedFrame, ...], str]:
     """Score all supplied frames and return a deterministic ranking and hash.
 
+    Rank is review order, never a calibrated risk category. The annotation
+    baseline keeps candidate-free frames in exports/evaluation; it is not
+    evidence of an error. This frozen formula and its hashes must not change.
+
     The function consumes Candidate-shaped mappings from the engine contract.
     Before aggregation is connected, each candidate is a provisional issue; its
     anchor nevertheless derives the required ``n_i`` value.

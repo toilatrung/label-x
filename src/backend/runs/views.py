@@ -27,6 +27,7 @@ from review.models import FrameReview, Lease, ReviewDecision
 from runs.config_versions import create_config_version, publish_config_version
 from runs.kpi import ledger_entries
 from runs.models import AIModel, ConfigVersion, ModelKind, QCRun, RunRanking, WorkUnit
+from runs.ranking_presentation import HAS_SUSPICIONS, PRIORITIES, run_evidence_incomplete
 from runs.serializers import (
     CandidateSerializer,
     ConfigVersionCreateSerializer,
@@ -933,7 +934,7 @@ class RunRankingView(APIView):
                 ],
             ),
             OpenApiParameter("q", str, required=False),
-            OpenApiParameter("priority", str, required=False, enum=["high", "medium", "low"]),
+            OpenApiParameter("priority", str, required=False, enum=list(PRIORITIES)),
             OpenApiParameter("cursor", str, required=False),
         ],
         responses={
@@ -1029,33 +1030,38 @@ class RunRankingView(APIView):
             else:
                 entries = entries.none()
 
-        ranking_total = ranking.entries.count()
+        incomplete = run_evidence_incomplete(ranking.run)
+        entries = entries.annotate(
+            has_scored_suspicions=Case(When(HAS_SUSPICIONS, then=Value(True)), default=Value(False))
+        )
+        groups = {
+            "suspected": Q(has_scored_suspicions=True),
+            "unassessed": Q(has_scored_suspicions=False, missing_evidence=True),
+            "no_suspicions": Q(has_scored_suspicions=False, missing_evidence=False),
+        }
+        if incomplete:
+            groups["unassessed"] = Q(has_scored_suspicions=False)
+            groups["no_suspicions"] = Q(pk__in=[])
         priority = request.query_params.get("priority")
-        if priority not in {None, "high", "medium", "low"}:
+        if priority is not None and priority not in PRIORITIES:
             raise ApiError(
                 status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "priority không hợp lệ."
             )
-        first_cut = (ranking_total + 2) // 3
-        second_cut = (ranking_total * 2 + 2) // 3
         # Facets cover the entire filtered queue before applying the selected priority
         # or cursor, so other priority choices remain useful when a bucket is selected.
         priority_counts = entries.aggregate(
-            high=Count("pk", filter=Q(rank__lte=first_cut)),
-            medium=Count("pk", filter=Q(rank__gt=first_cut, rank__lte=second_cut)),
-            low=Count("pk", filter=Q(rank__gt=second_cut)),
+            **{name: Count("pk", filter=condition) for name, condition in groups.items()}
         )
-        if priority == "high":
-            entries = entries.filter(rank__lte=first_cut)
-        elif priority == "medium":
-            entries = entries.filter(rank__gt=first_cut, rank__lte=second_cut)
-        elif priority == "low":
-            entries = entries.filter(rank__gt=second_cut)
+        if priority is not None:
+            entries = entries.filter(groups[priority])
 
         paginator = RunCursorPagination()
         paginator.ordering = "rank"
         page = paginator.paginate_queryset(entries, request, view=self)
         response = paginator.get_paginated_response(
-            RankedFrameSerializer(page, many=True, context={"ranking_total": ranking_total}).data
+            RankedFrameSerializer(
+                page, many=True, context={"run_evidence_incomplete": incomplete}
+            ).data
         )
         response.data["source"] = ranking.source
         response.data["content_hash"] = ranking.content_hash

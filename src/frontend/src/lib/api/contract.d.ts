@@ -2513,6 +2513,7 @@ export interface components {
             /** @enum {string} */
             source: "risk" | "random_audit";
             review_state: components["schemas"]["FrameReviewState"];
+            /** @description Trạng thái đọc: cờ đã lưu hoặc engine schema/geometry/duplicate/detector hay engine required chưa checked hoặc thiếu kết quả. Không ghi đè cờ trong ranking/explanation đã lưu; detector disabled vẫn thiếu bằng chứng E1/E2. Không vô hiệu nghi vấn E3 từ duplicate. */
             missing_evidence: boolean;
             /** @description Số issue theo IssueFamily */
             issue_counts: {
@@ -2524,10 +2525,10 @@ export interface components {
             };
             lease_holder_user_id: number | null;
             /**
-             * @description Mức ưu tiên suy ra từ s(f) (MBE-02)
+             * @description Nhóm review theo bằng chứng (presentation v1), không phải mức rủi ro. suspected: có nghi vấn E1/E2/E3 tính điểm; unassessed: chưa có nghi vấn tính điểm và thiếu bằng chứng; no_suspicions: chưa ghi nhận nghi vấn tính điểm với bằng chứng engine đầy đủ. Rank và score_v0 không đổi.
              * @enum {string}
              */
-            priority?: "high" | "medium" | "low";
+            priority?: "suspected" | "unassessed" | "no_suspicions";
             /** Format: uri */
             thumbnail_url?: string | null;
         };
@@ -3279,11 +3280,11 @@ export interface components {
             content_hash: string;
             /** @description SHA-256 của ordering đã lưu cho source */
             ranking_hash: string;
-            /** @description Số ảnh của toàn bộ queue theo mức ưu tiên, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor. */
+            /** @description Số ảnh của toàn bộ queue theo nhóm review bằng chứng, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor. */
             priority_counts?: {
-                high: number;
-                medium: number;
-                low: number;
+                suspected: number;
+                unassessed: number;
+                no_suspicions: number;
             };
             results: components["schemas"]["RankedFrame"][];
         };
@@ -4899,7 +4900,7 @@ export interface operations {
                 review_state?: components["schemas"]["FrameReviewState"];
                 /** @description Tìm theo frame_key (cvat_task_id hoặc frame_number) */
                 q?: string;
-                priority?: "high" | "medium" | "low";
+                priority?: "suspected" | "unassessed" | "no_suspicions";
                 /** @description Con trỏ trang từ trường next/previous (CursorPagination, PAGE_SIZE=50) */
                 cursor?: components["parameters"]["Cursor"];
             };
