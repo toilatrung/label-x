@@ -412,6 +412,73 @@ def test_api01_support_snapshot_operation_ids_and_status_codes_match():
             assert set(actual["responses"]) == set(expected["responses"])
 
 
+def _resolve(schema, spec):
+    """Follow $ref and flatten allOf/oneOf wrappers into one comparable schema."""
+    while "$ref" in schema:
+        schema = spec["components"]["schemas"][schema["$ref"].rsplit("/", 1)[1]]
+    merged = {key: value for key, value in schema.items() if key not in ("allOf", "oneOf")}
+    for item in schema.get("allOf", ()):
+        merged = {**_resolve(item, spec), **merged}
+    for item in schema.get("oneOf", ()):
+        branch = _resolve(item, spec)
+        merged.setdefault("type", branch.get("type"))
+        if "enum" in branch:
+            merged["enum"] = [*merged.get("enum", ()), *branch["enum"]]
+    return merged
+
+
+def _enum_values(schema, spec):
+    return set(_resolve(schema, spec).get("enum", ())) - {None}
+
+
+def _shape_problems(path, documented, runtime, doc_spec, rt_spec):
+    """Directional check: a client written against the contract must keep working."""
+    doc, rt = _resolve(documented, doc_spec), _resolve(runtime, rt_spec)
+    problems = []
+    if doc.get("type") == "object":
+        missing = set(doc.get("properties", {})) - set(rt.get("properties", {}))
+        problems += [f"{path}.{name}: missing at runtime" for name in sorted(missing)]
+        unguaranteed = set(doc.get("required", ())) - set(rt.get("required", ()))
+        problems += [f"{path}.{name}: not guaranteed at runtime" for name in sorted(unguaranteed)]
+        for name, child in doc.get("properties", {}).items():
+            if name in rt.get("properties", {}):
+                problems += _shape_problems(
+                    f"{path}.{name}", child, rt["properties"][name], doc_spec, rt_spec
+                )
+    elif doc.get("type") == "array":
+        problems += _shape_problems(
+            f"{path}[]", doc["items"], rt.get("items", {}), doc_spec, rt_spec
+        )
+    else:
+        if doc.get("type") != rt.get("type"):
+            problems.append(f"{path}: type {rt.get('type')!r} != {doc.get('type')!r}")
+        if doc.get("format") != rt.get("format") and doc.get("format") in {"uri", "date-time"}:
+            problems.append(f"{path}: format {rt.get('format')!r} != {doc.get('format')!r}")
+        runtime_enum, documented_enum = _enum_values(rt, rt_spec), _enum_values(doc, doc_spec)
+        if documented_enum and runtime_enum != documented_enum:
+            problems.append(f"{path}: enum {sorted(runtime_enum)} != {sorted(documented_enum)}")
+        if rt.get("nullable") and not doc.get("nullable"):
+            problems.append(f"{path}: runtime may be null but the contract forbids null")
+    return problems
+
+
+def test_api01_support_snapshot_response_shapes_are_compatible_with_contract():
+    from drf_spectacular.generators import SchemaGenerator
+
+    documented = yaml.safe_load((ROOT / "docs/04-api/openapi.yaml").read_text(encoding="utf-8"))
+    runtime = SchemaGenerator().get_schema(request=None, public=True)
+    problems = []
+    for name in ("Snapshot", "SnapshotAccepted", "SnapshotFrame", "PaginatedSnapshotList"):
+        problems += _shape_problems(
+            name,
+            documented["components"]["schemas"][name],
+            runtime["components"]["schemas"][name],
+            documented,
+            runtime,
+        )
+    assert not problems, "\n".join(problems)
+
+
 def test_api01_support_generated_types_match_committed_schema(tmp_path):
     contract_path = ROOT / "docs/04-api/openapi.yaml"
     cli = Path(
