@@ -9,6 +9,7 @@ import math
 import re
 import tempfile
 from collections.abc import Mapping
+from dataclasses import replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -553,11 +554,31 @@ def predict_frames(
 def run_detector_engine(engine_input: EngineInput) -> EngineOutput:
     """Load verified predictions and derive QC suspicions from snapshot annotations."""
     predictions, model = predict_frames(engine_input)
-    candidates = [
-        candidate
-        for frame, detections in predictions.values()
-        for candidate in _candidates_for_frame(engine_input, frame, detections, model=model)
-    ]
+    config_sha256 = hashlib.sha256(
+        json.dumps(engine_input.config.params, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    candidates: list[Candidate] = []
+    for frame, detections in predictions.values():
+        provenance = {
+            "source_frame": {
+                "snapshot_id": engine_input.snapshot_id,
+                "revision_sha256": frame.snapshot_job.snapshot.revision_sha256,
+                "cvat_task_id": frame.snapshot_job.cvat_task_id,
+                "frame_number": frame.frame_index,
+                "media_sha256": frame.media_sha256,
+                "width": frame.width,
+                "height": frame.height,
+            },
+            "coordinate_space": "original",
+            "config_sha256": config_sha256,
+            "predictions_sha256": hashlib.sha256(
+                json.dumps(detections, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest(),
+        }
+        candidates.extend(
+            replace(candidate, evidence={**candidate.evidence, **provenance})
+            for candidate in _candidates_for_frame(engine_input, frame, detections, model=model)
+        )
     return EngineOutput(
         idempotency_key=engine_input.idempotency_key,
         engine=engine_input.engine,

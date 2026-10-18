@@ -359,9 +359,9 @@
       "scenario": "Batch xử lý frame thành công và lỗi; rerun prediction",
       "expected": "Mọi required frame có ledger; transform đúng; prediction/config/model hash truy nguyên.",
       "fixtures": "Synthetic images + frozen stub; GPU thật ở evaluation",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p2_discovery.py::test_det_02_batch_ledger_original_coordinates_provenance_and_rerun"
     },
     {
       "id": "MAT-01",
@@ -404,9 +404,9 @@
       "scenario": "Crop lệch, sai frame/revision, transform resize",
       "expected": "Bằng chứng đúng frame và original coordinates; evidence sai bị từ chối/pending.",
       "fixtures": "Image/crop/checksum fixtures",
-      "implementation": "planned",
-      "runner": "unbound",
-      "test_nodeid": null
+      "implementation": "implemented",
+      "runner": "pytest",
+      "test_nodeid": "tests/phase_mvp/test_p2_discovery.py::test_mat_03_original_crop_resize_and_wrong_frame_revision_rejected"
     },
     {
       "id": "RNK-01",
