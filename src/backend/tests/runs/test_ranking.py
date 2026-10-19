@@ -221,23 +221,27 @@ def test_ranking_endpoint_serves_risk_and_random_with_scope_protection(
     assert len(risk.data["results"]) == 3
     assert risk.data["results"][0]["score_version"] == SCORE_V0
     assert risk.data["results"][0]["explanation"]["contributions"]
-    assert risk.data["results"][0]["priority"] == "high"
-    assert risk.data["priority_counts"] == {"high": 1, "medium": 1, "low": 1}
+    assert risk.data["results"][0]["priority"] == "suspected"
+    assert risk.data["priority_counts"] == {"suspected": 1, "unassessed": 2, "no_suspicions": 0}
     assert risk.data["results"][0]["thumbnail_url"] == "https://storage.test/frames/0.jpg"
 
     searched = client.get(f"/api/runs/{run.pk}/ranking/", {"q": "9:0"})
     assert searched.status_code == 200
     assert len(searched.data["results"]) == 1
     assert searched.data["results"][0]["frame_key"]["frame_number"] == 0
-    assert searched.data["priority_counts"] == {"high": 1, "medium": 0, "low": 0}
-    assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "high"}).data["results"]
+    assert searched.data["priority_counts"] == {"suspected": 1, "unassessed": 0, "no_suspicions": 0}
+    assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "suspected"}).data["results"]
     assert client.get(f"/api/runs/{run.pk}/ranking/", {"priority": "urgent"}).status_code == 400
 
     random_queue = client.get(f"/api/runs/{run.pk}/ranking/", {"queue": "random"})
     assert random_queue.status_code == 200
     assert random_queue.data["source"] == RunRanking.Source.RANDOM_AUDIT
     assert len(random_queue.data["results"]) == 2
-    assert random_queue.data["priority_counts"] == {"high": 1, "medium": 1, "low": 0}
+    assert random_queue.data["priority_counts"] == {
+        "suspected": 0,
+        "unassessed": 2,
+        "no_suspicions": 0,
+    }
 
     family = client.get(f"/api/runs/{run.pk}/ranking/", {"family": "E1"})
     assert family.status_code == 200
@@ -412,7 +416,11 @@ def test_runtime_ranking_schema_matches_static_contract_types() -> None:
 
     assert set(operation["responses"]) == {"200", "400", "403", "404"}
     assert parameters["cursor"]["schema"]["type"] == "string"
-    assert set(parameters["priority"]["schema"]["enum"]) == {"high", "medium", "low"}
+    assert set(parameters["priority"]["schema"]["enum"]) == {
+        "suspected",
+        "unassessed",
+        "no_suspicions",
+    }
     assert parameters["q"]["schema"]["type"] == "string"
     assert set(parameters["family"]["schema"]["enum"]) == {
         "E1",
@@ -488,18 +496,121 @@ def test_priority_counts_ignore_selected_priority_and_cursor_but_honor_other_fil
     url = f"/api/runs/{run.pk}/ranking/"
     first = client.get(url)
     assert len(first.data["results"]) == 1
-    assert first.data["priority_counts"] == {"high": 1, "medium": 1, "low": 1}
+    assert first.data["priority_counts"] == {"suspected": 1, "unassessed": 2, "no_suspicions": 0}
     second = client.get(first.data["next"])
     assert second.status_code == 200
     assert second.data["priority_counts"] == first.data["priority_counts"]
-    high = client.get(url, {"priority": "high"})
+    high = client.get(url, {"priority": "suspected"})
     assert high.data["priority_counts"] == first.data["priority_counts"]
-    filtered = client.get(url, {"family": "E1", "priority": "low"})
+    filtered = client.get(url, {"family": "E1", "priority": "no_suspicions"})
     assert filtered.data["results"] == []
-    assert filtered.data["priority_counts"] == {"high": 1, "medium": 0, "low": 0}
+    assert filtered.data["priority_counts"] == {"suspected": 1, "unassessed": 0, "no_suspicions": 0}
     empty = client.get(url, {"q": "no-matching-frame"})
     assert empty.data["results"] == []
-    assert empty.data["priority_counts"] == {"high": 0, "medium": 0, "low": 0}
+    assert empty.data["priority_counts"] == {"suspected": 0, "unassessed": 0, "no_suspicions": 0}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("with_e3", [False, True])
+@pytest.mark.parametrize("detector_disabled", [False, True])
+def test_evidence_groups_keep_frames_and_frozen_scores(
+    snapshot, config, qa_user, with_e3, detector_disabled
+):
+    from runs.models import EngineResult
+
+    run = _run(snapshot, config, qa_user)
+    run.engine_results.update(status="checked", reason=None)
+    EngineResult.objects.update_or_create(
+        run=run,
+        engine="detector",
+        defaults={"status": "checked", "reason": None, "required": False},
+    )
+    candidate = _candidate()
+    candidate.update(
+        engine="duplicate",
+        family="E3",
+        anchor={"kind": "annotation_box", "objects": [{"id": 10}, {"id": 11}]},
+    )
+    persist_run_rankings(
+        run_id=run.pk, candidates=[candidate] if with_e3 else [], audit_percent=Decimal("100")
+    )
+    # Reproduce a legacy stored row whose missing_evidence did not include the
+    # disabled, non-required detector. Presentation must remain conservative.
+    if detector_disabled:
+        run.engine_results.filter(engine="detector").update(status="not_checked", reason="disabled")
+    before = list(RunRankingEntry.objects.filter(ranking__run=run).values())
+    hashes = list(run.rankings.values("content_hash", "ranking_hash", "score_version"))
+    client = APIClient()
+    client.force_authenticate(qa_user)
+    for queue in ("risk", "random"):
+        url = f"/api/runs/{run.pk}/ranking/"
+        response = client.get(url, {"queue": queue})
+        rows = response.data["results"]
+        assert len(rows) == 3
+        assert all(row["missing_evidence"] == detector_disabled for row in rows)
+        counts = response.data["priority_counts"]
+        assert sum(counts.values()) == 3
+        assert counts["suspected"] == int(with_e3)
+        for group, count in counts.items():
+            filtered = client.get(url, {"queue": queue, "priority": group})
+            assert len(filtered.data["results"]) == count
+            assert all(row["priority"] == group for row in filtered.data["results"])
+            assert filtered.data["priority_counts"] == counts
+        for row in rows:
+            has_e3 = with_e3 and row["frame_key"]["frame_number"] == 0
+            expected = (
+                "suspected" if has_e3 else ("unassessed" if detector_disabled else "no_suspicions")
+            )
+            assert row["priority"] == expected
+            if has_e3:
+                assert row["issue_counts"] == {"E3": 1}
+                assert row["explanation"]["contributions"]
+            else:
+                assert row["score"] == row["baseline_score"] == 0.01
+    assert list(RunRankingEntry.objects.filter(ranking__run=run).values()) == before
+    assert list(run.rankings.values("content_hash", "ranking_hash", "score_version")) == hashes
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "counts,expected",
+    [
+        ({"E1": "three", "E2": None}, "unassessed"),
+        ({"E1": True}, "unassessed"),
+        ({"E1": {"nested": 1}}, "unassessed"),
+        ({"E1": -1}, "unassessed"),
+        (["unexpected"], "unassessed"),
+        ({"E3": 1, "E1": "bad"}, "suspected"),
+    ],
+)
+def test_legacy_counts_pass_through_without_inventing_suspicions(
+    snapshot, config, qa_user, counts, expected
+):
+    from runs.models import EngineResult
+
+    run = _run(snapshot, config, qa_user)
+    run.engine_results.update(status="checked", reason=None)
+    EngineResult.objects.update_or_create(
+        run=run, engine="detector", defaults={"status": "checked", "required": False}
+    )
+    persist_run_rankings(run_id=run.pk, candidates=[], audit_percent=Decimal("100"))
+    entry = RunRankingEntry.objects.filter(ranking__run=run, ranking__source="risk").first()
+    entry.issue_counts = counts
+    entry.save(update_fields=["issue_counts"])
+    client = APIClient()
+    client.force_authenticate(qa_user)
+    url = f"/api/runs/{run.pk}/ranking/"
+    response = client.get(url)
+    row = next(
+        row for row in response.data["results"] if row["frame_id"] == entry.snapshot_frame_id
+    )
+    assert row["issue_counts"] == counts
+    assert row["priority"] == expected
+    assert row["missing_evidence"] is True
+    for group, count in response.data["priority_counts"].items():
+        filtered = client.get(url, {"priority": group})
+        assert len(filtered.data["results"]) == count
+        assert all(row["priority"] == group for row in filtered.data["results"])
 
 
 def test_ranking_frame_query_does_not_load_job_payloads(

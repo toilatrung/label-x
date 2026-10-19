@@ -316,10 +316,10 @@ describe('ReviewQueues Frontend (T-034)', () => {
       expect(await screen.findByText('Task #10 • Frame #100')).toBeDefined();
       const row = screen.getByText('Task #10 • Frame #100').closest('article')!;
       expect(row.querySelector('.lx-review-rank')?.textContent).toBe('1');
-      expect(screen.getByText('Điểm 0.850')).toBeDefined();
-      expect(screen.getByText('Nền: 0.100')).toBeDefined();
-      expect(screen.getByText('Thiếu nhãn (E1): 2')).toBeDefined();
-      expect(screen.getByText('Sai lớp (E2): 1')).toBeDefined();
+      expect(screen.getByText('Điểm xếp hạng 0.850')).toBeDefined();
+      expect(screen.getByText('Nền theo số box: 0.100')).toBeDefined();
+      expect(screen.getByText('Nghi vấn Thiếu nhãn (E1): 2')).toBeDefined();
+      expect(screen.getByText('Nghi vấn Sai lớp (E2): 1')).toBeDefined();
     });
 
     it('switches to random queue tab independently and fetches random queue data', async () => {
@@ -356,7 +356,7 @@ describe('ReviewQueues Frontend (T-034)', () => {
 
       // Second page shows mockRiskFrame2
       expect(await screen.findByText('Task #20 • Frame #100')).toBeDefined();
-      expect(screen.getByText('Thiếu bằng chứng')).toBeDefined();
+      expect(screen.getByLabelText('Chưa đánh giá đầy đủ: thiếu bằng chứng engine')).toBeDefined();
 
       const prevBtn = screen.getByRole('button', { name: 'Trang trước' });
       expect((prevBtn as HTMLButtonElement).disabled).toBe(false);
@@ -973,6 +973,27 @@ describe('ReviewQueues Frontend (T-034)', () => {
 
   // --- MBE-02: tìm kiếm, mức ưu tiên, ảnh thu nhỏ, số đếm hàng đợi, nhận đúng frame ---
   describe('MBE-02: Search, priority, thumbnails, queue counts & claim by frame', () => {
+    it('keeps E3 when detector is disabled and describes baseline-only frames conservatively', async () => {
+      await renderReviewPage('reviewer', async request => {
+        const path = new URL(request.url).pathname;
+        if (path === '/api/runs/12/') return Response.json({ ...mockRun12,
+          engines: [{ engine: 'detector', status: 'not_checked', reason: 'disabled', failed_units: 0 }],
+        });
+        if (path.endsWith('/ranking/')) return rankingWith([
+          { ...mockRiskFrame2, priority: 'suspected' },
+          { ...mockRiskFrame1, frame_id: 999, score: 0.13, baseline_score: 0.13,
+            issue_counts: {}, priority: 'unassessed', missing_evidence: true },
+        ]);
+        return null;
+      });
+      expect(await screen.findByText(/detector: NOT CHECKED — disabled/)).toBeDefined();
+      expect(await screen.findByText('Nghi vấn Nhãn trùng (E3): 1')).toBeDefined();
+      expect(screen.getByText('Điểm xếp hạng 0.130')).toBeDefined();
+      expect(screen.queryByText('0 issue')).toBeNull();
+      expect(screen.queryByText('Rủi ro')).toBeNull();
+      expect(screen.queryByText('Ưu tiên cao')).toBeNull();
+      expect(screen.getByText(/Issue review và lỗi đã xác nhận/)).toBeDefined();
+    });
     const futureGrant: LeaseGrant = {
       ...mockLeaseGrant,
       lease: { ...mockLeaseGrant.lease, expires_at: '2099-01-01T00:00:00Z' },
@@ -1149,20 +1170,20 @@ describe('ReviewQueues Frontend (T-034)', () => {
         return Response.json({ next: null, previous: null, source: 'risk',
           content_hash: 'content', ranking_hash: 'ranking', results: [mockRiskFrame1],
           priority_counts: url.searchParams.has('q')
-            ? { high: 2, medium: 1, low: 0 } : { high: 196, medium: 196, low: 196 },
+            ? { suspected: 2, unassessed: 1, no_suspicions: 0 } : { suspected: 196, unassessed: 196, no_suspicions: 196 },
         });
       });
       expect(await screen.findByRole('option', { name: 'Tất cả (588 ảnh)' })).toBeDefined();
-      expect(screen.getByRole('option', { name: 'Cao (196 ảnh)' })).toBeDefined();
-      expect(screen.getByRole('option', { name: 'Trung bình (196 ảnh)' })).toBeDefined();
-      expect(screen.getByRole('option', { name: 'Thấp (196 ảnh)' })).toBeDefined();
-      fireEvent.change(screen.getByLabelText('Mức ưu tiên'), { target: { value: 'high' } });
-      await waitFor(() => expect(calls.some(request => new URL(request.url).searchParams.get('priority') === 'high')).toBe(true));
-      expect(await screen.findByRole('option', { name: 'Trung bình (196 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Có nghi vấn tính điểm (196 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Chưa đánh giá đầy đủ (196 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Chưa ghi nhận nghi vấn tính điểm (196 ảnh)' })).toBeDefined();
+      fireEvent.change(screen.getByLabelText('Nhóm review theo bằng chứng'), { target: { value: 'suspected' } });
+      await waitFor(() => expect(calls.some(request => new URL(request.url).searchParams.get('priority') === 'suspected')).toBe(true));
+      expect(await screen.findByRole('option', { name: 'Chưa đánh giá đầy đủ (196 ảnh)' })).toBeDefined();
       fireEvent.change(screen.getByLabelText('Tìm ảnh theo mã task hoặc số frame'), { target: { value: '100' } });
       expect(await screen.findByRole('option', { name: 'Tất cả (3 ảnh)' })).toBeDefined();
-      expect(screen.getByRole('option', { name: 'Cao (2 ảnh)' })).toBeDefined();
-      expect(screen.getByRole('option', { name: 'Thấp (0 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Có nghi vấn tính điểm (2 ảnh)' })).toBeDefined();
+      expect(screen.getByRole('option', { name: 'Chưa ghi nhận nghi vấn tính điểm (0 ảnh)' })).toBeDefined();
     });
 
     it('sends q (debounced) and priority to the ranking API and resets both', async () => {
@@ -1175,12 +1196,12 @@ describe('ReviewQueues Frontend (T-034)', () => {
         expect(call).toBeDefined();
       });
 
-      fireEvent.change(screen.getByLabelText('Mức ưu tiên'), { target: { value: 'high' } });
+      fireEvent.change(screen.getByLabelText('Nhóm review theo bằng chứng'), { target: { value: 'suspected' } });
       await waitFor(() => {
         const call = calls.find(
           (c) =>
             c.url.includes('/ranking/') &&
-            new URL(c.url).searchParams.get('priority') === 'high' &&
+            new URL(c.url).searchParams.get('priority') === 'suspected' &&
             new URL(c.url).searchParams.get('q') === '100'
         );
         expect(call).toBeDefined();
@@ -1203,8 +1224,8 @@ describe('ReviewQueues Frontend (T-034)', () => {
       await renderReviewPage('reviewer', async (req) => {
         if (req.url.includes('/api/runs/12/ranking/')) {
           return rankingWith([
-            { ...mockRiskFrame1, priority: 'high', thumbnail_url: 'http://minio.local/thumb/340.jpg?sig=1' },
-            { ...mockRiskFrame2, rank: 2, priority: 'medium', thumbnail_url: null },
+            { ...mockRiskFrame1, priority: 'suspected', thumbnail_url: 'http://minio.local/thumb/340.jpg?sig=1' },
+            { ...mockRiskFrame2, rank: 2, priority: 'unassessed', thumbnail_url: null },
           ]);
         }
         return null;
@@ -1213,8 +1234,8 @@ describe('ReviewQueues Frontend (T-034)', () => {
       const img = (await screen.findByAltText('Ảnh thu nhỏ Task #10 • Frame #100')) as HTMLImageElement;
       expect(img.getAttribute('src')).toBe('http://minio.local/thumb/340.jpg?sig=1');
       expect(screen.getByRole('img', { name: 'Không có ảnh thu nhỏ cho Task #20 • Frame #100' })).toBeDefined();
-      expect(screen.getByText('Ưu tiên cao')).toBeDefined();
-      expect(screen.getByText('Ưu tiên trung bình')).toBeDefined();
+      expect(screen.getAllByText('Có nghi vấn tính điểm').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Chưa đánh giá đầy đủ').length).toBeGreaterThan(0);
 
       // Ảnh lỗi tải thì về ô trống, không vỡ hàng
       fireEvent.error(img);

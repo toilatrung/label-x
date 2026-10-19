@@ -919,7 +919,7 @@ paths:
           schema: { type: string }
         - name: priority
           in: query
-          schema: { type: string, enum: [high, medium, low] }
+          schema: { type: string, enum: [suspected, unassessed, no_suspicions] }
         - $ref: "#/components/parameters/Cursor"
       responses:
         "200":
@@ -3635,7 +3635,9 @@ components:
           type: string
           enum: [risk, random_audit]
         review_state: { $ref: "#/components/schemas/FrameReviewState" }
-        missing_evidence: { type: boolean }
+        missing_evidence:
+          type: boolean
+          description: 'Trạng thái đọc: cờ đã lưu, issue_counts không đọc được, hoặc engine schema/geometry/duplicate/detector hay engine required chưa checked hoặc thiếu kết quả. Không ghi đè cờ trong ranking/explanation đã lưu; detector disabled vẫn thiếu bằng chứng E1/E2. Không vô hiệu nghi vấn E3 từ duplicate.'
         issue_counts:
           type: object
           additionalProperties: { type: integer }
@@ -3647,8 +3649,8 @@ components:
         lease_holder_user_id: { type: integer, nullable: true }
         priority:
           type: string
-          enum: [high, medium, low]
-          description: Mức ưu tiên suy ra từ s(f) (MBE-02)
+          enum: [suspected, unassessed, no_suspicions]
+          description: 'Nhóm review theo bằng chứng (presentation v1), không phải mức rủi ro. suspected: có nghi vấn E1/E2/E3 tính điểm; unassessed: chưa có nghi vấn tính điểm và thiếu bằng chứng; no_suspicions: chưa ghi nhận nghi vấn tính điểm với bằng chứng engine đầy đủ. Rank và score_v0 không đổi.'
         thumbnail_url: { type: string, format: uri, nullable: true }
 
     # ------------------------------------------------------------ guidelines
@@ -4592,12 +4594,12 @@ components:
           description: SHA-256 của ordering đã lưu cho source
         priority_counts:
           type: object
-          description: Số ảnh của toàn bộ queue theo mức ưu tiên, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor.
-          required: [high, medium, low]
+          description: Số ảnh của toàn bộ queue theo nhóm review bằng chứng, áp dụng family/origin/review_state/q nhưng bỏ priority và cursor.
+          required: [suspected, unassessed, no_suspicions]
           properties:
-            high: { type: integer, minimum: 0 }
-            medium: { type: integer, minimum: 0 }
-            low: { type: integer, minimum: 0 }
+            suspected: { type: integer, minimum: 0 }
+            unassessed: { type: integer, minimum: 0 }
+            no_suspicions: { type: integer, minimum: 0 }
         results:
           type: array
           items: { $ref: "#/components/schemas/RankedFrame" }
