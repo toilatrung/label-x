@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue Review anchor focus — LabelX</title>
+<meta name="labelx:id" content="issue-review-anchor-focus-20261018-vietanh">
+<meta name="labelx:title" content="Issue Review anchor focus">
+<meta name="labelx:type" content="report">
+<meta name="labelx:domain" content="development">
+<meta name="labelx:module" content="templates">
+<meta name="labelx:tags" content="[implementation, report, template]">
+<meta name="labelx:priority" content="3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.querySelector('article'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false})"></script>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:true,securityLevel:"strict",theme:"neutral"});</script>
+<style>
+:root{--canvas:#f6f7f9;--surface:#fff;--sunken:#f3f4f6;--selected:#eef1f5;--border:#e3e6ea;
+--ink:#1a1d23;--muted:#4b5262;--subtle:#6b7280;--primary:#1f2933;--brand:#d1202d;--info:#1d5ea8;
+--warn:#8a5300;--warn-soft:#fdf2d8;--neutral-soft:#eceef2;
+--font:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.6 var(--font)}
+.top{position:sticky;top:0;z-index:5;height:48px;background:var(--primary);color:#fff;display:flex;align-items:center;
+gap:14px;padding:0 24px;font-size:13px}.logo{font-weight:800;font-size:17px}.logo b{color:var(--brand)}
+.top a{color:#cfd4dc;text-decoration:none}.top a:hover{color:#fff}.top .sp{flex:1}
+main{max-width:1100px;margin:24px auto;padding:0 24px 64px}
+article{background:var(--surface);border:1px solid var(--border);padding:8px 32px 28px}
+.meta{display:grid;grid-template-columns:120px 1fr;gap:2px 12px;font-size:12.5px;color:var(--subtle);
+border:1px solid var(--border);background:var(--sunken);padding:8px 12px;margin:16px 0}
+.meta b{color:var(--muted);font-weight:600}
+h1{font-size:24px;line-height:1.25;margin:20px 0 12px}h2{font-size:19px;margin:28px 0 8px;padding-bottom:6px;
+border-bottom:1px solid var(--border)}h3{font-size:16px;margin:22px 0 6px}h4{font-size:15px}
+a{color:var(--info)}code{font-family:var(--mono);font-size:.86em;background:var(--sunken);padding:1px 4px}
+pre{background:var(--sunken);border:1px solid var(--border);padding:10px 12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0;display:block;overflow-x:auto}
+th{background:var(--sunken);text-align:left;font-size:12px;text-transform:uppercase;color:var(--subtle);font-weight:600}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid var(--warn);background:var(--warn-soft)}
+pre.mermaid{background:var(--surface);text-align:center;border:1px solid var(--border)}
+.toc{font-size:13px;border:1px solid var(--border);padding:8px 14px;margin:12px 0}
+.toc ul{margin:2px 0;padding-left:18px}
+ul.dir{columns:2;font-size:14px}
+@media print{.top{display:none}article{border:0}}
+</style></head>
+<body><main><article>
+<h1>Issue Review: ánh xạ anchor và hiệu ứng tập trung</h1>
+<h2>Record Metadata</h2><ul>
+<li><strong>Report ID</strong>: <code>issue-review-anchor-focus-20261018-vietanh</code></li>
+<li><strong>Owner</strong>: <code>Vietanhhhhhh2003</code></li>
+<li><strong>Executor</strong>: <code>Codex</code></li>
+<li><strong>Status</strong>: <code>complete</code></li>
+<li><strong>Task ID</strong>: yêu cầu người dùng ngày 18/10/2026; liên quan <a href="https://github.com/toilatrung/label-x/issues/395">#395 — MVP-p3_review</a></li>
+<li><strong>Epic ID</strong>: <a href="https://github.com/toilatrung/label-x/issues/386">#386 — MVP-RELEASE</a></li>
+<li><strong>Report Date</strong>: <code>2026-10-18</code></li>
+<li>Baseline develop: <code>125be0c139ae1239fb169777adf9abf06fe42566</code>; nhánh <code>fix/issue-review-anchor-focus</code>; PR vào develop.</li></ul>
+<h2>Scope</h2><p>API read serialization, contract evidence/ObjectRef, ReviewWorkspace, ReviewCanvas và đối chiếu annotation.
+Không thay ranking, priority, queue filters, engine generation/dedup hay annotation CVAT.</p>
+<h2>Nguyên nhân và payload thật</h2><p>QC#6 / SNP-004 / task #13 / job #4 / Frame 4, workspace ID 4 (khác snapshot frame ID 2385).
+Candidate #477 → Issue #57 giữ hai ID shape:9090 và shape:9142, overlap 0.883964. Candidate #478 → Issue #58 giữ shape:9091 và shape:9143, overlap 0.864312.
+Snapshot có đủ bốn annotation, nhãn car và tọa độ theo ảnh 1280×720. Detector disabled.
+Engine duplicate tạo ID có tiền tố shape:, API cũ trả nguyên ID này; cả panel đối chiếu và canvas so với source.id số thuần nên không khớp.
+Canvas cũ chỉ giảm opacity các annotation khác, không có lớp blur cho ảnh.</p>
+<h2>Changes Made</h2><ul>
+<li>review_anchor chuẩn hóa typed ID thành namespace + ID nguồn trong read model của issue và prediction; không cập nhật JSON nguồn hoặc khóa dedup.</li>
+<li>Contract/serializer giữ annotation_ids, cluster_annotation_ids, labels, same_label và cvat_track.</li>
+<li>Resolver dùng chung cho đối chiếu/canvas, hỗ trợ cả payload cũ lẫn canonical, tách shape/track.</li>
+<li>Ảnh nền blur và giảm sáng; lớp ảnh rõ được clip theo toàn bộ annotation neo, giữ rotation. Tọa độ dùng hệ Snapshot và cùng transform zoom/pan.</li>
+<li>Đổi issue tính lại vùng ngay; đổi frame remount canvas; Frame Review bỏ focus và reset zoom/pan. Xóa selectedIssueId khi frame không có issue.</li>
+<li>Hiển thị nguyên nhân anchor thiếu, không ánh xạ, cluster thiếu hai annotation hoặc hình học không hợp lệ.</li></ul>
+<h2>Acceptance Criteria và evidence</h2><table><tr><th>Yêu cầu</th><th>Bằng chứng</th></tr>
+<tr><td>Candidate → issue → Snapshot → canvas</td><td>test_issue_focus_api.py; before/after payload giữ snapshot_revision, ID và bbox; video #57/#58.</td></tr>
+<tr><td>E3 hai box, detector disabled</td><td>IssueFocus.test.tsx, ReviewWorkspace.test.tsx, test_issue_focus_api.py.</td></tr>
+<tr><td>Đổi issue/frame, không giữ highlight cũ</td><td>IssueFocus.test.tsx; ReviewWorkspace.test.tsx; video thao tác #57 → #58.</td></tr>
+<tr><td>Issue ↔ Frame Review, toàn frame</td><td>ReviewWorkspace.test.tsx kiểm reset zoom/pan; ảnh và video trước/sau.</td></tr>
+<tr><td>Anchor thiếu/không hợp lệ</td><td>Test resolver và workspace: anchor null, ID không tồn tại, thiếu cặp, bbox lỗi, ngoài frame, rotation NaN.</td></tr></table>
+<h2>Verification Results</h2><ul id="verification-results">
+<li>Contract: 24 passed. Backend regression PostgreSQL 17: 8 passed (candidate → issue → workspace, serialization/evidence).</li>
+<li>Frontend toàn bộ: 618 passed; sau bổ sung các ca malformed/rotation, 85 test review liên quan passed.</li>
+<li>Frontend production build, ESLint và typecheck: passed. Backend Ruff/format và mypy (210 source files): passed.</li>
+<li>Detector worker lint/format: passed; 24 tests passed. Django system check: passed.</li>
+<li>validate-framework: passed; verify-design: 25 screens / 19 tab states passed.</li>
+<li>Playwright: chuyển issue và chế độ review passed trên local replay. Bằng chứng payload/ảnh/video đã commit.</li>
+<li>Toàn bộ backend Windows/PostgreSQL: 1714 passed, 6 failed, 4 skipped, 4 errors. Một failure thuộc type sinh từ mô tả OpenAPI bổ sung: đã sinh lại contract.d.ts và test kiểm đồng bộ schema passed.</li>
+<li>Đối chứng checkout develop sạch 125be0c: đúng 5 failure và 4 error còn lại tái hiện; 113 test cùng đợt đối chứng passed. Chúng thuộc VLM dispatch khi thiếu Redis, SIGKILL không có trên Windows, quyền file POSIX 0600 và giới hạn 32767 ký tự của biến môi trường Windows. Không thay mã ngoài phạm vi để sửa các failure này.</li>
+<li>Chạy từng target tương đương make check bằng lệnh native trên Windows; không tuyên bố make check local pass. CI Linux/PostgreSQL của commit af6aa10 đang chạy tại thời điểm hoàn tất báo cáo; trạng thái cập nhật ở <a href="https://github.com/toilatrung/label-x/pull/452/checks">PR #452 checks</a>.</li>
+<li>PostgreSQL riêng trong .cache/issue-focus/pgdata, port 55433; tắt fsync/synchronous_commit để giảm thời gian I/O của database kiểm thử, không chạm database ứng dụng.</li>
+</ul>
+<h2>Design fidelity</h2><table><tr><th>Vùng ReviewWorkspace.dc.html</th><th>Kết quả</th></tr>
+<tr><td>AppShell, context bar, FlowNav, stage toolbar, panel, quyết định</td><td>Giữ bố cục và lớp lx-* hiện có; đối chiếu ReviewWorkspace.dc.html; ảnh 1440×1040 và toàn trang ở 390px trong evidence.</td></tr>
+<tr><td>Issue / Frame Review</td><td>Giữ điều khiển hiện có; bổ sung focus theo yêu cầu người dùng, hai box dùng overlay annotation hiện có.</td></tr>
+<tr><td>Đối chiếu bằng chứng / lỗi anchor</td><td>Giữ các card; E3 đối chiếu hai annotation Snapshot, cảnh báo dùng lx-callout.</td></tr></table>
+<h2>Related Files và bàn giao</h2><p><a href="../../../src/frontend/evidence/issue-focus/index.html">Video, ảnh và payload trước–sau</a>.
+<a href="../../../src/frontend/evidence/issue-focus/windows-baseline-comparison.json">Đối chứng failure Windows với baseline</a>;
+<a href="../../../src/frontend/evidence/issue-focus/backend-regressions.xml">JUnit regression PostgreSQL</a>.
+Video trước quay production; video sau quay bản local với payload và ảnh thật, anchor qua hàm serialization đã sửa.
+Đây không phải bằng chứng production đã được triển khai. Không commit mật khẩu, cookie hay URL ký S3; không lưu quyết định review.</p>
+<h2>Risks / Follow-up</h2><p>Chưa triển khai production. PR cần reviewer theo CR-102 và CI trước khi merge.
+Hiệu ứng dùng SVG filter/clipPath và ảnh Snapshot hiện có; không gọi detector hoặc CVAT để tính box.</p>
+</article></main></body></html>

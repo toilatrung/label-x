@@ -143,7 +143,9 @@ class BBoxSerializer(serializers.Serializer[Any]):
 
 
 class ObjectRefSerializer(serializers.Serializer[Any]):
-    namespace = serializers.ChoiceField(choices=["cvat_shape", "detector", "reviewer_region"])
+    namespace = serializers.ChoiceField(
+        choices=["cvat_shape", "cvat_track", "detector", "reviewer_region"]
+    )
     id = serializers.CharField()
 
 
@@ -165,6 +167,10 @@ class AnchorSerializer(serializers.Serializer[Any]):
 
 
 class EvidenceSerializer(serializers.Serializer[Any]):
+    annotation_ids = serializers.ListField(child=serializers.CharField(), required=False)
+    cluster_annotation_ids = serializers.ListField(child=serializers.CharField(), required=False)
+    labels = serializers.ListField(child=serializers.CharField(), required=False)
+    same_label = serializers.BooleanField(required=False)
     engine = serializers.ChoiceField(choices=ENGINE_NAMES)
     rule_id = serializers.CharField(allow_null=True, required=False)
     expected = serializers.CharField(allow_null=True, required=False)

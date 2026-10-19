@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { components } from '@/lib/api/contract';
 import { reviewBBox } from '@/lib/review/workspace-api';
+import { resolveIssueFocus } from '@/lib/review/issue-focus';
 import type { SnapshotAnnotation } from './ReviewCanvas';
 import styles from './ReviewIssueAssessment.module.css';
 
@@ -11,8 +12,8 @@ type Frame = components['schemas']['FrameSummary'];
 type BBox = components['schemas']['BBox'];
 
 export function isUnmatchedAnnotation(issue: Issue): boolean {
-  return String(issue.anchor.kind) === 'annotation_box' ||
-    [issue.anchor.rule_id, ...(issue.rule_ids ?? [])].includes('faster-rcnn-unmatched-annotation');
+  return String(issue.anchor?.kind) === 'annotation_box' ||
+    [issue.anchor?.rule_id, ...(issue.rule_ids ?? [])].includes('faster-rcnn-unmatched-annotation');
 }
 
 export function assessmentText(issue: Issue, annotationClass?: string): string {
@@ -36,16 +37,11 @@ export function assessmentText(issue: Issue, annotationClass?: string): string {
 }
 
 export function annotationForIssue(issue: Issue, annotations: SnapshotAnnotation[] = []) {
-  return annotations.find(annotation => issue.anchor.objects.some(object => {
-    const source = annotation.source;
-    if (!source) return false;
-    const namespace = source.kind === 'shape' ? 'cvat_shape' : source.kind === 'track' ? 'cvat_track' : source.kind;
-    return [source.kind, namespace].includes(String(object.namespace)) && String(object.id) === String(source.id);
-  }));
+  return resolveIssueFocus(issue, annotations).annotations[0];
 }
 
 export function guidelineRuleForIssue(issue: Issue): string | undefined {
-  return [...(issue.rule_ids ?? []), issue.anchor.rule_id].find(id => id &&
+  return [...(issue.rule_ids ?? []), issue.anchor?.rule_id].find(id => id &&
     !['faster-rcnn-detection', 'faster-rcnn-unmatched-annotation'].includes(id)) ?? undefined;
 }
 
@@ -83,7 +79,8 @@ export function ReviewIssueAssessment({ issue, frame, annotation, comparisonAnno
   const detectorEvidence = (issue.evidence ?? []).filter(ev => ev.engine === 'detector' && ev.prediction_class);
   const prediction = detectorEvidence[0];
   const annotationBox = reviewBBox(annotation?.bbox);
-  const predictionBox = reviewBBox(comparisonAnnotation?.bbox ?? prediction?.prediction_bbox);
+  const isCluster = issue.anchor?.kind === 'annotation_cluster';
+  const predictionBox = reviewBBox(comparisonAnnotation?.bbox ?? (isCluster ? null : prediction?.prediction_bbox));
   const boxes = [annotationBox && rotatedBounds(annotationBox, annotation?.rotation),
     predictionBox && rotatedBounds(predictionBox, comparisonAnnotation?.rotation)].filter((box): box is BBox => !!box);
   const width = frame.width ?? 0;
@@ -116,10 +113,10 @@ export function ReviewIssueAssessment({ issue, frame, annotation, comparisonAnno
           : <p className="lx-subtle">{unavailable(annotationBox, 'annotation')}</p>}
       </div>
       <div className={styles.card}>
-        <span className="lx-muted">{comparisonAnnotation ? 'Annotation cần đối chiếu' : 'Đề xuất detector'}</span>
-        <b>{comparisonAnnotation?.label || prediction?.prediction_class || 'Chưa có đề xuất nhãn'}</b>
+        <span className="lx-muted">{comparisonAnnotation || isCluster ? 'Annotation cần đối chiếu' : 'Đề xuất detector'}</span>
+        <b>{comparisonAnnotation?.label || (isCluster ? 'Chưa ánh xạ được annotation thứ hai' : prediction?.prediction_class || 'Chưa có đề xuất nhãn')}</b>
         {region && predictionBox ? <ComparisonCrop key={frame.image_url} frame={frame} box={predictionBox} region={region} title={comparisonAnnotation ? 'Vùng annotation cần đối chiếu' : 'Vùng detector đề xuất'} color="#16877e" rotation={comparisonAnnotation?.rotation} />
-          : <p className="lx-subtle">{unavailable(predictionBox, 'detector')}</p>}
+          : <p className="lx-subtle">{unavailable(predictionBox, isCluster ? 'annotation thứ hai' : 'detector')}</p>}
       </div>
     </div>
     {detectorEvidence.length > 1 && <p className="lx-subtle">Hiển thị cặp đầu tiên. Các bằng chứng detector còn lại nằm bên dưới.</p>}

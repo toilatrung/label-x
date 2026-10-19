@@ -1,0 +1,629 @@
+{
+  "frame": {
+    "id": 4,
+    "run_id": 6,
+    "frame_key": {
+      "cvat_task_id": 13,
+      "frame_number": 4
+    },
+    "cvat_job_id": 4,
+    "rank": 1,
+    "review_state": "in_review",
+    "missing_evidence": true,
+    "image_url": "[presigned URL omitted]",
+    "width": 1280,
+    "height": 720,
+    "cvat_deep_link": "https://cvat.williamtrinh.online/tasks/13/jobs/4?frame=4"
+  },
+  "snapshot_revision": "9eff00f7829e5bcd0378ca2059cb1d73731ebf7c90e1852a1543a1935f76d969",
+  "annotations": [
+    {
+      "id": "shape:9090",
+      "source": {
+        "id": 9090,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 484.752756,
+        "y1": 406.494525,
+        "x2": 747.604828,
+        "y2": 602.140102
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9091",
+      "source": {
+        "id": 9091,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 753.578738,
+        "y1": 412.468436,
+        "x2": 914.874328,
+        "y2": 496.103186
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9092",
+      "source": {
+        "id": 9092,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 378.715841,
+        "y1": 387.079316,
+        "x2": 523.583176,
+        "y2": 490.129275
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9093",
+      "source": {
+        "id": 9093,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 14.307286,
+        "y1": 428.896691,
+        "x2": 130.798546,
+        "y2": 490.129275
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9094",
+      "source": {
+        "id": 9094,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 120.685547,
+        "y1": 421.5,
+        "x2": 198.649792,
+        "y2": 471.36338
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9095",
+      "source": {
+        "id": 9095,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 173.331025,
+        "y1": 411.483664,
+        "x2": 233.210781,
+        "y2": 462.120235
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9096",
+      "source": {
+        "id": 9096,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 218.743189,
+        "y1": 416.708072,
+        "x2": 248.08025,
+        "y2": 456.895827
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9097",
+      "source": {
+        "id": 9097,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 238.837067,
+        "y1": 423.138113,
+        "x2": 269.821826,
+        "y2": 452.073297
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9098",
+      "source": {
+        "id": 9098,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 284.651108,
+        "y1": 403.84799,
+        "x2": 326.446373,
+        "y2": 430.371909
+      },
+      "rotation": 0,
+      "occluded": true,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9136",
+      "source": {
+        "id": 9136,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 2.230211,
+        "y1": 419.672473,
+        "x2": 138.255416,
+        "y2": 493.651093
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9137",
+      "source": {
+        "id": 9137,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 118.567557,
+        "y1": 417.286066,
+        "x2": 198.512195,
+        "y2": 476.946244
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9138",
+      "source": {
+        "id": 9138,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 178.824337,
+        "y1": 415.496261,
+        "x2": 234.308302,
+        "y2": 467.400615
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9139",
+      "source": {
+        "id": 9139,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 220.586461,
+        "y1": 417.286066,
+        "x2": 248.626744,
+        "y2": 462.627801
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9140",
+      "source": {
+        "id": 9140,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 243.257328,
+        "y1": 419.672473,
+        "x2": 271.297612,
+        "y2": 453.678774
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9141",
+      "source": {
+        "id": 9141,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 388.819275,
+        "y1": 379.314946,
+        "x2": 515.809895,
+        "y2": 502.31215
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9142",
+      "source": {
+        "id": 9142,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 489.453351,
+        "y1": 401.678074,
+        "x2": 748.22669,
+        "y2": 618.919889
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9143",
+      "source": {
+        "id": 9143,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 756.213521,
+        "y1": 413.658321,
+        "x2": 915.151467,
+        "y2": 506.305565
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    },
+    {
+      "id": "shape:9144",
+      "source": {
+        "id": 9144,
+        "kind": "shape"
+      },
+      "label_id": 45,
+      "label": "car",
+      "color": "#2080c0",
+      "bbox": {
+        "x1": 695.513078,
+        "y1": 413.570541,
+        "x2": 752.903021,
+        "y2": 473.656655
+      },
+      "rotation": 0,
+      "occluded": false,
+      "outside": false,
+      "z_order": 0,
+      "attributes": []
+    }
+  ],
+  "issues": [
+    {
+      "id": 57,
+      "family": "E3",
+      "origin": "engine",
+      "state": "in_review",
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "id": "shape:9090",
+            "namespace": "cvat_shape"
+          },
+          {
+            "id": "shape:9142",
+            "namespace": "cvat_shape"
+          }
+        ],
+        "rule_id": "DUP-01",
+        "policy_version": "1.0.0"
+      },
+      "n_i": 1,
+      "q_i": null,
+      "severity": null,
+      "rule_ids": [
+        "DUP-01"
+      ],
+      "evidence": [
+        {
+          "iou": 0.883964,
+          "engine": "duplicate",
+          "labels": [
+            "45",
+            "45"
+          ],
+          "rule_id": "DUP-01",
+          "same_label": true,
+          "is_kpi_error": false,
+          "annotation_ids": [
+            "shape:9090",
+            "shape:9142"
+          ],
+          "srs_requirement": "FR-ENG-04",
+          "structural_warning": true,
+          "cluster_annotation_ids": [
+            "shape:9090",
+            "shape:9142"
+          ]
+        }
+      ],
+      "links": [],
+      "review_decisions": []
+    },
+    {
+      "id": 58,
+      "family": "E3",
+      "origin": "engine",
+      "state": "in_review",
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "id": "shape:9091",
+            "namespace": "cvat_shape"
+          },
+          {
+            "id": "shape:9143",
+            "namespace": "cvat_shape"
+          }
+        ],
+        "rule_id": "DUP-01",
+        "policy_version": "1.0.0"
+      },
+      "n_i": 1,
+      "q_i": null,
+      "severity": null,
+      "rule_ids": [
+        "DUP-01"
+      ],
+      "evidence": [
+        {
+          "iou": 0.864312,
+          "engine": "duplicate",
+          "labels": [
+            "45",
+            "45"
+          ],
+          "rule_id": "DUP-01",
+          "same_label": true,
+          "is_kpi_error": false,
+          "annotation_ids": [
+            "shape:9091",
+            "shape:9143"
+          ],
+          "srs_requirement": "FR-ENG-04",
+          "structural_warning": true,
+          "cluster_annotation_ids": [
+            "shape:9091",
+            "shape:9143"
+          ]
+        }
+      ],
+      "links": [],
+      "review_decisions": []
+    }
+  ],
+  "predictions": [
+    {
+      "candidate_id": 477,
+      "engine": "duplicate",
+      "engine_version": "1.0.0",
+      "family": "E3",
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "id": "shape:9090",
+            "namespace": "cvat_shape"
+          },
+          {
+            "id": "shape:9142",
+            "namespace": "cvat_shape"
+          }
+        ],
+        "rule_id": "DUP-01",
+        "policy_version": "1.0.0"
+      },
+      "evidence": {
+        "iou": 0.883964,
+        "engine": "duplicate",
+        "labels": [
+          "45",
+          "45"
+        ],
+        "rule_id": "DUP-01",
+        "same_label": true,
+        "is_kpi_error": false,
+        "annotation_ids": [
+          "shape:9090",
+          "shape:9142"
+        ],
+        "srs_requirement": "FR-ENG-04",
+        "structural_warning": true,
+        "cluster_annotation_ids": [
+          "shape:9090",
+          "shape:9142"
+        ]
+      }
+    },
+    {
+      "candidate_id": 478,
+      "engine": "duplicate",
+      "engine_version": "1.0.0",
+      "family": "E3",
+      "anchor": {
+        "kind": "annotation_cluster",
+        "objects": [
+          {
+            "id": "shape:9091",
+            "namespace": "cvat_shape"
+          },
+          {
+            "id": "shape:9143",
+            "namespace": "cvat_shape"
+          }
+        ],
+        "rule_id": "DUP-01",
+        "policy_version": "1.0.0"
+      },
+      "evidence": {
+        "iou": 0.864312,
+        "engine": "duplicate",
+        "labels": [
+          "45",
+          "45"
+        ],
+        "rule_id": "DUP-01",
+        "same_label": true,
+        "is_kpi_error": false,
+        "annotation_ids": [
+          "shape:9091",
+          "shape:9143"
+        ],
+        "srs_requirement": "FR-ENG-04",
+        "structural_warning": true,
+        "cluster_annotation_ids": [
+          "shape:9091",
+          "shape:9143"
+        ]
+      }
+    }
+  ],
+  "engines": [
+    {
+      "engine": "detector",
+      "status": "not_checked",
+      "reason": "disabled",
+      "failed_units": 0
+    },
+    {
+      "engine": "duplicate",
+      "status": "checked",
+      "reason": null,
+      "failed_units": 0
+    },
+    {
+      "engine": "geometry",
+      "status": "checked",
+      "reason": null,
+      "failed_units": 0
+    },
+    {
+      "engine": "metric",
+      "status": "not_checked",
+      "reason": "disabled",
+      "failed_units": 0
+    },
+    {
+      "engine": "schema",
+      "status": "checked",
+      "reason": null,
+      "failed_units": 0
+    },
+    {
+      "engine": "vlm",
+      "status": "not_checked",
+      "reason": "disabled",
+      "failed_units": 0
+    }
+  ]
+}

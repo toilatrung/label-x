@@ -1,0 +1,31 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Issue Review — QC#6</title></head>
+<body><h1>Issue Review: QC#6 / SNP-004 / task 13 / job 4 / Frame 4</h1>
+<p>Ngày 18/10/2026. Trước: production. Sau: bản sửa local phát lại payload và ảnh thật của cùng Snapshot,
+qua hàm <code>review_anchor</code> đã sửa. Chưa triển khai lên production. Không ghi quyết định review.</p>
+<p>Chuỗi thao tác trong cả hai video: Issue #57 → #58 → Frame Review → Issue Review → #57.</p>
+<p>Quay lại: chạy <code>node scripts/frontend/capture-issue-focus.cjs before|after</code> từ gốc repository.
+Đặt <code>LABELX_CAPTURE_AUTH</code> trỏ tới Playwright storage state đã đăng nhập;
+<code>LABELX_PLAYWRIGHT_MODULE</code>, <code>LABELX_BROWSER_EXECUTABLE</code> trỏ tới công cụ trình duyệt đã cài.
+Chế độ after cần frontend local ở <code>LABELX_REPLAY_ORIGIN</code> (mặc định http://localhost:3012).
+Script chỉ đọc API production; mọi request ghi trong replay bị chặn.</p>
+<h2>Video</h2>
+<p>Trước — production</p><video controls width="960" src="before-production.webm"></video>
+<p>Sau — local replay</p><video controls width="960" src="after-local-replay.webm"></video>
+<h2>Payload</h2>
+<p><a href="before-payload.json">Payload trước</a> · <a href="after-payload.json">Payload sau serialization</a>.
+Đã bỏ URL ký S3 và thông tin lease/session. Tọa độ, ID, evidence và snapshot_revision giữ nguyên.</p>
+<table border="1"><tr><th>Issue</th><th>Candidate</th><th>Anchor nguồn</th><th>Source Snapshot</th><th>Overlap</th></tr>
+<tr><td>57</td><td>477</td><td>shape:9090, shape:9142</td><td>9090, 9142</td><td>0.883964</td></tr>
+<tr><td>58</td><td>478</td><td>shape:9091, shape:9143</td><td>9091, 9143</td><td>0.864312</td></tr></table>
+<p>Đủ hai ID cho mỗi cluster; mọi annotation đều có nhãn car và bbox theo ảnh 1280×720. Detector not_checked/disabled.</p>
+<h2>Ảnh đối chứng</h2>
+<p><a href="before-issue-57.png">Trước #57</a> · <a href="after-issue-57.png">Sau #57</a> ·
+<a href="before-issue-58.png">Trước #58</a> · <a href="after-issue-58.png">Sau #58</a> ·
+<a href="before-frame-review.png">Trước Frame Review</a> · <a href="after-frame-review.png">Sau Frame Review</a></p>
+<p><a href="after-mobile-390.png">Giao diện sau sửa ở 390px</a></p>
+<h2>Phạm vi bằng chứng</h2><p>Ảnh/video local xác minh giao diện với dữ liệu thật đã ghi lại, không chứng minh production đã được cập nhật.
+Test PostgreSQL xác minh candidate → materialize issue → workspace API → cả hai bbox; Vitest xác minh mapping,
+chuyển issue/frame, chế độ review và lỗi anchor. Không thay ranking, priority hoặc queue filters.</p>
+<p><a href="backend-regressions.xml">JUnit: 8 regression backend passed</a> ·
+<a href="windows-baseline-comparison.json">Đối chứng 5 failure / 4 error Windows tái hiện trên develop sạch</a>.</p>
+</body></html>

@@ -1,0 +1,69 @@
+{
+  "baseline_commit": "125be0c139ae1239fb169777adf9abf06fe42566",
+  "environment": "Windows, Python 3.12, PostgreSQL 17 isolated; Redis unavailable",
+  "baseline_failed": 5,
+  "baseline_errors": 4,
+  "baseline_passed": 113,
+  "comparison": "All remaining Windows failures/errors reproduce on clean develop.",
+  "failures": [
+    {
+      "kind": "failure",
+      "module": "tests.orchestration.test_vlm_stage",
+      "test": "test_stale_running_vlm_unit_is_reclaimed_by_sweeper",
+      "message": "AssertionError: assert ('pending' == 'pending'\n  \n    pending and None is not None)\n +  where None = <VlmUnit: VlmUnit run=1 candidate=1 [pending]>.dispatched_at"
+    },
+    {
+      "kind": "failure",
+      "module": "tests.phase_mvp.test_p1_deterministic",
+      "test": "test_agg_01_real_worker_sigkill_then_redelivery_and_replay_keep_candidates_immutable",
+      "message": "AssertionError: 64-none\\Lib\\unittest\\mock.py\", line 1143, in _mock_call\r\n      return self._execute_mock_call(*args, **kwargs)\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n    File \"C:\\Users\\Admin\\AppData\\Roaming\\uv\\python\\cpython-3.12.8-windows-x86_64-none\\Lib\\unittest\\mock.py\", line 1204, in _execute_mock_call\r\n      result = effect(*args, **kwargs)\r\n               ^^^^^^^^^^^^^^^^^^^^^^^\r\n    File \"<string>\", line 9, in die\r\n  AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?\r\n  \nassert 1 == -9\n +  where 1 = CompletedProcess(args=['D:\\\\Code\\\\label-x-issue-focus\\\\src\\\\backend\\\\.venv\\\\Scripts\\\\pyt"
+    },
+    {
+      "kind": "failure",
+      "module": "tests.week5.test_export_ranking",
+      "test": "test_export_writes_exact_scores_metadata_manifest_and_zip",
+      "message": "assert 1 == 0"
+    },
+    {
+      "kind": "failure",
+      "module": "tests.week5.test_export_ranking",
+      "test": "test_session_cookie_file_needs_no_login_post",
+      "message": "AssertionError: assert 1 == 0\n +  where 1 = <function main at 0x000002967A7556C0>(['--run-id', '5', '--out-dir', 'C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Temp\\\\pytest-of-Vi\u1ec7t Anh\\\\pytest-6\\\\test_session_cookie_file_needs0\\\\o'])\n +    where <function main at 0x000002967A7556C0> = export_ranking.main"
+    },
+    {
+      "kind": "failure",
+      "module": "tests.week5.test_export_ranking",
+      "test": "test_wrong_snapshot_wrong_password_and_cross_origin_next_fail_closed",
+      "message": "AssertionError: assert (1 == 1 and not False and 'expected 9' in 'export failed: LABELX_CREDENTIALS_FILE: file mode must be 0600 (found 0666)\\n')\n +  where False = exists()\n +    where exists = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Vi\u1ec7t Anh/pytest-6/test_wrong_snapshot_wrong_pass0/out').exists\n +  and   'export failed: LABELX_CREDENTIALS_FILE: file mode must be 0600 (found 0666)\\n' = CaptureResult(out='', err='export failed: LABELX_CREDENTIALS_FILE: file mode must be 0600 (found 0666)\\n').err\n +    where CaptureResult(out='', err='export failed: LABELX_CREDENTIALS_FILE: file mode must be 0600 (found 0666)\\n') = readouterr()"
+    },
+    {
+      "kind": "error",
+      "module": "tests.vlm.test_contract",
+      "test": "test_invalid_crop",
+      "message": "failed on setup with \"ValueError: the environment variable is longer than 32767 characters\""
+    },
+    {
+      "kind": "error",
+      "module": "tests.vlm.test_contract",
+      "test": "test_invalid_crop",
+      "message": "failed on teardown with \"ValueError: the environment variable is longer than 32767 characters\""
+    },
+    {
+      "kind": "error",
+      "module": "tests.vlm.test_contract",
+      "test": "test_invalid_crop",
+      "message": "failed on setup with \"ValueError: the environment variable is longer than 32767 characters\""
+    },
+    {
+      "kind": "error",
+      "module": "tests.vlm.test_contract",
+      "test": "test_invalid_crop",
+      "message": "failed on teardown with \"ValueError: the environment variable is longer than 32767 characters\""
+    }
+  ],
+  "corrected_failure": {
+    "test": "test_api01_support_generated_types_match_committed_schema",
+    "cause": "OpenAPI documentation changed after generation",
+    "resolution": "Regenerated contract.d.ts; targeted recheck: 1 passed"
+  }
+}

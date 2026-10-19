@@ -2624,12 +2624,14 @@ export interface components {
         /**
          * @description Định danh đối tượng qua revision (DEC-005): namespace nguồn + id trong namespace đó.
          *     cvat_shape: id shape CVAT (ổn định khi annotator sửa shape; xoá rồi vẽ lại là đối tượng mới).
+         *     cvat_track: id track CVAT; hình học lấy từ frame tương ứng trong Snapshot.
+         *     API review chuẩn hóa ID có tiền tố shape:/track: thành namespace và ID nguồn riêng.
          *     detector: dự đoán của một run, id = "<run_id>:<index>" (không ổn định qua run).
          *     reviewer_region: vùng reviewer vẽ, id = UUID do server cấp.
          */
         ObjectRef: {
             /** @enum {string} */
-            namespace: "cvat_shape" | "detector" | "reviewer_region";
+            namespace: "cvat_shape" | "cvat_track" | "detector" | "reviewer_region";
             id: string;
         };
         /** @description Neo issue theo DEC-006 và SRS tab:anchors; kind quyết định trường nào bắt buộc */
@@ -2654,6 +2656,10 @@ export interface components {
             run_id?: number;
         };
         Evidence: {
+            annotation_ids?: string[];
+            cluster_annotation_ids?: string[];
+            labels?: string[];
+            same_label?: boolean;
             engine: components["schemas"]["EngineName"];
             rule_id?: string | null;
             expected?: string | null;

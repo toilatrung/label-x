@@ -135,6 +135,42 @@ async function renderWorkspace(
 }
 
 describe('ReviewWorkspace (T-037 Core Workspace Component)', () => {
+  it('replaces E3 focus on issue navigation and clears focus and zoom in Frame Review', async () => {
+    const annotations = [91, 92, 93, 94].map((id, index) => ({ id: `shape:${id}`, source: { kind: 'shape', id }, label: 'car',
+      bbox: { x1: 10 + index * 100, y1: 20, x2: 80 + index * 100, y2: 80 } }));
+    const issues = [101, 102].map((id, index) => ({ ...baseFrameIssues.issues[0], id, family: 'E3' as const,
+      anchor: { kind: 'annotation_cluster' as const, policy_version: '1.0.0',
+        objects: annotations.slice(index * 2, index * 2 + 2).map(a => ({ namespace: 'cvat_shape' as const, id: a.id })) },
+      evidence: [{ engine: 'duplicate' as const, iou: 0.88 }] }));
+    const { container } = await renderWorkspace({}, { status: 200, body: { ...baseFrameIssues, annotations, issues,
+      engines: [{ engine: 'detector', status: 'not_checked', reason: 'disabled' }] } });
+    await screen.findByText('QC-00101');
+    expect(container.querySelectorAll('clipPath[id$="-focus"] rect')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: /^Issue tiếp ›$/ }));
+    await screen.findByText('QC-00102');
+    expect(container.querySelector('clipPath[id$="-focus"] rect')).toHaveAttribute('x', '210');
+    fireEvent.click(screen.getByTitle('Phóng to'));
+    fireEvent.click(screen.getByRole('button', { name: 'Frame Review' }));
+    expect(screen.queryByTestId('issue-focus-image')).toBeNull();
+    expect(container.querySelector('svg[aria-label="Khung hình annotation và prediction"] > g')).toHaveAttribute('transform', 'translate(0, 0) scale(1)');
+    fireEvent.click(screen.getByRole('button', { name: 'Issue Review' }));
+    expect(screen.getByTestId('issue-focus-image')).toBeDefined();
+  });
+
+  it('shows an explicit reason for an unmapped anchor', async () => {
+    await renderWorkspace({}, { status: 200, body: { ...baseFrameIssues, annotations: [] } });
+    await screen.findByText('QC-00101');
+    expect(screen.getByText(/Không ánh xạ được anchor trong Snapshot/)).toBeDefined();
+    expect(screen.queryByTestId('issue-focus-image')).toBeNull();
+  });
+
+  it('renders a clear explanation when a legacy response has no anchor', async () => {
+    await renderWorkspace({}, { status: 200, body: { ...baseFrameIssues,
+      issues: [{ ...baseFrameIssues.issues[0], anchor: null }] } });
+    await screen.findByText('QC-00101');
+    expect(screen.getByText(/Issue thiếu anchor/)).toBeDefined();
+    expect(screen.queryByTestId('issue-focus-image')).toBeNull();
+  });
   beforeEach(() => {
     vi.restoreAllMocks();
   });
