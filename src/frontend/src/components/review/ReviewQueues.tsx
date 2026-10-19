@@ -41,9 +41,9 @@ const FAMILY_LABELS: Record<IssueFamily, string> = {
 };
 
 const PRIORITY_LABELS: Record<RankingPriority, string> = {
-  high: 'Cao',
-  medium: 'Trung bình',
-  low: 'Thấp',
+  suspected: 'Có nghi vấn tính điểm',
+  unassessed: 'Chưa đánh giá đầy đủ',
+  no_suspicions: 'Chưa ghi nhận nghi vấn tính điểm',
 };
 
 const REVIEW_STATE_LABELS: Record<FrameReviewState, string> = {
@@ -380,7 +380,7 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
   const activeSummary = activeQueue === 'risk' ? riskSummaryQuery : randomSummaryQuery;
   const priorityCounts = rankingQuery.data?.priority_counts;
   const priorityTotal = priorityCounts
-    ? priorityCounts.high + priorityCounts.medium + priorityCounts.low : undefined;
+    ? priorityCounts.suspected + priorityCounts.unassessed + priorityCounts.no_suspicions : undefined;
 
   const invalidateQueueData = (targetDatasetId: number | null, targetRunId: number | null) => {
     queryClient.invalidateQueries({ queryKey: ['review', 'ranking', targetDatasetId, targetRunId] });
@@ -983,6 +983,14 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
             ))}
           </div>
 
+          <div className="lx-card__body lx-stack">
+            <p>Thứ tự review theo điểm xếp hạng, không phải mức rủi ro đã được xác định. Điểm nền = 0.01 × số box.</p>
+            <p>Nghi vấn tính điểm do engine đề xuất; Issue review và lỗi đã xác nhận được ghi nhận qua quyết định review. Không có nghi vấn không có nghĩa ảnh sạch.</p>
+            <p className="lx-hint">Nhóm có nghi vấn tính điểm gồm cả ảnh thiếu bằng chứng. Nhóm chưa đánh giá đầy đủ chỉ gồm ảnh chưa ghi nhận nghi vấn tính điểm.</p>
+            {runQuery.data.engines.filter(engine => ['schema', 'geometry', 'duplicate', 'detector'].includes(engine.engine) && engine.status !== 'checked').map(engine => (
+              <p key={engine.engine} className="lx-muted">{engine.engine}: {engine.status.toUpperCase().replaceAll('_', ' ')}{engine.reason ? ` — ${engine.reason}` : ''}. Chưa đánh giá đầy đủ; nghi vấn từ engine khác vẫn có hiệu lực.</p>
+            ))}
+          </div>
           {/* Filters Bar */}
           <div className="lx-review-filters lx-review-filters--4">
             <label className="lx-field">Tìm kiếm
@@ -997,7 +1005,7 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
                 />
               </span>
             </label>
-            <label className="lx-field">Mức ưu tiên
+            <label className="lx-field">Nhóm review theo bằng chứng
               <select
                 className="lx-select"
                 value={filters.priority ?? ''}
@@ -1173,30 +1181,27 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
                             Object.entries(frame.issue_counts).map(([fam, count]) => (
                               <span key={fam} className="lx-review-badge">
                                 <Icon name="alert" className="lx-review-icon" />
-                                {FAMILY_LABELS[fam as IssueFamily] ?? fam} ({fam}): {count}
+                                Nghi vấn {FAMILY_LABELS[fam as IssueFamily] ?? fam} ({fam}): {count}
                               </span>
                             ))
                           ) : (
-                            <span className="lx-subtle">0 issue</span>
+                            <span className="lx-subtle">Chưa ghi nhận nghi vấn tính điểm</span>
                           )}
                           {frame.priority && (
-                            <span className={`lx-review-badge${frame.priority === 'high' ? ' lx-review-badge--danger' : ''}`}>
-                              {frame.priority !== 'low' && (
-                                <Icon name={frame.priority === 'high' ? 'up' : 'equal'} className="lx-review-icon" />
-                              )}
-                              Ưu tiên {PRIORITY_LABELS[frame.priority].toLowerCase()}
+                            <span className="lx-review-badge lx-review-badge--neutral">
+                              {PRIORITY_LABELS[frame.priority]}
                             </span>
                           )}
-                          <span className="lx-review-badge">{frame.source === 'risk' ? 'Rủi ro' : 'Ngẫu nhiên'}</span>
+                          <span className="lx-review-badge lx-review-badge--neutral">{frame.source === 'risk' ? 'Theo điểm xếp hạng' : 'Ngẫu nhiên'}</span>
                           {frame.missing_evidence && (
-                            <span className="lx-badge lx-badge--warning">Thiếu bằng chứng</span>
+                            <span className="lx-badge lx-badge--warning" title="Thiếu bằng chứng engine" aria-label="Chưa đánh giá đầy đủ: thiếu bằng chứng engine">Chưa đánh giá đầy đủ</span>
                           )}
                         </div>
                         <div className="lx-mono lx-subtle">Frame ID: {frame.frame_id}</div>
                         <div className="lx-review-meta">
                           <span><Icon name="frame" className="lx-review-icon" />Frame {frame.frame_key.frame_number}</span>
-                          <span>Điểm {frame.score.toFixed(3)}</span>
-                          <span className="lx-subtle">Nền: {frame.baseline_score.toFixed(3)}</span>
+                          <span>Điểm xếp hạng {frame.score.toFixed(3)}</span>
+                          <span className="lx-subtle">Nền theo số box: {frame.baseline_score.toFixed(3)}</span>
                           <span className="lx-badge lx-badge--neutral">{REVIEW_STATE_LABELS[frame.review_state] ?? frame.review_state}</span>
                           {frame.lease_holder_user_id ? (
                             <span className="lx-mono">Đang giữ: User #{frame.lease_holder_user_id}</span>
@@ -1206,7 +1211,8 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
                         </div>
                         {frame.explanation && (
                           <details>
-                            <summary className="lx-review-explain-toggle">Chi tiết điểm</summary>
+                            <summary className="lx-review-explain-toggle">Chi tiết điểm đã lưu ({frame.score_version})</summary>
+                            <p className="lx-subtle">Bản ghi điểm được giữ nguyên. Trạng thái thiếu bằng chứng phía trên còn xét kết quả engine của Run, kể cả detector chưa chạy.</p>
                             <pre className="lx-mono lx-review-explain">{JSON.stringify(frame.explanation, null, 2)}</pre>
                           </details>
                         )}
@@ -1236,7 +1242,7 @@ export function ReviewQueues({ onWorkspaceStateChange, resumeWorkspace = false, 
               <div className="lx-card__foot">
                 <span className="lx-hint">
                   {activeQueue === 'risk'
-                    ? 'Ưu tiên cao được hiển thị trước'
+                    ? 'Thứ tự theo điểm xếp hạng; điểm nền không chứng minh rủi ro'
                     : 'Kiểm định ngẫu nhiên • Sắp xếp theo rank tăng dần'}
                 </span>
                 <div className="lx-pager">
